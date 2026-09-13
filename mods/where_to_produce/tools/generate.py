@@ -91,6 +91,13 @@ RIGHT_SCALE = RANK_SCALE // 10
 # и у чьих способов есть сырьевой вход. Двадцать; `silk` среди них нет -- его
 # рецепты сырья провинции не потребляют, -- и это единственный товар связок, на
 # который счёта грамоты не хватает.
+# **Два товара, у которых своё РГО усредняется в покрытие, и только два.**
+# `_trmm_cov_dyes` и `_trmm_cov_wine` -- единственные, где он пишет `add = 1`
+# и `divide = 2`, с объяснением: модификатор вывода грамоты поднимает и
+# собственное РГО этого сырья, так что на его локации оно входит ещё одним
+# полностью покрытым поставщиком. Остальные восемнадцать этого не делают.
+TRMM_RGO_AVERAGED = frozenset(("dyes", "wine"))
+
 COV_GOODS = frozenset("""
 beer books cannons cloth dyes fine_cloth firearms furniture glass jewelry
 leather liquor masonry naval_supplies paper pottery tar tools weaponry wine
@@ -3182,28 +3189,6 @@ def plan_loc_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     cov_goods = sorted({m.produced for m in rows
                         if m.produced in COV_GOODS and m.inputs
                         and any(r in game.raw_goods for r in m.inputs)})
-    cov_raws = sorted({r for m in rows if m.produced in COV_GOODS
-                       for r in m.inputs if r in game.raw_goods})
-    out.append(f"""
-# **Есть ли это сырьё в провинции** -- чип, форма скопирована у CM
-# (`_trmm_rgo_chip_*`): один `text` с триггером и один запасной. Зелёный --
-# провинция его даёт, красный -- нет; и то и другое видно, потому что спрошено
-# было именно «с чего бы 100%».
-""")
-    for raw in cov_raws:
-        out.append(f"""# Scope: location
-{MOD_ID}_cov_chip_{raw} = {{
-	type = location
-	text = {{
-		trigger = {{ province_definition = {{ any_location_in_province_definition = {{ raw_material ?= goods:{raw} }} }} }}
-		localization_key = {MOD_ID}_cov_have_{raw}
-	}}
-	text = {{
-		fallback = yes
-		localization_key = {MOD_ID}_cov_miss_{raw}
-	}}
-}}
-""")
     out.append(f"""
 # **Чем именно взято покрытие товара**: способ, который здесь победил, и его
 # сырьё поимённо. Номер способа лежит на локации (`_covm_<товар>`), потому что
@@ -10699,8 +10684,16 @@ def cov_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t}}
 \t}}
 """)
-        # Своё сырьё локации -- ещё один полностью покрытый поставщик, как у него.
-        out.append(f"""\tif = {{
+        # **Своё сырьё усредняется только у `dyes` и `wine`, и это не выбор.**
+        # У него ровно два таких товара (`_trmm_cov_dyes`, `_trmm_cov_wine`), и
+        # причина написана там же: модификатор вывода этой грамоты поднимает и
+        # собственное РГО этого сырья, поэтому на его локации оно входит ещё
+        # одним полностью покрытым поставщиком. У остальных восемнадцати товаров
+        # такого нет. Мы применяли это ко всем двадцати -- лишняя ветка, которую
+        # никто не просил.
+        own_rgo = ""
+        if good in TRMM_RGO_AVERAGED:
+            own_rgo = f"""\tif = {{
 \t\tlimit = {{ raw_material ?= goods:{good} }}
 \t\tchange_variable = {{ name = {MOD_ID}_cov_{good} add = 1 }}
 \t\tset_variable = {{ name = {MOD_ID}_cov_{good} value = {{
@@ -10708,17 +10701,19 @@ def cov_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t\tdivide = 2
 \t\t}} }}
 \t}}
-\t# Две половины числа порознь: подсказка обязана показать, какая из них его
-\t# делает. 236 %% на землю, у которой каждый товар меньше сотни, -- это вторая.
+"""
+        out.append(own_rgo + f"""\t# Две половины числа порознь: подсказка обязана показать, какая из них его
+\t# делает.
 \tset_variable = {{ name = {MOD_ID}_covr_{good} value = var:{MOD_ID}_cov_{good} }}
-\tset_variable = {{ name = {MOD_ID}_covl_{good} value = {{
-\t\tvalue = modifier:local_{good}_output_modifier
-\t\tdivide = {MOD_ID}_trmm_rgo_unit
-\t\tmin = 0
-\t}} }}
-\t# **`change_variable` знает `add`, а `value` -- нет** (`api.py`: add,
-\t# subtract, multiply, divide, modulo, min и max). С `value` блок молча
-\t# не делал ничего, и местный модификатор вывода в покрытие не входил.
+\t# **Местный модификатор берётся его значением, а не переписанным.**
+\t# `_trmm_lm_{good}` -- перенесённый файл CM, и в нём есть строка, которой у
+\t# переписанной формулы не было: **выданная здесь грамота вычитается**, иначе
+\t# она поднимает собственную пригодность. Из-за этого город, уже держащий
+\t# королевскую грамоту на книгопечатание, выглядел лучшим местом для неё же:
+\t# его прогон 2026-09-14, Эмсланд 236.1 % против Эйфеля 132.7 % при том, что
+\t# сырья у Эйфеля больше. «Чужой инструмент -- копировать, а не
+\t# воспроизводить формулой» стоит в `PITFALLS.md` ровно об этом.
+\tset_variable = {{ name = {MOD_ID}_covl_{good} value = {MOD_ID}_trmm_lm_{good} }}
 \tchange_variable = {{ name = {MOD_ID}_cov_{good} add = var:{MOD_ID}_covl_{good} }}
 """)
     out.append("}\n")
@@ -12666,32 +12661,26 @@ def loc_file(language: str, rows: list[eu5data.Method], split: dict[str, list[st
     # `bag_wtp_l_<язык>.yml` рядом с остальным человеческим текстом.
     ref = "$%s"   # ссылка на другой ключ; в f-строке скобку доллара проще так
 
-    cov_raws = sorted({r for m in rows if m.produced in COV_GOODS
-                       for r in m.inputs if r in game.raw_goods})
-    for raw in cov_raws:
-        out.append(f' {MOD_ID}_cov_have_{raw}: "  #G @{raw}! '
-                   f'[ShowGoodsName(\'{raw}\')]#!"\n')
-        out.append(f' {MOD_ID}_cov_miss_{raw}: "  #R @{raw}! '
-                   f'[ShowGoodsName(\'{raw}\')]#!"\n')
     out.append(' %s_cov_no_method: "%s"\n'
                % (MOD_ID, ref % (MOD_ID + "_cov_none$")))
 
-    # Одна строка на способ: здание, способ и его сырьё поимённо. Чипы красят
-    # себя сами -- зелёное провинция даёт, красное нет, -- и `n/d` рядом,
-    # потому что спрошено было ровно это: «использует предполагаемо шерсть 1/1».
+    # Одна строка на способ: здание, способ и «сырья n из d».
+    #
+    # **Сырьё поимённо здесь не печатается, и это его слово**: значки сырья и
+    # то же `n/d` уже стоят в самой строке результата
+    # (`_right_goods_count_<k>` и датамодель `_r_goods_<k>`), так что подсказка
+    # повторяла бы строку. «Какой ещё чип? Ты чё?» -- 2026-09-14.
     for mi, method in enumerate(rows, start=1):
         if method.produced not in COV_GOODS or not method.inputs:
             continue
         raws = [r for r in sorted(method.inputs) if r in game.raw_goods]
         if not raws:
             continue
-        chips = "".join(f"[Location.Custom('{MOD_ID}_cov_chip_{r}')]" for r in raws)
         out.append(
             f' {MOD_ID}_covm_{mi}: "\\n  [ShowBuildingTypeName(\'{method.building}\')],'
             f' [ShowProductionMethodName(\'{method.key}\')] '
             f'[Location.MakeScope.GetVariable(\'{MOD_ID}_covn_{method.produced}\').GetValue|0]'
-            f'/[Location.MakeScope.GetVariable(\'{MOD_ID}_covd_{method.produced}\').GetValue|0]'
-            f'{chips}"\n')
+            f'/[Location.MakeScope.GetVariable(\'{MOD_ID}_covd_{method.produced}\').GetValue|0]"\n')
 
     # Строка товара в разборе: сколько вышло, и из чего это сложилось -- сырьё
     # провинции плюс местный модификатор вывода в единицах `_trmm_rgo_unit`.
