@@ -1142,6 +1142,63 @@ FOREIGN_BREAKDOWNS = (
 )
 
 
+def unresolved_localization_refs(root: Path) -> list[str]:
+    """`$ключ$` без ключа и `Custom('имя')` без `customizable_localization`.
+
+    **Две формы, которые легко перепутать, и обе молчат.** `$x$` подставляет
+    другой ключ локализации, `[Scope.Custom('x')]` зовёт
+    `customizable_localization` -- и если взять не ту, на экране окажется имя
+    ключа или пустота. Дважды за один день: строка товара переезжала между
+    двумя формами, и оба раза это было видно только в игре.
+
+    Ключи ищутся и в моде, и в игровом дереве (`$ключ$` часто указывает на
+    ванильный), а `Custom()` -- только среди своих: чужие определения лежат в
+    модах, которых в `reference/` может не быть.
+    """
+    keys: set[str] = set()
+    for folder in (root / "main_menu/localization",
+                   REPO / "reference/game/main_menu/localization",
+                   REPO / "reference/mods"):
+        if not folder.is_dir():
+            continue
+        for path in folder.rglob("*.yml"):
+            for line in path.read_text(encoding="utf-8-sig",
+                                       errors="ignore").splitlines():
+                match = re.match(r"\s*([A-Za-z0-9_.]+):\s*", line)
+                if match:
+                    keys.add(match.group(1))
+    custom: set[str] = set()
+    folder = root / "in_game/common/customizable_localization"
+    if folder.is_dir():
+        for path in folder.glob("*.txt"):
+            custom |= set(re.findall(r"^(\w+)\s*=\s*\{",
+                                     path.read_text(encoding="utf-8-sig"), re.M))
+    found: list[str] = []
+    seen: set[tuple[str, str]] = set()
+    prefix = root.name and "bag_"
+    for path in sorted(list((root / "main_menu/localization").rglob("*.yml"))
+                       + list((root / "in_game/gui").rglob("*.gui"))):
+        text = path.read_text(encoding="utf-8-sig", errors="ignore")
+        for name in re.findall(r"\$([A-Za-z0-9_.]+)\$", text):
+            # `$ВЕРХНИМ_РЕГИСТРОМ$` -- это параметр, который подставляет
+            # позвавший, а не ссылка на ключ. Ключи здесь и у игры пишутся
+            # строчными.
+            if name.upper() == name:
+                continue
+            if name not in keys and (path.name, name) not in seen:
+                seen.add((path.name, name))
+                found.append(f"{path.relative_to(REPO)}: `${name}$` — такого "
+                             f"ключа локализации нет ни у мода, ни у игры")
+        for name in re.findall(r"Custom\('([A-Za-z0-9_]+)'\)", text):
+            if name.startswith(prefix) and name not in custom \
+                    and (path.name, name) not in seen:
+                seen.add((path.name, name))
+                found.append(f"{path.relative_to(REPO)}: `Custom('{name}')` — "
+                             f"нет такого `customizable_localization`; ключ "
+                             f"локализации подставляется через `${name}$`")
+    return found
+
+
 def foreign_breakdown_in_own_text(root: Path) -> list[str]:
     """Наш текст, рисующий разбор чужого расчёта.
 
@@ -1269,7 +1326,8 @@ def main(argv: list[str]) -> int:
                  + overflowing_windows(root)
                  + localization_markup(root)
                  + stale_overrides(root)
-                 + foreign_breakdown_in_own_text(root))
+                 + foreign_breakdown_in_own_text(root)
+                 + unresolved_localization_refs(root))
         total += len(found)
         for line in found:
             print(line)

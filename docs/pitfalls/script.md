@@ -7,48 +7,11 @@ of them raises an error you would notice**; most of them do nothing at all, whic
 is the expensive kind.
 
 
-## Где что живёт, и что молча не читается
+## Где что живёт, и что молча не читается — в архиве
 
-**Two script values of the same name: the first wins, the second is dropped
-silently** — the rule `customizable_localization` obeys too, and it costs the
-same way: the wrong copy edited, nothing said anywhere. Two shipped in one day
-on 2026-09-06. **`check_script.py` reports them now**, and the same folder rule
-holds for both neighbours: a trigger lives only in `scripted_triggers`, a value
-only in `script_values`, and each cost a run before its checker existed.
-
-**A `building_type` filter receives the object as `this` — not `scope:target`,
-and not `root` either.** Vanilla's `58_building_type.txt` promises both and has
-neither: reading `scope:target` logs an error on every pass of the list, and
-reading `root` logs nothing and matches nothing, which is worse. Measured
-2026-09-09 — a chip on `target = root` left the list empty while its probe held
-the location and the list it read was populated on 454 locations; the only other
-`root` reader here is `rgo_bonus_filter`'s location-panel pair, the one that had
-never worked; `06_country.txt` says "root is player" in its own header. **Ask
-`this` before any scope change**, literal on the far side, one `AND` branch per
-object — a generator's job. `building` and `location` scoped filters do get
-`scope:target`.
-
-**One predicate in two places will drift, and the copy that decides is the one
-nobody edits.** `_reach_<n>` — "could this country ever have this method" — was
-computed twice: once to write the trigger, once to decide whether to ask it. The
-writer learnt about `country_potential`; the asker did not, so 429 triggers were
-generated correct and never consulted, and a Tibetan atelier stood in Westphalia.
-Both now call `method_gates`. The symptom is the worst kind: the fix looks
-present in the generated files.
-
-**A partial report read as a whole one is a wrong answer with a number attached.**
-`WTP BLDG ... built=0` covers only *multi-good* buildings; concluding "no foreign
-building was placed" from it was reading an absence in a subset as a fact about
-the plan. The rule this repository already has — an empty result is a fact about
-the tree, never about the game — applies to its own diagnostics too.
-
-**`local_<x>_building_levels` names a building, not a good — and the two look
-alike.** `local_fine_cloth_guild_building_levels` raises the level cap of
-`fine_cloth_guild`; stripping `_guild` turns it into the good `fine_cloth`, and
-the charter then reads as "favours fine cloth" and pulls in every building that
-makes it — a Tibetan atelier the bonus will never touch. Caught by the owner on
-2026-09-09. A per-building bonus has to stay attached to its building: derive the
-good from the building, and gate on the winning method being that building's.
+Дубли имён, папки триггера и значения, `this` в фильтре типа зданий, один
+предикат в двух местах:
+[`../archive/pitfalls_script_where.md`](../archive/pitfalls_script_where.md).
 
 ## Триггеры: чью правду они говорят
 
@@ -231,6 +194,27 @@ the swap list's percent around it. **The form works.** The owner, 2026-09-14:
 column that really printed 0 % was somewhere else entirely, and the absence
 proved nothing about either. `api.py` ends every answer with the same warning
 for the same reason; it applies to a grep over the tree just as much.
+
+## Нежадная скобка в начале строки — это не конец блока
+
+**`^\tX = {(.*?)^\t}` ловит закрывающую скобку СЛЕДУЮЩЕГО блока**, если
+искомый написан одной строкой. `nd_drr_jezail_tradition` пишет `potential = {
+has_or_had_tag = DRR }` в строку, а ниже несёт `ai_weight = {` … `\n\t}` — и
+разбор отдал в ворота всё содержимое продвижения целиком, вместе с `requires`,
+`icon`, `unlock_unit` и `ai_weight`. Игра писала «Unknown trigger type:
+ai_weight» шестнадцать раз за загрузку, ворота были мусором, и на экране это не
+проявлялось ничем. **Однострочную форму пробуют первой**, и она обязана
+требовать, чтобы скобки сошлись в той же строке (`[^{}\n]*`).
+
+## Чтение переменной, которой нет, стоит строки в логе на каждый кадр
+
+**И ни одна из них не попадает в `error.log`.** `bag_wtp_r_fit_pct` читал
+`var:_r_fit` в строке окна, а кладёт его только поиск и только на кандидатов:
+240 строк «Value of wrong type … Got value of type 'none'» в `debug.log` за один
+сеанс. Там же 1 448 строк от прохода, который звали без `scope:`, который он
+ждёт. **Спрашивай `has_variable` перед чтением всего, что пишет не тот же
+проход**, и проси у владельца `debug.log`, а не только `error.log`: три ошибки
+из четырёх за 2026-09-14 нашлись только там.
 
 ## Один переключатель на два окна — это два разных переключателя
 

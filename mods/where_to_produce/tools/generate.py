@@ -350,10 +350,19 @@ def country_potentials() -> dict[str, str]:
         for path in sorted(folder.glob("*.txt")):
             text = path.read_text(encoding="utf-8-sig")
             for block in re.finditer(r"^([a-z0-9_]+)\s*=\s*\{(.*?)^\}", text, re.S | re.M):
-                gate = (re.search(r"^\tcountry_potential\s*=\s*\{(.*?)^\t\}",
-                                  block.group(2), re.S | re.M)
-                        or re.search(r"^\tcountry_potential\s*=\s*\{([^{}]*)\}",
-                                     block.group(2), re.M))
+                # **Однострочная форма пробуется ПЕРВОЙ, и это не стиль.** Форма
+                # `^\tX = {{(.*?)^\t}}` нежадная, но закрывающую скобку ищет в
+                # начале строки -- а у блока, где `potential` написан одной строкой,
+                # первая такая скобка принадлежит **следующему** блоку с телом
+                # (`ai_weight = {{ ... }}`). Так `nd_drr_jezail_tradition` отдал в
+                # ворота всё своё содержимое целиком, и игра писала «Unknown trigger
+                # type: ai_weight» шестнадцать раз за загрузку (его `debug.log`,
+                # 2026-09-14). Однострочная форма требует, чтобы скобки сошлись в
+                # той же строке, поэтому подменить её нечем.
+                gate = (re.search(r"^\tcountry_potential\s*=\s*\{([^{}\n]*)\}[ \t]*$",
+                                  block.group(2), re.M)
+                        or re.search(r"^\tcountry_potential\s*=\s*\{[ \t]*$(.*?)^\t\}",
+                                     block.group(2), re.S | re.M))
                 if not gate:
                     continue
                 body = " ".join(" ".join(line.split("#", 1)[0].split())
@@ -383,8 +392,19 @@ def locked_advances() -> dict[str, str]:
             # искавшая только закрывающую скобку в начале строки, такие
             # пропускала -- то есть считала национальный домик доступным всем.
             # Так Вестфалия получила в план чужие домики, 2026-09-09.
-            gate = (re.search(r"^\tpotential\s*=\s*\{(.*?)^\t\}", block.group(2), re.S | re.M)
-                    or re.search(r"^\tpotential\s*=\s*\{([^{}]*)\}", block.group(2), re.M))
+            # **Однострочная форма пробуется ПЕРВОЙ, и это не стиль.** Форма
+            # `^\tX = {{(.*?)^\t}}` нежадная, но закрывающую скобку ищет в
+            # начале строки -- а у блока, где `potential` написан одной строкой,
+            # первая такая скобка принадлежит **следующему** блоку с телом
+            # (`ai_weight = {{ ... }}`). Так `nd_drr_jezail_tradition` отдал в
+            # ворота всё своё содержимое целиком, и игра писала «Unknown trigger
+            # type: ai_weight» шестнадцать раз за загрузку (его `debug.log`,
+            # 2026-09-14). Однострочная форма требует, чтобы скобки сошлись в
+            # той же строке, поэтому подменить её нечем.
+            gate = (re.search(r"^\tpotential\s*=\s*\{([^{}\n]*)\}[ \t]*$",
+                              block.group(2), re.M)
+                    or re.search(r"^\tpotential\s*=\s*\{[ \t]*$(.*?)^\t\}",
+                                 block.group(2), re.S | re.M))
             if not gate:
                 continue
             # **Strip the game's own comments before collapsing to one line.**
@@ -473,7 +493,10 @@ def method_gates(method: eu5data.Method) -> list[str]:
     own_allow, _ = method_allow_gates(method)
     if own_allow:
         gates.append(own_allow)
-    return gates
+    # **Один и тот же запор, названный дважды, -- одна строка.** Продвижение
+    # мода и `country_potential` его же здания часто написаны одним условием;
+    # в `_reach_<n>` это выходило двумя одинаковыми `AND`.
+    return list(dict.fromkeys(gates))
 
 
 def method_allows() -> dict[str, str]:
@@ -2022,7 +2045,16 @@ def values_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 # которую формат `|%1` печатает процентом.
 # Scope: location
 {MOD_ID}_r_fit_pct = {{
-\tvalue = var:{MOD_ID}_r_fit
+\t# **`has_variable` перед чтением, потому что рисуется оно и там, где прохода
+\t# не было.** Строка окна читает значение каждый кадр, а `_r_fit` кладёт
+\t# только поиск и только на кандидатов: в его `debug.log` 2026-09-14 это 240
+\t# строк «Value of wrong type in 'bag_wtp_r_fit_pct'. Got value of type
+\t# 'none'». Ни на экране, ни в `error.log` это не видно вовсе.
+\tvalue = 0
+\tif = {{
+\t\tlimit = {{ has_variable = {MOD_ID}_r_fit }}
+\t\tadd = var:{MOD_ID}_r_fit
+\t}}
 \tdivide = {RANK_SCALE}
 }}
 
@@ -3241,21 +3273,6 @@ def plan_loc_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     # слово 2026-09-14: «вообще там в целом не должно быть этой мусорной строки
     # +0%». Там, где местный модификатор ноль -- а после вычитания выданной
     # грамоты он ноль чаще всего, -- строка короткая: товар и его процент.
-    out.append("#\n# Строка товара: с разложением, только если есть что раскладывать.\n")
-    for good in sorted(COV_GOODS):
-        out.append(f"""# Scope: location
-{MOD_ID}_cov_line_{good} = {{
-\ttype = location
-\ttext = {{
-\t\ttrigger = {{ var:{MOD_ID}_covl_{good} > 0 }}
-\t\tlocalization_key = {MOD_ID}_cov_full_{good}
-\t}}
-\ttext = {{
-\t\tfallback = yes
-\t\tlocalization_key = {MOD_ID}_cov_short_{good}
-\t}}
-}}
-""")
     # **Эпоха называется в каждой подсказке, которая от неё зависит.** Его слово
     # 2026-09-14: «чтобы всё и везде чётко разграничивалось что советует и
     # рассчитывает и на какую эпоху -- текущую или последнюю. Я уже раз 50 на
@@ -3281,43 +3298,25 @@ def plan_loc_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t}}
 }}
 """)
-    out.append(f"""
-# Разбор той грамоты, по которой шёл поиск: её товары, каждый со своим счётом.
-# Номер отмеченной грамоты кладёт на локацию тот же проход (`_rqsel`).
+    # **Подробности -- три лучших права локации, а не одно.** Его слово
+    # 2026-09-14: «ниже в подробностях должны показываться как минимум 3
+    # варианта топовых прав для локации, а не только текущее топовое право». И
+    # это одни и те же три места в обоих окнах: лесенка считается одинаково,
+    # значит и разбор под ней -- один.
+    for place in (1, 2, 3):
+        out.append(f"""
+# Разбор права, стоящего на {place}-м месте лесенки: имя и товары связки.
 # Scope: location
-{MOD_ID}_rq_details = {{
-	type = location
-""")
-    for k in range(1, len(rights) + 1):
-        out.append(f"""	text = {{
-		trigger = {{ has_variable = {MOD_ID}_rqsel var:{MOD_ID}_rqsel = {k} }}
-		localization_key = {MOD_ID}_rq_bd_{k}
-	}}
-""")
-    out.append(f"""	text = {{
-		fallback = yes
-		localization_key = {MOD_ID}_trmm_blank
-	}}
-}}
-""")
-
-    # То же, но для строки плана: грамота, которую раздача сюда поставила.
-    # **Подсказка строки плана рисовала лесенку CM** (`_trmm_ur_rank_slot_*`), а
-    # грамоту выбирал наш `_rq<k>` -- и на его экране 2026-09-14 подсказка
-    # называла лучшим текстиль, тогда как раздача поставила судматериалы. Тот же
-    # разрыв, что был в поиске, только в другом окне.
-    out.append(f"""
-# Scope: location
-{MOD_ID}_rq_details_plan = {{
+{MOD_ID}_rq_bd_slot_{place} = {{
 \ttype = location
 """)
-    for k in range(1, len(rights) + 1):
-        out.append(f"""\ttext = {{
-\t\ttrigger = {{ has_variable = {MOD_ID}_plan_right var:{MOD_ID}_plan_right = {k} }}
+        for k in range(1, len(rights) + 1):
+            out.append(f"""\ttext = {{
+\t\ttrigger = {{ has_variable = {MOD_ID}_rqr{k} var:{MOD_ID}_rqr{k} = {place - 1} }}
 \t\tlocalization_key = {MOD_ID}_rq_bd_{k}
 \t}}
 """)
-    out.append(f"""\ttext = {{
+        out.append(f"""\ttext = {{
 \t\tfallback = yes
 \t\tlocalization_key = {MOD_ID}_trmm_blank
 \t}}
@@ -4490,6 +4489,7 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\tvariable = {MOD_ID}_candidates
 \t\t{MOD_ID}_cov_pass = yes
 \t\t# Лесенка грамот этой локации -- её читает подсказка строки плана.
+\t\t{MOD_ID}_rq_park = yes
 \t\t{MOD_ID}_rq_rank = yes
 \t}}
 """)
@@ -10690,8 +10690,6 @@ def cov_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 # предполагаемо шерсть 1/1» (2026-09-14). На товар остаётся пять переменных:
 #
 # * `_cov_<товар>`  -- само покрытие, как его читает `_rq<k>`;
-# * `_covr_<товар>` -- та его часть, что пришла от сырья провинции;
-# * `_covl_<товар>` -- та, что пришла от местного модификатора вывода;
 # * `_covm_<товар>` -- номер победившего способа, по нему подсказка называет
 #                      здание и перечисляет сырьё, которое рецепт просит;
 # * `_covn_`/`_covd_` -- сколько видов сырья рецепта провинция даёт из скольких.
@@ -10740,8 +10738,14 @@ def cov_file(rows: list[eu5data.Method], split: dict[str, list[str]],
                 for raw in raws)
             if not adds:
                 continue
+            # **«На конец» -- это «когда-нибудь», а не «сейчас».** `_reach_<n>`
+            # выписан только у методов за недостижимым продвижением; у остальных
+            # 228 из 241 ответ «достижим» по построению, и подставлять им
+            # `_avail_` значило считать конец игры сегодняшним днём. Оттого
+            # лесенка прав не менялась от галочки вовсе: его прогон 2026-09-14,
+            # «права в расчёте всегда показываются одни и те же».
             gate = (f"{MOD_ID}_reach_{mi} = yes" if method_gates(method)
-                    else f"{MOD_ID}_avail_{mi} = yes")
+                    else "always = yes")
             out.append(f"""\t# {method.building} / {method.key}
 \tif = {{
 \t\tlimit = {{
@@ -10786,20 +10790,13 @@ def cov_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t}} }}
 \t}}
 """
-        out.append(own_rgo + f"""\t# Две половины числа порознь: подсказка обязана показать, какая из них его
-\t# делает.
-\tset_variable = {{ name = {MOD_ID}_covr_{good} value = var:{MOD_ID}_cov_{good} }}
-\t# **Местный модификатор берётся его значением, а не переписанным.**
-\t# `_trmm_lm_{good}` -- перенесённый файл CM, и в нём есть строка, которой у
-\t# переписанной формулы не было: **выданная здесь грамота вычитается**, иначе
-\t# она поднимает собственную пригодность. Из-за этого город, уже держащий
-\t# королевскую грамоту на книгопечатание, выглядел лучшим местом для неё же:
-\t# его прогон 2026-09-14, Эмсланд 236.1 % против Эйфеля 132.7 % при том, что
-\t# сырья у Эйфеля больше. «Чужой инструмент -- копировать, а не
-\t# воспроизводить формулой» стоит в `PITFALLS.md` ровно об этом.
-\tset_variable = {{ name = {MOD_ID}_covl_{good} value = {MOD_ID}_trmm_lm_{good} }}
-\tchange_variable = {{ name = {MOD_ID}_cov_{good} add = var:{MOD_ID}_covl_{good} }}
-""")
+        # **Местного модификатора вывода в счёте нет, и это его решение.**
+        # 2026-09-14: «наш мод интересует только то, что даёт провинция по РГО
+        # бонусу, а тот модификатор какой-то костыль для той карты, он нам не
+        # нужен». У CM он есть (`_trmm_lm_<товар>`, последним слагаемым в
+        # `_trmm_cov_<товар>`), и там же из него вычитается уже выданная
+        # грамота; у нас его нет вовсе.
+        out.append(own_rgo)
     out.append("}\n")
     # **Возраст ставит окно, и обе формы стоят рядом**, чтобы разойтись они
     # могли только вместе. Планом правит `_plan_by_end` (галочка окна плана),
@@ -10822,26 +10819,61 @@ def cov_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     # два экземпляра одного расчёта -- ровно то, из-за чего подсказка и столбец
     # разошлись в первый раз.
     rights = output_rights(rows, game)
+    # **В лесенке только то, что этой державе и правда светит.** Его прогон
+    # 2026-09-14: «там появились права Константинополя, которых быть не должно.
+    # А вот фламандское должно, ибо я играю за нидерландскую культуру. Права у
+    # которых бонус в провинции 0% вообще не должны показываться». Оба вопроса
+    # закрывает `_plan_right_gate_<k>` -- тот самый триггер, которым раздача
+    # решает, кому какая грамота доступна (`has_or_had_tag = BYZ` у
+    # константинопольской, культурная группа у фламандской), -- и ноль.
     park = "".join(
         "\tset_variable = { name = %s_rqv%d value = { value = %s_rq%d divide = %d } }\n"
-        % (MOD_ID, j, MOD_ID, j, RANK_SCALE) for j in range(1, len(rights) + 1))
+        "\tif = {\n"
+        "\t\tlimit = {\n"
+        "\t\t\tvar:%s_rqv%d > 0\n"
+        "\t\t\tscope:%s_country = { %s_plan_right_gate_%d = yes }\n"
+        "\t\t}\n"
+        "\t\tset_variable = { name = %s_rqok%d value = 1 }\n"
+        "\t}\n"
+        "\telse = { remove_variable = %s_rqok%d }\n"
+        % (MOD_ID, j, MOD_ID, j, RANK_SCALE,
+           MOD_ID, j, MOD_ID, MOD_ID, j, MOD_ID, j, MOD_ID, j)
+        for j in range(1, len(rights) + 1))
     ranks = ""
     for k in range(1, len(rights) + 1):
-        ranks += "\tset_variable = { name = %s_rqr%d value = 0 }\n" % (MOD_ID, k)
+        body = "\t\tset_variable = { name = %s_rqr%d value = 0 }\n" % (MOD_ID, k)
         for j in range(1, len(rights) + 1):
             if j == k:
                 continue
             # Ничья ломается номером: нестрогое сравнение оставило бы две
             # грамоты на одном месте, и вторая не нарисовалась бы вовсе.
             op = ">=" if j < k else ">"
-            ranks += ("\tif = { limit = { var:%s_rqv%d %s var:%s_rqv%d }"
-                      " change_variable = { name = %s_rqr%d add = 1 } }\n"
-                      % (MOD_ID, j, op, MOD_ID, k, MOD_ID, k))
+            body += ("\t\tif = { limit = { has_variable = %s_rqok%d"
+                     " var:%s_rqv%d %s var:%s_rqv%d }"
+                     " change_variable = { name = %s_rqr%d add = 1 } }\n"
+                     % (MOD_ID, j, MOD_ID, j, op, MOD_ID, k, MOD_ID, k))
+        # **Место считается только среди показанных**, иначе выброшенные права
+        # оставляли бы в лесенке дыры: место есть, а рисовать в нём нечего.
+        ranks += ("\tif = {\n\t\tlimit = { has_variable = %s_rqok%d }\n%s\t}\n"
+                  "\telse = { remove_variable = %s_rqr%d }\n"
+                  % (MOD_ID, k, body, MOD_ID, k))
     out.append(f"""
-# Наш счёт каждой грамоты на этой локации, долей, и место каждой в лесенке.
+# Наш счёт каждой грамоты на этой локации, долей.
 # Scope: location, после `_cov_pass`
+{MOD_ID}_rq_park = {{
+{park}}}
+
+# Место каждой грамоты в лесенке -- по тому, что лежит в `_rqv<k>`.
+#
+# **Отдельно от укладки, потому что укладок две.** Обычно `_rqv<k>` -- счёт этой
+# локации; в режиме специализации раздача кладёт туда среднее по городам
+# провинции -- то самое число, которым она грамоту и выбрала, -- и лесенка в
+# подсказке обязана быть той же, иначе она снова объясняет не то, что стоит
+# рядом (его прогон 2026-09-14: «текстиль показывается как самая подходящая, мод
+# всё равно поставил суд. материалы»).
+# Scope: location, ждёт scope:{MOD_ID}_country
 {MOD_ID}_rq_rank = {{
-{park}{ranks}}}
+{ranks}}}
 """)
     return "".join(out)
 
@@ -10993,10 +11025,12 @@ def swap_file(rows: list[eu5data.Method], split: dict[str, list[str]],
         # продвижением** -- остальные достижимы по построению и не выписаны
         # вовсе (`triggers_file`). Спросить несуществующий -- это блок, который
         # молча проходит или молча не делает ничего; поймал `check_script.py`
-        # ещё до сборки. Где `_reach_` нет, спрашиваем `_avail_`.
+        # ещё до сборки. Где `_reach_` нет, метод достижим по построению, и
+        # ответ «да»: подставлять `_avail_` значило бы считать конец игры
+        # сегодняшним днём, и «на конец» ничем не отличалось бы от «на сейчас».
         reach = " ".join(
             f"{MOD_ID}_reach_{m} = yes" if method_gates(rows[m - 1])
-            else f"{MOD_ID}_avail_{m} = yes" for m in mis)
+            else "always = yes" for m in mis)
         arms += f"""\tif = {{
 \t\tlimit = {{
 \t\t\tNOT = {{ is_target_in_variable_list = {{ name = {MOD_ID}_swap_can target = building_type:{building} }} }}
@@ -12328,6 +12362,7 @@ def rights_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t# столбца стоял разбор CM (`_trmm_ur_rank_bd_slot_*`), а в самом столбце
 \t\t# наш `_rq<k>`; сойтись они не могли -- карта не знает про эпоху, -- и на
 \t\t# его экране 2026-09-14 подсказка говорила 76.1 %, а столбец 236.1 %.
+\t\t{MOD_ID}_rq_park = yes
 \t\t{MOD_ID}_rq_rank = yes
 \t\tset_variable = {{ name = {MOD_ID}_rqsel value = {index} }}
 """)
@@ -12786,45 +12821,43 @@ def loc_file(language: str, rows: list[eu5data.Method], split: dict[str, list[st
         raws = [r for r in sorted(method.inputs) if r in game.raw_goods]
         if not raws:
             continue
+        # **`Method.key` -- это склейка частей через `+`, а не имя из игры.**
+        # Один рецепт может состоять из нескольких способов (`base+improvement`),
+        # и `ShowProductionMethodName` на склейке пишет в `error.log`
+        # «unknown db name definition from loc/ux
+        # 'wool_weavers_maintenance+base_fine_cloth_guild_maintenance'» -- в его
+        # логе 2026-09-14 это 3 077 строк, по одной на кадр отрисовки, а на
+        # экране вместо имени стояло `ERROR`. Печатаем части поимённо, и каждую
+        # -- ссылкой `$ключ$`, а не запросом в базу: ключ у них есть
+        # (`goods_l_<язык>.yml` самой игры), а определения может не быть.
+        names = ", ".join(ref % (part.key + "$") for part in method.parts)
         out.append(
-            f' {MOD_ID}_covm_{mi}: "\\n  [ShowBuildingTypeName(\'{method.building}\')],'
-            f' [ShowProductionMethodName(\'{method.key}\')] '
+            f' {MOD_ID}_covm_{mi}: "\\n    [ShowBuildingTypeName(\'{method.building}\')]'
+            f', {names} '
             f'[Location.MakeScope.GetVariable(\'{MOD_ID}_covn_{method.produced}\').GetValue|0]'
             f'/[Location.MakeScope.GetVariable(\'{MOD_ID}_covd_{method.produced}\').GetValue|0]"\n')
 
-    # Строка товара в разборе: сколько вышло, и из чего это сложилось -- сырьё
-    # провинции плюс местный модификатор вывода в единицах `_trmm_rgo_unit`.
-    # **Обе половины порознь**, потому что 236 % на землю, у которой каждый
-    # товар меньше сотни, делает именно вторая, и увидеть это надо на экране.
+    # Строка товара в разборе: товар, его покрытие и чем оно взято.
     for good in sorted(COV_GOODS):
-        head = (f'"\\n @{good}! [ShowGoodsName(\'{good}\')]: '
-                f'[Location.MakeScope.GetVariable(\'{MOD_ID}_cov_{good}\').GetValue|%1]')
-        why = f'[Location.Custom(\'{MOD_ID}_cov_why_{good}\')]"\n'
-        # Короткий вид: слагаемого нет, раскладывать нечего.
-        out.append(f' {MOD_ID}_cov_short_{good}: {head}{why}')
-        # Полный: итог и обе половины, но только когда вторая не ноль.
         out.append(
-            f' {MOD_ID}_cov_full_{good}: {head}'
-            f' = [Location.MakeScope.GetVariable(\'{MOD_ID}_covr_{good}\').GetValue|%1]'
-            f' {ref % (MOD_ID + "_cov_of$")} + '
-            f'[Location.MakeScope.GetVariable(\'{MOD_ID}_covl_{good}\').GetValue|%1]'
-            f' {ref % (MOD_ID + "_cov_mod$")}{why}')
+            f' {MOD_ID}_cov_line_{good}: "\\n  @{good}! [ShowGoodsName(\'{good}\')]: '
+            f'[Location.MakeScope.GetVariable(\'{MOD_ID}_cov_{good}\').GetValue|%1]'
+            f'[Location.Custom(\'{MOD_ID}_cov_why_{good}\')]"\n')
 
     # Строка грамоты в лесенке: её имя со значком (ключ уже есть) и наш процент.
     for k, right in enumerate(output_rights(rows, game), start=1):
-        out.append(
-            f' {MOD_ID}_rq_line_{k}: "\\n{ref % (MOD_ID + "_right_" + right.key + "$")}: '
-            f'[Location.MakeScope.GetVariable(\'{MOD_ID}_rqv{k}\').GetValue|%1]"\n')
-        # Разбор отмеченной грамоты -- строки её товаров, в порядке связки.
-        # **Ссылка `$ключ$`, а не `Custom()`**: строка товара -- ключ
-        # локализации, а `Custom()` зовёт `customizable_localization`. Перепутать
-        # их значит напечатать имя ключа вместо текста; поймал сверщик ссылок.
-        # `Custom()`, а не `$ключ$`: строка товара стала
-        # `customizable_localization` -- она выбирает между коротким и полным
-        # видом по тому, есть ли что раскладывать.
-        bd = "".join(f"[Location.Custom('{MOD_ID}_cov_line_{g}')]"
+        line = (f'\\n{ref % (MOD_ID + "_right_" + right.key + "$")}: '
+                f'[Location.MakeScope.GetVariable(\'{MOD_ID}_rqv{k}\').GetValue|%1]')
+        out.append(f' {MOD_ID}_rq_line_{k}: "{line}"\n')
+        # **Разбор начинается с имени права**: их теперь три подряд, и без имени
+        # они слиплись бы в одну кучу товаров.
+        # **`$ключ$`, а не `Custom()`.** Строка товара -- обычный ключ
+        # локализации; `Custom()` зовёт `customizable_localization`, которого с
+        # этим именем больше нет. Перепутать их -- напечатать имя ключа вместо
+        # текста; ловит `unresolved_localization_refs`.
+        bd = "".join(ref % (MOD_ID + "_cov_line_" + g + "$")
                      for g in sorted(right.output) if g in COV_GOODS)
-        out.append(f' {MOD_ID}_rq_bd_{k}: "{bd}"\n')
+        out.append(f' {MOD_ID}_rq_bd_{k}: "{line}{bd}"\n')
 
     return "".join(out)
 
@@ -14691,6 +14724,24 @@ def spec_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t\t\tset_global_variable = {{ name = {MOD_ID}_sprv value = global_var:{MOD_ID}_sprt }}
 \t\t\t\tset_global_variable = {{ name = {MOD_ID}_sprk value = {k} }}
 \t\t\t}}
+\t\t\t# **И это же число -- в лесенку подсказки.** Она обязана показывать то,
+\t\t\t# чем грамота выбрана, а выбрана она средним по городам провинции: пока
+\t\t\t# в лесенке стоял счёт одной локации, она называла лучшей одну грамоту,
+\t\t\t# а раздача ставила другую, и объяснить это было нечем.
+\t\t\tprovince_definition = {{
+\t\t\t\tevery_location_in_province_definition = {{
+\t\t\t\t\tset_variable = {{ name = {MOD_ID}_rqv{k} value = global_var:{MOD_ID}_sprt }}
+\t\t\t\t}}
+\t\t\t}}
+\t\t}}
+\t\t# Не прошла ворота или ни один город не подошёл -- ноль, и лесенка её не
+\t\t# покажет вовсе, потому что и получить её эта земля не может.
+\t\telse = {{
+\t\t\tprovince_definition = {{
+\t\t\t\tevery_location_in_province_definition = {{
+\t\t\t\t\tset_variable = {{ name = {MOD_ID}_rqv{k} value = 0 }}
+\t\t\t\t}}
+\t\t\t}}
 \t\t}}
 """
     out.append(f"""
@@ -14710,11 +14761,18 @@ def spec_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 # бы ей ни одного города (это уже стоило прогона 2026-09-03).
 # Scope: country
 {MOD_ID}_plan_spec_rights = {{
+\t# Лесенка в подсказке спрашивает ворота грамоты у державы.
+\tsave_scope_as = {MOD_ID}_country
 \tevery_in_global_list = {{
 \t\tvariable = {MOD_ID}_plan_prov_locs
 \t\tset_global_variable = {{ name = {MOD_ID}_sprv value = -1 }}
 \t\tset_global_variable = {{ name = {MOD_ID}_sprk value = 0 }}
-{picks}\t\t# И раздать выбранную всем городам провинции разом.
+{picks}\t\t# Числа в `_rqv<k>` теперь провинции, значит и места пересчитываются
+\t\t# по ним: иначе лесенка показывала бы новые проценты в старом порядке.
+\t\tprovince_definition = {{
+\t\t\tevery_location_in_province_definition = {{ {MOD_ID}_rq_rank = yes }}
+\t\t}}
+\t\t# И раздать выбранную всем городам провинции разом.
 \t\tif = {{
 \t\t\tlimit = {{ global_var:{MOD_ID}_sprk > 0 }}
 \t\t\tprovince_definition = {{
