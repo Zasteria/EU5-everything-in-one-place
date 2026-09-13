@@ -87,6 +87,15 @@ RIGHT_SLOTS = 3
 # case 6 468, and the smallest difference the bonus can make is still about 4.6.
 RIGHT_SCALE = RANK_SCALE // 10
 
+# Товары, у которых в перенесённой карте CM есть покрытие `_trmm_cov_<товар>`.
+# Двадцать; `silk` среди них нет, и это единственный товар связок этой сборки,
+# на который счёта грамоты не хватает. Список -- факт о перенесённом файле:
+# снят с `in_game/common/script_values/bag_wtp_trmm_values.txt`.
+TRMM_COV_GOODS = frozenset("""
+beer books cannons cloth dyes fine_cloth firearms furniture glass jewelry
+leather liquor masonry naval_supplies paper pottery tar tools weaponry wine
+""".split())
+
 # The whole-map plan. How many rounds of allocation the player may ask for at
 # most, and how many rows the plan window draws. The first is a ceiling on a
 # setting rather than the setting itself: CMM clamps the number he chooses, and
@@ -231,7 +240,7 @@ DIAG_LAPS = 40
 # shipping on 2026-09-06, and `read(18)` against seventeen slots came within one
 # build again the same day, when the good's line gained `out=`. **Raise this
 # whenever a line gains a number, in the same edit.**
-DIAG_SCRATCH = 25
+DIAG_SCRATCH = 27
 
 # The land continents, in the order the game's own localization lists them. The
 # ocean continent is not offered: nothing is built there.
@@ -1787,35 +1796,64 @@ def values_file(rows: list[eu5data.Method], split: dict[str, list[str]],
                 _won(g), " ".join(f"var:{MOD_ID}_pm{order.index(g) + 1} = {mi}"
                                   for mi in mis))
 
-        adds = "".join(f"""\tif = {{
-\t\tlimit = {{ {_won_here(g)} }}
-\t\tadd = var:{MOD_ID}_p{order.index(g) + 1}
-\t}}
-""" for g in bundle)
+        # **Счёт грамоты -- его, из карты.** Его слово, 2026-09-14: «Я хочу,
+        # чтобы выгода от земли по городскому праву считалась тем же методом,
+        # что считается в этой карте.» Метод -- среднее арифметическое покрытий
+        # товаров связки (`cm_trmm_right_textile = (cov_cloth + cov_dyes +
+        # cov_fine_cloth) / 3`), а покрытие товара -- доля входа его лучшего
+        # способа, которую провинция даёт своим РГО, плюс своё РГО локации и её
+        # модификатор вывода. Разбор целиком --
+        # `docs/investigations/wtp_town_right_map.md`.
+        #
+        # **Считаем через `_cov_<товар>`, а не через его же `_right_<право>`**:
+        # у него девять грамот, у сборки тринадцать. Покрытий хватает на все,
+        # кроме `silk`, а на девяти общих формула даёт ровно его число -- в этом
+        # и смысл эталона.
+        #
+        # **`silk` покрытия в переносе не имеет** и в среднее не входит:
+        # константинопольская грамота считается по двум товарам из трёх. Написано
+        # здесь затем, чтобы разницу с картой не искали как ошибку.
+        #
+        # **Умножаем на RANK_SCALE**: покрытие -- доля около единицы, а всё, что
+        # читает `_rq<k>` дальше -- квота, «Лучшая» в сводке, полосы -- меряет в
+        # той же тысяче, что и выгода товара.
+        #
+        # **Старый счёт был денежный**: сумма `_p<n>` по тем товарам связки,
+        # которые город и правда делает, делённая на всю связку. Он отвечал на
+        # «сколько это принесёт», а спрошено «насколько земля под это подходит».
+        covered = [g for g in bundle if g in TRMM_COV_GOODS]
+        if covered:
+            adds = "".join(f"\tadd = {MOD_ID}_trmm_cov_{g}\n" for g in covered)
+            adds += f"\tdivide = {len(covered)}\n\tmultiply = {RANK_SCALE}\n"
+        else:
+            # Ни одного покрытого товара -- считать нечем. В сборке такого нет;
+            # ветка стоит, чтобы молчаливый ноль не выглядел как расчёт.
+            adds = "\t# ни один товар связки не имеет покрытия в переносе\n"
         plan_values.append(f"""
 # {right.key}: {", ".join(bundle)}.
 #
-# **How much this ground would pay for this whole charter**, out of {RANK_SCALE},
-# and nothing else in it. No divisor of any kind: **a right is a bundle of goods
-# bound to a town and obeys the same rules a good does** (the owner, 2026-09-03),
-# so what limits it is a quota over the whole ground -- `_rquota` in
-# `_plan_place_rights` -- and never a penalty for having been granted next door.
+# **Насколько эта земля подходит под эту грамоту**, из {RANK_SCALE}. Счёт --
+# его, из карты «Лучшее городское право»: среднее покрытий товаров связки, где
+# покрытие товара -- доля входа его лучшего способа, которую провинция даёт
+# своим РГО. Считается по определению провинции, а не по локации, потому что
+# грамота даёт доступ к сырью всей провинции, а сырьё лежит по разным её
+# локациям.
 #
-# Both divisors it carried are gone and both were faults. Counting the **map**
-# made the ranges disjoint -- a right granted once could never again win on merit
-# -- so the rights were dealt round robin. Counting the **province** was the
-# other end of the same mistake: it emptied a province of the one charter its
-# ground was made for. «Где драг металы — ювелиркой всё затыкано.»
+# **Делителя по всей связке больше нет**: делим на те товары, у которых
+# покрытие есть, как делит он. Из связок сборки не покрыт один `silk`.
 #
-# **It asks `_pm<n>`, the scoring fact, and not `_plan_can_town_<n>`.** That one
-# is a placement gate -- it also asks whether the town still has room -- and at
-# grant time the town is empty, so the two agree; but the diagnosis reads this
-# same value after the plan, when every town is full, and the gate would answer
-# zero for all thirteen. It did, on 2026-09-03.
+# **Ни карты, ни провинции в делителе.** Оба были ошибками: счёт по карте делал
+# диапазоны непересекающимися -- раз выданная грамота уже не могла выиграть по
+# заслугам, -- а счёт по провинции выхолащивал провинцию, созданную ровно под
+# одну грамоту. «Где драг металы — ювелиркой всё затыкано.»
+#
+# **Читается после плана**, когда ворота постановки уже врут, поэтому в нём нет
+# ни одного `_plan_can_*`: только покрытия, которые пересчёт положил на
+# провинцию, и модификаторы самой локации.
 # Scope: location
 {MOD_ID}_rq{k} = {{
 \tvalue = 0
-{adds}\tdivide = {len(bundle)}
+{adds}
 }}
 """)
     plan_values = "".join(plan_values)
@@ -11908,6 +11946,27 @@ def diag_file(rows: list[eu5data.Method], split: dict[str, list[str]],
             + " -- галочка «читать этот мод» в настройках: 0 значит, что его "
               "здания в план не идут вовсе"))
 
+    # **Зонд под пустой список на «Технической».** Строк там нет, а `SOURCES 4=1`
+    # не отличает «CMF список построил, галочка стоит» от «списка нет вовсе»:
+    # `_rebuild_sources` ставит 1 и тогда, когда `cmm_list_items_...` не
+    # существует. Считаем сами обе стороны -- наш список и заведомо рабочий
+    # континентальный контролем.
+    out.append(f"\tset_global_variable = {{ name = {MOD_ID}_dv26 value = 0 }}\n"
+               f"\tset_global_variable = {{ name = {MOD_ID}_dv27 value = 0 }}\n"
+               f"\tevery_in_list = {{\n"
+               f"\t\tvariable = cmm_list_items_{MOD_ID}__source\n"
+               f"\t\tchange_global_variable = {{ name = {MOD_ID}_dv26 add = 1 }}\n"
+               f"\t}}\n"
+               f"\tevery_in_list = {{\n"
+               f"\t\tvariable = cmm_list_items_{MOD_ID}__continent\n"
+               f"\t\tchange_global_variable = {{ name = {MOD_ID}_dv27 add = 1 }}\n"
+               f"\t}}\n")
+    out.append(say("CMMLIST source=%s continent=%s -- строк, которые CMF построил "
+                   "для списка модов и для списка континентов. Континент -- "
+                   "контроль, он рисуется: если там 5, а в source 0, список "
+                   "не собран; если в source 1, а строки на экране нет, "
+                   "виновато рисование" % (read(26), read(27))))
+
     out.append(say("FOREIGN pool=%d mine=%%s unbuildable=%%s -- зданий чужих модов "
                    "в пуле плана, из них доступных этой державе, и сколько видов "
                    "стоит в плане, не будучи ей доступными: последнее обязано "
@@ -12656,8 +12715,28 @@ SUM_SPACING = 6
 # могут быть теми же: у грамоты нет ни сторон, ни РГО, ни потолков — есть
 # сколько выдано, сколько положено, скольким городам она вообще подходит и
 # сколько платит лучший из них.
-RSUM_COLS = ((300, "rname"), (70, "rgiven"), (70, "rquota"), (80, "rfit"),
-             (80, "rtop"), (420, "rwhy"))
+RSUM_COLS = ((40, "rmap"), (300, "rname"), (70, "rgiven"), (70, "rquota"),
+             (80, "rfit"), (80, "rtop"), (420, "rwhy"))
+
+# **Детские карты CM, по карте на право.** Его слово, 2026-09-14: «мне нужны и
+# те карты которые были внутри этой карты. Они как дети этой карты и их удобно
+# использовать». У него в них ходили из панели выдачи грамот, которой без CM
+# нет, а сами карты `category = hidden` -- во флайауте их не найти. Значит вход
+# наш, и он здесь: значок карты в строке грамоты.
+#
+# Девять -- столько их у него; остальные грамоты сборки своей карты не имеют и
+# получают пустую клетку той же ширины, чтобы столбцы не разъезжались.
+TRMM_MAPS = {
+    "royal_tooling_rights": "tooling",
+    "royal_jewelry_rights": "jewelry",
+    "royal_naval_rights": "naval",
+    "royal_textile_rights": "textile",
+    "royal_weaponry_rights": "weaponry",
+    "royal_book_rights": "book",
+    "royal_artisan_rights": "artisan",
+    "royal_brewing_rights": "brewing",
+    "royal_masonry_rights": "masonry",
+}
 SUM_ROW_W = sum(w for w, _ in SUM_COLS) + SUM_SPACING * (len(SUM_COLS) - 1)
 RSUM_ROW_W = sum(w for w, _ in RSUM_COLS) + SUM_SPACING * (len(RSUM_COLS) - 1)
 SUM_WINDOW_W = 1460
@@ -13084,6 +13163,23 @@ types BagWtpSumCells {
         cells = ""
         for width, kind in RSUM_COLS:
             sv = ("[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('%s_show_%s')|0]")
+            if kind == "rmap":
+                # `mapmode_tooltip_button` -- ванильный шаблон: сам рисует значок
+                # режима и сам переключает на него. Ванильных мест с ним 87.
+                mode = TRMM_MAPS.get(right.key)
+                if mode:
+                    cells += (f"\t\twidget = {{\n"
+                              f"\t\t\tsize = {{ {width} 26 }}\n"
+                              f"\t\t\tmapmode_tooltip_button = {{\n"
+                              f"\t\t\t\tparentanchor = center\n"
+                              f"\t\t\t\twidgetanchor = center\n"
+                              f"\t\t\t\tvisible = \"[CanChangeMapMode]\"\n"
+                              f"\t\t\t\tdatacontext = \"[GetMapMode('{MOD_ID}_trmm_search_{mode}')]\"\n"
+                              f"\t\t\t}}\n"
+                              f"\t\t}}\n\n")
+                else:
+                    cells += f"\t\twidget = {{ size = {{ {width} 26 }} }}\n\n"
+                continue
             if kind == "rname":
                 # Имя грамоты -- тот же ключ, которым её называет всё остальное
                 # в моде (`_right_<key>`), а не второй его экземпляр.

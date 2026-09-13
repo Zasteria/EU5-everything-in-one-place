@@ -19,93 +19,120 @@
 
 types BagWtpSwapTypes {
 
-	# Один домик, который тут стоит: значок, имя и «×».
-	type bag_wtp_swap_here_entry = hbox {
+	# Один домик, который тут стоит: значок, имя и «−».
+	#
+	# **Тип -- `widget` с размером, а не `hbox` с размером.** Размер на `hbox`
+	# не держится: он подгоняется под детей, и ряд схлопывается вместе с ними
+	# (`pitfalls/windows.md`). Первый заход написал оба ряда коробкой с
+	# размером, и списки не нарисовались при верных числах в заголовках.
+	type bag_wtp_swap_here_entry = widget {
 		size = { 380 30 }
-		spacing = 4
 		using = bg_number_container_bckg
 
-		widget = {
-			size = { 30 30 }
-			text_single = {
-				parentanchor = center
-				autoresize = yes
-				fontsize = 16
-				raw_text = "[BuildingType.GetIcon]"
-			}
-		}
+		hbox = {
+			parentanchor = left|vcenter
+			widgetanchor = left|vcenter
+			spacing = 4
 
-		text_single = {
-			size = { 300 30 }
-			autoresize = no
-			maximumsize = { 300 30 }
-			align = left|vcenter
-			fontsize = 13
-			fontsize_min = 10
-			elide = right
-			raw_text = "[BuildingType.GetName]"
-		}
-
-		widget = {
-			size = { 30 30 }
-			button_regular = {
-				size = { 26 26 }
-				parentanchor = center
-				widgetanchor = center
-				tooltip = "bag_wtp_swap_drop_tt"
-				onclick = "[GetScriptedGui('bag_wtp_swap_drop').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('wtp_bt', BuildingType.MakeScope).End)]"
+			widget = {
+				size = { 30 30 }
 				text_single = {
 					parentanchor = center
-					widgetanchor = center
 					autoresize = yes
-					fontsize = 14
-					text = "bag_wtp_edit_minus"
+					fontsize = 16
+					raw_text = "[BuildingType.GetIcon]"
+					tooltip = "[BuildingType.GetName]"
+				}
+			}
+
+			widget = {
+				size = { 300 30 }
+				text_single = {
+					parentanchor = left|vcenter
+					widgetanchor = left|vcenter
+					size = { 300 30 }
+					autoresize = no
+					maximumsize = { 300 30 }
+					align = left|vcenter
+					fontsize = 13
+					fontsize_min = 10
+					elide = right
+					raw_text = "[BuildingType.GetName]"
+				}
+			}
+
+			widget = {
+				size = { 34 30 }
+				button_regular = {
+					size = { 26 26 }
+					parentanchor = center
+					widgetanchor = center
+					tooltip = "bag_wtp_swap_drop_tt"
+					onclick = "[GetScriptedGui('bag_wtp_swap_drop').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('wtp_bt', BuildingType.MakeScope).End)]"
+					text_single = {
+						parentanchor = center
+						widgetanchor = center
+						autoresize = yes
+						fontsize = 14
+						text = "bag_wtp_edit_minus"
+					}
 				}
 			}
 		}
 	}
 
 	# Один домик, который сюда можно поставить: значок, имя и «+».
-	type bag_wtp_swap_can_entry = hbox {
+	type bag_wtp_swap_can_entry = widget {
 		size = { 380 30 }
-		spacing = 4
 		using = bg_number_container_bckg
 
-		widget = {
-			size = { 30 30 }
-			text_single = {
-				parentanchor = center
-				autoresize = yes
-				fontsize = 16
-				raw_text = "[BuildingType.GetIcon]"
-			}
-		}
+		hbox = {
+			parentanchor = left|vcenter
+			widgetanchor = left|vcenter
+			spacing = 4
 
-		text_single = {
-			size = { 300 30 }
-			autoresize = no
-			maximumsize = { 300 30 }
-			align = left|vcenter
-			fontsize = 13
-			fontsize_min = 10
-			elide = right
-			raw_text = "[BuildingType.GetName]"
-		}
-
-		widget = {
-			size = { 30 30 }
-			button_regular = {
-				size = { 26 26 }
-				parentanchor = center
-				widgetanchor = center
-				tooltip = "bag_wtp_swap_put_tt"
-				onclick = "[GetScriptedGui('bag_wtp_swap_put').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('wtp_bt', BuildingType.MakeScope).End)]"
+			widget = {
+				size = { 30 30 }
 				text_single = {
 					parentanchor = center
-					widgetanchor = center
 					autoresize = yes
-					fontsize = 14
-					text = "bag_wtp_edit_plus"
+					fontsize = 16
+					raw_text = "[BuildingType.GetIcon]"
+					tooltip = "[BuildingType.GetName]"
+				}
+			}
+
+			widget = {
+				size = { 300 30 }
+				text_single = {
+					parentanchor = left|vcenter
+					widgetanchor = left|vcenter
+					size = { 300 30 }
+					autoresize = no
+					maximumsize = { 300 30 }
+					align = left|vcenter
+					fontsize = 13
+					fontsize_min = 10
+					elide = right
+					raw_text = "[BuildingType.GetName]"
+				}
+			}
+
+			widget = {
+				size = { 34 30 }
+				button_regular = {
+					size = { 26 26 }
+					parentanchor = center
+					widgetanchor = center
+					tooltip = "bag_wtp_swap_put_tt"
+					onclick = "[GetScriptedGui('bag_wtp_swap_put').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('wtp_bt', BuildingType.MakeScope).End)]"
+					text_single = {
+						parentanchor = center
+						widgetanchor = center
+						autoresize = yes
+						fontsize = 14
+						text = "bag_wtp_edit_plus"
+					}
 				}
 			}
 		}
@@ -200,19 +227,38 @@ window = {
 						tooltip = "bag_wtp_swap_head_here_tt"
 					}
 
-					scrollbox = {
+					# **Форма ровно та, которой строка плана рисует эти же
+					# списки.** Размер держит `widget` снаружи, `scrollbox`
+					# внутри тянется политикой, а `datamodel` висит на **вложенной**
+					# коробке, не на той, которую подставляет `scrollbox_content`.
+					# Первый заход дал `scrollbox` свой размер и повесил датамодель
+					# прямо на его коробку: `layoutpolicy = expanding` у ребёнка
+					# коробки со своим размером даёт нулевую ширину
+					# (`pitfalls/windows.md`), и ряды рисовались в ничто -- при
+					# верных числах в заголовке.
+					widget = {
 						size = { 396 460 }
-						blockoverride "scrollbox_content" {
-							vbox = {
-								layoutpolicy_horizontal = expanding
-								layoutpolicy_vertical = preferred
-								margin = { 6 4 }
-								margin_right = 16
-								spacing = 3
-								datamodel = "[Location.MakeScope.GetList('bag_wtp_row_builds')]"
-								item = {
-									bag_wtp_swap_here_entry = {
-										datacontext = "[Scope.GetBuildingType]"
+						scrollbox = {
+							layoutpolicy_horizontal = expanding
+							layoutpolicy_vertical = expanding
+							blockoverride "scrollbox_content" {
+								vbox = {
+									layoutpolicy_horizontal = expanding
+									layoutpolicy_vertical = preferred
+									margin = { 6 4 }
+									margin_right = 16
+									spacing = 3
+
+									vbox = {
+										layoutpolicy_horizontal = expanding
+										layoutpolicy_vertical = preferred
+										spacing = 3
+										datamodel = "[Location.MakeScope.GetList('bag_wtp_row_builds')]"
+										item = {
+											bag_wtp_swap_here_entry = {
+												datacontext = "[Scope.GetBuildingType]"
+											}
+										}
 									}
 								}
 							}
@@ -254,19 +300,38 @@ window = {
 						}
 					}
 
-					scrollbox = {
+					# **Форма ровно та, которой строка плана рисует эти же
+					# списки.** Размер держит `widget` снаружи, `scrollbox`
+					# внутри тянется политикой, а `datamodel` висит на **вложенной**
+					# коробке, не на той, которую подставляет `scrollbox_content`.
+					# Первый заход дал `scrollbox` свой размер и повесил датамодель
+					# прямо на его коробку: `layoutpolicy = expanding` у ребёнка
+					# коробки со своим размером даёт нулевую ширину
+					# (`pitfalls/windows.md`), и ряды рисовались в ничто -- при
+					# верных числах в заголовке.
+					widget = {
 						size = { 396 460 }
-						blockoverride "scrollbox_content" {
-							vbox = {
-								layoutpolicy_horizontal = expanding
-								layoutpolicy_vertical = preferred
-								margin = { 6 4 }
-								margin_right = 16
-								spacing = 3
-								datamodel = "[Location.MakeScope.GetList('bag_wtp_swap_can')]"
-								item = {
-									bag_wtp_swap_can_entry = {
-										datacontext = "[Scope.GetBuildingType]"
+						scrollbox = {
+							layoutpolicy_horizontal = expanding
+							layoutpolicy_vertical = expanding
+							blockoverride "scrollbox_content" {
+								vbox = {
+									layoutpolicy_horizontal = expanding
+									layoutpolicy_vertical = preferred
+									margin = { 6 4 }
+									margin_right = 16
+									spacing = 3
+
+									vbox = {
+										layoutpolicy_horizontal = expanding
+										layoutpolicy_vertical = preferred
+										spacing = 3
+										datamodel = "[Location.MakeScope.GetList('bag_wtp_swap_can')]"
+										item = {
+											bag_wtp_swap_can_entry = {
+												datacontext = "[Scope.GetBuildingType]"
+											}
+										}
 									}
 								}
 							}

@@ -19,7 +19,6 @@ belongs on «Техническая»**
 
 **Деревня — сущность, а не товар, и правило обязано стоять в обоих местах**:
 ворота плана её из товара выбрасывали, ворота редактора — нет (2026-09-12).
-У редактора свой `own_groups`; деревня стоит в той же сетке «+1/−1».
 
 **Триггер живёт только в `common/scripted_triggers`** (ловит `check_script.py`).
 **Ворота постановки после плана врут**: всё, что читается **после** раздачи,
@@ -27,11 +26,8 @@ belongs on «Техническая»**
 
 **3 and 4 are separate and the traffic runs one way**: nothing the editor holds
 is ever read by 3. **The test: «не нужен», then a fresh plan — it must be
-ordinary.**
-
-**Before touching any `_plan_*`:
-[`plan_gaps.md`](../../docs/investigations/plan_gaps.md).** **The tick is the
-rank and outlives a save.**
+ordinary.** **Before touching any `_plan_*`:
+[`plan_gaps.md`](../../docs/investigations/plan_gaps.md).**
 
 ## Where it stands
 
@@ -40,11 +36,13 @@ rank and outlives a save.**
 с плейсета, замена ей живёт только в интерфейсе: `ToggleAutoExpandBuilding`).
 Что именно сделано и что смотреть в игре — там же, в конце.
 
-**Карта «Лучшее городское право» перенесена из CM dev целиком** (`_trmm_*`,
-[`wtp_town_right_map.md`](../../docs/investigations/wtp_town_right_map.md)):
-эталон, с которым сверять наш счёт прав, и три отличия его расчёта от нашего —
-там же. Проход за клеймом `_trmm_stamp`, и клеймо обязательно: **регистрация
-CMF идёт на каждое открытие страницы мода**, а не только на загрузке.
+**Карты городских прав CM dev перенесены целиком** — двадцать режимов, `_trmm_*`
+([`wtp_town_right_map.md`](../../docs/investigations/wtp_town_right_map.md)).
+**`_rq<k>`, выгода земли под грамоту, теперь считается его методом**: среднее
+`_trmm_cov_<товар>` по связке. Проход за клеймом `_trmm_stamp`, и клеймо
+обязательно: **регистрация CMF идёт на каждое открытие страницы мода**, а не
+только на загрузке. Не сходится с картой — сначала «Пересчитать» на
+«Технической»: без прохода все покрытия нули, и все грамоты стоят поровну.
 
 **Раздача, редактор, доливка, ряды, «Специализация», сводка** —
 [`archive/wtp_brief_plan_rules.md`](../../docs/archive/wtp_brief_plan_rules.md),
@@ -55,13 +53,12 @@ CMF идёт на каждое открытие страницы мода**, а 
 
 **Чужие окна** —
 [`wtp_integration.md`](../../docs/investigations/wtp_integration.md): **`root` в
-фильтре — не сам объект**; **`_stands_<здание>` слушается тумблера ранга**;
-**мод ничего не делает периодически**.
+фильтре — не сам объект**; **мод ничего не делает периодически**.
 
 **The build stamp is on «Техническая»**, before believing a fix failed. **Before
 any `.gui`: [`pitfalls/windows.md`](../../docs/pitfalls/windows.md)** — every
 rule in it this mod paid for, most twice.
 
 **Not to be attempted again**: eight
-([`archive/wtp_not_again.md`](../../docs/archive/wtp_not_again.md)). **The answer
-lives on the location.** **Built by** `generate.py`.
+([`archive/wtp_not_again.md`](../../docs/archive/wtp_not_again.md)). **Built by**
+`generate.py`.
