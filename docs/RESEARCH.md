@@ -43,6 +43,22 @@ The companion documents are [`PITFALLS.md`](PITFALLS.md) — the same knowledge
 from the other end, as mistakes and the symptom each one showed — and
 [`TESTLOG.md`](TESTLOG.md), which is what has actually been in the game.
 
+## Ванильную автоматизацию стройки гейтит `allow` здания
+
+**Автоматизация «Сооружения» строит с нуля**, и что ей можно строить, решает
+скриптовый блок `allow` в самом `building_type`: он считается в скоупе локации и
+закрывает **и ручную стройку, и автоматическую**. Проверено на живом примере:
+`calidad_de_vida_eu5` переопределяет `forts.txt`, дописывая условие в `allow`,
+и так запрещает автоматизации ставить форты в выбранных локациях.
+
+**Чего нет:** весов в `building_types` (`ai_will_do` там не бывает -- только
+`ai_forbid_shutdown`, `ai_ignore_maintenance`, `ai_unique_location_list`,
+`ai_foreign_ignore_naval_range`), и модификатора-запрета стройки. Сам выбор
+считает движок (`ConstructScoreItem.GetCostValue`, `GetEmployability`).
+
+**Значит единственный способ направить ванильную автоматизацию -- сузить ей
+выбор**, переопределив `allow` тех зданий, которыми она распоряжается.
+
 ## Автострой зданий: запись есть уже у стройки
 
 **Галочку авторасширения ставит только интерфейс** --
