@@ -87,11 +87,11 @@ RIGHT_SLOTS = 3
 # case 6 468, and the smallest difference the bonus can make is still about 4.6.
 RIGHT_SCALE = RANK_SCALE // 10
 
-# Товары, у которых в перенесённой карте CM есть покрытие `_trmm_cov_<товар>`.
-# Двадцать; `silk` среди них нет, и это единственный товар связок этой сборки,
-# на который счёта грамоты не хватает. Список -- факт о перенесённом файле:
-# снят с `in_game/common/script_values/bag_wtp_trmm_values.txt`.
-TRMM_COV_GOODS = frozenset("""
+# Товары, у которых `cov_file` считает покрытие: те, что стоят в связках грамот
+# и у чьих способов есть сырьевой вход. Двадцать; `silk` среди них нет -- его
+# рецепты сырья провинции не потребляют, -- и это единственный товар связок, на
+# который счёта грамоты не хватает.
+COV_GOODS = frozenset("""
 beer books cannons cloth dyes fine_cloth firearms furniture glass jewelry
 leather liquor masonry naval_supplies paper pottery tar tools weaponry wine
 """.split())
@@ -1860,9 +1860,9 @@ def values_file(rows: list[eu5data.Method], split: dict[str, list[str]],
         # **Старый счёт был денежный**: сумма `_p<n>` по тем товарам связки,
         # которые город и правда делает, делённая на всю связку. Он отвечал на
         # «сколько это принесёт», а спрошено «насколько земля под это подходит».
-        covered = [g for g in bundle if g in TRMM_COV_GOODS]
+        covered = [g for g in bundle if g in COV_GOODS]
         if covered:
-            adds = "".join(f"\tadd = {MOD_ID}_trmm_cov_{g}\n" for g in covered)
+            adds = "".join(f"\tadd = var:{MOD_ID}_cov_{g}\n" for g in covered)
             adds += f"\tdivide = {len(covered)}\n\tmultiply = {RANK_SCALE}\n"
         else:
             # Ни одного покрытого товара -- считать нечем. В сборке такого нет;
@@ -2021,18 +2021,15 @@ def values_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 
 # Scope: location
 {MOD_ID}_r_score = {{
-\tvalue = var:{MOD_ID}_r_total
-\t# **Пригодность ведёт порядок только «на конец».** Покрытие CM берёт лучший
-\t# способ рецепта, не спрашивая, открыт ли он державе (`_trmm_opt_*` -- ни
-\t# одних ворот по продвижению), то есть это число конца игры. Ставить его во
-\t# главу порядка в режиме «на сейчас» значит отвечать не на тот вопрос,
-\t# который задан.
+\t# **Порядок ведёт пригодность земли, в обоих режимах.** `_r_fit` -- это
+\t# `_rq<k>`, среднее наших покрытий по связке, и наше покрытие берёт лучший
+\t# способ **из доступных** по тумблеру эпохи. Деньги остались тем, что строка
+\t# печатает, и решают ничью.
+\tvalue = var:{MOD_ID}_r_fit
+\tmultiply = 1000
+\tadd = var:{MOD_ID}_r_total
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_rank_by_end }}
-\t\tadd = {{
-\t\t\tvalue = var:{MOD_ID}_r_fit
-\t\t\tmultiply = 1000
-\t\t}}
 \t\tadd = {MOD_ID}_r_mid_tiebreak
 \t}}
 }}
@@ -4320,6 +4317,13 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 # reads all {len(rows)} of them, {len(order)} passes over the same ground.
 # Scope: country
 {MOD_ID}_plan_score = {{
+\t# **Покрытие -- до всего остального.** `_rq<k>`, которым раздача выбирает
+\t# грамоты, читает `_cov_<товар>`, а посчитать его может только эффект: доля
+\t# входа спрашивает `any_location_in_province_definition`.
+\tevery_in_global_list = {{
+\t\tvariable = {MOD_ID}_candidates
+\t\t{MOD_ID}_cov_pass = yes
+\t}}
 """)
     for index, good in enumerate(order, start=1):
         out.append(f"\t{MOD_ID}_score_{index} = yes\n"
@@ -10458,6 +10462,107 @@ SWAP_OUT = MOD / "in_game/common/scripted_effects/bag_wtp_generated_swap.txt"
 SWAP_VALUES_OUT = MOD / "in_game/common/script_values/bag_wtp_generated_swap_values.txt"
 
 
+COV_OUT = MOD / "in_game/common/scripted_effects/bag_wtp_generated_cov.txt"
+
+
+def cov_file(rows: list[eu5data.Method], split: dict[str, list[str]],
+             game: eu5data.Game) -> str:
+    """Покрытие товара сырьём провинции -- **логика карты, наши условия**.
+
+    Его слово, 2026-09-14: «То как работает карта для нас важно, но не
+    константа. У нас гораздо больше настроек и условий. Нам нужно логику карты
+    перенести и адаптировать к тем условиям, в которых наш мод работает.
+    Доступные списки зданий, методов, эпох, уровней. Саму карту трогать не
+    надо.»
+
+    Формула его: доля входа рецепта, которую провинция даёт своим РГО; лучший
+    вариант среди способов; плюс своё сырьё локации как полное покрытие; плюс
+    местный модификатор вывода в единицах `_trmm_rgo_unit`.
+
+    Разница одна и она вся в отборе способов: **CM берёт лучший вариант
+    безусловно** (`_trmm_opt_*` -- ни одних ворот по продвижению), а мы берём
+    лучший **из доступных**: `_avail_` в режиме «на сейчас», `_reach_` в режиме
+    «на конец», и оба уже несут в себе галочку чужого мода. Поэтому наше число
+    слушается тумблера эпохи, а число карты -- нет, и сравнивать их в лоб можно
+    только «на конец».
+
+    Считается эффектом, а не значением: доля требует
+    `any_location_in_province_definition`, то есть триггера, а триггер в
+    значении живёт только под `if = {{ limit = ... }}` в эффекте.
+    """
+    wanted: set[str] = set()
+    for right in output_rights(rows, game):
+        wanted |= set(right.output)
+    by_good: dict[str, list[int]] = {}
+    for index, method in enumerate(rows, start=1):
+        if method.produced in wanted and method.inputs:
+            by_good.setdefault(method.produced, []).append(index)
+
+    out = [HEADER, """#
+# Покрытие товара сырьём провинции, по логике карты и нашим воротам.
+# Scope: location, ждёт scope:%s_country
+%s_cov_pass = {
+""" % (MOD_ID, MOD_ID)]
+    for good in sorted(by_good):
+        out.append(f"\tset_variable = {{ name = {MOD_ID}_cov_{good} value = 0 }}\n")
+        for mi in by_good[good]:
+            method = rows[mi - 1]
+            total = sum(method.inputs.values())
+            if total <= 0:
+                continue
+            adds = "".join(
+                f"\t\tif = {{\n"
+                f"\t\t\tlimit = {{ any_location_in_province_definition = "
+                f"{{ raw_material ?= goods:{raw} }} }}\n"
+                f"\t\t\tchange_variable = {{ name = {MOD_ID}_cov_try add = "
+                f"{round(amount / total, 3)} }}\n"
+                f"\t\t}}\n"
+                for raw, amount in sorted(method.inputs.items())
+                if raw in game.raw_goods)
+            if not adds:
+                continue
+            gate = (f"{MOD_ID}_reach_{mi} = yes" if method_gates(method)
+                    else f"{MOD_ID}_avail_{mi} = yes")
+            out.append(f"""\t# {method.building} / {method.key}
+\tif = {{
+\t\tlimit = {{
+\t\t\tOR = {{
+\t\t\t\tAND = {{
+\t\t\t\t\tNOT = {{ has_global_variable = {MOD_ID}_plan_by_end }}
+\t\t\t\t\tscope:{MOD_ID}_country = {{ {MOD_ID}_avail_{mi} = yes }}
+\t\t\t\t}}
+\t\t\t\tAND = {{
+\t\t\t\t\thas_global_variable = {MOD_ID}_plan_by_end
+\t\t\t\t\tscope:{MOD_ID}_country = {{ {gate} }}
+\t\t\t\t}}
+\t\t\t}}
+\t\t}}
+\t\tset_variable = {{ name = {MOD_ID}_cov_try value = 0 }}
+{adds}\t\tif = {{
+\t\t\tlimit = {{ var:{MOD_ID}_cov_try > var:{MOD_ID}_cov_{good} }}
+\t\t\tset_variable = {{ name = {MOD_ID}_cov_{good} value = var:{MOD_ID}_cov_try }}
+\t\t}}
+\t}}
+""")
+        # Своё сырьё локации -- ещё один полностью покрытый поставщик, как у него.
+        out.append(f"""\tif = {{
+\t\tlimit = {{ raw_material ?= goods:{good} }}
+\t\tchange_variable = {{ name = {MOD_ID}_cov_{good} add = 1 }}
+\t\tset_variable = {{ name = {MOD_ID}_cov_{good} value = {{
+\t\t\tvalue = var:{MOD_ID}_cov_{good}
+\t\t\tdivide = 2
+\t\t}} }}
+\t}}
+\tchange_variable = {{ name = {MOD_ID}_cov_{good} value = {{
+\t\tvalue = modifier:local_{good}_output_modifier
+\t\tdivide = {MOD_ID}_trmm_rgo_unit
+\t\tmin = 0
+\t}} }}
+""")
+    out.append("}\n")
+    return "".join(out)
+
+
 def swap_values_file(rows: list[eu5data.Method], split: dict[str, list[str]],
                      game: eu5data.Game) -> str:
     """Что провинция платит каждому зданию здесь -- по значению на здание.
@@ -10528,6 +10633,8 @@ def swap_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     order = goods_order(split)
     groups = plan_groups(rows, split, game)
     villages = village_entities(rows, split, game)
+    by_method = {i: m for i, m in enumerate(rows, start=1)}
+    shared = shared_buildings(rows, split, game)
 
     # Здание -> [(номер товара, сторона, [номера методов])], в устойчивом порядке.
     #
@@ -11296,11 +11403,64 @@ def swap_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t\tlimit = {{ scope:wtp_bt = building_type:{building} }}
 {calls}\t\t}}
 """
+    # **«+» ставит именно это здание, и для этого у него свой эффект.**
+    #
+    # Прошлый заход гейтил вызов `_edit_place_<товар>` тем, что `_pm<товар>` --
+    # выигравший здесь способ -- принадлежит нажатому зданию. Это чинило «одно
+    # нажатие -- один домик», но ломало всё остальное: список нарочно предлагает
+    # здания, которые победителями **не** являются, поэтому у почти каждой строки
+    # ворота не совпадали и «+» молча не делал ничего (его прогон 2026-09-14).
+    #
+    # Значит эффект свой. Он повторяет ровно то, что делает постановка плана --
+    # те же списки, те же счётчики, тот же потолок, -- и добавляет одно: **клик
+    # объявляет это здание ответом для своего товара здесь**, то есть пишет
+    # `_pm<товар>`. Тогда и «−» на нём потом сработает: снятие ищет товар по
+    # тому же `_pm`.
     put = ""
     for building in sorted(b for b in by_building if b not in villages):
+        arms = ""
+        for index, side, mis in by_building[building]:
+            good = order[index - 1]
+            cap = "urban" if side == "t" else "rural"
+            method_var = "pm" if side == "t" else "prm"
+            gain_var = "p" if side == "t" else "pr"
+            best_mi = max(mis, key=lambda m: by_method[m].output)
+            out_n = int(round(by_method[best_mi].output * 100))
+            is_town = "yes" if side == "t" else "no"
+            # `%`-форматирование, а не f-строка: удвоенные скобки остались бы
+            # удвоенными, и движок прочёл бы блок одним ключом (поймал чекер).
+            bcount = ("\t\t\tchange_global_variable = { name = %s_bn%d add = 1 }\n"
+                      % (MOD_ID, shared.index(building) + 1)
+                      if building in shared else "")
+            arms += f"""\t\tif = {{
+\t\t\tlimit = {{
+\t\t\t\tvar:{MOD_ID}_swap_once = 0
+\t\t\t\t{MOD_ID}_plan_is_town = {is_town}
+\t\t\t\t{MOD_ID}_is_granary = no
+\t\t\t\tvar:{MOD_ID}_load < global_var:{MOD_ID}_plan_cap_{cap}
+\t\t\t\tNOT = {{ is_target_in_variable_list = {{ name = {MOD_ID}_plan_goods target = goods:{good} }} }}
+\t\t\t}}
+\t\t\tset_variable = {{ name = {MOD_ID}_{method_var}{index} value = {best_mi} }}
+\t\t\tchange_global_variable = {{ name = {MOD_ID}_pout{index} add = {out_n} }}
+\t\t\tadd_to_variable_list = {{ name = {MOD_ID}_plan_goods target = goods:{good} }}
+\t\t\tadd_to_variable_list = {{ name = {MOD_ID}_plan_builds target = building_type:{building} }}
+\t\t\tchange_variable = {{ name = {MOD_ID}_load add = 1 }}
+\t\t\tchange_global_variable = {{ name = {MOD_ID}_plan_placed add = 1 }}
+\t\t\tchange_global_variable = {{ name = {MOD_ID}_plan_added add = 1 }}
+\t\t\tchange_global_variable = {{ name = {MOD_ID}_pn{index} add = 1 }}
+\t\t\tchange_global_variable = {{ name = {MOD_ID}_pn{side}{index} add = 1 }}
+\t\t\tchange_global_variable = {{ name = {MOD_ID}_plan_p{side} add = 1 }}
+{bcount}\t\t\tchange_global_variable = {{ name = {MOD_ID}_plan_gain add = var:{MOD_ID}_{gain_var}{index} }}
+\t\t\tif = {{
+\t\t\t\tlimit = {{ var:{MOD_ID}_{gain_var}{index} > 0 }}
+\t\t\t\tchange_global_variable = {{ name = {MOD_ID}_plan_fed add = 1 }}
+\t\t\t}}
+\t\t\tset_variable = {{ name = {MOD_ID}_swap_once value = 1 }}
+\t\t}}
+"""
         put += f"""\t\tif = {{
 \t\t\tlimit = {{ scope:wtp_bt = building_type:{building} }}
-{once("place", building)}\t\t}}
+{arms}\t\t}}
 """
     out.append(f"""
 # Снять этот домик с этой локации.
@@ -11829,6 +11989,9 @@ def rights_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t# `_rq<k>` и есть тот счёт. Кладём его на кандидата здесь, внутри обхода,
 \t\t# который и так идёт: `_r_score` считается в скоупе локации, а номер
 \t\t# отмеченной грамоты живёт на державе, и дотянуться туда оттуда нечем.
+\t\t# Покрытие считается здесь же, до того как его прочтёт `_rq<k>`:
+\t\t# доля входа требует триггера по провинции, то есть эффекта.
+\t\t{MOD_ID}_cov_pass = yes
 \t\tset_variable = {{ name = {MOD_ID}_r_fit value = {MOD_ID}_rq{index} }}
 """)
         for k in slots:
@@ -14536,6 +14699,7 @@ def main() -> int:
     write(PLAN_OUT, plan_file(rows, split, game) + village_icons(rows, split, game))
     write(SWAP_OUT, swap_file(rows, split, game))
     write(SWAP_VALUES_OUT, swap_values_file(rows, split, game))
+    write(COV_OUT, cov_file(rows, split, game))
     write(PLAN_TRIGGERS_OUT, plan_triggers_file(rows, split, game))
     write(PLAN_LOC_OUT, plan_loc_file(rows, split, game))
     write(DIAG_OUT, diag_file(rows, split, game, methods(core)))
