@@ -28,7 +28,12 @@ types BagWtpSwapTypes {
 	# политики; здесь я применил его не к тому случаю и написал ряд
 	# `widget`-ом, чего в этом моде не рисует никто.
 	type bag_wtp_swap_here_entry = hbox {
-		size = { 374 30 }
+		# **Политика плюс `-1`, а дети со своими размерами** -- ровно
+		# `bag_wtp_chg_entry`. Твёрдое число на `hbox` не держится (он
+		# подгоняется под детей), а растягивающийся ребёнок съедает соседей:
+		# сперва так пропали имена, потом так пропала кнопка «−».
+		layoutpolicy_horizontal = expanding
+		size = { -1 30 }
 		spacing = 4
 		using = bg_number_container_bckg
 
@@ -83,16 +88,15 @@ types BagWtpSwapTypes {
 		}
 	}
 
-	# Один домик, который сюда можно поставить: значок, имя и «+».
+	# Один домик, который сюда можно поставить: значок, имя, выгода и «+».
 	#
-	# **Форма ряда -- та же, что у `bag_wtp_chg_entry`, который рисуется.**
-	# `hbox` с политикой и `size = { -1 h }`: `-1` значит «ширину решает
-	# политика», а дети -- `widget`-ы со своими размерами. Правило
-	# «размер на `hbox` не держится» -- про `hbox` с настоящим числом и без
-	# политики; здесь я применил его не к тому случаю и написал ряд
-	# `widget`-ом, чего в этом моде не рисует никто.
+	# **Строка читает себя по флагу**, как строка списка модов у CMF:
+	# `Scope.GetFlagName` даёт `bag_wtp_swapslotN`, а `Concatenate` достраивает
+	# имя переменной на державе. Так строка знает не только здание, но и
+	# процент, который без этого достать было нечем.
 	type bag_wtp_swap_can_entry = hbox {
-		size = { 374 30 }
+		layoutpolicy_horizontal = expanding
+		size = { -1 30 }
 		spacing = 4
 		using = bg_number_container_bckg
 
@@ -102,29 +106,43 @@ types BagWtpSwapTypes {
 				parentanchor = center
 				autoresize = yes
 				fontsize = 16
-				raw_text = "[BuildingType.GetIcon]"
-				tooltip = "[BuildingType.GetName]"
+				raw_text = "[GetPlayer.MakeScope.GetVariable(Concatenate(Scope.GetFlagName, '_bt')).GetBuildingType.GetIcon]"
+				tooltip = "[GetPlayer.MakeScope.GetVariable(Concatenate(Scope.GetFlagName, '_bt')).GetBuildingType.GetName]"
 			}
 		}
 
-		# **Имя печаталось «...»**, и это тот же ноль ширины, что и у списка,
-		# только этажом ниже: `autoresize = no` без настоящего размера -- нечего
-		# обрезать, кроме как в многоточие. У рисующегося ряда
-		# (`bag_wtp_chg_entry`) каждая ячейка -- `widget` со своим размером, и
-		# текст внутри повторяет его же числом и `maximumsize`.
 		widget = {
-			size = { 300 30 }
+			size = { 250 30 }
 			text_single = {
 				parentanchor = left|vcenter
 				widgetanchor = left|vcenter
-				size = { 300 30 }
+				size = { 250 30 }
 				autoresize = no
-				maximumsize = { 300 30 }
+				maximumsize = { 250 30 }
 				align = left|vcenter
 				fontsize = 13
 				fontsize_min = 10
 				elide = right
-				raw_text = "[BuildingType.GetName]"
+				raw_text = "[GetPlayer.MakeScope.GetVariable(Concatenate(Scope.GetFlagName, '_bt')).GetBuildingType.GetName]"
+			}
+		}
+
+		# Что провинция платит этому зданию здесь -- доля от потолка его
+		# рецепта, в тех же десятых процента, что и всюду в моде.
+		widget = {
+			size = { 56 30 }
+			tooltip = "bag_wtp_swap_gain_tt"
+			text_single = {
+				parentanchor = right|vcenter
+				widgetanchor = right|vcenter
+				size = { 56 30 }
+				autoresize = no
+				maximumsize = { 56 30 }
+				align = right|vcenter
+				fontsize = 13
+				fontsize_min = 10
+				elide = right
+				raw_text = "[GetPlayer.MakeScope.GetVariable(Concatenate(Scope.GetFlagName, '_gain')).GetValue|1]%"
 			}
 		}
 
@@ -135,7 +153,7 @@ types BagWtpSwapTypes {
 				parentanchor = center
 				widgetanchor = center
 				tooltip = "bag_wtp_swap_put_tt"
-				onclick = "[GetScriptedGui('bag_wtp_swap_put').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('wtp_bt', BuildingType.MakeScope).End)]"
+				onclick = "[GetScriptedGui('bag_wtp_swap_put').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('wtp_bt', GetPlayer.MakeScope.GetVariable(Concatenate(Scope.GetFlagName, '_bt')).GetBuildingType.MakeScope).End)]"
 				text_single = {
 					parentanchor = center
 					widgetanchor = center
@@ -233,13 +251,18 @@ window = {
 					layoutpolicy_vertical = expanding
 					spacing = 4
 
-					text_single = {
+					hbox = {
 						layoutpolicy_horizontal = expanding
-						autoresize = no
-						align = left|vcenter
-						fontsize = 13
-						elide = right
-						text = "bag_wtp_swap_head_here"
+						spacing = 6
+
+						text_single = {
+							layoutpolicy_horizontal = expanding
+							autoresize = no
+							align = left|vcenter
+							fontsize = 13
+							elide = right
+							text = "bag_wtp_swap_head_here"
+						}
 					}
 
 					scrollbox = {
@@ -308,11 +331,9 @@ window = {
 								margin_right = 20
 								spacing = 3
 								ignoreinvisible = yes
-								datamodel = "[GetGlobalList('bag_wtp_swap_list')]"
+								datamodel = "[GetGlobalList('bag_wtp_swap_slots')]"
 								item = {
-									bag_wtp_swap_can_entry = {
-										datacontext = "[Scope.GetBuildingType]"
-									}
+									bag_wtp_swap_can_entry = {}
 								}
 							}
 						}
