@@ -762,9 +762,48 @@ ALWAYS_AVAILABLE = ("gun_smith", "cannon_maker")
 RIGHT_PROV_MIN = 9
 
 
+def dedupe_comments(body: str) -> str:
+    """Drop a comment block this file has already carried once.
+
+    The game has no loop over building types, so every branch here is written
+    out -- and a block of prose sitting above one branch used to be written out
+    with it. One ten-line block appeared **1174 times** in the plan file alone:
+    1.62 MB of the mod's 20 MB was the same paragraph, repeated.
+
+    The explanation is not lost -- it lives in this generator, which is where a
+    session reads it, and the first occurrence still stands in the output. The
+    owner asked what the twenty megabytes were, 2026-09-14, and this was a sixth
+    of the answer.
+    """
+    out: list[str] = []
+    seen: set[str] = set()
+    block: list[str] = []
+
+    def flush() -> None:
+        if not block:
+            return
+        key = "\n".join(l.strip() for l in block)
+        # A block of one bare `#` or a rule of dashes is punctuation, not prose.
+        if len(key) > 40 and key in seen:
+            block.clear()
+            return
+        seen.add(key)
+        out.extend(block)
+        block.clear()
+
+    for line in body.split("\n"):
+        if line.lstrip().startswith("#"):
+            block.append(line)
+        else:
+            flush()
+            out.append(line)
+    flush()
+    return "\n".join(out)
+
+
 def write(path: Path, body: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(BOM + body, encoding="utf-8")
+    path.write_text(BOM + dedupe_comments(body), encoding="utf-8")
 
 
 # --------------------------------------------------------------------------
@@ -10502,6 +10541,24 @@ def swap_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t\tchange_variable = {{ name = {MOD_ID}_swap_k add = 1 }}
 \t\t\t{MOD_ID}_swap_pass = yes
 \t\t}}
+\t\t# **Оба списка зеркалятся в глобальные, и окно читает только их.**
+\t\t# Заголовки печатали верные числа (4 и 24), а рядов не было: число стоит
+\t\t# в той же коробке, что и `datacontext`, а `datamodel` -- внутри
+\t\t# `blockoverride` у `scrollbox`. Что `datacontext` доходит туда, в этом
+\t\t# дереве ничем не доказано: единственная работающая датамодель в
+\t\t# `scrollbox` (строки плана) читает **глобальный** список и в скоупе не
+\t\t# нуждается. Здесь теперь так же -- на наследование скоупа окно больше
+\t\t# не опирается нигде.
+\t\tclear_global_variable_list = {MOD_ID}_swap_here
+\t\tclear_global_variable_list = {MOD_ID}_swap_list
+\t\tevery_in_list = {{
+\t\t\tvariable = {MOD_ID}_row_builds
+\t\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_here target = this }}
+\t\t}}
+\t\tevery_in_list = {{
+\t\t\tvariable = {MOD_ID}_swap_can
+\t\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_list target = this }}
+\t\t}}
 \t}}
 }}
 
@@ -11271,15 +11328,23 @@ def rights_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     return "".join(out)
 
 
-def list_settings(by_continent) -> list[tuple[str, str, str]]:
-    """Every list this mod registers: its tab, its id, and what a tick in it runs.
+def list_settings(by_continent) -> list[tuple[str, str, str, bool]]:
+    """Every list this mod registers: tab, id, what a tick runs, folded at first.
 
     One table, two readers -- the `_on_changed` callbacks and the collapse pass
     below both have to name every list, and a list named in one and not the
-    other is the kind of omission nothing reports.
+    other is the kind of omission nothing reports. **It went unreported for two
+    builds**: the mod list was registered without being named here, so it had no
+    `_on_changed`, and CMM draws a list row only while that GUI is shown. The
+    group header rendered, the list under it did not, and nothing logged
+    anything (`check_script.py` catches it now).
     """
-    return ([("zone", f"region_{c}", f"{MOD_ID}_zone_changed = yes") for c in by_continent]
-            + [("zone", "continent", f"{MOD_ID}_zone_changed = yes")])
+    return ([("zone", f"region_{c}", f"{MOD_ID}_zone_changed = yes", True)
+             for c in by_continent]
+            + [("zone", "continent", f"{MOD_ID}_zone_changed = yes", True),
+               # Один мод в списке -- не повод сворачивать: свёрнутый он выглядит
+               # ровно как пустой, а пустым он и был.
+               ("tech", "source", f"{MOD_ID}_rebuild_sources = yes", False)])
 
 
 def layout_file(by_continent) -> str:
@@ -11308,7 +11373,9 @@ def layout_file(by_continent) -> str:
 \t\tlimit = {{ NOT = {{ has_variable = {MOD_ID}_folded_once }} }}
 \t\tset_variable = {{ name = {MOD_ID}_folded_once value = 1 }}
 """]
-    for tab, setting, _ in list_settings(by_continent):
+    for tab, setting, _, fold in list_settings(by_continent):
+        if not fold:
+            continue
         out.append(f"\t\tadd_to_variable_map = {{ name = cmm_group_collapsed "
                    f"key = flag:{MOD_ID}__{tab}__{setting} value = 1 }}\n")
     out.append("\t}\n}\n")
@@ -11329,7 +11396,7 @@ def guis_file(by_continent) -> str:
 # slider and button settings auto-apply and reach `cmf_on_callback`, and a list
 # reaches neither until `cmm_apply_list_change` is called here.
 """]
-    for _, setting, after in list_settings(by_continent):
+    for _, setting, after, _fold in list_settings(by_continent):
         body = f"\t\t{after}\n" if after else ""
         out.append(f"""
 {MOD_ID}__{setting}_on_changed = {{
@@ -12715,28 +12782,13 @@ SUM_SPACING = 6
 # могут быть теми же: у грамоты нет ни сторон, ни РГО, ни потолков — есть
 # сколько выдано, сколько положено, скольким городам она вообще подходит и
 # сколько платит лучший из них.
-RSUM_COLS = ((40, "rmap"), (300, "rname"), (70, "rgiven"), (70, "rquota"),
-             (80, "rfit"), (80, "rtop"), (420, "rwhy"))
-
-# **Детские карты CM, по карте на право.** Его слово, 2026-09-14: «мне нужны и
-# те карты которые были внутри этой карты. Они как дети этой карты и их удобно
-# использовать». У него в них ходили из панели выдачи грамот, которой без CM
-# нет, а сами карты `category = hidden` -- во флайауте их не найти. Значит вход
-# наш, и он здесь: значок карты в строке грамоты.
-#
-# Девять -- столько их у него; остальные грамоты сборки своей карты не имеют и
-# получают пустую клетку той же ширины, чтобы столбцы не разъезжались.
-TRMM_MAPS = {
-    "royal_tooling_rights": "tooling",
-    "royal_jewelry_rights": "jewelry",
-    "royal_naval_rights": "naval",
-    "royal_textile_rights": "textile",
-    "royal_weaponry_rights": "weaponry",
-    "royal_book_rights": "book",
-    "royal_artisan_rights": "artisan",
-    "royal_brewing_rights": "brewing",
-    "royal_masonry_rights": "masonry",
-}
+# **Значка карты в строке грамоты нет, и он тут был зря.** Девять детских карт
+# открываются полосой значков над баннером режима карты -- ровно так, как у него
+# в CM dev (`bag_wtp_trmm_search_panel.gui`): включил «Лучшее городское право» из
+# флайаута, и полоса появилась. Его слово, 2026-09-14: «Ну… это работает. Хотя я
+# не особо понимаю зачем. Почему ты не сделал так, как оно было в CM DEV?»
+RSUM_COLS = ((300, "rname"), (70, "rgiven"), (70, "rquota"), (80, "rfit"),
+             (80, "rtop"), (420, "rwhy"))
 SUM_ROW_W = sum(w for w, _ in SUM_COLS) + SUM_SPACING * (len(SUM_COLS) - 1)
 RSUM_ROW_W = sum(w for w, _ in RSUM_COLS) + SUM_SPACING * (len(RSUM_COLS) - 1)
 SUM_WINDOW_W = 1460
@@ -13163,23 +13215,6 @@ types BagWtpSumCells {
         cells = ""
         for width, kind in RSUM_COLS:
             sv = ("[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('%s_show_%s')|0]")
-            if kind == "rmap":
-                # `mapmode_tooltip_button` -- ванильный шаблон: сам рисует значок
-                # режима и сам переключает на него. Ванильных мест с ним 87.
-                mode = TRMM_MAPS.get(right.key)
-                if mode:
-                    cells += (f"\t\twidget = {{\n"
-                              f"\t\t\tsize = {{ {width} 26 }}\n"
-                              f"\t\t\tmapmode_tooltip_button = {{\n"
-                              f"\t\t\t\tparentanchor = center\n"
-                              f"\t\t\t\twidgetanchor = center\n"
-                              f"\t\t\t\tvisible = \"[CanChangeMapMode]\"\n"
-                              f"\t\t\t\tdatacontext = \"[GetMapMode('{MOD_ID}_trmm_search_{mode}')]\"\n"
-                              f"\t\t\t}}\n"
-                              f"\t\t}}\n\n")
-                else:
-                    cells += f"\t\twidget = {{ size = {{ {width} 26 }} }}\n\n"
-                continue
             if kind == "rname":
                 # Имя грамоты -- тот же ключ, которым её называет всё остальное
                 # в моде (`_right_<key>`), а не второй его экземпляр.

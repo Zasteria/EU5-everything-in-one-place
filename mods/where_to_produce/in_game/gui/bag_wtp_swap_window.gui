@@ -181,14 +181,13 @@ window = {
 			margin = { 12 12 }
 			spacing = 6
 
-			# **Локация берётся один раз и здесь.** Первый заход читал её в
-			# каждом месте заново — `GetGlobalVariable(...).GetLocation.MakeScope
-			# .GetList(...)` — и оба списка вышли пустыми при непустой локации
-			# (его скриншот 2026-09-13: имя в заголовке есть, списков нет).
-			# Имя печаталось той же цепочкой без `MakeScope`, то есть ломалось
-			# именно повторное превращение в скоуп. Теперь `datacontext` даёт
-			# `Location`, и дальше стоит ровно та форма, которой строка плана
-			# рисует эти же списки с самого начала: `Location.MakeScope.GetList`.
+			# **Скоуп нужен здесь только имени локации.** Оба списка окно
+			# читает из глобальных (`GetGlobalList`), потому что три захода
+			# подряд ряды не рисовались при верных числах в заголовках: число
+			# стоит в этой коробке, рядом с `datacontext`, а `datamodel` — внутри
+			# `blockoverride` у `scrollbox`, и что `datacontext` туда доходит,
+			# в этом дереве ничем не доказано. Единственная работающая
+			# датамодель в `scrollbox` — строки плана — читает глобальный список.
 			datacontext = "[GetGlobalVariable('bag_wtp_swap_loc').GetLocation]"
 
 			# Какая локация правится. Имя, а не номер: окно открывается из
@@ -253,7 +252,7 @@ window = {
 										layoutpolicy_horizontal = expanding
 										layoutpolicy_vertical = preferred
 										spacing = 3
-										datamodel = "[Location.MakeScope.GetList('bag_wtp_row_builds')]"
+										datamodel = "[GetGlobalList('bag_wtp_swap_here')]"
 										item = {
 											bag_wtp_swap_here_entry = {
 												datacontext = "[Scope.GetBuildingType]"
@@ -326,7 +325,7 @@ window = {
 										layoutpolicy_horizontal = expanding
 										layoutpolicy_vertical = preferred
 										spacing = 3
-										datamodel = "[Location.MakeScope.GetList('bag_wtp_swap_can')]"
+										datamodel = "[GetGlobalList('bag_wtp_swap_list')]"
 										item = {
 											bag_wtp_swap_can_entry = {
 												datacontext = "[Scope.GetBuildingType]"

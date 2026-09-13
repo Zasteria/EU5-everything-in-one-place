@@ -327,6 +327,42 @@ TRIGGER_ONLY = re.compile(
     r"province_definition|scope:|#|\{|\}|$)")
 
 
+def listless_callbacks(root: Path) -> list[str]:
+    """A registered list setting with no `<setting>_on_changed` scripted GUI.
+
+    CMM draws a list row only while `CMMGuiIsShown('<setting>_on_changed')`, and
+    registering a list is what marks the setting as having one. Without the GUI
+    the whole widget is hidden -- but a list is filed under a group named after
+    itself, so the **group header still renders**. On screen it reads as a list
+    that came back empty, which is the one thing it is not.
+
+    Two builds were spent on it: the mod-source list registered one row, the
+    dump counted that row, and the page showed a header with nothing under it.
+    """
+    registered: dict[str, str] = {}
+    declared: set[str] = set()
+    for path in sorted(root.rglob("*.txt")):
+        if not set(path.parts) & set(MOUNTS):
+            continue
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+        text = "\n".join(l.split("#", 1)[0] for l in text.splitlines())
+        for match in re.finditer(
+                r"cmm_register(?:_global)?_settings_list\s*=\s*\{([^}]*)\}", text):
+            body = match.group(1)
+            mod = re.search(r"mod_id\s*=\s*(\w+)", body)
+            setting = re.search(r"setting_id\s*=\s*(\w+)", body)
+            if not (mod and setting):
+                continue
+            line = text[:match.start()].count("\n") + 1
+            registered.setdefault(f"{mod.group(1)}__{setting.group(1)}",
+                                  f"{path.relative_to(REPO)}:{line}")
+        declared.update(re.findall(r"(?m)^(\w+)_on_changed\s*=\s*\{", text))
+    return [f"{where}: list setting `{name}` has no `{name}_on_changed` scripted "
+            f"GUI -- CMM hides the list and draws its group header anyway, so "
+            f"the page shows an empty list rather than a missing one"
+            for name, where in sorted(registered.items()) if name not in declared]
+
+
 def misplaced_triggers(root: Path) -> list[str]:
     """A block in `scripted_effects/` whose body is nothing but conditions.
 
@@ -1021,6 +1057,7 @@ def main(argv: list[str]) -> int:
         root = root if root.is_absolute() else REPO / root
         found = (problems(root) + unresolved(root, known) + unwritten(root)
                  + misplaced_triggers(root)
+                 + listless_callbacks(root)
                  + unresolved_script_values(root)
                  + duplicate_definitions(root)
                  + frameless_windows(root)
