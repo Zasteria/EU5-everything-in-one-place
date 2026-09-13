@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Three ways a mod file fails at load, all findable from here.
 
 Every other checker in this tree answers a question about one mod's meaning.
@@ -1133,6 +1133,57 @@ SHARED_COPIES = (
 )
 
 
+def stale_overrides(root: Path) -> list[str]:
+    """A full-file copy of a vanilla `.gui` that no longer carries all of it.
+
+    **Идея взята у Community Mod Toolkit** (`tools/gui_update.py` в их ветке
+    `dev`, 2026-08-31): мод, который кладёт свой файл на место игрового,
+    заменяет его целиком, и когда игра патчит этот файл, добавленное патчем
+    просто исчезает из игры -- молча, без строчки в логе. У них это целая
+    машинерия на двух гит-ветках с трёхсторонним слиянием; нам столько не надо,
+    потому что игровое дерево у нас и так лежит в `reference/` -- достаточно
+    сверить состав.
+
+    Сверяется состав верхнего уровня: блоки `имя = {{` и `types Имя {{`. Имя,
+    которое есть у игры и которого нет у нас, -- это окно или набор типов,
+    которого в игре больше не будет. Сверять построчно смысла нет: мод затем и
+    правит файл, чтобы он отличался.
+    """
+    found: list[str] = []
+    for path in sorted(root.rglob("*.gui")):
+        rel = path.relative_to(root)
+        original = REPO / "reference" / "game" / rel
+        if not original.is_file():
+            continue
+        theirs = _top_level_names(original)
+        ours = _top_level_names(path)
+        for name in sorted(theirs - ours):
+            found.append(f"{path.relative_to(REPO)}: пропал `{name}` — файл "
+                         f"кладётся поверх игрового целиком, значит этого блока "
+                         f"в игре не будет вовсе; он есть в "
+                         f"{original.relative_to(REPO)}")
+    return found
+
+
+def _top_level_names(path: Path) -> set[str]:
+    """Имена блоков нулевого уровня в `.gui`: `имя = {{` и `types Имя {{`."""
+    names: set[str] = set()
+    depth = 0
+    pending: str | None = None
+    for line in _gui_text(path).splitlines():
+        if depth == 0:
+            match = (re.match(r"\s*(\w[\w.]*)\s*=\s*\{", line)
+                     or re.match(r"\s*types\s+(\w+)\s*\{", line))
+            if match:
+                pending = match.group(1)
+        opened = line.count("{") - line.count("}")
+        if depth == 0 and opened > 0 and pending:
+            names.add(pending)
+            pending = None
+        depth += opened
+    return names
+
+
 def shared_copies() -> list[str]:
     """Одинаковые файлы двух модов -- одинаковы ли они на самом деле."""
     found: list[str] = []
@@ -1180,7 +1231,8 @@ def main(argv: list[str]) -> int:
                  + flowcontainer_datamodels(root)
                  + scope_mixed_variables(root)
                  + overflowing_windows(root)
-                 + localization_markup(root))
+                 + localization_markup(root)
+                 + stale_overrides(root))
         total += len(found)
         for line in found:
             print(line)

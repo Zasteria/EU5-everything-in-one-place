@@ -222,14 +222,32 @@ does nothing, and says nothing; the local output modifier it was meant to add to
 a coverage was simply absent. `set_variable` takes `value`, which is where the
 habit comes from.
 
-**`|%` is not a format `GetValue` takes.** The game asks for it 430 times and not
-once on a variable: percentages come off `ScriptValue`, off widget functions, off
-`$VAR$`. `GetVariable('x').GetValue|%1` printed `0 %` for every row of the swap
-list. The form this mod draws twelve percentages with — `...GetValue|1]%`, the
-number already in percent — is also the form the game writes in
-`outliner_entries.gui`.
+**"Not in this tree" is not "not in the engine", and a search is not a
+diagnosis.** `GetVariable('x').GetValue|%1` appears nowhere in the game's 430
+uses of the `|%` format — every one of those is on a `ScriptValue`, a widget
+function or a `$VAR$` — so a session concluded the form was invalid and rewrote
+the swap list's percent around it. **The form works.** The owner, 2026-09-14:
+«процент в правом списке и так был в порядке, я не просил его менять». The
+column that really printed 0 % was somewhere else entirely, and the absence
+proved nothing about either. `api.py` ends every answer with the same warning
+for the same reason; it applies to a grep over the tree just as much.
 
 ## Окно и эффект, которые обязаны договориться
+
+**Число и его подсказка обязаны быть одним счётом.** Столбец «Пригодность» в
+поиске по грамоте считал наш `_rq<k>` -- покрытие по **доступным** способам, --
+а подсказка под ним рисовала разбор перенесённой карты (`_trmm_*`), то есть
+числа Construction Manager, которые про эпоху не знают. На его экране 2026-09-14
+подсказка говорила «76.1 %», столбец «236.1 %», и сойтись они не могли ни при
+каких данных. Он прочёл это как «бардак», и был прав: **подсказка, которая
+объясняет чужой расчёт, хуже отсутствующей** -- она не просто не помогает, она
+опровергает то, что стоит рядом. Перенося чужой инструмент, переноси **или**
+расчёт вместе с его объяснением, **или** ни того ни другого.
+
+**Разбор показывает слагаемые, а не итог.** «Текстиль 100 %» он читать отказался:
+«а с чего бы он 100%? Я этого не вижу». Число, сложенное из покрытия сырья и
+местного модификатора, обязано показывать обе половины порознь -- иначе 236 % на
+земле, у которой каждый товар меньше сотни, выглядит ошибкой, а не суммой.
 
 **A list that offers what its own button refuses is a bug report waiting.** The
 swap window's right column asked whether the building may stand here and never
