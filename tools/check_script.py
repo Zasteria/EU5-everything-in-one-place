@@ -363,6 +363,54 @@ def listless_callbacks(root: Path) -> list[str]:
             for name, where in sorted(registered.items()) if name not in declared]
 
 
+def sized_above_datamodel(root: Path) -> list[str]:
+    """A `datamodel` with a fixed-size box somewhere above it in the window.
+
+    Every list this repository actually draws hangs under nothing but layout
+    policies: `window > vbox > vbox > scrollbox > blockoverride > vbox`. Put a
+    box with a real `size = { N M }` anywhere in that chain and the policies
+    under it resolve to zero width -- the rows render into nothing while
+    everything beside them, headers and counters included, is still correct.
+    That reads as an empty list and logs nothing.
+
+    Five builds of the swap window were spent on it, four of them guesses. The
+    rule is the measurement: compare the chain, not the look.
+    """
+    found: list[str] = []
+    for path in sorted(root.rglob("*.gui")):
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+        text = "\n".join(l.split("#", 1)[0] for l in text.splitlines())
+        if "\nwindow = {" not in text:
+            continue
+        stack: list[tuple[str, bool]] = []
+        for number, line in enumerate(text[text.index("\nwindow = {"):].splitlines(), 1):
+            stripped = line.strip()
+            if "datamodel =" in stripped:
+                # The window frame itself is sized, always and rightly; the
+                # rule is about the boxes between it and the list.
+                sized = [n for n, s in stack[1:] if s]
+                if sized:
+                    where = f"{path.relative_to(REPO)}"
+                    found.append(
+                        f"{where}: a datamodel hangs under `{sized[-1]}`, which "
+                        f"carries a fixed size -- every list this repo draws has "
+                        f"nothing but layout policies above it, and a policy "
+                        f"under a sized box resolves to zero width: the rows "
+                        f"render into nothing while the headers beside them stay "
+                        f"correct")
+            opens = stripped.count("{") - stripped.count("}")
+            if opens > 0:
+                match = re.match(r"^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*\{", stripped)
+                stack.append((match.group(1) if match else "?", False))
+            for _ in range(max(0, -opens)):
+                if stack:
+                    stack.pop()
+            # A real size on the box just opened, not on a leaf that closes here.
+            if stack and re.match(r"^size\s*=\s*\{\s*\d+\s+\d+\s*\}$", stripped):
+                stack[-1] = (stack[-1][0], True)
+    return found
+
+
 def misplaced_triggers(root: Path) -> list[str]:
     """A block in `scripted_effects/` whose body is nothing but conditions.
 
@@ -1058,6 +1106,7 @@ def main(argv: list[str]) -> int:
         found = (problems(root) + unresolved(root, known) + unwritten(root)
                  + misplaced_triggers(root)
                  + listless_callbacks(root)
+                 + sized_above_datamodel(root)
                  + unresolved_script_values(root)
                  + duplicate_definitions(root)
                  + frameless_windows(root)
