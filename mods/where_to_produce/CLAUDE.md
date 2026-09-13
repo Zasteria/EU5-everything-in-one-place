@@ -33,13 +33,18 @@ is ever read by 3. **Before touching any `_plan_*`:
 не предлагать: `Building` создаёт только движок
 ([`RESEARCH.md`](../../docs/RESEARCH.md)).
 
-**Карты городских прав CM dev перенесены целиком** — двадцать режимов и полоса
-значков над баннером, `_trmm_*`
-([`wtp_town_right_map.md`](../../docs/investigations/wtp_town_right_map.md)).
-**`_rq<k>`, выгода земли под грамоту, — его метод**: среднее `_trmm_cov_<товар>`
-по связке (сошлось с картой, 09-14). Проход за клеймом `_trmm_stamp`: без него
-все покрытия нули и грамоты стоят поровну — тогда «Пересчитать» на
-«Технической».
+**Карты городских прав CM dev перенесены целиком** (`_trmm_*`), и выгода земли
+под грамоту `_rq<k>` считается его методом —
+[`wtp_town_right_map.md`](../../docs/investigations/wtp_town_right_map.md).
+
+**Четыре починки 09-14, ни одна не проверена прогоном** — разбор в
+[`wtp_backlog.md`](../../docs/investigations/wtp_backlog.md), правила в
+[`pitfalls/script.md`](../../docs/pitfalls/script.md): `_cov_pass` без
+`province_definition = { }` не считался вовсе (0 % в «Пригодности»); «−» не
+снимало здание, которое игра пускает и в село, и в город; правый список окна
+замены собран теперь **воротами самой постановки** (сторона, место, свободный
+товар); процент в нём печатался формой `|%` на `GetValue`, которой в дереве игры
+нет.
 
 **Раздача, редактор, доливка, ряды, сводка** —
 [`archive/wtp_brief_plan_rules.md`](../../docs/archive/wtp_brief_plan_rules.md),
@@ -53,9 +58,6 @@ is ever read by 3. **Before touching any `_plan_*`:
 **Подсказка игроку — одно предложение** («килотонны бесполезных объяснений»,
 09-14). Объяснение живёт в `generate.py`, не на экране и **не в сгенерированном
 файле**: блок прозы выписывался 1174 раза, `write()` режет повтор.
-
-**Не рисуется — сравни с рисующимся, не гадай** (пять сборок, четыре догадки,
-09-14): [`pitfalls/how_to_fix.md`](../../docs/pitfalls/how_to_fix.md).
 
 **The build stamp is on «Техническая»**, before believing a fix failed. **Before
 any `.gui`: [`pitfalls/windows.md`](../../docs/pitfalls/windows.md)** — every
