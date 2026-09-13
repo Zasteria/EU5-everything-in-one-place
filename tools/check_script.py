@@ -72,9 +72,14 @@ WRITTEN = (
     # **`remove_variable` is not a write.** A variable only ever removed and read
     # is precisely the fault: the rename that broke both plan buttons left the
     # window's flag with a reader, a remover, and nobody to set it.
-    re.compile(r'(?:set|change)(?:_global)?_variable(?:_list)?\s*=\s*'
+    # **A local is a write too.** `local_var:x` matches the `var:` arm of
+    # BEING_READ below -- nothing stands in front of `var:` there -- so unless
+    # `set_local_variable` counts, every staged local reads as never set. The
+    # town-rights map copy staged nineteen of them and all nineteen were
+    # reported as faults.
+    re.compile(r'(?:set|change)(?:_global|_local)?_variable(?:_list)?\s*=\s*'
                r'\{\s*name\s*=\s*(\w+)'),
-    re.compile(r'add_to(?:_global)?_variable_list\s*=\s*\{\s*name\s*=\s*(\w+)'),
+    re.compile(r'add_to(?:_global|_local)?_variable_list\s*=\s*\{\s*name\s*=\s*(\w+)'),
     # CMF owns these: a setting alias and a list it builds are written by the
     # framework, and the mod only ever reads them back.
     re.compile(r'(?:alias|list_name)\s*=\s*(\w+)'),
@@ -311,6 +316,198 @@ def problems(root: Path) -> list[str]:
                 found.append(f"{where}:{line}: `{match.group(1)}` in a trigger — "
                              f"`if` is an effect and `else_if` is nothing; a "
                              f"trigger wants `trigger_{match.group(1)}`")
+    return found
+
+
+TRIGGER_ONLY = re.compile(
+    r"^\s*(has_variable|has_global_variable|always|OR|AND|NOT|NOR|NAND|"
+    r"is_target_in_variable_list|is_target_in_global_variable_list|"
+    r"var:|global_var:|location_rank|raw_material|vegetation|topography|climate|"
+    r"can_build_building|has_building|exists|owner|region|continent|market|"
+    r"province_definition|scope:|#|\{|\}|$)")
+
+
+def listless_callbacks(root: Path) -> list[str]:
+    """A registered list setting with no `<setting>_on_changed` scripted GUI.
+
+    CMM draws a list row only while `CMMGuiIsShown('<setting>_on_changed')`, and
+    registering a list is what marks the setting as having one. Without the GUI
+    the whole widget is hidden -- but a list is filed under a group named after
+    itself, so the **group header still renders**. On screen it reads as a list
+    that came back empty, which is the one thing it is not.
+
+    Two builds were spent on it: the mod-source list registered one row, the
+    dump counted that row, and the page showed a header with nothing under it.
+    """
+    registered: dict[str, str] = {}
+    declared: set[str] = set()
+    for path in sorted(root.rglob("*.txt")):
+        if not set(path.parts) & set(MOUNTS):
+            continue
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+        text = "\n".join(l.split("#", 1)[0] for l in text.splitlines())
+        for match in re.finditer(
+                r"cmm_register(?:_global)?_settings_list\s*=\s*\{([^}]*)\}", text):
+            body = match.group(1)
+            mod = re.search(r"mod_id\s*=\s*(\w+)", body)
+            setting = re.search(r"setting_id\s*=\s*(\w+)", body)
+            if not (mod and setting):
+                continue
+            line = text[:match.start()].count("\n") + 1
+            registered.setdefault(f"{mod.group(1)}__{setting.group(1)}",
+                                  f"{path.relative_to(REPO)}:{line}")
+        declared.update(re.findall(r"(?m)^(\w+)_on_changed\s*=\s*\{", text))
+    return [f"{where}: list setting `{name}` has no `{name}_on_changed` scripted "
+            f"GUI -- CMM hides the list and draws its group header anyway, so "
+            f"the page shows an empty list rather than a missing one"
+            for name, where in sorted(registered.items()) if name not in declared]
+
+
+def sized_above_datamodel(root: Path) -> list[str]:
+    """A `datamodel` with a fixed-size box somewhere above it in the window.
+
+    Every list this repository actually draws hangs under nothing but layout
+    policies: `window > vbox > vbox > scrollbox > blockoverride > vbox`. Put a
+    box with a real `size = { N M }` anywhere in that chain and the policies
+    under it resolve to zero width -- the rows render into nothing while
+    everything beside them, headers and counters included, is still correct.
+    That reads as an empty list and logs nothing.
+
+    Five builds of the swap window were spent on it, four of them guesses. The
+    rule is the measurement: compare the chain, not the look.
+    """
+    found: list[str] = []
+    for path in sorted(root.rglob("*.gui")):
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+        text = "\n".join(l.split("#", 1)[0] for l in text.splitlines())
+        if "\nwindow = {" not in text:
+            continue
+        stack: list[tuple[str, bool]] = []
+        for number, line in enumerate(text[text.index("\nwindow = {"):].splitlines(), 1):
+            stripped = line.strip()
+            if "datamodel =" in stripped:
+                # The window frame itself is sized, always and rightly; the
+                # rule is about the boxes between it and the list.
+                sized = [n for n, s in stack[1:] if s]
+                if sized:
+                    where = f"{path.relative_to(REPO)}"
+                    found.append(
+                        f"{where}: a datamodel hangs under `{sized[-1]}`, which "
+                        f"carries a fixed size -- every list this repo draws has "
+                        f"nothing but layout policies above it, and a policy "
+                        f"under a sized box resolves to zero width: the rows "
+                        f"render into nothing while the headers beside them stay "
+                        f"correct")
+            opens = stripped.count("{") - stripped.count("}")
+            if opens > 0:
+                match = re.match(r"^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*\{", stripped)
+                stack.append((match.group(1) if match else "?", False))
+            for _ in range(max(0, -opens)):
+                if stack:
+                    stack.pop()
+            # A real size on the box just opened, not on a leaf that closes here.
+            if stack and re.match(r"^size\s*=\s*\{\s*\d+\s+\d+\s*\}$", stripped):
+                stack[-1] = (stack[-1][0], True)
+    return found
+
+
+def misplaced_values(root: Path) -> list[str]:
+    """A script value defined outside `common/script_values`.
+
+    The same silent class as a trigger outside `scripted_triggers`: the engine
+    registers a value only from that folder, so one written next to the effects
+    that use it reads as zero for ever and logs nothing. It happened twice --
+    the swap window's per-building gain, and it would have happened again with
+    the coverage pass.
+
+    A value is told from an effect by its body: `value =`, or an arithmetic key
+    at the top level of the block, and no effect-only key anywhere in it.
+    """
+    found: list[str] = []
+    for path in sorted(root.rglob("*.txt")):
+        parts = set(path.parts)
+        if "common" not in parts or "script_values" in parts:
+            continue
+        if not {"scripted_effects", "scripted_triggers"} & parts:
+            continue
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+        text = "\n".join(l.split("#", 1)[0] for l in text.splitlines())
+        for match in re.finditer(r"(?m)^([a-z_0-9]+) = \{$", text):
+            body = text[match.end():_brace_end(text, match.end())]
+            if not re.search(r"(?m)^\tvalue = ", body):
+                continue
+            if re.search(r"(?m)^\t(?:set|change|add_to|remove|clear)_", body):
+                continue
+            line = text[:match.start()].count("\n") + 1
+            found.append(
+                f"{path.relative_to(REPO)}:{line}: `{match.group(1)}` looks like "
+                f"a script value and does not live in common/script_values -- the "
+                f"engine registers one only from there, so this reads as zero "
+                f"for ever and says so nowhere")
+    return found
+
+
+def orphan_localization_lists(root: Path) -> list[str]:
+    """A localization data function reading a global list nothing fills.
+
+    `GetGlobalList('x')` in a .yml is as much a reader as one in a .gui, and it
+    fails the same way -- a count that prints 0 over a list that is plainly not
+    empty, because the code moved to another list and the string stayed behind.
+    That is exactly what "Можно поставить (0)" was.
+    """
+    written: set[str] = set()
+    for path in sorted(root.rglob("*.txt")):
+        if "common" not in set(path.parts):
+            continue
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+        written.update(re.findall(
+            r"(?:add_to|clear)_global_variable_list = \{?\s*(?:name = )?(\w+)", text))
+    found: list[str] = []
+    for path in sorted(root.rglob("*.yml")):
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+        for number, line in enumerate(text.splitlines(), 1):
+            for name in re.findall(r"GetGlobalList\('(\w+)'\)", line):
+                if name not in written:
+                    found.append(
+                        f"{path.relative_to(REPO)}:{number}: localization reads "
+                        f"`{name}`, and nothing in common/ ever fills it -- the "
+                        f"number prints 0 beside a list that is not empty")
+    return found
+
+
+def misplaced_triggers(root: Path) -> list[str]:
+    """A block in `scripted_effects/` whose body is nothing but conditions.
+
+    **Это стоило трёх недель тихой поломки.** `bag_wtp_is_food_loc` -- обычный
+    триггер из одной строки -- лежал в файле эффектов, потому что генератор
+    писал его рядом с эффектом, который им пользуется. Игра в
+    `common/scripted_effects` триггеров не заводит: кнопка житницы показывалась
+    на каждой локации подряд, `error.log` молчал, а условие переписывали дважды,
+    потому что виновным считали его. Владелец, 2026-09-13, во второй раз:
+    «кнопка житниц всё так же на всех локациях отображается».
+
+    **Ложные срабатывания невозможны по построению**: эффект, который только
+    зовёт другие эффекты, пишет `foo = yes`, и `TRIGGER_ONLY` такую строку не
+    пропускает. Флагуется только блок, в котором нет ни одной строки, кроме
+    условий.
+    """
+    found: list[str] = []
+    folder = root / "in_game/common/scripted_effects"
+    if not folder.is_dir():
+        return found
+    for path in sorted(folder.glob("*.txt")):
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+        for match in re.finditer(r"(?m)^([a-z0-9_]+)\s*=\s*\{", text):
+            end = _brace_end(text, match.end() - 1)
+            body = text[match.end():end - 1]
+            lines = [line for line in body.splitlines() if line.strip()]
+            if lines and all(TRIGGER_ONLY.match(line) for line in lines):
+                line_no = text[:match.start()].count("\n") + 1
+                found.append(
+                    f"{path.relative_to(REPO)}:{line_no}: `{match.group(1)}` is a "
+                    f"trigger and lives in `scripted_effects/` — the game reads "
+                    f"triggers only from `scripted_triggers/`, so every caller "
+                    f"of it silently answers something else")
     return found
 
 
@@ -971,6 +1168,11 @@ def main(argv: list[str]) -> int:
             continue
         root = root if root.is_absolute() else REPO / root
         found = (problems(root) + unresolved(root, known) + unwritten(root)
+                 + misplaced_triggers(root)
+                 + listless_callbacks(root)
+                 + sized_above_datamodel(root)
+                 + misplaced_values(root)
+                 + orphan_localization_lists(root)
                  + unresolved_script_values(root)
                  + duplicate_definitions(root)
                  + frameless_windows(root)

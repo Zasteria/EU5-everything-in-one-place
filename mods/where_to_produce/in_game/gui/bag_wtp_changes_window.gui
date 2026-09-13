@@ -26,6 +26,22 @@ types BagWtpChangesTypes {
 		}
 	}
 
+	# **Одна деревня, значком.** Деревня в плане -- сущность, а не товар, и в
+	# списке изменений обязана читаться так же: «деревня встала, товар ушёл», а
+	# не «товар встал, товар ушёл» (его слово, 2026-09-13). Значок берётся со
+	# скоупа здания -- у типа здания он есть, тексиконы в тексте есть только у
+	# товаров.
+	type bag_wtp_chg_vill_entry = widget {
+		size = { 30 24 }
+		text_single = {
+			parentanchor = center
+			autoresize = yes
+			fontsize = 16
+			raw_text = "[BuildingType.GetIcon]"
+			tooltip = "[BuildingType.GetName]"
+		}
+	}
+
 	# One location the editing moved: its name, what went out, what came in.
 	type bag_wtp_chg_entry = hbox {
 		layoutpolicy_horizontal = expanding
@@ -126,6 +142,21 @@ types BagWtpChangesTypes {
 					}
 				}
 			}
+
+			# Деревни той же половины, следом за товарами. Второй датамодели,
+			# а не второй элемент в первой: список один -- скоупы в нём одного
+			# типа, и здание в список товаров не положить.
+			hbox = {
+				parentanchor = right|vcenter
+				widgetanchor = right|vcenter
+				spacing = 4
+				datamodel = "[Location.MakeScope.GetList('bag_wtp_chg_bout')]"
+				item = {
+					bag_wtp_chg_vill_entry = {
+						datacontext = "[Scope.GetBuildingType]"
+					}
+				}
+			}
 		}
 
 		widget = {
@@ -166,6 +197,21 @@ types BagWtpChangesTypes {
 				item = {
 					bag_wtp_chg_goods_entry = {
 						datacontext = "[Scope.GetGoods]"
+					}
+				}
+			}
+
+			# Деревни той же половины, следом за товарами. Второй датамодели,
+			# а не второй элемент в первой: список один -- скоупы в нём одного
+			# типа, и здание в список товаров не положить.
+			hbox = {
+				parentanchor = right|vcenter
+				widgetanchor = right|vcenter
+				spacing = 4
+				datamodel = "[Location.MakeScope.GetList('bag_wtp_chg_bin')]"
+				item = {
+					bag_wtp_chg_vill_entry = {
+						datacontext = "[Scope.GetBuildingType]"
 					}
 				}
 			}

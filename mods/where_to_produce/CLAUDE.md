@@ -4,61 +4,63 @@
 
 «Ты постоянно смешиваешь функции плана и редактирования» — его слова.
 
-**The mod page is three tabs and four buttons that only open windows**, every
-setting inside the window of its function. **Two rules of his**: **no
-descriptions in a window header** — that is the control's tooltip — and
-**anything technical belongs on «Техническая»**
+**The mod page is three tabs and buttons that only open windows**, every setting
+inside the window of its function; **anything technical belongs on
+«Техническая»**
 ([`wtp_menu_rebuild.md`](../../docs/investigations/wtp_menu_rebuild.md)).
 
 | # | what | where | files |
 | --- | --- | --- | --- |
 | 1 | **Choose the ground** | «Земля» on the mod page, or the map buttons in any window | `_zone_*`, `_region_*` |
 | 2 | **One good or right → the best locations for it**, by what local RGOs pay | the ranking window: circles pick it, «Искать локации» runs it | `_score_*`, `_rank_*`, `_pick_*` |
-| 3 | **A whole plan for that ground** — every production where it pays | the plan window: the caps and both switches there, «Пересчитать» runs it | `_plan_*` |
+| 3 | **A whole plan for that ground** — every production where it pays | the plan window: the caps and **three** switches there, «Пересчитать» runs it | `_plan_*` |
 | 4 | **Editing that plan afterwards**, one building at a time | the editor window, and only there | `_edit_*` |
 
-**3 and 4 are separate and the traffic runs one way**: nothing the editor holds
-is ever read by 3. Crossed once and reverted. **The test: «не нужен», then a
-fresh plan — it must be ordinary.**
+**Деревня — сущность, а не товар, и правило стоит в обоих местах** (09-12).
 
-**Before touching any `_plan_*`:
-[`plan_gaps.md`](../../docs/investigations/plan_gaps.md).** **The tick is the
-rank and outlives a save.**
+**Триггер живёт только в `common/scripted_triggers`** (ловит `check_script.py`).
+**Ворота постановки после плана врут**: всё, что читается **после** раздачи,
+спрашивает факт (`_pm<n> > 0`), а не `_plan_can_*`. Два прогона: 09-03 и 09-13.
+
+**3 and 4 are separate and the traffic runs one way**: nothing the editor holds
+is ever read by 3. **Before touching any `_plan_*`:
+[`plan_gaps.md`](../../docs/investigations/plan_gaps.md).**
 
 ## Where it stands
 
+**Его список — [`wtp_backlog.md`](../../docs/investigations/wtp_backlog.md), и он
+открыт.** Построено всё, кроме 9. **Автострой закрыт его решением 2026-09-14** —
+не предлагать: `Building` создаёт только движок
+([`RESEARCH.md`](../../docs/RESEARCH.md)).
 
-**Как устроена раздача — уровень, два котла, деревня-товар, три равенства** —
-[`archive/wtp_brief_plan_rules.md`](../../docs/archive/wtp_brief_plan_rules.md);
-закрыто прогоном 2026-09-08 и с тех пор не менялось. **Правила редактора,
-доливки, рядов, «Специализации» и сводки**:
-[`archive/wtp_brief_rules.md`](../../docs/archive/wtp_brief_rules.md),
-[`wtp_editor_design.md`](../../docs/investigations/wtp_editor_design.md).
+**Карты городских прав CM dev перенесены целиком** — двадцать режимов и полоса
+значков над баннером, `_trmm_*`
+([`wtp_town_right_map.md`](../../docs/investigations/wtp_town_right_map.md)).
+**`_rq<k>`, выгода земли под грамоту, — его метод**: среднее `_trmm_cov_<товар>`
+по связке (сошлось с картой, 09-14). Проход за клеймом `_trmm_stamp`: без него
+все покрытия нули и грамоты стоят поровну — тогда «Пересчитать» на
+«Технической».
 
-**Выгода от земли — свойство ПРОВИНЦИИ, а не локации** (`_g<n>` спрашивает
-`any_location_in_province_definition`), значит внутри провинции менять нечего. **«Перетасовать» — ручная кнопка**, переезд **между** провинциями; сельский
-домик меняется и с деревней, но её выгоду обмен намеренно не спрашивает
-([`plan_gaps.md`](../../docs/investigations/plan_gaps.md)). **Дальше**: шаги 7–8.
+**Раздача, редактор, доливка, ряды, сводка** —
+[`archive/wtp_brief_plan_rules.md`](../../docs/archive/wtp_brief_plan_rules.md),
+[`archive/wtp_brief_rules.md`](../../docs/archive/wtp_brief_rules.md).
 
-**Всё, что мод делает в чужих окнах** — галочки плана в списке зданий локации,
-отмашка на автострой CM, кнопки житницы и «снести лишнее», и чтение зданий чужих
-модов генератором — [`wtp_integration.md`](../../docs/investigations/wtp_integration.md).
-Три правила оттуда, которые дороже прочих: **`root` в фильтре — не сам объект**;
-**`_stands_<здание>` слушается тумблера ранга, поэтому не годится ни для чего,
-что делает игра**; **мод ничего не делает периодически** — это его требование.
+**Чужие окна** —
+[`wtp_integration.md`](../../docs/investigations/wtp_integration.md): **`root` в
+фильтре — не сам объект**; **мод ничего не делает периодически**. **Список CMF
+без своего `_on_changed` не рисуется, а группа рисуется** (ловит чекер).
 
-**Мод строит и зданиями чужих модов**, а «Техническая» держит список этих модов
-с галочкой на каждый: снятая закрывает их зданиям ворота `_avail_`/`_reach_`, а
-не убирает их из файлов.
+**Подсказка игроку — одно предложение** («килотонны бесполезных объяснений»,
+09-14). Объяснение живёт в `generate.py`, не на экране и **не в сгенерированном
+файле**: блок прозы выписывался 1174 раза, `write()` режет повтор.
 
-**Условие внутри значения ключа локализации ломает клетку** — выбирает
-диспетчер `customizable_localization`.
+**Не рисуется — сравни с рисующимся, не гадай** (пять сборок, четыре догадки,
+09-14): [`pitfalls/how_to_fix.md`](../../docs/pitfalls/how_to_fix.md).
 
 **The build stamp is on «Техническая»**, before believing a fix failed. **Before
-touching any `.gui`, the checklist is
-[`pitfalls/windows.md`](../../docs/pitfalls/windows.md)** — every rule in it this
-mod paid for, most of them twice.
+any `.gui`: [`pitfalls/windows.md`](../../docs/pitfalls/windows.md)** — every
+rule in it this mod paid for, most twice.
 
-**Not to be attempted again**: eight, rejected
-([`archive/wtp_not_again.md`](../../docs/archive/wtp_not_again.md)). **The answer
-lives on the location.** **Built by** `generate.py`.
+**Not to be attempted again**: eight
+([`archive/wtp_not_again.md`](../../docs/archive/wtp_not_again.md)). **Built by**
+`generate.py`.

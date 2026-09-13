@@ -292,7 +292,16 @@ bag_wtp_plan_refresh = {
 	}
 
 	effect = {
-		bag_wtp_plan_run = yes
+		# **Галочка решает, какой из двух расчётов это будет.** Обе половины
+		# кончаются одним и тем же окном, и `bag_wtp_spec_ran` в нём говорит,
+		# чем посчитано то, что в нём лежит.
+		if = {
+			limit = { has_global_variable = bag_wtp_plan_spec }
+			bag_wtp_spec_run = yes
+		}
+		else = {
+			bag_wtp_plan_run = yes
+		}
 		bag_wtp_plan_show = yes
 	}
 }
@@ -645,6 +654,150 @@ bag_wtp_toggle_plan_rights = {
 	}
 }
 
+# ---- окно замены домика в одной локации --------------------------------
+#
+# **Локация приходит скоупом и паркуется в глобалке.** Окно открывается из
+# строки плана, а кнопки внутри него живут дольше нажатия: они берут локацию из
+# `bag_wtp_swap_loc` и передают её обратно тем же именем, так что ни один
+# эффект ниже не знает, из какого окна его позвали.
+bag_wtp_swap_open = {
+	scope = country
+	saved_scopes = { wtp_location }
+
+	is_shown = {
+		always = yes
+	}
+
+	effect = {
+		bag_wtp_swap_open_effect = yes
+	}
+}
+
+# Кнопка замены в строке плана: только при открытом редакторе и не на житнице.
+#
+# **Житница сюда не ходит**: её заполняет свой круг, её места в раздаче не
+# участвуют, и снимать её домики поштучно значило бы держать второй обратный
+# ход к кругу, который весь обратим одним нажатием пометки.
+bag_wtp_swap_here = {
+	scope = country
+	saved_scopes = { wtp_location }
+
+	is_shown = {
+		has_variable = bag_wtp_edit_open
+		scope:wtp_location = { bag_wtp_is_granary = no }
+	}
+
+	effect = {
+	}
+}
+
+bag_wtp_swap_close = {
+	scope = country
+
+	is_shown = {
+		always = yes
+	}
+
+	effect = {
+		bag_wtp_swap_close_effect = yes
+	}
+}
+
+bag_wtp_swap_drop = {
+	scope = country
+	saved_scopes = { wtp_bt }
+
+	is_shown = {
+		always = yes
+	}
+
+	effect = {
+		bag_wtp_swap_drop_effect = yes
+	}
+}
+
+bag_wtp_swap_put = {
+	scope = country
+	saved_scopes = { wtp_bt }
+
+	is_shown = {
+		always = yes
+	}
+
+	effect = {
+		bag_wtp_swap_put_effect = yes
+	}
+}
+
+bag_wtp_swap_sift = {
+	scope = country
+
+	is_shown = {
+		always = yes
+	}
+
+	effect = {
+		bag_wtp_swap_sift_effect = yes
+	}
+}
+
+# Какая страница сводки на экране: товары или грамоты.
+#
+# **Глобалка, а не переменная страны.** `visible` в окне читает
+# `GetGlobalVariable(...).IsSet`, и это единственная форма, которой обе половины
+# и обе кнопки отвечают одинаково.
+bag_wtp_sum_page_goods = {
+	scope = country
+
+	is_shown = {
+		always = yes
+	}
+
+	effect = {
+		remove_global_variable = bag_wtp_sum_page
+	}
+}
+
+bag_wtp_sum_page_rights = {
+	scope = country
+
+	is_shown = {
+		always = yes
+	}
+
+	effect = {
+		set_global_variable = { name = bag_wtp_sum_page value = 1 }
+	}
+}
+
+# «Специализация» — тумблер того же «Пересчитать», а не своя кнопка.
+#
+# **Он отменил своё же требование, поиграв**, 2026-09-12: «Кнопка "считать"
+# специализацию — просто делает свой расчёт в том же окне, что и общий план, и
+# если я захочу в этом же окне нажать "пересчитать" — он просто сделает базовый
+# общий план, а не специализацию. Это натолкнуло меня на то, что нужно просто
+# добавить галочку "специализация" в общий план, а не делать для неё отдельную
+# кнопку CMF.» Раньше режим выбирался тем, какую кнопку на странице мода
+# нажали, а окно потом показывало результат обеих — и «Пересчитать» в нём
+# всегда значило обычный план.
+bag_wtp_toggle_plan_spec = {
+	scope = country
+
+	is_shown = {
+		always = yes
+	}
+
+	effect = {
+		if = {
+			limit = { has_global_variable = bag_wtp_plan_spec }
+			remove_global_variable = bag_wtp_plan_spec
+		}
+		else = {
+			set_global_variable = { name = bag_wtp_plan_spec value = 1 }
+		}
+	}
+}
+
 # The two caps, a press a step.
 #
 # **Three and four are the owner's own figures and cannot be derived.** The game
@@ -864,3 +1017,23 @@ bag_wtp_food_press_loc = {
 
 	effect = { bag_wtp_food_press_loc_do = yes }
 }
+
+# **Перекраска карты без смены режима.** Из `cm_trmm_grant_scripted_guis.txt`
+# CM dev: полоса значков видит взведённый флаг, уходит на скрытый двойник
+# `_refresh` того же режима и через 0.1с возвращается -- карта перерисовывается,
+# а выбранный режим остаётся тем же. Взводит флаг пересчёт: после него цвета
+# земли другие, а игра сама об этом не узнаёт.
+# Scope: country
+bag_wtp_trmm_refresh_pending = {
+	is_shown = {
+		has_variable = bag_wtp_trmm_refresh_armed
+	}
+}
+
+# Scope: country
+bag_wtp_trmm_ack_refresh = {
+	effect = {
+		remove_variable = bag_wtp_trmm_refresh_armed
+	}
+}
+

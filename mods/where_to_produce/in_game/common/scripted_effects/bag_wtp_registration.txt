@@ -91,23 +91,6 @@ bag_wtp_register = {
 		group_id = open
 	}
 
-	# **«Специализация» — второй режим того же плана, и своя кнопка у него по
-	# его прямой просьбе**, 2026-09-07: «Сделай отдельную кнопку для такого
-	# плана в меню мода.» Она не открывает окно, а считает: равномерности,
-	# долей и ступеней в этом режиме нет вовсе, провинция берёт ту грамоту, что
-	# ей подходит лучше всего, и отдаёт её всем своим городам, а каждая
-	# свободная ячейка достаётся тому товару, который платит в ней больше всех.
-	#
-	# Всё техническое общее с обычным планом: земля, пометки город/село, лимиты
-	# домиков, слоты, редактор и «Показать изменения». Окно плана после расчёта
-	# открывается само и говорит, каким режимом то, что в нём, посчитано.
-	cmm_register_button_setting = {
-		mod_id = bag_wtp
-		setting_id = spec
-		tab_id = plan
-		group_id = open
-	}
-
 	# ---- «Техническая» -----------------------------------------------------
 	#
 	# «Диагностика». One press, everything the mod knows, into `debug.log` and
@@ -125,6 +108,17 @@ bag_wtp_register = {
 	cmm_register_button_setting = {
 		mod_id = bag_wtp
 		setting_id = diag
+		tab_id = tech
+		group_id = tech
+	}
+
+	# «Пересчитать карту прав». Проход карты городских прав идёт сам на первой
+	# загрузке и больше не идёт никогда: он читает сырьё провинций и модификаторы
+	# вывода, а они меняются по ходу партии. Эта кнопка сбрасывает клеймо и
+	# считает заново -- нажимать, когда карта отстала от игры.
+	cmm_register_button_setting = {
+		mod_id = bag_wtp
+		setting_id = trmm
 		tab_id = tech
 		group_id = tech
 	}
@@ -151,6 +145,9 @@ bag_wtp_register = {
 	bag_wtp_edit_init_slots = yes
 
 	bag_wtp_init_counters = yes
+	# Типы зданий деревень в глобалках: без них ячейка редактора рисует значок
+	# со скоупа, которого нет, и вместо значка встаёт пустота.
+	bag_wtp_init_vbt = yes
 	bag_wtp_rebuild_zone = yes
 	bag_wtp_rebuild_regions = yes
 	bag_wtp_rebuild_sources = yes
@@ -163,6 +160,19 @@ bag_wtp_register = {
 	# index and no circle, and a chosen good the player cannot see is the fault
 	# this mod has paid for twice.
 	bag_wtp_sync_sel = yes
+
+	# Карта «Лучшее городское право», перенесённая из CM: один проход по всем
+	# определениям провинций, за клеймом, ровно как у него. Регистрация CMF
+	# срабатывает и при каждом открытии страницы мода, поэтому без клейма это был
+	# бы полный проход по карте на каждое открытие; с клеймом второй раз не делает
+	# ничего. Пересчёт вручную -- кнопка «Пересчитать карту прав» на «Технической».
+	if = {
+		limit = { NOT = { bag_wtp_trmm_data_is_current = yes } }
+		bag_wtp_trmm_recompute_all = yes
+		# Проход синхронный, так что недосчитанного состояния, которое клеймо
+		# заверило бы, не бывает.
+		set_global_variable = { name = bag_wtp_trmm_stamp value = bag_wtp_trmm_version_value }
+	}
 
 	# **Nothing here throws the answer away.** This runs on CMF's registration
 	# hook, and the fifteenth run showed that hook firing again every time the

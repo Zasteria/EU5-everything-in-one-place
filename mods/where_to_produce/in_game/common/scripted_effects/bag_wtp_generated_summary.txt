@@ -170,8 +170,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn2 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt2 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -196,24 +194,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr2 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_2 = yes bag_wtp_plan_can_rural_2 = yes } }
 			set_global_variable = { name = bag_wtp_wsp2 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp2 }
@@ -226,10 +211,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp2 } }
 			set_global_variable = { name = bag_wtp_wr2 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr2 value = 9 }
@@ -247,7 +228,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr2 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock2 }
 		set_global_variable = { name = bag_wtp_wr2 value = 6 }
@@ -280,8 +260,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn3 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt3 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -306,24 +284,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr3 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_3 = yes bag_wtp_plan_can_rural_3 = yes } }
 			set_global_variable = { name = bag_wtp_wsp3 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp3 }
@@ -336,10 +301,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp3 } }
 			set_global_variable = { name = bag_wtp_wr3 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr3 value = 9 }
@@ -357,7 +318,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr3 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock3 }
 		set_global_variable = { name = bag_wtp_wr3 value = 6 }
@@ -390,8 +350,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn4 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt4 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -416,24 +374,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr4 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_4 = yes bag_wtp_plan_can_rural_4 = yes } }
 			set_global_variable = { name = bag_wtp_wsp4 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp4 }
@@ -446,10 +391,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp4 } }
 			set_global_variable = { name = bag_wtp_wr4 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr4 value = 9 }
@@ -467,7 +408,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr4 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock4 }
 		set_global_variable = { name = bag_wtp_wr4 value = 6 }
@@ -500,8 +440,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn5 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt5 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -526,24 +464,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr5 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_5 = yes bag_wtp_plan_can_rural_5 = yes } }
 			set_global_variable = { name = bag_wtp_wsp5 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp5 }
@@ -556,10 +481,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp5 } }
 			set_global_variable = { name = bag_wtp_wr5 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr5 value = 9 }
@@ -577,7 +498,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr5 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock5 }
 		set_global_variable = { name = bag_wtp_wr5 value = 6 }
@@ -610,8 +530,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn6 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt6 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -636,24 +554,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr6 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_6 = yes bag_wtp_plan_can_rural_6 = yes } }
 			set_global_variable = { name = bag_wtp_wsp6 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp6 }
@@ -666,10 +571,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp6 } }
 			set_global_variable = { name = bag_wtp_wr6 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr6 value = 9 }
@@ -687,7 +588,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr6 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock6 }
 		set_global_variable = { name = bag_wtp_wr6 value = 6 }
@@ -720,8 +620,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn7 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt7 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -746,24 +644,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr7 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_7 = yes bag_wtp_plan_can_rural_7 = yes } }
 			set_global_variable = { name = bag_wtp_wsp7 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp7 }
@@ -776,10 +661,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp7 } }
 			set_global_variable = { name = bag_wtp_wr7 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr7 value = 9 }
@@ -797,7 +678,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr7 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock7 }
 		set_global_variable = { name = bag_wtp_wr7 value = 6 }
@@ -830,8 +710,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn8 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt8 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -856,24 +734,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr8 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_8 = yes bag_wtp_plan_can_rural_8 = yes } }
 			set_global_variable = { name = bag_wtp_wsp8 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp8 }
@@ -886,10 +751,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp8 } }
 			set_global_variable = { name = bag_wtp_wr8 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr8 value = 9 }
@@ -907,7 +768,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr8 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock8 }
 		set_global_variable = { name = bag_wtp_wr8 value = 6 }
@@ -940,8 +800,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn9 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt9 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -966,24 +824,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr9 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_9 = yes bag_wtp_plan_can_rural_9 = yes } }
 			set_global_variable = { name = bag_wtp_wsp9 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp9 }
@@ -996,10 +841,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp9 } }
 			set_global_variable = { name = bag_wtp_wr9 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr9 value = 9 }
@@ -1017,7 +858,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr9 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock9 }
 		set_global_variable = { name = bag_wtp_wr9 value = 6 }
@@ -1050,8 +890,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn10 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt10 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -1076,24 +914,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr10 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_10 = yes bag_wtp_plan_can_rural_10 = yes } }
 			set_global_variable = { name = bag_wtp_wsp10 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp10 }
@@ -1106,10 +931,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp10 } }
 			set_global_variable = { name = bag_wtp_wr10 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr10 value = 9 }
@@ -1127,7 +948,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr10 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock10 }
 		set_global_variable = { name = bag_wtp_wr10 value = 6 }
@@ -1160,8 +980,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn11 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt11 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -1186,24 +1004,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr11 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_rural_11 = yes } }
 			set_global_variable = { name = bag_wtp_wsp11 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp11 }
@@ -1216,10 +1021,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp11 } }
 			set_global_variable = { name = bag_wtp_wr11 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr11 value = 9 }
@@ -1233,7 +1034,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr11 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock11 }
 		set_global_variable = { name = bag_wtp_wr11 value = 6 }
@@ -1266,8 +1066,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn12 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt12 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -1292,24 +1090,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr12 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_12 = yes bag_wtp_plan_can_rural_12 = yes } }
 			set_global_variable = { name = bag_wtp_wsp12 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp12 }
@@ -1322,10 +1107,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp12 } }
 			set_global_variable = { name = bag_wtp_wr12 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr12 value = 9 }
@@ -1343,7 +1124,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr12 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock12 }
 		set_global_variable = { name = bag_wtp_wr12 value = 6 }
@@ -1376,8 +1156,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn13 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt13 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -1402,24 +1180,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr13 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_13 = yes bag_wtp_plan_can_rural_13 = yes } }
 			set_global_variable = { name = bag_wtp_wsp13 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp13 }
@@ -1432,10 +1197,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp13 } }
 			set_global_variable = { name = bag_wtp_wr13 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr13 value = 9 }
@@ -1453,7 +1214,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr13 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock13 }
 		set_global_variable = { name = bag_wtp_wr13 value = 6 }
@@ -1486,8 +1246,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn14 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt14 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -1512,24 +1270,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr14 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_14 = yes bag_wtp_plan_can_rural_14 = yes } }
 			set_global_variable = { name = bag_wtp_wsp14 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp14 }
@@ -1542,10 +1287,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp14 } }
 			set_global_variable = { name = bag_wtp_wr14 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr14 value = 9 }
@@ -1563,7 +1304,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr14 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock14 }
 		set_global_variable = { name = bag_wtp_wr14 value = 6 }
@@ -1596,8 +1336,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn15 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt15 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -1622,24 +1360,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr15 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_15 = yes bag_wtp_plan_can_rural_15 = yes } }
 			set_global_variable = { name = bag_wtp_wsp15 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp15 }
@@ -1652,10 +1377,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp15 } }
 			set_global_variable = { name = bag_wtp_wr15 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr15 value = 9 }
@@ -1673,7 +1394,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr15 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock15 }
 		set_global_variable = { name = bag_wtp_wr15 value = 6 }
@@ -1706,8 +1426,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn16 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt16 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -1732,24 +1450,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr16 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_16 = yes } }
 			set_global_variable = { name = bag_wtp_wsp16 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp16 }
@@ -1762,10 +1467,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp16 } }
 			set_global_variable = { name = bag_wtp_wr16 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr16 value = 9 }
@@ -1779,7 +1480,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr16 value = 4 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock16 }
 		set_global_variable = { name = bag_wtp_wr16 value = 6 }
@@ -1812,8 +1512,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn17 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt17 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -1838,24 +1536,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr17 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_17 = yes bag_wtp_plan_can_rural_17 = yes } }
 			set_global_variable = { name = bag_wtp_wsp17 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp17 }
@@ -1868,10 +1553,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp17 } }
 			set_global_variable = { name = bag_wtp_wr17 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr17 value = 9 }
@@ -1889,7 +1570,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr17 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock17 }
 		set_global_variable = { name = bag_wtp_wr17 value = 6 }
@@ -1922,8 +1602,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn18 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt18 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -1948,24 +1626,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr18 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_18 = yes bag_wtp_plan_can_rural_18 = yes } }
 			set_global_variable = { name = bag_wtp_wsp18 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp18 }
@@ -1978,10 +1643,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp18 } }
 			set_global_variable = { name = bag_wtp_wr18 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr18 value = 9 }
@@ -1999,7 +1660,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr18 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock18 }
 		set_global_variable = { name = bag_wtp_wr18 value = 6 }
@@ -2032,8 +1692,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn19 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt19 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -2058,24 +1716,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr19 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_19 = yes bag_wtp_plan_can_rural_19 = yes } }
 			set_global_variable = { name = bag_wtp_wsp19 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp19 }
@@ -2088,10 +1733,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp19 } }
 			set_global_variable = { name = bag_wtp_wr19 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr19 value = 9 }
@@ -2109,7 +1750,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr19 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock19 }
 		set_global_variable = { name = bag_wtp_wr19 value = 6 }
@@ -2142,8 +1782,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn20 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt20 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -2168,24 +1806,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr20 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_20 = yes bag_wtp_plan_can_rural_20 = yes } }
 			set_global_variable = { name = bag_wtp_wsp20 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp20 }
@@ -2198,10 +1823,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp20 } }
 			set_global_variable = { name = bag_wtp_wr20 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr20 value = 9 }
@@ -2219,7 +1840,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr20 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock20 }
 		set_global_variable = { name = bag_wtp_wr20 value = 6 }
@@ -2252,8 +1872,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn21 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt21 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -2278,24 +1896,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr21 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_21 = yes bag_wtp_plan_can_rural_21 = yes } }
 			set_global_variable = { name = bag_wtp_wsp21 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp21 }
@@ -2308,10 +1913,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp21 } }
 			set_global_variable = { name = bag_wtp_wr21 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr21 value = 9 }
@@ -2329,7 +1930,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr21 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock21 }
 		set_global_variable = { name = bag_wtp_wr21 value = 6 }
@@ -2362,8 +1962,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn22 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt22 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -2388,24 +1986,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr22 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_22 = yes bag_wtp_plan_can_rural_22 = yes } }
 			set_global_variable = { name = bag_wtp_wsp22 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp22 }
@@ -2418,10 +2003,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp22 } }
 			set_global_variable = { name = bag_wtp_wr22 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr22 value = 9 }
@@ -2439,7 +2020,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr22 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock22 }
 		set_global_variable = { name = bag_wtp_wr22 value = 6 }
@@ -2472,8 +2052,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn23 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt23 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -2498,24 +2076,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr23 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_rural_23 = yes } }
 			set_global_variable = { name = bag_wtp_wsp23 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp23 }
@@ -2528,10 +2093,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp23 } }
 			set_global_variable = { name = bag_wtp_wr23 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr23 value = 9 }
@@ -2545,7 +2106,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr23 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock23 }
 		set_global_variable = { name = bag_wtp_wr23 value = 6 }
@@ -2578,8 +2138,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn24 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt24 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -2604,24 +2162,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr24 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_24 = yes bag_wtp_plan_can_rural_24 = yes } }
 			set_global_variable = { name = bag_wtp_wsp24 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp24 }
@@ -2634,10 +2179,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp24 } }
 			set_global_variable = { name = bag_wtp_wr24 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr24 value = 9 }
@@ -2655,7 +2196,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr24 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock24 }
 		set_global_variable = { name = bag_wtp_wr24 value = 6 }
@@ -2688,8 +2228,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn25 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt25 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -2714,24 +2252,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr25 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_rural_25 = yes } }
 			set_global_variable = { name = bag_wtp_wsp25 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp25 }
@@ -2744,10 +2269,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp25 } }
 			set_global_variable = { name = bag_wtp_wr25 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr25 value = 9 }
@@ -2761,7 +2282,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr25 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock25 }
 		set_global_variable = { name = bag_wtp_wr25 value = 6 }
@@ -2794,8 +2314,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn26 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt26 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -2820,24 +2338,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr26 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_26 = yes bag_wtp_plan_can_rural_26 = yes } }
 			set_global_variable = { name = bag_wtp_wsp26 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp26 }
@@ -2850,10 +2355,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp26 } }
 			set_global_variable = { name = bag_wtp_wr26 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr26 value = 9 }
@@ -2871,7 +2372,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr26 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock26 }
 		set_global_variable = { name = bag_wtp_wr26 value = 6 }
@@ -2904,8 +2404,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn27 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt27 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -2930,24 +2428,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr27 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_27 = yes } }
 			set_global_variable = { name = bag_wtp_wsp27 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp27 }
@@ -2960,10 +2445,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp27 } }
 			set_global_variable = { name = bag_wtp_wr27 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr27 value = 9 }
@@ -2977,7 +2458,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr27 value = 4 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock27 }
 		set_global_variable = { name = bag_wtp_wr27 value = 6 }
@@ -3010,8 +2490,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn28 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt28 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -3036,24 +2514,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr28 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_28 = yes } }
 			set_global_variable = { name = bag_wtp_wsp28 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp28 }
@@ -3066,10 +2531,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp28 } }
 			set_global_variable = { name = bag_wtp_wr28 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr28 value = 9 }
@@ -3083,7 +2544,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr28 value = 4 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock28 }
 		set_global_variable = { name = bag_wtp_wr28 value = 6 }
@@ -3116,8 +2576,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn29 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt29 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -3142,24 +2600,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr29 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_29 = yes bag_wtp_plan_can_rural_29 = yes } }
 			set_global_variable = { name = bag_wtp_wsp29 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp29 }
@@ -3172,10 +2617,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp29 } }
 			set_global_variable = { name = bag_wtp_wr29 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr29 value = 9 }
@@ -3193,7 +2634,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr29 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock29 }
 		set_global_variable = { name = bag_wtp_wr29 value = 6 }
@@ -3226,8 +2666,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn30 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt30 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -3252,24 +2690,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr30 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_30 = yes bag_wtp_plan_can_rural_30 = yes } }
 			set_global_variable = { name = bag_wtp_wsp30 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp30 }
@@ -3282,10 +2707,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp30 } }
 			set_global_variable = { name = bag_wtp_wr30 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr30 value = 9 }
@@ -3303,7 +2724,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr30 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock30 }
 		set_global_variable = { name = bag_wtp_wr30 value = 6 }
@@ -3336,8 +2756,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn31 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt31 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -3362,24 +2780,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr31 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_31 = yes } }
 			set_global_variable = { name = bag_wtp_wsp31 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp31 }
@@ -3392,10 +2797,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp31 } }
 			set_global_variable = { name = bag_wtp_wr31 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr31 value = 9 }
@@ -3409,7 +2810,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr31 value = 4 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock31 }
 		set_global_variable = { name = bag_wtp_wr31 value = 6 }
@@ -3442,8 +2842,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn32 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt32 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -3468,24 +2866,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr32 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_32 = yes } }
 			set_global_variable = { name = bag_wtp_wsp32 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp32 }
@@ -3498,10 +2883,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp32 } }
 			set_global_variable = { name = bag_wtp_wr32 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr32 value = 9 }
@@ -3515,7 +2896,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr32 value = 4 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock32 }
 		set_global_variable = { name = bag_wtp_wr32 value = 6 }
@@ -3548,8 +2928,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn33 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt33 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -3574,24 +2952,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr33 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_33 = yes bag_wtp_plan_can_rural_33 = yes } }
 			set_global_variable = { name = bag_wtp_wsp33 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp33 }
@@ -3604,10 +2969,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp33 } }
 			set_global_variable = { name = bag_wtp_wr33 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr33 value = 9 }
@@ -3625,7 +2986,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr33 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock33 }
 		set_global_variable = { name = bag_wtp_wr33 value = 6 }
@@ -3658,8 +3018,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn34 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt34 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -3684,24 +3042,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr34 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_34 = yes bag_wtp_plan_can_rural_34 = yes } }
 			set_global_variable = { name = bag_wtp_wsp34 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp34 }
@@ -3714,10 +3059,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp34 } }
 			set_global_variable = { name = bag_wtp_wr34 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr34 value = 9 }
@@ -3735,7 +3076,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr34 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock34 }
 		set_global_variable = { name = bag_wtp_wr34 value = 6 }
@@ -3768,8 +3108,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn35 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt35 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -3794,24 +3132,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr35 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_35 = yes } }
 			set_global_variable = { name = bag_wtp_wsp35 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp35 }
@@ -3824,10 +3149,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp35 } }
 			set_global_variable = { name = bag_wtp_wr35 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr35 value = 9 }
@@ -3841,7 +3162,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr35 value = 4 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock35 }
 		set_global_variable = { name = bag_wtp_wr35 value = 6 }
@@ -3874,8 +3194,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn36 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt36 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -3900,24 +3218,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr36 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_36 = yes bag_wtp_plan_can_rural_36 = yes } }
 			set_global_variable = { name = bag_wtp_wsp36 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp36 }
@@ -3930,10 +3235,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp36 } }
 			set_global_variable = { name = bag_wtp_wr36 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr36 value = 9 }
@@ -3951,7 +3252,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr36 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock36 }
 		set_global_variable = { name = bag_wtp_wr36 value = 6 }
@@ -3984,8 +3284,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn37 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt37 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -4010,24 +3308,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr37 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_37 = yes bag_wtp_plan_can_rural_37 = yes } }
 			set_global_variable = { name = bag_wtp_wsp37 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp37 }
@@ -4040,10 +3325,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp37 } }
 			set_global_variable = { name = bag_wtp_wr37 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr37 value = 9 }
@@ -4061,7 +3342,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr37 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock37 }
 		set_global_variable = { name = bag_wtp_wr37 value = 6 }
@@ -4094,8 +3374,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn38 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt38 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -4120,24 +3398,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr38 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_38 = yes bag_wtp_plan_can_rural_38 = yes } }
 			set_global_variable = { name = bag_wtp_wsp38 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp38 }
@@ -4150,10 +3415,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp38 } }
 			set_global_variable = { name = bag_wtp_wr38 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr38 value = 9 }
@@ -4171,7 +3432,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr38 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock38 }
 		set_global_variable = { name = bag_wtp_wr38 value = 6 }
@@ -4204,8 +3464,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn39 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt39 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -4230,24 +3488,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr39 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_39 = yes bag_wtp_plan_can_rural_39 = yes } }
 			set_global_variable = { name = bag_wtp_wsp39 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp39 }
@@ -4260,10 +3505,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp39 } }
 			set_global_variable = { name = bag_wtp_wr39 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr39 value = 9 }
@@ -4281,7 +3522,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr39 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock39 }
 		set_global_variable = { name = bag_wtp_wr39 value = 6 }
@@ -4314,8 +3554,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn40 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt40 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -4340,24 +3578,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr40 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_40 = yes bag_wtp_plan_can_rural_40 = yes } }
 			set_global_variable = { name = bag_wtp_wsp40 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp40 }
@@ -4370,10 +3595,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp40 } }
 			set_global_variable = { name = bag_wtp_wr40 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr40 value = 9 }
@@ -4391,7 +3612,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr40 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock40 }
 		set_global_variable = { name = bag_wtp_wr40 value = 6 }
@@ -4424,8 +3644,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn41 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt41 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -4450,24 +3668,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr41 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_41 = yes } }
 			set_global_variable = { name = bag_wtp_wsp41 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp41 }
@@ -4480,10 +3685,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp41 } }
 			set_global_variable = { name = bag_wtp_wr41 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr41 value = 9 }
@@ -4497,7 +3698,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr41 value = 4 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock41 }
 		set_global_variable = { name = bag_wtp_wr41 value = 6 }
@@ -4530,8 +3730,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn42 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt42 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -4556,24 +3754,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr42 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_42 = yes } }
 			set_global_variable = { name = bag_wtp_wsp42 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp42 }
@@ -4586,10 +3771,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp42 } }
 			set_global_variable = { name = bag_wtp_wr42 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr42 value = 9 }
@@ -4603,7 +3784,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr42 value = 4 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock42 }
 		set_global_variable = { name = bag_wtp_wr42 value = 6 }
@@ -4636,8 +3816,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn43 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt43 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -4662,24 +3840,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr43 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_43 = yes bag_wtp_plan_can_rural_43 = yes } }
 			set_global_variable = { name = bag_wtp_wsp43 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp43 }
@@ -4692,10 +3857,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp43 } }
 			set_global_variable = { name = bag_wtp_wr43 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr43 value = 9 }
@@ -4713,7 +3874,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr43 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock43 }
 		set_global_variable = { name = bag_wtp_wr43 value = 6 }
@@ -4746,8 +3906,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn44 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt44 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -4772,24 +3930,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr44 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_44 = yes bag_wtp_plan_can_rural_44 = yes } }
 			set_global_variable = { name = bag_wtp_wsp44 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp44 }
@@ -4802,10 +3947,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp44 } }
 			set_global_variable = { name = bag_wtp_wr44 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr44 value = 9 }
@@ -4823,7 +3964,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr44 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock44 }
 		set_global_variable = { name = bag_wtp_wr44 value = 6 }
@@ -4856,8 +3996,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn45 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt45 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -4882,24 +4020,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr45 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_45 = yes bag_wtp_plan_can_rural_45 = yes } }
 			set_global_variable = { name = bag_wtp_wsp45 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp45 }
@@ -4912,10 +4037,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp45 } }
 			set_global_variable = { name = bag_wtp_wr45 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr45 value = 9 }
@@ -4933,7 +4054,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr45 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock45 }
 		set_global_variable = { name = bag_wtp_wr45 value = 6 }
@@ -4966,8 +4086,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn46 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt46 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -4992,24 +4110,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr46 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_46 = yes bag_wtp_plan_can_rural_46 = yes } }
 			set_global_variable = { name = bag_wtp_wsp46 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp46 }
@@ -5022,10 +4127,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp46 } }
 			set_global_variable = { name = bag_wtp_wr46 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr46 value = 9 }
@@ -5043,7 +4144,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr46 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock46 }
 		set_global_variable = { name = bag_wtp_wr46 value = 6 }
@@ -5076,8 +4176,6 @@ bag_wtp_plan_summary = {
 			limit = { global_var:bag_wtp_pn47 = 0 }
 			change_global_variable = { name = bag_wtp_sum_zero add = 1 }
 		}
-		# Сторона учитывается, только если земля даёт товару хоть одно место на
-		# ней: иначе «минимум по городу» ловил бы нули чисто сельских товаров.
 		if = {
 			limit = { global_var:bag_wtp_ngt47 > 0 }
 			change_global_variable = { name = bag_wtp_sum_tg add = 1 }
@@ -5102,24 +4200,11 @@ bag_wtp_plan_summary = {
 				set_global_variable = { name = bag_wtp_sum_rmax value = global_var:bag_wtp_pnr47 }
 			}
 		}
-		# **Осталось ли товару хоть одно свободное место.** Тот же вопрос, что
-		# задаёт себе раздача, но заданный сейчас: `_px<s><n>` живёт внутри
-		# `bag_wtp_plan_allocate` и о правках редактора не знает.
-		#
-		# **По `_plan_touched`, а не по `_candidates`.** Земля плана -- это то, на
-		# чём план стоит, а список кандидатов идёт за текущим выбором на карте:
-		# клик по соседней провинции после расчёта переписал бы его, и сводка
-		# начала бы отвечать про землю, которой в плане нет.
 		every_in_global_list = {
 			variable = bag_wtp_plan_touched
 			limit = { OR = { bag_wtp_plan_can_town_47 = yes bag_wtp_plan_can_rural_47 = yes } }
 			set_global_variable = { name = bag_wtp_wsp47 value = 1 }
 		}
-		# **«Мест не осталось» -- это два разных ответа, и владелец поймал их
-		# слитыми 2026-09-07: «у всех одна причина остановки, которая по сути
-		# говорит что кончилось место».** Товар, стоящий во всех своих местах,
-		# и товар, чьи места разобрали другие, остановились по разным причинам,
-		# и вопрос «почему рыбы 18, а железа 39» отвечается только вторым.
 		if = {
 			limit = {
 				NOT = { has_global_variable = bag_wtp_wsp47 }
@@ -5132,10 +4217,6 @@ bag_wtp_plan_summary = {
 			limit = { NOT = { has_global_variable = bag_wtp_wsp47 } }
 			set_global_variable = { name = bag_wtp_wr47 value = 10 }
 		}
-		# **В специализации доли и потолков не было, поэтому и причины такой
-		# быть не может.** Товар, у которого места есть, а домиков нет, там
-		# проиграл соревнование за каждую свободную ячейку -- и это отдельный
-		# ответ, а не «ни во что не упёрся».
 		else_if = {
 			limit = { has_global_variable = bag_wtp_spec_ran }
 			set_global_variable = { name = bag_wtp_wr47 value = 9 }
@@ -5153,7 +4234,6 @@ bag_wtp_plan_summary = {
 			set_global_variable = { name = bag_wtp_wr47 value = 5 }
 		}
 	}
-	# Пометки редактора перекрывают всё: это ответ игроку про его же решение.
 	if = {
 		limit = { has_global_variable = bag_wtp_lock47 }
 		set_global_variable = { name = bag_wtp_wr47 value = 6 }
@@ -5161,6 +4241,422 @@ bag_wtp_plan_summary = {
 	if = {
 		limit = { has_global_variable = bag_wtp_skip47 }
 		set_global_variable = { name = bag_wtp_wr47 value = 7 }
+	}
+	# constantinopolitan_silk_monopoly_rights
+	set_global_variable = { name = bag_wtp_rfit1 value = 0 }
+	set_global_variable = { name = bag_wtp_rtop1 value = 0 }
+	every_in_global_list = {
+		variable = bag_wtp_candidates
+		limit = {
+			bag_wtp_plan_is_town = yes
+			bag_wtp_plan_right_won_1 = yes
+		}
+		change_global_variable = { name = bag_wtp_rfit1 add = 1 }
+		if = {
+			limit = { bag_wtp_rq1 > global_var:bag_wtp_rtop1 }
+			set_global_variable = { name = bag_wtp_rtop1 value = bag_wtp_rq1 }
+		}
+	}
+	set_global_variable = { name = bag_wtp_rwhy1 value = 5 }
+	if = {
+		limit = { NOT = { has_global_variable = bag_wtp_plan_rights } }
+		set_global_variable = { name = bag_wtp_rwhy1 value = 3 }
+	}
+	else_if = {
+		limit = { NOT = { global_var:bag_wtp_rgiven1 < global_var:bag_wtp_rquota } }
+		set_global_variable = { name = bag_wtp_rwhy1 value = 4 }
+	}
+	if = {
+		limit = { global_var:bag_wtp_rfit1 = 0 }
+		set_global_variable = { name = bag_wtp_rwhy1 value = 2 }
+	}
+	if = {
+		limit = { NOT = { bag_wtp_plan_right_gate_1 = yes } }
+		set_global_variable = { name = bag_wtp_rwhy1 value = 1 }
+	}
+	# flemish_cloth_industries_right
+	set_global_variable = { name = bag_wtp_rfit2 value = 0 }
+	set_global_variable = { name = bag_wtp_rtop2 value = 0 }
+	every_in_global_list = {
+		variable = bag_wtp_candidates
+		limit = {
+			bag_wtp_plan_is_town = yes
+			bag_wtp_plan_right_won_2 = yes
+		}
+		change_global_variable = { name = bag_wtp_rfit2 add = 1 }
+		if = {
+			limit = { bag_wtp_rq2 > global_var:bag_wtp_rtop2 }
+			set_global_variable = { name = bag_wtp_rtop2 value = bag_wtp_rq2 }
+		}
+	}
+	set_global_variable = { name = bag_wtp_rwhy2 value = 5 }
+	if = {
+		limit = { NOT = { has_global_variable = bag_wtp_plan_rights } }
+		set_global_variable = { name = bag_wtp_rwhy2 value = 3 }
+	}
+	else_if = {
+		limit = { NOT = { global_var:bag_wtp_rgiven2 < global_var:bag_wtp_rquota } }
+		set_global_variable = { name = bag_wtp_rwhy2 value = 4 }
+	}
+	if = {
+		limit = { global_var:bag_wtp_rfit2 = 0 }
+		set_global_variable = { name = bag_wtp_rwhy2 value = 2 }
+	}
+	if = {
+		limit = { NOT = { bag_wtp_plan_right_gate_2 = yes } }
+		set_global_variable = { name = bag_wtp_rwhy2 value = 1 }
+	}
+	# royal_artisan_rights
+	set_global_variable = { name = bag_wtp_rfit3 value = 0 }
+	set_global_variable = { name = bag_wtp_rtop3 value = 0 }
+	every_in_global_list = {
+		variable = bag_wtp_candidates
+		limit = {
+			bag_wtp_plan_is_town = yes
+			bag_wtp_plan_right_won_3 = yes
+		}
+		change_global_variable = { name = bag_wtp_rfit3 add = 1 }
+		if = {
+			limit = { bag_wtp_rq3 > global_var:bag_wtp_rtop3 }
+			set_global_variable = { name = bag_wtp_rtop3 value = bag_wtp_rq3 }
+		}
+	}
+	set_global_variable = { name = bag_wtp_rwhy3 value = 5 }
+	if = {
+		limit = { NOT = { has_global_variable = bag_wtp_plan_rights } }
+		set_global_variable = { name = bag_wtp_rwhy3 value = 3 }
+	}
+	else_if = {
+		limit = { NOT = { global_var:bag_wtp_rgiven3 < global_var:bag_wtp_rquota } }
+		set_global_variable = { name = bag_wtp_rwhy3 value = 4 }
+	}
+	if = {
+		limit = { global_var:bag_wtp_rfit3 = 0 }
+		set_global_variable = { name = bag_wtp_rwhy3 value = 2 }
+	}
+	if = {
+		limit = { NOT = { bag_wtp_plan_right_gate_3 = yes } }
+		set_global_variable = { name = bag_wtp_rwhy3 value = 1 }
+	}
+	# royal_book_rights
+	set_global_variable = { name = bag_wtp_rfit4 value = 0 }
+	set_global_variable = { name = bag_wtp_rtop4 value = 0 }
+	every_in_global_list = {
+		variable = bag_wtp_candidates
+		limit = {
+			bag_wtp_plan_is_town = yes
+			bag_wtp_plan_right_won_4 = yes
+		}
+		change_global_variable = { name = bag_wtp_rfit4 add = 1 }
+		if = {
+			limit = { bag_wtp_rq4 > global_var:bag_wtp_rtop4 }
+			set_global_variable = { name = bag_wtp_rtop4 value = bag_wtp_rq4 }
+		}
+	}
+	set_global_variable = { name = bag_wtp_rwhy4 value = 5 }
+	if = {
+		limit = { NOT = { has_global_variable = bag_wtp_plan_rights } }
+		set_global_variable = { name = bag_wtp_rwhy4 value = 3 }
+	}
+	else_if = {
+		limit = { NOT = { global_var:bag_wtp_rgiven4 < global_var:bag_wtp_rquota } }
+		set_global_variable = { name = bag_wtp_rwhy4 value = 4 }
+	}
+	if = {
+		limit = { global_var:bag_wtp_rfit4 = 0 }
+		set_global_variable = { name = bag_wtp_rwhy4 value = 2 }
+	}
+	if = {
+		limit = { NOT = { bag_wtp_plan_right_gate_4 = yes } }
+		set_global_variable = { name = bag_wtp_rwhy4 value = 1 }
+	}
+	# royal_brewing_rights
+	set_global_variable = { name = bag_wtp_rfit5 value = 0 }
+	set_global_variable = { name = bag_wtp_rtop5 value = 0 }
+	every_in_global_list = {
+		variable = bag_wtp_candidates
+		limit = {
+			bag_wtp_plan_is_town = yes
+			bag_wtp_plan_right_won_5 = yes
+		}
+		change_global_variable = { name = bag_wtp_rfit5 add = 1 }
+		if = {
+			limit = { bag_wtp_rq5 > global_var:bag_wtp_rtop5 }
+			set_global_variable = { name = bag_wtp_rtop5 value = bag_wtp_rq5 }
+		}
+	}
+	set_global_variable = { name = bag_wtp_rwhy5 value = 5 }
+	if = {
+		limit = { NOT = { has_global_variable = bag_wtp_plan_rights } }
+		set_global_variable = { name = bag_wtp_rwhy5 value = 3 }
+	}
+	else_if = {
+		limit = { NOT = { global_var:bag_wtp_rgiven5 < global_var:bag_wtp_rquota } }
+		set_global_variable = { name = bag_wtp_rwhy5 value = 4 }
+	}
+	if = {
+		limit = { global_var:bag_wtp_rfit5 = 0 }
+		set_global_variable = { name = bag_wtp_rwhy5 value = 2 }
+	}
+	if = {
+		limit = { NOT = { bag_wtp_plan_right_gate_5 = yes } }
+		set_global_variable = { name = bag_wtp_rwhy5 value = 1 }
+	}
+	# royal_jewelry_rights
+	set_global_variable = { name = bag_wtp_rfit6 value = 0 }
+	set_global_variable = { name = bag_wtp_rtop6 value = 0 }
+	every_in_global_list = {
+		variable = bag_wtp_candidates
+		limit = {
+			bag_wtp_plan_is_town = yes
+			bag_wtp_plan_right_won_6 = yes
+		}
+		change_global_variable = { name = bag_wtp_rfit6 add = 1 }
+		if = {
+			limit = { bag_wtp_rq6 > global_var:bag_wtp_rtop6 }
+			set_global_variable = { name = bag_wtp_rtop6 value = bag_wtp_rq6 }
+		}
+	}
+	set_global_variable = { name = bag_wtp_rwhy6 value = 5 }
+	if = {
+		limit = { NOT = { has_global_variable = bag_wtp_plan_rights } }
+		set_global_variable = { name = bag_wtp_rwhy6 value = 3 }
+	}
+	else_if = {
+		limit = { NOT = { global_var:bag_wtp_rgiven6 < global_var:bag_wtp_rquota } }
+		set_global_variable = { name = bag_wtp_rwhy6 value = 4 }
+	}
+	if = {
+		limit = { global_var:bag_wtp_rfit6 = 0 }
+		set_global_variable = { name = bag_wtp_rwhy6 value = 2 }
+	}
+	if = {
+		limit = { NOT = { bag_wtp_plan_right_gate_6 = yes } }
+		set_global_variable = { name = bag_wtp_rwhy6 value = 1 }
+	}
+	# royal_masonry_rights
+	set_global_variable = { name = bag_wtp_rfit7 value = 0 }
+	set_global_variable = { name = bag_wtp_rtop7 value = 0 }
+	every_in_global_list = {
+		variable = bag_wtp_candidates
+		limit = {
+			bag_wtp_plan_is_town = yes
+			bag_wtp_plan_right_won_7 = yes
+		}
+		change_global_variable = { name = bag_wtp_rfit7 add = 1 }
+		if = {
+			limit = { bag_wtp_rq7 > global_var:bag_wtp_rtop7 }
+			set_global_variable = { name = bag_wtp_rtop7 value = bag_wtp_rq7 }
+		}
+	}
+	set_global_variable = { name = bag_wtp_rwhy7 value = 5 }
+	if = {
+		limit = { NOT = { has_global_variable = bag_wtp_plan_rights } }
+		set_global_variable = { name = bag_wtp_rwhy7 value = 3 }
+	}
+	else_if = {
+		limit = { NOT = { global_var:bag_wtp_rgiven7 < global_var:bag_wtp_rquota } }
+		set_global_variable = { name = bag_wtp_rwhy7 value = 4 }
+	}
+	if = {
+		limit = { global_var:bag_wtp_rfit7 = 0 }
+		set_global_variable = { name = bag_wtp_rwhy7 value = 2 }
+	}
+	if = {
+		limit = { NOT = { bag_wtp_plan_right_gate_7 = yes } }
+		set_global_variable = { name = bag_wtp_rwhy7 value = 1 }
+	}
+	# royal_naval_rights
+	set_global_variable = { name = bag_wtp_rfit8 value = 0 }
+	set_global_variable = { name = bag_wtp_rtop8 value = 0 }
+	every_in_global_list = {
+		variable = bag_wtp_candidates
+		limit = {
+			bag_wtp_plan_is_town = yes
+			bag_wtp_plan_right_won_8 = yes
+		}
+		change_global_variable = { name = bag_wtp_rfit8 add = 1 }
+		if = {
+			limit = { bag_wtp_rq8 > global_var:bag_wtp_rtop8 }
+			set_global_variable = { name = bag_wtp_rtop8 value = bag_wtp_rq8 }
+		}
+	}
+	set_global_variable = { name = bag_wtp_rwhy8 value = 5 }
+	if = {
+		limit = { NOT = { has_global_variable = bag_wtp_plan_rights } }
+		set_global_variable = { name = bag_wtp_rwhy8 value = 3 }
+	}
+	else_if = {
+		limit = { NOT = { global_var:bag_wtp_rgiven8 < global_var:bag_wtp_rquota } }
+		set_global_variable = { name = bag_wtp_rwhy8 value = 4 }
+	}
+	if = {
+		limit = { global_var:bag_wtp_rfit8 = 0 }
+		set_global_variable = { name = bag_wtp_rwhy8 value = 2 }
+	}
+	if = {
+		limit = { NOT = { bag_wtp_plan_right_gate_8 = yes } }
+		set_global_variable = { name = bag_wtp_rwhy8 value = 1 }
+	}
+	# royal_textile_rights
+	set_global_variable = { name = bag_wtp_rfit9 value = 0 }
+	set_global_variable = { name = bag_wtp_rtop9 value = 0 }
+	every_in_global_list = {
+		variable = bag_wtp_candidates
+		limit = {
+			bag_wtp_plan_is_town = yes
+			bag_wtp_plan_right_won_9 = yes
+		}
+		change_global_variable = { name = bag_wtp_rfit9 add = 1 }
+		if = {
+			limit = { bag_wtp_rq9 > global_var:bag_wtp_rtop9 }
+			set_global_variable = { name = bag_wtp_rtop9 value = bag_wtp_rq9 }
+		}
+	}
+	set_global_variable = { name = bag_wtp_rwhy9 value = 5 }
+	if = {
+		limit = { NOT = { has_global_variable = bag_wtp_plan_rights } }
+		set_global_variable = { name = bag_wtp_rwhy9 value = 3 }
+	}
+	else_if = {
+		limit = { NOT = { global_var:bag_wtp_rgiven9 < global_var:bag_wtp_rquota } }
+		set_global_variable = { name = bag_wtp_rwhy9 value = 4 }
+	}
+	if = {
+		limit = { global_var:bag_wtp_rfit9 = 0 }
+		set_global_variable = { name = bag_wtp_rwhy9 value = 2 }
+	}
+	if = {
+		limit = { NOT = { bag_wtp_plan_right_gate_9 = yes } }
+		set_global_variable = { name = bag_wtp_rwhy9 value = 1 }
+	}
+	# royal_tooling_rights
+	set_global_variable = { name = bag_wtp_rfit10 value = 0 }
+	set_global_variable = { name = bag_wtp_rtop10 value = 0 }
+	every_in_global_list = {
+		variable = bag_wtp_candidates
+		limit = {
+			bag_wtp_plan_is_town = yes
+			bag_wtp_plan_right_won_10 = yes
+		}
+		change_global_variable = { name = bag_wtp_rfit10 add = 1 }
+		if = {
+			limit = { bag_wtp_rq10 > global_var:bag_wtp_rtop10 }
+			set_global_variable = { name = bag_wtp_rtop10 value = bag_wtp_rq10 }
+		}
+	}
+	set_global_variable = { name = bag_wtp_rwhy10 value = 5 }
+	if = {
+		limit = { NOT = { has_global_variable = bag_wtp_plan_rights } }
+		set_global_variable = { name = bag_wtp_rwhy10 value = 3 }
+	}
+	else_if = {
+		limit = { NOT = { global_var:bag_wtp_rgiven10 < global_var:bag_wtp_rquota } }
+		set_global_variable = { name = bag_wtp_rwhy10 value = 4 }
+	}
+	if = {
+		limit = { global_var:bag_wtp_rfit10 = 0 }
+		set_global_variable = { name = bag_wtp_rwhy10 value = 2 }
+	}
+	if = {
+		limit = { NOT = { bag_wtp_plan_right_gate_10 = yes } }
+		set_global_variable = { name = bag_wtp_rwhy10 value = 1 }
+	}
+	# royal_weaponry_rights
+	set_global_variable = { name = bag_wtp_rfit11 value = 0 }
+	set_global_variable = { name = bag_wtp_rtop11 value = 0 }
+	every_in_global_list = {
+		variable = bag_wtp_candidates
+		limit = {
+			bag_wtp_plan_is_town = yes
+			bag_wtp_plan_right_won_11 = yes
+		}
+		change_global_variable = { name = bag_wtp_rfit11 add = 1 }
+		if = {
+			limit = { bag_wtp_rq11 > global_var:bag_wtp_rtop11 }
+			set_global_variable = { name = bag_wtp_rtop11 value = bag_wtp_rq11 }
+		}
+	}
+	set_global_variable = { name = bag_wtp_rwhy11 value = 5 }
+	if = {
+		limit = { NOT = { has_global_variable = bag_wtp_plan_rights } }
+		set_global_variable = { name = bag_wtp_rwhy11 value = 3 }
+	}
+	else_if = {
+		limit = { NOT = { global_var:bag_wtp_rgiven11 < global_var:bag_wtp_rquota } }
+		set_global_variable = { name = bag_wtp_rwhy11 value = 4 }
+	}
+	if = {
+		limit = { global_var:bag_wtp_rfit11 = 0 }
+		set_global_variable = { name = bag_wtp_rwhy11 value = 2 }
+	}
+	if = {
+		limit = { NOT = { bag_wtp_plan_right_gate_11 = yes } }
+		set_global_variable = { name = bag_wtp_rwhy11 value = 1 }
+	}
+	# scandinavian_bergslag_privileges
+	set_global_variable = { name = bag_wtp_rfit12 value = 0 }
+	set_global_variable = { name = bag_wtp_rtop12 value = 0 }
+	every_in_global_list = {
+		variable = bag_wtp_candidates
+		limit = {
+			bag_wtp_plan_is_town = yes
+			bag_wtp_plan_right_won_12 = yes
+		}
+		change_global_variable = { name = bag_wtp_rfit12 add = 1 }
+		if = {
+			limit = { bag_wtp_rq12 > global_var:bag_wtp_rtop12 }
+			set_global_variable = { name = bag_wtp_rtop12 value = bag_wtp_rq12 }
+		}
+	}
+	set_global_variable = { name = bag_wtp_rwhy12 value = 5 }
+	if = {
+		limit = { NOT = { has_global_variable = bag_wtp_plan_rights } }
+		set_global_variable = { name = bag_wtp_rwhy12 value = 3 }
+	}
+	else_if = {
+		limit = { NOT = { global_var:bag_wtp_rgiven12 < global_var:bag_wtp_rquota } }
+		set_global_variable = { name = bag_wtp_rwhy12 value = 4 }
+	}
+	if = {
+		limit = { global_var:bag_wtp_rfit12 = 0 }
+		set_global_variable = { name = bag_wtp_rwhy12 value = 2 }
+	}
+	if = {
+		limit = { NOT = { bag_wtp_plan_right_gate_12 = yes } }
+		set_global_variable = { name = bag_wtp_rwhy12 value = 1 }
+	}
+	# scandinavian_tar_privileges
+	set_global_variable = { name = bag_wtp_rfit13 value = 0 }
+	set_global_variable = { name = bag_wtp_rtop13 value = 0 }
+	every_in_global_list = {
+		variable = bag_wtp_candidates
+		limit = {
+			bag_wtp_plan_is_town = yes
+			bag_wtp_plan_right_won_13 = yes
+		}
+		change_global_variable = { name = bag_wtp_rfit13 add = 1 }
+		if = {
+			limit = { bag_wtp_rq13 > global_var:bag_wtp_rtop13 }
+			set_global_variable = { name = bag_wtp_rtop13 value = bag_wtp_rq13 }
+		}
+	}
+	set_global_variable = { name = bag_wtp_rwhy13 value = 5 }
+	if = {
+		limit = { NOT = { has_global_variable = bag_wtp_plan_rights } }
+		set_global_variable = { name = bag_wtp_rwhy13 value = 3 }
+	}
+	else_if = {
+		limit = { NOT = { global_var:bag_wtp_rgiven13 < global_var:bag_wtp_rquota } }
+		set_global_variable = { name = bag_wtp_rwhy13 value = 4 }
+	}
+	if = {
+		limit = { global_var:bag_wtp_rfit13 = 0 }
+		set_global_variable = { name = bag_wtp_rwhy13 value = 2 }
+	}
+	if = {
+		limit = { NOT = { bag_wtp_plan_right_gate_13 = yes } }
+		set_global_variable = { name = bag_wtp_rwhy13 value = 1 }
 	}
 	# Пустая земля оставила бы 9999 на экране.
 	if = {

@@ -87,6 +87,15 @@ RIGHT_SLOTS = 3
 # case 6 468, and the smallest difference the bonus can make is still about 4.6.
 RIGHT_SCALE = RANK_SCALE // 10
 
+# Товары, у которых `cov_file` считает покрытие: те, что стоят в связках грамот
+# и у чьих способов есть сырьевой вход. Двадцать; `silk` среди них нет -- его
+# рецепты сырья провинции не потребляют, -- и это единственный товар связок, на
+# который счёта грамоты не хватает.
+COV_GOODS = frozenset("""
+beer books cannons cloth dyes fine_cloth firearms furniture glass jewelry
+leather liquor masonry naval_supplies paper pottery tar tools weaponry wine
+""".split())
+
 # The whole-map plan. How many rounds of allocation the player may ask for at
 # most, and how many rows the plan window draws. The first is a ceiling on a
 # setting rather than the setting itself: CMM clamps the number he chooses, and
@@ -231,7 +240,7 @@ DIAG_LAPS = 40
 # shipping on 2026-09-06, and `read(18)` against seventeen slots came within one
 # build again the same day, when the good's line gained `out=`. **Raise this
 # whenever a line gains a number, in the same edit.**
-DIAG_SCRATCH = 25
+DIAG_SCRATCH = 27
 
 # The land continents, in the order the game's own localization lists them. The
 # ocean continent is not offered: nothing is built there.
@@ -450,7 +459,207 @@ def method_gates(method: eu5data.Method) -> list[str]:
     source = source_of(method.building)
     if source:
         gates.append(f"global_var:{MOD_ID}_src{source} = 1")
+    # **И собственный `allow` метода.** Кастильское сукно не запирает ни одно
+    # продвижение и ни один `country_potential` здания -- запирает переменная
+    # державы внутри самого метода, и без этой строки «Мериносовая шерсть»
+    # стояла кандидатом у любой страны на свете (`method_allows`).
+    own_allow, _ = method_allow_gates(method)
+    if own_allow:
+        gates.append(own_allow)
     return gates
+
+
+def method_allows() -> dict[str, str]:
+    """Метод -> его собственный `allow`, одной строкой. Их семь на всю сборку.
+
+    **Ворота бывают на методе, а не только на здании, и этого никто не читал.**
+    Владелец, поиграв, 2026-09-12: «тонкое сукно показывает, что расчитывает на
+    метод "Мериносовая шерсть", которая очевидно доступна хер пойми кому, но
+    точно не мне». «Мериносовая шерсть» -- `spanish_cloth_workshop_maintenance`,
+    и он заперт не продвижением и не `country_potential` здания, а собственным
+
+        allow = { custom_tooltip = { text = has_unlocked_spanish_cloth_industry
+                                     has_variable = spanish_cloth_industry } }
+
+    `method_gates()` смотрел только на продвижения метода и на
+    `country_potential` **здания**, поэтому метод стоял в таблице без единых
+    ворот у любой державы на свете.
+
+    **Класс маленький и посчитан**: собственный `allow` несут семь блоков на всю
+    сборку, но пять из них -- крепостные житницы, которые не производят ничего
+    и методами не являются вовсе. Остаются два кастильских суконных. Читается
+    тем же способом, каким склеивается игра: `common/building_types` каждого
+    мода поверх игровой.
+    """
+    out: dict[str, str] = {}
+    folders = [refs.GAME_COMMON / "building_types"] + [
+        common / "building_types" for _folder, _name, common in refs.mod_sources()]
+    for folder in folders:
+        if not folder.is_dir():
+            continue
+        for path in sorted(folder.glob("*.txt")):
+            if "readme" in path.name.lower():
+                continue
+            text = path.read_text(encoding="utf-8-sig", errors="replace")
+            for match in re.finditer(r"(?m)^\t\t([a-z0-9_]+)\s*=\s*\{", text):
+                body = eu5data._braced(text, match.end() - 1)
+                # `produced` ключом, а не словом: пять крепостных житниц несут
+                # `allow` и не производят ничего -- `is_produced_in_market`
+                # внутри их условия ловился поиском по подстроке, и они попадали
+                # сюда, не будучи методами вовсе.
+                if not re.search(r"(?m)^\t\t\tproduced\s*=", body):
+                    continue
+                if not re.search(r"(?m)^\t\t\tallow\s*=\s*\{", body):
+                    continue
+                allow = eu5data._braced(body, body.index("{", body.index("allow")))
+                out[match.group(1)] = " ".join(allow[1:-1].split())
+    return out
+
+
+METHOD_ALLOWS = method_allows()
+# Что из `allow` метода переведено и куда. Ворота страны идут в `_avail_`/
+# `_reach_`, ворота локации -- рядом с `_stands_<здание>`; непереведённое не
+# гадается, а печатается в конце сборки, чтобы следующий чужой `allow` был
+# виден, а не тих.
+UNREAD_ALLOWS: dict[str, str] = {}
+
+
+def method_country_gate(key: str) -> str | None:
+    """Страновая половина `allow` метода, или `None`.
+
+    **Переводится только то, что переводится без догадок** -- то же правило, что
+    у `building_reach`. `has_variable = X`, в обёртке `custom_tooltip` или без
+    неё, это переменная державы: кастильская промышленность приходит событием
+    (`flavor_cas`), а не продвижением, поэтому «когда-нибудь» для неё значит
+    ровно то же, что «сейчас», и ворота одни на обе стороны.
+
+    **Скоуп выбран, а не измерен.** Сам `allow` спрашивает `scope:target`, когда
+    хочет локацию, -- значит по умолчанию он не в локации; переменная,
+    выдаваемая национальным событием, живёт на державе. Если окажется иначе,
+    метод исчезнет у всех, включая Кастилию, -- и это единственное, что в этой
+    правке может ошибиться.
+    """
+    body = METHOD_ALLOWS.get(key)
+    if not body:
+        return None
+    one = re.fullmatch(r"custom_tooltip = \{ text = [a-z0-9_]+ (has_variable = [a-z0-9_]+) \}", body)
+    if one:
+        return one.group(1)
+    if re.fullmatch(r"has_variable = [a-z0-9_]+", body):
+        return body
+    return None
+
+
+def method_location_gate(key: str) -> str | None:
+    """Локационная половина `allow` метода, или `None`.
+
+    Пять крепостных житниц спрашивают `scope:target ?= { market ?= {
+    is_produced_in_market = goods:X } }`. `scope:target` у метода -- локация, в
+    которой его собираются запустить, и внутренность этого блока сама игра
+    пишет как условие локации: `nd_msa_plantation_estate` несёт ровно
+    `market ?= { is_produced_in_market = goods:pepper }` в своём
+    `location_potential`. Поэтому перевод -- содержимое блока, слово в слово.
+    """
+    body = METHOD_ALLOWS.get(key)
+    if not body:
+        return None
+    inner = re.fullmatch(r"scope:target \?= \{(.*)\}", body)
+    if inner:
+        return " ".join(inner.group(1).split())
+    return None
+
+
+def method_allow_gates(method: eu5data.Method) -> tuple[str | None, str | None]:
+    """Обе половины `allow` всех частей метода -- страновая и локационная.
+
+    У пары `base+improvement` частей две, и `allow` может нести любая: ключ
+    метода это склейка, а `allow` объявлен на имени части.
+    """
+    country, location = [], []
+    for part in method.parts:
+        if part.key not in METHOD_ALLOWS:
+            continue
+        one = method_country_gate(part.key)
+        two = method_location_gate(part.key)
+        if one:
+            country.append(one)
+        elif two:
+            location.append(two)
+        else:
+            UNREAD_ALLOWS[part.key] = METHOD_ALLOWS[part.key]
+    join = lambda parts: (parts[0] if len(parts) == 1 else
+                          " ".join(f"AND = {{ {p} }}" for p in parts)) if parts else None
+    return join(country), join(location)
+
+
+# **Что такое «еда» для житницы, и почему фруктов тут нет.** Владелец,
+# 2026-09-13: «Локации отмеченные как житницы должны ставить в план то, что даёт
+# бонус еды. В основном это земледельческая деревня. Фрукты туда ставить не
+# нужно, они мусор даже для этой цели.» Список сырья -- тот же, что у
+# продовольственного потенциала, минус фрукты.
+GRANARY_FOOD = ("wheat", "rice", "millet", "maize", "legumes", "potato",
+                "livestock", "olives", "fish", "wild_game", "fur", "beeswax")
+
+
+def granary_buildings() -> list[str]:
+    """Здания, которые житница ставит: те, что растят еду или сам РГО.
+
+    **Правило измерено, а не выписано по памяти.** Его слово 2026-09-13: «он
+    теперь должен добавлять в план на этой локации земледельческую деревню и
+    другие здания, которые увеличивают добываемую пищу или в целом добычу РГО.
+    Таких зданий немного… Но такие здания есть в других модах, поэтому мод
+    должен учитывать подобное.»
+
+    Значит признак -- **модификатор здания**, и три его вида:
+
+    - `local_raw_material_output` -- «в целом добыча РГО» (земледельческая
+      деревня, и она же единственная такая в самой игре);
+    - `local_monthly_food_modifier` -- еда напрямую (`irrigation_systems`,
+      акведук, польдеры, террасы);
+    - `local_<сырьё>_output_modifier` по любому продовольственному сырью, кроме
+      фруктов (`windmill` -- пшеница, рис, просо).
+
+    **И только те, что сами ничего не производят, плюс деревни.** Иначе сюда
+    попадают кожевня, поднимающая скот, и мастерская, поднимающая своё сырьё:
+    это производственные домики, они борются за места в обычном плане и в
+    житнице им делать нечего. Земледельческая деревня производит скот и всё
+    равно здесь -- она и есть то, ради чего он это просил.
+
+    На сборке с чужими модами набор -- 77 зданий, 15 из них игры.
+    """
+    found: list[tuple[int, str]] = []
+    folders = [(0, refs.GAME_COMMON / "building_types")] + [
+        (n, common / "building_types")
+        for n, (_folder, _name, common) in enumerate(refs.mod_sources(), start=1)]
+    for source, folder in folders:
+        if not folder.is_dir():
+            continue
+        for path in sorted(folder.glob("*.txt")):
+            if "readme" in path.name.lower():
+                continue
+            text = path.read_text(encoding="utf-8-sig", errors="replace")
+            for match in re.finditer(r"(?m)^([a-z0-9_]+)\s*=\s*\{", text):
+                block = eu5data._braced(text, match.end() - 1)
+                mods = " ".join(
+                    eu5data._braced(block, hit.end() - 1) for hit in
+                    re.finditer(r"(?m)^\t(modifier|raw_modifier)\s*=\s*\{", block))
+                raises = ("local_raw_material_output" in mods
+                          or "local_monthly_food_modifier" in mods
+                          or any(f"local_{good}_output_modifier" in mods
+                                 for good in GRANARY_FOOD))
+                if not raises:
+                    continue
+                produces = re.search(r"(?m)^\t\t\tproduced\s*=", block)
+                village = re.search(r"(?m)^\tis_village\s*=\s*yes", block)
+                if produces and not village:
+                    continue
+                found.append((source, match.group(1)))
+    # **Земледельческая деревня первой, и это не косметика.** Круг ставит
+    # домики по порядку, пока в локации есть место, а его «в основном это
+    # земледельческая деревня» -- это и есть порядок.
+    order = {name: i for i, (_s, name) in enumerate(found)}
+    seen = {name: source for source, name in found}
+    return sorted(seen, key=lambda b: (b != "farming_village", seen[b], order[b]))
 
 
 def building_reach(building: str) -> str | None:
@@ -544,10 +753,57 @@ def method_advances(method: eu5data.Method) -> list[str]:
 # and a rule would quietly take in whatever the next patch adds.
 ALWAYS_AVAILABLE = ("gun_smith", "cannon_maker")
 
+# **С какого числа провинций грамота становится свойством провинции, а не города.**
+# Владелец, 2026-09-12, поиграв: «Меня вообще не устраивает то, когда в одной
+# провинции у меня 2-4 вида городского права. Теперь делаем так. Если на
+# выбранной земле 9 или больше провинций — расчёт идёт строго 1 гор. право на
+# провинцию.» Порог считается по **провинциям выбранной земли**
+# (`_plan_provn`), а не по локациям, и это его число, а не выведенное.
+RIGHT_PROV_MIN = 9
+
+
+def dedupe_comments(body: str) -> str:
+    """Drop a comment block this file has already carried once.
+
+    The game has no loop over building types, so every branch here is written
+    out -- and a block of prose sitting above one branch used to be written out
+    with it. One ten-line block appeared **1174 times** in the plan file alone:
+    1.62 MB of the mod's 20 MB was the same paragraph, repeated.
+
+    The explanation is not lost -- it lives in this generator, which is where a
+    session reads it, and the first occurrence still stands in the output. The
+    owner asked what the twenty megabytes were, 2026-09-14, and this was a sixth
+    of the answer.
+    """
+    out: list[str] = []
+    seen: set[str] = set()
+    block: list[str] = []
+
+    def flush() -> None:
+        if not block:
+            return
+        key = "\n".join(l.strip() for l in block)
+        # A block of one bare `#` or a rule of dashes is punctuation, not prose.
+        if len(key) > 40 and key in seen:
+            block.clear()
+            return
+        seen.add(key)
+        out.extend(block)
+        block.clear()
+
+    for line in body.split("\n"):
+        if line.lstrip().startswith("#"):
+            block.append(line)
+        else:
+            flush()
+            out.append(line)
+    flush()
+    return "\n".join(out)
+
 
 def write(path: Path, body: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(BOM + body, encoding="utf-8")
+    path.write_text(BOM + dedupe_comments(body), encoding="utf-8")
 
 
 # --------------------------------------------------------------------------
@@ -555,13 +811,40 @@ def write(path: Path, body: str) -> None:
 
 
 def methods(game: eu5data.Game) -> list[eu5data.Method]:
-    """Every method that could gain something from an RGO.
+    """Every method the game has, and the filter that used to be here is gone.
 
-    A method with no raw-material input can never take the bonus, so scoring it
-    would be scoring a zero.
+    **Это оно съело лесопилку.** Здесь стояло
+
+        rows = [m for m in game.methods if m.raw_inputs(game.raw_goods)]
+
+    -- «метод без сырьевого входа бонус взять не может, значит считать в нём
+    нечего», -- и `lumber_mill` из `tools = 0.417` и вегетации ни одного
+    сырьевого входа не имеет. Метод выбрасывался, здание не попадало в файлы
+    мода ни разу, и владелец, поиграв, увидел ровно то, что из этого следует:
+    «выбрав древесину в окне редактора и попытаться увеличить его кол-во -- мод
+    напишет, что "товар стоит везде где может". Однако... его стоит в целом 0.»
+    (2026-09-12). **И он сам же назвал класс**: «раз он не понял это с таким
+    простым зданием, значит вполне может быть такое и с какими-то другими».
+
+    **Класс измерен: 15 методов из 705** на сборке с чужими модами --
+    `lumber_mill` (лесоматериалы), `forest_village` (дичь, и это одна из
+    четырёх деревень), два перегонных (спиртное), `slave_market`, `shoen`,
+    `iron_mill/steel_tools` и шесть зданий ND. Ни одного товара целиком это не
+    лишало -- лишало лучшего способа его делать.
+
+    **Считать в них есть что, и ветка для этого уже написана.** У такого метода
+    `shares()` пуст, поэтому `_g<n>` выходит нулём везде -- `values_file` эту
+    ветку знает и подписывает её «a recipe no RGO can feed», -- а `fed_floor`
+    равен базе, то есть земля кормит его всегда и нигде не лучше. Это и есть
+    честный ответ про лесопилку: ей ничего не нужно, кроме леса, и её
+    `location_potential` уже спрашивается через `_stands_<здание>`.
+
+    **Порядок внутри товара это не ломает**: `_m` -- выпуск, и лесопилка (1.0)
+    бьёт `shoen` (0.6) и `nd_liv_dampfsagewerk` (0.48) без всякого бонуса.
+    Ровно та же логика, по которой `fed_floor` не считает против метода вход,
+    который РГО достать не могут: сделанное сырьём не бывает.
     """
-    rows = [m for m in game.methods if m.raw_inputs(game.raw_goods)]
-    return sorted(rows, key=lambda m: (m.produced, m.building, m.key))
+    return sorted(game.methods, key=lambda m: (m.produced, m.building, m.key))
 
 
 def fed_floor(method: eu5data.Method, game: eu5data.Game) -> float:
@@ -595,6 +878,16 @@ def fed_floor(method: eu5data.Method, game: eu5data.Game) -> float:
     """
     shares = sorted(v for good, v in method.shares().items()
                     if good in game.raw_goods)
+    # **Рецепт, которому сырьё не нужно вовсе, проходит всегда -- и сказать это
+    # надо числом, а не нулём.** Потолок у него нуль, половина нуля нуль, и
+    # формула ниже возвращает ровно базу -- а `keep()` сравнивает **строго**
+    # (`var:_try > floor`), так что метод не проходил бы собственный пол ни в
+    # одном ответе с полом. Это второй замок на той же двери, за которой сидела
+    # лесопилка: снять фильтр в `methods()` и оставить это -- значит починить
+    # наполовину. Земля кормит такой рецепт настолько, насколько его вообще
+    # можно кормить, поэтому пол ниже любого мыслимого `_m`.
+    if not shares:
+        return -1.0
     sums = {0.0}
     for share in shares:
         sums |= {s + share for s in sums}
@@ -1115,6 +1408,11 @@ def triggers_file(rows, split, game) -> str:
         source = source_of(method.building)
         if source:
             extra += f"\n\tglobal_var:{MOD_ID}_src{source} = 1"
+        # Страновая половина `allow` самого метода -- та же, что в `_reach_`:
+        # она не про возраст, а про то, случилось ли с этой державой событие.
+        own_allow, _ = method_allow_gates(method)
+        if own_allow:
+            extra += f"\n\t{own_allow}"
         out.append(f"{MOD_ID}_avail_{index} = {{\n"
                    f"\tcan_build_building = building_type:{method.building}{extra}\n}}\n")
 
@@ -1161,6 +1459,27 @@ def triggers_file(rows, split, game) -> str:
 }}
 """)
 
+    out.append(f"""
+# **Там, где локация правда добывает еду, и нигде больше.**
+#
+# **Этот триггер три недели лежал в файле эффектов и потому не работал ни разу.**
+# Кнопка житницы показывалась на каждой локации подряд, и владелец сказал об
+# этом дважды -- сначала «убери её оттуда, где не добывается еда при помощи
+# РГО», потом «кнопка житниц всё так же на всех локациях отображается», уже
+# после того, как условие было переписано. Условие было ни при чём: `.txt` в
+# `common/scripted_effects` триггером не становится, как бы он ни выглядел.
+# **Теперь это ловит `check_script.py`.**
+#
+# Само условие -- тот же факт, которым рисуется число продовольственного
+# потенциала: `_food_pot` стоит на локации ровно тогда, когда `_food_potential`
+# больше нуля. Один факт -- одно место, где он считается; два списка разошлись
+# бы, и один из них уже расходился (дичи в списке CM нет, а в потенциале она
+# есть).
+# Scope: location
+{MOD_ID}_is_food_loc = {{
+\thas_variable = {MOD_ID}_food_pot
+}}
+""")
     out.append("\n# Scope: location\n")
     seen: dict[str, eu5data.Method] = {}
     for method in rows:
@@ -1202,6 +1521,24 @@ def triggers_file(rows, split, game) -> str:
 \t}}
 }}
 """)
+
+    # **Ворота локации, которые метод несёт сам.** Пять крепостных житниц
+    # спрашивают рынок локации: пшеничная стоит только там, где рынок даёт
+    # пшеницу. `_stands_<здание>` -- про здание и общий на все его методы,
+    # поэтому этим пяти нужен свой: `_mstands_<n>`, и `score_file` спрашивает
+    # его вместо `_stands_` ровно там, где он написан (`method_allows`).
+    own = {index: method_allow_gates(method)[1]
+           for index, method in enumerate(rows, start=1)}
+    own = {index: gate for index, gate in own.items() if gate}
+    if own:
+        out.append(f"\n# The {len(own)} method(s) whose own `allow` asks something "
+                   f"of the location.\n# Scope: location\n")
+    for index, gate in own.items():
+        method = rows[index - 1]
+        out.append(f"# {method.building} / {method.key}\n"
+                   f"{MOD_ID}_mstands_{index} = {{\n"
+                   f"\t{MOD_ID}_stands_{method.building} = yes\n"
+                   f"\t{gate}\n}}\n")
 
     return "".join(out)
 
@@ -1498,35 +1835,64 @@ def values_file(rows: list[eu5data.Method], split: dict[str, list[str]],
                 _won(g), " ".join(f"var:{MOD_ID}_pm{order.index(g) + 1} = {mi}"
                                   for mi in mis))
 
-        adds = "".join(f"""\tif = {{
-\t\tlimit = {{ {_won_here(g)} }}
-\t\tadd = var:{MOD_ID}_p{order.index(g) + 1}
-\t}}
-""" for g in bundle)
+        # **Счёт грамоты -- его, из карты.** Его слово, 2026-09-14: «Я хочу,
+        # чтобы выгода от земли по городскому праву считалась тем же методом,
+        # что считается в этой карте.» Метод -- среднее арифметическое покрытий
+        # товаров связки (`cm_trmm_right_textile = (cov_cloth + cov_dyes +
+        # cov_fine_cloth) / 3`), а покрытие товара -- доля входа его лучшего
+        # способа, которую провинция даёт своим РГО, плюс своё РГО локации и её
+        # модификатор вывода. Разбор целиком --
+        # `docs/investigations/wtp_town_right_map.md`.
+        #
+        # **Считаем через `_cov_<товар>`, а не через его же `_right_<право>`**:
+        # у него девять грамот, у сборки тринадцать. Покрытий хватает на все,
+        # кроме `silk`, а на девяти общих формула даёт ровно его число -- в этом
+        # и смысл эталона.
+        #
+        # **`silk` покрытия в переносе не имеет** и в среднее не входит:
+        # константинопольская грамота считается по двум товарам из трёх. Написано
+        # здесь затем, чтобы разницу с картой не искали как ошибку.
+        #
+        # **Умножаем на RANK_SCALE**: покрытие -- доля около единицы, а всё, что
+        # читает `_rq<k>` дальше -- квота, «Лучшая» в сводке, полосы -- меряет в
+        # той же тысяче, что и выгода товара.
+        #
+        # **Старый счёт был денежный**: сумма `_p<n>` по тем товарам связки,
+        # которые город и правда делает, делённая на всю связку. Он отвечал на
+        # «сколько это принесёт», а спрошено «насколько земля под это подходит».
+        covered = [g for g in bundle if g in COV_GOODS]
+        if covered:
+            adds = "".join(f"\tadd = var:{MOD_ID}_cov_{g}\n" for g in covered)
+            adds += f"\tdivide = {len(covered)}\n\tmultiply = {RANK_SCALE}\n"
+        else:
+            # Ни одного покрытого товара -- считать нечем. В сборке такого нет;
+            # ветка стоит, чтобы молчаливый ноль не выглядел как расчёт.
+            adds = "\t# ни один товар связки не имеет покрытия в переносе\n"
         plan_values.append(f"""
 # {right.key}: {", ".join(bundle)}.
 #
-# **How much this ground would pay for this whole charter**, out of {RANK_SCALE},
-# and nothing else in it. No divisor of any kind: **a right is a bundle of goods
-# bound to a town and obeys the same rules a good does** (the owner, 2026-09-03),
-# so what limits it is a quota over the whole ground -- `_rquota` in
-# `_plan_place_rights` -- and never a penalty for having been granted next door.
+# **Насколько эта земля подходит под эту грамоту**, из {RANK_SCALE}. Счёт --
+# его, из карты «Лучшее городское право»: среднее покрытий товаров связки, где
+# покрытие товара -- доля входа его лучшего способа, которую провинция даёт
+# своим РГО. Считается по определению провинции, а не по локации, потому что
+# грамота даёт доступ к сырью всей провинции, а сырьё лежит по разным её
+# локациям.
 #
-# Both divisors it carried are gone and both were faults. Counting the **map**
-# made the ranges disjoint -- a right granted once could never again win on merit
-# -- so the rights were dealt round robin. Counting the **province** was the
-# other end of the same mistake: it emptied a province of the one charter its
-# ground was made for. «Где драг металы — ювелиркой всё затыкано.»
+# **Делителя по всей связке больше нет**: делим на те товары, у которых
+# покрытие есть, как делит он. Из связок сборки не покрыт один `silk`.
 #
-# **It asks `_pm<n>`, the scoring fact, and not `_plan_can_town_<n>`.** That one
-# is a placement gate -- it also asks whether the town still has room -- and at
-# grant time the town is empty, so the two agree; but the diagnosis reads this
-# same value after the plan, when every town is full, and the gate would answer
-# zero for all thirteen. It did, on 2026-09-03.
+# **Ни карты, ни провинции в делителе.** Оба были ошибками: счёт по карте делал
+# диапазоны непересекающимися -- раз выданная грамота уже не могла выиграть по
+# заслугам, -- а счёт по провинции выхолащивал провинцию, созданную ровно под
+# одну грамоту. «Где драг металы — ювелиркой всё затыкано.»
+#
+# **Читается после плана**, когда ворота постановки уже врут, поэтому в нём нет
+# ни одного `_plan_can_*`: только покрытия, которые пересчёт положил на
+# провинцию, и модификаторы самой локации.
 # Scope: location
 {MOD_ID}_rq{k} = {{
 \tvalue = 0
-{adds}\tdivide = {len(bundle)}
+{adds}
 }}
 """)
     plan_values = "".join(plan_values)
@@ -1640,9 +2006,28 @@ def values_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \tmultiply = 0.00001
 }}
 
+# **Порядок поиска по грамоте -- пригодность земли, а не деньги.** `_r_fit` --
+# это `_rq<k>`, среднее покрытий связки, тот счёт, которым красит карта
+# «Лучшее городское право»; кладёт его на кандидата `_score_right_<k>`. Деньги
+# (`_r_total`) остались тем, что строка печатает, и решают ничью.
+# Пригодность земли под отмеченную грамоту, как её показывает карта: `_r_fit`
+# лежит в тысячных (`_rq<k>` = покрытие x RANK_SCALE), а на экран идёт долей,
+# которую формат `|%1` печатает процентом.
+# Scope: location
+{MOD_ID}_r_fit_pct = {{
+\tvalue = var:{MOD_ID}_r_fit
+\tdivide = {RANK_SCALE}
+}}
+
 # Scope: location
 {MOD_ID}_r_score = {{
-\tvalue = var:{MOD_ID}_r_total
+\t# **Порядок ведёт пригодность земли, в обоих режимах.** `_r_fit` -- это
+\t# `_rq<k>`, среднее наших покрытий по связке, и наше покрытие берёт лучший
+\t# способ **из доступных** по тумблеру эпохи. Деньги остались тем, что строка
+\t# печатает, и решают ничью.
+\tvalue = var:{MOD_ID}_r_fit
+\tmultiply = 1000
+\tadd = var:{MOD_ID}_r_total
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_rank_by_end }}
 \t\tadd = {MOD_ID}_r_mid_tiebreak
@@ -2047,7 +2432,12 @@ def score_file(rows: list[eu5data.Method], split: dict[str, list[str]],
             # override the rank alone. `{MOD_ID}_stands_<building>` splits them
             # where it can and asks the game as before where it cannot
             # (`triggers_file`, and `docs/SETTLED.md` for what it cost to find).
-            stands = f" {MOD_ID}_stands_{rows[method_index - 1].building} = yes"
+            # **И `_mstands_<n>` там, где метод несёт собственный `allow` про
+            # локацию**: пшеничная житница крепости стоит не везде, где стоит
+            # крепость, а там, где её рынок даёт пшеницу (`method_allows`).
+            stands = (f" {MOD_ID}_mstands_{method_index} = yes"
+                      if method_allow_gates(rows[method_index - 1])[1] else
+                      f" {MOD_ID}_stands_{rows[method_index - 1].building} = yes")
             # **Every answer below is an end-game one, and the one thing even the
             # end cannot bring is an advance this country may never take.**
             # `_reach_<n>` is `always = yes` for all but thirteen methods, so the
@@ -2567,6 +2957,39 @@ def plan_triggers_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 }}
 """)
 
+        # **И тот же вопрос, заданный факту, а не воротам.**
+        #
+        # `_plan_right_fits_<k>` -- ворота **постановки**: внутри `_plan_can_town_<i>`
+        # сидит «в городе ещё есть комната» и «этого товара тут ещё нет». На
+        # раздаче город пуст и оба верны; **после** плана каждый город полон, и
+        # ворота отвечают «нет» везде. Ровно этим `WTP RQ` вышел тринадцатью
+        # нулями 2026-09-03, и ровно этим вторая страница сводки вышла нулями в
+        # столбцах «Подходит» и «Лучшая» 2026-09-13: «столбы полностью нули,
+        # хотя очевидно там есть те, что подходят по кормлению земли».
+        #
+        # Здесь спрашивается то, что было правдой в момент раздачи и остаётся ею
+        # навсегда: **городской метод этого товара выиграл здесь** (`_pm<i> > 0`),
+        # с той же оговоркой про конкретное здание, что и у `_rq<k>`.
+        won = "".join(
+            "\t\t%s\n" % (
+                f"var:{MOD_ID}_pm{order.index(g) + 1} > 0"
+                if not right_methods(right, g, rows) else
+                "AND = { var:%s_pm%d > 0 OR = { %s } }" % (
+                    MOD_ID, order.index(g) + 1,
+                    " ".join(f"var:{MOD_ID}_pm{order.index(g) + 1} = {mi}"
+                             for mi in right_methods(right, g, rows))))
+            for g in wanted)
+        out.append(f"""
+# {right.key}: подходил ли этот город хоть одним товаром связки -- факт, а не
+# ворота. Читается сводкой после плана, когда ворота уже врут.
+# Scope: location
+{MOD_ID}_plan_right_won_{k} = {{
+\t{MOD_ID}_is_granary = no
+\tOR = {{
+{won}\t}}
+}}
+""")
+
     # And whether this country may grant it at all, at the age the plan is being
     # drawn for. `plan_right_gates` is why this is not the window's question.
     out.append(f"""
@@ -2880,6 +3303,25 @@ def plan_loc_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t# `_edit_last_done` stays as the last of them. Nothing should reach it -- a
 \t# finished press is op 1 or op 2 -- and if the window ever prints it, the
 \t# press did something these branches do not describe.
+\t# **Деревня называется домиком, а не товаром**, и поэтому у неё свои два
+\t# кода операции: одного товара, за который её ставят, у неё нет -- есть
+\t# здание, которое встало или ушло.
+\ttext = {{
+\t\ttrigger = {{
+\t\t\tglobal_var:{MOD_ID}_edit_done = 1
+\t\t\tglobal_var:{MOD_ID}_edit_op = 5
+\t\t\tglobal_var:{MOD_ID}_edit_evicted = 1
+\t\t}}
+\t\tlocalization_key = {MOD_ID}_edit_last_vill_over
+\t}}
+\ttext = {{
+\t\ttrigger = {{ global_var:{MOD_ID}_edit_done = 1 global_var:{MOD_ID}_edit_op = 5 }}
+\t\tlocalization_key = {MOD_ID}_edit_last_vill_add
+\t}}
+\ttext = {{
+\t\ttrigger = {{ global_var:{MOD_ID}_edit_done = 1 global_var:{MOD_ID}_edit_op = 6 }}
+\t\tlocalization_key = {MOD_ID}_edit_last_vill_drop
+\t}}
 \ttext = {{
 \t\ttrigger = {{
 \t\t\tglobal_var:{MOD_ID}_edit_done = 1
@@ -2992,6 +3434,28 @@ def plan_loc_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 }}
 """)
 
+    # **И то же самое на грамоту, для второй страницы сводки.** Пять веток,
+    # одна глобалка `_rwhy<k>`, и ни одна ветка не повторяет товарную: у
+    # грамоты нет ни потолков сторон, ни «не нужен», ни замка.
+    for k in range(1, len(output_rights(rows, game)) + 1):
+        out.append(f"""
+# Scope: country
+{MOD_ID}_rwhy_{k} = {{
+\ttype = country
+""")
+        for code, key in ((1, "gate"), (2, "noland"), (3, "off"), (4, "quota")):
+            out.append(f"""\ttext = {{
+\t\ttrigger = {{ global_var:{MOD_ID}_rwhy{k} = {code} }}
+\t\tlocalization_key = {MOD_ID}_rwhy_{key}
+\t}}
+""")
+        out.append(f"""\ttext = {{
+\t\tfallback = yes
+\t\tlocalization_key = {MOD_ID}_rwhy_beaten
+\t}}
+}}
+""")
+
     # **Клетка «доля −РГО» -- тоже диспетчер, и по той же причине.** Приписку
     # «−N» пробовали через `SelectLocalization` с вложенным `GreaterThan_int32`
     # -- форма из игры, но в клетке сводки она сломала столбец целиком
@@ -3015,13 +3479,20 @@ def plan_loc_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     return "".join(out)
 
 
-def grant_bundle_blocks(rights, order, groups, substitute, tab: str) -> str:
+def grant_bundle_blocks(rights, order, groups, substitute, tab: str,
+                        level_counter: bool = True) -> str:
     """The charter's own buildings, put down on a town that has just taken it.
 
-    **Written once and emitted twice.** The even plan's grant pass and the
-    specialisation's province-wide one place the identical bundle, keyed on the
-    identical `_rbest_k` -- two copies would be two places for the substitute
-    rule and the three counters to drift apart.
+    **Written once and emitted three times.** The even plan's grant pass, its
+    province-wide twin and the specialisation's place the identical bundle,
+    keyed on the identical `_rbest_k` -- three copies would be three places for
+    the substitute rule and the three counters to drift apart.
+
+    **`level_counter` -- единственное, чем отличается провинциальный проход.**
+    `_rn<k>` это лестница уровней и делитель доли, и в нём считаются те
+    единицы, между которыми грамоты делят поровну: города в обычном проходе и
+    **провинции** в провинциальном. Поэтому там он прибавляется один раз на
+    провинцию, снаружи обхода её городов, а здесь его нет вовсе.
     """
     out = []
     for k, right in enumerate(rights, start=1):
@@ -3046,14 +3517,15 @@ def grant_bundle_blocks(rights, order, groups, substitute, tab: str) -> str:
             else:
                 lines.append(f"{tab}\t{MOD_ID}_plan_try_town_{i} = yes\n")
         adds = "".join(lines)
+        level = (f"{tab}\tchange_global_variable = {{ name = {MOD_ID}_rn{k} add = 1 }}\n"
+                 if level_counter else "")
         out.append(f"""{tab}if = {{
 {tab}\tlimit = {{ var:{MOD_ID}_rbest_k = {k} }}
 {adds}{tab}\tset_variable = {{ name = {MOD_ID}_plan_right value = {k} }}
 {tab}\t# **One counter, over the whole ground.** `_rn<k>` is what the quota reads;
 {tab}\t# `_rgiven<k>` is the same number for the dump, kept apart so that changing
 {tab}\t# what the plan counts never quietly changes what the report prints.
-{tab}\tchange_global_variable = {{ name = {MOD_ID}_rn{k} add = 1 }}
-{tab}\tchange_global_variable = {{ name = {MOD_ID}_rgiven{k} add = 1 }}
+{level}{tab}\tchange_global_variable = {{ name = {MOD_ID}_rgiven{k} add = 1 }}
 {tab}\tchange_global_variable = {{ name = {MOD_ID}_plan_rightn add = 1 }}
 {tab}}}
 """)
@@ -3097,6 +3569,57 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     is the owner's «жёстко зарезервировать слоты» and it costs one comparison.
     """
     order = [good for kind in ("raw", "made") for good in split[kind]]
+    # ---- житницы: свой круг, свои домики, ничьи места ----------------------
+    #
+    # **Житница выпадает из плана как место и заполняется отдельно.** Его слово
+    # 2026-09-13: «он теперь должен добавлять в план на этой локации
+    # земледельческую деревню и другие здания, которые увеличивают добываемую
+    # пищу или в целом добычу РГО… В общую сводку они не идут и за места ни с
+    # кем в плане не борются.»
+    #
+    # Поэтому круг стоит **после** раздачи товаров и грамот, ходит только по
+    # помеченным локациям и ни одного счётчика товара не трогает: `_pn<n>`,
+    # `_plan_gain` и `_plan_fed` остаются такими, будто житницы нет вовсе --
+    # ровно как её комнаты не считаются в `_plan_rooms` с 2026-09-08.
+    #
+    # **Товар в строке -- собственное сырьё локации.** `_plan_goods` и
+    # `_plan_builds` обязаны идти индекс в индекс (`ROWPAIR`), а житница по
+    # определению стоит на продовольственном РГО: строка читается «пшеница --
+    # Земледельческая деревня», и это правда о том, что там будет.
+    #
+    # **Ворота -- сама игра, оба раза.** `can_build_building` в скоупе локации
+    # отвечает за ранг и `location_potential`, в скоупе страны -- за
+    # продвижения. Тумблер ранга к житнице не применяется вовсе: она то, что
+    # она есть.
+    gran = granary_buildings()
+
+    def gran_put(tab: str) -> str:
+        out_ = ""
+        for building in gran:
+            source = source_of(building)
+            # Галочка мода-источника, та же, что у `_avail_<n>`: снятая
+            # закрывает его зданиям ворота, а не убирает их из файлов.
+            src = (f"{tab}\t\tglobal_var:{MOD_ID}_src{source} = 1\n" if source else "")
+            out_ += f"""{tab}if = {{
+{tab}\tlimit = {{
+{tab}\t\tOR = {{
+{tab}\t\t\tAND = {{ {MOD_ID}_plan_is_town = yes
+{tab}\t\t\t\tvar:{MOD_ID}_load < global_var:{MOD_ID}_plan_cap_urban }}
+{tab}\t\t\tAND = {{ {MOD_ID}_plan_is_town = no
+{tab}\t\t\t\tvar:{MOD_ID}_load < global_var:{MOD_ID}_plan_cap_rural }}
+{tab}\t\t}}
+{tab}\t\tNOT = {{ is_target_in_variable_list = {{ name = {MOD_ID}_plan_builds target = building_type:{building} }} }}
+{tab}\t\tcan_build_building = building_type:{building}
+{src}{tab}\t\tscope:{MOD_ID}_country = {{ can_build_building = building_type:{building} }}
+{tab}\t}}
+{tab}\tadd_to_variable_list = {{ name = {MOD_ID}_plan_builds target = building_type:{building} }}
+{tab}\tchange_variable = {{ name = {MOD_ID}_load add = 1 }}
+{tab}\tchange_global_variable = {{ name = {MOD_ID}_plan_placed add = 1 }}
+{tab}\tchange_global_variable = {{ name = {MOD_ID}_gran_put add = 1 }}
+{tab}}}
+"""
+        return out_
+
     rights = output_rights(rows, game)
     groups = plan_groups(rows, split, game)
     shared = shared_buildings(rows, split, game)
@@ -3287,6 +3810,10 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t{MOD_ID}_plan_set_quota = yes
 \t{MOD_ID}_plan_place_scarce = yes
 \t{MOD_ID}_plan_allocate = yes
+\t# **И житницы, последними.** Их комнаты в раздаче не участвуют вовсе, и
+\t# домики, которые сюда встанут, ни с кем за места не спорили: круг ходит
+\t# только по помеченным локациям и ставит то, что растит еду или сам РГО.
+\t{MOD_ID}_plan_fill_granaries = yes
 \t{MOD_ID}_plan_rank = yes
 \t# **A fresh plan is its own baseline.** «Показать изменения» right after one is
 \t# empty, which is the true answer: nothing has been edited yet, and everything
@@ -3315,31 +3842,42 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 {MOD_ID}_set_bavail = {{
 {bavail}}}
 
-# **Локация, которой Construction Manager предлагает режим житницы.**
+# Переключить режим житницы для этой локации.
 #
-# Список сырья прочитан у самого CM (`cm_is_food_rgo_location`) на сборке, а не
-# выписан по памяти: обновится он -- обновится и здесь при пересборке. Условие
-# то же, что у него: сельское поселение с продовольственным РГО, потому что
-# фермерскую и рыбацкую деревни в городе не построить, и кнопка там ни к чему.
-# Scope: location
-{MOD_ID}_is_food_loc = {{
-\tlocation_rank = location_rank:rural_settlement
-\tOR = {{
-{food_or}\t}}
-}}
-
-# Переключить режим житницы CM для этой локации. **Переменная CM пишется
-# напрямую**, как и галочки автостроя; модификатор `cm_auto_food_locked_location`
-# намеренно не ставится -- имя чужого модификатора в нашем файле сломалось бы у
-# того, у кого CM не стоит, а на саму житницу CM смотрит по переменной.
+# **Переменная CM пишется по-прежнему, и это не рудимент.** Мод её и читает
+# (`_is_granary`), и CM, если он у кого-то стоит, увидит ту же пометку; имя,
+# которого нет, ломается не там, где его ищут, а переменную можно писать в
+# пустоту. Модификатор `cm_auto_food_locked_location` намеренно не ставится.
+#
+# **В окне плана нажатие только помечает, в редакторе -- меняет сразу.** Его
+# слово 2026-09-13: «если я жму её в окне "общего плана", то чтобы получить
+# изменения -- нужно нажать пересчитать… если я нажму на эту кнопку в режиме
+# редактора -- изменения должны произойти сразу же, т.е. исчезнуть из локации
+# домики плана и встать домики житницы». Кнопка одна на оба окна -- ряд плана
+# общий, -- поэтому решает то, открыт ли редактор.
 # Scope: country, ждёт scope:wtp_location
 {MOD_ID}_food_press_loc_do = {{
+\tsave_scope_as = {MOD_ID}_country
 \tscope:wtp_location = {{
 \t\tif = {{
 \t\t\tlimit = {{ has_variable = cm_auto_food_location_enabled }}
 \t\t\tremove_variable = cm_auto_food_location_enabled
 \t\t}}
 \t\telse = {{ set_variable = {{ name = cm_auto_food_location_enabled value = yes }} }}
+\t}}
+\tif = {{
+\t\tlimit = {{ has_variable = {MOD_ID}_edit_open }}
+\t\tscope:wtp_location = {{
+\t\t\tif = {{
+\t\t\t\tlimit = {{ {MOD_ID}_is_granary = yes }}
+\t\t\t\t# Стала житницей: всё плановое с локации долой, житничное на неё.
+\t\t\t\t{MOD_ID}_edit_wipe_here = yes
+{gran_put(chr(9) * 3)}\t\t\t}}
+\t\t\telse = {{ {MOD_ID}_clear_granary_here = yes }}
+\t\t}}
+\t\t# Строка локации перерисовывается из `_plan_builds`, поэтому её надо
+\t\t# собрать заново -- и по всей земле, потому что пара строк общая.
+\t\t{MOD_ID}_plan_rows = yes
 \t}}
 }}
 
@@ -3779,6 +4317,13 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 # reads all {len(rows)} of them, {len(order)} passes over the same ground.
 # Scope: country
 {MOD_ID}_plan_score = {{
+\t# **Покрытие -- до всего остального.** `_rq<k>`, которым раздача выбирает
+\t# грамоты, читает `_cov_<товар>`, а посчитать его может только эффект: доля
+\t# входа спрашивает `any_location_in_province_definition`.
+\tevery_in_global_list = {{
+\t\tvariable = {MOD_ID}_candidates
+\t\t{MOD_ID}_cov_pass = yes
+\t}}
 """)
     for index, good in enumerate(order, start=1):
         out.append(f"\t{MOD_ID}_score_{index} = yes\n"
@@ -4222,6 +4767,22 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
                     f"var:{MOD_ID}_plan_right = {k} }}\n{inside}\t\t}}\n")
     rest = "".join(row_entry(index, good, "\t\t")
                    for index, good in enumerate(order, start=1))
+    # **Домики житницы -- свой список, и пару строк они не трогают.**
+    #
+    # Сначала они шли в `_row_goods`/`_row_builds` парой «сырьё локации --
+    # домик», и это сломало инвариант: `add_to_variable_list` кладёт один и тот
+    # же товар один раз, а домиков житница ставит несколько, так что списки
+    # разъезжались по длине. Прогон 2026-09-13 это и намерил:
+    # `WTP ROWPAIR rows=37 mismatched=7`, при семи ожидаемых нулях.
+    #
+    # Своего товара у этих домиков нет вовсе -- они ничего не производят, --
+    # поэтому им и не место в паре. `_row_gran` рисуется в строке отдельным
+    # датамоделем, как деревни в списке изменений.
+    gran_rows = "".join(f"""\t\tif = {{
+\t\t\tlimit = {{ is_target_in_variable_list = {{ name = {MOD_ID}_plan_builds target = building_type:{b} }} }}
+\t\t\tadd_to_variable_list = {{ name = {MOD_ID}_row_gran target = building_type:{b} }}
+\t\t}}
+""" for b in granary_buildings())
     out.append(f"""
 # What a row draws, in an order that is the same however the plan got there.
 # Scope: country
@@ -4230,7 +4791,8 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\tvariable = {MOD_ID}_plan_touched
 \t\tclear_variable_list = {MOD_ID}_row_goods
 \t\tclear_variable_list = {MOD_ID}_row_builds
-{bundles}{rest}\t}}
+\t\tclear_variable_list = {MOD_ID}_row_gran
+{bundles}{rest}{gran_rows}\t}}
 }}
 
 """)
@@ -4288,7 +4850,7 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     level_bands = "".join(
         f"\t\tset_global_variable = {{ name = {MOD_ID}_rband value = {band} }}\n"
         f"\t\tset_global_variable = {{ name = {MOD_ID}_ropen value = 0 }}\n"
-        f"\t\t{MOD_ID}_plan_grant_pass = yes\n"
+        f"\t\t{MOD_ID}_plan_grant_step = yes\n"
         for band in PLAN_BANDS)
     # The same ladder once more, off the loop, for a ground where the guard below
     # cut the levels short. `_rlevel` jumps to the quota so the count is the one
@@ -4315,7 +4877,39 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     # charter fits on merit still ends with one.
     grant_passes += (f"\tset_global_variable = {{ name = {MOD_ID}_rband value = 0 }}\n"
                      f"\tset_global_variable = {{ name = {MOD_ID}_ropen value = 1 }}\n"
-                     f"\t{MOD_ID}_plan_grant_pass = yes\n")
+                     f"\t{MOD_ID}_plan_grant_step = yes\n")
+    gran_clear = "".join(f"""\tif = {{
+\t\tlimit = {{ is_target_in_variable_list = {{ name = {MOD_ID}_plan_builds target = building_type:{b} }} }}
+\t\tremove_list_variable = {{ name = {MOD_ID}_plan_builds target = building_type:{b} }}
+\t\tchange_variable = {{ name = {MOD_ID}_load subtract = 1 }}
+\t\tchange_global_variable = {{ name = {MOD_ID}_plan_placed subtract = 1 }}
+\t}}
+""" for b in gran)
+
+    out.append(f"""
+# Житницы: что план ставит на локацию, помеченную кормилицей.
+#
+# **По одному домику, по порядку, пока есть место.** Земледельческая деревня
+# первой -- «в основном это земледельческая деревня», -- дальше то, что игра и
+# чужие моды дают этой локации: `granary_buildings` собрал их по модификатору,
+# а не по имени, поэтому здание чужого мода попадает сюда само.
+# Scope: country
+{MOD_ID}_plan_fill_granaries = {{
+\tset_global_variable = {{ name = {MOD_ID}_gran_put value = 0 }}
+\tevery_in_global_list = {{
+\t\tvariable = {MOD_ID}_candidates
+\t\tlimit = {{ {MOD_ID}_is_granary = yes }}
+{gran_put(chr(9) * 2)}\t}}
+}}
+
+# И обратное: снять с локации всё, что поставила житница.
+#
+# **Нужно затем же, зачем и первое**: пометка снимается в редакторе и обязана
+# убрать домики немедленно, не дожидаясь «Пересчитать».
+# Scope: location
+{MOD_ID}_clear_granary_here = {{
+{gran_clear}}}
+""")
     out.append(f"""
 # Urban rights, before any good is placed and only in towns.
 #
@@ -4350,7 +4944,16 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t# by that, so a country with three rights available spreads over three and not
 \t# over the {len(rights)} the game defines.
 \tset_global_variable = {{ name = {MOD_ID}_rgrant value = 0 }}
-{grant_counts}\tset_global_variable = {{ name = {MOD_ID}_rquota value = global_var:{MOD_ID}_plan_towns }}
+{grant_counts}\t# **Квота делит то, между чем грамоты и делятся.** Города -- в обычном
+\t# режиме, провинции -- когда их {RIGHT_PROV_MIN} и больше и грамота стала
+\t# свойством провинции: делить провинциальные грамоты на число городов
+\t# значило бы выдать каждой грамоте в несколько раз больше провинций, чем
+\t# земля держит, и лестница уровней выродилась бы в первый же круг.
+\tset_global_variable = {{ name = {MOD_ID}_rquota value = global_var:{MOD_ID}_plan_towns }}
+\tif = {{
+\t\tlimit = {{ global_var:{MOD_ID}_plan_provn >= {RIGHT_PROV_MIN} }}
+\t\tset_global_variable = {{ name = {MOD_ID}_rquota value = global_var:{MOD_ID}_plan_provn }}
+\t}}
 \tif = {{
 \t\tlimit = {{ global_var:{MOD_ID}_rgrant > 0 }}
 \t\tchange_global_variable = {{ name = {MOD_ID}_rquota divide = {MOD_ID}_rgrant_value }}
@@ -4415,6 +5018,117 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     substitute = market_inputs(game)
     out.append(grant_bundle_blocks(rights, order, groups, substitute, "\t\t"))
     out.append("\t}\n}\n")
+
+    # ---- одна грамота на провинцию ----------------------------------------
+    #
+    # Провинциальный близнец прохода выше. Всё, что делает лестницу лестницей --
+    # полосы, уровни, квота, открывающий проход, -- то же самое и читается из тех
+    # же глобалок; меняются ровно две вещи: **кого обходим** (представителей
+    # провинций вместо городов) и **чем платит земля** (средняя `_rq<k>` по тем
+    # городам провинции, которым грамота вообще подходит, вместо числа одного
+    # города).
+    #
+    # Средняя, а не сумма, по той же причине, по какой она средняя в
+    # «Специализации»: сумма выбирала бы грамоту числом городов, а не тем, что
+    # под ними лежит.
+    #
+    # **Второй раз провинция не берёт, и сторожа для этого не нужно.** Выдача
+    # ставит связку каждому городу провинции, значит `_load` у них уже не ноль,
+    # значит на следующем круге `_sprn` у этой провинции выйдет нулём при любой
+    # грамоте и `_sprk` останется нулём. Тот же сторож, что у обычного прохода,
+    # и ровно та же строка.
+    prov_picks = ""
+    for k, right in enumerate(rights, start=1):
+        prov_picks += f"""\t\t# {right.key}
+\t\tset_global_variable = {{ name = {MOD_ID}_sprt value = 0 }}
+\t\tset_global_variable = {{ name = {MOD_ID}_sprn value = 0 }}
+\t\tprovince_definition = {{
+\t\t\tevery_location_in_province_definition = {{
+\t\t\t\tlimit = {{
+\t\t\t\t\tis_target_in_global_variable_list = {{ name = {MOD_ID}_candidates target = this }}
+\t\t\t\t\t{MOD_ID}_plan_is_town = yes
+\t\t\t\t\tvar:{MOD_ID}_load = 0
+\t\t\t\t\t{MOD_ID}_plan_right_fits_{k} = yes
+\t\t\t\t}}
+\t\t\t\tchange_global_variable = {{ name = {MOD_ID}_sprt add = {MOD_ID}_rq{k} }}
+\t\t\t\tchange_global_variable = {{ name = {MOD_ID}_sprn add = 1 }}
+\t\t\t}}
+\t\t}}
+\t\tif = {{
+\t\t\tlimit = {{
+\t\t\t\tglobal_var:{MOD_ID}_sprn > 0
+\t\t\t\tscope:{MOD_ID}_country = {{ {MOD_ID}_plan_right_gate_{k} = yes }}
+\t\t\t}}
+\t\t\tchange_global_variable = {{ name = {MOD_ID}_sprt divide = {MOD_ID}_sprn_value }}
+\t\t\tif = {{
+\t\t\t\tlimit = {{
+\t\t\t\t\tglobal_var:{MOD_ID}_sprt > global_var:{MOD_ID}_sprv
+\t\t\t\t\tglobal_var:{MOD_ID}_sprt >= global_var:{MOD_ID}_rband
+\t\t\t\t\tOR = {{
+\t\t\t\t\t\tglobal_var:{MOD_ID}_ropen = 1
+\t\t\t\t\t\tglobal_var:{MOD_ID}_rn{k} < global_var:{MOD_ID}_rlevel
+\t\t\t\t\t}}
+\t\t\t\t}}
+\t\t\t\tset_global_variable = {{ name = {MOD_ID}_sprv value = global_var:{MOD_ID}_sprt }}
+\t\t\t\tset_global_variable = {{ name = {MOD_ID}_sprk value = {k} }}
+\t\t\t}}
+\t\t}}
+"""
+    prov_level = "".join(
+        f"\t\t\tif = {{\n\t\t\t\tlimit = {{ global_var:{MOD_ID}_sprk = {k} }}\n"
+        f"\t\t\t\tchange_global_variable = {{ name = {MOD_ID}_rn{k} add = 1 }}\n\t\t\t}}\n"
+        for k in range(1, len(rights) + 1))
+    out.append(f"""
+# Один круг провинциальной раздачи: каждая ещё пустая провинция берёт ту
+# грамоту, за которую её города платят в среднем больше всего, и отдаёт её всем
+# своим городам разом.
+#
+# **`-1`, а не ноль, как начальное лучшее** -- по той же причине, что и в
+# обычном проходе: земля, за которую ни одна грамота не платит ничего, всё
+# равно должна получить ту, что ей хоть как-то подходит.
+#
+# **`_rn<k>` здесь считает провинции**, поэтому он прибавляется один раз
+# снаружи обхода городов, а связка выкладывается без него.
+# Scope: country
+{MOD_ID}_plan_grant_pass_prov = {{
+\tevery_in_global_list = {{
+\t\tvariable = {MOD_ID}_plan_prov_locs
+\t\tset_global_variable = {{ name = {MOD_ID}_sprv value = -1 }}
+\t\tset_global_variable = {{ name = {MOD_ID}_sprk value = 0 }}
+{prov_picks}\t\tif = {{
+\t\t\tlimit = {{ global_var:{MOD_ID}_sprk > 0 }}
+{prov_level}\t\t\tprovince_definition = {{
+\t\t\t\tevery_location_in_province_definition = {{
+\t\t\t\t\tlimit = {{
+\t\t\t\t\t\tis_target_in_global_variable_list = {{ name = {MOD_ID}_candidates target = this }}
+\t\t\t\t\t\t{MOD_ID}_plan_is_town = yes
+\t\t\t\t\t\tvar:{MOD_ID}_load = 0
+\t\t\t\t\t}}
+\t\t\t\t\tset_variable = {{ name = {MOD_ID}_rbest_k value = global_var:{MOD_ID}_sprk }}
+{grant_bundle_blocks(rights, order, groups, substitute, chr(9) * 5, level_counter=False)}\t\t\t\t\tremove_variable = {MOD_ID}_rbest_k
+\t\t\t\t}}
+\t\t\t}}
+\t\t}}
+\t}}
+}}
+
+# **Чем раздаются грамоты -- городами или провинциями.** Его слово, 2026-09-12:
+# «Если на выбранной земле {RIGHT_PROV_MIN} или больше провинций -- расчёт идёт строго 1 гор.
+# право на провинцию». Порог по провинциям выбранной земли; ниже него ничего не
+# меняется, и маленькая земля планируется ровно как планировалась.
+#
+# **Одна развилка на всю лестницу, а не на каждый её шаг.** Полосы и уровни
+# зовут этот шаг, поэтому переключать гранулярность посреди раздачи нечем -- и
+# незачем.
+# Scope: country
+{MOD_ID}_plan_grant_step = {{
+\tif = {{
+\t\tlimit = {{ global_var:{MOD_ID}_plan_provn >= {RIGHT_PROV_MIN} }}
+\t\t{MOD_ID}_plan_grant_pass_prov = yes
+\t}}
+\telse = {{ {MOD_ID}_plan_grant_pass = yes }}
+}}
+""")
 
     # ---- the quota ---------------------------------------------------------
     #
@@ -5611,7 +6325,12 @@ EDIT_SLOTS = 3
 # `flowcontainer` crashed the game and `fixedgridbox` drew the cells on top of
 # one another. `docs/pitfalls/interface.md`.
 EDIT_ROW = 10
-EDIT_ROWS = 5
+# **Сколько рядов -- считается, а не написано.** Было пять под 47 товаров; с
+# 2026-09-13 в той же сетке стоят и три универсальные деревни, а мод чужих
+# модов может принести ещё: «таких домиков может быть очень много в модах,
+# поэтому нужно учитывать это». Ряд добавляется сам.
+def edit_rows(n: int) -> int:
+    return max(1, -(-n // EDIT_ROW))
 # The picker's cell, in one place: «−1», the count, «+1», «не нужен», and the
 # gap between two goods. `CELL_GAP` is what keeps one good's buttons off the
 # next good's; the window is sized from these, and `check_script.py` measures
@@ -5654,7 +6373,8 @@ EDIT_RIGHT_ROW = 5
 
 
 def edit_cells_file(order: list[str],
-                    rights: list[eu5data.TownRight]) -> str:
+                    rights: list[eu5data.TownRight],
+                    villages_pick: list[str] = ()) -> str:
     """Five rows of ten cells: «−1», the good's icon with its count, «+1».
 
     **All 47, not the ground's 38.** Every cell is a static child of a plain `hbox`. Both widgets that would
@@ -5680,10 +6400,48 @@ def edit_cells_file(order: list[str],
     the window alone is a failure and not a surprise. It did not resolve types
     until this cell grew, which is the door it was added to close.
     """
+    # **Деревни стоят в той же сетке, что и товары, и это его правка.**
+    # 2026-09-13: «я не хочу, чтобы они забирали себе отдельную строку… нужна
+    # только иконка, аналогично как с простыми товарами». Своя строка была под
+    # именами зданий; имена ушли, значки пришли, и ячейка стала такой же, как у
+    # товара, -- минус «не нужен» и замок, которых у деревни нет.
+    picker = list(order) + list(villages_pick)
     rows = []
-    for r in range(EDIT_ROWS):
+    for r in range(edit_rows(len(picker))):
         cells = ""
-        for i in range(r * EDIT_ROW + 1, min((r + 1) * EDIT_ROW, len(order)) + 1):
+        for i in range(r * EDIT_ROW + 1, min((r + 1) * EDIT_ROW, len(picker)) + 1):
+            village = i > len(order)
+            # **Три отличия ячейки деревни, и все три -- «у неё этого нет».**
+            # Замка нет (доливка ходит по товарам и деревню назад не вернёт),
+            # значка-близнеца под замок нет, «не нужен» нет. Пустышка вместо
+            # галочки обязана остаться: ряд держит столбцы шириной ячейки, и
+            # «просто не рисовать» сдвинуло бы всю строку.
+            pin_plain = "" if village else (
+                '\t\t\t\t\tvisible = "[Not(GetGlobalVariable(\'%s_lock%d\').IsSet)]"\n'
+                % (MOD_ID, i))
+            pin_twin = "" if village else (
+                '\t\t\t\ttext_single = {\n'
+                '\t\t\t\t\tparentanchor = center\n'
+                '\t\t\t\t\twidgetanchor = center\n'
+                '\t\t\t\t\tautoresize = yes\n'
+                '\t\t\t\t\tfontsize = 16\n'
+                '\t\t\t\t\tvisible = "[GetGlobalVariable(\'%s_lock%d\').IsSet]"\n'
+                '\t\t\t\t\ttext = "%s_cell_pin_%d"\n'
+                '\t\t\t\t}\n' % (MOD_ID, i, MOD_ID, i))
+            cell_tip = f"{MOD_ID}_vcell_tt" if village else f"{MOD_ID}_cell_tt"
+            skip_cell = ('\t\t\twidget = { size = { 26 28 } }\n' if village else
+                '\t\t\twidget = {\n'
+                '\t\t\t\tsize = { 26 28 }\n'
+                '\t\t\t\tcheckbutton_round_alt = {\n'
+                '\t\t\t\t\tsize = { 24 24 }\n'
+                '\t\t\t\t\tparentanchor = center\n'
+                '\t\t\t\t\twidgetanchor = center\n'
+                '\t\t\t\t\tdown = "[GetGlobalVariable(\'%s_skip%d\').IsSet]"\n'
+                '\t\t\t\t\ttooltip = "%s_edit_skip_tt"\n'
+                '\t\t\t\t\tonclick = "[GetScriptedGui(\'%s_pick_skip_%d\')'
+                '.Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"\n'
+                '\t\t\t\t}\n'
+                '\t\t\t}\n' % (MOD_ID, i, MOD_ID, MOD_ID, i))
             cells += f"""
 		# **A plain `widget` holds the column; the `hbox` inside only lays the
 		# controls out.** This file already carried the rule and it was not
@@ -5733,23 +6491,15 @@ def edit_cells_file(order: list[str],
 			widget = {{
 				size = {{ 42 28 }}
 				alwaystransparent = no
-				tooltip = "{MOD_ID}_cell_tt"
+				tooltip = "{cell_tip}"
 				text_single = {{
 					parentanchor = center
 					widgetanchor = center
 					autoresize = yes
 					fontsize = 16
-					visible = "[Not(GetGlobalVariable('{MOD_ID}_lock{i}').IsSet)]"
-					text = "{MOD_ID}_cell_{i}"
+{pin_plain}					text = "{MOD_ID}_cell_{i}"
 				}}
-				text_single = {{
-					parentanchor = center
-					widgetanchor = center
-					autoresize = yes
-					fontsize = 16
-					visible = "[GetGlobalVariable('{MOD_ID}_lock{i}').IsSet]"
-					text = "{MOD_ID}_cell_pin_{i}"
-				}}
+{pin_twin}
 			}}
 
 			widget = {{
@@ -5779,17 +6529,7 @@ def edit_cells_file(order: list[str],
 			# (`upframe` / `downframe`) and takes the state from `down`, which
 			# is how the outliner's own category toggles work. One control, no
 			# glyph, and the state is legible.
-			widget = {{
-				size = {{ 26 28 }}
-				checkbutton_round_alt = {{
-					size = {{ 24 24 }}
-					parentanchor = center
-					widgetanchor = center
-					down = "[GetGlobalVariable('{MOD_ID}_skip{i}').IsSet]"
-					tooltip = "{MOD_ID}_edit_skip_tt"
-					onclick = "[GetScriptedGui('{MOD_ID}_pick_skip_{i}').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-				}}
-			}}
+{skip_cell}
 			}}
 		}}
 """
@@ -5802,10 +6542,10 @@ def edit_cells_file(order: list[str],
         pad = "".join(f"""
 		widget = {{ size = {{ {CELL_W} {CELL_H} }} }}
 """
-            for _ in range(EDIT_ROW - (min((r + 1) * EDIT_ROW, len(order))
+            for _ in range(EDIT_ROW - (min((r + 1) * EDIT_ROW, len(picker))
                                        - r * EDIT_ROW)))
         rows.append(f"""
-	# Goods {r * EDIT_ROW + 1}..{min((r + 1) * EDIT_ROW, len(order))} of the plan's own order.
+	# Cells {r * EDIT_ROW + 1}..{min((r + 1) * EDIT_ROW, len(picker))}: товары, затем универсальные деревни.
 	type {MOD_ID}_edit_row{r + 1} = hbox {{
 		# His words, 2026-09-05: «я не хочу, чтобы инструмент 1 товара был
 		# буквально через миллиметр от другого инструмента другого товара».
@@ -6164,7 +6904,49 @@ def editor_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     """
     order = [good for kind in ("raw", "made") for good in split[kind]]
     groups = plan_groups(rows, split, game)
+    villages_ = village_entities(rows, split, game)
+    # **Деревня-сущность -- не здание товара, и редактор обязан знать это тоже.**
+    #
+    # Ворота плана выбрасывали её из товара с самого начала
+    # (`plan_triggers_file`), а здесь стояло «ворота редактора строятся отдельно
+    # и деревни сохраняют» -- ровно та дыра, которую нашёл прогон 2026-09-12,
+    # когда `hunting_lodges` вернулся в игру: «+1» на дичь стал втыкать лесную
+    # деревню. Его слово: «деревня -- универсальное здание, универсальные здания
+    # считаются как отдельная сущность… такие товары как дичь или рыба выбывают
+    # из счёта, так как они обобщены и включены в сущность какой-либо деревни».
+    #
+    # `groups` ниже читается там, где речь о самой деревне (обмен,
+    # `_plan_pick_worst`); `own_groups` -- там, где речь о товаре.
+    own_groups = {key: ({b: m for b, m in by.items() if b not in villages_}
+                        if key[1] == "r" else by)
+                  for key, by in groups.items()}
     rights = output_rights(rows, game)
+
+    # **И три универсальные деревни стоят в том же списке «+1/−1».** Его слово
+    # 2026-09-12, тем же сообщением, что выбросило деревню из товара: «в списке
+    # товаров на +1 −1 нужно убрать те, которые производятся ТОЛЬКО деревнями
+    # (кроме земледельческой) и добавить в список +1 −1 все три вида
+    # универсальных деревень». Иначе деревню стало нечем ни поднять, ни опустить
+    # вовсе: из товара она вышла, а своей строки не имела.
+    #
+    # **Номер деревни -- это `len(order) + k`**, и дальше она едет по тем же
+    # рельсам: `_edit_good` её номер, `_edit_scan_<i>`, `_edit_fits_rural_<i>`,
+    # `_edit_place_rural_<i>` и `_edit_remove_rural_<i>` у неё свои и зовут
+    # готовые `_plan_try_village_<k>` / `_plan_drop_village_<k>`.
+    #
+    # **Жертвой деревня не бывает.** `_plan_pick_worst` выбирает только свои
+    # домики товара, и `_esg` поэтому всегда товар -- значит `remove_dispatch`
+    # и `restore_dispatch` остаются на товарах, а доливка после «−1» деревню не
+    # вернёт: она ходит по товарам.
+    vshared = shared_buildings(rows, split, game)
+    vmakes_pick = {k: [i for i, g in enumerate(order, start=1)
+                       if b in (groups.get((g, "r")) or {})]
+                   for k, b in enumerate(villages_, start=1)}
+    PICK_N = len(order) + len(villages_)
+
+    def vill_of(index: int) -> int:
+        """Номер деревни по номеру в списке редактора, или 0 для товара."""
+        return index - len(order) if index > len(order) else 0
 
     def call(prefix: str, index: int, tab: str) -> str:
         """The two sides' effects, and only the ones that were generated.
@@ -6173,11 +6955,14 @@ def editor_file(rows: list[eu5data.Method], split: dict[str, list[str]],
         an effect that does not exist is the failure this repository names first:
         the block it sits in does nothing and the game says so nowhere useful.
         """
+        if vill_of(index):
+            # Деревня стоит только в селе, и городской половины у неё нет вовсе.
+            return f"{tab}{MOD_ID}_{prefix}_rural_{index} = yes\n"
         good = order[index - 1]
         return "".join(
             f"{tab}{MOD_ID}_{prefix}_{listname}_{index} = yes\n"
             for side, listname in (("t", "town"), ("r", "rural"))
-            if groups.get((good, side)))
+            if own_groups.get((good, side)))
     out = [HEADER, f"""#
 # The plan editor. Everything here changes a plan that already exists and
 # **nothing here re-runs the plan**: `{MOD_ID}_plan_run` is the only thing that
@@ -6219,7 +7004,7 @@ def editor_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     for side, listname, method_var, rank in (("t", "town", "pm", "yes"),
                                              ("r", "rural", "prm", "no")):
         for index, good in enumerate(order, start=1):
-            by_building = groups.get((good, side), {})
+            by_building = own_groups.get((good, side), {})
             if not by_building:
                 gate.append(f"\n# Scope: location\n"
                             f"{MOD_ID}_edit_fits_{listname}_{index} = {{ always = no }}\n")
@@ -6365,6 +7150,35 @@ def editor_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 }}
 """)
 
+    # **Ворота деревни для редактора -- `_plan_can_village_<k>` без комнаты.**
+    # Та же пара, что у товара: план спрашивает свободную комнату, редактор
+    # освобождает её сам, поэтому здесь её нет, и `_edit_place_rural_<i>`
+    # спрашивает полные ворота в последний момент через `_plan_try_village_<k>`.
+    for k, building in enumerate(villages_, start=1):
+        index = len(order) + k
+        goods_free = "".join(
+            f"\t\tAND = {{\n"
+            f"\t\t\tvar:{MOD_ID}_vw{k} = {i}\n"
+            f"\t\t\tNOT = {{ is_target_in_variable_list = {{ name = {MOD_ID}_plan_goods "
+            f"target = goods:{order[i - 1]} }} }}\n"
+            f"\t\t}}\n" for i in vmakes_pick[k])
+        gate.append(f"""
+# {building}: ворота редактора, «комната» снята.
+# Scope: location
+{MOD_ID}_edit_fits_rural_{index} = {{
+\tvar:{MOD_ID}_vw{k} > 0
+\t{MOD_ID}_is_granary = no
+\t{MOD_ID}_plan_is_town = no
+\tNOT = {{ is_target_in_variable_list = {{ name = {MOD_ID}_plan_builds target = building_type:{building} }} }}
+\tOR = {{
+{goods_free}\t}}
+}}
+
+# {building} в городе не стоит вовсе.
+# Scope: location
+{MOD_ID}_edit_fits_town_{index} = {{ always = no }}
+""")
+
     # ---- what it would cost to put this good here --------------------------
     for index, good in enumerate(order, start=1):
         arms = []
@@ -6397,11 +7211,47 @@ def editor_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 }}
 """)
 
+    # То же для деревни: её выгода на локации -- `_vb<k>`, посчитанная тем же
+    # проходом `_plan_village_scores`, что и `_p<n>` у товара.
+    for k, building in enumerate(villages_, start=1):
+        index = len(order) + k
+        out.append(f"""
+# {building}: что каждая локация запросит за ещё одну такую деревню.
+# Scope: country
+{MOD_ID}_edit_scan_{index} = {{
+\tevery_in_global_list = {{
+\t\tvariable = {MOD_ID}_candidates
+\t\tif = {{
+\t\t\tlimit = {{ {MOD_ID}_edit_fits_rural_{index} = yes }}
+\t\t\tif = {{
+\t\t\t\tlimit = {{ var:{MOD_ID}_load < global_var:{MOD_ID}_plan_cap_rural }}
+\t\t\t\tset_variable = {{ name = {MOD_ID}_esc value = 1 }}
+\t\t\t\tset_variable = {{ name = {MOD_ID}_esv value = var:{MOD_ID}_vb{k} }}
+\t\t\t\tchange_variable = {{ name = {MOD_ID}_esv add = {RANK_SCALE} }}
+\t\t\t}}
+\t\t\telse_if = {{
+\t\t\t\tlimit = {{ var:{MOD_ID}_esw >= 0 var:{MOD_ID}_esg > 0 }}
+\t\t\t\tset_variable = {{ name = {MOD_ID}_esc value = 1 }}
+\t\t\t\tset_variable = {{ name = {MOD_ID}_esv value = var:{MOD_ID}_vb{k} }}
+\t\t\t\tchange_variable = {{ name = {MOD_ID}_esv subtract = var:{MOD_ID}_esw }}
+\t\t\t}}
+\t\t}}
+\t}}
+}}
+
+# {building} сюда, и обратно. **Обёртки, а не вторая копия правил**: ставит и
+# снимает деревню то же, что делает это в плане, — иначе счётчики разъехались бы.
+# Scope: location
+{MOD_ID}_edit_place_rural_{index} = {{ {MOD_ID}_plan_try_village_{k} = yes }}
+# Scope: location
+{MOD_ID}_edit_remove_rural_{index} = {{ {MOD_ID}_plan_drop_village_{k} = yes }}
+""")
+
     # ---- taking one building out -------------------------------------------
     for side, listname, method_var, gain_var in (("t", "town", "pm", "p"),
                                                  ("r", "rural", "prm", "pr")):
         for index, good in enumerate(order, start=1):
-            by_building = groups.get((good, side), {})
+            by_building = own_groups.get((good, side), {})
             if not by_building:
                 continue
             branches = ""
@@ -6453,7 +7303,7 @@ def editor_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     # ---- the two operations -------------------------------------------------
     scan_dispatch = "".join(
         f"\t\tif = {{ limit = {{ global_var:{MOD_ID}_edit_good = {i} }} {MOD_ID}_edit_scan_{i} = yes }}\n"
-        for i in range(1, len(order) + 1))
+        for i in range(1, PICK_N + 1))
     # How many locations could hold this good at all, room and victims aside.
     fit_dispatch = "".join(
         f"\t\tif = {{\n\t\t\tlimit = {{ global_var:{MOD_ID}_edit_good = {i} }}\n"
@@ -6463,7 +7313,7 @@ def editor_file(rows: list[eu5data.Method], split: dict[str, list[str]],
         f"{MOD_ID}_edit_fits_rural_{i} = yes }} }}\n"
         f"\t\t\t\tchange_global_variable = {{ name = {MOD_ID}_edit_fitn add = 1 }}\n"
         f"\t\t\t}}\n\t\t}}\n"
-        for i in range(1, len(order) + 1))
+        for i in range(1, PICK_N + 1))
     remove_dispatch = "".join(
         f"\t\t\tif = {{ limit = {{ var:{MOD_ID}_esg = {i} }}\n"
         f"{call('edit_remove', i, chr(9) * 4)}\t\t\t}}\n"
@@ -6471,7 +7321,7 @@ def editor_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     add_dispatch = "".join(
         f"\t\t\t\tif = {{ limit = {{ global_var:{MOD_ID}_edit_good = {i} }}\n"
         f"{call('edit_place', i, chr(9) * 5)}\t\t\t\t}}\n"
-        for i in range(1, len(order) + 1))
+        for i in range(1, PICK_N + 1))
     # The victim put back where it stood, keyed by `_esg` rather than by the
     # good the press asked for. Same effects: a building that stood here a
     # moment ago passes `_plan_can_*` again by construction.
@@ -6483,7 +7333,13 @@ def editor_file(rows: list[eu5data.Method], split: dict[str, list[str]],
         f"\tif = {{ limit = {{ global_var:{MOD_ID}_edit_good = {i} }} "
         f"set_global_variable = {{ name = {MOD_ID}_edit_fitn "
         f"value = global_var:{MOD_ID}_pn{i} }} }}\n"
-        for i in range(1, len(order) + 1))
+        for i in range(1, len(order) + 1)) + "".join(
+        # У деревни свой счётчик поставленных -- `_bn<k>` по списку общих
+        # зданий, тот самый, которым её держит потолок в плане.
+        f"\tif = {{ limit = {{ global_var:{MOD_ID}_edit_good = {len(order) + k} }} "
+        f"set_global_variable = {{ name = {MOD_ID}_edit_fitn "
+        f"value = global_var:{MOD_ID}_bn{vshared.index(b) + 1} }} }}\n"
+        for k, b in enumerate(villages_, start=1))
     out.append(f"""
 # How many buildings of the chosen good stand on the ground right now.
 #
@@ -6980,10 +7836,27 @@ def editor_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t\t}}
 \t\t}}
 """)
+    for k, building in enumerate(villages_, start=1):
+        index = len(order) + k
+        vb = vshared.index(building) + 1
+        # Деревня опознаётся на локации своим домиком, а не товаром: товар в
+        # `_plan_goods` она кладёт только ради строки.
+        out.append(f"""\t\tif = {{
+\t\t\tlimit = {{ global_var:{MOD_ID}_edit_good = {index} global_var:{MOD_ID}_bn{vb} > 0 }}
+\t\t\tevery_in_global_list = {{
+\t\t\t\tvariable = {MOD_ID}_candidates
+\t\t\t\tlimit = {{ is_target_in_variable_list = {{ name = {MOD_ID}_plan_builds target = building_type:{building} }} }}
+\t\t\t\tset_variable = {{ name = {MOD_ID}_esc value = 1 }}
+\t\t\t\tset_variable = {{ name = {MOD_ID}_esv value = {RANK_SCALE} }}
+\t\t\t\tchange_variable = {{ name = {MOD_ID}_esv subtract = var:{MOD_ID}_vb{k} }}
+\t\t\t}}
+\t\t}}
+""")
+
     drop_dispatch = "".join(
         f"\t\t\tif = {{ limit = {{ global_var:{MOD_ID}_edit_good = {i} }}\n"
         f"{call('edit_remove', i, chr(9) * 4)}\t\t\t}}\n"
-        for i in range(1, len(order) + 1))
+        for i in range(1, PICK_N + 1))
     # **The freed room goes to the good furthest below its share, not to the
     # richest.** His words, 2026-09-04: «остальные, у которых не хватало до 7
     # равномерных, начнут по 1 заполнять места, чтобы добрать свою
@@ -8518,6 +9391,19 @@ def editor_file(rows: list[eu5data.Method], split: dict[str, list[str]],
         f"{{ name = {MOD_ID}_plan_goods target = goods:{good} }} }} "
         f"add_to_variable_list = {{ name = {MOD_ID}_save_goods target = goods:{good} }} }}\n"
         for good in order)
+    # **И деревни, по зданию, а не по товару.** Деревня кладёт свой товар в
+    # `_plan_goods` только ради строки; сравнение по товарам поэтому показывало
+    # её приход и уход как «встал товар / ушёл товар», и владелец назвал это
+    # 2026-09-13: «в списке изменений это выглядит базово как товар встал товар
+    # ушёл. А должно быть деревня встала, товар ушёл». Значит в слепке должно
+    # лежать и то, какие деревни стояли.
+    save_vill = "".join(
+        f"\t\tif = {{\n"
+        f"\t\t\tlimit = {{ is_target_in_variable_list = {{ name = {MOD_ID}_plan_builds "
+        f"target = building_type:{b} }} }}\n"
+        f"\t\t\tadd_to_variable_list = {{ name = {MOD_ID}_save_vill "
+        f"target = building_type:{b} }}\n"
+        f"\t\t}}\n" for b in villages_)
     out.append(f"""
 # **The baseline every «изменено» is measured against.**
 #
@@ -8537,7 +9423,8 @@ def editor_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \tevery_in_global_list = {{
 \t\tvariable = {MOD_ID}_plan_touched
 \t\tclear_variable_list = {MOD_ID}_save_goods
-{save_copy}\t\tset_variable = {{ name = {MOD_ID}_save_load value = var:{MOD_ID}_load }}
+\t\tclear_variable_list = {MOD_ID}_save_vill
+{save_copy}{save_vill}\t\tset_variable = {{ name = {MOD_ID}_save_load value = var:{MOD_ID}_load }}
 \t\tremove_variable = {MOD_ID}_save_right
 \t\tif = {{
 \t\t\tlimit = {{ has_variable = {MOD_ID}_plan_right }}
@@ -8645,6 +9532,68 @@ def editor_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 }}
 """
         for i, good in enumerate(order, start=1)))
+
+    # **И та же пара на каждую деревню.** Отличий от товара ровно три: нет
+    # «не нужен» (деревню доливка не возвращает -- она ходит по товарам), нет
+    # замка (`_lock<n>` читает тот же обход) и код операции свой, 5 и 6, чтобы
+    # строка нажатия называла домик, а не товар: у деревни товара нет, у неё
+    # есть здание.
+    out.append("".join(
+        f"""
+# «+1» на {building}.
+# Scope: country
+{MOD_ID}_edit_plus_{len(order) + k} = {{
+\tset_global_variable = {{ name = {MOD_ID}_edit_good value = {len(order) + k} }}
+\tset_global_variable = {{ name = {MOD_ID}_edit_vill_s value = building_type:{building} }}
+\tset_global_variable = {{ name = {MOD_ID}_edit_reached value = 1 }}
+\t{MOD_ID}_edit_add = yes
+\t# **После, а не до**: `_edit_add` ставит `_edit_op = 1` сам, и код деревни
+\t# обязан пережить его, иначе строка нажатия назовёт товар, которого нет.
+\tset_global_variable = {{ name = {MOD_ID}_edit_op value = 5 }}
+}}
+
+# «−1» на {building}.
+# Scope: country
+{MOD_ID}_edit_minus_{len(order) + k} = {{
+\tset_global_variable = {{ name = {MOD_ID}_edit_good value = {len(order) + k} }}
+\tset_global_variable = {{ name = {MOD_ID}_edit_vill_s value = building_type:{building} }}
+\tset_global_variable = {{ name = {MOD_ID}_edit_reached value = 1 }}
+\t{MOD_ID}_edit_drop = yes
+\tset_global_variable = {{ name = {MOD_ID}_edit_op value = 6 }}
+}}
+"""
+        for k, building in enumerate(villages_, start=1)))
+
+    # **Локация очищается от всего планового разом, и это нужно житнице.**
+    #
+    # Его слово 2026-09-13: «если я нажму на эту кнопку в режиме редактора --
+    # изменения должны произойти сразу же, т.е. исчезнуть из локации домики
+    # плана и встать домики житницы». Значит нужен обратный ход для всего, что
+    # план на локацию кладёт: товары, деревни и грамота.
+    #
+    # **Каждая половина снимается тем же, чем ставилась**, а не голым
+    # `clear_variable_list`: счётчики товара, доли и грамоты иначе остались бы
+    # такими, будто домики на месте, и сводка врала бы до следующего
+    # «Пересчитать». `_edit_remove_*` и `_plan_drop_village_*` сами спрашивают,
+    # стоит ли тут то, что они снимают, поэтому зовутся без обёрток.
+    wipe_goods = "".join(call("edit_remove", i, "\t")
+                         for i in range(1, len(order) + 1))
+    wipe_vill = "".join(f"\t{MOD_ID}_plan_drop_village_{k} = yes\n"
+                        for k in range(1, len(villages_) + 1))
+    wipe_right = "".join(f"""\tif = {{
+\t\tlimit = {{ has_variable = {MOD_ID}_plan_right var:{MOD_ID}_plan_right = {k} }}
+\t\tchange_global_variable = {{ name = {MOD_ID}_rgiven{k} subtract = 1 }}
+\t\tchange_global_variable = {{ name = {MOD_ID}_rn{k} subtract = 1 }}
+\t\tchange_global_variable = {{ name = {MOD_ID}_plan_rightn subtract = 1 }}
+\t}}
+""" for k in range(1, len(rights) + 1))
+    out.append(f"""
+# Всё плановое с этой локации долой: товары, деревни, грамота.
+# Scope: location
+{MOD_ID}_edit_wipe_here = {{
+{wipe_goods}{wipe_vill}{wipe_right}\tremove_variable = {MOD_ID}_plan_right
+}}
+""")
 
     # ---- the numbered slots -------------------------------------------------
     #
@@ -8867,18 +9816,57 @@ def editor_file(rows: list[eu5data.Method], split: dict[str, list[str]],
         f'NOT = {{ is_target_in_variable_list = {{ name = {MOD_ID}_save_goods target = goods:{good} }} }} }} '
         f'debug_log = "WTP LD +{good}" }}\n'
         for good in order)
+    # **Приход и уход деревни -- это здание, а не товар.** Деревня кладёт товар в
+    # `_plan_goods` только ради строки локации, поэтому по товарам её появление
+    # читалось как «встал товар», и владелец это назвал, 2026-09-13: «должно
+    # быть деревня встала, товар ушёл».
+    #
+    # Две пары списков: `_chg_out`/`_chg_in` -- товары, `_chg_bout`/`_chg_bin` --
+    # здания. Окно рисует их одну за другой в том же столбце.
+    #
+    # **И товар-призрак из строки гасится.** Товар, которым деревня «торгует»,
+    # приходит и уходит вместе с ней; строка про него была бы вторым сообщением
+    # об одном событии. `_vw<k>` -- какой это товар, и он пишется оценкой, а не
+    # постановкой, так что верен и для ушедшей деревни.
+    def phantom(good: str, side: str) -> str:
+        """Условие «этот товар пришёл (ушёл) не сам, а с деревней»."""
+        i = order.index(good) + 1
+        arms = []
+        for k, building in enumerate(villages_, start=1):
+            here = (f"is_target_in_variable_list = {{ name = {MOD_ID}_plan_builds "
+                    f"target = building_type:{building} }}")
+            was = (f"is_target_in_variable_list = {{ name = {MOD_ID}_save_vill "
+                   f"target = building_type:{building} }}")
+            moved = (f"AND = {{ {here} NOT = {{ {was} }} }}" if side == "in"
+                     else f"AND = {{ {was} NOT = {{ {here} }} }}")
+            arms.append(f"AND = {{ var:{MOD_ID}_vw{k} = {i} {moved} }}")
+        return "NOT = { OR = { %s } }" % " ".join(arms) if arms else ""
+
     rows = "".join(
         f"\t\tif = {{ limit = {{ is_target_in_variable_list = {{ name = {MOD_ID}_save_goods target = goods:{good} }} "
-        f"NOT = {{ is_target_in_variable_list = {{ name = {MOD_ID}_plan_goods target = goods:{good} }} }} }}\n"
+        f"NOT = {{ is_target_in_variable_list = {{ name = {MOD_ID}_plan_goods target = goods:{good} }} }} "
+        f"{phantom(good, 'out')} }}\n"
         f"\t\t\tadd_to_variable_list = {{ name = {MOD_ID}_chg_out target = goods:{good} }}\n"
         f"\t\t\tchange_variable = {{ name = {MOD_ID}_chg_n add = 1 }}\n"
         f"\t\t}}\n"
         f"\t\tif = {{ limit = {{ is_target_in_variable_list = {{ name = {MOD_ID}_plan_goods target = goods:{good} }} "
-        f"NOT = {{ is_target_in_variable_list = {{ name = {MOD_ID}_save_goods target = goods:{good} }} }} }}\n"
+        f"NOT = {{ is_target_in_variable_list = {{ name = {MOD_ID}_save_goods target = goods:{good} }} }} "
+        f"{phantom(good, 'in')} }}\n"
         f"\t\t\tadd_to_variable_list = {{ name = {MOD_ID}_chg_in target = goods:{good} }}\n"
         f"\t\t\tchange_variable = {{ name = {MOD_ID}_chg_n add = 1 }}\n"
         f"\t\t}}\n"
-        for good in order)
+        for good in order) + "".join(
+        f"\t\tif = {{ limit = {{ is_target_in_variable_list = {{ name = {MOD_ID}_save_vill target = building_type:{b} }} "
+        f"NOT = {{ is_target_in_variable_list = {{ name = {MOD_ID}_plan_builds target = building_type:{b} }} }} }}\n"
+        f"\t\t\tadd_to_variable_list = {{ name = {MOD_ID}_chg_bout target = building_type:{b} }}\n"
+        f"\t\t\tchange_variable = {{ name = {MOD_ID}_chg_n add = 1 }}\n"
+        f"\t\t}}\n"
+        f"\t\tif = {{ limit = {{ is_target_in_variable_list = {{ name = {MOD_ID}_plan_builds target = building_type:{b} }} "
+        f"NOT = {{ is_target_in_variable_list = {{ name = {MOD_ID}_save_vill target = building_type:{b} }} }} }}\n"
+        f"\t\t\tadd_to_variable_list = {{ name = {MOD_ID}_chg_bin target = building_type:{b} }}\n"
+        f"\t\t\tchange_variable = {{ name = {MOD_ID}_chg_n add = 1 }}\n"
+        f"\t\t}}\n"
+        for b in villages_)
     out.append(f"""
 # «Показать изменения»: every location where the plan now differs from the saved
 # one, and nothing else.
@@ -8911,6 +9899,8 @@ def editor_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\tvariable = {MOD_ID}_plan_touched
 \t\tclear_variable_list = {MOD_ID}_chg_out
 \t\tclear_variable_list = {MOD_ID}_chg_in
+\t\tclear_variable_list = {MOD_ID}_chg_bout
+\t\tclear_variable_list = {MOD_ID}_chg_bin
 \t\tset_variable = {{ name = {MOD_ID}_chg_n value = 0 }}
 \t\tset_variable = {{ name = {MOD_ID}_chg_rank value = 0 }}
 \t\t# **A moved charter is a change even when no building moved.** Two
@@ -9455,6 +10445,1066 @@ def editor_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     return "".join(out), "".join(gate)
 
 
+
+# Сколько домиков окно замены предлагает разом.
+#
+# **Двадцать четыре были потолком, а не ответом.** Его прогон 2026-09-14: «мод
+# показывает, что можно поставить 24 вида здания… на самом деле их гораздо
+# больше должно отображаться». Ровно 24 в каждой локации -- признак упора в
+# потолок, а не совпадение. Круг стоит один проход по зданиям на строку, список
+# в скроллбоксе, читать все и не нужно -- нужно, чтобы список кончался там же,
+# где кончаются кандидаты.
+SWAP_MAX = 80
+SWAP_OUT = MOD / "in_game/common/scripted_effects/bag_wtp_generated_swap.txt"
+# **Значение живёт только в `script_values`**, ровно как триггер только в
+# `scripted_triggers`: выгода здания сначала уехала в файл эффектов вместе с
+# остальным окном замены. Ловит `check_script.py`.
+SWAP_VALUES_OUT = MOD / "in_game/common/script_values/bag_wtp_generated_swap_values.txt"
+
+
+COV_OUT = MOD / "in_game/common/scripted_effects/bag_wtp_generated_cov.txt"
+
+
+def cov_file(rows: list[eu5data.Method], split: dict[str, list[str]],
+             game: eu5data.Game) -> str:
+    """Покрытие товара сырьём провинции -- **логика карты, наши условия**.
+
+    Его слово, 2026-09-14: «То как работает карта для нас важно, но не
+    константа. У нас гораздо больше настроек и условий. Нам нужно логику карты
+    перенести и адаптировать к тем условиям, в которых наш мод работает.
+    Доступные списки зданий, методов, эпох, уровней. Саму карту трогать не
+    надо.»
+
+    Формула его: доля входа рецепта, которую провинция даёт своим РГО; лучший
+    вариант среди способов; плюс своё сырьё локации как полное покрытие; плюс
+    местный модификатор вывода в единицах `_trmm_rgo_unit`.
+
+    Разница одна и она вся в отборе способов: **CM берёт лучший вариант
+    безусловно** (`_trmm_opt_*` -- ни одних ворот по продвижению), а мы берём
+    лучший **из доступных**: `_avail_` в режиме «на сейчас», `_reach_` в режиме
+    «на конец», и оба уже несут в себе галочку чужого мода. Поэтому наше число
+    слушается тумблера эпохи, а число карты -- нет, и сравнивать их в лоб можно
+    только «на конец».
+
+    Считается эффектом, а не значением: доля требует
+    `any_location_in_province_definition`, то есть триггера, а триггер в
+    значении живёт только под `if = {{ limit = ... }}` в эффекте.
+    """
+    wanted: set[str] = set()
+    for right in output_rights(rows, game):
+        wanted |= set(right.output)
+    by_good: dict[str, list[int]] = {}
+    for index, method in enumerate(rows, start=1):
+        if method.produced in wanted and method.inputs:
+            by_good.setdefault(method.produced, []).append(index)
+
+    out = [HEADER, """#
+# Покрытие товара сырьём провинции, по логике карты и нашим воротам.
+# Scope: location, ждёт scope:%s_country
+%s_cov_pass = {
+""" % (MOD_ID, MOD_ID)]
+    for good in sorted(by_good):
+        out.append(f"\tset_variable = {{ name = {MOD_ID}_cov_{good} value = 0 }}\n")
+        for mi in by_good[good]:
+            method = rows[mi - 1]
+            total = sum(method.inputs.values())
+            if total <= 0:
+                continue
+            adds = "".join(
+                f"\t\tif = {{\n"
+                f"\t\t\tlimit = {{ any_location_in_province_definition = "
+                f"{{ raw_material ?= goods:{raw} }} }}\n"
+                f"\t\t\tchange_variable = {{ name = {MOD_ID}_cov_try add = "
+                f"{round(amount / total, 3)} }}\n"
+                f"\t\t}}\n"
+                for raw, amount in sorted(method.inputs.items())
+                if raw in game.raw_goods)
+            if not adds:
+                continue
+            gate = (f"{MOD_ID}_reach_{mi} = yes" if method_gates(method)
+                    else f"{MOD_ID}_avail_{mi} = yes")
+            out.append(f"""\t# {method.building} / {method.key}
+\tif = {{
+\t\tlimit = {{
+\t\t\tOR = {{
+\t\t\t\tAND = {{
+\t\t\t\t\tNOT = {{ has_global_variable = {MOD_ID}_plan_by_end }}
+\t\t\t\t\tscope:{MOD_ID}_country = {{ {MOD_ID}_avail_{mi} = yes }}
+\t\t\t\t}}
+\t\t\t\tAND = {{
+\t\t\t\t\thas_global_variable = {MOD_ID}_plan_by_end
+\t\t\t\t\tscope:{MOD_ID}_country = {{ {gate} }}
+\t\t\t\t}}
+\t\t\t}}
+\t\t}}
+\t\tset_variable = {{ name = {MOD_ID}_cov_try value = 0 }}
+{adds}\t\tif = {{
+\t\t\tlimit = {{ var:{MOD_ID}_cov_try > var:{MOD_ID}_cov_{good} }}
+\t\t\tset_variable = {{ name = {MOD_ID}_cov_{good} value = var:{MOD_ID}_cov_try }}
+\t\t}}
+\t}}
+""")
+        # Своё сырьё локации -- ещё один полностью покрытый поставщик, как у него.
+        out.append(f"""\tif = {{
+\t\tlimit = {{ raw_material ?= goods:{good} }}
+\t\tchange_variable = {{ name = {MOD_ID}_cov_{good} add = 1 }}
+\t\tset_variable = {{ name = {MOD_ID}_cov_{good} value = {{
+\t\t\tvalue = var:{MOD_ID}_cov_{good}
+\t\t\tdivide = 2
+\t\t}} }}
+\t}}
+\tchange_variable = {{ name = {MOD_ID}_cov_{good} value = {{
+\t\tvalue = modifier:local_{good}_output_modifier
+\t\tdivide = {MOD_ID}_trmm_rgo_unit
+\t\tmin = 0
+\t}} }}
+""")
+    out.append("}\n")
+    return "".join(out)
+
+
+def swap_values_file(rows: list[eu5data.Method], split: dict[str, list[str]],
+                     game: eu5data.Game) -> str:
+    """Что провинция платит каждому зданию здесь -- по значению на здание.
+
+    **Здание, а не товар.** Список окна замены сортируется по зданиям, и здание,
+    делающее два товара, стоит столько, сколько лучший из них. Раньше список
+    мерил выгоду ТОВАРА и потому ставил рядом четыре ступени одной лестницы как
+    четыре разных ответа.
+
+    **`min` -- это пол, и несколько полов дают максимум.** `value = 0` и по
+    `min = var:<выгода>` на каждый товар здания -- это max(0, a, b, ...) одной
+    формой, без накопителя и без сравнения значения с самим собой.
+    """
+    order = goods_order(split)
+    groups = plan_groups(rows, split, game)
+    villages = village_entities(rows, split, game)
+    by_building: dict[str, list[tuple[int, str]]] = {}
+    for (good, side), buildings in groups.items():
+        for building, _mis in buildings.items():
+            if side == "r" and building in villages:
+                continue
+            by_building.setdefault(building, []).append((order.index(good) + 1, side))
+    out = [HEADER, "#\n# Выгода локации от одного здания: лучший из его товаров.\n"]
+    for building in sorted(b for b in by_building if b not in villages):
+        floors = "".join(
+            "\tmin = var:%s_%s%d\n" % (MOD_ID, "p" if side == "t" else "pr", index)
+            for index, side in sorted(by_building[building]))
+        out.append(f"""
+# Scope: location
+{MOD_ID}_swap_gain_{building} = {{
+\tvalue = 0
+{floors}}}
+""")
+    return "".join(out)
+
+
+def swap_file(rows: list[eu5data.Method], split: dict[str, list[str]],
+              game: eu5data.Game) -> str:
+    """Окно замены: что стоит в одной локации и что туда можно поставить.
+
+    **Его шестой пункт, 2026-09-13.** «В каждой локации в окне редактора должна
+    быть добавлена кнопочка замены. Жму кнопку и открывается окно конкретной
+    локации. В нём показаны те домики, которые там стоят. Я могу нажать удалить
+    на любой из них. На другой части окна мне показывается список домиков,
+    которые я могу туда поставить. Они должны быть сортированы по бонусу от
+    РГО… кнопку "отсеять", которая уберёт из списка все домики, которые вообще
+    никакого бонуса от РГО провинции не получат.»
+
+    **Списки -- здания, а не товары, и это решает половину задачи.** Строка
+    датамодели, которой дан тип здания, рисует его значок и имя сама; товар
+    пришлось бы переводить в здание картой переменных на локации, то есть
+    формой, которой в этом моде ещё нет. Слева -- `_row_builds`, тот самый
+    список, которым рисуется строка плана; справа -- `_swap_can`, собранный
+    здесь по убыванию выгоды.
+
+    **Ни одного нового правила постановки и снятия.** «×» и «+» зовут
+    `_edit_remove_*` и `_edit_place_*` -- те же эффекты, которыми работают «−1»
+    и «+1», со всеми их воротами и счётчиками. Здание умеет несколько товаров,
+    поэтому зовутся они по всем его товарам разом: ворота сами решат, о котором
+    из них шла речь. **Поэтому окно не может рассинхронизировать план**: оно не
+    знает о нём ничего, кроме имён этих эффектов.
+
+    **Житницы сюда не ходят.** Их заполняет свой круг, их места в раздаче не
+    участвуют, и «удалить домик житницы» значило бы держать ещё один обратный
+    ход к кругу, который и так весь обратим одним нажатием пометки. Кнопка на
+    такой строке не показывается вовсе.
+    """
+    order = goods_order(split)
+    groups = plan_groups(rows, split, game)
+    villages = village_entities(rows, split, game)
+    by_method = {i: m for i, m in enumerate(rows, start=1)}
+    shared = shared_buildings(rows, split, game)
+
+    # Здание -> [(номер товара, сторона, [номера методов])], в устойчивом порядке.
+    #
+    # **Деревня из товарной половины выброшена тем же правилом, что и в
+    # редакторе.** `_edit_remove_rural_<n>` у товара, который в селе делает
+    # только деревня, не существует вовсе -- редактор его не пишет, -- и вызов
+    # несуществующего эффекта здесь ловит `check_script.py`. Деревни снимаются
+    # своим `_plan_drop_village_<k>` ниже.
+    by_building: dict[str, list[tuple[int, str, list[int]]]] = {}
+    for (good, side), buildings in groups.items():
+        for building, mis in buildings.items():
+            if side == "r" and building in villages:
+                continue
+            by_building.setdefault(building, []).append(
+                (order.index(good) + 1, side, sorted(mis)))
+    for building in by_building:
+        by_building[building].sort()
+
+    out = [HEADER, f"""#
+# Окно замены: одна локация, два списка зданий и две кнопки на каждое.
+"""]
+
+    # ---- круг выбора лучшего из ещё не предложенных ------------------------
+    #
+    # **Кандидат -- здание, и ворота у него свои.** Прежде здесь стояло
+    # `_edit_fits_<сторона>_<товар>`, то есть ворота ТОВАРА: «этот товар тут
+    # производится». Здание предлагалось, даже если держава его построить не
+    # может -- и он это увидел, 2026-09-14: «список домиков справа не полный и
+    # вообще не соответствует доступности стране… может показываться 4 вида
+    # одного здания просто разного уровня… даже при выключенной галочке справа
+    # всё так же отображаются все здания из ND».
+    #
+    # Теперь ворота спрашивают само здание, тремя условиями:
+    #
+    # * `_stands_<здание>` -- локация его держит (и слушается тумблера ранга);
+    # * хотя бы один его способ проходит `_avail_` («на сейчас») или `_reach_`
+    #   («на конец») -- **по тому же тумблеру, каким посчитан план**; галочка
+    #   мода живёт внутри `_avail_`/`_reach_`, поэтому снятая галочка убирает
+    #   здания мода и отсюда тоже;
+    # * ступень лестницы отсекается тем же `can_build_building` внутри
+    #   `_avail_`: недоступный уровень здания ворота не пройдёт.
+    arms = ""
+    for building in sorted(b for b in by_building if b not in villages):
+        entries = by_building[building]
+        mis = sorted({m for _i, _s, ms in entries for m in ms})
+        gains = " ".join(
+            f"var:{MOD_ID}_p{index}" if side == "t" else f"var:{MOD_ID}_pr{index}"
+            for index, side, _ms in entries)
+        # Выгода здания -- лучшая из выгод его товаров здесь.
+        best = f"{MOD_ID}_swap_gain_{building}"
+        avail = " ".join(f"{MOD_ID}_avail_{m} = yes" for m in mis)
+        # **`_reach_<n>` существует только у методов за недостижимым
+        # продвижением** -- остальные достижимы по построению и не выписаны
+        # вовсе (`triggers_file`). Спросить несуществующий -- это блок, который
+        # молча проходит или молча не делает ничего; поймал `check_script.py`
+        # ещё до сборки. Где `_reach_` нет, спрашиваем `_avail_`.
+        reach = " ".join(
+            f"{MOD_ID}_reach_{m} = yes" if method_gates(rows[m - 1])
+            else f"{MOD_ID}_avail_{m} = yes" for m in mis)
+        arms += f"""\tif = {{
+\t\tlimit = {{
+\t\t\tNOT = {{ is_target_in_variable_list = {{ name = {MOD_ID}_swap_can target = building_type:{building} }} }}
+\t\t\t{MOD_ID}_is_granary = no
+\t\t\t{MOD_ID}_stands_{building} = yes
+\t\t\t# **Ступень лестницы -- только верхняя из открытых.** Его прогон
+\t\t\t# 2026-09-14: «мне не надо, чтобы мод предлагал мне на выбор 1 или 2
+\t\t\t# уровень здания, должен быть самый высокий из доступных». Игра сама
+\t\t\t# знает, какая ступень устарела для этой державы --
+\t\t\t# `building_type_is_obsolete`, страновой триггер по типу здания;
+\t\t\t# CM спрашивает его той же формой.
+\t\t\tscope:{MOD_ID}_country = {{
+\t\t\t\tNOT = {{ building_type_is_obsolete = building_type:{building} }}
+\t\t\t}}
+\t\t\tOR = {{
+\t\t\t\tAND = {{
+\t\t\t\t\tNOT = {{ has_global_variable = {MOD_ID}_plan_by_end }}
+\t\t\t\t\tscope:{MOD_ID}_country = {{ OR = {{ {avail} }} }}
+\t\t\t\t}}
+\t\t\t\tAND = {{
+\t\t\t\t\thas_global_variable = {MOD_ID}_plan_by_end
+\t\t\t\t\tscope:{MOD_ID}_country = {{ OR = {{ {reach} }} }}
+\t\t\t\t}}
+\t\t\t}}
+\t\t\t# «Отсеять»: убрать всё, чему провинция не платит ничего.
+\t\t\tOR = {{
+\t\t\t\tNOT = {{ has_global_variable = {MOD_ID}_swap_sift }}
+\t\t\t\t{best} > 0
+\t\t\t}}
+\t\t\t{best} > global_var:{MOD_ID}_swap_bv
+\t\t}}
+\t\tset_global_variable = {{ name = {MOD_ID}_swap_bv value = {best} }}
+\t\tset_global_variable = {{ name = {MOD_ID}_swap_bb value = building_type:{building} }}
+\t}}
+"""
+    out.append(f"""
+# Один круг: лучший из тех, кого здесь ещё не предложили.
+#
+# **`-1` как начальное лучшее, а не ноль.** Домик, которому провинция не платит
+# ничего, -- законный кандидат: без «Отсеять» он обязан быть в списке, и
+# сравнение с нулём не пустило бы его туда никогда.
+# Scope: location, ждёт scope:{MOD_ID}_country
+{MOD_ID}_swap_pass = {{
+\tset_global_variable = {{ name = {MOD_ID}_swap_bv value = -1 }}
+\tremove_global_variable = {MOD_ID}_swap_bb
+{arms}\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tadd_to_variable_list = {{ name = {MOD_ID}_swap_can target = global_var:{MOD_ID}_swap_bb }}
+\t}}
+}}
+
+# Список заново: {SWAP_MAX} кругов или пока не кончатся кандидаты.
+#
+# **Локация берётся из глобалки, а не из скоупа.** Кнопки внутри окна живут в
+# типе строки датамодели: скоуп там -- здание, а локацию пришлось бы тащить
+# через `GetGlobalVariable(...).GetLocation.MakeScope`, и ровно эта цепочка
+# 2026-09-13 вернула пустые списки при непустой локации. `global_var:X = {{ }}`
+# как переход в скоуп -- форма самой игры (`character_death_pulses.txt`).
+# Scope: country
+{MOD_ID}_swap_rebuild = {{
+\t# Ворота кандидата спрашивают доступность у державы, а стоят в скоупе
+\t# локации -- значит державу надо туда занести.
+\tsave_scope_as = {MOD_ID}_country
+\tglobal_var:{MOD_ID}_swap_loc = {{ clear_variable_list = {MOD_ID}_swap_can }}
+\tclear_global_variable_list = {MOD_ID}_swap_slots
+\tclear_global_variable_list = {MOD_ID}_swap_here
+
+\t# **Строка -- пронумерованное место, а не безымянный элемент датамодели**,
+\t# потому что ей нужен ещё и процент выгоды. Достать число «по зданию из
+\t# строки» этому дереву нечем: `BuildingType.GetKey` в дампах нет, переменную
+\t# на типе здания не держит никто, `type = building_type` у кастомной
+\t# локализации не встречается, а переход в скоуп через `global_var:X = {{ }}`
+\t# **внутри значения** не доказан нигде. Доказан способ CMF: датамодель идёт
+\t# по флагам, а строка собирает имя переменной через `Concatenate`
+\t# (`cmm_list_setting.gui`).
+\t#
+\t# Раскатан не поиск, а **укладка**: круг определён один раз, здесь на место
+\t# приходится вызов и три строки. Восемьдесят мест -- 400 строк, а не 56 000.
+\t#
+\t# Числа лежат на державе, не на локации: `CMMHomeScope.GetVariable(...)` --
+\t# ровно та форма, которой читает себя список модов, а
+\t# `GetGlobalVariable(...).GetLocation.MakeScope.Get...` в этом окне уже
+\t# однажды вернула пустоту.
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot1_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot1_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot1 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot2_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot2_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot2 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot3_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot3_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot3 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot4_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot4_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot4 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot5_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot5_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot5 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot6_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot6_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot6 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot7_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot7_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot7 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot8_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot8_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot8 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot9_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot9_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot9 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot10_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot10_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot10 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot11_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot11_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot11 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot12_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot12_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot12 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot13_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot13_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot13 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot14_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot14_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot14 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot15_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot15_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot15 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot16_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot16_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot16 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot17_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot17_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot17 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot18_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot18_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot18 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot19_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot19_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot19 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot20_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot20_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot20 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot21_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot21_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot21 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot22_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot22_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot22 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot23_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot23_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot23 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot24_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot24_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot24 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot25_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot25_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot25 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot26_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot26_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot26 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot27_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot27_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot27 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot28_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot28_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot28 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot29_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot29_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot29 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot30_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot30_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot30 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot31_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot31_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot31 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot32_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot32_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot32 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot33_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot33_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot33 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot34_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot34_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot34 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot35_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot35_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot35 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot36_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot36_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot36 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot37_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot37_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot37 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot38_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot38_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot38 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot39_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot39_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot39 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot40_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot40_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot40 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot41_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot41_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot41 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot42_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot42_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot42 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot43_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot43_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot43 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot44_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot44_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot44 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot45_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot45_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot45 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot46_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot46_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot46 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot47_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot47_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot47 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot48_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot48_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot48 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot49_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot49_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot49 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot50_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot50_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot50 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot51_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot51_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot51 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot52_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot52_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot52 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot53_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot53_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot53 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot54_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot54_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot54 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot55_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot55_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot55 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot56_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot56_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot56 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot57_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot57_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot57 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot58_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot58_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot58 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot59_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot59_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot59 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot60_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot60_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot60 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot61_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot61_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot61 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot62_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot62_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot62 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot63_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot63_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot63 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot64_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot64_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot64 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot65_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot65_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot65 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot66_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot66_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot66 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot67_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot67_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot67 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot68_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot68_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot68 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot69_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot69_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot69 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot70_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot70_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot70 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot71_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot71_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot71 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot72_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot72_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot72 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot73_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot73_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot73 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot74_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot74_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot74 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot75_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot75_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot75 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot76_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot76_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot76 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot77_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot77_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot77 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot78_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot78_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot78 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot79_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot79_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot79 }}
+\t}}
+\tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot80_bt value = global_var:{MOD_ID}_swap_bb }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot80_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot80 }}
+\t}}
+
+\t# Левый список -- то, что стоит: он без чисел, поэтому остаётся обычной
+\t# датамоделью по глобальному списку зданий.
+\tglobal_var:{MOD_ID}_swap_loc = {{
+\t\tevery_in_list = {{
+\t\t\tvariable = {MOD_ID}_row_builds
+\t\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_here target = this }}
+\t\t}}
+\t}}
+}}
+
+# Открыть окно на этой локации.
+# Scope: country, ждёт scope:wtp_location
+{MOD_ID}_swap_open_effect = {{
+\tset_global_variable = {{ name = {MOD_ID}_swap_loc value = scope:wtp_location }}
+\t{MOD_ID}_swap_rebuild = yes
+\tset_variable = {{ name = {MOD_ID}_swap_open value = 1 }}
+}}
+
+# Scope: country
+{MOD_ID}_swap_close_effect = {{
+\tremove_variable = {MOD_ID}_swap_open
+}}
+""")
+
+    # ---- «−» и «+», обе через эффекты редактора ----------------------------
+    #
+    # **Одно нажатие -- один домик, и именно тот, по которому нажали.** Прежде
+    # здесь звались эффекты редактора по ВСЕМ товарам здания разом: здание,
+    # умеющее два товара, ставило два домика, а `_edit_place_<товар>` ставил не
+    # ту ступень лестницы, по которой нажали, а ту, которой этот товар
+    # выигрывает. Его прогон 2026-09-14: «нажал +1 на какой-то домик из ND…
+    # добавилось сразу аж два домика: Тонкое сукно лвл4 и спиртовые лвл4»,
+    # «нажал +1 на пиво лвл1, но добавилось пиво лвл4».
+    #
+    # Лечится без единого нового правила постановки: вызов гейтится тем, что
+    # `_pm<товар>` -- выигравший здесь способ -- принадлежит **этому** зданию.
+    # Тогда `_edit_place_<товар>` поставит именно его, потому что здание он
+    # выбирает по тому же `_pm`. А `_swap_once` держит счёт: сработать может
+    # только первый подошедший товар.
+    def once(kind: str, building: str) -> str:
+        calls = ""
+        for index, side, mis in by_building.get(building, []):
+            listname = "town" if side == "t" else "rural"
+            same = " ".join(f"var:{MOD_ID}_pm{index} = {m}" for m in mis)
+            calls += f"""\t\t\tif = {{
+\t\t\t\tlimit = {{
+\t\t\t\t\tvar:{MOD_ID}_swap_once = 0
+\t\t\t\t\tOR = {{ {same} }}
+\t\t\t\t}}
+\t\t\t\t{MOD_ID}_edit_{kind}_{listname}_{index} = yes
+\t\t\t\tset_variable = {{ name = {MOD_ID}_swap_once value = 1 }}
+\t\t\t}}
+"""
+        return calls
+
+    drop = ""
+    for building in sorted(set(by_building) | set(villages)):
+        calls = once("remove", building)
+        if building in villages:
+            calls += (f"\t\t\t{MOD_ID}_plan_drop_village_{villages.index(building) + 1}"
+                      f" = yes\n")
+        drop += f"""\t\tif = {{
+\t\t\tlimit = {{ scope:wtp_bt = building_type:{building} }}
+{calls}\t\t}}
+"""
+    # **«+» ставит именно это здание, и для этого у него свой эффект.**
+    #
+    # Прошлый заход гейтил вызов `_edit_place_<товар>` тем, что `_pm<товар>` --
+    # выигравший здесь способ -- принадлежит нажатому зданию. Это чинило «одно
+    # нажатие -- один домик», но ломало всё остальное: список нарочно предлагает
+    # здания, которые победителями **не** являются, поэтому у почти каждой строки
+    # ворота не совпадали и «+» молча не делал ничего (его прогон 2026-09-14).
+    #
+    # Значит эффект свой. Он повторяет ровно то, что делает постановка плана --
+    # те же списки, те же счётчики, тот же потолок, -- и добавляет одно: **клик
+    # объявляет это здание ответом для своего товара здесь**, то есть пишет
+    # `_pm<товар>`. Тогда и «−» на нём потом сработает: снятие ищет товар по
+    # тому же `_pm`.
+    put = ""
+    for building in sorted(b for b in by_building if b not in villages):
+        arms = ""
+        for index, side, mis in by_building[building]:
+            good = order[index - 1]
+            cap = "urban" if side == "t" else "rural"
+            method_var = "pm" if side == "t" else "prm"
+            gain_var = "p" if side == "t" else "pr"
+            best_mi = max(mis, key=lambda m: by_method[m].output)
+            out_n = int(round(by_method[best_mi].output * 100))
+            is_town = "yes" if side == "t" else "no"
+            # `%`-форматирование, а не f-строка: удвоенные скобки остались бы
+            # удвоенными, и движок прочёл бы блок одним ключом (поймал чекер).
+            bcount = ("\t\t\tchange_global_variable = { name = %s_bn%d add = 1 }\n"
+                      % (MOD_ID, shared.index(building) + 1)
+                      if building in shared else "")
+            arms += f"""\t\tif = {{
+\t\t\tlimit = {{
+\t\t\t\tvar:{MOD_ID}_swap_once = 0
+\t\t\t\t{MOD_ID}_plan_is_town = {is_town}
+\t\t\t\t{MOD_ID}_is_granary = no
+\t\t\t\tvar:{MOD_ID}_load < global_var:{MOD_ID}_plan_cap_{cap}
+\t\t\t\tNOT = {{ is_target_in_variable_list = {{ name = {MOD_ID}_plan_goods target = goods:{good} }} }}
+\t\t\t}}
+\t\t\tset_variable = {{ name = {MOD_ID}_{method_var}{index} value = {best_mi} }}
+\t\t\tchange_global_variable = {{ name = {MOD_ID}_pout{index} add = {out_n} }}
+\t\t\tadd_to_variable_list = {{ name = {MOD_ID}_plan_goods target = goods:{good} }}
+\t\t\tadd_to_variable_list = {{ name = {MOD_ID}_plan_builds target = building_type:{building} }}
+\t\t\tchange_variable = {{ name = {MOD_ID}_load add = 1 }}
+\t\t\tchange_global_variable = {{ name = {MOD_ID}_plan_placed add = 1 }}
+\t\t\tchange_global_variable = {{ name = {MOD_ID}_plan_added add = 1 }}
+\t\t\tchange_global_variable = {{ name = {MOD_ID}_pn{index} add = 1 }}
+\t\t\tchange_global_variable = {{ name = {MOD_ID}_pn{side}{index} add = 1 }}
+\t\t\tchange_global_variable = {{ name = {MOD_ID}_plan_p{side} add = 1 }}
+{bcount}\t\t\tchange_global_variable = {{ name = {MOD_ID}_plan_gain add = var:{MOD_ID}_{gain_var}{index} }}
+\t\t\tif = {{
+\t\t\t\tlimit = {{ var:{MOD_ID}_{gain_var}{index} > 0 }}
+\t\t\t\tchange_global_variable = {{ name = {MOD_ID}_plan_fed add = 1 }}
+\t\t\t}}
+\t\t\tset_variable = {{ name = {MOD_ID}_swap_once value = 1 }}
+\t\t}}
+"""
+        put += f"""\t\tif = {{
+\t\t\tlimit = {{ scope:wtp_bt = building_type:{building} }}
+{arms}\t\t}}
+"""
+    out.append(f"""
+# Снять этот домик с этой локации.
+#
+# **Зовутся все товары здания сразу.** Здание, которое умеет несколько товаров,
+# стоит здесь ради одного из них, и какого именно -- знает `_edit_remove_*`
+# через `_pm<n>`. Спрашивать это здесь значило бы держать второй экземпляр того
+# же знания.
+# Scope: country, ждёт scope:wtp_bt
+{MOD_ID}_swap_drop_effect = {{
+\tglobal_var:{MOD_ID}_swap_loc = {{
+\t\tset_variable = {{ name = {MOD_ID}_swap_once value = 0 }}
+{drop}\t}}
+\t{MOD_ID}_plan_rows = yes
+\t{MOD_ID}_swap_rebuild = yes
+}}
+
+# Поставить этот домик в свободное место этой локации.
+#
+# `_edit_place_*` сам спрашивает и ворота (`_edit_fits_*`), и комнату, поэтому
+# нажатие в полной локации просто ничего не делает -- места освобождает «×».
+# Scope: country, ждёт scope:wtp_bt
+{MOD_ID}_swap_put_effect = {{
+\tglobal_var:{MOD_ID}_swap_loc = {{
+\t\tset_variable = {{ name = {MOD_ID}_swap_once value = 0 }}
+{put}\t}}
+\t{MOD_ID}_plan_rows = yes
+\t{MOD_ID}_swap_rebuild = yes
+}}
+
+# «Отсеять» -- тумблер, и список пересобирается тут же.
+# Scope: country
+{MOD_ID}_swap_sift_effect = {{
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_swap_sift }}
+\t\tremove_global_variable = {MOD_ID}_swap_sift
+\t}}
+\telse = {{ set_global_variable = {{ name = {MOD_ID}_swap_sift value = 1 }} }}
+\t{MOD_ID}_swap_rebuild = yes
+}}
+""")
+    return "".join(out)
+
+
 def rows_file() -> str:
     """The ranking pass. One row per province definition, best first.
 
@@ -9933,6 +11983,16 @@ def rights_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\tvariable = {MOD_ID}_candidates
 \t\tset_variable = {{ name = {MOD_ID}_r_total value = 0 }}
 \t\tset_variable = {{ name = {MOD_ID}_r_mid_total value = 0 }}
+\t\t# **Чем этот поиск сортирует -- то же, чем красит карта.** Его слово,
+\t\t# 2026-09-14: «функция поиска по одному городскому праву… я ожидаю, что
+\t\t# она будет тоже ориентироваться по аналогии карты городских прав».
+\t\t# `_rq<k>` и есть тот счёт. Кладём его на кандидата здесь, внутри обхода,
+\t\t# который и так идёт: `_r_score` считается в скоупе локации, а номер
+\t\t# отмеченной грамоты живёт на державе, и дотянуться туда оттуда нечем.
+\t\t# Покрытие считается здесь же, до того как его прочтёт `_rq<k>`:
+\t\t# доля входа требует триггера по провинции, то есть эффекта.
+\t\t{MOD_ID}_cov_pass = yes
+\t\tset_variable = {{ name = {MOD_ID}_r_fit value = {MOD_ID}_rq{index} }}
 """)
         for k in slots:
             out.append(f"\t\tset_variable = {{ name = {MOD_ID}_r_method_{k} value = 0 }}\n")
@@ -10143,15 +12203,23 @@ def rights_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     return "".join(out)
 
 
-def list_settings(by_continent) -> list[tuple[str, str, str]]:
-    """Every list this mod registers: its tab, its id, and what a tick in it runs.
+def list_settings(by_continent) -> list[tuple[str, str, str, bool]]:
+    """Every list this mod registers: tab, id, what a tick runs, folded at first.
 
     One table, two readers -- the `_on_changed` callbacks and the collapse pass
     below both have to name every list, and a list named in one and not the
-    other is the kind of omission nothing reports.
+    other is the kind of omission nothing reports. **It went unreported for two
+    builds**: the mod list was registered without being named here, so it had no
+    `_on_changed`, and CMM draws a list row only while that GUI is shown. The
+    group header rendered, the list under it did not, and nothing logged
+    anything (`check_script.py` catches it now).
     """
-    return ([("zone", f"region_{c}", f"{MOD_ID}_zone_changed = yes") for c in by_continent]
-            + [("zone", "continent", f"{MOD_ID}_zone_changed = yes")])
+    return ([("zone", f"region_{c}", f"{MOD_ID}_zone_changed = yes", True)
+             for c in by_continent]
+            + [("zone", "continent", f"{MOD_ID}_zone_changed = yes", True),
+               # Один мод в списке -- не повод сворачивать: свёрнутый он выглядит
+               # ровно как пустой, а пустым он и был.
+               ("tech", "source", f"{MOD_ID}_rebuild_sources = yes", False)])
 
 
 def layout_file(by_continent) -> str:
@@ -10180,7 +12248,9 @@ def layout_file(by_continent) -> str:
 \t\tlimit = {{ NOT = {{ has_variable = {MOD_ID}_folded_once }} }}
 \t\tset_variable = {{ name = {MOD_ID}_folded_once value = 1 }}
 """]
-    for tab, setting, _ in list_settings(by_continent):
+    for tab, setting, _, fold in list_settings(by_continent):
+        if not fold:
+            continue
         out.append(f"\t\tadd_to_variable_map = {{ name = cmm_group_collapsed "
                    f"key = flag:{MOD_ID}__{tab}__{setting} value = 1 }}\n")
     out.append("\t}\n}\n")
@@ -10201,7 +12271,7 @@ def guis_file(by_continent) -> str:
 # slider and button settings auto-apply and reach `cmf_on_callback`, and a list
 # reaches neither until `cmm_apply_list_change` is called here.
 """]
-    for _, setting, after in list_settings(by_continent):
+    for _, setting, after, _fold in list_settings(by_continent):
         body = f"\t\t{after}\n" if after else ""
         out.append(f"""
 {MOD_ID}__{setting}_on_changed = {{
@@ -10273,6 +12343,23 @@ def loc_file(language: str, rows: list[eu5data.Method], split: dict[str, list[st
         out.append(f" {MOD_ID}_cell_pin_{i}: "
                    f'"@{good}! [GuiScope.SetRoot(GetPlayer.MakeScope)'
                    f".ScriptValue('{MOD_ID}_show_pn{i}')|0]*\"\n")
+
+    # **Ячейка деревни -- значок и счётчик, ровно как у товара.** Его слово
+    # 2026-09-13: «нет иконок, нужно добавить. Не нужно писать название, нужна
+    # только иконка, аналогично как с простыми товарами. Таких домиков может
+    # быть очень много в модах».
+    #
+    # **Значок здания достаётся только через переменную.** У товара есть
+    # тексикона `@wheat!`, у здания её нет, а превратить строку в тип здания в
+    # интерфейсе нечем: глобального промоута из имени в `BuildingType` в дампах
+    # игры нет вовсе. Поэтому `_vbt<k>` -- глобалка с самим типом, поставленная
+    # при регистрации, и значок берётся с неё.
+    for k, building in enumerate(village_entities(rows, split, game), start=1):
+        b = shared_buildings(rows, split, game).index(building) + 1
+        out.append(f" {MOD_ID}_cell_{len(goods_order(split)) + k}: "
+                   f"\"[GetGlobalVariable('{MOD_ID}_vbt{k}').GetBuildingType.GetIcon] "
+                   f"[GuiScope.SetRoot(GetPlayer.MakeScope)"
+                   f".ScriptValue('{MOD_ID}_show_bn{b}')|0]\"\n")
 
     # **Строка сводки: пять чисел и ни одного слова.** Слова стоят в заголовках
     # столбцов, поэтому сами клетки одинаковы на всех языках и живут здесь.
@@ -10801,6 +12888,27 @@ def diag_file(rows: list[eu5data.Method], split: dict[str, list[str]],
             + " -- галочка «читать этот мод» в настройках: 0 значит, что его "
               "здания в план не идут вовсе"))
 
+    # **Зонд под пустой список на «Технической».** Строк там нет, а `SOURCES 4=1`
+    # не отличает «CMF список построил, галочка стоит» от «списка нет вовсе»:
+    # `_rebuild_sources` ставит 1 и тогда, когда `cmm_list_items_...` не
+    # существует. Считаем сами обе стороны -- наш список и заведомо рабочий
+    # континентальный контролем.
+    out.append(f"\tset_global_variable = {{ name = {MOD_ID}_dv26 value = 0 }}\n"
+               f"\tset_global_variable = {{ name = {MOD_ID}_dv27 value = 0 }}\n"
+               f"\tevery_in_list = {{\n"
+               f"\t\tvariable = cmm_list_items_{MOD_ID}__source\n"
+               f"\t\tchange_global_variable = {{ name = {MOD_ID}_dv26 add = 1 }}\n"
+               f"\t}}\n"
+               f"\tevery_in_list = {{\n"
+               f"\t\tvariable = cmm_list_items_{MOD_ID}__continent\n"
+               f"\t\tchange_global_variable = {{ name = {MOD_ID}_dv27 add = 1 }}\n"
+               f"\t}}\n")
+    out.append(say("CMMLIST source=%s continent=%s -- строк, которые CMF построил "
+                   "для списка модов и для списка континентов. Континент -- "
+                   "контроль, он рисуется: если там 5, а в source 0, список "
+                   "не собран; если в source 1, а строки на экране нет, "
+                   "виновато рисование" % (read(26), read(27))))
+
     out.append(say("FOREIGN pool=%d mine=%%s unbuildable=%%s -- зданий чужих модов "
                    "в пуле плана, из них доступных этой державе, и сколько видов "
                    "стоит в плане, не будучи ей доступными: последнее обязано "
@@ -10809,10 +12917,17 @@ def diag_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     out.append(park(7, f"{MOD_ID}_raze_n"))
     out.append(say("RAZE last=%s -- сколько производственных зданий снесло "
                    "последнее нажатие «снести лишнее»" % read(7)))
-    out.append(say("GRANARY n=%s -- локаций в режиме житницы CM: план в них "
-                   "ничего не ставит и их мест не считает, но РГО их считает "
-                   "по-прежнему и выгоду провинции они дают как раньше"
-                   % read(6)))
+    # **`put` -- зонд круга житниц, и он нужен ровно потому, что их комнаты в
+    # счёте мест не участвуют**: «житниц нет» и «житницы есть и пустые» на всех
+    # прочих числах выглядят одинаково. `put=0` при `n>0` -- пометки стоят, а
+    # ни один домик не встал, и спрашивать тогда надо `can_build_building`, а
+    # не пометку.
+    out.append(park(5, f"{MOD_ID}_gran_put"))
+    out.append(say("GRANARY n=%s put=%s -- локаций, помеченных житницей, и "
+                   "домиков, которые круг житниц в них поставил. Их мест план "
+                   "не считает и товарами за них никто не спорил; РГО они дают "
+                   "как прежде"
+                   % (read(6), read(5))))
 
     out.append(say("CM found=%s were_on=%s touched=%s off=%s present=%s -- "
                    "present=0 значит Construction Manager не в игре и кнопок "
@@ -11538,9 +13653,22 @@ SUM_COLS = ((180, "name"), (52, "n"), (56, "nb"), (50, "town"), (50, "rural"),
             (52, "places"), (44, "rgo"), (58, "qraw"), (66, "quota"),
             (66, "qt"), (66, "qr"), (52, "gain"), (420, "why"))
 SUM_SPACING = 6
+# **Вторая страница сводки: столбцы грамоты.** Не те же, что у товара, и не
+# могут быть теми же: у грамоты нет ни сторон, ни РГО, ни потолков — есть
+# сколько выдано, сколько положено, скольким городам она вообще подходит и
+# сколько платит лучший из них.
+# **Значка карты в строке грамоты нет, и он тут был зря.** Девять детских карт
+# открываются полосой значков над баннером режима карты -- ровно так, как у него
+# в CM dev (`bag_wtp_trmm_search_panel.gui`): включил «Лучшее городское право» из
+# флайаута, и полоса появилась. Его слово, 2026-09-14: «Ну… это работает. Хотя я
+# не особо понимаю зачем. Почему ты не сделал так, как оно было в CM DEV?»
+RSUM_COLS = ((300, "rname"), (70, "rgiven"), (70, "rquota"), (80, "rfit"),
+             (80, "rtop"), (420, "rwhy"))
 SUM_ROW_W = sum(w for w, _ in SUM_COLS) + SUM_SPACING * (len(SUM_COLS) - 1)
+RSUM_ROW_W = sum(w for w, _ in RSUM_COLS) + SUM_SPACING * (len(RSUM_COLS) - 1)
 SUM_WINDOW_W = 1460
 assert SUM_ROW_W <= SUM_WINDOW_W - 40, (SUM_ROW_W, SUM_WINDOW_W)
+assert RSUM_ROW_W <= SUM_WINDOW_W - 40, (RSUM_ROW_W, SUM_WINDOW_W)
 
 
 def summary_file(rows: list[eu5data.Method], split: dict[str, list[str]],
@@ -11711,7 +13839,56 @@ def summary_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\tset_global_variable = {{ name = {MOD_ID}_wr{index} value = 7 }}
 \t}}
 """)
-    out.append(f"""\t# Пустая земля оставила бы 9999 на экране.
+    # ---- вторая страница сводки: грамоты ----------------------------------
+    #
+    # **Столько же чисел на грамоту, сколько на товар, и по той же причине.**
+    # Его слово 2026-09-12: «в общую сводку нужно добавить вторую страницу, в
+    # которой будет списком показана статистика по городским правам в области,
+    # аналогично сводке по товарам из плана».
+    #
+    # Считается тем же нажатием, что и товарная половина. Один обход по городам
+    # на грамоту: `_rq<k>` уже посчитан планом, `_plan_right_fits_<k>` -- готовый
+    # триггер локации, и оба читаются, а не считаются заново.
+    #
+    # **Причина у грамоты своя, пять веток**, и ни одна не повторяет товарную:
+    # 1 -- держава её выдать не может вовсе; 2 -- ни один город этой земли ей не
+    # подходит; 3 -- грамоты в этом плане не раздавались (галочка снята);
+    # 4 -- выбрала свою квоту; 5 -- квота не выбрана, значит на остальных городах
+    # её перебили те, кому земля платит больше.
+    rights_calc = "".join(f"""\t# {right.key}
+\tset_global_variable = {{ name = {MOD_ID}_rfit{k} value = 0 }}
+\tset_global_variable = {{ name = {MOD_ID}_rtop{k} value = 0 }}
+\tevery_in_global_list = {{
+\t\tvariable = {MOD_ID}_candidates
+\t\tlimit = {{
+\t\t\t{MOD_ID}_plan_is_town = yes
+\t\t\t{MOD_ID}_plan_right_won_{k} = yes
+\t\t}}
+\t\tchange_global_variable = {{ name = {MOD_ID}_rfit{k} add = 1 }}
+\t\tif = {{
+\t\t\tlimit = {{ {MOD_ID}_rq{k} > global_var:{MOD_ID}_rtop{k} }}
+\t\t\tset_global_variable = {{ name = {MOD_ID}_rtop{k} value = {MOD_ID}_rq{k} }}
+\t\t}}
+\t}}
+\tset_global_variable = {{ name = {MOD_ID}_rwhy{k} value = 5 }}
+\tif = {{
+\t\tlimit = {{ NOT = {{ has_global_variable = {MOD_ID}_plan_rights }} }}
+\t\tset_global_variable = {{ name = {MOD_ID}_rwhy{k} value = 3 }}
+\t}}
+\telse_if = {{
+\t\tlimit = {{ NOT = {{ global_var:{MOD_ID}_rgiven{k} < global_var:{MOD_ID}_rquota }} }}
+\t\tset_global_variable = {{ name = {MOD_ID}_rwhy{k} value = 4 }}
+\t}}
+\tif = {{
+\t\tlimit = {{ global_var:{MOD_ID}_rfit{k} = 0 }}
+\t\tset_global_variable = {{ name = {MOD_ID}_rwhy{k} value = 2 }}
+\t}}
+\tif = {{
+\t\tlimit = {{ NOT = {{ {MOD_ID}_plan_right_gate_{k} = yes }} }}
+\t\tset_global_variable = {{ name = {MOD_ID}_rwhy{k} value = 1 }}
+\t}}
+""" for k, right in enumerate(output_rights(rows, game), start=1))
+    out.append(f"""{rights_calc}\t# Пустая земля оставила бы 9999 на экране.
 \tif = {{
 \t\tlimit = {{ NOT = {{ has_global_variable = {MOD_ID}_sum_any }} }}
 \t\tset_global_variable = {{ name = {MOD_ID}_sum_min value = 0 }}
@@ -11902,6 +14079,94 @@ types BagWtpSumCells {
 {head}\t}}
 
 """)
+    # ---- вторая страница: строка на грамоту --------------------------------
+    #
+    # **Та же форма, что у товара, и ни одного общего столбца.** Грамота не
+    # стоит в локации домиком: она свойство города, поэтому «город/село»,
+    # «РГО» и потолки сторон у неё пусты по смыслу, а не по данным -- и
+    # рисовать их прочерками значило бы половину таблицы прочерков.
+    rights_all = output_rights(rows, game)
+    for k, right in enumerate(rights_all, start=1):
+        cells = ""
+        for width, kind in RSUM_COLS:
+            sv = ("[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('%s_show_%s')|0]")
+            if kind == "rname":
+                # Имя грамоты -- тот же ключ, которым её называет всё остальное
+                # в моде (`_right_<key>`), а не второй его экземпляр.
+                text, align, size = f'"{MOD_ID}_right_{right.key}"', "left|vcenter", 14
+            elif kind == "rwhy":
+                text = f'"[GetPlayer.Custom(\'{MOD_ID}_rwhy_{k}\')]"'
+                align, size = "left|vcenter", 13
+            else:
+                body = {"rgiven": "#Y " + sv % (MOD_ID, f"rgiven{k}") + "#!",
+                        "rquota": sv % (MOD_ID, "rquota"),
+                        "rfit": sv % (MOD_ID, f"rfit{k}"),
+                        "rtop": sv % (MOD_ID, f"rtop{k}")}[kind]
+                text = '"%s"' % body
+                align = "center|vcenter"
+                size = 15 if kind == "rgiven" else 13
+            cells += f"""\t\ttext_single = {{
+\t\t\tsize = {{ {width} 26 }}
+\t\t\tautoresize = no
+\t\t\tmaximumsize = {{ {width} 26 }}
+\t\t\talign = {align}
+\t\t\tfontsize = {size}
+\t\t\tfontsize_min = 10
+\t\t\telide = right
+\t\t\ttooltip = "{MOD_ID}_sum_{kind}_tt"
+\t\t\ttext = {text}
+\t\t}}
+
+"""
+        out.append(f"""\t# {right.key}
+\ttype {MOD_ID}_sumr_row{k} = hbox {{
+\t\tsize = {{ {RSUM_ROW_W} 26 }}
+\t\tspacing = {SUM_SPACING}
+\t\tusing = bg_number_container_bckg
+\t\t# **Грамота, которой этой державе не видать, в сводку не идёт вовсе.**
+\t\t# Его слово 2026-09-13: «у него как ни странно не должно быть никаких
+\t\t# прав Константинополя и остальных не для его державы». `_right_ok<k>` --
+\t\t# та же переменная, которой окно поиска гасит клетку недоступной грамоты;
+\t\t# ставит её `_refresh_rights` по `potential` самой грамоты.
+\t\tvisible = "[GetPlayer.MakeScope.GetVariable('{MOD_ID}_right_ok{k}').IsSet]"
+
+{cells}\t}}
+
+""")
+    rhead = ""
+    for width, kind in RSUM_COLS:
+        align = "left|vcenter" if kind in ("rname", "rwhy") else "center|vcenter"
+        rhead += f"""\t\ttext_single = {{
+\t\t\tsize = {{ {width} 22 }}
+\t\t\tautoresize = no
+\t\t\tmaximumsize = {{ {width} 22 }}
+\t\t\talign = {align}
+\t\t\tfontsize = 13
+\t\t\tfontsize_min = 10
+\t\t\telide = right
+\t\t\ttooltip = "{MOD_ID}_sum_{kind}_tt"
+\t\t\ttext = "{MOD_ID}_sum_col_{kind}"
+\t\t}}
+
+"""
+    out.append(f"""\t# Заголовки второй страницы, теми же ширинами, что и её строки.
+\ttype {MOD_ID}_sumr_head_row = hbox {{
+\t\tsize = {{ {RSUM_ROW_W} 22 }}
+\t\tspacing = {SUM_SPACING}
+
+{rhead}\t}}
+
+""")
+    rrowlist = "".join(f"\t\t{MOD_ID}_sumr_row{k} = {{}}\n"
+                       for k in range(1, len(rights_all) + 1))
+    out.append(f"""\t# Все строки грамот одной коробкой.
+\ttype {MOD_ID}_sumr_all = vbox {{
+\t\tspacing = 2
+\t\tignoreinvisible = yes
+{rrowlist}\t}}
+
+""")
+
     rowlist = "".join(f"\t\t{MOD_ID}_sum_row{i} = {{}}\n"
                       for i in range(1, len(order) + 1))
     rowlist += "".join(f"\t\t{MOD_ID}_sum_vrow{k} = {{}}\n"
@@ -11916,6 +14181,23 @@ types BagWtpSumCells {
 }}
 """)
     return "".join(out)
+
+def village_icons(rows, split, game) -> str:
+    """`_vbt<k>` -- сам тип здания деревни, в глобалке, ради значка.
+
+    **Значок здания в интерфейсе достаётся только со скоупа.** У товара есть
+    тексикона в тексте (`@wheat!`), у здания её нет, а глобального промоута из
+    имени в `BuildingType` в дампах игры нет вовсе -- значит нужен носитель, и
+    им может быть только переменная. Ставится при регистрации, то есть на
+    загрузке сохранения и при открытии страницы мода, и больше не меняется.
+    """
+    out = ["# Scope: country\n%s_init_vbt = {\n" % MOD_ID]
+    for k, building in enumerate(village_entities(rows, split, game), start=1):
+        out.append(f"\tset_global_variable = {{ name = {MOD_ID}_vbt{k} "
+                   f"value = building_type:{building} }}\n")
+    out.append("}\n")
+    return "".join(out)
+
 
 def village_values(rows, split, game) -> str:
     """Читалки для строк деревень в сводке: домиков, доля, мест."""
@@ -12164,6 +14446,10 @@ def spec_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t}}
 \t{MOD_ID}_plan_set_quota = yes
 \t{MOD_ID}_plan_spec_fill = yes
+\t# **И житницы, последними.** Их комнаты в раздаче не участвуют вовсе, и
+\t# домики, которые сюда встанут, ни с кем за места не спорили: круг ходит
+\t# только по помеченным локациям и ставит то, что растит еду или сам РГО.
+\t{MOD_ID}_plan_fill_granaries = yes
 \t{MOD_ID}_plan_rank = yes
 \t# Свежий план -- своя же точка отсчёта для «Показать изменения».
 \t{MOD_ID}_edit_save = yes
@@ -12214,6 +14500,10 @@ def main() -> int:
     # by one**, so a game with more goods or more rights than the rows hold
     # would simply stop drawing the extra ones -- silently, since a cell that is
     # never written is a cell nothing complains about.
+    assert edit_rows(len(goods_order(split))
+                     + len(village_entities(rows, split, game))) <= 5, (
+        "the editor's picker needs more than five rows, and "
+        "`bag_wtp_edit_window.gui` names them one by one")
     assert len(goods_order(split)) <= PICK_ROW * PICK_ROWS, (
         f"{len(goods_order(split))} goods and only {PICK_ROW * PICK_ROWS} cells "
         f"in the search picker: raise `PICK_ROWS` and add the row to both "
@@ -12249,7 +14539,14 @@ def main() -> int:
         f"# How many towns hold {right.key} right now, printed in its own cell.\n"
         f"# Scope: country\n"
         f"{MOD_ID}_show_rgiven{k} = {{ value = global_var:{MOD_ID}_rgiven{k} }}\n"
+        f"# Сколько городов этой земли ей вообще подходят, и сколько платит\n"
+        f"# лучший из них -- вторая страница сводки.\n"
+        f"{MOD_ID}_show_rfit{k} = {{ value = global_var:{MOD_ID}_rfit{k} }}\n"
+        f"{MOD_ID}_show_rtop{k} = {{ value = global_var:{MOD_ID}_rtop{k} }}\n"
         for k, right in enumerate(output_rights(rows, game), start=1))
+        + f"# Квота грамот: сколько городов (или провинций) приходится на одну.\n"
+          f"# Scope: country\n"
+          f"{MOD_ID}_show_rquota = {{ value = global_var:{MOD_ID}_rquota }}\n"
         # **Пять чисел строки сводки.** Всё, что нужно, чтобы сравнить товар с
         # товаром: сколько стоит, где стоит, сколько мест есть, сколько
         # положено и что земля за него платит.
@@ -12305,6 +14602,25 @@ def main() -> int:
 """
         for i, good in enumerate(goods_order(split), start=1)
         for what in ("plus", "minus", "skip")) + "".join(
+        f"""
+# «{{'plus': '+1', 'minus': '−1'}}[what]» на {building}, из его собственной ячейки
+# редактора. Деревня -- сущность, а не товар, поэтому у неё своя строка и свой
+# номер в том же `_edit_good`.
+{MOD_ID}_pick_{what}_{len(goods_order(split)) + k} = {{
+\tscope = country
+
+\tis_shown = {{
+\t\talways = yes
+\t}}
+
+\teffect = {{
+\t\t{MOD_ID}_edit_{what}_{len(goods_order(split)) + k} = yes
+\t\t{MOD_ID}_recompute_live = yes
+\t}}
+}}
+"""
+        for k, building in enumerate(village_entities(rows, split, game), start=1)
+        for what in ("plus", "minus")) + "".join(
         f"""
 # «{{'plus': '+1', 'minus': '−1'}}[what]» on the {right.key} charter, from its own
 # cell in the editor. **A charter is moved, never added**: «+1» takes the town
@@ -12380,14 +14696,18 @@ def main() -> int:
         for i, right in enumerate(output_rights(rows, game), start=1)))
     write(LAYOUT_OUT, layout_file(by_continent))
     write(RIGHTS_OUT, rights_file(rows, split, game))
-    write(PLAN_OUT, plan_file(rows, split, game))
+    write(PLAN_OUT, plan_file(rows, split, game) + village_icons(rows, split, game))
+    write(SWAP_OUT, swap_file(rows, split, game))
+    write(SWAP_VALUES_OUT, swap_values_file(rows, split, game))
+    write(COV_OUT, cov_file(rows, split, game))
     write(PLAN_TRIGGERS_OUT, plan_triggers_file(rows, split, game))
     write(PLAN_LOC_OUT, plan_loc_file(rows, split, game))
     write(DIAG_OUT, diag_file(rows, split, game, methods(core)))
     effects, triggers = editor_file(rows, split, game)
     write(EDITOR_OUT, effects)
     write(EDITOR_TRIGGERS_OUT, triggers)
-    write(EDIT_CELLS_OUT, edit_cells_file(goods_order(split), output_rights(rows, game)))
+    write(EDIT_CELLS_OUT, edit_cells_file(goods_order(split), output_rights(rows, game),
+                                         village_entities(rows, split, game)))
     write(PICK_CELLS_OUT, pick_cells_file(goods_order(split), rights))
     write(SUMMARY_OUT, summary_file(rows, split, game))
     write(SUM_CELLS_OUT, sum_cells_file(rows, split, game))
@@ -12431,6 +14751,15 @@ def main() -> int:
     if dropped:
         print(f"{len(dropped)} building(s) of other mods left out: they make no "
               f"good the game itself has, and the picker list stops at {LIST_CAP}")
+    # **Чужой `allow`, который никто не перевёл, обязан быть виден.** Он
+    # заперт для игрока и открыт для мода -- ровно та тишина, которой в этом
+    # моде уже стоила «Мериносовая шерсть». Гадать за него нельзя, молчать о
+    # нём тоже.
+    if UNREAD_ALLOWS:
+        print(f"{len(UNREAD_ALLOWS)} method allow(s) not translated into a gate "
+              f"-- the method is offered to everyone:")
+        for key, body in sorted(UNREAD_ALLOWS.items()):
+            print(f"  {key}: {body}")
     print(f"{len(rows)} methods scored, {rural} of them in a village, "
           f"{len(split['raw'])} raw + {len(split['made'])} made goods, "
           f"{len(CONTINENTS)} continents, {RESULT_ROWS} provinces ranked, "

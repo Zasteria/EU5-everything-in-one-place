@@ -106,13 +106,11 @@ bag_wtp_on_button = {
 		bag_wtp_open_edit_window_effect = yes
 	}
 
-	# «Специализация»: тот же конвейер плана с двумя другими серединами, и окно
-	# плана следом — иначе нажатие ничего не показывает.
-	if = {
-		limit = { var:cmf_callback = flag:bag_wtp__spec }
-		bag_wtp_spec_run = yes
-		bag_wtp_open_plan_window_effect = yes
-	}
+	# **«Специализация» больше не кнопка на этой странице.** Она галочка в окне
+	# плана, и считает её то же «Пересчитать» (`bag_wtp_plan_refresh`) — его
+	# слово 2026-09-12, отменяющее его же просьбу 2026-09-07 о своей кнопке:
+	# «нужно просто добавить галочку "специализация" в общий план, а не делать
+	# для неё отдельную кнопку CMF».
 
 	# The diagnosis. Nothing of the mod's own state is touched by it -- it reads
 	# what the last pass left and writes only its own scratch globals -- so the
@@ -121,6 +119,17 @@ bag_wtp_on_button = {
 	if = {
 		limit = { var:cmf_callback = flag:bag_wtp__diag }
 		bag_wtp_diag = yes
+	}
+
+	# Пересчёт карты городских прав. Полный проход по определениям провинций --
+	# секунды, а не мгновение, поэтому он кнопка, а не что-то периодическое.
+	if = {
+		limit = { var:cmf_callback = flag:bag_wtp__trmm }
+		bag_wtp_trmm_recompute_all = yes
+		set_global_variable = { name = bag_wtp_trmm_stamp value = bag_wtp_trmm_version_value }
+		# Цвета земли теперь другие, а игра сама карту не перерисует: полоса
+		# значков увидит этот флаг, сходит на двойник `_refresh` и вернётся.
+		set_variable = { name = bag_wtp_trmm_refresh_armed value = 1 }
 	}
 }
 

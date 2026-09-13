@@ -434,6 +434,23 @@ types BagWtpPlanTypes {
 						}
 					}
 				}
+
+				# **Домики житницы — свой список, и не случайно.** Своего товара
+				# у них нет, а `_row_goods` и `_row_builds` обязаны идти индекс
+				# в индекс: пара «сырьё локации — домик» ломала это, как только
+				# житница ставила больше одного домика (`ROWPAIR mismatched=7`,
+				# прогон 2026-09-13). Третий список ничего не обещает попарно.
+				hbox = {
+					parentanchor = left
+					widgetanchor = left
+					spacing = 2
+					datamodel = "[Location.MakeScope.GetList('bag_wtp_row_gran')]"
+					item = {
+						bag_wtp_plan_building_entry = {
+							datacontext = "[Scope.GetBuildingType]"
+						}
+					}
+				}
 			}
 		}
 
@@ -513,6 +530,26 @@ types BagWtpPlanTypes {
 				visible = "[Location.MakeScope.GetVariable('cm_auto_food_location_enabled').IsSet]"
 			}
 			onclick = "[GetScriptedGui('bag_wtp_food_press_loc').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('wtp_location', Location.MakeScope).End)]"
+		}
+
+		# **Замена домика в этой локации.** Его шестой пункт, 2026-09-13: «в
+		# каждой локации в окне редактора должна быть добавлена кнопочка
+		# замены». Ряд общий на оба окна, поэтому кнопка спрашивает, открыт ли
+		# редактор, — и не показывается на житнице, которую заполняет свой круг.
+		button_regular = {
+			size = { 40 42 }
+			tooltip = "bag_wtp_swap_open_tt"
+			visible = "[GetScriptedGui('bag_wtp_swap_here').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('wtp_location', Location.MakeScope).End)]"
+			icon = {
+				size = { 24 24 }
+				parentanchor = center
+				widgetanchor = center
+				# `arrow_double_h` -- значок, который игра правда рисует: он назван в
+				# её же `.gui`. Придуманное имя текстуры даёт пустую кнопку и
+				# молчит, как и всё остальное в этом интерфейсе.
+				texture = "gfx/interface/icons/flat_icons/arrow_double_h.dds"
+			}
+			onclick = "[GetScriptedGui('bag_wtp_swap_open').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('wtp_location', Location.MakeScope).End)]"
 		}
 
 		widget = { layoutpolicy_horizontal = expanding size = { -1 30 } }
@@ -643,6 +680,37 @@ window = {
 					elide = right
 					text = "bag_wtp_plan_rights"
 					tooltip = "bag_wtp_plan_rights_tt"
+				}
+
+				# «Специализация» — третий тумблер того же «Пересчитать».
+				#
+				# **Была кнопкой на странице мода и перестала ею быть**,
+				# 2026-09-12: «если я захочу в этом же окне нажать
+				# "пересчитать" — он просто сделает базовый общий план, а не
+				# специализацию… нужно просто добавить галочку "специализация"
+				# в общий план». Развилка — в `bag_wtp_plan_refresh`.
+				widget = {
+					size = { 28 34 }
+					checkbutton_round_alt = {
+						size = { 24 24 }
+						parentanchor = center
+						widgetanchor = center
+						down = "[GetGlobalVariable('bag_wtp_plan_spec').IsSet]"
+						tooltip = "bag_wtp_plan_spec_tt"
+						onclick = "[GetScriptedGui('bag_wtp_toggle_plan_spec').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+					}
+				}
+
+				text_single = {
+					size = { 210 34 }
+					autoresize = no
+					maximumsize = { 210 34 }
+					align = left|vcenter
+					fontsize = 13
+					fontsize_min = 10
+					elide = right
+					text = "bag_wtp_plan_spec"
+					tooltip = "bag_wtp_plan_spec_tt"
 				}
 
 
