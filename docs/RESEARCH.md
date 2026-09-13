@@ -1,4 +1,4 @@
-# EU5 modding notes
+﻿# EU5 modding notes
 
 How EU5 modding actually works, learnt mostly by getting it wrong first. The
 game ships no modding documentation, so everything here came from the game's own
@@ -42,3 +42,27 @@ says so where a version matters.
 The companion documents are [`PITFALLS.md`](PITFALLS.md) — the same knowledge
 from the other end, as mistakes and the symptom each one showed — and
 [`TESTLOG.md`](TESTLOG.md), which is what has actually been in the game.
+
+## Автострой зданий: запись есть уже у стройки
+
+**Галочку авторасширения ставит только интерфейс** --
+`ToggleAutoExpandBuilding(Building.Self)`, `IsAutoExpand(Building.Self)`. Ни
+эффекта, ни триггера для неё нет: проверено по полным `effects.log` и
+`triggers.log`, а не по ключевому слову. Среди систем `set_automated_system`
+постройки зданий тоже нет.
+
+**Но `Building` достаётся не только из панели игры.** Здание **в стройке** уже
+имеет запись, и до неё дотягивается любое окно, у которого есть локация:
+`Location.GetCivilConstructions` -> `Construction.GetBuilding`. Обе формы --
+ванильные (`build_location_lateralview.gui:1460`,
+`map_markers_construction.gui:116`).
+
+**Заказать стройку скрипт умеет**: `construct_building` в скоупе локации,
+с `cost_multiplier`, `payer` и `instant = yes/no`. `change_building_level_in_location`
+ставит уровень напрямую, `every_buildings_in_location` заводит в скоуп здания
+(`building_level`, `building_max_level`, `building_levels_under_construction`,
+`is_at_max_level`).
+
+**Здание с потолком в один уровень галочки не получает** -- гейт по потолку,
+а не по существованию записи.
+
