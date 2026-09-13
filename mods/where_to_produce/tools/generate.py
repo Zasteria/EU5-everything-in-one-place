@@ -2021,11 +2021,18 @@ def values_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 
 # Scope: location
 {MOD_ID}_r_score = {{
-\tvalue = var:{MOD_ID}_r_fit
-\tmultiply = 1000
-\tadd = var:{MOD_ID}_r_total
+\tvalue = var:{MOD_ID}_r_total
+\t# **Пригодность ведёт порядок только «на конец».** Покрытие CM берёт лучший
+\t# способ рецепта, не спрашивая, открыт ли он державе (`_trmm_opt_*` -- ни
+\t# одних ворот по продвижению), то есть это число конца игры. Ставить его во
+\t# главу порядка в режиме «на сейчас» значит отвечать не на тот вопрос,
+\t# который задан.
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_rank_by_end }}
+\t\tadd = {{
+\t\t\tvalue = var:{MOD_ID}_r_fit
+\t\t\tmultiply = 1000
+\t\t}}
 \t\tadd = {MOD_ID}_r_mid_tiebreak
 \t}}
 }}
@@ -10667,560 +10674,560 @@ def swap_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot1_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot1_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot1_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot1 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot2_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot2_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot2_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot2 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot3_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot3_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot3_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot3 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot4_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot4_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot4_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot4 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot5_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot5_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot5_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot5 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot6_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot6_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot6_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot6 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot7_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot7_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot7_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot7 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot8_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot8_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot8_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot8 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot9_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot9_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot9_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot9 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot10_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot10_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot10_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot10 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot11_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot11_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot11_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot11 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot12_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot12_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot12_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot12 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot13_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot13_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot13_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot13 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot14_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot14_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot14_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot14 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot15_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot15_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot15_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot15 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot16_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot16_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot16_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot16 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot17_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot17_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot17_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot17 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot18_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot18_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot18_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot18 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot19_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot19_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot19_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot19 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot20_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot20_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot20_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot20 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot21_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot21_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot21_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot21 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot22_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot22_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot22_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot22 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot23_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot23_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot23_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot23 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot24_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot24_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot24_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot24 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot25_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot25_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot25_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot25 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot26_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot26_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot26_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot26 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot27_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot27_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot27_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot27 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot28_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot28_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot28_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot28 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot29_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot29_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot29_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot29 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot30_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot30_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot30_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot30 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot31_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot31_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot31_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot31 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot32_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot32_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot32_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot32 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot33_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot33_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot33_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot33 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot34_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot34_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot34_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot34 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot35_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot35_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot35_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot35 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot36_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot36_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot36_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot36 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot37_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot37_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot37_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot37 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot38_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot38_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot38_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot38 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot39_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot39_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot39_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot39 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot40_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot40_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot40_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot40 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot41_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot41_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot41_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot41 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot42_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot42_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot42_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot42 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot43_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot43_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot43_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot43 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot44_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot44_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot44_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot44 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot45_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot45_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot45_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot45 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot46_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot46_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot46_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot46 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot47_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot47_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot47_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot47 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot48_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot48_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot48_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot48 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot49_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot49_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot49_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot49 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot50_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot50_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot50_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot50 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot51_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot51_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot51_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot51 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot52_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot52_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot52_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot52 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot53_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot53_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot53_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot53 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot54_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot54_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot54_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot54 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot55_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot55_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot55_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot55 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot56_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot56_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot56_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot56 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot57_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot57_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot57_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot57 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot58_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot58_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot58_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot58 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot59_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot59_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot59_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot59 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot60_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot60_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot60_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot60 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot61_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot61_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot61_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot61 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot62_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot62_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot62_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot62 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot63_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot63_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot63_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot63 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot64_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot64_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot64_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot64 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot65_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot65_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot65_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot65 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot66_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot66_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot66_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot66 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot67_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot67_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot67_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot67 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot68_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot68_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot68_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot68 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot69_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot69_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot69_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot69 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot70_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot70_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot70_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot70 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot71_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot71_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot71_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot71 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot72_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot72_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot72_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot72 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot73_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot73_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot73_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot73 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot74_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot74_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot74_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot74 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot75_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot75_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot75_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot75 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot76_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot76_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot76_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot76 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot77_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot77_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot77_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot77 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot78_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot78_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot78_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot78 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot79_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot79_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot79_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot79 }}
 \t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ {MOD_ID}_swap_pass = yes }}
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_swap_bb }}
 \t\tset_variable = {{ name = {MOD_ID}_swapslot80_bt value = global_var:{MOD_ID}_swap_bb }}
-\t\tset_variable = {{ name = {MOD_ID}_swapslot80_gain value = global_var:{MOD_ID}_swap_bv }}
+\t\tset_variable = {{ name = {MOD_ID}_swapslot80_gain value = {{ value = global_var:{MOD_ID}_swap_bv divide = {RANK_SCALE} }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_swap_slots target = flag:{MOD_ID}_swapslot80 }}
 \t}}
 

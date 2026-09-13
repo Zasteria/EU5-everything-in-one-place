@@ -23998,11 +23998,18 @@ bag_wtp_r_fit_pct = {
 
 # Scope: location
 bag_wtp_r_score = {
-	value = var:bag_wtp_r_fit
-	multiply = 1000
-	add = var:bag_wtp_r_total
+	value = var:bag_wtp_r_total
+	# **Пригодность ведёт порядок только «на конец».** Покрытие CM берёт лучший
+	# способ рецепта, не спрашивая, открыт ли он державе (`_trmm_opt_*` -- ни
+	# одних ворот по продвижению), то есть это число конца игры. Ставить его во
+	# главу порядка в режиме «на сейчас» значит отвечать не на тот вопрос,
+	# который задан.
 	if = {
 		limit = { has_global_variable = bag_wtp_rank_by_end }
+		add = {
+			value = var:bag_wtp_r_fit
+			multiply = 1000
+		}
 		add = bag_wtp_r_mid_tiebreak
 	}
 }
