@@ -3237,6 +3237,50 @@ def plan_loc_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 	}}
 }}
 """)
+    # **Строка товара в двух видах, и пустое слагаемое не печатается.** Его
+    # слово 2026-09-14: «вообще там в целом не должно быть этой мусорной строки
+    # +0%». Там, где местный модификатор ноль -- а после вычитания выданной
+    # грамоты он ноль чаще всего, -- строка короткая: товар и его процент.
+    out.append("#\n# Строка товара: с разложением, только если есть что раскладывать.\n")
+    for good in sorted(COV_GOODS):
+        out.append(f"""# Scope: location
+{MOD_ID}_cov_line_{good} = {{
+\ttype = location
+\ttext = {{
+\t\ttrigger = {{ var:{MOD_ID}_covl_{good} > 0 }}
+\t\tlocalization_key = {MOD_ID}_cov_full_{good}
+\t}}
+\ttext = {{
+\t\tfallback = yes
+\t\tlocalization_key = {MOD_ID}_cov_short_{good}
+\t}}
+}}
+""")
+    # **Эпоха называется в каждой подсказке, которая от неё зависит.** Его слово
+    # 2026-09-14: «чтобы всё и везде чётко разграничивалось что советует и
+    # рассчитывает и на какую эпоху -- текущую или последнюю. Я уже раз 50 на
+    # этой теме правки вношу за тобой». У каждого окна свой тумблер, поэтому и
+    # подписи две -- одна на всех врала бы про то окно, чей тумблер не её.
+    #
+    # **Две области видимости у одной подписи, потому что зовут её из обеих.**
+    # Подсказка строки читает локацию, подсказка столбца сводки -- державу;
+    # `customizable_localization` принадлежит той области, из которой позван, и
+    # чужой там не работает. Триггер у обеих один -- глобалка.
+    for name, switch in (("plan", "plan_by_end"), ("rank", "rank_by_end")):
+        for suffix, scope in (("", "location"), ("_c", "country")):
+            out.append(f"""# Scope: {scope}
+{MOD_ID}_age_{name}{suffix} = {{
+\ttype = {scope}
+\ttext = {{
+\t\ttrigger = {{ has_global_variable = {MOD_ID}_{switch} }}
+\t\tlocalization_key = {MOD_ID}_age_end
+\t}}
+\ttext = {{
+\t\tfallback = yes
+\t\tlocalization_key = {MOD_ID}_age_now
+\t}}
+}}
+""")
     out.append(f"""
 # Разбор той грамоты, по которой шёл поиск: её товары, каждый со своим счётом.
 # Номер отмеченной грамоты кладёт на локацию тот же проход (`_rqsel`).
@@ -3254,6 +3298,29 @@ def plan_loc_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 		fallback = yes
 		localization_key = {MOD_ID}_trmm_blank
 	}}
+}}
+""")
+
+    # То же, но для строки плана: грамота, которую раздача сюда поставила.
+    # **Подсказка строки плана рисовала лесенку CM** (`_trmm_ur_rank_slot_*`), а
+    # грамоту выбирал наш `_rq<k>` -- и на его экране 2026-09-14 подсказка
+    # называла лучшим текстиль, тогда как раздача поставила судматериалы. Тот же
+    # разрыв, что был в поиске, только в другом окне.
+    out.append(f"""
+# Scope: location
+{MOD_ID}_rq_details_plan = {{
+\ttype = location
+""")
+    for k in range(1, len(rights) + 1):
+        out.append(f"""\ttext = {{
+\t\ttrigger = {{ has_variable = {MOD_ID}_plan_right var:{MOD_ID}_plan_right = {k} }}
+\t\tlocalization_key = {MOD_ID}_rq_bd_{k}
+\t}}
+""")
+    out.append(f"""\ttext = {{
+\t\tfallback = yes
+\t\tlocalization_key = {MOD_ID}_trmm_blank
+\t}}
 }}
 """)
 
@@ -4413,9 +4480,17 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t# **Покрытие -- до всего остального.** `_rq<k>`, которым раздача выбирает
 \t# грамоты, читает `_cov_<товар>`, а посчитать его может только эффект: доля
 \t# входа спрашивает `any_location_in_province_definition`.
+\t#
+\t# **Эпоха ставится тумблером этого окна, и это не мелочь.** Проход умеет
+\t# считать «на сейчас» и «на конец», а из какого тумблера брать -- решает тот,
+\t# кто зовёт: у плана свой, у поиска по грамоте свой.
+\t{MOD_ID}_cov_age_plan = yes
+\tsave_scope_as = {MOD_ID}_country
 \tevery_in_global_list = {{
 \t\tvariable = {MOD_ID}_candidates
 \t\t{MOD_ID}_cov_pass = yes
+\t\t# Лесенка грамот этой локации -- её читает подсказка строки плана.
+\t\t{MOD_ID}_rq_rank = yes
 \t}}
 """)
     for index, good in enumerate(order, start=1):
@@ -10620,9 +10695,18 @@ def cov_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 # * `_covm_<товар>` -- номер победившего способа, по нему подсказка называет
 #                      здание и перечисляет сырьё, которое рецепт просит;
 # * `_covn_`/`_covd_` -- сколько видов сырья рецепта провинция даёт из скольких.
-# Scope: location, ждёт scope:%s_country
+#
+# **Эпоху проход берёт у того, кто его позвал, а не у одной глобалки на всех.**
+# Он гейтился на `_plan_by_end` -- тумблере окна плана, -- а звал его и поиск по
+# грамоте, у которого свой тумблер (`_rank_by_end`). Значит галочка «Считать на
+# конец игры» в поиске не делала для «Пригодности» ничего: столбец всегда считал
+# по тумблеру другого окна. Его слово 2026-09-14: «ебучий мод опять не различает
+# что он советует на "сейчас" и на "конец"… я уже раз 50 на этой теме правки
+# вношу за тобой». Теперь возраст приносит вызывающий -- `%s_cov_end`, -- и
+# ставит его из **своего** тумблера.
+# Scope: location, ждёт scope:%s_country и %s_cov_age
 %s_cov_pass = {
-""" % (MOD_ID, MOD_ID)]
+""" % (MOD_ID, MOD_ID, MOD_ID, MOD_ID)]
     for good in sorted(by_good):
         out.append(f"\tset_variable = {{ name = {MOD_ID}_cov_{good} value = 0 }}\n"
                    f"\tset_variable = {{ name = {MOD_ID}_covm_{good} value = 0 }}\n"
@@ -10663,11 +10747,11 @@ def cov_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\tlimit = {{
 \t\t\tOR = {{
 \t\t\t\tAND = {{
-\t\t\t\t\tNOT = {{ has_global_variable = {MOD_ID}_plan_by_end }}
+\t\t\t\t\tNOT = {{ has_global_variable = {MOD_ID}_cov_end }}
 \t\t\t\t\tscope:{MOD_ID}_country = {{ {MOD_ID}_avail_{mi} = yes }}
 \t\t\t\t}}
 \t\t\t\tAND = {{
-\t\t\t\t\thas_global_variable = {MOD_ID}_plan_by_end
+\t\t\t\t\thas_global_variable = {MOD_ID}_cov_end
 \t\t\t\t\tscope:{MOD_ID}_country = {{ {gate} }}
 \t\t\t\t}}
 \t\t\t}}
@@ -10717,6 +10801,48 @@ def cov_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \tchange_variable = {{ name = {MOD_ID}_cov_{good} add = var:{MOD_ID}_covl_{good} }}
 """)
     out.append("}\n")
+    # **Возраст ставит окно, и обе формы стоят рядом**, чтобы разойтись они
+    # могли только вместе. Планом правит `_plan_by_end` (галочка окна плана),
+    # поиском по грамоте -- `_rank_by_end` (галочка окна поиска), и это разные
+    # тумблеры: одно окно ищет место под одну грамоту, другое раздаёт весь план.
+    for name, switch in (("plan", "plan_by_end"), ("rank", "rank_by_end")):
+        out.append(f"""
+# Возраст для `_cov_pass`, из тумблера окна «{name}».
+# Scope: country
+{MOD_ID}_cov_age_{name} = {{
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_{switch} }}
+\t\tset_global_variable = {{ name = {MOD_ID}_cov_end value = 1 }}
+\t}}
+\telse = {{ remove_global_variable = {MOD_ID}_cov_end }}
+}}
+""")
+    # **Лесенка прав на локации -- один эффект на оба окна.** Она нужна и
+    # поиску по грамоте, и подсказке строки плана, а считаться обязана одинаково:
+    # два экземпляра одного расчёта -- ровно то, из-за чего подсказка и столбец
+    # разошлись в первый раз.
+    rights = output_rights(rows, game)
+    park = "".join(
+        "\tset_variable = { name = %s_rqv%d value = { value = %s_rq%d divide = %d } }\n"
+        % (MOD_ID, j, MOD_ID, j, RANK_SCALE) for j in range(1, len(rights) + 1))
+    ranks = ""
+    for k in range(1, len(rights) + 1):
+        ranks += "\tset_variable = { name = %s_rqr%d value = 0 }\n" % (MOD_ID, k)
+        for j in range(1, len(rights) + 1):
+            if j == k:
+                continue
+            # Ничья ломается номером: нестрогое сравнение оставило бы две
+            # грамоты на одном месте, и вторая не нарисовалась бы вовсе.
+            op = ">=" if j < k else ">"
+            ranks += ("\tif = { limit = { var:%s_rqv%d %s var:%s_rqv%d }"
+                      " change_variable = { name = %s_rqr%d add = 1 } }\n"
+                      % (MOD_ID, j, op, MOD_ID, k, MOD_ID, k))
+    out.append(f"""
+# Наш счёт каждой грамоты на этой локации, долей, и место каждой в лесенке.
+# Scope: location, после `_cov_pass`
+{MOD_ID}_rq_rank = {{
+{park}{ranks}}}
+""")
     return "".join(out)
 
 
@@ -12161,8 +12287,14 @@ def rights_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     # ---- the pass -------------------------------------------------------
     out.append(f"""
 # Score every candidate for the ticked right.
+#
+# **Возраст ставится здесь, из тумблера ЭТОГО окна.** Галочка «Считать на конец
+# игры» в поиске пишет `_rank_by_end`, а покрытие раньше гейтилось на
+# `_plan_by_end` -- тумблере окна плана, -- так что в поиске она не делала
+# ничего.
 # Scope: country
 {MOD_ID}_score_right = {{
+\t{MOD_ID}_cov_age_rank = yes
 """)
     for index in range(1, len(rights) + 1):
         keyword = "if" if index == 1 else "else_if"
@@ -12173,27 +12305,6 @@ def rights_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     for index, right in enumerate(rights, start=1):
         bundle = sorted(right.output)
         pretty = ", ".join("%s +%g%%" % (g, right.output[g] * 100) for g in bundle)
-        # Доля, а не тысяча: и лесенка её печатает процентом, и сравнения
-        # между собой от масштаба не зависят.
-        park = "".join(
-            "\t\tset_variable = { name = %s_rqv%d value = { value = %s_rq%d"
-            " divide = %d } }\n" % (MOD_ID, j, MOD_ID, j, RANK_SCALE)
-            for j in range(1, len(rights) + 1))
-        # **Место в лесенке -- строгий порядок, а не «сколько больше».** С
-        # нестрогим сравнением две грамоты с равным счётом делят одно место, и
-        # вторая не рисуется вовсе: `customizable_localization` берёт первый
-        # подошедший `text`. Ничья ломается номером.
-        ranks = ""
-        for k in range(1, len(rights) + 1):
-            ranks += ("\t\tset_variable = { name = %s_rqr%d value = 0 }\n"
-                      % (MOD_ID, k))
-            for j in range(1, len(rights) + 1):
-                if j == k:
-                    continue
-                op = ">=" if j < k else ">"
-                ranks += ("\t\tif = { limit = { var:%s_rqv%d %s var:%s_rqv%d }"
-                          " change_variable = { name = %s_rqr%d add = 1 } }\n"
-                          % (MOD_ID, j, op, MOD_ID, k, MOD_ID, k))
         out.append(f"""
 # {right.key} -- {pretty}
 # Scope: country
@@ -12217,10 +12328,9 @@ def rights_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t# столбца стоял разбор CM (`_trmm_ur_rank_bd_slot_*`), а в самом столбце
 \t\t# наш `_rq<k>`; сойтись они не могли -- карта не знает про эпоху, -- и на
 \t\t# его экране 2026-09-14 подсказка говорила 76.1 %, а столбец 236.1 %.
-\t\t# Поэтому все тринадцать наших счетов паркуются долей прямо здесь, где
-\t\t# покрытие только что посчитано, а рядом -- место каждого в лесенке.
+\t\t{MOD_ID}_rq_rank = yes
 \t\tset_variable = {{ name = {MOD_ID}_rqsel value = {index} }}
-{park}{ranks}""")
+""")
         for k in slots:
             out.append(f"\t\tset_variable = {{ name = {MOD_ID}_r_method_{k} value = 0 }}\n")
         out.append("\t}\n")
@@ -12687,14 +12797,18 @@ def loc_file(language: str, rows: list[eu5data.Method], split: dict[str, list[st
     # **Обе половины порознь**, потому что 236 % на землю, у которой каждый
     # товар меньше сотни, делает именно вторая, и увидеть это надо на экране.
     for good in sorted(COV_GOODS):
+        head = (f'"\\n @{good}! [ShowGoodsName(\'{good}\')]: '
+                f'[Location.MakeScope.GetVariable(\'{MOD_ID}_cov_{good}\').GetValue|%1]')
+        why = f'[Location.Custom(\'{MOD_ID}_cov_why_{good}\')]"\n'
+        # Короткий вид: слагаемого нет, раскладывать нечего.
+        out.append(f' {MOD_ID}_cov_short_{good}: {head}{why}')
+        # Полный: итог и обе половины, но только когда вторая не ноль.
         out.append(
-            f' {MOD_ID}_cov_line_{good}: "\\n @{good}! [ShowGoodsName(\'{good}\')]: '
-            f'[Location.MakeScope.GetVariable(\'{MOD_ID}_cov_{good}\').GetValue|%1]'
+            f' {MOD_ID}_cov_full_{good}: {head}'
             f' = [Location.MakeScope.GetVariable(\'{MOD_ID}_covr_{good}\').GetValue|%1]'
             f' {ref % (MOD_ID + "_cov_of$")} + '
             f'[Location.MakeScope.GetVariable(\'{MOD_ID}_covl_{good}\').GetValue|%1]'
-            f' {ref % (MOD_ID + "_cov_mod$")}'
-            f'[Location.Custom(\'{MOD_ID}_cov_why_{good}\')]"\n')
+            f' {ref % (MOD_ID + "_cov_mod$")}{why}')
 
     # Строка грамоты в лесенке: её имя со значком (ключ уже есть) и наш процент.
     for k, right in enumerate(output_rights(rows, game), start=1):
@@ -12705,7 +12819,10 @@ def loc_file(language: str, rows: list[eu5data.Method], split: dict[str, list[st
         # **Ссылка `$ключ$`, а не `Custom()`**: строка товара -- ключ
         # локализации, а `Custom()` зовёт `customizable_localization`. Перепутать
         # их значит напечатать имя ключа вместо текста; поймал сверщик ссылок.
-        bd = "".join(ref % (MOD_ID + "_cov_line_" + g + "$")
+        # `Custom()`, а не `$ключ$`: строка товара стала
+        # `customizable_localization` -- она выбирает между коротким и полным
+        # видом по тому, есть ли что раскладывать.
+        bd = "".join(f"[Location.Custom('{MOD_ID}_cov_line_{g}')]"
                      for g in sorted(right.output) if g in COV_GOODS)
         out.append(f' {MOD_ID}_rq_bd_{k}: "{bd}"\n')
 

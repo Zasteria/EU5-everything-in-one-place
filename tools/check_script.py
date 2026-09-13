@@ -1133,6 +1133,42 @@ SHARED_COPIES = (
 )
 
 
+# Перенесённые из чужого мода разборы: их можно рисовать в перенесённом окне и
+# нельзя в своём. Ключ -> файл, в котором он законен.
+FOREIGN_BREAKDOWNS = (
+    ("bag_wtp_trmm_ur_rank_", "bag_wtp_trmm_l_"),
+    ("bag_wtp_trmm_bd_slot_", "bag_wtp_trmm_l_"),
+    ("bag_wtp_trmm_slot_", "bag_wtp_trmm_l_"),
+)
+
+
+def foreign_breakdown_in_own_text(root: Path) -> list[str]:
+    """Наш текст, рисующий разбор чужого расчёта.
+
+    **Столбец считает одно, подсказка под ним рисует другое.** «Пригодность»
+    считалась нашим `_rq<k>` -- по способам, доступным державе, -- а подсказка
+    под ней звала `_trmm_ur_rank_bd_slot_*`, разбор перенесённой карты, который
+    про эпоху не знает вовсе. На экране владельца 2026-09-14 стояли 76.1 % и
+    236.1 % разом; в окне плана то же самое назвало лучшей грамотой не ту,
+    которую раздача выдала. Сойтись эти два числа не могли ни при каких данных.
+
+    Правило: перенесённый разбор рисует перенесённое окно. В своём тексте
+    (`bag_wtp_l_<язык>.yml`) его быть не должно -- у своего расчёта свой разбор.
+    """
+    found: list[str] = []
+    for path in sorted(root.rglob("*.yml")):
+        name = path.name
+        for key, allowed_prefix in FOREIGN_BREAKDOWNS:
+            if allowed_prefix in name or key not in path.read_text(
+                    encoding="utf-8-sig", errors="ignore"):
+                continue
+            found.append(
+                f"{path.relative_to(REPO)}: рисует `{key}*` — разбор чужого "
+                f"расчёта в своём тексте; у столбца и его подсказки обязан быть "
+                f"один счёт")
+    return found
+
+
 def stale_overrides(root: Path) -> list[str]:
     """A full-file copy of a vanilla `.gui` that no longer carries all of it.
 
@@ -1232,7 +1268,8 @@ def main(argv: list[str]) -> int:
                  + scope_mixed_variables(root)
                  + overflowing_windows(root)
                  + localization_markup(root)
-                 + stale_overrides(root))
+                 + stale_overrides(root)
+                 + foreign_breakdown_in_own_text(root))
         total += len(found)
         for line in found:
             print(line)
