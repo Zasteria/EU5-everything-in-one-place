@@ -2006,9 +2006,15 @@ def values_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \tmultiply = 0.00001
 }}
 
+# **Порядок поиска по грамоте -- пригодность земли, а не деньги.** `_r_fit` --
+# это `_rq<k>`, среднее покрытий связки, тот счёт, которым красит карта
+# «Лучшее городское право»; кладёт его на кандидата `_score_right_<k>`. Деньги
+# (`_r_total`) остались тем, что строка печатает, и решают ничью.
 # Scope: location
 {MOD_ID}_r_score = {{
-\tvalue = var:{MOD_ID}_r_total
+\tvalue = var:{MOD_ID}_r_fit
+\tmultiply = 1000
+\tadd = var:{MOD_ID}_r_total
 \tif = {{
 \t\tlimit = {{ has_global_variable = {MOD_ID}_rank_by_end }}
 \t\tadd = {MOD_ID}_r_mid_tiebreak
@@ -10420,10 +10426,56 @@ def editor_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 
 
 
-# Сколько домиков окно замены предлагает разом. Больше двух десятков строк он
-# всё равно не читает, а проход по всем товарам стоит одного круга на строку.
-SWAP_MAX = 24
+# Сколько домиков окно замены предлагает разом.
+#
+# **Двадцать четыре были потолком, а не ответом.** Его прогон 2026-09-14: «мод
+# показывает, что можно поставить 24 вида здания… на самом деле их гораздо
+# больше должно отображаться». Ровно 24 в каждой локации -- признак упора в
+# потолок, а не совпадение. Круг стоит один проход по зданиям на строку, список
+# в скроллбоксе, читать все и не нужно -- нужно, чтобы список кончался там же,
+# где кончаются кандидаты.
+SWAP_MAX = 80
 SWAP_OUT = MOD / "in_game/common/scripted_effects/bag_wtp_generated_swap.txt"
+# **Значение живёт только в `script_values`**, ровно как триггер только в
+# `scripted_triggers`: выгода здания сначала уехала в файл эффектов вместе с
+# остальным окном замены. Ловит `check_script.py`.
+SWAP_VALUES_OUT = MOD / "in_game/common/script_values/bag_wtp_generated_swap_values.txt"
+
+
+def swap_values_file(rows: list[eu5data.Method], split: dict[str, list[str]],
+                     game: eu5data.Game) -> str:
+    """Что провинция платит каждому зданию здесь -- по значению на здание.
+
+    **Здание, а не товар.** Список окна замены сортируется по зданиям, и здание,
+    делающее два товара, стоит столько, сколько лучший из них. Раньше список
+    мерил выгоду ТОВАРА и потому ставил рядом четыре ступени одной лестницы как
+    четыре разных ответа.
+
+    **`min` -- это пол, и несколько полов дают максимум.** `value = 0` и по
+    `min = var:<выгода>` на каждый товар здания -- это max(0, a, b, ...) одной
+    формой, без накопителя и без сравнения значения с самим собой.
+    """
+    order = goods_order(split)
+    groups = plan_groups(rows, split, game)
+    villages = village_entities(rows, split, game)
+    by_building: dict[str, list[tuple[int, str]]] = {}
+    for (good, side), buildings in groups.items():
+        for building, _mis in buildings.items():
+            if side == "r" and building in villages:
+                continue
+            by_building.setdefault(building, []).append((order.index(good) + 1, side))
+    out = [HEADER, "#\n# Выгода локации от одного здания: лучший из его товаров.\n"]
+    for building in sorted(b for b in by_building if b not in villages):
+        floors = "".join(
+            "\tmin = var:%s_%s%d\n" % (MOD_ID, "p" if side == "t" else "pr", index)
+            for index, side in sorted(by_building[building]))
+        out.append(f"""
+# Scope: location
+{MOD_ID}_swap_gain_{building} = {{
+\tvalue = 0
+{floors}}}
+""")
+    return "".join(out)
 
 
 def swap_file(rows: list[eu5data.Method], split: dict[str, list[str]],
@@ -10483,23 +10535,65 @@ def swap_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 """]
 
     # ---- круг выбора лучшего из ещё не предложенных ------------------------
+    #
+    # **Кандидат -- здание, и ворота у него свои.** Прежде здесь стояло
+    # `_edit_fits_<сторона>_<товар>`, то есть ворота ТОВАРА: «этот товар тут
+    # производится». Здание предлагалось, даже если держава его построить не
+    # может -- и он это увидел, 2026-09-14: «список домиков справа не полный и
+    # вообще не соответствует доступности стране… может показываться 4 вида
+    # одного здания просто разного уровня… даже при выключенной галочке справа
+    # всё так же отображаются все здания из ND».
+    #
+    # Теперь ворота спрашивают само здание, тремя условиями:
+    #
+    # * `_stands_<здание>` -- локация его держит (и слушается тумблера ранга);
+    # * хотя бы один его способ проходит `_avail_` («на сейчас») или `_reach_`
+    #   («на конец») -- **по тому же тумблеру, каким посчитан план**; галочка
+    #   мода живёт внутри `_avail_`/`_reach_`, поэтому снятая галочка убирает
+    #   здания мода и отсюда тоже;
+    # * ступень лестницы отсекается тем же `can_build_building` внутри
+    #   `_avail_`: недоступный уровень здания ворота не пройдёт.
     arms = ""
     for building in sorted(b for b in by_building if b not in villages):
-        for index, side, _mis in by_building[building]:
-            listname = "town" if side == "t" else "rural"
-            gain = f"{MOD_ID}_p{index}" if side == "t" else f"{MOD_ID}_pr{index}"
-            arms += f"""\tif = {{
+        entries = by_building[building]
+        mis = sorted({m for _i, _s, ms in entries for m in ms})
+        gains = " ".join(
+            f"var:{MOD_ID}_p{index}" if side == "t" else f"var:{MOD_ID}_pr{index}"
+            for index, side, _ms in entries)
+        # Выгода здания -- лучшая из выгод его товаров здесь.
+        best = f"{MOD_ID}_swap_gain_{building}"
+        avail = " ".join(f"{MOD_ID}_avail_{m} = yes" for m in mis)
+        # **`_reach_<n>` существует только у методов за недостижимым
+        # продвижением** -- остальные достижимы по построению и не выписаны
+        # вовсе (`triggers_file`). Спросить несуществующий -- это блок, который
+        # молча проходит или молча не делает ничего; поймал `check_script.py`
+        # ещё до сборки. Где `_reach_` нет, спрашиваем `_avail_`.
+        reach = " ".join(
+            f"{MOD_ID}_reach_{m} = yes" if method_gates(rows[m - 1])
+            else f"{MOD_ID}_avail_{m} = yes" for m in mis)
+        arms += f"""\tif = {{
 \t\tlimit = {{
 \t\t\tNOT = {{ is_target_in_variable_list = {{ name = {MOD_ID}_swap_can target = building_type:{building} }} }}
-\t\t\t{MOD_ID}_edit_fits_{listname}_{index} = yes
+\t\t\t{MOD_ID}_is_granary = no
+\t\t\t{MOD_ID}_stands_{building} = yes
+\t\t\tOR = {{
+\t\t\t\tAND = {{
+\t\t\t\t\tNOT = {{ has_global_variable = {MOD_ID}_plan_by_end }}
+\t\t\t\t\tscope:{MOD_ID}_country = {{ OR = {{ {avail} }} }}
+\t\t\t\t}}
+\t\t\t\tAND = {{
+\t\t\t\t\thas_global_variable = {MOD_ID}_plan_by_end
+\t\t\t\t\tscope:{MOD_ID}_country = {{ OR = {{ {reach} }} }}
+\t\t\t\t}}
+\t\t\t}}
 \t\t\t# «Отсеять»: убрать всё, чему провинция не платит ничего.
 \t\t\tOR = {{
 \t\t\t\tNOT = {{ has_global_variable = {MOD_ID}_swap_sift }}
-\t\t\t\tvar:{gain} > 0
+\t\t\t\t{best} > 0
 \t\t\t}}
-\t\t\tvar:{gain} > var:{MOD_ID}_swap_bv
+\t\t\t{best} > var:{MOD_ID}_swap_bv
 \t\t}}
-\t\tset_variable = {{ name = {MOD_ID}_swap_bv value = var:{gain} }}
+\t\tset_variable = {{ name = {MOD_ID}_swap_bv value = {best} }}
 \t\tset_variable = {{ name = {MOD_ID}_swap_bb value = building_type:{building} }}
 \t}}
 """
@@ -10509,7 +10603,7 @@ def swap_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 # **`-1` как начальное лучшее, а не ноль.** Домик, которому провинция не платит
 # ничего, -- законный кандидат: без «Отсеять» он обязан быть в списке, и
 # сравнение с нулём не пустило бы его туда никогда.
-# Scope: location
+# Scope: location, ждёт scope:{MOD_ID}_country
 {MOD_ID}_swap_pass = {{
 \tset_variable = {{ name = {MOD_ID}_swap_bv value = -1 }}
 \tremove_variable = {MOD_ID}_swap_bb
@@ -10529,6 +10623,9 @@ def swap_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 # как переход в скоуп -- форма самой игры (`character_death_pulses.txt`).
 # Scope: country
 {MOD_ID}_swap_rebuild = {{
+\t# Ворота кандидата спрашивают доступность у державы, а стоят в скоупе
+\t# локации -- значит державу надо туда занести.
+\tsave_scope_as = {MOD_ID}_country
 \tglobal_var:{MOD_ID}_swap_loc = {{
 \t\tclear_variable_list = {MOD_ID}_swap_can
 \t\tset_variable = {{ name = {MOD_ID}_swap_more value = 1 }}
@@ -10576,13 +10673,40 @@ def swap_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 }}
 """)
 
-    # ---- «×» и «+», обе через эффекты редактора ----------------------------
+    # ---- «−» и «+», обе через эффекты редактора ----------------------------
+    #
+    # **Одно нажатие -- один домик, и именно тот, по которому нажали.** Прежде
+    # здесь звались эффекты редактора по ВСЕМ товарам здания разом: здание,
+    # умеющее два товара, ставило два домика, а `_edit_place_<товар>` ставил не
+    # ту ступень лестницы, по которой нажали, а ту, которой этот товар
+    # выигрывает. Его прогон 2026-09-14: «нажал +1 на какой-то домик из ND…
+    # добавилось сразу аж два домика: Тонкое сукно лвл4 и спиртовые лвл4»,
+    # «нажал +1 на пиво лвл1, но добавилось пиво лвл4».
+    #
+    # Лечится без единого нового правила постановки: вызов гейтится тем, что
+    # `_pm<товар>` -- выигравший здесь способ -- принадлежит **этому** зданию.
+    # Тогда `_edit_place_<товар>` поставит именно его, потому что здание он
+    # выбирает по тому же `_pm`. А `_swap_once` держит счёт: сработать может
+    # только первый подошедший товар.
+    def once(kind: str, building: str) -> str:
+        calls = ""
+        for index, side, mis in by_building.get(building, []):
+            listname = "town" if side == "t" else "rural"
+            same = " ".join(f"var:{MOD_ID}_pm{index} = {m}" for m in mis)
+            calls += f"""\t\t\tif = {{
+\t\t\t\tlimit = {{
+\t\t\t\t\tvar:{MOD_ID}_swap_once = 0
+\t\t\t\t\tOR = {{ {same} }}
+\t\t\t\t}}
+\t\t\t\t{MOD_ID}_edit_{kind}_{listname}_{index} = yes
+\t\t\t\tset_variable = {{ name = {MOD_ID}_swap_once value = 1 }}
+\t\t\t}}
+"""
+        return calls
+
     drop = ""
     for building in sorted(set(by_building) | set(villages)):
-        calls = ""
-        for index, side, _mis in by_building.get(building, []):
-            listname = "town" if side == "t" else "rural"
-            calls += f"\t\t\t{MOD_ID}_edit_remove_{listname}_{index} = yes\n"
+        calls = once("remove", building)
         if building in villages:
             calls += (f"\t\t\t{MOD_ID}_plan_drop_village_{villages.index(building) + 1}"
                       f" = yes\n")
@@ -10592,12 +10716,9 @@ def swap_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 """
     put = ""
     for building in sorted(b for b in by_building if b not in villages):
-        calls = "".join(
-            f"\t\t\t{MOD_ID}_edit_place_{'town' if side == 't' else 'rural'}_{index} = yes\n"
-            for index, side, _mis in by_building[building])
         put += f"""\t\tif = {{
 \t\t\tlimit = {{ scope:wtp_bt = building_type:{building} }}
-{calls}\t\t}}
+{once("place", building)}\t\t}}
 """
     out.append(f"""
 # Снять этот домик с этой локации.
@@ -10609,6 +10730,7 @@ def swap_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 # Scope: country, ждёт scope:wtp_bt
 {MOD_ID}_swap_drop_effect = {{
 \tglobal_var:{MOD_ID}_swap_loc = {{
+\t\tset_variable = {{ name = {MOD_ID}_swap_once value = 0 }}
 {drop}\t}}
 \t{MOD_ID}_plan_rows = yes
 \t{MOD_ID}_swap_rebuild = yes
@@ -10621,6 +10743,7 @@ def swap_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 # Scope: country, ждёт scope:wtp_bt
 {MOD_ID}_swap_put_effect = {{
 \tglobal_var:{MOD_ID}_swap_loc = {{
+\t\tset_variable = {{ name = {MOD_ID}_swap_once value = 0 }}
 {put}\t}}
 \t{MOD_ID}_plan_rows = yes
 \t{MOD_ID}_swap_rebuild = yes
@@ -11118,6 +11241,13 @@ def rights_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\tvariable = {MOD_ID}_candidates
 \t\tset_variable = {{ name = {MOD_ID}_r_total value = 0 }}
 \t\tset_variable = {{ name = {MOD_ID}_r_mid_total value = 0 }}
+\t\t# **Чем этот поиск сортирует -- то же, чем красит карта.** Его слово,
+\t\t# 2026-09-14: «функция поиска по одному городскому праву… я ожидаю, что
+\t\t# она будет тоже ориентироваться по аналогии карты городских прав».
+\t\t# `_rq<k>` и есть тот счёт. Кладём его на кандидата здесь, внутри обхода,
+\t\t# который и так идёт: `_r_score` считается в скоупе локации, а номер
+\t\t# отмеченной грамоты живёт на державе, и дотянуться туда оттуда нечем.
+\t\tset_variable = {{ name = {MOD_ID}_r_fit value = {MOD_ID}_rq{index} }}
 """)
         for k in slots:
             out.append(f"\t\tset_variable = {{ name = {MOD_ID}_r_method_{k} value = 0 }}\n")
@@ -13823,6 +13953,7 @@ def main() -> int:
     write(RIGHTS_OUT, rights_file(rows, split, game))
     write(PLAN_OUT, plan_file(rows, split, game) + village_icons(rows, split, game))
     write(SWAP_OUT, swap_file(rows, split, game))
+    write(SWAP_VALUES_OUT, swap_values_file(rows, split, game))
     write(PLAN_TRIGGERS_OUT, plan_triggers_file(rows, split, game))
     write(PLAN_LOC_OUT, plan_loc_file(rows, split, game))
     write(DIAG_OUT, diag_file(rows, split, game, methods(core)))
