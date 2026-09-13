@@ -49,7 +49,7 @@ for the reference tree and the rebuild loop,
   before its first load is how `where_to_produce` ended up with six suspects and
   no way to choose between them.
 - **A run the player reports goes into [`docs/TESTLOG.md`](docs/TESTLOG.md) in
-  the same session.** They report it once, in passing. A session that does not
+  the same session.** He reports it once, in passing; a session that does not
   write it down leaves the next one calling the thing untested.
 - **End anything that changed the tree with two short lists: what changed, and
   what he has to check in the game.** His own words, 2026-09-02, after a summary
@@ -58,22 +58,22 @@ for the reference tree and the rebuild loop,
   one is owed, name the ground, the presses and what a right answer looks like;
   «протестируй» is not a check.
 - **Before touching any `.gui`, read
-  [`docs/pitfalls/windows.md`](docs/pitfalls/windows.md)** — one short checklist,
-  and every rule in it is one somebody has already paid for. Windows have cost
-  more of his sessions than anything else: «меня заебало решать проблему окон
-  чуть ли не через одну сессию», 2026-09-06.
+  [`docs/pitfalls/windows.md`](docs/pitfalls/windows.md)** — every rule in it is
+  paid for. Windows cost more of his sessions than anything else: «меня заебало
+  решать проблему окон чуть ли не через одну сессию», 2026-09-06.
 - **A CMM macro called with an argument CMF does not declare fails silently**
   and takes the rest of its effect with it. `python3 tools/check_cmm.py
   mods/<mod>/in_game/common` after touching any CMM call.
-- **A cause you cannot name is not a cause. Do not guess it — measure it.**
-  The owner, 2026-09-01, after four theories about one symptom, three fixes built
-  on them and four of his runs spent: «гадать НИКОГДА не нужно… Зонды, счётчики,
-  проверки». Build the probe first — a counter per stage, a `cmf_log`, a number
-  on the window — and let one run say where the thing actually breaks.
+- **A cause you cannot name is not a cause — measure it by diffing against
+  something here that works.** Written once and broken again: one empty window,
+  five builds, four of them guesses «по правилу» (09-14; «гадать НИКОГДА не
+  нужно… Зонды, счётчики, проверки», 09-01). **First move is a diff, not a
+  rule**; then a probe, so one run says where it breaks.
+  [`docs/pitfalls/how_to_fix.md`](docs/pitfalls/how_to_fix.md) — the order of
+  moves, and what each mistake cost here.
 - **Effects that merely do nothing log nothing.** `error.log` names the file and
-  line for GUI and script failures; an effect that never runs is invisible.
-- **A `building_type` filter receives `root` and nothing else**, whatever
-  vanilla's comment says.
+  line for GUI and script failures; one that never runs is invisible.
+- **A `building_type` filter receives `root`**, whatever vanilla's comment says.
 - **Localization has its own checklist**,
   [`docs/pitfalls/localization.md`](docs/pitfalls/localization.md): a
   `customizable_localization` cannot be overridden, square brackets in a value
@@ -119,7 +119,6 @@ holds it — and keep that place small:
 | a rule a checker could enforce instead | the checker |
 
 **Everything under `docs/` has a size budget and `tools/check_docs.py` enforces
-it.** A document that has outgrown its budget is not trimmed by deleting what it
-knows — it is split, and the finished half moves to `docs/archive/`, which
-`kb.py` still searches. The budget exists because this repository already grew
-past the point where a session could afford to read it once.
+it.** A document over budget is not trimmed by deleting what it knows — it is
+split, and the finished half moves to `docs/archive/`, which `kb.py` still
+searches.

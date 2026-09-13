@@ -54,8 +54,8 @@ is ever read by 3. **Before touching any `_plan_*`:
 09-14). Объяснение живёт в `generate.py`, не на экране и **не в сгенерированном
 файле**: блок прозы выписывался 1174 раза, `write()` режет повтор.
 
-**Список не рисуется — сравни цепочку коробок с рисующимся окном, не гадай**
-(пять сборок, четыре догадки, 09-14). Над рабочим `datamodel` нет своих размеров.
+**Не рисуется — сравни с рисующимся, не гадай** (пять сборок, четыре догадки,
+09-14): [`pitfalls/how_to_fix.md`](../../docs/pitfalls/how_to_fix.md).
 
 **The build stamp is on «Техническая»**, before believing a fix failed. **Before
 any `.gui`: [`pitfalls/windows.md`](../../docs/pitfalls/windows.md)** — every

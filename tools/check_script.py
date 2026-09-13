@@ -411,6 +411,70 @@ def sized_above_datamodel(root: Path) -> list[str]:
     return found
 
 
+def misplaced_values(root: Path) -> list[str]:
+    """A script value defined outside `common/script_values`.
+
+    The same silent class as a trigger outside `scripted_triggers`: the engine
+    registers a value only from that folder, so one written next to the effects
+    that use it reads as zero for ever and logs nothing. It happened twice --
+    the swap window's per-building gain, and it would have happened again with
+    the coverage pass.
+
+    A value is told from an effect by its body: `value =`, or an arithmetic key
+    at the top level of the block, and no effect-only key anywhere in it.
+    """
+    found: list[str] = []
+    for path in sorted(root.rglob("*.txt")):
+        parts = set(path.parts)
+        if "common" not in parts or "script_values" in parts:
+            continue
+        if not {"scripted_effects", "scripted_triggers"} & parts:
+            continue
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+        text = "\n".join(l.split("#", 1)[0] for l in text.splitlines())
+        for match in re.finditer(r"(?m)^([a-z_0-9]+) = \{$", text):
+            body = text[match.end():_brace_end(text, match.end())]
+            if not re.search(r"(?m)^\tvalue = ", body):
+                continue
+            if re.search(r"(?m)^\t(?:set|change|add_to|remove|clear)_", body):
+                continue
+            line = text[:match.start()].count("\n") + 1
+            found.append(
+                f"{path.relative_to(REPO)}:{line}: `{match.group(1)}` looks like "
+                f"a script value and does not live in common/script_values -- the "
+                f"engine registers one only from there, so this reads as zero "
+                f"for ever and says so nowhere")
+    return found
+
+
+def orphan_localization_lists(root: Path) -> list[str]:
+    """A localization data function reading a global list nothing fills.
+
+    `GetGlobalList('x')` in a .yml is as much a reader as one in a .gui, and it
+    fails the same way -- a count that prints 0 over a list that is plainly not
+    empty, because the code moved to another list and the string stayed behind.
+    That is exactly what "Можно поставить (0)" was.
+    """
+    written: set[str] = set()
+    for path in sorted(root.rglob("*.txt")):
+        if "common" not in set(path.parts):
+            continue
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+        written.update(re.findall(
+            r"(?:add_to|clear)_global_variable_list = \{?\s*(?:name = )?(\w+)", text))
+    found: list[str] = []
+    for path in sorted(root.rglob("*.yml")):
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+        for number, line in enumerate(text.splitlines(), 1):
+            for name in re.findall(r"GetGlobalList\('(\w+)'\)", line):
+                if name not in written:
+                    found.append(
+                        f"{path.relative_to(REPO)}:{number}: localization reads "
+                        f"`{name}`, and nothing in common/ ever fills it -- the "
+                        f"number prints 0 beside a list that is not empty")
+    return found
+
+
 def misplaced_triggers(root: Path) -> list[str]:
     """A block in `scripted_effects/` whose body is nothing but conditions.
 
@@ -1107,6 +1171,8 @@ def main(argv: list[str]) -> int:
                  + misplaced_triggers(root)
                  + listless_callbacks(root)
                  + sized_above_datamodel(root)
+                 + misplaced_values(root)
+                 + orphan_localization_lists(root)
                  + unresolved_script_values(root)
                  + duplicate_definitions(root)
                  + frameless_windows(root)

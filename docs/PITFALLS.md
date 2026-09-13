@@ -1,14 +1,16 @@
 ﻿# Pitfalls
 
-Mistakes already made in this repository, each with the symptom that gave it
-away. Every one of them cost at least one round trip through the game, because
-none of them raise an error you would notice.
-
-Scan this whenever something silently does nothing.
+Mistakes already made here, each with the symptom that gave it away. Every one
+cost at least one round trip through the game: none of them raises an error you
+would notice.
 
 **«Возьми этот инструмент» — это `cp` и замена префикса, а не новый код**, и
 «соберём заново по подобию» оплачивается его прогонами:
 [`archive/wtp2_failed.md`](archive/wtp2_failed.md), 2026-09-12.
+
+**Молча не работает — сперва
+[`pitfalls/how_to_fix.md`](pitfalls/how_to_fix.md)**, порядок действий, и только
+потом этот список: правило, применённое не к тому случаю, стоило пяти сборок.
 
 Two subjects outgrew this file and have their own, which `tools/kb.py`
 searches like everything else:
@@ -32,12 +34,12 @@ searches like everything else:
 
 ## Script
 
-**Two script values of the same name: the first wins and the second is dropped,
-silently.** The same rule `customizable_localization` obeys, and it costs the
-same way — a value edited in the wrong copy simply has no effect, with nothing on
-screen or in `error.log` to say which copy the game reads. Two shipped in one day
-on 2026-09-06, both from a generator adding a reader that already existed forty
-lines further down. `check_script.py` reports them now.
+**Two script values of the same name: the first wins, the second is dropped
+silently** — the rule `customizable_localization` obeys too, and it costs the
+same way: the wrong copy edited, nothing said anywhere. Two shipped in one day
+on 2026-09-06. **`check_script.py` reports them now**, and the same folder rule
+holds for both neighbours: a trigger lives only in `scripted_triggers`, a value
+only in `script_values`, and each cost a run before its checker existed.
 
 **A `building_type` filter receives the object as `this` — not `scope:target`,
 and not `root` either.** Vanilla's `58_building_type.txt` promises both and has
@@ -227,16 +229,13 @@ that matters, not the values themselves.
 
 ## Never invent a name for something the game already names
 
-**2026-09-01.** A session called `royal_masonry_rights` «масонская хартия». The
-owner plays in Russian, saw a name that exists in no game of his, and reasonably
-asked why an invented right was displacing his glass. Nothing had been invented;
-the name had. His game calls it «Права на каменные и стекольные работы», and the
-key and its localization are each one grep away.
+**2026-09-01.** A session called `royal_masonry_rights` «масонская хартия» — a
+name that exists in no game of his. Nothing had been invented but the name; his
+game says «Права на каменные и стекольные работы», one grep away.
 
 **Name a rule, building, good or right by its key or by the string the game
-shows.** Never by a translation of the key, and never by a phrase invented to
-read more smoothly: the owner cannot check the code, so a name he cannot find
-costs him confidence in the whole report.
+shows** — never by a translation, never by a smoother phrase. He cannot check
+the code, so a name he cannot find costs him the whole report.
 
 ## Deciding what exists
 
