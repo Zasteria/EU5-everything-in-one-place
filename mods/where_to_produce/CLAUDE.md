@@ -53,9 +53,9 @@ inside the window of its function; **anything technical belongs on
 
 **Чужие окна** —
 [`wtp_integration.md`](../../docs/investigations/wtp_integration.md): **`root` в
-фильтре — не сам объект**; **мод ничего не делает периодически**.
-
-**Подсказка игроку — одно предложение**, объяснение живёт в `generate.py`.
+фильтре — не сам объект**; **периодического мод не делает**; **панель локации —
+общий с `rgo_bonus_filter` файл, правится только в обеих копиях**, кнопка «⟳» в
+ней пересобирает список.
 
 **The build stamp is on «Техническая»**, before believing a fix failed. **Before
 any `.gui`: [`pitfalls/windows.md`](../../docs/pitfalls/windows.md)** — every
