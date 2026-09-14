@@ -18,25 +18,26 @@ them** — `SHIP_GLORP_HINTS` in `tools/generate.py`.
 недоступные» on. Rows showing in both blocks are left alone on purpose:
 de-duplicating would mean parsing their blob, which is what broke this first.
 
-**Read a logs drop with `python3 tools/which_build.py <logs folder>` first** —
-a run once loaded a five-day-old build and looked like a mod fault.
+**Read a logs drop with `tools/which_build.py` first** — a run once loaded a
+five-day-old build and looked like a mod fault.
 
 **What is only here:** the 264 extra lines; the availability gates (252 lines,
 175 objects); `SVX_REACHABLE`; the five advance-locked privileges held back;
 four repaired Russian keys of Glorp UI's interface.
 
 **One gate cannot be seen by this owner.** The religious aspect gate — he plays
-Catholic, where the Papacy sets aspects, so there is nothing for it to show
-either way. It needs a run as a religion that picks its own.
+Catholic, where the Papacy sets aspects. It needs a run as a religion that picks
+its own.
 
-**Known gap:** the added lines are Russian only; elsewhere they show as raw keys.
+**Known gap:** the added lines are Russian only; elsewhere, raw keys.
 
 ## Окно ценностей и автономность
 
 **09-14, в игре не видено:** `in_game/gui/svx_societal_values_window.gui` —
-ванильный `template societal_values` с четырьмя кусками, вторая полоска под
-`GetDirection`. Чужого в нём нет; это шаблон, не окно.
-`tools/generate_values_window.py`, в `refresh.py`. **Подсказки без Glorp UI не
+ванильный `template societal_values` с четырьмя кусками, чужого в нём нет.
+**Рисует ровно то же, что окно Glorp UI, и это сверяется каждой сборкой**:
+переключателя быть не может, поэтому режимы сделаны неотличимыми.
+`tools/generate_values_window.py`. **Подсказки без Glorp UI не
 живут** — вклеенный блок зовёт их файлы; три пути и цена:
 [`README.md`](README.md#автономность-чего-не-хватает).
 
@@ -56,9 +57,8 @@ biggest thing neither mod shows.
     python3 mods/glorpui_hints/tools/generate.py --game-files reference/game
     python3 mods/glorpui_hints/tools/scan_sources.py reference/game
 
-The last two rebuild the hint lists from the game's `common/` tree. They are
-**not** in `tools/refresh.py`: the scan takes a minute and the game files move
-far less often than Glorp UI does.
+The last two rebuild the hint lists from the game's `common/` tree. **Not** in
+`tools/refresh.py`: the scan takes a minute and game files move rarely.
 
 ## Three things that fail silently here
 

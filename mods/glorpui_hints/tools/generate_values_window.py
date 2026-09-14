@@ -8,12 +8,23 @@ of the row prints as text. Glorp UI added a thin second bar for it under the
 first, and that is the one thing of theirs the owner wants kept after the mod
 itself leaves the playset.
 
-**This is vanilla's own template with three hunks applied**, not a copy of Glorp
+**This is vanilla's own template with four hunks applied**, not a copy of Glorp
 UI's file and not a window written here: the file is read out of
-`reference/game`, the two progress bars are replaced by a `vbox` of three, and
-the middle badge moves two pixels. Everything else in the window is whatever the
-game ships, so a patch that changes the window arrives here on the next
-`tools/refresh.py` instead of being silently overwritten by a year-old copy.
+`reference/game`, the two progress bars are replaced by a `vbox` of three, the
+middle badge moves two pixels and its number grows a point. Everything else in
+the window is whatever the game ships, so a patch that changes the window
+arrives here on the next `tools/refresh.py` instead of being silently
+overwritten by a year-old copy.
+
+**Both modes, and why there is no switch.** With Glorp UI in the playset this
+file wins — the same load-order override the tooltip half already relies on —
+so "defer to them when they are there" cannot be written: a template is
+registered when its file is read, and a `.gui` has no way to ask whether another
+mod is loaded before that happens (`visible` only chooses among what this file
+already declared). So the two modes are made **indistinguishable** instead:
+`check_matches_glorp` compares this window with theirs on every build, comments
+and indentation dropped, and fails naming the difference the day their window
+moves. Glorp UI on or off, the owner sees the same window.
 
 Nothing in it is Glorp UI's: `progressbar_bar_small`, `progress_bar_goldish`
 and `progress_bar_blue_alt` are the game's own bar skins, used by the game's own
@@ -105,7 +116,7 @@ HUNKS = [
 \t\t\t\t\t\t\t}
 
 \t\t\t\t\t\t\tprogressbar = { # svx: drifting the other way - empty, to hold the height
-\t\t\t\t\t\t\t\tvisible = "[Not(LessThan_float(SocietalValueItem.GetDirection, '(float)0'))]"
+\t\t\t\t\t\t\t\tvisible = "[Or(GreaterThan_float(SocietalValueItem.GetDirection, '(float)0'), EqualTo_float(SocietalValueItem.GetDirection, '(float)0') )]"
 \t\t\t\t\t\t\t\tlayoutpolicy_horizontal = expanding
 \t\t\t\t\t\t\t\tsize = { 0 4 }
 \t\t\t\t\t\t\t\tusing = progressbar_bar_small
@@ -147,12 +158,13 @@ HUNKS = [
 \t\t\t\t\t\t\t}
 
 \t\t\t\t\t\t\tprogressbar = { # svx: drifting the other way - empty, to hold the height
-\t\t\t\t\t\t\t\tvisible = "[Not(GreaterThan_float(SocietalValueItem.GetDirection, '(float)0'))]"
+\t\t\t\t\t\t\t\tvisible = "[Or(LessThan_float(SocietalValueItem.GetDirection, '(float)0'), EqualTo_float(SocietalValueItem.GetDirection, '(float)0') )]"
 \t\t\t\t\t\t\t\tlayoutpolicy_horizontal = expanding
 \t\t\t\t\t\t\t\tsize = { 0 4 }
 \t\t\t\t\t\t\t\tusing = progressbar_bar_small
 \t\t\t\t\t\t\t\tusing = progress_bar_goldish
 \t\t\t\t\t\t\t\tvalue = "[Abs_float('(float)0')]"
+\t\t\t\t\t\t\t\tinvertprogress = yes
 \t\t\t\t\t\t\t}
 \t\t\t\t\t\t}
 """),
@@ -215,6 +227,52 @@ def build() -> str:
     return HEADER + "\n" + body.rstrip("\n") + "\n"
 
 
+GLORP_WINDOW = "in_game/gui/glorpUI_societal_values_lateralview.gui"
+
+
+def behaviour(text: str) -> str:
+    """The window with comments and layout removed - what the engine is left with.
+
+    Both files say the same thing in different hands: Glorp UI indents with
+    spaces and marks their additions `# GlorpUI:`, this one indents with the
+    game's tabs and marks them `# svx:`. Neither reaches the screen, so the
+    comparison drops both.
+    """
+    return re.sub(r"\s+", " ", re.sub(r"#[^\n]*", "", text)).strip()
+
+
+def check_matches_glorp(text: str) -> list[str]:
+    """Ours must draw exactly what Glorp UI's window draws.
+
+    This is the whole of the two-mode promise, and it is checked here rather
+    than trusted. With Glorp UI in the playset **this file wins** - it is the
+    same load-order override the tooltip half relies on - so if it drew
+    anything but their window, turning Glorp UI on would change what the owner
+    sees. And a `.gui` cannot ask whether another mod is loaded: a template is
+    registered when the file is read, and `visible` only decides what is drawn
+    out of what this file already declared. So the two modes are made
+    indistinguishable instead of switched between, and the day Glorp UI moves
+    their window this fails naming the difference - the only symptom there will
+    ever be.
+    """
+    glorp = refs.known("glorp_ui") / GLORP_WINDOW
+    if not glorp.is_file():
+        return ["%s: not in the reference tree - the window was built from the"
+                " game's files, but that it still matches Glorp UI's is unchecked"
+                % GLORP_WINDOW]
+    theirs = behaviour(glorp.read_text(encoding="utf-8-sig"))
+    ours = behaviour(template_text(text, TEMPLATE))
+    if ours == theirs:
+        return []
+    # Name the first place they part, not the whole window.
+    at = next((i for i, (a, b) in enumerate(zip(ours, theirs)) if a != b),
+              min(len(ours), len(theirs)))
+    return ["Glorp UI's window no longer draws what this one draws - decide"
+            " whether the change is wanted, then teach it to HUNKS in"
+            " %s\n       theirs: ...%s\n       ours:   ...%s"
+            % (Path(__file__).name, theirs[at:at + 110], ours[at:at + 110])]
+
+
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true",
@@ -222,6 +280,7 @@ def main(argv: list[str]) -> int:
     args = parser.parse_args(argv[1:])
 
     text = build()
+    problems = check_matches_glorp(text)
     was = OUT.read_text(encoding="utf-8-sig") if OUT.is_file() else None
     if args.check:
         print("%s: %s" % (OUT.relative_to(refs.REPO),
@@ -232,6 +291,11 @@ def main(argv: list[str]) -> int:
     print("%s: %d lines, %d of them the game's own"
           % (OUT.relative_to(refs.REPO), text.count("\n"),
              text.count("\n") - sum(new.count("\n") for _, new in HUNKS)))
+    if problems:
+        for problem in problems:
+            print("     %s" % problem, file=sys.stderr)
+        return 1
+    print("draws exactly what Glorp UI's window draws, checked")
     return 0
 
 
