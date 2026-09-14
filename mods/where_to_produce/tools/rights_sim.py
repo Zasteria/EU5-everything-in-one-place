@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Прогнать раздачу городских прав на числах из его дампа, не заходя в игру.
 
 **Зачем это есть.** Раздача грамот -- единственная часть мода, про которую
@@ -22,6 +22,14 @@
 город на режиме специализации (6/5/15/4/0/0/9/0/0); это и есть та проверка,
 ради которой файл написан. Разойдётся с игрой -- значит разошёлся с
 `generate.py`, и чинить надо здесь, а не верить числам.
+
+**Ровный счёт -- не всегда правильный ответ, и строка «специализация» здесь
+для сравнения, а не как приговор.** Специализация раздаёт грамоты своим
+проходом нарочно: провинция берёт то, что подходит ей лучше всего, и ноль у
+какой-то грамоты там -- ответ, а не сбой. Его слово 2026-09-14, после того как
+сессия переписала этот режим под ровный счёт: «в чём её суть по-твоему? Лучшее
+ставить, и в ней вполне может быть 0 каких-то прав». Ровняет обычный план, и
+спрашивать ровность надо у него.
 """
 from __future__ import annotations
 
@@ -123,7 +131,7 @@ def show(name: str, keys, given) -> None:
     zero = sum(1 for k in keys if given[k] == 0)
     spread = max(given.values()) - min(given.values())
     body = "  ".join(f"{k[:6]}={given[k]:>2}" for k in keys)
-    print(f"  {name:<34}{body}   нулей={zero} разброс={spread}")
+    print(f"  {name:<38}{body}   нулей={zero} разброс={spread}")
 
 
 def main() -> int:
@@ -144,15 +152,15 @@ def main() -> int:
                   f"в {len(reach)} провинциях")
         return 0
     print()
-    show("специализация, как была:", keys,
+    show("специализация (лучшее, без ровности):", keys,
          grant(keys, provs, ladder=False, lag="none", fair=False))
-    show("общая раздача, без отставания:", keys,
+    show("обычный план, без отставания:", keys,
          grant(keys, provs, ladder=True, lag="none", fair=False))
     show("+ отставание обрывом:", keys,
          grant(keys, provs, ladder=True, lag="binary", fair=False))
-    show("+ отставание уклоном:", keys,
+    show("+ отставание уклоном (как сейчас):", keys,
          grant(keys, provs, ladder=True, lag="graded", fair=False))
-    show("+ уклон и «поровну» (как сейчас):", keys,
+    show("+ уклон и галочка «поровну»:", keys,
          grant(keys, provs, ladder=True, lag="graded", fair=True))
     return 0
 
