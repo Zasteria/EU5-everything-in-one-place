@@ -682,7 +682,6 @@ window = {
 					tooltip = "bag_wtp_plan_rights_tt"
 				}
 
-
 				# «Специализация» — третий тумблер того же «Пересчитать».
 				#
 				# **Была кнопкой на странице мода и перестала ею быть**,
@@ -713,50 +712,6 @@ window = {
 					text = "bag_wtp_plan_spec"
 					tooltip = "bag_wtp_plan_spec_tt"
 				}
-			}
-
-			# **Грамоты поровну — четвёртый тумблер того же «Пересчитать», и он
-			# стоит своей строкой.** В ряду трёх он не помещался: `check_script`
-			# посчитал ряд в 1820 при окне 1700, а лишнее срезается с правого
-			# края, то есть с кнопки (`docs/pitfalls/interface.md`). Ряд шире
-			# своей коробки — это та самая ошибка, которую этот мод оплатил
-			# дважды, и поймал её чекер, а не прогон.
-			#
-			# **Снята по умолчанию, и это сознательно.** Снятая держит пол:
-			# отстающая грамота получает преимущество только там, где земля ей
-			# хоть что-то платит, — так раздача и работала. Стоящая ровняет счёт
-			# любой ценой, и это его выбор, а не наш: 2026-09-14 сессия уже
-			# переписала под ровный счёт целый режим, которого он об этом не
-			# просил.
-			hbox = {
-				layoutpolicy_horizontal = expanding
-				spacing = 8
-
-				widget = {
-					size = { 28 34 }
-					checkbutton_round_alt = {
-						size = { 24 24 }
-						parentanchor = center
-						widgetanchor = center
-						down = "[GetGlobalVariable('bag_wtp_plan_rfair').IsSet]"
-						tooltip = "bag_wtp_plan_rfair_tt"
-						onclick = "[GetScriptedGui('bag_wtp_toggle_plan_rfair').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-					}
-				}
-
-				text_single = {
-					size = { 260 34 }
-					autoresize = no
-					maximumsize = { 260 34 }
-					align = left|vcenter
-					fontsize = 13
-					fontsize_min = 10
-					elide = right
-					text = "bag_wtp_plan_rfair"
-					tooltip = "bag_wtp_plan_rfair_tt"
-				}
-
-				expand = {}
 
 
 				text_single = {
@@ -881,6 +836,54 @@ window = {
 					onclick = "[GetScriptedGui('bag_wtp_plan_clear_ticks').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
 				}
 			}
+
+			# **«Грамоты — поровну» — своей строкой, и не от красоты.** Ряд
+			# тумблеров выше уже 1582 пикселя при 1660 доступных; четвёртая пара
+			# «галочка + подпись» в него не влезает, а лишнее срезается с правого
+			# края — это `check_script` и посчитал (1820 при окне 1700). Первая
+			# попытка разрезала тот ряд пополам, и во вторую половину уехали
+			# лимиты и «Сбросить пометки»: его скриншот 2026-09-14 — «галочки
+			# разъехались сильно и заняли даже часть следующей строки». Новый ряд
+			# ставится **после** старого целиком, и старого не касается.
+			#
+			# **Снята по умолчанию.** Ровный счёт ценой земли, которая грамоте не
+			# платит, — его выбор, а не наш.
+			#
+			# **Взаимоисключима с «Режимом специализации»**: у специализации своя
+			# раздача грамот, ровности в ней нет нарочно, и галочка там не делает
+			# ничего. Гасят друг друга сами переключатели, а не `visible`:
+			# пропадающая галочка читается как поломка, а погасшая — как выбор.
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				spacing = 8
+
+				widget = {
+					size = { 28 34 }
+					checkbutton_round_alt = {
+						size = { 24 24 }
+						parentanchor = center
+						widgetanchor = center
+						down = "[GetGlobalVariable('bag_wtp_plan_rfair').IsSet]"
+						tooltip = "bag_wtp_plan_rfair_tt"
+						onclick = "[GetScriptedGui('bag_wtp_toggle_plan_rfair').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+					}
+				}
+
+				text_single = {
+					size = { 300 34 }
+					autoresize = no
+					maximumsize = { 300 34 }
+					align = left|vcenter
+					fontsize = 13
+					fontsize_min = 10
+					elide = right
+					text = "bag_wtp_plan_rfair"
+					tooltip = "bag_wtp_plan_rfair_tt"
+				}
+
+				expand = {}
+			}
+
 
 			# The borders, the same four buttons the ranking window carries.
 			# They were only there before, and choosing the ground for a plan
