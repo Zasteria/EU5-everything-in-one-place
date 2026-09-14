@@ -3696,7 +3696,8 @@ def plan_loc_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 {MOD_ID}_rwhy_{k} = {{
 \ttype = country
 """)
-        for code, key in ((1, "gate"), (2, "noland"), (3, "off"), (4, "quota")):
+        for code, key in ((1, "gate"), (2, "noland"), (3, "off"), (4, "quota"),
+                          (6, "capped")):
             out.append(f"""\ttext = {{
 \t\ttrigger = {{ global_var:{MOD_ID}_rwhy{k} = {code} }}
 \t\tlocalization_key = {MOD_ID}_rwhy_{key}
@@ -5313,8 +5314,14 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t# спрашивает саму выгоду, поэтому это две разные переменные: добавка
 \t\t# решает, кому достанется город, и не делает вид, что земля платит больше.
 \t\tset_variable = {{ name = {MOD_ID}_rkey value = var:{MOD_ID}_rtry }}
+\t\t# Добавка только там, где земля ей хоть что-то платит: иначе открывающий
+\t\t# проход (полоса 0, потолка уровня нет) отдал бы отставшей все остатки
+\t\t# подряд, включая города, где она не зарабатывает ничего.
 \t\tif = {{
-\t\t\tlimit = {{ global_var:{MOD_ID}_rlag{k} = 1 }}
+\t\t\tlimit = {{
+\t\t\t\tglobal_var:{MOD_ID}_rlag{k} = 1
+\t\t\t\tvar:{MOD_ID}_rtry > 0
+\t\t\t}}
 \t\t\tchange_variable = {{ name = {MOD_ID}_rkey add = {RIGHT_LAG_BONUS} }}
 \t\t}}
 \t\tif = {{
@@ -5323,7 +5330,25 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t\t\t{MOD_ID}_plan_right_fits_{k} = yes
 \t\t\t\t# The band: what this ground has to pay before the charter is taken
 \t\t\t\t# here at all. The open pass sets it to 0.
-\t\t\t\tvar:{MOD_ID}_rtry >= global_var:{MOD_ID}_rband
+\t\t\t\t#
+\t\t\t\t# **Отставшую грамоту полоса не держит.** Она требует заплатить
+\t\t\t\t# `_rband` прежде, чем грамоту тут рассмотрят, -- а отставшая
+\t\t\t\t# отстала как раз потому, что земля ей платит мало, и до полосы 0
+\t\t\t\t# свободной земли не доживало. **Но только там, где земля ей хоть
+\t\t\t\t# что-то платит**: город, который не платит ей ничего, ничего ей и
+\t\t\t\t# не даст, а у того, кто там зарабатывал, отнимет.
+\t\t\t\t# **И только той, у которой город уже есть** (`_rn<k> > 0`): без
+\t\t\t\t# этого все, кроме первой выдачи, «отстают» с нуля, и лестница полос
+\t\t\t\t# перестаёт работать вовсе. Не получившая ещё ничего стоит в очереди,
+\t\t\t\t# а не отстаёт, и очередь держит лестница уровней.
+\t\t\t\tOR = {{
+\t\t\t\t\tvar:{MOD_ID}_rtry >= global_var:{MOD_ID}_rband
+\t\t\t\t\tAND = {{
+\t\t\t\t\t\tglobal_var:{MOD_ID}_rlag{k} = 1
+\t\t\t\t\t\tglobal_var:{MOD_ID}_rn{k} > 0
+\t\t\t\t\t\tvar:{MOD_ID}_rtry > 0
+\t\t\t\t\t}}
+\t\t\t\t}}
 \t\t\t\t# The level: how many towns any one charter may hold so far. It
 \t\t\t\t# climbs by one at a time, so no charter takes an Nth town while
 \t\t\t\t# another is still short of its Nth -- that, and not the quota it
@@ -5391,14 +5416,51 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t\t# Ключ сравнения -- средняя выгода плюс добавка отставшей грамоте.
 \t\t\t# Полоса ниже спрашивает саму выгоду, и это две разные глобалки.
 \t\t\tset_global_variable = {{ name = {MOD_ID}_sprkey value = global_var:{MOD_ID}_sprt }}
+\t\t\t# **Добавка только там, где земля ей хоть что-то платит.** Открывающий
+\t\t\t# проход идёт с полосой 0 и без потолка уровня: без этого условия
+\t\t\t# отставшая забрала бы там все остатки подряд, включая землю, которая
+\t\t\t# не платит ей ничего, -- и отняла бы её у того, кто там зарабатывал.
 \t\t\tif = {{
-\t\t\t\tlimit = {{ global_var:{MOD_ID}_rlag{k} = 1 }}
+\t\t\t\tlimit = {{
+\t\t\t\t\tglobal_var:{MOD_ID}_rlag{k} = 1
+\t\t\t\t\tglobal_var:{MOD_ID}_sprt > 0
+\t\t\t\t}}
 \t\t\t\tchange_global_variable = {{ name = {MOD_ID}_sprkey add = {RIGHT_LAG_BONUS} }}
 \t\t\t}}
 \t\t\tif = {{
 \t\t\t\tlimit = {{
 \t\t\t\t\tglobal_var:{MOD_ID}_sprkey > global_var:{MOD_ID}_sprv
-\t\t\t\t\tglobal_var:{MOD_ID}_sprt >= global_var:{MOD_ID}_rband
+\t\t\t\t\t# **Полоса отставшую грамоту не держит, и в этом вся правка.**
+\t\t\t\t\t# Полоса требует от земли заплатить `_rband` прежде, чем грамоту
+\t\t\t\t\t# тут вообще рассмотрят, а оружейным эта земля платит 6 % --
+\t\t\t\t\t# то есть 60 из 1000, и в полосы 800..200 они не попадали ни
+\t\t\t\t\t# разу. К полосе 0 свободной земли уже не оставалось, и добавка
+\t\t\t\t\t# отставшему не успевала ничего решить: его прогон 2026-09-14,
+\t\t\t\t\t# «оружейные права как были на 1 провинции так и остались».
+\t\t\t\t\t# Теперь отставшая рассматривается в любой полосе -- это и есть
+\t\t\t\t\t# «поиск подходящей провинции **начнётся** для них в приоритете».
+\t\t\t\t\t# **Но только там, где земля ей хоть что-то платит** (`> 0`):
+\t\t\t\t\t# провинция, которая не платит ей ничего, ничего ей и не даст, а
+\t\t\t\t\t# у того, кто там зарабатывал, отнимет.
+\t\t\t\t\t#
+\t\t\t\t\t# **И только той, у которой провинция уже есть** (`_rn<k> > 0`).
+\t\t\t\t\t# Без этого условия послабление съедало бы лестницу полос целиком:
+\t\t\t\t\t# после первой же выдачи все остальные грамоты «отстают» -- у них
+\t\t\t\t\t# ноль, -- и вторая провинция досталась бы просто лучшей из них по
+\t\t\t\t\t# ходу обхода, а не лучшей паре «земля -- грамота» на всей земле.
+\t\t\t\t\t# Первый круг обязан идти полосами, как и шёл: «не получившая ещё
+\t\t\t\t\t# ничего» -- это не отставание, это очередь, и её держит лестница
+\t\t\t\t\t# уровней. Отставание, ради которого это написано, появляется
+\t\t\t\t\t# **после** первого круга и берётся из размера провинций: у одной
+\t\t\t\t\t# восемь городов, у другой один.
+\t\t\t\t\tOR = {{
+\t\t\t\t\t\tglobal_var:{MOD_ID}_sprt >= global_var:{MOD_ID}_rband
+\t\t\t\t\t\tAND = {{
+\t\t\t\t\t\t\tglobal_var:{MOD_ID}_rlag{k} = 1
+\t\t\t\t\t\t\tglobal_var:{MOD_ID}_rn{k} > 0
+\t\t\t\t\t\t\tglobal_var:{MOD_ID}_sprt > 0
+\t\t\t\t\t\t}}
+\t\t\t\t\t}}
 \t\t\t\t\tOR = {{
 \t\t\t\t\t\tglobal_var:{MOD_ID}_ropen = 1
 \t\t\t\t\t\tglobal_var:{MOD_ID}_rn{k} < global_var:{MOD_ID}_rlevel
@@ -14888,6 +14950,9 @@ def summary_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     rights_calc = "".join(f"""\t# {right.key}
 \tset_global_variable = {{ name = {MOD_ID}_rfit{k} value = 0 }}
 \tset_global_variable = {{ name = {MOD_ID}_rtop{k} value = 0 }}
+\t# **Есть ли ей куда ещё пойти.** Города, где грамота подходит, где земля ей
+\t# хоть что-то платит и где её ещё нет: ноль здесь -- это потолок, а не обида.
+\tset_global_variable = {{ name = {MOD_ID}_rmore{k} value = 0 }}
 \tevery_in_global_list = {{
 \t\tvariable = {MOD_ID}_candidates
 \t\tlimit = {{
@@ -14899,6 +14964,13 @@ def summary_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t\tlimit = {{ {MOD_ID}_rq{k} > global_var:{MOD_ID}_rtop{k} }}
 \t\t\tset_global_variable = {{ name = {MOD_ID}_rtop{k} value = {MOD_ID}_rq{k} }}
 \t\t}}
+\t\tif = {{
+\t\t\tlimit = {{
+\t\t\t\tNOT = {{ var:{MOD_ID}_plan_right = {k} }}
+\t\t\t\t{MOD_ID}_rq{k} > 0
+\t\t\t}}
+\t\t\tchange_global_variable = {{ name = {MOD_ID}_rmore{k} add = 1 }}
+\t\t}}
 \t}}
 \tset_global_variable = {{ name = {MOD_ID}_rwhy{k} value = 5 }}
 \tif = {{
@@ -14909,6 +14981,19 @@ def summary_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\tlimit = {{ NOT = {{ global_var:{MOD_ID}_rgiven{k} < global_var:{MOD_ID}_rquota }} }}
 \t\tset_global_variable = {{ name = {MOD_ID}_rwhy{k} value = 4 }}
 \t}}
+\t# **Отстала, и идти ей больше некуда -- это отдельный ответ.** «Её перебили»
+\t# и «на остальной земле ей не платят ничего» читаются на экране одинаково, а
+\t# делать с ними надо разное: первое чинится раздачей, второе не чинится
+\t# ничем. Его прогон 2026-09-14: оружейные на одной провинции, 6 % там и 6 %
+\t# ещё в одной, в остальных ноль.
+\tif = {{
+\t\tlimit = {{
+\t\t\tglobal_var:{MOD_ID}_rwhy{k} = 5
+\t\t\tglobal_var:{MOD_ID}_rlag{k} = 1
+\t\t\tglobal_var:{MOD_ID}_rmore{k} = 0
+\t\t}}
+\t\tset_global_variable = {{ name = {MOD_ID}_rwhy{k} value = 6 }}
+\t}}
 \tif = {{
 \t\tlimit = {{ global_var:{MOD_ID}_rfit{k} = 0 }}
 \t\tset_global_variable = {{ name = {MOD_ID}_rwhy{k} value = 2 }}
@@ -14918,7 +15003,11 @@ def summary_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\tset_global_variable = {{ name = {MOD_ID}_rwhy{k} value = 1 }}
 \t}}
 """ for k, right in enumerate(output_rights(rows, game), start=1))
-    out.append(f"""{rights_calc}\t# Пустая земля оставила бы 9999 на экране.
+    # **Отставание пересчитывается перед сводкой, а не берётся от раздачи.**
+    # Нажатия редактора двигают `_rgiven<k>`, а `_rlag<k>` после них устарел бы;
+    # эффект чисто глобальный и стоит один проход по тринадцати числам.
+    out.append(f"""\t{MOD_ID}_plan_grant_lag = yes
+{rights_calc}\t# Пустая земля оставила бы 9999 на экране.
 \tif = {{
 \t\tlimit = {{ NOT = {{ has_global_variable = {MOD_ID}_sum_any }} }}
 \t\tset_global_variable = {{ name = {MOD_ID}_sum_min value = 0 }}

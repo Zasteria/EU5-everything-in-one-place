@@ -41,13 +41,12 @@ inside the window of its function; **anything technical belongs on
 городе (09-14, [`pitfalls/script.md`](../../docs/pitfalls/script.md)). **Прогона
 не видело.**
 
-**Отставшая грамота выбирается первой** (`_rlag<k>`: `_rgiven<k> × 2 < max`,
-считается в **городах**, пересчёт перед каждой провинцией; «подходящую» держат
-полосы). **Грамота ставится руками** — окно замены, `_swap_right_set_<k>`.
-**«+1»/«−1» у грамот ходят провинцией** (`_edit_right_add_prov`/`_drop_prov`),
-галочка стоит по умолчанию, городской путь не тронут. Все три —
-[`wtp_backlog.md`](../../docs/investigations/wtp_backlog.md), **прогона не
-видели.**
+**Отставшая грамота** (`_rlag<k>`: `_rgiven<k> × 2 < max`, счёт в **городах**)
+**проходит любую полосу** — полоса и была воротами, из-за которых компенсация не
+работала (09-14); но только где земля платит ей `> 0` и где провинция у неё уже
+есть. **Грамота ставится руками** (окно замены, принято 09-14) и **«+1»/«−1»
+ходят провинцией**, галочка по умолчанию, городской путь не тронут. Разбор —
+[`wtp_backlog.md`](../../docs/investigations/wtp_backlog.md).
 
 **Раздача, редактор, доливка, ряды, сводка** —
 [`archive/wtp_brief_plan_rules.md`](../../docs/archive/wtp_brief_plan_rules.md),
@@ -57,8 +56,8 @@ inside the window of its function; **anything technical belongs on
 [`wtp_integration.md`](../../docs/investigations/wtp_integration.md): **`root` в
 фильтре — не сам объект**; **мод ничего не делает периодически**.
 
-**Подсказка игроку — одно предложение** («килотонны бесполезных объяснений»,
-09-14); объяснение живёт в `generate.py`, не на экране.
+**Подсказка игроку — одно предложение**; объяснение живёт в `generate.py`, не на
+экране.
 
 **The build stamp is on «Техническая»**, before believing a fix failed. **Before
 any `.gui`: [`pitfalls/windows.md`](../../docs/pitfalls/windows.md)** — every

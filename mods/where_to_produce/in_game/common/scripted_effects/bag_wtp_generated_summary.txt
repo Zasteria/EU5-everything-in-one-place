@@ -4242,9 +4242,13 @@ bag_wtp_plan_summary = {
 		limit = { has_global_variable = bag_wtp_skip47 }
 		set_global_variable = { name = bag_wtp_wr47 value = 7 }
 	}
+	bag_wtp_plan_grant_lag = yes
 	# constantinopolitan_silk_monopoly_rights
 	set_global_variable = { name = bag_wtp_rfit1 value = 0 }
 	set_global_variable = { name = bag_wtp_rtop1 value = 0 }
+	# **Есть ли ей куда ещё пойти.** Города, где грамота подходит, где земля ей
+	# хоть что-то платит и где её ещё нет: ноль здесь -- это потолок, а не обида.
+	set_global_variable = { name = bag_wtp_rmore1 value = 0 }
 	every_in_global_list = {
 		variable = bag_wtp_candidates
 		limit = {
@@ -4256,6 +4260,13 @@ bag_wtp_plan_summary = {
 			limit = { bag_wtp_rq1 > global_var:bag_wtp_rtop1 }
 			set_global_variable = { name = bag_wtp_rtop1 value = bag_wtp_rq1 }
 		}
+		if = {
+			limit = {
+				NOT = { var:bag_wtp_plan_right = 1 }
+				bag_wtp_rq1 > 0
+			}
+			change_global_variable = { name = bag_wtp_rmore1 add = 1 }
+		}
 	}
 	set_global_variable = { name = bag_wtp_rwhy1 value = 5 }
 	if = {
@@ -4265,6 +4276,19 @@ bag_wtp_plan_summary = {
 	else_if = {
 		limit = { NOT = { global_var:bag_wtp_rgiven1 < global_var:bag_wtp_rquota } }
 		set_global_variable = { name = bag_wtp_rwhy1 value = 4 }
+	}
+	# **Отстала, и идти ей больше некуда -- это отдельный ответ.** «Её перебили»
+	# и «на остальной земле ей не платят ничего» читаются на экране одинаково, а
+	# делать с ними надо разное: первое чинится раздачей, второе не чинится
+	# ничем. Его прогон 2026-09-14: оружейные на одной провинции, 6 % там и 6 %
+	# ещё в одной, в остальных ноль.
+	if = {
+		limit = {
+			global_var:bag_wtp_rwhy1 = 5
+			global_var:bag_wtp_rlag1 = 1
+			global_var:bag_wtp_rmore1 = 0
+		}
+		set_global_variable = { name = bag_wtp_rwhy1 value = 6 }
 	}
 	if = {
 		limit = { global_var:bag_wtp_rfit1 = 0 }
@@ -4277,6 +4301,7 @@ bag_wtp_plan_summary = {
 	# flemish_cloth_industries_right
 	set_global_variable = { name = bag_wtp_rfit2 value = 0 }
 	set_global_variable = { name = bag_wtp_rtop2 value = 0 }
+	set_global_variable = { name = bag_wtp_rmore2 value = 0 }
 	every_in_global_list = {
 		variable = bag_wtp_candidates
 		limit = {
@@ -4287,6 +4312,13 @@ bag_wtp_plan_summary = {
 		if = {
 			limit = { bag_wtp_rq2 > global_var:bag_wtp_rtop2 }
 			set_global_variable = { name = bag_wtp_rtop2 value = bag_wtp_rq2 }
+		}
+		if = {
+			limit = {
+				NOT = { var:bag_wtp_plan_right = 2 }
+				bag_wtp_rq2 > 0
+			}
+			change_global_variable = { name = bag_wtp_rmore2 add = 1 }
 		}
 	}
 	set_global_variable = { name = bag_wtp_rwhy2 value = 5 }
@@ -4299,6 +4331,14 @@ bag_wtp_plan_summary = {
 		set_global_variable = { name = bag_wtp_rwhy2 value = 4 }
 	}
 	if = {
+		limit = {
+			global_var:bag_wtp_rwhy2 = 5
+			global_var:bag_wtp_rlag2 = 1
+			global_var:bag_wtp_rmore2 = 0
+		}
+		set_global_variable = { name = bag_wtp_rwhy2 value = 6 }
+	}
+	if = {
 		limit = { global_var:bag_wtp_rfit2 = 0 }
 		set_global_variable = { name = bag_wtp_rwhy2 value = 2 }
 	}
@@ -4309,6 +4349,7 @@ bag_wtp_plan_summary = {
 	# royal_artisan_rights
 	set_global_variable = { name = bag_wtp_rfit3 value = 0 }
 	set_global_variable = { name = bag_wtp_rtop3 value = 0 }
+	set_global_variable = { name = bag_wtp_rmore3 value = 0 }
 	every_in_global_list = {
 		variable = bag_wtp_candidates
 		limit = {
@@ -4319,6 +4360,13 @@ bag_wtp_plan_summary = {
 		if = {
 			limit = { bag_wtp_rq3 > global_var:bag_wtp_rtop3 }
 			set_global_variable = { name = bag_wtp_rtop3 value = bag_wtp_rq3 }
+		}
+		if = {
+			limit = {
+				NOT = { var:bag_wtp_plan_right = 3 }
+				bag_wtp_rq3 > 0
+			}
+			change_global_variable = { name = bag_wtp_rmore3 add = 1 }
 		}
 	}
 	set_global_variable = { name = bag_wtp_rwhy3 value = 5 }
@@ -4331,6 +4379,14 @@ bag_wtp_plan_summary = {
 		set_global_variable = { name = bag_wtp_rwhy3 value = 4 }
 	}
 	if = {
+		limit = {
+			global_var:bag_wtp_rwhy3 = 5
+			global_var:bag_wtp_rlag3 = 1
+			global_var:bag_wtp_rmore3 = 0
+		}
+		set_global_variable = { name = bag_wtp_rwhy3 value = 6 }
+	}
+	if = {
 		limit = { global_var:bag_wtp_rfit3 = 0 }
 		set_global_variable = { name = bag_wtp_rwhy3 value = 2 }
 	}
@@ -4341,6 +4397,7 @@ bag_wtp_plan_summary = {
 	# royal_book_rights
 	set_global_variable = { name = bag_wtp_rfit4 value = 0 }
 	set_global_variable = { name = bag_wtp_rtop4 value = 0 }
+	set_global_variable = { name = bag_wtp_rmore4 value = 0 }
 	every_in_global_list = {
 		variable = bag_wtp_candidates
 		limit = {
@@ -4351,6 +4408,13 @@ bag_wtp_plan_summary = {
 		if = {
 			limit = { bag_wtp_rq4 > global_var:bag_wtp_rtop4 }
 			set_global_variable = { name = bag_wtp_rtop4 value = bag_wtp_rq4 }
+		}
+		if = {
+			limit = {
+				NOT = { var:bag_wtp_plan_right = 4 }
+				bag_wtp_rq4 > 0
+			}
+			change_global_variable = { name = bag_wtp_rmore4 add = 1 }
 		}
 	}
 	set_global_variable = { name = bag_wtp_rwhy4 value = 5 }
@@ -4363,6 +4427,14 @@ bag_wtp_plan_summary = {
 		set_global_variable = { name = bag_wtp_rwhy4 value = 4 }
 	}
 	if = {
+		limit = {
+			global_var:bag_wtp_rwhy4 = 5
+			global_var:bag_wtp_rlag4 = 1
+			global_var:bag_wtp_rmore4 = 0
+		}
+		set_global_variable = { name = bag_wtp_rwhy4 value = 6 }
+	}
+	if = {
 		limit = { global_var:bag_wtp_rfit4 = 0 }
 		set_global_variable = { name = bag_wtp_rwhy4 value = 2 }
 	}
@@ -4373,6 +4445,7 @@ bag_wtp_plan_summary = {
 	# royal_brewing_rights
 	set_global_variable = { name = bag_wtp_rfit5 value = 0 }
 	set_global_variable = { name = bag_wtp_rtop5 value = 0 }
+	set_global_variable = { name = bag_wtp_rmore5 value = 0 }
 	every_in_global_list = {
 		variable = bag_wtp_candidates
 		limit = {
@@ -4383,6 +4456,13 @@ bag_wtp_plan_summary = {
 		if = {
 			limit = { bag_wtp_rq5 > global_var:bag_wtp_rtop5 }
 			set_global_variable = { name = bag_wtp_rtop5 value = bag_wtp_rq5 }
+		}
+		if = {
+			limit = {
+				NOT = { var:bag_wtp_plan_right = 5 }
+				bag_wtp_rq5 > 0
+			}
+			change_global_variable = { name = bag_wtp_rmore5 add = 1 }
 		}
 	}
 	set_global_variable = { name = bag_wtp_rwhy5 value = 5 }
@@ -4395,6 +4475,14 @@ bag_wtp_plan_summary = {
 		set_global_variable = { name = bag_wtp_rwhy5 value = 4 }
 	}
 	if = {
+		limit = {
+			global_var:bag_wtp_rwhy5 = 5
+			global_var:bag_wtp_rlag5 = 1
+			global_var:bag_wtp_rmore5 = 0
+		}
+		set_global_variable = { name = bag_wtp_rwhy5 value = 6 }
+	}
+	if = {
 		limit = { global_var:bag_wtp_rfit5 = 0 }
 		set_global_variable = { name = bag_wtp_rwhy5 value = 2 }
 	}
@@ -4405,6 +4493,7 @@ bag_wtp_plan_summary = {
 	# royal_jewelry_rights
 	set_global_variable = { name = bag_wtp_rfit6 value = 0 }
 	set_global_variable = { name = bag_wtp_rtop6 value = 0 }
+	set_global_variable = { name = bag_wtp_rmore6 value = 0 }
 	every_in_global_list = {
 		variable = bag_wtp_candidates
 		limit = {
@@ -4415,6 +4504,13 @@ bag_wtp_plan_summary = {
 		if = {
 			limit = { bag_wtp_rq6 > global_var:bag_wtp_rtop6 }
 			set_global_variable = { name = bag_wtp_rtop6 value = bag_wtp_rq6 }
+		}
+		if = {
+			limit = {
+				NOT = { var:bag_wtp_plan_right = 6 }
+				bag_wtp_rq6 > 0
+			}
+			change_global_variable = { name = bag_wtp_rmore6 add = 1 }
 		}
 	}
 	set_global_variable = { name = bag_wtp_rwhy6 value = 5 }
@@ -4427,6 +4523,14 @@ bag_wtp_plan_summary = {
 		set_global_variable = { name = bag_wtp_rwhy6 value = 4 }
 	}
 	if = {
+		limit = {
+			global_var:bag_wtp_rwhy6 = 5
+			global_var:bag_wtp_rlag6 = 1
+			global_var:bag_wtp_rmore6 = 0
+		}
+		set_global_variable = { name = bag_wtp_rwhy6 value = 6 }
+	}
+	if = {
 		limit = { global_var:bag_wtp_rfit6 = 0 }
 		set_global_variable = { name = bag_wtp_rwhy6 value = 2 }
 	}
@@ -4437,6 +4541,7 @@ bag_wtp_plan_summary = {
 	# royal_masonry_rights
 	set_global_variable = { name = bag_wtp_rfit7 value = 0 }
 	set_global_variable = { name = bag_wtp_rtop7 value = 0 }
+	set_global_variable = { name = bag_wtp_rmore7 value = 0 }
 	every_in_global_list = {
 		variable = bag_wtp_candidates
 		limit = {
@@ -4447,6 +4552,13 @@ bag_wtp_plan_summary = {
 		if = {
 			limit = { bag_wtp_rq7 > global_var:bag_wtp_rtop7 }
 			set_global_variable = { name = bag_wtp_rtop7 value = bag_wtp_rq7 }
+		}
+		if = {
+			limit = {
+				NOT = { var:bag_wtp_plan_right = 7 }
+				bag_wtp_rq7 > 0
+			}
+			change_global_variable = { name = bag_wtp_rmore7 add = 1 }
 		}
 	}
 	set_global_variable = { name = bag_wtp_rwhy7 value = 5 }
@@ -4459,6 +4571,14 @@ bag_wtp_plan_summary = {
 		set_global_variable = { name = bag_wtp_rwhy7 value = 4 }
 	}
 	if = {
+		limit = {
+			global_var:bag_wtp_rwhy7 = 5
+			global_var:bag_wtp_rlag7 = 1
+			global_var:bag_wtp_rmore7 = 0
+		}
+		set_global_variable = { name = bag_wtp_rwhy7 value = 6 }
+	}
+	if = {
 		limit = { global_var:bag_wtp_rfit7 = 0 }
 		set_global_variable = { name = bag_wtp_rwhy7 value = 2 }
 	}
@@ -4469,6 +4589,7 @@ bag_wtp_plan_summary = {
 	# royal_naval_rights
 	set_global_variable = { name = bag_wtp_rfit8 value = 0 }
 	set_global_variable = { name = bag_wtp_rtop8 value = 0 }
+	set_global_variable = { name = bag_wtp_rmore8 value = 0 }
 	every_in_global_list = {
 		variable = bag_wtp_candidates
 		limit = {
@@ -4479,6 +4600,13 @@ bag_wtp_plan_summary = {
 		if = {
 			limit = { bag_wtp_rq8 > global_var:bag_wtp_rtop8 }
 			set_global_variable = { name = bag_wtp_rtop8 value = bag_wtp_rq8 }
+		}
+		if = {
+			limit = {
+				NOT = { var:bag_wtp_plan_right = 8 }
+				bag_wtp_rq8 > 0
+			}
+			change_global_variable = { name = bag_wtp_rmore8 add = 1 }
 		}
 	}
 	set_global_variable = { name = bag_wtp_rwhy8 value = 5 }
@@ -4491,6 +4619,14 @@ bag_wtp_plan_summary = {
 		set_global_variable = { name = bag_wtp_rwhy8 value = 4 }
 	}
 	if = {
+		limit = {
+			global_var:bag_wtp_rwhy8 = 5
+			global_var:bag_wtp_rlag8 = 1
+			global_var:bag_wtp_rmore8 = 0
+		}
+		set_global_variable = { name = bag_wtp_rwhy8 value = 6 }
+	}
+	if = {
 		limit = { global_var:bag_wtp_rfit8 = 0 }
 		set_global_variable = { name = bag_wtp_rwhy8 value = 2 }
 	}
@@ -4501,6 +4637,7 @@ bag_wtp_plan_summary = {
 	# royal_textile_rights
 	set_global_variable = { name = bag_wtp_rfit9 value = 0 }
 	set_global_variable = { name = bag_wtp_rtop9 value = 0 }
+	set_global_variable = { name = bag_wtp_rmore9 value = 0 }
 	every_in_global_list = {
 		variable = bag_wtp_candidates
 		limit = {
@@ -4511,6 +4648,13 @@ bag_wtp_plan_summary = {
 		if = {
 			limit = { bag_wtp_rq9 > global_var:bag_wtp_rtop9 }
 			set_global_variable = { name = bag_wtp_rtop9 value = bag_wtp_rq9 }
+		}
+		if = {
+			limit = {
+				NOT = { var:bag_wtp_plan_right = 9 }
+				bag_wtp_rq9 > 0
+			}
+			change_global_variable = { name = bag_wtp_rmore9 add = 1 }
 		}
 	}
 	set_global_variable = { name = bag_wtp_rwhy9 value = 5 }
@@ -4523,6 +4667,14 @@ bag_wtp_plan_summary = {
 		set_global_variable = { name = bag_wtp_rwhy9 value = 4 }
 	}
 	if = {
+		limit = {
+			global_var:bag_wtp_rwhy9 = 5
+			global_var:bag_wtp_rlag9 = 1
+			global_var:bag_wtp_rmore9 = 0
+		}
+		set_global_variable = { name = bag_wtp_rwhy9 value = 6 }
+	}
+	if = {
 		limit = { global_var:bag_wtp_rfit9 = 0 }
 		set_global_variable = { name = bag_wtp_rwhy9 value = 2 }
 	}
@@ -4533,6 +4685,7 @@ bag_wtp_plan_summary = {
 	# royal_tooling_rights
 	set_global_variable = { name = bag_wtp_rfit10 value = 0 }
 	set_global_variable = { name = bag_wtp_rtop10 value = 0 }
+	set_global_variable = { name = bag_wtp_rmore10 value = 0 }
 	every_in_global_list = {
 		variable = bag_wtp_candidates
 		limit = {
@@ -4543,6 +4696,13 @@ bag_wtp_plan_summary = {
 		if = {
 			limit = { bag_wtp_rq10 > global_var:bag_wtp_rtop10 }
 			set_global_variable = { name = bag_wtp_rtop10 value = bag_wtp_rq10 }
+		}
+		if = {
+			limit = {
+				NOT = { var:bag_wtp_plan_right = 10 }
+				bag_wtp_rq10 > 0
+			}
+			change_global_variable = { name = bag_wtp_rmore10 add = 1 }
 		}
 	}
 	set_global_variable = { name = bag_wtp_rwhy10 value = 5 }
@@ -4555,6 +4715,14 @@ bag_wtp_plan_summary = {
 		set_global_variable = { name = bag_wtp_rwhy10 value = 4 }
 	}
 	if = {
+		limit = {
+			global_var:bag_wtp_rwhy10 = 5
+			global_var:bag_wtp_rlag10 = 1
+			global_var:bag_wtp_rmore10 = 0
+		}
+		set_global_variable = { name = bag_wtp_rwhy10 value = 6 }
+	}
+	if = {
 		limit = { global_var:bag_wtp_rfit10 = 0 }
 		set_global_variable = { name = bag_wtp_rwhy10 value = 2 }
 	}
@@ -4565,6 +4733,7 @@ bag_wtp_plan_summary = {
 	# royal_weaponry_rights
 	set_global_variable = { name = bag_wtp_rfit11 value = 0 }
 	set_global_variable = { name = bag_wtp_rtop11 value = 0 }
+	set_global_variable = { name = bag_wtp_rmore11 value = 0 }
 	every_in_global_list = {
 		variable = bag_wtp_candidates
 		limit = {
@@ -4575,6 +4744,13 @@ bag_wtp_plan_summary = {
 		if = {
 			limit = { bag_wtp_rq11 > global_var:bag_wtp_rtop11 }
 			set_global_variable = { name = bag_wtp_rtop11 value = bag_wtp_rq11 }
+		}
+		if = {
+			limit = {
+				NOT = { var:bag_wtp_plan_right = 11 }
+				bag_wtp_rq11 > 0
+			}
+			change_global_variable = { name = bag_wtp_rmore11 add = 1 }
 		}
 	}
 	set_global_variable = { name = bag_wtp_rwhy11 value = 5 }
@@ -4587,6 +4763,14 @@ bag_wtp_plan_summary = {
 		set_global_variable = { name = bag_wtp_rwhy11 value = 4 }
 	}
 	if = {
+		limit = {
+			global_var:bag_wtp_rwhy11 = 5
+			global_var:bag_wtp_rlag11 = 1
+			global_var:bag_wtp_rmore11 = 0
+		}
+		set_global_variable = { name = bag_wtp_rwhy11 value = 6 }
+	}
+	if = {
 		limit = { global_var:bag_wtp_rfit11 = 0 }
 		set_global_variable = { name = bag_wtp_rwhy11 value = 2 }
 	}
@@ -4597,6 +4781,7 @@ bag_wtp_plan_summary = {
 	# scandinavian_bergslag_privileges
 	set_global_variable = { name = bag_wtp_rfit12 value = 0 }
 	set_global_variable = { name = bag_wtp_rtop12 value = 0 }
+	set_global_variable = { name = bag_wtp_rmore12 value = 0 }
 	every_in_global_list = {
 		variable = bag_wtp_candidates
 		limit = {
@@ -4607,6 +4792,13 @@ bag_wtp_plan_summary = {
 		if = {
 			limit = { bag_wtp_rq12 > global_var:bag_wtp_rtop12 }
 			set_global_variable = { name = bag_wtp_rtop12 value = bag_wtp_rq12 }
+		}
+		if = {
+			limit = {
+				NOT = { var:bag_wtp_plan_right = 12 }
+				bag_wtp_rq12 > 0
+			}
+			change_global_variable = { name = bag_wtp_rmore12 add = 1 }
 		}
 	}
 	set_global_variable = { name = bag_wtp_rwhy12 value = 5 }
@@ -4619,6 +4811,14 @@ bag_wtp_plan_summary = {
 		set_global_variable = { name = bag_wtp_rwhy12 value = 4 }
 	}
 	if = {
+		limit = {
+			global_var:bag_wtp_rwhy12 = 5
+			global_var:bag_wtp_rlag12 = 1
+			global_var:bag_wtp_rmore12 = 0
+		}
+		set_global_variable = { name = bag_wtp_rwhy12 value = 6 }
+	}
+	if = {
 		limit = { global_var:bag_wtp_rfit12 = 0 }
 		set_global_variable = { name = bag_wtp_rwhy12 value = 2 }
 	}
@@ -4629,6 +4829,7 @@ bag_wtp_plan_summary = {
 	# scandinavian_tar_privileges
 	set_global_variable = { name = bag_wtp_rfit13 value = 0 }
 	set_global_variable = { name = bag_wtp_rtop13 value = 0 }
+	set_global_variable = { name = bag_wtp_rmore13 value = 0 }
 	every_in_global_list = {
 		variable = bag_wtp_candidates
 		limit = {
@@ -4640,6 +4841,13 @@ bag_wtp_plan_summary = {
 			limit = { bag_wtp_rq13 > global_var:bag_wtp_rtop13 }
 			set_global_variable = { name = bag_wtp_rtop13 value = bag_wtp_rq13 }
 		}
+		if = {
+			limit = {
+				NOT = { var:bag_wtp_plan_right = 13 }
+				bag_wtp_rq13 > 0
+			}
+			change_global_variable = { name = bag_wtp_rmore13 add = 1 }
+		}
 	}
 	set_global_variable = { name = bag_wtp_rwhy13 value = 5 }
 	if = {
@@ -4649,6 +4857,14 @@ bag_wtp_plan_summary = {
 	else_if = {
 		limit = { NOT = { global_var:bag_wtp_rgiven13 < global_var:bag_wtp_rquota } }
 		set_global_variable = { name = bag_wtp_rwhy13 value = 4 }
+	}
+	if = {
+		limit = {
+			global_var:bag_wtp_rwhy13 = 5
+			global_var:bag_wtp_rlag13 = 1
+			global_var:bag_wtp_rmore13 = 0
+		}
+		set_global_variable = { name = bag_wtp_rwhy13 value = 6 }
 	}
 	if = {
 		limit = { global_var:bag_wtp_rfit13 = 0 }
