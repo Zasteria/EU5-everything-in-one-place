@@ -1142,6 +1142,49 @@ FOREIGN_BREAKDOWNS = (
 )
 
 
+def ungated_live_windows(root: Path) -> list[str]:
+    """Окно из `scripted_widgets/` без `visible` на себе самом.
+
+    **Запись в `scripted_widgets/` -- это обещание, что окно живёт всю сессию.**
+    Движок строит его дерево при загрузке и не разбирает; `visible` на корне --
+    единственное, что мешает каждому потомку пересчитывать свои выражения в
+    каждом кадре.
+
+    Что бывает без него, видно у Construction Manager: `cm_hidden_window` стоит
+    на `visible = "[EqualTo_CFixedPoint('(CFixedPoint)0', '(CFixedPoint)0')]"` --
+    всегда истина, -- и их собственный комментарий объясняет зачем: «Keeps
+    descendant visibility gates re-evaluating each frame». Внутри -- датамодель
+    по всем типам зданий с двумя вложенными, и каждая строка спрашивает
+    `BuildingType.IsProducing` и `ProductionMethod.IsProducing` кадр за кадром.
+    `docs/investigations/cm_performance.md`.
+    """
+    found: list[str] = []
+    folder = root / "in_game/gui/scripted_widgets"
+    if not folder.is_dir():
+        return found
+    for listing in sorted(folder.glob("*.txt")):
+        for line in listing.read_text(encoding="utf-8-sig").splitlines():
+            match = re.match(r"\s*(\S+\.gui)\s*=\s*(\w+)", line)
+            if not match:
+                continue
+            path = root / "in_game" / match.group(1)
+            if not path.is_file():
+                continue
+            text = _gui_text(path)
+            block = re.search(r'name\s*=\s*"%s"' % re.escape(match.group(2)), text)
+            if not block:
+                continue
+            # `visible` корня окна: первая строка одного отступа после `name`.
+            head = text[block.end():block.end() + 4000]
+            head = head.split("\n\t\twidget", 1)[0]
+            if not re.search(r"^\tvisible\s*=", head, re.M):
+                found.append(
+                    f"{path.relative_to(REPO)}: окно `{match.group(2)}` записано "
+                    f"в `scripted_widgets/`, но `visible` на себе не держит — "
+                    f"значит его дерево пересчитывается каждый кадр всю сессию")
+    return found
+
+
 def unresolved_localization_refs(root: Path) -> list[str]:
     """`$ключ$` без ключа и `Custom('имя')` без `customizable_localization`.
 
@@ -1327,7 +1370,8 @@ def main(argv: list[str]) -> int:
                  + localization_markup(root)
                  + stale_overrides(root)
                  + foreign_breakdown_in_own_text(root)
-                 + unresolved_localization_refs(root))
+                 + unresolved_localization_refs(root)
+                 + ungated_live_windows(root))
         total += len(found)
         for line in found:
             print(line)

@@ -10710,75 +10710,105 @@ def cov_file(rows: list[eu5data.Method], split: dict[str, list[str]],
                    f"\tset_variable = {{ name = {MOD_ID}_covm_{good} value = 0 }}\n"
                    f"\tset_variable = {{ name = {MOD_ID}_covn_{good} value = 0 }}\n"
                    f"\tset_variable = {{ name = {MOD_ID}_covd_{good} value = 0 }}\n")
+        # **Способы сгруппированы по зданию, и вопрос о локации задан один раз
+        # на здание.** `_stands_<здание>` спрашивает `can_build_building`, то
+        # есть читает состояние игры; 530 таких вопросов на локацию, а зданий
+        # под ними сотня с небольшим.
+        #
+        # **Внутри здания -- по убыванию выхлопа**, потому что сравнение долей
+        # строгое и при равенстве побеждает первый: пусть это будет верхняя
+        # ступень лестницы, а не первая попавшаяся.
+        by_building: dict[str, list[int]] = {}
         for mi in by_good[good]:
-            method = rows[mi - 1]
-            total = sum(method.inputs.values())
-            if total <= 0:
-                continue
-            raws = [r for r in sorted(method.inputs) if r in game.raw_goods]
-            # **`province_definition = {{ }}` -- не украшение, и его отсутствие
-            # стоило всей «Пригодности».** `any_location_in_province_definition`
-            # живёт **только** в скоупе определения провинции (`api.py`), а этот
-            # эффект -- локационный: без перехода триггер не проходил ни разу,
-            # все `_cov_<товар>` оставались нулями, `_rq<k>` вместе с ними, и
-            # столбец печатал 0 % в каждой строке. У CM тот же триггер написан
-            # без перехода потому, что **его** значения считаются в скоупе
-            # определения (шапка `bag_wtp_trmm_values.txt`); у нас так написано
-            # в `_b<n>`, которое рисуется верно с самого начала -- и это тот
-            # самый диф с рисующимся, которым такое и находится.
-            adds = "".join(
-                f"\t\tif = {{\n"
-                f"\t\t\tlimit = {{ province_definition = {{ "
-                f"any_location_in_province_definition = "
-                f"{{ raw_material ?= goods:{raw} }} }} }}\n"
-                f"\t\t\tchange_variable = {{ name = {MOD_ID}_cov_try add = "
-                f"{round(method.inputs[raw] / total, 3)} }}\n"
-                f"\t\t\tchange_variable = {{ name = {MOD_ID}_covn_try add = 1 }}\n"
-                f"\t\t}}\n"
-                for raw in raws)
-            if not adds:
-                continue
-            # **«На конец» -- это «когда-нибудь», а не «сейчас».** `_reach_<n>`
-            # выписан только у методов за недостижимым продвижением; у остальных
-            # 228 из 241 ответ «достижим» по построению, и подставлять им
-            # `_avail_` значило считать конец игры сегодняшним днём. Оттого
-            # лесенка прав не менялась от галочки вовсе: его прогон 2026-09-14,
-            # «права в расчёте всегда показываются одни и те же».
-            gate = (f"{MOD_ID}_reach_{mi} = yes" if method_gates(method)
-                    else "always = yes")
-            out.append(f"""\t# {method.building} / {method.key}
-\tif = {{
-\t\tlimit = {{
-\t\t\tOR = {{
-\t\t\t\tAND = {{
-\t\t\t\t\tNOT = {{ has_global_variable = {MOD_ID}_cov_end }}
-\t\t\t\t\tscope:{MOD_ID}_country = {{ {MOD_ID}_avail_{mi} = yes }}
-\t\t\t\t}}
-\t\t\t\tAND = {{
-\t\t\t\t\thas_global_variable = {MOD_ID}_cov_end
-\t\t\t\t\tscope:{MOD_ID}_country = {{ {gate} }}
+            by_building.setdefault(rows[mi - 1].building, []).append(mi)
+        for building in sorted(by_building):
+            arms = ""
+            for mi in sorted(by_building[building],
+                             key=lambda m: (-rows[m - 1].output, m)):
+                method = rows[mi - 1]
+                total = sum(method.inputs.values())
+                if total <= 0:
+                    continue
+                raws = [r for r in sorted(method.inputs) if r in game.raw_goods]
+                # **`province_definition = {{ }}` -- не украшение, и его
+                # отсутствие стоило всей «Пригодности».**
+                # `any_location_in_province_definition` живёт **только** в
+                # скоупе определения провинции (`api.py`), а этот эффект --
+                # локационный: без перехода триггер не проходил ни разу, все
+                # `_cov_<товар>` оставались нулями, `_rq<k>` вместе с ними, и
+                # столбец печатал 0 % в каждой строке.
+                adds = "".join(
+                    f"\t\t\tif = {{\n"
+                    f"\t\t\t\tlimit = {{ province_definition = {{ "
+                    f"any_location_in_province_definition = "
+                    f"{{ raw_material ?= goods:{raw} }} }} }}\n"
+                    f"\t\t\t\tchange_variable = {{ name = {MOD_ID}_cov_try add = "
+                    f"{round(method.inputs[raw] / total, 3)} }}\n"
+                    f"\t\t\t\tchange_variable = {{ name = {MOD_ID}_covn_try add = 1 }}\n"
+                    f"\t\t\t}}\n"
+                    for raw in raws)
+                if not adds:
+                    continue
+                # **«На конец» -- это «когда-нибудь», а не «сейчас».**
+                # `_reach_<n>` выписан только у методов за недостижимым
+                # продвижением; у остальных 228 из 241 ответ «достижим» по
+                # построению, и подставлять им `_avail_` значило считать конец
+                # игры сегодняшним днём. Оттого лесенка прав не менялась от
+                # галочки вовсе: «права в расчёте всегда показываются одни и те
+                # же», 2026-09-14.
+                gate = (f"{MOD_ID}_reach_{mi} = yes" if method_gates(method)
+                        else "always = yes")
+                # **В конце игры здания, которое сменяет наследник, уже нет.**
+                # Подсказка «на конец» предлагала скрипторий -- здание первой
+                # эпохи, которое лестница давно заменила. Это статический факт
+                # игры (`obsolete` у наследника), и ветка просто не открывается.
+                if method.building in game.obsoleted:
+                    gate = "always = no"
+                arms += f"""\t\t# {method.key}
+\t\tif = {{
+\t\t\tlimit = {{
+\t\t\t\tOR = {{
+\t\t\t\t\tAND = {{
+\t\t\t\t\t\tNOT = {{ has_global_variable = {MOD_ID}_cov_end }}
+\t\t\t\t\t\tscope:{MOD_ID}_country = {{ {MOD_ID}_avail_{mi} = yes }}
+\t\t\t\t\t}}
+\t\t\t\t\tAND = {{
+\t\t\t\t\t\thas_global_variable = {MOD_ID}_cov_end
+\t\t\t\t\t\tscope:{MOD_ID}_country = {{ {gate} }}
+\t\t\t\t\t}}
 \t\t\t\t}}
 \t\t\t}}
+\t\t\tset_variable = {{ name = {MOD_ID}_cov_try value = 0 }}
+\t\t\tset_variable = {{ name = {MOD_ID}_covn_try value = 0 }}
+{adds}\t\t\tif = {{
+\t\t\t\tlimit = {{ var:{MOD_ID}_cov_try > var:{MOD_ID}_cov_{good} }}
+\t\t\t\tset_variable = {{ name = {MOD_ID}_cov_{good} value = var:{MOD_ID}_cov_try }}
+\t\t\t\t# Кто победил и чем -- это и есть разбор, который печатает подсказка.
+\t\t\t\tset_variable = {{ name = {MOD_ID}_covm_{good} value = {mi} }}
+\t\t\t\tset_variable = {{ name = {MOD_ID}_covn_{good} value = var:{MOD_ID}_covn_try }}
+\t\t\t\tset_variable = {{ name = {MOD_ID}_covd_{good} value = {len(raws)} }}
+\t\t\t}}
 \t\t}}
-\t\tset_variable = {{ name = {MOD_ID}_cov_try value = 0 }}
-\t\tset_variable = {{ name = {MOD_ID}_covn_try value = 0 }}
-{adds}\t\tif = {{
-\t\t\tlimit = {{ var:{MOD_ID}_cov_try > var:{MOD_ID}_cov_{good} }}
-\t\t\tset_variable = {{ name = {MOD_ID}_cov_{good} value = var:{MOD_ID}_cov_try }}
-\t\t\t# Кто победил и чем -- это и есть разбор, который подсказка печатает.
-\t\t\tset_variable = {{ name = {MOD_ID}_covm_{good} value = {mi} }}
-\t\t\tset_variable = {{ name = {MOD_ID}_covn_{good} value = var:{MOD_ID}_covn_try }}
-\t\t\tset_variable = {{ name = {MOD_ID}_covd_{good} value = {len(raws)} }}
-\t\t}}
-\t}}
+"""
+            if not arms:
+                continue
+            out.append(f"""\t# {building}
+\t#
+\t# **Локация обязана держать это здание, и без этой строки счёт был бредом.**
+\t# Покрытие спрашивало только державу, поэтому лучшим способом города
+\t# оказывался «Сельский стекольщик», а в Вестфалии -- японский «Сёэн» (его
+\t# прогон 2026-09-14). `_stands_<здание>` -- ровно тот вопрос: ранг локации,
+\t# её `location_potential` и тумблер город/село.
+\tif = {{
+\t\tlimit = {{ {MOD_ID}_stands_{building} = yes }}
+{arms}\t}}
 """)
         # **Своё сырьё усредняется только у `dyes` и `wine`, и это не выбор.**
         # У него ровно два таких товара (`_trmm_cov_dyes`, `_trmm_cov_wine`), и
-        # причина написана там же: модификатор вывода этой грамоты поднимает и
+        # причина написана там же: модификатор вывода грамоты поднимает и
         # собственное РГО этого сырья, поэтому на его локации оно входит ещё
         # одним полностью покрытым поставщиком. У остальных восемнадцати товаров
-        # такого нет. Мы применяли это ко всем двадцати -- лишняя ветка, которую
-        # никто не просил.
+        # такого нет.
         own_rgo = ""
         if good in TRMM_RGO_AVERAGED:
             own_rgo = f"""\tif = {{
@@ -10830,7 +10860,10 @@ def cov_file(rows: list[eu5data.Method], split: dict[str, list[str]],
         "\tset_variable = { name = %s_rqv%d value = { value = %s_rq%d divide = %d } }\n"
         "\tif = {\n"
         "\t\tlimit = {\n"
-        "\t\t\tvar:%s_rqv%d > 0\n"
+        # Порог, а не ноль: `|%1` округляет до десятой, и всё, что печатается
+        # «0.0 %», в лесенке -- мусор («фламандское суконное 0.0%» на его
+        # экране 2026-09-14).
+        "\t\t\tvar:%s_rqv%d > 0.0005\n"
         "\t\t\tscope:%s_country = { %s_plan_right_gate_%d = yes }\n"
         "\t\t}\n"
         "\t\tset_variable = { name = %s_rqok%d value = 1 }\n"
@@ -12831,8 +12864,11 @@ def loc_file(language: str, rows: list[eu5data.Method], split: dict[str, list[st
         # -- ссылкой `$ключ$`, а не запросом в базу: ключ у них есть
         # (`goods_l_<язык>.yml` самой игры), а определения может не быть.
         names = ", ".join(ref % (part.key + "$") for part in method.parts)
+        # **Одна строка на товар, а не две.** Его слово 2026-09-14: «читается
+        # очень сложно, идут как будто бы одним смешанным списком». Здание и
+        # способ дописываются к строке товара, а не начинают свою.
         out.append(
-            f' {MOD_ID}_covm_{mi}: "\\n    [ShowBuildingTypeName(\'{method.building}\')]'
+            f' {MOD_ID}_covm_{mi}: " — [ShowBuildingTypeName(\'{method.building}\')]'
             f', {names} '
             f'[Location.MakeScope.GetVariable(\'{MOD_ID}_covn_{method.produced}\').GetValue|0]'
             f'/[Location.MakeScope.GetVariable(\'{MOD_ID}_covd_{method.produced}\').GetValue|0]"\n')
@@ -12849,6 +12885,8 @@ def loc_file(language: str, rows: list[eu5data.Method], split: dict[str, list[st
         line = (f'\\n{ref % (MOD_ID + "_right_" + right.key + "$")}: '
                 f'[Location.MakeScope.GetVariable(\'{MOD_ID}_rqv{k}\').GetValue|%1]')
         out.append(f' {MOD_ID}_rq_line_{k}: "{line}"\n')
+        # В разборе то же имя, но с пустой строкой перед ним: три права подряд
+        # без неё читались одним списком.
         # **Разбор начинается с имени права**: их теперь три подряд, и без имени
         # они слиплись бы в одну кучу товаров.
         # **`$ключ$`, а не `Custom()`.** Строка товара -- обычный ключ
@@ -12857,7 +12895,7 @@ def loc_file(language: str, rows: list[eu5data.Method], split: dict[str, list[st
         # текста; ловит `unresolved_localization_refs`.
         bd = "".join(ref % (MOD_ID + "_cov_line_" + g + "$")
                      for g in sorted(right.output) if g in COV_GOODS)
-        out.append(f' {MOD_ID}_rq_bd_{k}: "{line}{bd}"\n')
+        out.append(f' {MOD_ID}_rq_bd_{k}: "\\n{line}{bd}"\n')
 
     return "".join(out)
 
@@ -14730,7 +14768,12 @@ def spec_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t\t# а раздача ставила другую, и объяснить это было нечем.
 \t\t\tprovince_definition = {{
 \t\t\t\tevery_location_in_province_definition = {{
-\t\t\t\t\tset_variable = {{ name = {MOD_ID}_rqv{k} value = global_var:{MOD_ID}_sprt }}
+\t\t\t\t\t# Долей, как всюду: `_sprt` -- среднее из `_rq<k>`, а те из
+\t\t\t\t\t# {RANK_SCALE}. Без деления лесенка печатала 90650 %.
+\t\t\t\t\tset_variable = {{ name = {MOD_ID}_rqv{k} value = {{
+\t\t\t\t\t\tvalue = global_var:{MOD_ID}_sprt
+\t\t\t\t\t\tdivide = {RANK_SCALE}
+\t\t\t\t\t}} }}
 \t\t\t\t}}
 \t\t\t}}
 \t\t}}
