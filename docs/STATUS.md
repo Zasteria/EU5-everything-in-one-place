@@ -6,7 +6,7 @@ state, the commands, and what fails silently in that mod.
 
 | mod | state | never been in game |
 | --- | --- | --- |
-| [`glorpui_hints`](../mods/glorpui_hints/CLAUDE.md) | **окно ценностей своё, подтверждено 09-14**; без Glorp UI подсказка теряла главный список — возвращён | возврат списка; религиозный аспект |
+| [`glorpui_hints`](../mods/glorpui_hints/CLAUDE.md) | **автономен с 09-14**: машинерия подсказок Glorp UI форкнута под `svx_svh_*`, окно ценностей своё и подтверждено | весь форк; религиозный аспект |
 | [`ru_loc_fix`](../mods/ru_loc_fix/CLAUDE.md) | working; repairs the base game's own Russian markup, 207 keys | rounds two and three |
 | [`auto_build_ru`](../mods/auto_build_ru/CLAUDE.md) | done and confirmed; 1269 keys. **Пересобрать нельзя**: Advanced Auto Build убран из дерева 2026-09-12, а генератор читает его английские ключи | the 0.9.3 work, 28 keys |
 | [`nd_ru`](../mods/nd_ru/CLAUDE.md) | in progress; 4 174 keys, 10.2% | everything except Westphalia and the override itself |
