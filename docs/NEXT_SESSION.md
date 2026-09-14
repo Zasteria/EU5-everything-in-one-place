@@ -30,12 +30,6 @@ This file is the part that is live. What has already been settled is in
 играть и сворачивать как обычно. **Гадать до этого нечего**
 ([`pitfalls/diagnosis.md`](pitfalls/diagnosis.md)).
 
-**Ванильный костыль автостроя построен 09-14 по его заказу и целиком не
-прогонялся** — старое «автострой закрыт, не предлагать» отменено им же. Без CM у
-отмашки две кнопки, обе — скрытый привод окна плана:
-[`investigations/wtp_vanilla_autoexpand.md`](investigations/wtp_vanilla_autoexpand.md);
-решающее число — `costed` в строке `VANILLA` на «Технической».
-
 **Окно замены, порядок «Пригодности» и `ERROR` приняты прогонами 09-14.** **Не
 видело прогона главное:** `_cov_pass` наконец спрашивает **локацию**
 (`_stands_<здание>`) — без этого он предлагал городу сельское здание, а
@@ -46,11 +40,20 @@ This file is the part that is live. What has already been settled is in
 пунктов.
 
 **Просить `debug.log`, а не только `error.log`:** три ошибки из четырёх за 09-14
-нашлись только там. Почему CM ест производительность — измерено,
+нашлись только там. Почему CM ест производительность —
 [`investigations/cm_performance.md`](investigations/cm_performance.md).
 
-**Открыто из первых девяти:** режим ручного заполнения (9). **Community Mod
-Toolkit** — [`archive/next_toolkit_and_deferred.md`](archive/next_toolkit_and_deferred.md).
+**Community Mod Toolkit прочитан** —
+[`investigations/community_mod_toolkit.md`](investigations/community_mod_toolkit.md);
+игрового скрипта в нём нет. Ждёт его решения про `upload.py` со SteamworksPy —
+вечер работы и его Steam.
+
+**Автострой: закрыт, переоткрыт им же, построен, не заработал, снят целиком.**
+Мод откачен байт в байт, опыт записан —
+[`archive/wtp_vanilla_autoexpand_attempt.md`](archive/wtp_vanilla_autoexpand_attempt.md).
+**Не предлагать заново.**
+
+**Открыто из первых девяти:** режим ручного заполнения (9).
 
 ## Старое по `where_to_produce`, до его списка — в архиве
 

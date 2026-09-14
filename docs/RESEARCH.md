@@ -135,45 +135,26 @@ C++, и дальше зовётся та же внутренняя процед�
 **Здание с потолком в один уровень галочки не получает** -- гейт по потолку,
 а не по существованию записи.
 
-**Но `construct_building` -- не та стройка, которой строит игрок.** Эффект
-скрипта **не берёт особые валюты цены**; это написано у самого CM
-(`cm_feature_effects.txt:194`), и поэтому CM заказывает стройку кнопкой движка
-`BuildOrExpandBuildingDefault(BuildingType, Location)`. Точную цену называет
-`GetBuildOrExpandBuildingCost(BuildingType, Location)` -- **CFixedPoint**, а
-`...CostValue` -- строка.
+**Дверь от скрипта к `Building` есть, и она в обе стороны** -- но галочку она
+поставить так и не смогла, см. ниже. `Scope.GetBuilding` (`data_types_script.txt`)
+достаёт здание в `.gui` из списка переменной, который написал скрипт;
+`Building.MakeScope` отдаёт его обратно; `MakeScopeBool(...)` передаёт ответ
+интерфейса скрипту. Скриптовая половина: `every_buildings_in_location` заводит
+здание в скоуп, `save_temporary_scope_as` его сохраняет (так делает CM,
+`cm_misc_script_values.txt:102`), а тип спрашивается событийным таргетом
+`building_type` (`Input Scopes: building`), форма ваниллы,
+`scripted_triggers/building_triggers.txt:26`. **Искать `Location.GetBuildings`
+бесполезно**: у `Location` такой функции нет, а все четыре списка зданий в игре
+висят на панелях, которые движок строит сам.
 
-**Дверь от локации к `Building` -- в скрипте, а не в интерфейсе.** Искать её
-среди функций `Location` бесполезно: их там нет, а все четыре списка зданий в
-игре (`LocationView.GetLocationBuildings`,
-`LocationProductionView`/`ProductionView.GetBuildingItems`,
-`LocationUpkeepWrap.GetBuildings`) висят на панелях, которые движок строит сам.
-**Дверь -- `Scope.GetBuilding`** (`data_types_script.txt`): здание, положенное
-скриптом в список переменной, читается датамоделью и достаётся из строки
-`Building`-ом, ровно как `Scope.GetBuildingType` достаёт тип из `_row_builds`.
+**`construct_building` эффектом строит дешевле, чем кнопка**: он не берёт особые
+валюты цены (`cm_feature_effects.txt:194`), поэтому CM заказывает стройку кнопкой
+движка `BuildOrExpandBuildingDefault(BuildingType, Location)`. Цену называет
+`GetBuildOrExpandBuildingCost(...)` -- CFixedPoint; `...CostValue` вопреки имени
+возвращает строку.
 
-Скриптовая половина: `every_buildings_in_location` заводит здание в скоуп,
-`save_temporary_scope_as` его сохраняет (так делает и CM,
-`cm_misc_script_values.txt:102`), а тип здания спрашивается событийным таргетом
-`building_type` (`Input Scopes: building`) -- форма ваниллы,
-`scripted_triggers/building_triggers.txt:26`. **Так достижимо любое стоящее
-здание**, не только то, что в стройке.
-
-`Location.GetCivilConstructions` -> `Construction.GetBuilding` (с воротами
-`Construction.IsBuilding`) остаётся вторым путём и нужен для здания, которое
-ещё строится: про здание с нулём уровней `every_buildings_in_location` ничего не
-обещает.
-
-**Цена ошибки здесь уже заплачена**: 2026-09-14 сессия объявила стоящее здание
-недостижимым, обыскав список функций `Location` и ни разу не спросив, чем скрипт
-отдаёт объекты интерфейсу. Владелец не поверил -- и был прав.
-
-**Как заставить интерфейс что-то сделать по списку, не платя кадрами.** Форма
-CM, и она работает: скрипт пишет список, виджет с `datamodel` по нему рождает
-строки, а `state = { name = X on_finish = ... }` срабатывает только когда кто-то
-позвал `PdxGuiTriggerAllAnimations('X')`. Зовёт его состояние `_show` виджета,
-чей `visible` читает флаг: флаг поставлен -- переход в видимость -- один проход.
-**`_show` ловит переход, а не рождение**: виджет, родившийся уже видимым, молчит,
-и на этот случай у игры есть `trigger_on_create = yes`
-(`economy_lateralview.gui:333`). А **`visible` у самой строки -- это условие
-действия**: строка, которой нечего делать, невидима и не срабатывает.
+**И всё это вместе галочку не поставило.** Попытка 2026-09-14 -- три сборки, два
+его прогона, откачена целиком по его решению:
+[`archive/wtp_vanilla_autoexpand_attempt.md`](archive/wtp_vanilla_autoexpand_attempt.md).
+**Не начинать заново без его слова.**
 
