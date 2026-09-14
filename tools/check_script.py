@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Three ways a mod file fails at load, all findable from here.
 
 Every other checker in this tree answers a question about one mod's meaning.
@@ -1133,6 +1133,193 @@ SHARED_COPIES = (
 )
 
 
+# Перенесённые из чужого мода разборы: их можно рисовать в перенесённом окне и
+# нельзя в своём. Ключ -> файл, в котором он законен.
+FOREIGN_BREAKDOWNS = (
+    ("bag_wtp_trmm_ur_rank_", "bag_wtp_trmm_l_"),
+    ("bag_wtp_trmm_bd_slot_", "bag_wtp_trmm_l_"),
+    ("bag_wtp_trmm_slot_", "bag_wtp_trmm_l_"),
+)
+
+
+def ungated_live_windows(root: Path) -> list[str]:
+    """Окно из `scripted_widgets/` без `visible` на себе самом.
+
+    **Запись в `scripted_widgets/` -- это обещание, что окно живёт всю сессию.**
+    Движок строит его дерево при загрузке и не разбирает; `visible` на корне --
+    единственное, что мешает каждому потомку пересчитывать свои выражения в
+    каждом кадре.
+
+    Что бывает без него, видно у Construction Manager: `cm_hidden_window` стоит
+    на `visible = "[EqualTo_CFixedPoint('(CFixedPoint)0', '(CFixedPoint)0')]"` --
+    всегда истина, -- и их собственный комментарий объясняет зачем: «Keeps
+    descendant visibility gates re-evaluating each frame». Внутри -- датамодель
+    по всем типам зданий с двумя вложенными, и каждая строка спрашивает
+    `BuildingType.IsProducing` и `ProductionMethod.IsProducing` кадр за кадром.
+    `docs/investigations/cm_performance.md`.
+    """
+    found: list[str] = []
+    folder = root / "in_game/gui/scripted_widgets"
+    if not folder.is_dir():
+        return found
+    for listing in sorted(folder.glob("*.txt")):
+        for line in listing.read_text(encoding="utf-8-sig").splitlines():
+            match = re.match(r"\s*(\S+\.gui)\s*=\s*(\w+)", line)
+            if not match:
+                continue
+            path = root / "in_game" / match.group(1)
+            if not path.is_file():
+                continue
+            text = _gui_text(path)
+            block = re.search(r'name\s*=\s*"%s"' % re.escape(match.group(2)), text)
+            if not block:
+                continue
+            # `visible` корня окна: первая строка одного отступа после `name`.
+            head = text[block.end():block.end() + 4000]
+            head = head.split("\n\t\twidget", 1)[0]
+            if not re.search(r"^\tvisible\s*=", head, re.M):
+                found.append(
+                    f"{path.relative_to(REPO)}: окно `{match.group(2)}` записано "
+                    f"в `scripted_widgets/`, но `visible` на себе не держит — "
+                    f"значит его дерево пересчитывается каждый кадр всю сессию")
+    return found
+
+
+def unresolved_localization_refs(root: Path) -> list[str]:
+    """`$ключ$` без ключа и `Custom('имя')` без `customizable_localization`.
+
+    **Две формы, которые легко перепутать, и обе молчат.** `$x$` подставляет
+    другой ключ локализации, `[Scope.Custom('x')]` зовёт
+    `customizable_localization` -- и если взять не ту, на экране окажется имя
+    ключа или пустота. Дважды за один день: строка товара переезжала между
+    двумя формами, и оба раза это было видно только в игре.
+
+    Ключи ищутся и в моде, и в игровом дереве (`$ключ$` часто указывает на
+    ванильный), а `Custom()` -- только среди своих: чужие определения лежат в
+    модах, которых в `reference/` может не быть.
+    """
+    keys: set[str] = set()
+    for folder in (root / "main_menu/localization",
+                   REPO / "reference/game/main_menu/localization",
+                   REPO / "reference/mods"):
+        if not folder.is_dir():
+            continue
+        for path in folder.rglob("*.yml"):
+            for line in path.read_text(encoding="utf-8-sig",
+                                       errors="ignore").splitlines():
+                match = re.match(r"\s*([A-Za-z0-9_.]+):\s*", line)
+                if match:
+                    keys.add(match.group(1))
+    custom: set[str] = set()
+    folder = root / "in_game/common/customizable_localization"
+    if folder.is_dir():
+        for path in folder.glob("*.txt"):
+            custom |= set(re.findall(r"^(\w+)\s*=\s*\{",
+                                     path.read_text(encoding="utf-8-sig"), re.M))
+    found: list[str] = []
+    seen: set[tuple[str, str]] = set()
+    prefix = root.name and "bag_"
+    for path in sorted(list((root / "main_menu/localization").rglob("*.yml"))
+                       + list((root / "in_game/gui").rglob("*.gui"))):
+        text = path.read_text(encoding="utf-8-sig", errors="ignore")
+        for name in re.findall(r"\$([A-Za-z0-9_.]+)\$", text):
+            # `$ВЕРХНИМ_РЕГИСТРОМ$` -- это параметр, который подставляет
+            # позвавший, а не ссылка на ключ. Ключи здесь и у игры пишутся
+            # строчными.
+            if name.upper() == name:
+                continue
+            if name not in keys and (path.name, name) not in seen:
+                seen.add((path.name, name))
+                found.append(f"{path.relative_to(REPO)}: `${name}$` — такого "
+                             f"ключа локализации нет ни у мода, ни у игры")
+        for name in re.findall(r"Custom\('([A-Za-z0-9_]+)'\)", text):
+            if name.startswith(prefix) and name not in custom \
+                    and (path.name, name) not in seen:
+                seen.add((path.name, name))
+                found.append(f"{path.relative_to(REPO)}: `Custom('{name}')` — "
+                             f"нет такого `customizable_localization`; ключ "
+                             f"локализации подставляется через `${name}$`")
+    return found
+
+
+def foreign_breakdown_in_own_text(root: Path) -> list[str]:
+    """Наш текст, рисующий разбор чужого расчёта.
+
+    **Столбец считает одно, подсказка под ним рисует другое.** «Пригодность»
+    считалась нашим `_rq<k>` -- по способам, доступным державе, -- а подсказка
+    под ней звала `_trmm_ur_rank_bd_slot_*`, разбор перенесённой карты, который
+    про эпоху не знает вовсе. На экране владельца 2026-09-14 стояли 76.1 % и
+    236.1 % разом; в окне плана то же самое назвало лучшей грамотой не ту,
+    которую раздача выдала. Сойтись эти два числа не могли ни при каких данных.
+
+    Правило: перенесённый разбор рисует перенесённое окно. В своём тексте
+    (`bag_wtp_l_<язык>.yml`) его быть не должно -- у своего расчёта свой разбор.
+    """
+    found: list[str] = []
+    for path in sorted(root.rglob("*.yml")):
+        name = path.name
+        for key, allowed_prefix in FOREIGN_BREAKDOWNS:
+            if allowed_prefix in name or key not in path.read_text(
+                    encoding="utf-8-sig", errors="ignore"):
+                continue
+            found.append(
+                f"{path.relative_to(REPO)}: рисует `{key}*` — разбор чужого "
+                f"расчёта в своём тексте; у столбца и его подсказки обязан быть "
+                f"один счёт")
+    return found
+
+
+def stale_overrides(root: Path) -> list[str]:
+    """A full-file copy of a vanilla `.gui` that no longer carries all of it.
+
+    **Идея взята у Community Mod Toolkit** (`tools/gui_update.py` в их ветке
+    `dev`, 2026-08-31): мод, который кладёт свой файл на место игрового,
+    заменяет его целиком, и когда игра патчит этот файл, добавленное патчем
+    просто исчезает из игры -- молча, без строчки в логе. У них это целая
+    машинерия на двух гит-ветках с трёхсторонним слиянием; нам столько не надо,
+    потому что игровое дерево у нас и так лежит в `reference/` -- достаточно
+    сверить состав.
+
+    Сверяется состав верхнего уровня: блоки `имя = {{` и `types Имя {{`. Имя,
+    которое есть у игры и которого нет у нас, -- это окно или набор типов,
+    которого в игре больше не будет. Сверять построчно смысла нет: мод затем и
+    правит файл, чтобы он отличался.
+    """
+    found: list[str] = []
+    for path in sorted(root.rglob("*.gui")):
+        rel = path.relative_to(root)
+        original = REPO / "reference" / "game" / rel
+        if not original.is_file():
+            continue
+        theirs = _top_level_names(original)
+        ours = _top_level_names(path)
+        for name in sorted(theirs - ours):
+            found.append(f"{path.relative_to(REPO)}: пропал `{name}` — файл "
+                         f"кладётся поверх игрового целиком, значит этого блока "
+                         f"в игре не будет вовсе; он есть в "
+                         f"{original.relative_to(REPO)}")
+    return found
+
+
+def _top_level_names(path: Path) -> set[str]:
+    """Имена блоков нулевого уровня в `.gui`: `имя = {{` и `types Имя {{`."""
+    names: set[str] = set()
+    depth = 0
+    pending: str | None = None
+    for line in _gui_text(path).splitlines():
+        if depth == 0:
+            match = (re.match(r"\s*(\w[\w.]*)\s*=\s*\{", line)
+                     or re.match(r"\s*types\s+(\w+)\s*\{", line))
+            if match:
+                pending = match.group(1)
+        opened = line.count("{") - line.count("}")
+        if depth == 0 and opened > 0 and pending:
+            names.add(pending)
+            pending = None
+        depth += opened
+    return names
+
+
 def shared_copies() -> list[str]:
     """Одинаковые файлы двух модов -- одинаковы ли они на самом деле."""
     found: list[str] = []
@@ -1180,7 +1367,11 @@ def main(argv: list[str]) -> int:
                  + flowcontainer_datamodels(root)
                  + scope_mixed_variables(root)
                  + overflowing_windows(root)
-                 + localization_markup(root))
+                 + localization_markup(root)
+                 + stale_overrides(root)
+                 + foreign_breakdown_in_own_text(root)
+                 + unresolved_localization_refs(root)
+                 + ungated_live_windows(root))
         total += len(found)
         for line in found:
             print(line)

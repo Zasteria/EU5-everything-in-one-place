@@ -23992,7 +23992,16 @@ bag_wtp_r_mid_tiebreak = {
 # которую формат `|%1` печатает процентом.
 # Scope: location
 bag_wtp_r_fit_pct = {
-	value = var:bag_wtp_r_fit
+	# **`has_variable` перед чтением, потому что рисуется оно и там, где прохода
+	# не было.** Строка окна читает значение каждый кадр, а `_r_fit` кладёт
+	# только поиск и только на кандидатов: в его `debug.log` 2026-09-14 это 240
+	# строк «Value of wrong type in 'bag_wtp_r_fit_pct'. Got value of type
+	# 'none'». Ни на экране, ни в `error.log` это не видно вовсе.
+	value = 0
+	if = {
+		limit = { has_variable = bag_wtp_r_fit }
+		add = var:bag_wtp_r_fit
+	}
 	divide = 1000
 }
 

@@ -12,11 +12,15 @@ state, the commands, and what fails silently in that mod.
 | [`nd_ru`](../mods/nd_ru/CLAUDE.md) | in progress; 4 174 keys, 10.2% | everything except Westphalia and the override itself |
 | [`rgo_bonus_filter`](../mods/rgo_bonus_filter/CLAUDE.md) | working, in use, nothing outstanding | the location-panel chip |
 | [`goods_target`](../mods/goods_target/CLAUDE.md) | paused, half working, four faults known | anything on the monthly pulse |
-| [`where_to_produce`](../mods/where_to_produce/CLAUDE.md) | **Единственная версия, и работа идёт в ней.** Его список после партии записан — [`investigations/wtp_backlog.md`](investigations/wtp_backlog.md), девять пунктов и открыт. Из девяти пунктов открыты два: 9 (ручное заполнение) и ванильная отмашка автостроя. Карта «Лучшее городское право» перенесена из CM dev целиком — [`investigations/wtp_town_right_map.md`](investigations/wtp_town_right_map.md), там же разбор его расчёта и три отличия от нашего. Попытка второй версии закрыта в день начала ([`archive/wtp2_failed.md`](archive/wtp2_failed.md)) | **всё, что построено 2026-09-12, прогона не видело**; и **его слово в тот же день: 90% из того, что документы звали непрогнанным, уже прогонялось или неактуально** — сверять с ним, не с документами |
+| [`where_to_produce`](../mods/where_to_produce/CLAUDE.md) | **Единственная версия, и работа идёт в ней.** Его список и все заходы по нему — [`investigations/wtp_backlog.md`](investigations/wtp_backlog.md); открыт пункт 9 (ручное заполнение). Карта «Лучшее городское право» перенесена из CM dev целиком — [`investigations/wtp_town_right_map.md`](investigations/wtp_town_right_map.md) | окно замены, порядок «Пригодности» и `ERROR` прогонами 09-14 приняты; **не видело прогона: `_cov_pass` со спросом о локации (`_stands_`), «на конец» без устаревших зданий, поделённое среднее провинции в лесенке**; и **его слово 09-12: 90% из того, что документы звали непрогнанным, уже прогонялось или неактуально** — сверять с ним, не с документами |
 
 `where_to_produce` is the second attempt at a question the first one failed at
 without ever being tested. Why the first was removed, and the lesson that shaped
 this one, is [`archive/where_to_produce.md`](archive/where_to_produce.md).
+
+**Игра вылетает с 09-14, причина не названа.** Без видимого повода, чаще после
+того как она какое-то время свёрнута. Что нужно от него — логи и один заход без
+мода — в [`NEXT_SESSION.md`](NEXT_SESSION.md).
 
 ## Two things being hunted that are not any mod's fault
 
