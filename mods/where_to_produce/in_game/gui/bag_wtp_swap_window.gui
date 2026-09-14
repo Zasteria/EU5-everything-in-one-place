@@ -194,7 +194,8 @@ window = {
 	widgetanchor = center
 	position = { 120 40 }
 	movable = yes
-	size = { 1000 620 }
+	# Стало выше на блок грамот: четыре ряда ячеек по 32 плюс заголовок.
+	size = { 1000 760 }
 	using = bg_window_default_alt
 
 	visible = "[GetPlayer.MakeScope.GetVariable('bag_wtp_swap_open').IsSet]"
@@ -357,6 +358,64 @@ window = {
 							}
 						}
 					}
+				}
+			}
+
+			# ---- городское право этой локации, руками ----------------------
+			#
+			# **Его слово, 2026-09-14:** «иметь возможность заменять городские
+			# права вручную, так же как сейчас заменяется товар». Товар меняется
+			# руками здесь — значит и грамота здесь.
+			#
+			# **Блок виден только городу, держащему грамоту.** `visible` триггеров
+			# не умеет (`docs/pitfalls/windows.md`), поэтому ответ приносит флаг
+			# `bag_wtp_swap_istown`, который ставит `bag_wtp_swap_rebuild`.
+			#
+			# **Имя текущей грамоты — той же кастомной локализацией, что печатает
+			# её строка плана**, и читается оно со скоупа этой коробки:
+			# `datacontext` локации стоит на родителе, и `Location.Custom(...)`
+			# внутри него — та же форма, которой рисуется имя локации выше.
+			vbox = {
+				layoutpolicy_horizontal = expanding
+				spacing = 4
+				visible = "[GetGlobalVariable('bag_wtp_swap_istown').IsSet]"
+
+				hbox = {
+					layoutpolicy_horizontal = expanding
+					spacing = 6
+
+					text_single = {
+						size = { 200 24 }
+						maximumsize = { 200 24 }
+						autoresize = no
+						align = left|vcenter
+						fontsize = 13
+						elide = right
+						text = "bag_wtp_swap_head_right"
+						tooltip = "bag_wtp_swap_head_right_tt"
+					}
+
+					text_single = {
+						layoutpolicy_horizontal = expanding
+						size = { -1 24 }
+						autoresize = no
+						align = left|vcenter
+						fontsize = 13
+						elide = right
+						text = "[Location.Custom('bag_wtp_plan_right_label')]"
+						tooltip = "bag_wtp_swap_head_right_tt"
+					}
+				}
+
+				vbox = {
+					layoutpolicy_horizontal = expanding
+					spacing = 2
+					ignoreinvisible = yes
+
+					bag_wtp_swap_right_row1 = {}
+					bag_wtp_swap_right_row2 = {}
+					bag_wtp_swap_right_row3 = {}
+					bag_wtp_swap_right_row4 = {}
 				}
 			}
 

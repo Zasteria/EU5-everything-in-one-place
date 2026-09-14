@@ -19,10 +19,9 @@ inside the window of its function; **anything technical belongs on
 **Деревня — сущность, а не товар, и правило стоит в обоих местах** (09-12).
 
 **Ворота постановки после плана врут**: всё, что читается **после** раздачи,
-спрашивает факт (`_pm<n> > 0`), а не `_plan_can_*`. Два прогона: 09-03 и 09-13.
-
-**3 and 4 are separate and the traffic runs one way**: nothing the editor holds
-is ever read by 3. **Before touching any `_plan_*`:
+спрашивает факт (`_pm<n> > 0`), а не `_plan_can_*` (09-03, 09-13). **3 и 4
+разделены, и движение одностороннее**: ничего из редактора план не читает.
+**Before touching any `_plan_*`:
 [`plan_gaps.md`](../../docs/investigations/plan_gaps.md).**
 
 ## Where it stands
@@ -33,20 +32,22 @@ is ever read by 3. **Before touching any `_plan_*`:
 ([`RESEARCH.md`](../../docs/RESEARCH.md)).
 
 **Карты городских прав CM dev перенесены целиком** (`_trmm_*`), выгода земли под
-грамоту `_rq<k>` считается его методом —
-[`wtp_town_right_map.md`](../../docs/investigations/wtp_town_right_map.md), там же
-четыре правила счёта `_cov_pass`.
+грамоту `_rq<k>` — его метод, и там же четыре правила `_cov_pass`:
+[`wtp_town_right_map.md`](../../docs/investigations/wtp_town_right_map.md).
+**Окно замены принято прогоном 09-14**, «−» на `mason` тоже.
 
-**Окно замены принято прогоном 09-14** целиком, «−» на `mason` тоже.
+**Счёт обязан спрашивать локацию** (`_cov_pass` → `_stands_<здание>`), **а сам
+`_stands_` под галочкой ранга — сторону**: иначе `market_village` вставал в
+городе (09-14, [`pitfalls/script.md`](../../docs/pitfalls/script.md)). **Прогона
+не видело.**
 
-**`_cov_pass` обязан спрашивать локацию** (`_stands_<здание>`, сгруппировано по
-зданию): без этого счёт предлагал городу сельское здание, а Вестфалии японское.
-**А сам `_stands_` под галочкой ранга обязан нести сторону** (`_plan_is_town`,
-из `Method.urban`/`.rural`): галочка меняет `can_build_building` на
-`location_potential`, ранга после этого не спрашивал никто, и `market_village`
-без `location_potential` стоял где угодно — «Торговая деревня» в городе, 09-14.
-**Покрытие — только сырьё провинции**, эпоху приносит позвавший, в лесенке
-только доступные державе и не округляющиеся в ноль права. **Прогона не видело.**
+**Отставшая грамота выбирается первой** (`_rlag<k>`: `_rgiven<k> × 2 < max`,
+считается в **городах**, пересчёт перед каждой провинцией; «подходящую» держат
+полосы). **Грамота ставится руками** — окно замены, `_swap_right_set_<k>`.
+**«+1»/«−1» у грамот ходят провинцией** (`_edit_right_add_prov`/`_drop_prov`),
+галочка стоит по умолчанию, городской путь не тронут. Все три —
+[`wtp_backlog.md`](../../docs/investigations/wtp_backlog.md), **прогона не
+видели.**
 
 **Раздача, редактор, доливка, ряды, сводка** —
 [`archive/wtp_brief_plan_rules.md`](../../docs/archive/wtp_brief_plan_rules.md),
