@@ -986,6 +986,7 @@ bag_wtp_cm_absent = {
 # Scope: country, ждёт scope:wtp_location
 bag_wtp_b1_press_loc = {
 	scope = country
+	saved_scopes = { wtp_location }
 
 	is_shown = { always = yes }
 	is_valid = { always = yes }
@@ -996,6 +997,7 @@ bag_wtp_b1_press_loc = {
 # Scope: country, ждёт scope:wtp_location — любую локацию нужной провинции
 bag_wtp_b1_press_prov = {
 	scope = country
+	saved_scopes = { wtp_location }
 
 	is_shown = { always = yes }
 	is_valid = { always = yes }
@@ -1017,6 +1019,7 @@ bag_wtp_b1_press_all = {
 # Scope: location, ждёт scope:wtp_cost
 bag_wtp_b1_cost_add = {
 	scope = location
+	saved_scopes = { wtp_cost }
 
 	is_shown = { always = yes }
 	is_valid = { always = yes }
@@ -1037,6 +1040,7 @@ bag_wtp_b1_cost_done = {
 # Scope: location, ждёт scope:wtp_building
 bag_wtp_b1_fire_one = {
 	scope = location
+	saved_scopes = { wtp_building }
 
 	is_shown = { always = yes }
 	is_valid = { always = yes }
@@ -1057,6 +1061,7 @@ bag_wtp_b1_fire_done = {
 # Scope: country, ждёт scope:wtp_location
 bag_wtp_ax_press_loc = {
 	scope = country
+	saved_scopes = { wtp_location }
 
 	is_shown = { always = yes }
 	is_valid = { always = yes }
@@ -1067,6 +1072,7 @@ bag_wtp_ax_press_loc = {
 # Scope: country, ждёт scope:wtp_location — любую локацию нужной провинции
 bag_wtp_ax_press_prov = {
 	scope = country
+	saved_scopes = { wtp_location }
 
 	is_shown = { always = yes }
 	is_valid = { always = yes }
@@ -1084,14 +1090,41 @@ bag_wtp_ax_press_all = {
 	effect = { bag_wtp_ax_press_all_do = yes }
 }
 
+# Первый проход: интерфейс отвечает про одно здание — горит или нет — и отдаёт
+# само здание обратно скрипту. `Building.MakeScope` и есть та дверь в обратную
+# сторону, которой в прошлой версии не было.
 # Scope: location
-bag_wtp_ax_seen = {
+bag_wtp_ax_read = {
 	scope = location
+	saved_scopes = { wtp_building wtp_on }
 
 	is_shown = { always = yes }
 	is_valid = { always = yes }
 
-	effect = { bag_wtp_ax_seen_do = yes }
+	effect = { bag_wtp_ax_read_do = yes }
+}
+
+# Между проходами: решить направление и сложить список того, что надо нажать.
+# Scope: country
+bag_wtp_ax_sort = {
+	scope = country
+
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+
+	effect = { bag_wtp_ax_sort_do = yes }
+}
+
+# Второй проход: нажатие состоялось.
+# Scope: location
+bag_wtp_ax_fire = {
+	scope = location
+	saved_scopes = { wtp_building }
+
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+
+	effect = { bag_wtp_ax_fire_do = yes }
 }
 
 # Scope: country

@@ -180,6 +180,15 @@ types BagWtpPlanTypes {
 							parentanchor = center
 							widgetanchor = center
 							texture = "gfx/interface/icons/flat_icons/mass_upgrade.dds"
+							alpha = 0.35
+							visible = "[Not(Location.MakeScope.GetVariable('bag_wtp_ax_lit_prov').IsSet)]"
+						}
+						icon = {
+							size = { 26 26 }
+							parentanchor = center
+							widgetanchor = center
+							texture = "gfx/interface/icons/flat_icons/mass_upgrade.dds"
+							visible = "[Location.MakeScope.GetVariable('bag_wtp_ax_lit_prov').IsSet]"
 						}
 						onclick = "[GetScriptedGui('bag_wtp_ax_press_prov').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('wtp_location', Location.MakeScope).End)]"
 					}
@@ -544,6 +553,15 @@ types BagWtpPlanTypes {
 					parentanchor = center
 					widgetanchor = center
 					texture = "gfx/interface/icons/flat_icons/mass_upgrade.dds"
+					alpha = 0.35
+					visible = "[Not(Location.MakeScope.GetVariable('bag_wtp_ax_lit').IsSet)]"
+				}
+				icon = {
+					size = { 26 26 }
+					parentanchor = center
+					widgetanchor = center
+					texture = "gfx/interface/icons/flat_icons/mass_upgrade.dds"
+					visible = "[Location.MakeScope.GetVariable('bag_wtp_ax_lit').IsSet]"
 				}
 				onclick = "[GetScriptedGui('bag_wtp_ax_press_loc').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('wtp_location', Location.MakeScope).End)]"
 			}
@@ -685,11 +703,21 @@ window = {
 				name = _show
 				duration = 0.2
 				on_finish = "[PdxGuiTriggerAllAnimations('bag_wtp_b1_fire')]"
+				next = bag_wtp_b1_fire_again
+			}
+			# **Второй круг, и без него «иногда надо нажать дважды».** Строки
+			# датамодели появляются не в том кадре, в котором скрипт написал
+			# список. Повтор не заказывает лишнего: заказанный тип уходит из
+			# `_b1_todo` тем же нажатием, и второй круг его уже не видит.
+			state = {
+				name = bag_wtp_b1_fire_again
+				duration = 0.5
+				on_finish = "[PdxGuiTriggerAllAnimations('bag_wtp_b1_fire')]"
 				next = bag_wtp_b1_fire_end
 			}
 			state = {
 				name = bag_wtp_b1_fire_end
-				duration = 0.3
+				duration = 0.4
 				on_finish = "[GetScriptedGui('bag_wtp_b1_fire_done').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
 			}
 		}
@@ -727,81 +755,60 @@ window = {
 			}
 		}
 
-		# Галочка: гасить тут нечего, кроме самого списка, и это делает скрипт.
+		# **Отмашка: прочитать -- решить -- нажать.** Первая версия ставила
+		# галочку строкой, которую гасит `visible`, и молчала: `_show` ловит
+		# переход в видимость, а строка рождалась уже видимой. Стройка в этом же
+		# приводе работала, потому что её строки будит `PdxGuiTriggerAllAnimations`
+		# (прогон 2026-09-14). Теперь и здесь он.
 		#
-		# **Секунда, а не десятая.** Отмашка на весь план создаёт разом столько
-		# строк, сколько в нём локаций, и каждая ставит свою галочку через свою
-		# десятую; список обязан дожить до последней.
-		#
-		# **И второго, «добивающего» шага тут нарочно нет.** `_show` срабатывает
-		# на переход в видимость, а флаг снимается в конце этого же шага — то
-		# есть каждое нажатие из погашенного состояния свой проход получает, а
-		# нажатие поверх идущего прохода в него и попадает. Добивающий шаг
-		# вместо этого стёр бы землю следующего нажатия.
+		# **Условия в `visible` больше нет вовсе.** Первый проход спрашивает у
+		# игры каждое здание списка и отдаёт ответ скрипту; скрипт складывает
+		# список того, что надо нажать; второй проход жмёт его без всяких
+		# условий. Переключатель не может снять то, что должен поставить, потому
+		# что в списке второго прохода этого просто нет.
 		widget = {
 			size = { 0 0 }
 			visible = "[GetGlobalVariable('bag_wtp_ax_go').IsSet]"
 			state = {
 				name = _show
-				duration = 1.0
+				duration = 0.3
+				on_finish = "[PdxGuiTriggerAllAnimations('bag_wtp_ax_read')]"
+				next = bag_wtp_ax_read_again
+			}
+			# **Второй звонок первому проходу.** Строки датамодели появляются не
+			# в том же кадре, в котором скрипт написал список, -- из-за этого
+			# стройку иногда приходилось нажимать дважды. Повтор безопасен:
+			# ответ на тот же вопрос дважды даёт то же число, потому что счёт
+			# обнуляется армированием, а не проходом.
+			state = {
+				name = bag_wtp_ax_read_again
+				duration = 0.5
+				on_finish = "[PdxGuiTriggerAllAnimations('bag_wtp_ax_read')]"
+				next = bag_wtp_ax_sorted
+			}
+			state = {
+				name = bag_wtp_ax_sorted
+				duration = 0.3
+				on_finish = "[GetScriptedGui('bag_wtp_ax_sort').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+				next = bag_wtp_ax_pressed
+			}
+			state = {
+				name = bag_wtp_ax_pressed
+				duration = 0.4
+				on_finish = "[PdxGuiTriggerAllAnimations('bag_wtp_ax_fire')]"
+				next = bag_wtp_ax_ended
+			}
+			state = {
+				name = bag_wtp_ax_ended
+				duration = 0.5
 				on_finish = "[GetScriptedGui('bag_wtp_ax_done').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
 			}
 		}
 
-		# Пары «локация × здание» для цены. Список пишет скрипт, и пока он пуст,
-		# здесь нет ни одного виджета.
-		widget = {
-			datamodel = "[GetGlobalList('bag_wtp_b1_locs')]"
-			item = {
-				widget = {
-					datacontext = "[Scope.GetLocation]"
-					datamodel = "[Location.MakeScope.GetList('bag_wtp_b1_todo')]"
-					item = {
-						widget = {
-							size = { 0 0 }
-							datacontext = "[Scope.GetBuildingType]"
-							state = {
-								name = bag_wtp_b1_cost
-								on_finish = "[GetScriptedGui('bag_wtp_b1_cost_add').Execute(GuiScope.SetRoot(Location.MakeScope).AddScope('wtp_cost', MakeScopeValue(GetBuildOrExpandBuildingCost(BuildingType.Self, Location.Self))).End)]"
-							}
-						}
-					}
-				}
-			}
-		}
-
-		# Те же пары, но только на земле нажатия, и тут они строят.
-		widget = {
-			datamodel = "[GetGlobalList('bag_wtp_b1_fire_locs')]"
-			item = {
-				widget = {
-					datacontext = "[Scope.GetLocation]"
-					datamodel = "[Location.MakeScope.GetList('bag_wtp_b1_todo')]"
-					item = {
-						widget = {
-							size = { 0 0 }
-							datacontext = "[Scope.GetBuildingType]"
-							state = {
-								name = bag_wtp_b1_fire
-								on_finish = "[BuildOrExpandBuildingDefault(BuildingType.Self, Location.Self)]"
-								on_finish = "[GetScriptedGui('bag_wtp_b1_fire_one').Execute(GuiScope.SetRoot(Location.MakeScope).AddScope('wtp_building', BuildingType.MakeScope).End)]"
-							}
-						}
-					}
-				}
-			}
-		}
-
-		# **Галочка автостроя у стоящих зданий плана, и вот чем скрипт до них
-		# дотянулся.** `every_buildings_in_location` заводит здание в скоуп,
-		# скрипт кладёт его в список переменной локации, а `Scope.GetBuilding`
-		# отдаёт его сюда `Building`-ом — тем же движением, каким строка плана
-		# достаёт `BuildingType` из `_row_builds`. Ванильная галочка живёт на
-		# `Building`, и это единственная дверь к ней из своего окна.
-		#
-		# **Почему не «из локации напрямую»**: у `Location` нет ни одной функции,
-		# отдающей её здания, — все четыре таких списка в игре висят на её
-		# собственных панелях. Дверь не в интерфейсе, дверь в скрипте.
+		# **Стоящие здания плана: первый проход.** `Scope.GetBuilding` достаёт
+		# из списка скрипта `Building`, а `Building.MakeScope` отдаёт его
+		# обратно -- дверь работает в обе стороны, и только поэтому скрипт может
+		# решать, что нажимать, не гадая.
 		widget = {
 			datamodel = "[GetGlobalList('bag_wtp_ax_locs')]"
 			item = {
@@ -812,12 +819,9 @@ window = {
 						widget = {
 							size = { 0 0 }
 							datacontext = "[Scope.GetBuilding]"
-							visible = "[Not(IsAutoExpand(Building.Self))]"
 							state = {
-								name = _show
-								duration = 0.1
-								on_finish = "[ToggleAutoExpandBuilding(Building.Self)]"
-								on_finish = "[GetScriptedGui('bag_wtp_ax_seen').Execute(GuiScope.SetRoot(Building.GetLocation.MakeScope).End)]"
+								name = bag_wtp_ax_read
+								on_finish = "[GetScriptedGui('bag_wtp_ax_read').Execute(GuiScope.SetRoot(Building.GetLocation.MakeScope).AddScope('wtp_building', Building.MakeScope).AddScope('wtp_on', MakeScopeBool(IsAutoExpand(Building.Self))).End)]"
 							}
 						}
 					}
@@ -825,9 +829,9 @@ window = {
 			}
 		}
 
-		# Та же галочка тому, что ещё только строится: у стройки запись `Building`
-		# уже есть, а в списке выше её может не быть — `every_buildings_in_location`
-		# про здание с нулём уровней ничего не обещает.
+		# **То же для того, что ещё строится.** У стройки запись `Building` уже
+		# есть, а в списке выше её может не быть: про здание с нулём уровней
+		# `every_buildings_in_location` ничего не обещает.
 		widget = {
 			datamodel = "[GetGlobalList('bag_wtp_ax_locs')]"
 			item = {
@@ -837,12 +841,33 @@ window = {
 					item = {
 						widget = {
 							size = { 0 0 }
-							visible = "[And(Construction.IsBuilding, Not(IsAutoExpand(Construction.GetBuilding)))]"
+							visible = "[Construction.IsBuilding]"
 							state = {
-								name = _show
-								duration = 0.1
-								on_finish = "[ToggleAutoExpandBuilding(Construction.GetBuilding)]"
-								on_finish = "[GetScriptedGui('bag_wtp_ax_seen').Execute(GuiScope.SetRoot(Construction.GetLocation.MakeScope).End)]"
+								name = bag_wtp_ax_read
+								on_finish = "[GetScriptedGui('bag_wtp_ax_read').Execute(GuiScope.SetRoot(Construction.GetLocation.MakeScope).AddScope('wtp_building', Construction.GetBuilding.MakeScope).AddScope('wtp_on', MakeScopeBool(IsAutoExpand(Construction.GetBuilding))).End)]"
+							}
+						}
+					}
+				}
+			}
+		}
+
+		# **Второй проход: нажать.** В списке лежит ровно то, что надо
+		# переключить, -- условий тут нет и быть не может.
+		widget = {
+			datamodel = "[GetGlobalList('bag_wtp_ax_locs')]"
+			item = {
+				widget = {
+					datacontext = "[Scope.GetLocation]"
+					datamodel = "[Location.MakeScope.GetList('bag_wtp_ax_todo')]"
+					item = {
+						widget = {
+							size = { 0 0 }
+							datacontext = "[Scope.GetBuilding]"
+							state = {
+								name = bag_wtp_ax_fire
+								on_finish = "[ToggleAutoExpandBuilding(Building.Self)]"
+								on_finish = "[GetScriptedGui('bag_wtp_ax_fire').Execute(GuiScope.SetRoot(Building.GetLocation.MakeScope).AddScope('wtp_building', Building.MakeScope).End)]"
 							}
 						}
 					}
@@ -1271,6 +1296,15 @@ window = {
 							parentanchor = center
 							widgetanchor = center
 							texture = "gfx/interface/icons/flat_icons/mass_upgrade.dds"
+							alpha = 0.35
+							visible = "[Not(GetGlobalVariable('bag_wtp_ax_lit_all').IsSet)]"
+						}
+						icon = {
+							size = { 30 30 }
+							parentanchor = center
+							widgetanchor = center
+							texture = "gfx/interface/icons/flat_icons/mass_upgrade.dds"
+							visible = "[GetGlobalVariable('bag_wtp_ax_lit_all').IsSet]"
 						}
 						onclick = "[GetScriptedGui('bag_wtp_ax_press_all').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
 					}

@@ -31,6 +31,7 @@ bag_wtp_plan_run = {
 	# обойдётся, спрашивается заново: без CM подсказка кнопки стройки читает
 	# именно эти числа.
 	bag_wtp_b1_scan = yes
+	bag_wtp_ax_light = yes
 	cmf_log = { action = bag_wtp_log_plan }
 }
 
@@ -66725,6 +66726,10 @@ bag_wtp_b1_fire_one_do = {
 		}
 		add_to_variable_list = { name = bag_wtp_b1_fired target = scope:wtp_building }
 	}
+	# **Заказанное уходит из очереди сразу.** Привод будит строки дважды -- один
+	# раз строки могут ещё не существовать, -- и только это не даёт второму
+	# кругу заказать то же самое ещё раз.
+	remove_list_variable = { name = bag_wtp_b1_todo target = scope:wtp_building }
 	change_global_variable = { name = bag_wtp_b1_fire_n add = 1 }
 }
 
@@ -66739,20 +66744,38 @@ bag_wtp_b1_fire_done_do = {
 		add_to_global_variable_list = { name = bag_wtp_ax_locs target = this }
 	}
 	clear_global_variable_list = bag_wtp_b1_fire_locs
+	set_global_variable = { name = bag_wtp_ax_mode value = 1 }
 	bag_wtp_ax_arm = yes
 	bag_wtp_b1_scan = yes
 }
 
-# **Отмашка ванильного автостроя -- в одну сторону.** Прочитать чужую галочку
-# скрипт не может, а подсветка, которая врёт, хуже, чем её отсутствие: кнопка
-# включает, а снимается галочка там же, где ставилась руками -- в панели
-# локации. `_ax_locs` -- земля нажатия, и привод гасит её сам.
+# **Отмашка ванильного автостроя: сперва прочитать, потом нажать.**
+#
+# **Первая версия не сработала, и причина -- механизм, а не дверь** (прогон
+# 2026-09-14). Галочка ставилась строкой, которую гасит `visible`, а `_show`
+# ловит **переход** в видимость: строка, родившаяся уже видимой, молчит. Стройка
+# в том же приводе работала, потому что её строки будит
+# `PdxGuiTriggerAllAnimations`. Здесь теперь тот же, проверенный им механизм.
+#
+# **Два прохода вместо условия в `visible`.** Сначала интерфейс по каждому
+# зданию списка говорит скрипту, стоит ли на нём галочка
+# (`MakeScopeBool(IsAutoExpand(...))`), и заодно отдаёт само здание обратно
+# (`Building.MakeScope`). Скрипт складывает из ответов два списка -- «горит» и
+# «не горит», -- и во втором проходе интерфейс жмёт ровно те, которые надо.
+# Переключатель больше ничего не гадает.
+#
+# **Отсюда же и подсветка, честная.** `_ax_on`/`_ax_off` на локации -- это не
+# память мода о том, что он делал, а ответ игры про сегодня. Кнопка снова о двух
+# смыслах, как у CM: не всё горит -- зажечь всё, горит всё -- погасить.
+#
+# `_ax_mode`: 1 -- нажатие, 0 -- только прочитать для подсветки.
 # Scope: country, ждёт scope:wtp_location
 bag_wtp_ax_press_loc_do = {
 	clear_global_variable_list = bag_wtp_ax_locs
 	scope:wtp_location = {
 		add_to_global_variable_list = { name = bag_wtp_ax_locs target = this }
 	}
+	set_global_variable = { name = bag_wtp_ax_mode value = 1 }
 	bag_wtp_ax_arm = yes
 }
 
@@ -66764,6 +66787,7 @@ bag_wtp_ax_press_prov_do = {
 		limit = { province_definition = { this = scope:bag_wtp_ax_prov } }
 		add_to_global_variable_list = { name = bag_wtp_ax_locs target = this }
 	}
+	set_global_variable = { name = bag_wtp_ax_mode value = 1 }
 	bag_wtp_ax_arm = yes
 }
 
@@ -66774,14 +66798,36 @@ bag_wtp_ax_press_all_do = {
 		variable = bag_wtp_plan_touched
 		add_to_global_variable_list = { name = bag_wtp_ax_locs target = this }
 	}
+	set_global_variable = { name = bag_wtp_ax_mode value = 1 }
 	bag_wtp_ax_arm = yes
 }
 
+# **Только прочитать -- это подсветка.** Открытие окна и свежий план спрашивают
+# игру, что на её земле уже горит, и ничего не нажимают.
+# Scope: country
+bag_wtp_ax_light = {
+	if = {
+		limit = { NOT = { has_variable_list = cm_priority_features_list } }
+		clear_global_variable_list = bag_wtp_ax_locs
+		every_in_global_list = {
+			variable = bag_wtp_plan_touched
+			add_to_global_variable_list = { name = bag_wtp_ax_locs target = this }
+		}
+		set_global_variable = { name = bag_wtp_ax_mode value = 0 }
+		bag_wtp_ax_arm = yes
+	}
+}
+
 # **Стоящие здания плана этой локации -- в список, который читает интерфейс.**
-# Вопрос тот же, что у сноса, и предикат тот же: план это здание тут держит.
+# Вопрос тот же, что задаёт снос, и предикат тот же: план это здание тут держит.
 # Scope: location
 bag_wtp_ax_list_loc = {
 	clear_variable_list = bag_wtp_ax_b
+	clear_variable_list = bag_wtp_ax_todo
+	clear_variable_list = bag_wtp_ax_was_on
+	clear_variable_list = bag_wtp_ax_was_off
+	set_variable = { name = bag_wtp_ax_on value = 0 }
+	set_variable = { name = bag_wtp_ax_off value = 0 }
 	if = {
 		limit = {
 			has_building = building_type:ablaq_palace
@@ -73862,6 +73908,8 @@ bag_wtp_ax_list_loc = {
 bag_wtp_ax_arm = {
 	set_global_variable = { name = bag_wtp_ax_n value = 0 }
 	set_global_variable = { name = bag_wtp_ax_std value = 0 }
+	set_global_variable = { name = bag_wtp_ax_gon value = 0 }
+	set_global_variable = { name = bag_wtp_ax_goff value = 0 }
 	every_in_global_list = {
 		variable = bag_wtp_ax_locs
 		bag_wtp_ax_list_loc = yes
@@ -73869,21 +73917,144 @@ bag_wtp_ax_arm = {
 	set_global_variable = { name = bag_wtp_ax_go value = 1 }
 }
 
-# **Список гаснет сразу после прохода.** Оставшись висеть, он отметил бы и ту
+# Один ответ интерфейса про одно здание: горит или нет, и само здание обратно.
+# Scope: location, ждёт scope:wtp_building и scope:wtp_on
+bag_wtp_ax_read_do = {
+	# **Один ответ на здание, сколько бы раз его ни спросили.** Первый проход
+	# будится дважды -- строки датамодели появляются не в том кадре, в котором
+	# скрипт написал список, -- и два списка здесь вместо счётчика именно затем,
+	# чтобы повтор ничего не удвоил. Удвоенный `_ax_todo` нажал бы одно здание
+	# дважды, то есть поставил бы галочку и тут же снял.
+	if = {
+		limit = {
+			NOT = { is_target_in_variable_list = { name = bag_wtp_ax_was_on
+				target = scope:wtp_building } }
+			NOT = { is_target_in_variable_list = { name = bag_wtp_ax_was_off
+				target = scope:wtp_building } }
+		}
+		if = {
+			limit = { scope:wtp_on = yes }
+			change_variable = { name = bag_wtp_ax_on add = 1 }
+			change_global_variable = { name = bag_wtp_ax_gon add = 1 }
+			add_to_variable_list = { name = bag_wtp_ax_was_on target = scope:wtp_building }
+		}
+		else = {
+			change_variable = { name = bag_wtp_ax_off add = 1 }
+			change_global_variable = { name = bag_wtp_ax_goff add = 1 }
+			add_to_variable_list = { name = bag_wtp_ax_was_off target = scope:wtp_building }
+		}
+	}
+}
+
+# **Что жать, решается тут -- между двумя проходами.** Не всё горит -- жмём
+# погасшие; горит всё -- гасим. В режиме подсветки не жмём ничего: список
+# остаётся пустым, и второй проход находит ноль строк.
+# Scope: country
+bag_wtp_ax_sort_do = {
+	set_global_variable = { name = bag_wtp_ax_dir value = 0 }
+	if = {
+		limit = {
+			global_var:bag_wtp_ax_gon > 0
+			NOT = { global_var:bag_wtp_ax_goff > 0 }
+		}
+		set_global_variable = { name = bag_wtp_ax_dir value = 1 }
+	}
+	every_in_global_list = {
+		variable = bag_wtp_ax_locs
+		clear_variable_list = bag_wtp_ax_todo
+		if = {
+			limit = { global_var:bag_wtp_ax_mode = 1 }
+			if = {
+				limit = { global_var:bag_wtp_ax_dir = 1 }
+				every_in_list = {
+					variable = bag_wtp_ax_was_on
+					save_temporary_scope_as = bag_wtp_ax_one
+					prev = { add_to_variable_list = { name = bag_wtp_ax_todo
+						target = scope:bag_wtp_ax_one } }
+				}
+			}
+			else = {
+				every_in_list = {
+					variable = bag_wtp_ax_was_off
+					save_temporary_scope_as = bag_wtp_ax_one
+					prev = { add_to_variable_list = { name = bag_wtp_ax_todo
+						target = scope:bag_wtp_ax_one } }
+				}
+			}
+		}
+	}
+	bag_wtp_ax_lamp = yes
+}
+
+# Подсветка: локация горит, когда у неё есть здания плана и все они горят;
+# провинция -- когда горят все её локации плана; шапка -- когда горит весь план.
+# Читается с той же представительной локации, на которой стоит ряд провинции.
+# Scope: country
+bag_wtp_ax_lamp = {
+	every_in_global_list = {
+		variable = bag_wtp_plan_touched
+		remove_variable = bag_wtp_ax_lit
+		if = {
+			limit = {
+				has_variable = bag_wtp_ax_on
+				var:bag_wtp_ax_on > 0
+				NOT = { var:bag_wtp_ax_off > 0 }
+			}
+			set_variable = { name = bag_wtp_ax_lit value = 1 }
+		}
+	}
+	every_in_global_list = {
+		variable = bag_wtp_plan_provs
+		province_definition = { save_scope_as = bag_wtp_ax_prov }
+		remove_variable = bag_wtp_ax_lit_prov
+		if = {
+			limit = {
+				any_in_global_list = {
+					variable = bag_wtp_plan_touched
+					province_definition = { this = scope:bag_wtp_ax_prov }
+					var:bag_wtp_ax_lit = 1
+				}
+				NOT = {
+					any_in_global_list = {
+						variable = bag_wtp_plan_touched
+						province_definition = { this = scope:bag_wtp_ax_prov }
+						has_variable = bag_wtp_ax_off
+						var:bag_wtp_ax_off > 0
+					}
+				}
+			}
+			set_variable = { name = bag_wtp_ax_lit_prov value = 1 }
+		}
+	}
+	remove_global_variable = bag_wtp_ax_lit_all
+	if = {
+		limit = {
+			global_var:bag_wtp_ax_gon > 0
+			NOT = { global_var:bag_wtp_ax_goff > 0 }
+		}
+		set_global_variable = { name = bag_wtp_ax_lit_all value = 1 }
+	}
+}
+
+# Scope: location, ждёт scope:wtp_building
+bag_wtp_ax_fire_do = {
+	change_global_variable = { name = bag_wtp_ax_n add = 1 }
+	remove_list_variable = { name = bag_wtp_ax_todo target = scope:wtp_building }
+}
+
+# **Списки гаснут сразу после прохода.** Оставшись висеть, они отметили бы и ту
 # стройку, которую игрок начал руками через минуту после нажатия.
 # Scope: country
 bag_wtp_ax_done_do = {
 	every_in_global_list = {
 		variable = bag_wtp_ax_locs
 		clear_variable_list = bag_wtp_ax_b
+		clear_variable_list = bag_wtp_ax_todo
+		clear_variable_list = bag_wtp_ax_was_on
+		clear_variable_list = bag_wtp_ax_was_off
 	}
 	remove_global_variable = bag_wtp_ax_go
 	clear_global_variable_list = bag_wtp_ax_locs
-}
-
-# Scope: location
-bag_wtp_ax_seen_do = {
-	change_global_variable = { name = bag_wtp_ax_n add = 1 }
 }
 
 # The ground this run works over, and everything the last one left on the map.
@@ -140902,6 +141073,7 @@ bag_wtp_open_plan_window_effect = {
 	# хватает и во что обойдётся построить это первым ярусом. Считается здесь, на
 	# открытии, потому что подсказка обязана знать число до нажатия.
 	bag_wtp_b1_scan = yes
+	bag_wtp_ax_light = yes
 	remove_variable = bag_wtp_result_open
 	remove_variable = bag_wtp_right_open
 	bag_wtp_hide_results = yes

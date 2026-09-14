@@ -4041,6 +4041,7 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t# обойдётся, спрашивается заново: без CM подсказка кнопки стройки читает
 \t# именно эти числа.
 \t{MOD_ID}_b1_scan = yes
+	{MOD_ID}_ax_light = yes
 \tcmf_log = {{ action = {MOD_ID}_log_plan }}
 }}
 
@@ -4470,6 +4471,10 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t}}
 \t\tadd_to_variable_list = {{ name = {MOD_ID}_b1_fired target = scope:wtp_building }}
 \t}}
+\t# **Заказанное уходит из очереди сразу.** Привод будит строки дважды -- один
+\t# раз строки могут ещё не существовать, -- и только это не даёт второму
+\t# кругу заказать то же самое ещё раз.
+\tremove_list_variable = {{ name = {MOD_ID}_b1_todo target = scope:wtp_building }}
 \tchange_global_variable = {{ name = {MOD_ID}_b1_fire_n add = 1 }}
 }}
 
@@ -4484,20 +4489,38 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_ax_locs target = this }}
 \t}}
 \tclear_global_variable_list = {MOD_ID}_b1_fire_locs
+\tset_global_variable = {{ name = {MOD_ID}_ax_mode value = 1 }}
 \t{MOD_ID}_ax_arm = yes
 \t{MOD_ID}_b1_scan = yes
 }}
 
-# **Отмашка ванильного автостроя -- в одну сторону.** Прочитать чужую галочку
-# скрипт не может, а подсветка, которая врёт, хуже, чем её отсутствие: кнопка
-# включает, а снимается галочка там же, где ставилась руками -- в панели
-# локации. `_ax_locs` -- земля нажатия, и привод гасит её сам.
+# **Отмашка ванильного автостроя: сперва прочитать, потом нажать.**
+#
+# **Первая версия не сработала, и причина -- механизм, а не дверь** (прогон
+# 2026-09-14). Галочка ставилась строкой, которую гасит `visible`, а `_show`
+# ловит **переход** в видимость: строка, родившаяся уже видимой, молчит. Стройка
+# в том же приводе работала, потому что её строки будит
+# `PdxGuiTriggerAllAnimations`. Здесь теперь тот же, проверенный им механизм.
+#
+# **Два прохода вместо условия в `visible`.** Сначала интерфейс по каждому
+# зданию списка говорит скрипту, стоит ли на нём галочка
+# (`MakeScopeBool(IsAutoExpand(...))`), и заодно отдаёт само здание обратно
+# (`Building.MakeScope`). Скрипт складывает из ответов два списка -- «горит» и
+# «не горит», -- и во втором проходе интерфейс жмёт ровно те, которые надо.
+# Переключатель больше ничего не гадает.
+#
+# **Отсюда же и подсветка, честная.** `_ax_on`/`_ax_off` на локации -- это не
+# память мода о том, что он делал, а ответ игры про сегодня. Кнопка снова о двух
+# смыслах, как у CM: не всё горит -- зажечь всё, горит всё -- погасить.
+#
+# `_ax_mode`: 1 -- нажатие, 0 -- только прочитать для подсветки.
 # Scope: country, ждёт scope:wtp_location
 {MOD_ID}_ax_press_loc_do = {{
 \tclear_global_variable_list = {MOD_ID}_ax_locs
 \tscope:wtp_location = {{
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_ax_locs target = this }}
 \t}}
+\tset_global_variable = {{ name = {MOD_ID}_ax_mode value = 1 }}
 \t{MOD_ID}_ax_arm = yes
 }}
 
@@ -4510,6 +4533,7 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\tlimit = {{ province_definition = {{ this = scope:{MOD_ID}_ax_prov }} }}
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_ax_locs target = this }}
 \t}}
+\tset_global_variable = {{ name = {MOD_ID}_ax_mode value = 1 }}
 \t{MOD_ID}_ax_arm = yes
 }}
 
@@ -4520,20 +4544,44 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\tvariable = {MOD_ID}_plan_touched
 \t\tadd_to_global_variable_list = {{ name = {MOD_ID}_ax_locs target = this }}
 \t}}
+\tset_global_variable = {{ name = {MOD_ID}_ax_mode value = 1 }}
 \t{MOD_ID}_ax_arm = yes
 }}
 
+# **Только прочитать -- это подсветка.** Открытие окна и свежий план спрашивают
+# игру, что на её земле уже горит, и ничего не нажимают.
+# Scope: country
+{MOD_ID}_ax_light = {{
+\tif = {{
+\t\tlimit = {{ NOT = {{ has_variable_list = cm_priority_features_list }} }}
+\t\tclear_global_variable_list = {MOD_ID}_ax_locs
+\t\tevery_in_global_list = {{
+\t\t\tvariable = {MOD_ID}_plan_touched
+\t\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_ax_locs target = this }}
+\t\t}}
+\t\tset_global_variable = {{ name = {MOD_ID}_ax_mode value = 0 }}
+\t\t{MOD_ID}_ax_arm = yes
+\t}}
+}}
+
 # **Стоящие здания плана этой локации -- в список, который читает интерфейс.**
-# Вопрос тот же, что у сноса, и предикат тот же: план это здание тут держит.
+# Вопрос тот же, что задаёт снос, и предикат тот же: план это здание тут держит.
 # Scope: location
 {MOD_ID}_ax_list_loc = {{
 \tclear_variable_list = {MOD_ID}_ax_b
+\tclear_variable_list = {MOD_ID}_ax_todo
+\tclear_variable_list = {MOD_ID}_ax_was_on
+\tclear_variable_list = {MOD_ID}_ax_was_off
+\tset_variable = {{ name = {MOD_ID}_ax_on value = 0 }}
+\tset_variable = {{ name = {MOD_ID}_ax_off value = 0 }}
 {ax_list}}}
 
 # Scope: country
 {MOD_ID}_ax_arm = {{
 \tset_global_variable = {{ name = {MOD_ID}_ax_n value = 0 }}
 \tset_global_variable = {{ name = {MOD_ID}_ax_std value = 0 }}
+\tset_global_variable = {{ name = {MOD_ID}_ax_gon value = 0 }}
+\tset_global_variable = {{ name = {MOD_ID}_ax_goff value = 0 }}
 \tevery_in_global_list = {{
 \t\tvariable = {MOD_ID}_ax_locs
 \t\t{MOD_ID}_ax_list_loc = yes
@@ -4541,21 +4589,144 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \tset_global_variable = {{ name = {MOD_ID}_ax_go value = 1 }}
 }}
 
-# **Список гаснет сразу после прохода.** Оставшись висеть, он отметил бы и ту
+# Один ответ интерфейса про одно здание: горит или нет, и само здание обратно.
+# Scope: location, ждёт scope:wtp_building и scope:wtp_on
+{MOD_ID}_ax_read_do = {{
+\t# **Один ответ на здание, сколько бы раз его ни спросили.** Первый проход
+\t# будится дважды -- строки датамодели появляются не в том кадре, в котором
+\t# скрипт написал список, -- и два списка здесь вместо счётчика именно затем,
+\t# чтобы повтор ничего не удвоил. Удвоенный `_ax_todo` нажал бы одно здание
+\t# дважды, то есть поставил бы галочку и тут же снял.
+\tif = {{
+\t\tlimit = {{
+\t\t\tNOT = {{ is_target_in_variable_list = {{ name = {MOD_ID}_ax_was_on
+\t\t\t\ttarget = scope:wtp_building }} }}
+\t\t\tNOT = {{ is_target_in_variable_list = {{ name = {MOD_ID}_ax_was_off
+\t\t\t\ttarget = scope:wtp_building }} }}
+\t\t}}
+\t\tif = {{
+\t\t\tlimit = {{ scope:wtp_on = yes }}
+\t\t\tchange_variable = {{ name = {MOD_ID}_ax_on add = 1 }}
+\t\t\tchange_global_variable = {{ name = {MOD_ID}_ax_gon add = 1 }}
+\t\t\tadd_to_variable_list = {{ name = {MOD_ID}_ax_was_on target = scope:wtp_building }}
+\t\t}}
+\t\telse = {{
+\t\t\tchange_variable = {{ name = {MOD_ID}_ax_off add = 1 }}
+\t\t\tchange_global_variable = {{ name = {MOD_ID}_ax_goff add = 1 }}
+\t\t\tadd_to_variable_list = {{ name = {MOD_ID}_ax_was_off target = scope:wtp_building }}
+\t\t}}
+\t}}
+}}
+
+# **Что жать, решается тут -- между двумя проходами.** Не всё горит -- жмём
+# погасшие; горит всё -- гасим. В режиме подсветки не жмём ничего: список
+# остаётся пустым, и второй проход находит ноль строк.
+# Scope: country
+{MOD_ID}_ax_sort_do = {{
+\tset_global_variable = {{ name = {MOD_ID}_ax_dir value = 0 }}
+\tif = {{
+\t\tlimit = {{
+\t\t\tglobal_var:{MOD_ID}_ax_gon > 0
+\t\t\tNOT = {{ global_var:{MOD_ID}_ax_goff > 0 }}
+\t\t}}
+\t\tset_global_variable = {{ name = {MOD_ID}_ax_dir value = 1 }}
+\t}}
+\tevery_in_global_list = {{
+\t\tvariable = {MOD_ID}_ax_locs
+\t\tclear_variable_list = {MOD_ID}_ax_todo
+\t\tif = {{
+\t\t\tlimit = {{ global_var:{MOD_ID}_ax_mode = 1 }}
+\t\t\tif = {{
+\t\t\t\tlimit = {{ global_var:{MOD_ID}_ax_dir = 1 }}
+\t\t\t\tevery_in_list = {{
+\t\t\t\t\tvariable = {MOD_ID}_ax_was_on
+\t\t\t\t\tsave_temporary_scope_as = {MOD_ID}_ax_one
+\t\t\t\t\tprev = {{ add_to_variable_list = {{ name = {MOD_ID}_ax_todo
+\t\t\t\t\t\ttarget = scope:{MOD_ID}_ax_one }} }}
+\t\t\t\t}}
+\t\t\t}}
+\t\t\telse = {{
+\t\t\t\tevery_in_list = {{
+\t\t\t\t\tvariable = {MOD_ID}_ax_was_off
+\t\t\t\t\tsave_temporary_scope_as = {MOD_ID}_ax_one
+\t\t\t\t\tprev = {{ add_to_variable_list = {{ name = {MOD_ID}_ax_todo
+\t\t\t\t\t\ttarget = scope:{MOD_ID}_ax_one }} }}
+\t\t\t\t}}
+\t\t\t}}
+\t\t}}
+\t}}
+\t{MOD_ID}_ax_lamp = yes
+}}
+
+# Подсветка: локация горит, когда у неё есть здания плана и все они горят;
+# провинция -- когда горят все её локации плана; шапка -- когда горит весь план.
+# Читается с той же представительной локации, на которой стоит ряд провинции.
+# Scope: country
+{MOD_ID}_ax_lamp = {{
+\tevery_in_global_list = {{
+\t\tvariable = {MOD_ID}_plan_touched
+\t\tremove_variable = {MOD_ID}_ax_lit
+\t\tif = {{
+\t\t\tlimit = {{
+\t\t\t\thas_variable = {MOD_ID}_ax_on
+\t\t\t\tvar:{MOD_ID}_ax_on > 0
+\t\t\t\tNOT = {{ var:{MOD_ID}_ax_off > 0 }}
+\t\t\t}}
+\t\t\tset_variable = {{ name = {MOD_ID}_ax_lit value = 1 }}
+\t\t}}
+\t}}
+\tevery_in_global_list = {{
+\t\tvariable = {MOD_ID}_plan_provs
+\t\tprovince_definition = {{ save_scope_as = {MOD_ID}_ax_prov }}
+\t\tremove_variable = {MOD_ID}_ax_lit_prov
+\t\tif = {{
+\t\t\tlimit = {{
+\t\t\t\tany_in_global_list = {{
+\t\t\t\t\tvariable = {MOD_ID}_plan_touched
+\t\t\t\t\tprovince_definition = {{ this = scope:{MOD_ID}_ax_prov }}
+\t\t\t\t\tvar:{MOD_ID}_ax_lit = 1
+\t\t\t\t}}
+\t\t\t\tNOT = {{
+\t\t\t\t\tany_in_global_list = {{
+\t\t\t\t\t\tvariable = {MOD_ID}_plan_touched
+\t\t\t\t\t\tprovince_definition = {{ this = scope:{MOD_ID}_ax_prov }}
+\t\t\t\t\t\thas_variable = {MOD_ID}_ax_off
+\t\t\t\t\t\tvar:{MOD_ID}_ax_off > 0
+\t\t\t\t\t}}
+\t\t\t\t}}
+\t\t\t}}
+\t\t\tset_variable = {{ name = {MOD_ID}_ax_lit_prov value = 1 }}
+\t\t}}
+\t}}
+\tremove_global_variable = {MOD_ID}_ax_lit_all
+\tif = {{
+\t\tlimit = {{
+\t\t\tglobal_var:{MOD_ID}_ax_gon > 0
+\t\t\tNOT = {{ global_var:{MOD_ID}_ax_goff > 0 }}
+\t\t}}
+\t\tset_global_variable = {{ name = {MOD_ID}_ax_lit_all value = 1 }}
+\t}}
+}}
+
+# Scope: location, ждёт scope:wtp_building
+{MOD_ID}_ax_fire_do = {{
+\tchange_global_variable = {{ name = {MOD_ID}_ax_n add = 1 }}
+\tremove_list_variable = {{ name = {MOD_ID}_ax_todo target = scope:wtp_building }}
+}}
+
+# **Списки гаснут сразу после прохода.** Оставшись висеть, они отметили бы и ту
 # стройку, которую игрок начал руками через минуту после нажатия.
 # Scope: country
 {MOD_ID}_ax_done_do = {{
 \tevery_in_global_list = {{
 \t\tvariable = {MOD_ID}_ax_locs
 \t\tclear_variable_list = {MOD_ID}_ax_b
+\t\tclear_variable_list = {MOD_ID}_ax_todo
+\t\tclear_variable_list = {MOD_ID}_ax_was_on
+\t\tclear_variable_list = {MOD_ID}_ax_was_off
 \t}}
 \tremove_global_variable = {MOD_ID}_ax_go
 \tclear_global_variable_list = {MOD_ID}_ax_locs
-}}
-
-# Scope: location
-{MOD_ID}_ax_seen_do = {{
-\tchange_global_variable = {{ name = {MOD_ID}_ax_n add = 1 }}
 }}
 
 # The ground this run works over, and everything the last one left on the map.
@@ -6763,6 +6934,7 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t# хватает и во что обойдётся построить это первым ярусом. Считается здесь, на
 \t# открытии, потому что подсказка обязана знать число до нажатия.
 \t{MOD_ID}_b1_scan = yes
+	{MOD_ID}_ax_light = yes
 \tremove_variable = {MOD_ID}_result_open
 \tremove_variable = {MOD_ID}_right_open
 \t{MOD_ID}_hide_results = yes
@@ -13713,18 +13885,25 @@ def diag_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     # как «цена занижена». `built` и `flagged` -- что сделало последнее нажатие.
     for slot, source in enumerate((f"{MOD_ID}_b1_pairs", f"{MOD_ID}_b1_cadd",
                                    f"{MOD_ID}_b1_cost_all", f"{MOD_ID}_b1_fire_n",
-                                   f"{MOD_ID}_ax_n", f"{MOD_ID}_ax_std"), start=1):
+                                   f"{MOD_ID}_ax_n", f"{MOD_ID}_ax_std",
+                                   f"{MOD_ID}_ax_gon", f"{MOD_ID}_ax_goff"), start=1):
         out.append(park(slot, source))
-    out.append(say("VANILLA pairs=%s costed=%s gold=%s | tried=%s standing=%s "
-                   "flagged=%s -- costed обязан равняться pairs, иначе привод "
-                   "окна не дошёл до конца и цена занижена; tried -- сколько "
-                   "строек движку предложено, а не сколько он принял (отказ он не "
-                   "возвращает); standing -- сколько стоящих зданий плана скрипт "
-                   "нашёл и отдал интерфейсу, flagged -- скольким тот правда "
-                   "поставил галочку. standing>0 при flagged=0 значит, что "
-                   "интерфейс до здания не дотянулся, и это единственное число, "
-                   "которое отличает это от «галочки уже стояли»"
-                   % (read(1), read(2), read(3), read(4), read(6), read(5))))
+    out.append(say("VANILLA pairs=%s costed=%s gold=%s | tried=%s -- costed "
+                   "обязан равняться pairs, иначе привод окна не дошёл до конца "
+                   "и цена занижена; tried -- сколько строек движку предложено, "
+                   "а не сколько он принял: отказ он не возвращает"
+                   % (read(1), read(2), read(3), read(4))))
+    # **Четыре числа отмашки, и каждое отрезает свою поломку.** `standing` --
+    # сколько зданий скрипт нашёл и положил в список; ноль значит, что виноват
+    # скрипт, а не интерфейс. `on`+`off` -- сколько из них интерфейс сумел
+    # прочитать: меньше, чем `standing`, значит `Scope.GetBuilding` не дотянулся.
+    # `pressed` -- сколько нажато; ноль при `off > 0` значит, что до второго
+    # прохода дело не дошло.
+    out.append(say("VANILLA-AX standing=%s | on=%s off=%s | pressed=%s -- "
+                   "on+off должно равняться standing (интерфейс прочитал всё, "
+                   "что дал скрипт), а pressed -- тому, что решил второй проход: "
+                   "off при зажигании, on при гашении"
+                   % (read(6), read(7), read(8), read(5))))
 
     out.append(flag(1, f"has_global_variable = bag_view_location"))
     out.append(say("FILTER view_location=%s -- 1 значит, что панель "
