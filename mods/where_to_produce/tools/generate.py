@@ -222,6 +222,12 @@ RIGHT_LEVELS = 12
 # сравнимо, -- а не «дать оружейные там, где они не стоят ничего».
 RIGHT_LAG_BONUS = RANK_SCALE * 100
 
+# **Шаг уклона: сколько стоит один город отставания.** Больше любой выгоды
+# (`RANK_SCALE`) на порядок, так что отставшая на один город обгоняет любую
+# неотставшую, а отставшая на два -- отставшую на один. Между равными по
+# отставанию по-прежнему решает земля.
+RIGHT_LAG_STEP = RANK_SCALE * 10
+
 # **The rungs inside one lap of the draft, and the whole of the ordering.**
 #
 # **A lap is a level**: `_plan_lvl` rises by one and every good may add at most
@@ -4492,7 +4498,8 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     for k in range(1, len(rights) + 1):
         out.append(f"\tset_global_variable = {{ name = {MOD_ID}_rgiven{k} value = 0 }}\n"
                    f"\tset_global_variable = {{ name = {MOD_ID}_rn{k} value = 0 }}\n"
-                   f"\tset_global_variable = {{ name = {MOD_ID}_rlag{k} value = 0 }}\n")
+                   f"\tset_global_variable = {{ name = {MOD_ID}_rlag{k} value = 0 }}\n"
+                   f"\tset_global_variable = {{ name = {MOD_ID}_rlagw{k} value = 0 }}\n")
     out.append(f"\tset_global_variable = {{ name = {MOD_ID}_rmax value = 0 }}\n"
                f"\tset_global_variable = {{ name = {MOD_ID}_rlagv value = 0 }}\n"
                f"\tset_global_variable = {{ name = {MOD_ID}_sprkey value = 0 }}\n")
@@ -5205,6 +5212,14 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     # **`multiply = 2` у выданного, а не деление максимума пополам.** Счёт целый,
     # деление целого молча округляет, и грамота с ровно половиной оказывалась то
     # отставшей, то нет -- в зависимости от чётности максимума.
+    # **И насколько отстала, а не только «отстала ли».** Порог «меньше половины»
+    # -- обрыв, а не уклон: когда позади оказываются сразу шесть грамот, все шесть
+    # получают одну и ту же добавку, и между ними снова решает выгода -- то есть
+    # оружейные, которым платят 62, проигрывают книгопечатным с их 715 столько же
+    # раз, сколько проигрывали без добавки. Его прогон 2026-09-14 это и показал.
+    # `_rlagw<k>` -- расстояние до самой раздатой, в шагах: чем дальше, тем
+    # сильнее заявка, и шесть отставших выстраиваются в очередь по отставанию,
+    # а не сваливаются в одну кучу.
     rlag = "".join(
         f"\tset_global_variable = {{ name = {MOD_ID}_rlagv value = global_var:{MOD_ID}_rgiven{k} }}\n"
         f"\tchange_global_variable = {{ name = {MOD_ID}_rlagv multiply = 2 }}\n"
@@ -5213,6 +5228,11 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
         f"\t\tlimit = {{ global_var:{MOD_ID}_rlagv < global_var:{MOD_ID}_rmax }}\n"
         f"\t\tset_global_variable = {{ name = {MOD_ID}_rlag{k} value = 1 }}\n"
         f"\t}}\n"
+        f"\tset_global_variable = {{ name = {MOD_ID}_rlagw{k} value = global_var:{MOD_ID}_rmax }}\n"
+        f"\tchange_global_variable = {{ name = {MOD_ID}_rlagw{k} "
+        f"subtract = global_var:{MOD_ID}_rgiven{k} }}\n"
+        f"\tchange_global_variable = {{ name = {MOD_ID}_rlagw{k} "
+        f"multiply = {RIGHT_LAG_STEP} }}\n"
         for k in range(1, len(rights) + 1))
     out.append(f"""
 # Какие грамоты отстали: выдано меньше половины от самой раздатой.
@@ -5314,15 +5334,18 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t# спрашивает саму выгоду, поэтому это две разные переменные: добавка
 \t\t# решает, кому достанется город, и не делает вид, что земля платит больше.
 \t\tset_variable = {{ name = {MOD_ID}_rkey value = var:{MOD_ID}_rtry }}
-\t\t# Добавка только там, где земля ей хоть что-то платит: иначе открывающий
-\t\t# проход (полоса 0, потолка уровня нет) отдал бы отставшей все остатки
-\t\t# подряд, включая города, где она не зарабатывает ничего.
+\t\t# Добавка -- по расстоянию до самой раздатой (`_rlagw<k>`), а не «есть/нет»:
+\t\t# одинаковая добавка шести отставшим ничего между ними не решает. Пол
+\t\t# («только где платят») снимает галочка «Грамоты — поровну».
 \t\tif = {{
 \t\t\tlimit = {{
 \t\t\t\tglobal_var:{MOD_ID}_rlag{k} = 1
-\t\t\t\tvar:{MOD_ID}_rtry > 0
+\t\t\t\tOR = {{
+\t\t\t\t\thas_global_variable = {MOD_ID}_plan_rfair
+\t\t\t\t\tvar:{MOD_ID}_rtry > 0
+\t\t\t\t}}
 \t\t\t}}
-\t\t\tchange_variable = {{ name = {MOD_ID}_rkey add = {RIGHT_LAG_BONUS} }}
+\t\t\tchange_variable = {{ name = {MOD_ID}_rkey add = global_var:{MOD_ID}_rlagw{k} }}
 \t\t}}
 \t\tif = {{
 \t\t\tlimit = {{
@@ -5346,7 +5369,10 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t\t\t\tAND = {{
 \t\t\t\t\t\tglobal_var:{MOD_ID}_rlag{k} = 1
 \t\t\t\t\t\tglobal_var:{MOD_ID}_rn{k} > 0
-\t\t\t\t\t\tvar:{MOD_ID}_rtry > 0
+\t\t\t\t\t\tOR = {{
+\t\t\t\t\t\t\thas_global_variable = {MOD_ID}_plan_rfair
+\t\t\t\t\t\t\tvar:{MOD_ID}_rtry > 0
+\t\t\t\t\t\t}}
 \t\t\t\t\t}}
 \t\t\t\t}}
 \t\t\t\t# The level: how many towns any one charter may hold so far. It
@@ -5416,16 +5442,27 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t\t# Ключ сравнения -- средняя выгода плюс добавка отставшей грамоте.
 \t\t\t# Полоса ниже спрашивает саму выгоду, и это две разные глобалки.
 \t\t\tset_global_variable = {{ name = {MOD_ID}_sprkey value = global_var:{MOD_ID}_sprt }}
-\t\t\t# **Добавка только там, где земля ей хоть что-то платит.** Открывающий
-\t\t\t# проход идёт с полосой 0 и без потолка уровня: без этого условия
-\t\t\t# отставшая забрала бы там все остатки подряд, включая землю, которая
-\t\t\t# не платит ей ничего, -- и отняла бы её у того, кто там зарабатывал.
+\t\t\t# **Добавка -- по расстоянию до самой раздатой, а не «есть/нет».**
+\t\t\t# Шести отставшим одинаковая добавка ничего не решает: между ними снова
+\t\t\t# выигрывает выгода, и грамота с 62 проигрывает грамоте с 715 столько же
+\t\t\t# раз, сколько проигрывала без добавки.
+\t\t\t#
+\t\t\t# **Полом управляет галочка «Грамоты — поровну».** Снятая оставляет
+\t\t\t# добавку только там, где земля грамоте хоть что-то платит: провинция,
+\t\t\t# которая не платит ей ничего, ничего ей и не даст, а у того, кто там
+\t\t\t# зарабатывал, отнимет. Стоящая -- ровняет счёт любой ценой, и это его
+\t\t\t# трижды повторенная просьба: «относительно одинаковое количество
+\t\t\t# каждого городского права». На его земле это разница между разбросом
+\t\t\t# 8 и разбросом 3 (посчитано по дампу 2026-09-14).
 \t\t\tif = {{
 \t\t\t\tlimit = {{
 \t\t\t\t\tglobal_var:{MOD_ID}_rlag{k} = 1
-\t\t\t\t\tglobal_var:{MOD_ID}_sprt > 0
+\t\t\t\t\tOR = {{
+\t\t\t\t\t\thas_global_variable = {MOD_ID}_plan_rfair
+\t\t\t\t\t\tglobal_var:{MOD_ID}_sprt > 0
+\t\t\t\t\t}}
 \t\t\t\t}}
-\t\t\t\tchange_global_variable = {{ name = {MOD_ID}_sprkey add = {RIGHT_LAG_BONUS} }}
+\t\t\t\tchange_global_variable = {{ name = {MOD_ID}_sprkey add = global_var:{MOD_ID}_rlagw{k} }}
 \t\t\t}}
 \t\t\tif = {{
 \t\t\t\tlimit = {{
@@ -5458,7 +5495,10 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t\t\t\t\tAND = {{
 \t\t\t\t\t\t\tglobal_var:{MOD_ID}_rlag{k} = 1
 \t\t\t\t\t\t\tglobal_var:{MOD_ID}_rn{k} > 0
-\t\t\t\t\t\t\tglobal_var:{MOD_ID}_sprt > 0
+\t\t\t\t\t\t\tOR = {{
+\t\t\t\t\t\t\t\thas_global_variable = {MOD_ID}_plan_rfair
+\t\t\t\t\t\t\t\tglobal_var:{MOD_ID}_sprt > 0
+\t\t\t\t\t\t\t}}
 \t\t\t\t\t\t}}
 \t\t\t\t\t}}
 \t\t\t\t\tOR = {{
@@ -15463,23 +15503,23 @@ def spec_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\tprovince_definition = {{
 \t\t\tevery_location_in_province_definition = {{ {MOD_ID}_rq_rank = yes }}
 \t\t}}
-\t\t# И раздать выбранную всем городам провинции разом.
-\t\tif = {{
-\t\t\tlimit = {{ global_var:{MOD_ID}_sprk > 0 }}
-\t\t\tprovince_definition = {{
-\t\t\t\tevery_location_in_province_definition = {{
-\t\t\t\t\tlimit = {{
-\t\t\t\t\t\tis_target_in_global_variable_list = {{ name = {MOD_ID}_candidates target = this }}
-\t\t\t\t\t\t{MOD_ID}_plan_is_town = yes
-\t\t\t\t\t\tvar:{MOD_ID}_load = 0
-\t\t\t\t\t}}
-\t\t\t\t\t# Тот же ключ, что читает выкладка связки, -- и та же выкладка.
-\t\t\t\t\tset_variable = {{ name = {MOD_ID}_rbest_k value = global_var:{MOD_ID}_sprk }}
-{grant_bundle_blocks(rights, order, groups, substitute, chr(9) * 5)}\t\t\t\t\tremove_variable = {MOD_ID}_rbest_k
-\t\t\t\t}}
-\t\t\t}}
-\t\t}}
 \t}}
+\t# **А раздаёт грамоты общая раздача, и это правка 2026-09-14.**
+\t#
+\t# Здесь стоял свой проход: каждая провинция брала свою лучшую грамоту и всё.
+\t# Ни лестницы уровней, ни полос, ни квоты -- и его прогон показал, чего это
+\t# стоит: на двенадцати провинциях винокуренные взяли 15 городов, а каменные,
+\t# корабельные, инструментальные и оружейные -- **ни одного**. Разброс 0..15
+\t# при девяти доступных грамотах.
+\t#
+\t# Считано по его дампу и проверено на его же числах: та же земля под общей
+\t# раздачей даёт 5/1/8/4/4/3/9/3/1 -- ни одного нуля. **Специализация -- это
+\t# про товары, а не про грамоты**: грамота в провинции всё равно одна, и лишать
+\t# её лестницы было нечем оправдать.
+\t#
+\t# **Один расчёт, а не два.** Две копии одной раздачи -- ровно то, из-за чего
+\t# подсказка и столбец уже расходились однажды.
+\t{MOD_ID}_plan_place_rights = yes
 }}
 """)
 
