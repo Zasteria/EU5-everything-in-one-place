@@ -10,33 +10,35 @@ fourteen more** and gates them by whether the country can actually take them.
 
 ## State
 
-**Glorp UI took the translation half upstream.** Their 2026-08-28 build ships
-the hints in all eleven languages, with this mod's verb-after-object
-opener. Settled 2026-08-30: **Russian stays here, the other ten go back to
-them** — `SHIP_GLORP_HINTS` in `tools/generate.py` is `["russian"]`; he prefers
-this mod's Russian and does not mind about the rest.
+**Glorp UI took the translation half upstream** (their 2026-08-28 build, all
+eleven languages). Settled 08-30: **Russian stays here, the other ten go back to
+them** — `SHIP_GLORP_HINTS` in `tools/generate.py`.
 
-**The splice is confirmed in game, 2026-08-30.** With Glorp UI's «показать
-недоступные» on, vanilla's blob and this mod's lists both appear and Glorp UI's
-per-axis lists are hidden, which is their design. A few rows show in both blocks
-and that is left alone on purpose: de-duplicating would mean parsing their blob,
-which is what broke this the first time.
+**The splice is confirmed in game, 2026-08-30**, with Glorp UI's «показать
+недоступные» on. Rows showing in both blocks are left alone on purpose:
+de-duplicating would mean parsing their blob, which is what broke this first.
 
-**Read a logs drop with `python3 tools/which_build.py <logs folder>` first.**
-The run before this one loaded a five-day-old build and looked like a mod fault.
-`mods.bat` did not install this build either — the owner copied it by hand.
+**Read a logs drop with `python3 tools/which_build.py <logs folder>` first** —
+a run once loaded a five-day-old build and looked like a mod fault.
 
-**What is only here, and stays here:** the 264 extra lines; the availability
-gates (252 lines gated by a country trigger, 175 gated objects); `SVX_REACHABLE`;
-holding back the five advance-locked privileges; four repaired Russian keys of
-Glorp UI's own interface.
+**What is only here:** the 264 extra lines; the availability gates (252 lines,
+175 objects); `SVX_REACHABLE`; the five advance-locked privileges held back;
+four repaired Russian keys of Glorp UI's interface.
 
 **One gate cannot be seen by this owner.** The religious aspect gate — he plays
 Catholic, where the Papacy sets aspects, so there is nothing for it to show
 either way. It needs a run as a religion that picks its own.
 
-**Known gap:** the added lines are Russian only. An English game
-renders the two new blocks as raw keys.
+**Known gap:** the added lines are Russian only; elsewhere they show as raw keys.
+
+## Окно ценностей и автономность
+
+**09-14, в игре не видено:** `in_game/gui/svx_societal_values_window.gui` —
+ванильный `template societal_values` с четырьмя кусками, вторая полоска под
+`GetDirection`. Чужого в нём нет; это шаблон, не окно.
+`tools/generate_values_window.py`, в `refresh.py`. **Подсказки без Glorp UI не
+живут** — вклеенный блок зовёт их файлы; три пути и цена:
+[`README.md`](README.md#автономность-чего-не-хватает).
 
 ## The open piece of work
 
@@ -72,8 +74,7 @@ far less often than Glorp UI does.
   only symptom there will ever be.
 - **A gate on a trigger that does not exist never fires and never logs.** 492
   religious aspect lines were gated on `country_religion`, which is nothing
-  anywhere; they simply never appeared. `generate.py` now checks every trigger
-  name in the gates against the engine dump and the game's scripted triggers.
+  anywhere. `generate.py` now checks every trigger name against the dumps.
 
 Depth: [`README.md`](README.md). The other addon that looks like this one, and
 why it is not: [`../../docs/archive/glorpui_small_fix.md`](../../docs/archive/glorpui_small_fix.md).

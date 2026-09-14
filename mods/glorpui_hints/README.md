@@ -555,6 +555,56 @@ one search by name across the whole install before calling it missing; and both
 sweep every `.txt` in the install for `monthly_towards_`, so a directory Paradox
 renames comes along regardless.
 
+## Автономность: чего не хватает
+
+Владелец снимает Glorp UI с плейсета (2026-09-14). По числам мод дорогим не был
+— [`../../docs/investigations/glorp_ui_cost.md`](../../docs/investigations/glorp_ui_cost.md)
+— но нужны от него только подсказки и полоски в окне ценностей.
+
+**Полоски сделаны и ничего чужого не требуют.** `tools/generate_values_window.py`
+читает `reference/game/in_game/gui/societal_values_lateralview.gui`, вынимает
+`template societal_values` и применяет четыре точных куска. Всё, что он зовёт —
+`progressbar_bar_small`, `progress_bar_goldish`, `progress_bar_blue_alt`,
+`SocietalValueItem.GetDirection` — игровое; `progress_bar_goldish` игра зовёт
+сама в `map_markers.gui` и `production_lateralview.gui`. `lateralview`,
+`select_menu_left` и `types Values` остаются игре: файл кладётся под своим
+именем и переопределяет только шаблон, по порядку загрузки — ровно так же это
+делал Glorp UI, и в игре это работало.
+
+**Подсказки без Glorp UI теряют 827 строк.** Вклеенный дословно блок ссылается
+на их `ScriptValue('glorpui_svh_visible_<ось>')` и на
+`Player.Custom('glorpui_svh_*')`; и то и другое — их генерируемые файлы
+(`common/script_values`, `common/customizable_localization`). Наш русский `.yml`
+с их текстом у нас есть, но текст этот состоит из вызовов их `Custom()`.
+Пропадает и ванильный блоб: он у них за переменной
+`showUnavailableSocietalValueSuggestions`, которую без мода некому поставить.
+
+Три пути, по возрастанию цены:
+
+1. **Ванильный блок вместо вклейки.** `SocietalValueCountryLeft_tooltip`,
+   `SocietalValueCountryRight_tooltip` и блоки
+   `societal_value_left/right_tooltip_extra` — **ванильные**, из
+   `in_game/gui/shared/government_tooltips.gui`; Glorp UI для вклейки не нужен
+   вовсе. `generate_extra.blockoverride_body` читает игровой файл тем же
+   вызовом. Результат: игровой блоб плюс наши 264 строки. Полчаса работы, и
+   владелец уже говорил про голый блоб «совсем плохо» (08-30).
+2. **827 строк генерировать самим.** Всё, что для этого нужно, уже лежит:
+   `scan_sources.py` находит все 1 426 толчков (`laws` 442, `government_reforms`
+   235, `estate_privileges` 150); зачины `ESTATE_PRIVILEGE`,
+   `GOVERNMENT_REFORM`, `POLICY` есть в `languages.py` на всех одиннадцати
+   языках; у игры есть реестры `LAW`, `GOVERNMENT_REFORM`, `ESTATE_PRIVILEGE` и
+   функции `ShowLawName`, `ShowGovernmentReformName`, `ShowPolicyName`,
+   `ShowEstatePrivilegeName`. Закон в находке лежит объектом, политика — вторым
+   элементом `path`. Заодно закрываются 89 пар из 429, которых не показывает
+   никто. Сессия работы, и чужих файлов мод не везёт.
+3. **Перенести их генерируемые файлы под наши имена.** Дёшево и механически, но
+   это публикация чужого генерированного дерева и вечная сверка с их обновлением
+   — та самая устаревающая копия, которая здесь уже стоила прогона.
+
+И отдельно от кода: в `.metadata/metadata.json` стоит жёсткая зависимость
+`glorp.ui`, а в имени мода — чужое название. Автономный мод обязан снять и то и
+другое, а вещь опубликована, поэтому переименование — решение владельца.
+
 ## What is untested
 
 Everything the 2026-08-27 rewrite touched is unrun. In the order a single
