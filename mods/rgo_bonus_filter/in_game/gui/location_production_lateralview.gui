@@ -3,43 +3,6 @@
 	widgetid = "location_production_lateralview"
 
 	blockoverride "panel_header" {
-		# SHARED PROBE -- this file is shipped byte-identical by rgo_bonus_filter
-		# and where_to_produce. Both need the same fact, both would otherwise
-		# override this same panel, and whichever loaded last would silently take
-		# the other's probe away. One probe, one global (`bag_view_location`), one
-		# pair of scripted GUIs under names belonging to neither mod: then either
-		# mod alone works and both together work in any load order.
-		#
-		# **Edit it in both copies or not at all** -- `tools/check_script.py` fails
-		# the build when they drift.
-		#
-		# It records which location this panel is showing, so a building-list
-		# filter can reach it. A building_type filter is handed the building type
-		# and nothing else, and LocationProductionView only resolves inside this
-		# panel, so the probe has to live here rather than in a scripted widget.
-		# Zero sized and invisible; it only writes a variable.
-		#
-		# **Стоит в шапке, а не в содержимом, и это ответ на его прогон
-		# 2026-09-14:** с постоянно включённой галочкой «Из плана — сюда»
-		# список отставал на одну локацию — панель успевала отфильтровать
-		# список раньше, чем проба записывала новую локацию, и фильтр отвечал
-		# по прошлой. Переставлять фильтр в игре нечем (`api.py` не знает ни
-		# одной функции, которая пересобрала бы список), и хука «локация
-		# выбрана» в `on_action` тоже нет; единственное, чем тут можно
-		# распорядиться, — порядок в дереве. Шапка строится до содержимого,
-		# значит и проба срабатывает до списка.
-		widget = {
-			size = { 0 0 }
-			datacontext = "[LocationProductionView.GetSelectedLocation]"
-			visible = "[Location.IsValid]"
-
-			state = {
-				name = bag_capture_location
-				trigger_when = "[Not(GetScriptedGui('bag_view_location_is_current').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('bag_view_loc', Location.MakeScope).End))]"
-				on_start = "[GetScriptedGui('bag_store_view_location').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('bag_view_loc', Location.MakeScope).End)]"
-			}
-		}
-
 		window_header_alt = {
 			datacontext = "[LocationProductionView.GetSelectedLocation]"
 			blockoverride "header_text" {
@@ -75,6 +38,33 @@
 	blockoverride "panel_content" {
 		widget = {
 			using = layoutpolicy_expanding
+
+			# SHARED PROBE -- this file is shipped byte-identical by rgo_bonus_filter
+			# and where_to_produce. Both need the same fact, both would otherwise
+			# override this same panel, and whichever loaded last would silently take
+			# the other's probe away. One probe, one global (`bag_view_location`), one
+			# pair of scripted GUIs under names belonging to neither mod: then either
+			# mod alone works and both together work in any load order.
+			#
+			# **Edit it in both copies or not at all** -- `tools/check_script.py` fails
+			# the build when they drift.
+			#
+			# It records which location this panel is showing, so a building-list
+			# filter can reach it. A building_type filter is handed the building type
+			# and nothing else, and LocationProductionView only resolves inside this
+			# panel, so the probe has to live here rather than in a scripted widget.
+			# Zero sized and invisible; it only writes a variable.
+			widget = {
+				size = { 0 0 }
+				datacontext = "[LocationProductionView.GetSelectedLocation]"
+				visible = "[Location.IsValid]"
+
+				state = {
+					name = bag_capture_location
+					trigger_when = "[Not(GetScriptedGui('bag_view_location_is_current').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('bag_view_loc', Location.MakeScope).End))]"
+					on_start = "[GetScriptedGui('bag_store_view_location').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('bag_view_loc', Location.MakeScope).End)]"
+				}
+			}
 
 			vbox = {
 				using = bg_main_inner_alt
