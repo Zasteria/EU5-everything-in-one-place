@@ -49,6 +49,7 @@ GENERATORS = (
     ("nd_ru", "mods/nd_ru/tools/generate_ru.py"),
     ("ru_loc_fix", "mods/ru_loc_fix/tools/generate.py"),
     ("glorpui_hints", "mods/glorpui_hints/tools/generate.py"),
+    ("glorpui_hints window", "mods/glorpui_hints/tools/generate_values_window.py"),
 )
 
 

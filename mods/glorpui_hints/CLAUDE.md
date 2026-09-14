@@ -1,42 +1,43 @@
 # `glorpui_hints` — brief
 
-The societal value tooltip, with the sources Glorp UI's own generator never
-looks at. Glorp UI reads laws, government reforms and estate privileges — 827 of
-the game's 1 426 pushes across 23 source types; this mod adds **264 lines from
-fourteen more** and gates them by whether the country can actually take them.
-
-**This is the mod the current job is about.** What that job is:
-[`../../docs/NEXT_SESSION.md`](../../docs/NEXT_SESSION.md).
+The societal value tooltip, and the values window. **Autonomous since
+2026-09-14** — Glorp UI's takeable-only hint machinery was forked into this mod
+under `svx_svh_*` names, so the mod now carries both halves: their 827 lines
+(laws, reforms, privileges) and this mod's own **264 from fourteen more source
+types**, all gated by what the country can actually take.
 
 ## State
 
-**Glorp UI took the translation half upstream.** Their 2026-08-28 build ships
-the hints in all eleven languages, with this mod's verb-after-object
-opener. Settled 2026-08-30: **Russian stays here, the other ten go back to
-them** — `SHIP_GLORP_HINTS` in `tools/generate.py` is `["russian"]`; he prefers
-this mod's Russian and does not mind about the rest.
+**The fork, 2026-09-14, his decision** — «просто спизди нужные вещи из glorp…
+любые обновления уже свои сделаем». `tools/fork_hints.py` takes their four
+generated files, renames every identifier into `svx_svh_*` (so there is no
+`Duplicated key` even with Glorp UI installed) and drops their own «show
+unavailable» clause: that switching is this mod's `svx__show_all` now — off, the
+takeable-only lists; on, the game's whole blob. All eleven languages ship from
+here. Nothing of theirs is reached at runtime; the reference tree is needed only
+to rebuild.
 
-**The splice is confirmed in game, 2026-08-30.** With Glorp UI's «показать
-недоступные» on, vanilla's blob and this mod's lists both appear and Glorp UI's
-per-axis lists are hidden, which is their design. A few rows show in both blocks
-and that is left alone on purpose: de-duplicating would mean parsing their blob,
-which is what broke this the first time.
+**The tooltip itself is confirmed in game, 2026-08-30** — this mod's templates
+win over Glorp UI's, which is what the whole override rests on. **The fork has
+not been in game at all.**
 
-**Read a logs drop with `python3 tools/which_build.py <logs folder>` first.**
-The run before this one loaded a five-day-old build and looked like a mod fault.
-`mods.bat` did not install this build either — the owner copied it by hand.
+**Read a logs drop with `tools/which_build.py` first** — a run once loaded a
+five-day-old build and looked like a mod fault.
 
-**What is only here, and stays here:** the 264 extra lines; the availability
-gates (252 lines gated by a country trigger, 175 gated objects); `SVX_REACHABLE`;
-holding back the five advance-locked privileges; four repaired Russian keys of
-Glorp UI's own interface.
+**What is only here:** the 264 extra lines; the availability gates (252 lines,
+175 objects); `SVX_REACHABLE`; the five advance-locked privileges held back;
+four repaired Russian keys of Glorp UI's interface.
 
 **One gate cannot be seen by this owner.** The religious aspect gate — he plays
-Catholic, where the Papacy sets aspects, so there is nothing for it to show
-either way. It needs a run as a religion that picks its own.
+Catholic, where the Papacy sets aspects. It needs a run as a religion that picks
+its own.
 
-**Known gap:** the added lines are Russian only. An English game
-renders the two new blocks as raw keys.
+## Окно ценностей
+
+**Подтверждено в игре 09-14** — `svx_societal_values_window.gui`, ванильный
+`template societal_values` с четырьмя кусками. **Рисует ровно то же, что окно
+Glorp UI, и это сверяется каждой сборкой**: переключателя быть не может, поэтому
+режимы сделаны неотличимыми. `tools/generate_values_window.py`.
 
 ## The open piece of work
 
@@ -52,28 +53,24 @@ biggest thing neither mod shows.
     python3 mods/glorpui_hints/tools/generate.py              the mod (in tools/refresh.py)
     python3 mods/glorpui_hints/tools/generate.py --conflicts  what overlaps Glorp UI
     python3 mods/glorpui_hints/tools/generate.py --game-files reference/game
-    python3 mods/glorpui_hints/tools/scan_sources.py reference/game
 
-The last two rebuild the hint lists from the game's `common/` tree. They are
-**not** in `tools/refresh.py`: the scan takes a minute and the game files move
-far less often than Glorp UI does.
+The last one rebuilds the hint lists from the game's `common/` tree (it runs
+`scan_sources.py`). **Not** in `refresh.py`: the scan takes a minute.
 
 ## Three things that fail silently here
 
 - **A `customizable_localization` cannot be overridden** — first definition
-  wins, later ones are dropped with `gamedatabase.h: Duplicated key`. So Glorp
-  UI's own filter rule is untouchable and the way round it is to take over the
-  localization key it prints. That mechanism is the reason the advance gate
-  works at all.
-- **This mod re-emits Glorp UI's tooltip lists inside its own override.** If
-  their list moves and ours does not, the templates still parse, the mod still
-  loads, and the player silently gets a stale copy. `generate.py` compares the
-  two as an ordered sequence and fails naming the difference — that check is the
-  only symptom there will ever be.
+  wins (`gamedatabase.h: Duplicated key`). The way round it is to take over the
+  localization key it prints; that is why the advance gate works at all.
+- **A forked name that moved on one side only prints nothing.** Everything is
+  renamed in one pass in `fork_hints.rename`, applied to every file a generator
+  writes, because the `.gui` sets the scopes and the script values read them.
+  `check_references_resolve` then proves every `ScriptValue`, `Player.Custom`
+  and `localization_key` resolves inside this mod — 1 072 definitions, no
+  duplicates.
 - **A gate on a trigger that does not exist never fires and never logs.** 492
   religious aspect lines were gated on `country_religion`, which is nothing
-  anywhere; they simply never appeared. `generate.py` now checks every trigger
-  name in the gates against the engine dump and the game's scripted triggers.
+  anywhere. `generate.py` now checks every trigger name against the dumps.
 
 Depth: [`README.md`](README.md). The other addon that looks like this one, and
 why it is not: [`../../docs/archive/glorpui_small_fix.md`](../../docs/archive/glorpui_small_fix.md).
