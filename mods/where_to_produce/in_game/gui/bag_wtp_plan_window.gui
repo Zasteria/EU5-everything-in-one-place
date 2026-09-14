@@ -792,7 +792,42 @@ window = {
 			}
 		}
 
-		# Галочка автостроя у всего, что на этой земле строится.
+		# **Галочка автостроя у стоящих зданий плана, и вот чем скрипт до них
+		# дотянулся.** `every_buildings_in_location` заводит здание в скоуп,
+		# скрипт кладёт его в список переменной локации, а `Scope.GetBuilding`
+		# отдаёт его сюда `Building`-ом — тем же движением, каким строка плана
+		# достаёт `BuildingType` из `_row_builds`. Ванильная галочка живёт на
+		# `Building`, и это единственная дверь к ней из своего окна.
+		#
+		# **Почему не «из локации напрямую»**: у `Location` нет ни одной функции,
+		# отдающей её здания, — все четыре таких списка в игре висят на её
+		# собственных панелях. Дверь не в интерфейсе, дверь в скрипте.
+		widget = {
+			datamodel = "[GetGlobalList('bag_wtp_ax_locs')]"
+			item = {
+				widget = {
+					datacontext = "[Scope.GetLocation]"
+					datamodel = "[Location.MakeScope.GetList('bag_wtp_ax_b')]"
+					item = {
+						widget = {
+							size = { 0 0 }
+							datacontext = "[Scope.GetBuilding]"
+							visible = "[Not(IsAutoExpand(Building.Self))]"
+							state = {
+								name = _show
+								duration = 0.1
+								on_finish = "[ToggleAutoExpandBuilding(Building.Self)]"
+								on_finish = "[GetScriptedGui('bag_wtp_ax_seen').Execute(GuiScope.SetRoot(Building.GetLocation.MakeScope).End)]"
+							}
+						}
+					}
+				}
+			}
+		}
+
+		# Та же галочка тому, что ещё только строится: у стройки запись `Building`
+		# уже есть, а в списке выше её может не быть — `every_buildings_in_location`
+		# про здание с нулём уровней ничего не обещает.
 		widget = {
 			datamodel = "[GetGlobalList('bag_wtp_ax_locs')]"
 			item = {

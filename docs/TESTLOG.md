@@ -243,5 +243,7 @@ Kept here so it is one list rather than scattered through prose:
   2026-09-14, [`investigations/wtp_vanilla_autoexpand.md`](investigations/wtp_vanilla_autoexpand.md)).
   Nothing in it has been in the game: neither the hidden widget driver, nor
   `BuildOrExpandBuildingDefault` fired from it, nor
-  `ToggleAutoExpandBuilding`, nor the engine price in the tooltip. The row to
-  read is `VANILLA` on «Техническая», and `costed` must equal `pairs`.
+  `ToggleAutoExpandBuilding` on a standing building reached through
+  `Scope.GetBuilding`, nor the engine price in the tooltip. The row to read is
+  `VANILLA` on «Техническая»: `costed` must equal `pairs`, and `standing > 0`
+  with `flagged = 0` is the interface failing to reach the building.

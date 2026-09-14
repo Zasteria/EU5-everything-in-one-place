@@ -3927,6 +3927,33 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
             blocked.append(upper)
         return f"{tab}OR = {{\n{arms}{tab}}}\n"
 
+    # **Стоящие здания плана, сложенные в список для интерфейса.** Это тот же
+    # вопрос, что задаёт снос, и нарочно тем же предикатом `keeps`: снос убирает
+    # то, что план тут не держит, а этот проход ставит галочку ровно тому, что
+    # держит. Третьего правила про «какие здания тут наши» не заводим.
+    #
+    # **`Scope.GetBuilding` -- вот чем скрипт отдаёт здание интерфейсу.** Список
+    # переменной, в котором лежат здания, читается в `.gui` датамоделью, и её
+    # строка достаёт `Building` тем же движением, каким строка плана достаёт
+    # `BuildingType` из `_row_builds`. Ванильная галочка живёт на `Building`, и
+    # это единственный способ до неё дотянуться из своего окна.
+    ax_list = "".join(
+        f"\tif = {{\n"
+        f"\t\tlimit = {{\n"
+        f"\t\t\thas_building = building_type:{b}\n"
+        f"{keeps(b, chr(9) * 3)}"
+        f"\t\t}}\n"
+        f"\t\tevery_buildings_in_location = {{\n"
+        f"\t\t\tlimit = {{ building_type = {{ this = building_type:{b} }} }}\n"
+        f"\t\t\tsave_temporary_scope_as = {MOD_ID}_ax_bld\n"
+        f"\t\t\tprev = {{\n"
+        f"\t\t\t\tadd_to_variable_list = {{ name = {MOD_ID}_ax_b "
+        f"target = scope:{MOD_ID}_ax_bld }}\n"
+        f"\t\t\t\tchange_global_variable = {{ name = {MOD_ID}_ax_std add = 1 }}\n"
+        f"\t\t\t}}\n"
+        f"\t\t}}\n"
+        f"\t}}\n" for b in sorted({b for key in groups for b in groups[key]}))
+
     raze = "".join(
         f"\tif = {{\n"
         f"\t\tlimit = {{\n"
@@ -4496,9 +4523,21 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t{MOD_ID}_ax_arm = yes
 }}
 
+# **Стоящие здания плана этой локации -- в список, который читает интерфейс.**
+# Вопрос тот же, что у сноса, и предикат тот же: план это здание тут держит.
+# Scope: location
+{MOD_ID}_ax_list_loc = {{
+\tclear_variable_list = {MOD_ID}_ax_b
+{ax_list}}}
+
 # Scope: country
 {MOD_ID}_ax_arm = {{
 \tset_global_variable = {{ name = {MOD_ID}_ax_n value = 0 }}
+\tset_global_variable = {{ name = {MOD_ID}_ax_std value = 0 }}
+\tevery_in_global_list = {{
+\t\tvariable = {MOD_ID}_ax_locs
+\t\t{MOD_ID}_ax_list_loc = yes
+\t}}
 \tset_global_variable = {{ name = {MOD_ID}_ax_go value = 1 }}
 }}
 
@@ -4506,6 +4545,10 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 # стройку, которую игрок начал руками через минуту после нажатия.
 # Scope: country
 {MOD_ID}_ax_done_do = {{
+\tevery_in_global_list = {{
+\t\tvariable = {MOD_ID}_ax_locs
+\t\tclear_variable_list = {MOD_ID}_ax_b
+\t}}
 \tremove_global_variable = {MOD_ID}_ax_go
 \tclear_global_variable_list = {MOD_ID}_ax_locs
 }}
@@ -13670,15 +13713,18 @@ def diag_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     # как «цена занижена». `built` и `flagged` -- что сделало последнее нажатие.
     for slot, source in enumerate((f"{MOD_ID}_b1_pairs", f"{MOD_ID}_b1_cadd",
                                    f"{MOD_ID}_b1_cost_all", f"{MOD_ID}_b1_fire_n",
-                                   f"{MOD_ID}_ax_n"), start=1):
+                                   f"{MOD_ID}_ax_n", f"{MOD_ID}_ax_std"), start=1):
         out.append(park(slot, source))
-    out.append(say("VANILLA pairs=%s costed=%s gold=%s | tried=%s flagged=%s -- "
-                   "costed обязан равняться pairs, иначе привод окна не дошёл до "
-                   "конца и цена занижена; tried -- сколько стройк движку "
-                   "предложено, а не сколько он принял (отказ он не возвращает), "
-                   "и flagged=0 после нажатия значит, что стройки, которой можно "
-                   "поставить галочку, не нашлось"
-                   % tuple(read(i) for i in range(1, 6))))
+    out.append(say("VANILLA pairs=%s costed=%s gold=%s | tried=%s standing=%s "
+                   "flagged=%s -- costed обязан равняться pairs, иначе привод "
+                   "окна не дошёл до конца и цена занижена; tried -- сколько "
+                   "строек движку предложено, а не сколько он принял (отказ он не "
+                   "возвращает); standing -- сколько стоящих зданий плана скрипт "
+                   "нашёл и отдал интерфейсу, flagged -- скольким тот правда "
+                   "поставил галочку. standing>0 при flagged=0 значит, что "
+                   "интерфейс до здания не дотянулся, и это единственное число, "
+                   "которое отличает это от «галочки уже стояли»"
+                   % (read(1), read(2), read(3), read(4), read(6), read(5))))
 
     out.append(flag(1, f"has_global_variable = bag_view_location"))
     out.append(say("FILTER view_location=%s -- 1 значит, что панель "

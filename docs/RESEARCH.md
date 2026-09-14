@@ -142,13 +142,30 @@ C++, и дальше зовётся та же внутренняя процед�
 `GetBuildOrExpandBuildingCost(BuildingType, Location)` -- **CFixedPoint**, а
 `...CostValue` -- строка.
 
-**Из голой локации до `Building` есть ровно один путь**, и он про стройку:
-`Location.GetCivilConstructions` -> `Construction.GetBuilding`, с воротами
-`Construction.IsBuilding` (остальные стройки -- РГО, ранг, дороги, рынок).
-`LocationView.GetLocationBuildings`, `LocationProductionView.GetBuildingItems` и
-`LocationUpkeepWrap.GetBuildings` требуют вид, который движок строит сам, и
-глобального промоута к ним в дампах нет. **Стоящее здание из чужого окна
-недостижимо.**
+**Дверь от локации к `Building` -- в скрипте, а не в интерфейсе.** Искать её
+среди функций `Location` бесполезно: их там нет, а все четыре списка зданий в
+игре (`LocationView.GetLocationBuildings`,
+`LocationProductionView`/`ProductionView.GetBuildingItems`,
+`LocationUpkeepWrap.GetBuildings`) висят на панелях, которые движок строит сам.
+**Дверь -- `Scope.GetBuilding`** (`data_types_script.txt`): здание, положенное
+скриптом в список переменной, читается датамоделью и достаётся из строки
+`Building`-ом, ровно как `Scope.GetBuildingType` достаёт тип из `_row_builds`.
+
+Скриптовая половина: `every_buildings_in_location` заводит здание в скоуп,
+`save_temporary_scope_as` его сохраняет (так делает и CM,
+`cm_misc_script_values.txt:102`), а тип здания спрашивается событийным таргетом
+`building_type` (`Input Scopes: building`) -- форма ваниллы,
+`scripted_triggers/building_triggers.txt:26`. **Так достижимо любое стоящее
+здание**, не только то, что в стройке.
+
+`Location.GetCivilConstructions` -> `Construction.GetBuilding` (с воротами
+`Construction.IsBuilding`) остаётся вторым путём и нужен для здания, которое
+ещё строится: про здание с нулём уровней `every_buildings_in_location` ничего не
+обещает.
+
+**Цена ошибки здесь уже заплачена**: 2026-09-14 сессия объявила стоящее здание
+недостижимым, обыскав список функций `Location` и ни разу не спросив, чем скрипт
+отдаёт объекты интерфейсу. Владелец не поверил -- и был прав.
 
 **Как заставить интерфейс что-то сделать по списку, не платя кадрами.** Форма
 CM, и она работает: скрипт пишет список, виджет с `datamodel` по нему рождает
