@@ -45,18 +45,21 @@ This file is the part that is live. What has already been settled is in
 [`investigations/wtp_backlog.md`](investigations/wtp_backlog.md)**, семь
 пунктов.
 
-**Почему CM ест производительность — измерено**,
-[`investigations/cm_performance.md`](investigations/cm_performance.md). **Просить
-`debug.log`, а не только `error.log`:** три ошибки из четырёх за 09-14 нашлись
-только там.
+**Просить `debug.log`, а не только `error.log`:** три ошибки из четырёх за 09-14
+нашлись только там. Почему CM ест производительность —
+[`investigations/cm_performance.md`](investigations/cm_performance.md).
 
 **Community Mod Toolkit прочитан** —
+[`investigations/community_mod_toolkit.md`](investigations/community_mod_toolkit.md);
+игрового скрипта в нём нет. Ждёт его решения про `upload.py` со SteamworksPy —
+вечер работы и его Steam.
 [`investigations/community_mod_toolkit.md`](investigations/community_mod_toolkit.md).
 Ждёт решения их `upload.py` со SteamworksPy — вечер работы и его Steam.
 
-**Автострой закрыт его решением 2026-09-14 — не предлагать.** Почему заглушку
-подсунуть нечем — [`RESEARCH.md`](RESEARCH.md). Он будет решать это отдельной
-сессией.
+**Автострой: закрыт, переоткрыт им же, построен, не заработал, снят целиком.**
+Мод откачен байт в байт, опыт записан —
+[`archive/wtp_vanilla_autoexpand_attempt.md`](archive/wtp_vanilla_autoexpand_attempt.md).
+**Не предлагать заново.**
 
 **Открыто из первых девяти:** режим ручного заполнения (9).
 

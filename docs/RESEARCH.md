@@ -135,3 +135,26 @@ C++, и дальше зовётся та же внутренняя процед�
 **Здание с потолком в один уровень галочки не получает** -- гейт по потолку,
 а не по существованию записи.
 
+**Дверь от скрипта к `Building` есть, и она в обе стороны** -- но галочку она
+поставить так и не смогла, см. ниже. `Scope.GetBuilding` (`data_types_script.txt`)
+достаёт здание в `.gui` из списка переменной, который написал скрипт;
+`Building.MakeScope` отдаёт его обратно; `MakeScopeBool(...)` передаёт ответ
+интерфейса скрипту. Скриптовая половина: `every_buildings_in_location` заводит
+здание в скоуп, `save_temporary_scope_as` его сохраняет (так делает CM,
+`cm_misc_script_values.txt:102`), а тип спрашивается событийным таргетом
+`building_type` (`Input Scopes: building`), форма ваниллы,
+`scripted_triggers/building_triggers.txt:26`. **Искать `Location.GetBuildings`
+бесполезно**: у `Location` такой функции нет, а все четыре списка зданий в игре
+висят на панелях, которые движок строит сам.
+
+**`construct_building` эффектом строит дешевле, чем кнопка**: он не берёт особые
+валюты цены (`cm_feature_effects.txt:194`), поэтому CM заказывает стройку кнопкой
+движка `BuildOrExpandBuildingDefault(BuildingType, Location)`. Цену называет
+`GetBuildOrExpandBuildingCost(...)` -- CFixedPoint; `...CostValue` вопреки имени
+возвращает строку.
+
+**И всё это вместе галочку не поставило.** Попытка 2026-09-14 -- три сборки, два
+его прогона, откачена целиком по его решению:
+[`archive/wtp_vanilla_autoexpand_attempt.md`](archive/wtp_vanilla_autoexpand_attempt.md).
+**Не начинать заново без его слова.**
+
