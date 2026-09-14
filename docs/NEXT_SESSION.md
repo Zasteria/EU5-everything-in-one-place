@@ -17,10 +17,11 @@ This file is the part that is live. What has already been settled is in
 ## Glorp UI снимается с плейсета
 
 **Дорогим он не был** — числа в
-[`investigations/glorp_ui_cost.md`](investigations/glorp_ui_cost.md); снять его
-всё равно его решение, и нужны от мода две вещи. **Полоски в окне ценностей
-сделаны 09-14** и чужого не требуют. **Подсказки — нет**, и это развилка: три
-пути с ценой в [`../mods/glorpui_hints/README.md`](../mods/glorpui_hints/README.md#автономность-чего-не-хватает),
+[`investigations/glorp_ui_cost.md`](investigations/glorp_ui_cost.md). **Окно
+ценностей своё и подтверждено 09-14.** Тем же прогоном подсказка без Glorp UI
+осталась без главного списка: ванильный возвращён своим и **ждёт прогона**. Их
+827 отфильтрованных строк так не вернутся — три пути с ценой в
+[`../mods/glorpui_hints/README.md`](../mods/glorpui_hints/README.md#автономность-чего-не-хватает),
 решает он.
 
 ## Игра вылетает, и причину назвать пока нечем

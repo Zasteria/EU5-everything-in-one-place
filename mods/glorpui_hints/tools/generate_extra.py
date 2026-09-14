@@ -446,6 +446,46 @@ def main():
             "",
         ])
 
+    def vanilla_hint(side):
+        """The game's own hint list, shown when Glorp UI is not in the playset.
+
+        Vanilla prints `SocietalValue.GetLeftHint(Player.Self)` under
+        `TO_MOVE_FURTHER_TO_LEFT` unconditionally. Glorp UI's block, which this
+        mod splices in above, replaces that with the same list behind their
+        `showUnavailableSocietalValueSuggestions` variable - and **nobody sets
+        that variable when Glorp UI is gone**, so the whole block goes dark and
+        the player is left with this mod's own two lists and no main list at
+        all. Seen in game 2026-09-14.
+
+        So the same list is emitted once more here, gated on Glorp UI *not*
+        having registered with the mod menu. The two gates cannot both be true:
+        theirs needs their window to set the variable, which needs their mod.
+        Before CMF has run its registration the answer is "not registered" and
+        this shows - which is vanilla's own behaviour, and the safe way round.
+
+        `glorpui__showUnavailableSocietalValueSuggestions` is a bool setting
+        Glorp UI registers with CMM (`glorpui_cmm_effects.txt`), and
+        `CMMSettingIsRegistered` is CMF's own generic macro over a setting key -
+        CMF asks it about `cmf_core__action_bar_position` the same way.
+        """
+        return "\n".join([
+            "\t\tTooltipScrolledStringPairList = {",
+            "\t\t\tvisible = \"[Not(CMMSettingIsRegistered("
+            "'glorpui__showUnavailableSocietalValueSuggestions'))]\"",
+            "\t\t\tblockoverride \"block_scrollarea\" {",
+            "\t\t\t\tmaximumsize = { -1 160 }",
+            "\t\t\t}",
+            "",
+            "\t\t\tblockoverride \"block_title\" {",
+            "\t\t\t\ttext = \"TO_MOVE_FURTHER_TO_%s\"" % side.upper(),
+            "\t\t\t\tdefault_format = \"#help\"",
+            "\t\t\t}",
+            "",
+            "\t\t\ttextcontext = \"[SocietalValue.Get%sHint(Player.Self)]\"" % side,
+            "\t\t}",
+            "",
+        ])
+
     glorp_gui = (refs.known("glorp_ui") / GLORP_HINTS_GUI).read_text(
         encoding="utf-8-sig")
 
@@ -475,6 +515,8 @@ def main():
         gui.append("")
         gui.append("\t\t# --- everything below is this mod's ---")
         gui.append("")
+        gui.append("\t\t# The game's own list, for a playset without Glorp UI.")
+        gui.append(vanilla_hint(side))
         for parts in pairs:
             direction = parts[index]
             gui.append(scroll_list("svx_axis_%s" % parts[2], "SVX_ALSO_PUSHES",
