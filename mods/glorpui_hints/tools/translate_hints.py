@@ -89,7 +89,9 @@ SOURCE_NAME = "glorpui_generated_societal_value_hints_l_english.yml"
 
 
 def output_name(language: str) -> str:
-    return "glorpui_generated_societal_value_hints_l_%s.yml" % language
+    # Their keys live here under `svx_svh_*` since the 2026-09-14 fork, so the
+    # file is this mod's own and named as one.
+    return "svx_svh_hints_l_%s.yml" % language
 
 
 class Unrecognised(Exception):

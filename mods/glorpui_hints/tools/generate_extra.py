@@ -41,6 +41,7 @@ sys.path.insert(0, os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(
         os.path.dirname(os.path.abspath(__file__))))), "tools"))
 
+import fork_hints  # noqa: E402  Glorp UI's hint machinery, under our names
 import gates as svx_gates
 import languages as svx_languages
 import refs  # noqa: E402  the reference tree, resolved by mod id
@@ -257,9 +258,15 @@ def collect(findings, game_files):
 
 
 def write(path, text):
+    """Write one generated file, with Glorp UI's names turned into this mod's.
+
+    The rename runs here rather than at each call site so that a name and the
+    thing that reads it cannot move apart: the `.gui` sets the scopes, the
+    script values read them, and both come through this function.
+    """
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8-sig", newline="\n") as handle:
-        handle.write(text)
+        handle.write(fork_hints.rename(text))
 
 
 def localization(language, pairs, entries, gate_keys):
@@ -446,16 +453,40 @@ def main():
             "",
         ])
 
-    glorp_gui = (refs.known("glorp_ui") / GLORP_HINTS_GUI).read_text(
-        encoding="utf-8-sig")
+    def vanilla_hint(side):
+        """The game's own hint list, printed while the mod menu switch is on.
+
+        Vanilla prints `SocietalValue.GetLeftHint(Player.Self)` under
+        `TO_MOVE_FURTHER_TO_LEFT` and never filters it. Glorp UI put that blob
+        behind their own «show unavailable» switch and drew takeable-only lists
+        otherwise; since 2026-09-14 those lists are forked into this mod
+        (`fork_hints.py`), so the same either/or is done here off `svx__show_all`
+        — off, the takeable-only lists; on, the game's whole blob.
+        """
+        return "\n".join([
+            "\t\tTooltipScrolledStringPairList = {",
+            "\t\t\tvisible = \"[%s]\"" % show_all,
+            "\t\t\tblockoverride \"block_scrollarea\" {",
+            "\t\t\t\tmaximumsize = { -1 160 }",
+            "\t\t\t}",
+            "",
+            "\t\t\tblockoverride \"block_title\" {",
+            "\t\t\t\ttext = \"TO_MOVE_FURTHER_TO_%s\"" % side.upper(),
+            "\t\t\t\tdefault_format = \"#help\"",
+            "\t\t\t}",
+            "",
+            "\t\t\ttextcontext = \"[SocietalValue.Get%sHint(Player.Self)]\"" % side,
+            "\t\t}",
+            "",
+        ])
 
     gui = [HEADER,
-           "# Overrides Glorp UI's own override, so this mod must load AFTER Glorp UI.",
-           "# Glorp UI's own block is copied in first, byte for byte, and this mod's",
-           "# lists are added after it. Verbatim rather than re-emitted: whatever",
-           "# Glorp UI puts in that block is theirs to decide, and anything a parse",
-           "# here failed to recognise would be a piece of their mod the player",
-           "# stops getting -- which is exactly what their 2026-08-28 build cost.",
+           "# Overrides the game's own SocietalValueCountryLeft/Right_tooltip.",
+           "# Nothing of Glorp UI's is spliced in any more: since 2026-09-14 their",
+           "# takeable-only lists are forked into this mod under svx_svh_* names",
+           "# (tools/fork_hints.py), so every name below is defined by this mod or",
+           "# by the game. With Glorp UI also installed this template wins and the",
+           "# player sees these lists, which are the same lists.",
            ""]
     # True while the mod menu switch is on. `CMMSettingIsRegistered` guards the
     # case CMF describes: the setting is read before registration has run, or
@@ -471,9 +502,18 @@ def main():
         gui.append("template %s {" % template)
         gui.append("\tusing = SocietalValue%s_tooltip" % side)
         gui.append("\tblockoverride \"%s\" {" % block_name)
-        gui.append(blockoverride_body(glorp_gui, template, block_name))
         gui.append("")
-        gui.append("\t\t# --- everything below is this mod's ---")
+        gui.append("\t\t# The game's whole list, while the switch is on.")
+        gui.append(vanilla_hint(side))
+        gui.append("\t\t# The takeable-only lists, forked from Glorp UI, while it is off.")
+        gui.append("")
+        for parts in pairs:
+            direction = parts[index]
+            gui.append(scroll_list("svx_svh_visible_%s" % direction,
+                                   "TO_MOVE_FURTHER_TO_%s" % side.upper(),
+                                   "SVX_SVH_BODY_%s" % direction.upper(),
+                                   switch="off"))
+        gui.append("\t\t# --- and below, the sources only this mod reads ---")
         gui.append("")
         for parts in pairs:
             direction = parts[index]
@@ -486,6 +526,20 @@ def main():
         gui += ["\t}", "}", ""]
     write(os.path.join(args.out, "in_game/gui/svx_extra_societal_value_hints.gui"),
           "\n".join(gui))
+
+    # Glorp UI's takeable-only machinery, under this mod's names. Written here
+    # rather than in generate.py because it is generated from their tree the
+    # same way everything else here is generated from the game's.
+    forked, stripped, kept = fork_hints.fork(refs.known("glorp_ui"), args.out)
+    for path, text in forked:
+        write(os.path.join(args.out, path), text)
+    if forked:
+        print("%d file(s) taken from Glorp UI under svx_svh_*, %d of their "
+              "switch clauses dropped" % (len(forked), stripped))
+    if kept:
+        print("%d forked file(s) already here and left alone — they are this "
+              "mod's now; delete one to take theirs again" % len(kept))
+
 
     total = sum(len(v) for v in entries.values())
     print("%d hint lines: %d gated as available now, %d also listed as attainable"

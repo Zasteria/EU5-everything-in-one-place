@@ -48,7 +48,8 @@ sys.path.insert(0, str(TOOLS))
 sys.path.insert(0, str(MOD.parent.parent / "tools"))
 
 import refs  # noqa: E402
-import generate_extra  # noqa: E402  for the verbatim block it splices in
+import generate_extra  # noqa: E402  the hint lists and the fork
+import fork_hints  # noqa: E402  their names to ours, in every generated file
 import languages as svx_languages  # noqa: E402
 import translate_hints  # noqa: E402
 
@@ -56,6 +57,9 @@ EXTRA_GUI = MOD / "in_game/gui/svx_extra_societal_value_hints.gui"
 UNLOCK_GATE = MOD / "in_game/common/customizable_localization/svx_unlock_gate.txt"
 EXTRA_CUSTOM = MOD / "in_game/common/customizable_localization/svx_extra_hint_loc.txt"
 EXTRA_VALUES = MOD / "in_game/common/script_values/svx_extra_hint_script_values.txt"
+# Glorp UI's, forked under this mod's names by `fork_hints.py`.
+FORKED_CUSTOM = MOD / "in_game/common/customizable_localization/svx_svh_hint_loc.txt"
+FORKED_VALUES = MOD / "in_game/common/script_values/svx_svh_hint_script_values.txt"
 
 # Which languages get Glorp UI's whole hint text from here rather than from
 # Glorp UI.
@@ -73,7 +77,12 @@ EXTRA_VALUES = MOD / "in_game/common/script_values/svx_extra_hint_script_values.
 # UI's own text is what the player gets, and this mod ships only the handful of
 # hints it actually changes — the ones an advance has to unlock first, which
 # Glorp UI still recommends to a country that cannot take them.
-SHIP_GLORP_HINTS = ["russian"]
+# **All eleven since the 2026-09-14 fork.** Until then Glorp UI shipped the text
+# itself and this mod only re-emitted Russian, which the owner prefers. With
+# Glorp UI off the playset nobody else ships any of it, so every language comes
+# from here — the openers in `languages.py` are what makes that cost fifty
+# strings rather than eleven thousand.
+SHIP_GLORP_HINTS = list(svx_languages.LANGUAGES)
 
 
 def hints_path(language: str) -> Path:
@@ -370,17 +379,12 @@ def check_references_resolve(problems: list[str], glorp: Path,
     defined_values = set(SCRIPT_VALUE_RE.findall(
         EXTRA_VALUES.read_text(encoding="utf-8-sig")))
     defined_values |= set(SCRIPT_VALUE_RE.findall(
-        (glorp / GLORP_HINTS_VALUES).read_text(encoding="utf-8-sig")))
+        FORKED_VALUES.read_text(encoding="utf-8-sig")))
     loc = extra_path(language).read_text(encoding="utf-8-sig")
     defined_keys = set(LOC_KEY_RE.findall(loc))
     defined_keys |= set(LOC_KEY_RE.findall(hints))
     defined_keys |= set(LOC_KEY_RE.findall(
         menu_path(language).read_text(encoding="utf-8-sig")))
-    # And what Glorp UI defines in this language itself. Since 2026-08-28 that
-    # is its whole hint file in all eleven, which is why this mod stops
-    # re-emitting it — but the `.gui` still prints their body keys, so they have
-    # to be counted as defined or every language but Russian fails here.
-    defined_keys |= set(LOC_KEY_RE.findall(glorp_hints_text(glorp, language)))
 
     for _, value, _, body in entries(gui):
         if value not in defined_values:
@@ -398,9 +402,11 @@ def check_references_resolve(problems: list[str], glorp: Path,
     # the availability gates in one file, the advance locks in the other.
     declared = set(CUSTOM_RE.findall(EXTRA_CUSTOM.read_text(encoding="utf-8-sig")))
     declared |= set(CUSTOM_RE.findall(UNLOCK_GATE.read_text(encoding="utf-8-sig")))
+    declared |= set(CUSTOM_RE.findall(FORKED_CUSTOM.read_text(encoding="utf-8-sig")))
     used = set(PLAYER_CUSTOM_RE.findall(loc)) | set(PLAYER_CUSTOM_RE.findall(hints))
-    # Glorp UI's own body keys concatenate Glorp UI's own rules; only the names
-    # this mod puts into the game's namespace are this mod's to declare.
+    # Everything the localization prints is this mod's own now: the forked
+    # takeability rules, the availability gates and the advance locks. A name
+    # here that nothing declares is a line the player silently never sees.
     for name in sorted({n for n in used if n.startswith("svx_")} - declared):
         problems.append("%s: no customizable localization %s"
                         % (extra_path(language).name, name))
@@ -458,21 +464,11 @@ def check_languages_are_in_step(problems: list[str]) -> None:
             keys |= set(LOC_KEY_RE.findall(path.read_text(encoding="utf-8-sig")))
         per_language[language] = keys
     reference_language = "russian"
-    # Glorp UI's own hint keys are only shipped from here in `SHIP_GLORP_HINTS`;
-    # elsewhere Glorp UI defines them, so they are not what the languages are
-    # compared on. What every language must still carry is this mod's own keys
-    # and the hints it changes.
-    glorp_keys = {key for language in SHIP_GLORP_HINTS
-                  for key in LOC_KEY_RE.findall(
-                      hints_path(language).read_text(encoding="utf-8-sig"))}
-    kept = {key for language in svx_languages.LANGUAGES
-            if language not in SHIP_GLORP_HINTS
-            for key in LOC_KEY_RE.findall(
-                hints_path(language).read_text(encoding="utf-8-sig"))}
-    expected = (per_language[reference_language] - glorp_keys) | kept
+    # Since the fork every language is shipped from here, hint keys included,
+    # so they must match exactly — there is no longer another mod defining any
+    # of them in some of the folders and not others.
+    expected = per_language[reference_language]
     for language, keys in per_language.items():
-        if language in SHIP_GLORP_HINTS:
-            keys = keys - glorp_keys | kept
         missing, extra = expected - keys, keys - expected
         for key in sorted(missing)[:5]:
             problems.append("%s is missing %s, which %s defines"
@@ -859,8 +855,8 @@ def main(argv: list[str]) -> int:
     gates = unlock_gates(glorp)
     if not args.check:
         UNLOCK_GATE.parent.mkdir(parents=True, exist_ok=True)
-        UNLOCK_GATE.write_text(render_unlock_gate(gates), encoding="utf-8-sig",
-                               newline="\n")
+        UNLOCK_GATE.write_text(fork_hints.rename(render_unlock_gate(gates)),
+                               encoding="utf-8-sig", newline="\n")
 
     if not args.check:
         for language in svx_languages.GLORP_UI_FIXES:
@@ -881,21 +877,26 @@ def main(argv: list[str]) -> int:
             print("Glorp UI writes a hint this mod cannot translate. Add the "
                   "opener to languages.py:\n  %s" % exc, file=sys.stderr)
             return 1
+        text = fork_hints.rename(text)
         rendered[language] = text
         if not args.check:
             hints_path(language).parent.mkdir(parents=True, exist_ok=True)
             hints_path(language).write_text(text, encoding="utf-8-sig",
                                             newline="\n")
     if not args.check:
+        for language in svx_languages.LANGUAGES:
+            stale = (MOD / "main_menu/localization" / language
+                     / ("glorpui_generated_societal_value_hints_l_%s.yml" % language))
+            if stale.is_file():
+                stale.unlink()
+                print("removed %s — its keys are shipped as svx_svh_* now"
+                      % stale.relative_to(MOD))
         print("wrote %d localization folders under %s"
               % (len(svx_languages.LANGUAGES),
                  (MOD / "main_menu/localization").relative_to(refs.REPO)))
     for language in SHIP_GLORP_HINTS:
         print("%s: %d of Glorp UI's hints re-translated here, %d body keys copied"
               % (language, counts[language][0], counts[language][1]))
-    rest = [l for l in svx_languages.LANGUAGES if l not in SHIP_GLORP_HINTS]
-    print("the other %d languages get %d key(s) — only the hints this mod changes,"
-          " Glorp UI's own text for the rest" % (len(rest), len(gates) * 2))
     print("%d hints held back until the advance that unlocks the privilege: %s"
           % (len(gates),
              ", ".join(sorted({privilege for privilege, _ in gates.values()}))))
@@ -904,7 +905,6 @@ def main(argv: list[str]) -> int:
              ", ".join(sorted(svx_languages.GLORP_UI_FIXES))))
 
     problems: list[str] = []
-    check_glorp_list_is_current(problems, glorp)
     check_gates_found_something(problems, glorp)
     check_english_is_glorp_uis_own(problems, glorp)
     check_catalog_concepts_exist(problems)
@@ -930,11 +930,12 @@ def main(argv: list[str]) -> int:
     # anticipated is still a list on the player's screen.
     lists = "TooltipScrolledStringPairList"
     ours_gui = EXTRA_GUI.read_text(encoding="utf-8-sig")
-    theirs_gui = (glorp / GLORP_HINTS_GUI).read_text(encoding="utf-8-sig")
     gated = len(CUSTOM_RE.findall(EXTRA_CUSTOM.read_text(encoding="utf-8-sig")))
-    print("%d tooltip lists, %d of them Glorp UI's own, carried verbatim"
-          % (ours_gui.count(lists), theirs_gui.count(lists)))
-    print("%d hint lines gated by a country trigger" % gated)
+    forked = len(CUSTOM_RE.findall(FORKED_CUSTOM.read_text(encoding="utf-8-sig")))
+    print("%d tooltip lists, every name in them this mod's own or the game's"
+          % ours_gui.count(lists))
+    print("%d hint lines gated by a country trigger, %d takeability rules forked"
+          % (gated, forked))
     return 0
 
 
