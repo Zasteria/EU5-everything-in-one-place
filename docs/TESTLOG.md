@@ -239,3 +239,9 @@ Kept here so it is one list rather than scattered through prose:
   where the open pass used to place 271 buildings of 770.
 - Everything `nd_ru` has translated apart from Westphalia — 3 600 keys that have
   never been on screen.
+- **`where_to_produce`'s vanilla auto-build crutch, all of it** (built
+  2026-09-14, [`investigations/wtp_vanilla_autoexpand.md`](investigations/wtp_vanilla_autoexpand.md)).
+  Nothing in it has been in the game: neither the hidden widget driver, nor
+  `BuildOrExpandBuildingDefault` fired from it, nor
+  `ToggleAutoExpandBuilding`, nor the engine price in the tooltip. The row to
+  read is `VANILLA` on «Техническая», and `costed` must equal `pairs`.

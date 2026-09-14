@@ -3939,9 +3939,41 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
         f"\t}}\n" for b in sorted({b for key in groups for b in groups[key]}))
     food_or = "".join(f"\t\traw_material = goods:{g}\n" for g in FOOD_GOODS)
 
+    # **Ванильный костыль: что тут надо построить, чтобы было что отмечать.**
+    # Ступень берётся та же, что у галочки CM и у фишки фильтра (`cm_walk`) --
+    # иначе кнопка строила бы не тот домик, который он видит в строке. А внутри
+    # неё вопрос уже другой: здания тут нет, страна и локация его пускают, и мод
+    # его сюда ещё не заказывал.
+    def b1_mark(building: str, tab: str) -> str:
+        t = tab
+        return (
+            f"{t}if = {{\n"
+            f"{t}\tlimit = {{\n"
+            f"{t}\t\tNOT = {{ has_building = building_type:{building} }}\n"
+            f"{t}\t\tcan_build_building = building_type:{building}\n"
+            f"{t}\t\tNOT = {{ is_target_in_variable_list = {{ name = {MOD_ID}_b1_fired "
+            f"target = building_type:{building} }} }}\n"
+            f"{t}\t\tNOT = {{ is_target_in_variable_list = {{ name = {MOD_ID}_b1_todo "
+            f"target = building_type:{building} }} }}\n"
+            f"{t}\t}}\n"
+            f"{t}\tadd_to_variable_list = {{ name = {MOD_ID}_b1_todo "
+            f"target = building_type:{building} }}\n"
+            f"{t}\tchange_variable = {{ name = {MOD_ID}_b1_n add = 1 }}\n"
+            f"{t}}}\n")
+
     cm_apply = cm_walk(cm_mark)
     cm_scan = cm_walk(cm_seen)
     cm_lit = cm_walk(cm_light)
+    b1_scan = cm_walk(b1_mark)
+    # **Память о заказанном забывается, когда здание встало.** Пока стройка
+    # идёт, `has_building` может ещё отвечать «нет», и без памяти второе нажатие
+    # заказало бы второй уровень -- то самое расширение, которое он запретил.
+    b1_forget = "".join(
+        f"\tif = {{\n"
+        f"\t\tlimit = {{ has_building = building_type:{b} }}\n"
+        f"\t\tremove_list_variable = {{ name = {MOD_ID}_b1_fired "
+        f"target = building_type:{b} }}\n"
+        f"\t}}\n" for b in ladder_set(groups, game))
 
     bavail = "".join(
         f"\tset_global_variable = {{ name = {MOD_ID}_ba_{b} value = 0 }}\n"
@@ -3978,6 +4010,10 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t# empty, which is the true answer: nothing has been edited yet, and everything
 \t# after this is measured against what the formula produced.
 \t{MOD_ID}_edit_save = yes
+\t# **Свежий план -- свежий счёт костыля.** Что тут не построено и во что это
+\t# обойдётся, спрашивается заново: без CM подсказка кнопки стройки читает
+\t# именно эти числа.
+\t{MOD_ID}_b1_scan = yes
 \tcmf_log = {{ action = {MOD_ID}_log_plan }}
 }}
 
@@ -4261,6 +4297,222 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t}}
 \t\tset_global_variable = {{ name = {MOD_ID}_cm_off value = 1 }}
 \t}}
+}}
+
+# ---- ванильный костыль: первый ярус и галочка движка ----------------------
+#
+# **CM снят, и с ним ушла единственная переменная, в которую галочку автостроя
+# можно было написать скриптом.** Ванильная лежит полем на записи `Building`,
+# ставит её только интерфейс (`ToggleAutoExpandBuilding`), а у непостроенного
+# здания записи нет вовсе: «Авторасширение ванилы не может быть включено пока
+# не начата стройка хотя бы первого уровня здания» -- его слова, 2026-09-14.
+# Отсюда вторая кнопка рядом с первой, и обе -- виджеты, а не эффекты.
+#
+# **Скрипт здесь только считает, кому что положено.** Он пишет два списка:
+# глобальный `_b1_locs` -- локации, где плану чего-то не хватает, и на каждой из
+# них `_b1_todo` -- типы, которых там нет. Стройку и галочку заказывает по этим
+# спискам скрытый привод окна плана.
+#
+# **Почему стройку заказывает интерфейс, а не `construct_building`.** Эффект
+# скрипта **не берёт с игрока особые валюты цены** -- это написано у самого CM
+# (`cm_feature_effects.txt:194`), и поэтому он тоже строит кнопкой движка.
+# Строит `BuildOrExpandBuildingDefault`, ровно то же, что нажатие игрока.
+#
+# **`_b1_todo` -- это ровно «первый ярус и ничего больше».** Тип попадает в
+# список только когда `has_building` про него говорит «нет»; стоящее здание в
+# список не попадает, и кнопке движка нечего расширять.
+# Scope: location
+{MOD_ID}_b1_scan_loc = {{
+\tclear_variable_list = {MOD_ID}_b1_todo
+\tset_variable = {{ name = {MOD_ID}_b1_n value = 0 }}
+\tset_variable = {{ name = {MOD_ID}_b1_cost value = 0 }}
+{b1_forget}{b1_scan}}}
+
+# **Обход считается один раз на открытие окна и после каждой стройки**, а не на
+# кадр: это та самая цена, из-за которой CM снят.
+#
+# **При включённом CM не считается вовсе.** Ветка ванилы нужна только тогда,
+# когда CM в игре нет.
+# Scope: country
+{MOD_ID}_b1_scan = {{
+\t# **Очередь стройки не переживает ни загрузку, ни закрытие окна.** Она
+\t# заполняется нажатием и опустошается приводом; всё, что осталось от прошлого
+\t# раза, -- это стройка, за которую никто не собирался платить сейчас.
+\tremove_global_variable = {MOD_ID}_b1_fire
+\tclear_global_variable_list = {MOD_ID}_b1_fire_locs
+\tif = {{
+\t\tlimit = {{ NOT = {{ has_variable_list = cm_priority_features_list }} }}
+\t\t{MOD_ID}_set_bavail = yes
+\t\tclear_global_variable_list = {MOD_ID}_b1_locs
+\t\tset_global_variable = {{ name = {MOD_ID}_b1_pairs value = 0 }}
+\t\tset_global_variable = {{ name = {MOD_ID}_b1_cost_all value = 0 }}
+\t\tset_global_variable = {{ name = {MOD_ID}_b1_cadd value = 0 }}
+\t\tevery_in_global_list = {{
+\t\t\tvariable = {MOD_ID}_plan_touched
+\t\t\t{MOD_ID}_b1_scan_loc = yes
+\t\t\tif = {{
+\t\t\t\tlimit = {{ has_variable = {MOD_ID}_b1_n var:{MOD_ID}_b1_n > 0 }}
+\t\t\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_b1_locs target = this }}
+\t\t\t\tchange_global_variable = {{ name = {MOD_ID}_b1_pairs add = var:{MOD_ID}_b1_n }}
+\t\t\t}}
+\t\t}}
+\t\tset_global_variable = {{ name = {MOD_ID}_b1_cost_go value = 1 }}
+\t}}
+}}
+
+# **Цену называет движок, а не формула.** `GetBuildOrExpandBuildingCost` -- то
+# самое число, которое он видит в панели стройки; скрипт его только
+# складывает. Его выбор, 2026-09-14: «Точное число движка».
+# Scope: location, ждёт scope:wtp_cost
+{MOD_ID}_b1_cost_add_do = {{
+\tchange_variable = {{ name = {MOD_ID}_b1_cost add = scope:wtp_cost }}
+\tchange_global_variable = {{ name = {MOD_ID}_b1_cost_all add = scope:wtp_cost }}
+\tchange_global_variable = {{ name = {MOD_ID}_b1_cadd add = 1 }}
+}}
+
+# Сумма провинции -- сумма её локаций, и лежит она на той же представительной
+# локации, на которой стоит её ряд.
+# Scope: country
+{MOD_ID}_b1_cost_done_do = {{
+\tremove_global_variable = {MOD_ID}_b1_cost_go
+\tevery_in_global_list = {{
+\t\tvariable = {MOD_ID}_plan_provs
+\t\tprovince_definition = {{ save_scope_as = {MOD_ID}_b1_prov }}
+\t\tset_global_variable = {{ name = {MOD_ID}_b1_tmp value = 0 }}
+\t\tevery_in_global_list = {{
+\t\t\tvariable = {MOD_ID}_plan_touched
+\t\t\tlimit = {{
+\t\t\t\tprovince_definition = {{ this = scope:{MOD_ID}_b1_prov }}
+\t\t\t\thas_variable = {MOD_ID}_b1_cost
+\t\t\t}}
+\t\t\tchange_global_variable = {{ name = {MOD_ID}_b1_tmp add = var:{MOD_ID}_b1_cost }}
+\t\t}}
+\t\tset_variable = {{ name = {MOD_ID}_b1_cost_prov value = global_var:{MOD_ID}_b1_tmp }}
+\t}}
+}}
+
+# Нажатие: чем платить, решает движок, а тут только собирается земля.
+# Scope: country, ждёт scope:wtp_location
+{MOD_ID}_b1_press_loc_do = {{
+\tclear_global_variable_list = {MOD_ID}_b1_fire_locs
+\tscope:wtp_location = {{
+\t\tif = {{
+\t\t\tlimit = {{ has_variable = {MOD_ID}_b1_n var:{MOD_ID}_b1_n > 0 }}
+\t\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_b1_fire_locs target = this }}
+\t\t}}
+\t}}
+\t{MOD_ID}_b1_arm = yes
+}}
+
+# Scope: country, ждёт scope:wtp_location -- любую локацию нужной провинции
+{MOD_ID}_b1_press_prov_do = {{
+\tscope:wtp_location = {{ province_definition = {{ save_scope_as = {MOD_ID}_b1_prov }} }}
+\tclear_global_variable_list = {MOD_ID}_b1_fire_locs
+\tevery_in_global_list = {{
+\t\tvariable = {MOD_ID}_b1_locs
+\t\tlimit = {{ province_definition = {{ this = scope:{MOD_ID}_b1_prov }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_b1_fire_locs target = this }}
+\t}}
+\t{MOD_ID}_b1_arm = yes
+}}
+
+# Scope: country
+{MOD_ID}_b1_press_all_do = {{
+\tclear_global_variable_list = {MOD_ID}_b1_fire_locs
+\tevery_in_global_list = {{
+\t\tvariable = {MOD_ID}_b1_locs
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_b1_fire_locs target = this }}
+\t}}
+\t{MOD_ID}_b1_arm = yes
+}}
+
+# Scope: country
+{MOD_ID}_b1_arm = {{
+\tset_global_variable = {{ name = {MOD_ID}_b1_fire_n value = 0 }}
+\tset_global_variable = {{ name = {MOD_ID}_b1_fire value = 1 }}
+}}
+
+# Одна заказанная стройка: запомнить тип, чтобы второе нажатие не заказало
+# второй уровень.
+# Scope: location, ждёт scope:wtp_building
+{MOD_ID}_b1_fire_one_do = {{
+\tif = {{
+\t\tlimit = {{
+\t\t\tNOT = {{ is_target_in_variable_list = {{ name = {MOD_ID}_b1_fired
+\t\t\t\ttarget = scope:wtp_building }} }}
+\t\t}}
+\t\tadd_to_variable_list = {{ name = {MOD_ID}_b1_fired target = scope:wtp_building }}
+\t}}
+\tchange_global_variable = {{ name = {MOD_ID}_b1_fire_n add = 1 }}
+}}
+
+# **Стройка кончилась -- начинается галочка.** Заказанное на этой земле уже
+# имеет запись `Building`, и именно с этого мига её флаг доступен интерфейсу.
+# Scope: country
+{MOD_ID}_b1_fire_done_do = {{
+\tremove_global_variable = {MOD_ID}_b1_fire
+\tclear_global_variable_list = {MOD_ID}_ax_locs
+\tevery_in_global_list = {{
+\t\tvariable = {MOD_ID}_b1_fire_locs
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_ax_locs target = this }}
+\t}}
+\tclear_global_variable_list = {MOD_ID}_b1_fire_locs
+\t{MOD_ID}_ax_arm = yes
+\t{MOD_ID}_b1_scan = yes
+}}
+
+# **Отмашка ванильного автостроя -- в одну сторону.** Прочитать чужую галочку
+# скрипт не может, а подсветка, которая врёт, хуже, чем её отсутствие: кнопка
+# включает, а снимается галочка там же, где ставилась руками -- в панели
+# локации. `_ax_locs` -- земля нажатия, и привод гасит её сам.
+# Scope: country, ждёт scope:wtp_location
+{MOD_ID}_ax_press_loc_do = {{
+\tclear_global_variable_list = {MOD_ID}_ax_locs
+\tscope:wtp_location = {{
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_ax_locs target = this }}
+\t}}
+\t{MOD_ID}_ax_arm = yes
+}}
+
+# Scope: country, ждёт scope:wtp_location -- любую локацию нужной провинции
+{MOD_ID}_ax_press_prov_do = {{
+\tscope:wtp_location = {{ province_definition = {{ save_scope_as = {MOD_ID}_ax_prov }} }}
+\tclear_global_variable_list = {MOD_ID}_ax_locs
+\tevery_in_global_list = {{
+\t\tvariable = {MOD_ID}_plan_touched
+\t\tlimit = {{ province_definition = {{ this = scope:{MOD_ID}_ax_prov }} }}
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_ax_locs target = this }}
+\t}}
+\t{MOD_ID}_ax_arm = yes
+}}
+
+# Scope: country
+{MOD_ID}_ax_press_all_do = {{
+\tclear_global_variable_list = {MOD_ID}_ax_locs
+\tevery_in_global_list = {{
+\t\tvariable = {MOD_ID}_plan_touched
+\t\tadd_to_global_variable_list = {{ name = {MOD_ID}_ax_locs target = this }}
+\t}}
+\t{MOD_ID}_ax_arm = yes
+}}
+
+# Scope: country
+{MOD_ID}_ax_arm = {{
+\tset_global_variable = {{ name = {MOD_ID}_ax_n value = 0 }}
+\tset_global_variable = {{ name = {MOD_ID}_ax_go value = 1 }}
+}}
+
+# **Список гаснет сразу после прохода.** Оставшись висеть, он отметил бы и ту
+# стройку, которую игрок начал руками через минуту после нажатия.
+# Scope: country
+{MOD_ID}_ax_done_do = {{
+\tremove_global_variable = {MOD_ID}_ax_go
+\tclear_global_variable_list = {MOD_ID}_ax_locs
+}}
+
+# Scope: location
+{MOD_ID}_ax_seen_do = {{
+\tchange_global_variable = {{ name = {MOD_ID}_ax_n add = 1 }}
 }}
 
 # The ground this run works over, and everything the last one left on the map.
@@ -6464,6 +6716,10 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t# подсветка кнопок отмашки пересчитывается на каждом открытии окна, а не
 \t# только после своего же нажатия.
 \t{MOD_ID}_cm_light = yes
+\t# **А без CM на том же месте считается другое**: чего плану на этой земле не
+\t# хватает и во что обойдётся построить это первым ярусом. Считается здесь, на
+\t# открытии, потому что подсказка обязана знать число до нажатия.
+\t{MOD_ID}_b1_scan = yes
 \tremove_variable = {MOD_ID}_result_open
 \tremove_variable = {MOD_ID}_right_open
 \t{MOD_ID}_hide_results = yes
@@ -13404,6 +13660,24 @@ def diag_file(rows: list[eu5data.Method], split: dict[str, list[str]],
                    "present=0 значит Construction Manager не в игре и кнопок "
                    "автостроя нет; found=0 после нажатия значит в группе нет ни "
                    "одного домика плана, который тут может стоять"
+                   % tuple(read(i) for i in range(1, 6))))
+
+    # **Ванильный костыль, пять чисел, и каждое отделяет одну поломку.**
+    # `pairs` -- сколько пар «локация × здание» насчитал скрипт; ноль значит,
+    # что плану строить нечего, а не что кнопка не работает. `costed` -- сколько
+    # из них успел спросить движок: `costed < pairs` означает, что скрытый привод
+    # окна не дошёл до конца, и это единственный симптом, который иначе выглядит
+    # как «цена занижена». `built` и `flagged` -- что сделало последнее нажатие.
+    for slot, source in enumerate((f"{MOD_ID}_b1_pairs", f"{MOD_ID}_b1_cadd",
+                                   f"{MOD_ID}_b1_cost_all", f"{MOD_ID}_b1_fire_n",
+                                   f"{MOD_ID}_ax_n"), start=1):
+        out.append(park(slot, source))
+    out.append(say("VANILLA pairs=%s costed=%s gold=%s | tried=%s flagged=%s -- "
+                   "costed обязан равняться pairs, иначе привод окна не дошёл до "
+                   "конца и цена занижена; tried -- сколько стройк движку "
+                   "предложено, а не сколько он принял (отказ он не возвращает), "
+                   "и flagged=0 после нажатия значит, что стройки, которой можно "
+                   "поставить галочку, не нашлось"
                    % tuple(read(i) for i in range(1, 6))))
 
     out.append(flag(1, f"has_global_variable = bag_view_location"))

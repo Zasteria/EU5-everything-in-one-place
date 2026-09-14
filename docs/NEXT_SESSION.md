@@ -30,6 +30,12 @@ This file is the part that is live. What has already been settled is in
 играть и сворачивать как обычно. **Гадать до этого нечего**
 ([`pitfalls/diagnosis.md`](pitfalls/diagnosis.md)).
 
+**Ванильный костыль автостроя построен 09-14 по его заказу и целиком не
+прогонялся** — старое «автострой закрыт, не предлагать» отменено им же. Без CM у
+отмашки две кнопки, обе — скрытый привод окна плана:
+[`investigations/wtp_vanilla_autoexpand.md`](investigations/wtp_vanilla_autoexpand.md);
+решающее число — `costed` в строке `VANILLA` на «Технической».
+
 **Окно замены, порядок «Пригодности» и `ERROR` приняты прогонами 09-14.** **Не
 видело прогона главное:** `_cov_pass` наконец спрашивает **локацию**
 (`_stands_<здание>`) — без этого он предлагал городу сельское здание, а
@@ -39,22 +45,12 @@ This file is the part that is live. What has already been settled is in
 [`investigations/wtp_backlog.md`](investigations/wtp_backlog.md)**, семь
 пунктов.
 
-**Почему CM ест производительность — измерено**,
-[`investigations/cm_performance.md`](investigations/cm_performance.md). **Просить
-`debug.log`, а не только `error.log`:** три ошибки из четырёх за 09-14 нашлись
-только там.
+**Просить `debug.log`, а не только `error.log`:** три ошибки из четырёх за 09-14
+нашлись только там. Почему CM ест производительность — измерено,
+[`investigations/cm_performance.md`](investigations/cm_performance.md).
 
-**Community Mod Toolkit прочитан** —
-[`investigations/community_mod_toolkit.md`](investigations/community_mod_toolkit.md);
-игрового скрипта в нём нет вовсе. Взято `.editorconfig` наполовину и мысль
-`gui_update.py` как `stale_overrides`. Ждёт решения их `upload.py` со
-SteamworksPy — вечер работы и его Steam.
-
-**Автострой закрыт его решением 2026-09-14 — не предлагать.** Почему заглушку
-подсунуть нечем — [`RESEARCH.md`](RESEARCH.md). Он будет решать это отдельной
-сессией.
-
-**Открыто из первых девяти:** режим ручного заполнения (9).
+**Открыто из первых девяти:** режим ручного заполнения (9). **Community Mod
+Toolkit** — [`archive/next_toolkit_and_deferred.md`](archive/next_toolkit_and_deferred.md).
 
 ## Старое по `where_to_produce`, до его списка — в архиве
 
