@@ -1514,8 +1514,36 @@ def triggers_file(rows, split, game) -> str:
     seen: dict[str, eu5data.Method] = {}
     for method in rows:
         seen.setdefault(method.building, method)
+    # **Which side of the tick this building may stand on, and it was missing.**
+    # `can_build_building` answers the rank and the potential in one breath; the
+    # tick replaces it, and until 2026-09-14 what it put back was the potential
+    # alone. So under a tick the rank went unasked altogether, and a building
+    # that declares one side answered yes on both. `market_village` declares
+    # `rural_settlement` and nothing else and carries no `location_potential`,
+    # so on a location ticked «город» `_stands_market_village` was the bare
+    # `{MOD_ID}_rank_is_ticked = yes` -- true always. His run of 2026-09-14 is
+    # what that printed: the jewelry charter scored 100 % on a town and the
+    # breakdown under it named «Торговая деревня, Сельский ювелир 1/1», «а
+    # деревни в целом не могут вставать в города. Соответственно мод предлагает
+    # вариант, которые невозможен».
+    #
+    # **The sides are `eu5data.Method.urban` / `.rural`, the same two
+    # `plan_groups` deals by**, so the trigger and the plan cannot disagree about
+    # where a building goes. A building that declares both sides gets no test at
+    # all; one that declares neither gets `always = no`, because that is the side
+    # `plan_groups` puts it on -- neither.
+    def ticked_side(method: eu5data.Method) -> str:
+        if method.urban and method.rural:
+            return ""
+        if method.urban:
+            return f"{MOD_ID}_plan_is_town = yes"
+        if method.rural:
+            return f"{MOD_ID}_plan_is_town = no"
+        return "always = no"
+
     for building, method in sorted(seen.items()):
         potential = " ".join(method.potential.split())
+        side = ticked_side(method)
         # Two reasons to leave a building alone and ask the game as before: it
         # is gated by something besides the rank and the potential, or its
         # potential names a scope this one has not got. Twelve buildings of a
@@ -1531,13 +1559,24 @@ def triggers_file(rows, split, game) -> str:
         elif not potential:
             # The rank is the whole of what the game checks here, and the tick is
             # the answer to the rank. This is the manufacturing ladder.
-            out.append(f"{MOD_ID}_stands_{building} = {{\n"
+            ranks = " ".join(sorted(method.ranks)) or "none"
+            out.append(f"# declares {ranks}\n"
+                       f"{MOD_ID}_stands_{building} = {{\n"
                        f"\tOR = {{\n"
-                       f"\t\t{MOD_ID}_rank_is_ticked = yes\n"
-                       f"\t\tcan_build_building = building_type:{building}\n"
+                       f"\t\tAND = {{\n"
+                       f"\t\t\t{MOD_ID}_rank_is_ticked = no\n"
+                       f"\t\t\tcan_build_building = building_type:{building}\n"
+                       f"\t\t}}\n"
+                       f"\t\tAND = {{\n"
+                       f"\t\t\t{MOD_ID}_rank_is_ticked = yes\n"
+                       + (f"\t\t\t{side}\n" if side else "")
+                       + f"\t\t}}\n"
                        f"\t}}\n}}\n")
         else:
-            out.append(f"""{MOD_ID}_stands_{building} = {{
+            ranks = " ".join(sorted(method.ranks)) or "none"
+            line = f"\t\t\t{side}\n" if side else ""
+            out.append(f"""# declares {ranks}
+{MOD_ID}_stands_{building} = {{
 \tOR = {{
 \t\tAND = {{
 \t\t\t{MOD_ID}_rank_is_ticked = no
@@ -1545,7 +1584,7 @@ def triggers_file(rows, split, game) -> str:
 \t\t}}
 \t\tAND = {{
 \t\t\t{MOD_ID}_rank_is_ticked = yes
-\t\t\t# the building's own `location_potential`, copied from the game
+{line}\t\t\t# the building's own `location_potential`, copied from the game
 \t\t\t{potential}
 \t\t}}
 \t}}
