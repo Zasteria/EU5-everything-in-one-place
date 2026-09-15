@@ -1,0 +1,30 @@
+﻿# What the setup driver in bcm_pf_map_mode_window.gui fires, and the gate it
+# fires behind.
+#
+# **There is no on_action here, and that is not an oversight.** CM runs its setup
+# from on_game_start_after_lobby and on_game_load_after_lobby, and those two are
+# not the engine's: the dump marks them `From Code: No`
+# (reference/game/docs/on_actions.log), because the Community Mod Framework
+# declares and fires them. The engine's own on_game_start fires before the
+# country selection screen and has no load-time counterpart at all. Wiring to
+# CMF's hooks would make this mod need CMF, so the work is driven from the
+# window instead — the same way the river harvest below it already is.
+
+# Root is the player. True while any of the three setup passes still owes work.
+# The driver's _show fires once on the hidden->shown edge, so this staying true
+# through the river harvest does not re-fire it.
+bcm_setup_pending = {
+	is_shown = {
+		OR = {
+			NOT = { bcm_trmm_data_is_current = yes }
+			NOT = { bcm_fpot_data_is_current = yes }
+			NOT = { bcm_pf_river_data_is_current = yes }
+		}
+	}
+}
+
+bcm_run_setup = {
+	effect = {
+		bcm_run_lobby_setup = yes
+	}
+}

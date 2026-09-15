@@ -1,0 +1,31 @@
+﻿# The once-per-save setup, cut down to what these three maps read. CM's own
+# cm_run_lobby_setup does the same three calls in the same order, behind the same
+# stamps, among a dozen others.
+#
+# **Every pass is behind its stamp, and that is not an optimisation.** Two of the
+# three walk every location on the map; the stamp is what keeps a reload from
+# paying for a pass whose result is already in the save.
+
+bcm_run_lobby_setup = {
+	# Recommended urban rights coverage: one pass over every province definition,
+	# writing what the map and its tooltip then only read. Synchronous, so there
+	# is no partial state for the stamp to certify.
+	if = {
+		limit = { NOT = { bcm_trmm_data_is_current = yes } }
+		bcm_trmm_recompute_all = yes
+		set_global_variable = { name = bcm_trmm_stamp value = bcm_trmm_version_value }
+	}
+
+	# Food potential per location, so the map reads a variable instead of
+	# evaluating the whole formula per location per repaint.
+	if = {
+		limit = { NOT = { bcm_fpot_data_is_current = yes } }
+		bcm_fpot_recompute_all = yes
+		set_global_variable = { name = bcm_fpot_stamp value = bcm_fpot_version_value }
+	}
+
+	# River adjacency for the placement finder. This one is *not* synchronous: it
+	# only queues the work, and the driver in bcm_pf_map_mode_window.gui records a
+	# batch per tick, because the neighbour lists can only be read from GUI.
+	bcm_pf_populate_river_locations = yes
+}
