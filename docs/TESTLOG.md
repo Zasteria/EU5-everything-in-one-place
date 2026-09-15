@@ -261,3 +261,6 @@ Kept here so it is one list rather than scattered through prose:
   where the open pass used to place 271 buildings of 770.
 - Everything `nd_ru` has translated apart from Westphalia — 3 600 keys that have
   never been on screen.
+- **All of `cm_maps`**, built 2026-09-15: three CM dev maps standing without CM.
+  Nothing in it has been loaded — not the three modes, not the icon strip, not
+  the placement search. What one load would settle is in its brief.

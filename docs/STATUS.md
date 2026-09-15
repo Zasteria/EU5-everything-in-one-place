@@ -1,8 +1,8 @@
-﻿# Where the seven mods stand
+﻿# Where the eight mods stand
 
 One line each, and a link to the brief. **Read the brief for the mod the task is
-about and no others** — `mods/<mod>/CLAUDE.md` is 300–800 tokens and holds the
-state, the commands, and what fails silently in that mod.
+about and no others** — `mods/<mod>/CLAUDE.md` holds the state, the commands and
+what fails silently there.
 
 | mod | state | never been in game |
 | --- | --- | --- |
@@ -17,6 +17,11 @@ state, the commands, and what fails silently in that mod.
 `where_to_produce` is the second attempt at a question the first one failed at
 without ever being tested. Why, and the lesson —
 [`archive/where_to_produce.md`](archive/where_to_produce.md).
+| [`where_to_produce`](../mods/where_to_produce/CLAUDE.md) | **Единственная версия, и работа идёт в ней.** Его список и все заходы по нему — [`investigations/wtp_backlog.md`](investigations/wtp_backlog.md); открыт пункт 9 (ручное заполнение). Карта «Лучшее городское право» перенесена из CM dev целиком — [`investigations/wtp_town_right_map.md`](investigations/wtp_town_right_map.md) | окно замены, порядок «Пригодности» и `ERROR` прогонами 09-14 приняты; **не видело прогона: `_cov_pass` со спросом о локации (`_stands_`), «на конец» без устаревших зданий, поделённое среднее провинции в лесенке**; и **его слово 09-12: 90% из того, что документы звали непрогнанным, уже прогонялось или неактуально** — сверять с ним, не с документами |
+| [`cm_maps`](../mods/cm_maps/CLAUDE.md) | **новый 09-15, в игре не был.** Три карты CM dev без CM и CMF: еда, права (+9 детских), губернатор | всё |
+
+`where_to_produce` is the **second** attempt; the first failed untested, and why
+is [`archive/where_to_produce.md`](archive/where_to_produce.md).
 
 **Игра вылетает с 09-14, причина не названа.** Без видимого повода, чаще после
 того как она какое-то время свёрнута. Что нужно от него — логи и один заход без
@@ -34,7 +39,7 @@ without ever being tested. Why, and the lesson —
 
 ## The tooling around all of it
 
-Finished and not to be rebuilt: `mods.bat` → `tools/mods.ps1`, the menu that
-does his whole mod loop, and `tools/workshop.py`, which answers whether a
-refresh is owed without needing the game, an account or the files.
-[`CONVENTIONS.md`](CONVENTIONS.md) is how it fits together.
+`mods.bat` → `tools/mods.ps1` is his whole mod loop and `tools/workshop.py`
+answers whether a refresh is owed; both finished, and **not to be rebuilt** —
+that rule lives in [`SETTLED.md`](SETTLED.md). How it fits together:
+[`CONVENTIONS.md`](CONVENTIONS.md).
