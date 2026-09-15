@@ -54578,30 +54578,59 @@ bag_wtp_plan_prepare = {
 	set_global_variable = { name = bag_wtp_esh47 value = 0 }
 	set_global_variable = { name = bag_wtp_rgiven1 value = 0 }
 	set_global_variable = { name = bag_wtp_rn1 value = 0 }
+	set_global_variable = { name = bag_wtp_rlag1 value = 0 }
+	set_global_variable = { name = bag_wtp_rlagw1 value = 0 }
 	set_global_variable = { name = bag_wtp_rgiven2 value = 0 }
 	set_global_variable = { name = bag_wtp_rn2 value = 0 }
+	set_global_variable = { name = bag_wtp_rlag2 value = 0 }
+	set_global_variable = { name = bag_wtp_rlagw2 value = 0 }
 	set_global_variable = { name = bag_wtp_rgiven3 value = 0 }
 	set_global_variable = { name = bag_wtp_rn3 value = 0 }
+	set_global_variable = { name = bag_wtp_rlag3 value = 0 }
+	set_global_variable = { name = bag_wtp_rlagw3 value = 0 }
 	set_global_variable = { name = bag_wtp_rgiven4 value = 0 }
 	set_global_variable = { name = bag_wtp_rn4 value = 0 }
+	set_global_variable = { name = bag_wtp_rlag4 value = 0 }
+	set_global_variable = { name = bag_wtp_rlagw4 value = 0 }
 	set_global_variable = { name = bag_wtp_rgiven5 value = 0 }
 	set_global_variable = { name = bag_wtp_rn5 value = 0 }
+	set_global_variable = { name = bag_wtp_rlag5 value = 0 }
+	set_global_variable = { name = bag_wtp_rlagw5 value = 0 }
 	set_global_variable = { name = bag_wtp_rgiven6 value = 0 }
 	set_global_variable = { name = bag_wtp_rn6 value = 0 }
+	set_global_variable = { name = bag_wtp_rlag6 value = 0 }
+	set_global_variable = { name = bag_wtp_rlagw6 value = 0 }
 	set_global_variable = { name = bag_wtp_rgiven7 value = 0 }
 	set_global_variable = { name = bag_wtp_rn7 value = 0 }
+	set_global_variable = { name = bag_wtp_rlag7 value = 0 }
+	set_global_variable = { name = bag_wtp_rlagw7 value = 0 }
 	set_global_variable = { name = bag_wtp_rgiven8 value = 0 }
 	set_global_variable = { name = bag_wtp_rn8 value = 0 }
+	set_global_variable = { name = bag_wtp_rlag8 value = 0 }
+	set_global_variable = { name = bag_wtp_rlagw8 value = 0 }
 	set_global_variable = { name = bag_wtp_rgiven9 value = 0 }
 	set_global_variable = { name = bag_wtp_rn9 value = 0 }
+	set_global_variable = { name = bag_wtp_rlag9 value = 0 }
+	set_global_variable = { name = bag_wtp_rlagw9 value = 0 }
 	set_global_variable = { name = bag_wtp_rgiven10 value = 0 }
 	set_global_variable = { name = bag_wtp_rn10 value = 0 }
+	set_global_variable = { name = bag_wtp_rlag10 value = 0 }
+	set_global_variable = { name = bag_wtp_rlagw10 value = 0 }
 	set_global_variable = { name = bag_wtp_rgiven11 value = 0 }
 	set_global_variable = { name = bag_wtp_rn11 value = 0 }
+	set_global_variable = { name = bag_wtp_rlag11 value = 0 }
+	set_global_variable = { name = bag_wtp_rlagw11 value = 0 }
 	set_global_variable = { name = bag_wtp_rgiven12 value = 0 }
 	set_global_variable = { name = bag_wtp_rn12 value = 0 }
+	set_global_variable = { name = bag_wtp_rlag12 value = 0 }
+	set_global_variable = { name = bag_wtp_rlagw12 value = 0 }
 	set_global_variable = { name = bag_wtp_rgiven13 value = 0 }
 	set_global_variable = { name = bag_wtp_rn13 value = 0 }
+	set_global_variable = { name = bag_wtp_rlag13 value = 0 }
+	set_global_variable = { name = bag_wtp_rlagw13 value = 0 }
+	set_global_variable = { name = bag_wtp_rmax value = 0 }
+	set_global_variable = { name = bag_wtp_rlagv value = 0 }
+	set_global_variable = { name = bag_wtp_sprkey value = 0 }
 	set_global_variable = { name = bag_wtp_rband value = 0 }
 	set_global_variable = { name = bag_wtp_ropen value = 0 }
 	set_global_variable = { name = bag_wtp_rlevel value = 0 }
@@ -102504,6 +102533,159 @@ bag_wtp_clear_granary_here = {
 	}
 }
 
+# Какие грамоты отстали: выдано меньше половины от самой раздатой.
+#
+# **Только глобалки, поэтому зовётся из любого скоупа** -- в том числе изнутри
+# обхода по локациям, где он и нужен: счёт меняется этим же обходом, и следующий
+# город обязан видеть то, что взял предыдущий.
+# Scope: any
+bag_wtp_plan_grant_lag = {
+	set_global_variable = { name = bag_wtp_rmax value = 0 }
+	if = { limit = { global_var:bag_wtp_rgiven1 > global_var:bag_wtp_rmax } set_global_variable = { name = bag_wtp_rmax value = global_var:bag_wtp_rgiven1 } }
+	if = { limit = { global_var:bag_wtp_rgiven2 > global_var:bag_wtp_rmax } set_global_variable = { name = bag_wtp_rmax value = global_var:bag_wtp_rgiven2 } }
+	if = { limit = { global_var:bag_wtp_rgiven3 > global_var:bag_wtp_rmax } set_global_variable = { name = bag_wtp_rmax value = global_var:bag_wtp_rgiven3 } }
+	if = { limit = { global_var:bag_wtp_rgiven4 > global_var:bag_wtp_rmax } set_global_variable = { name = bag_wtp_rmax value = global_var:bag_wtp_rgiven4 } }
+	if = { limit = { global_var:bag_wtp_rgiven5 > global_var:bag_wtp_rmax } set_global_variable = { name = bag_wtp_rmax value = global_var:bag_wtp_rgiven5 } }
+	if = { limit = { global_var:bag_wtp_rgiven6 > global_var:bag_wtp_rmax } set_global_variable = { name = bag_wtp_rmax value = global_var:bag_wtp_rgiven6 } }
+	if = { limit = { global_var:bag_wtp_rgiven7 > global_var:bag_wtp_rmax } set_global_variable = { name = bag_wtp_rmax value = global_var:bag_wtp_rgiven7 } }
+	if = { limit = { global_var:bag_wtp_rgiven8 > global_var:bag_wtp_rmax } set_global_variable = { name = bag_wtp_rmax value = global_var:bag_wtp_rgiven8 } }
+	if = { limit = { global_var:bag_wtp_rgiven9 > global_var:bag_wtp_rmax } set_global_variable = { name = bag_wtp_rmax value = global_var:bag_wtp_rgiven9 } }
+	if = { limit = { global_var:bag_wtp_rgiven10 > global_var:bag_wtp_rmax } set_global_variable = { name = bag_wtp_rmax value = global_var:bag_wtp_rgiven10 } }
+	if = { limit = { global_var:bag_wtp_rgiven11 > global_var:bag_wtp_rmax } set_global_variable = { name = bag_wtp_rmax value = global_var:bag_wtp_rgiven11 } }
+	if = { limit = { global_var:bag_wtp_rgiven12 > global_var:bag_wtp_rmax } set_global_variable = { name = bag_wtp_rmax value = global_var:bag_wtp_rgiven12 } }
+	if = { limit = { global_var:bag_wtp_rgiven13 > global_var:bag_wtp_rmax } set_global_variable = { name = bag_wtp_rmax value = global_var:bag_wtp_rgiven13 } }
+	set_global_variable = { name = bag_wtp_rlagv value = global_var:bag_wtp_rgiven1 }
+	change_global_variable = { name = bag_wtp_rlagv multiply = 2 }
+	set_global_variable = { name = bag_wtp_rlag1 value = 0 }
+	if = {
+		limit = { global_var:bag_wtp_rlagv < global_var:bag_wtp_rmax }
+		set_global_variable = { name = bag_wtp_rlag1 value = 1 }
+	}
+	set_global_variable = { name = bag_wtp_rlagw1 value = global_var:bag_wtp_rmax }
+	change_global_variable = { name = bag_wtp_rlagw1 subtract = global_var:bag_wtp_rgiven1 }
+	change_global_variable = { name = bag_wtp_rlagw1 multiply = 10000 }
+	set_global_variable = { name = bag_wtp_rlagv value = global_var:bag_wtp_rgiven2 }
+	change_global_variable = { name = bag_wtp_rlagv multiply = 2 }
+	set_global_variable = { name = bag_wtp_rlag2 value = 0 }
+	if = {
+		limit = { global_var:bag_wtp_rlagv < global_var:bag_wtp_rmax }
+		set_global_variable = { name = bag_wtp_rlag2 value = 1 }
+	}
+	set_global_variable = { name = bag_wtp_rlagw2 value = global_var:bag_wtp_rmax }
+	change_global_variable = { name = bag_wtp_rlagw2 subtract = global_var:bag_wtp_rgiven2 }
+	change_global_variable = { name = bag_wtp_rlagw2 multiply = 10000 }
+	set_global_variable = { name = bag_wtp_rlagv value = global_var:bag_wtp_rgiven3 }
+	change_global_variable = { name = bag_wtp_rlagv multiply = 2 }
+	set_global_variable = { name = bag_wtp_rlag3 value = 0 }
+	if = {
+		limit = { global_var:bag_wtp_rlagv < global_var:bag_wtp_rmax }
+		set_global_variable = { name = bag_wtp_rlag3 value = 1 }
+	}
+	set_global_variable = { name = bag_wtp_rlagw3 value = global_var:bag_wtp_rmax }
+	change_global_variable = { name = bag_wtp_rlagw3 subtract = global_var:bag_wtp_rgiven3 }
+	change_global_variable = { name = bag_wtp_rlagw3 multiply = 10000 }
+	set_global_variable = { name = bag_wtp_rlagv value = global_var:bag_wtp_rgiven4 }
+	change_global_variable = { name = bag_wtp_rlagv multiply = 2 }
+	set_global_variable = { name = bag_wtp_rlag4 value = 0 }
+	if = {
+		limit = { global_var:bag_wtp_rlagv < global_var:bag_wtp_rmax }
+		set_global_variable = { name = bag_wtp_rlag4 value = 1 }
+	}
+	set_global_variable = { name = bag_wtp_rlagw4 value = global_var:bag_wtp_rmax }
+	change_global_variable = { name = bag_wtp_rlagw4 subtract = global_var:bag_wtp_rgiven4 }
+	change_global_variable = { name = bag_wtp_rlagw4 multiply = 10000 }
+	set_global_variable = { name = bag_wtp_rlagv value = global_var:bag_wtp_rgiven5 }
+	change_global_variable = { name = bag_wtp_rlagv multiply = 2 }
+	set_global_variable = { name = bag_wtp_rlag5 value = 0 }
+	if = {
+		limit = { global_var:bag_wtp_rlagv < global_var:bag_wtp_rmax }
+		set_global_variable = { name = bag_wtp_rlag5 value = 1 }
+	}
+	set_global_variable = { name = bag_wtp_rlagw5 value = global_var:bag_wtp_rmax }
+	change_global_variable = { name = bag_wtp_rlagw5 subtract = global_var:bag_wtp_rgiven5 }
+	change_global_variable = { name = bag_wtp_rlagw5 multiply = 10000 }
+	set_global_variable = { name = bag_wtp_rlagv value = global_var:bag_wtp_rgiven6 }
+	change_global_variable = { name = bag_wtp_rlagv multiply = 2 }
+	set_global_variable = { name = bag_wtp_rlag6 value = 0 }
+	if = {
+		limit = { global_var:bag_wtp_rlagv < global_var:bag_wtp_rmax }
+		set_global_variable = { name = bag_wtp_rlag6 value = 1 }
+	}
+	set_global_variable = { name = bag_wtp_rlagw6 value = global_var:bag_wtp_rmax }
+	change_global_variable = { name = bag_wtp_rlagw6 subtract = global_var:bag_wtp_rgiven6 }
+	change_global_variable = { name = bag_wtp_rlagw6 multiply = 10000 }
+	set_global_variable = { name = bag_wtp_rlagv value = global_var:bag_wtp_rgiven7 }
+	change_global_variable = { name = bag_wtp_rlagv multiply = 2 }
+	set_global_variable = { name = bag_wtp_rlag7 value = 0 }
+	if = {
+		limit = { global_var:bag_wtp_rlagv < global_var:bag_wtp_rmax }
+		set_global_variable = { name = bag_wtp_rlag7 value = 1 }
+	}
+	set_global_variable = { name = bag_wtp_rlagw7 value = global_var:bag_wtp_rmax }
+	change_global_variable = { name = bag_wtp_rlagw7 subtract = global_var:bag_wtp_rgiven7 }
+	change_global_variable = { name = bag_wtp_rlagw7 multiply = 10000 }
+	set_global_variable = { name = bag_wtp_rlagv value = global_var:bag_wtp_rgiven8 }
+	change_global_variable = { name = bag_wtp_rlagv multiply = 2 }
+	set_global_variable = { name = bag_wtp_rlag8 value = 0 }
+	if = {
+		limit = { global_var:bag_wtp_rlagv < global_var:bag_wtp_rmax }
+		set_global_variable = { name = bag_wtp_rlag8 value = 1 }
+	}
+	set_global_variable = { name = bag_wtp_rlagw8 value = global_var:bag_wtp_rmax }
+	change_global_variable = { name = bag_wtp_rlagw8 subtract = global_var:bag_wtp_rgiven8 }
+	change_global_variable = { name = bag_wtp_rlagw8 multiply = 10000 }
+	set_global_variable = { name = bag_wtp_rlagv value = global_var:bag_wtp_rgiven9 }
+	change_global_variable = { name = bag_wtp_rlagv multiply = 2 }
+	set_global_variable = { name = bag_wtp_rlag9 value = 0 }
+	if = {
+		limit = { global_var:bag_wtp_rlagv < global_var:bag_wtp_rmax }
+		set_global_variable = { name = bag_wtp_rlag9 value = 1 }
+	}
+	set_global_variable = { name = bag_wtp_rlagw9 value = global_var:bag_wtp_rmax }
+	change_global_variable = { name = bag_wtp_rlagw9 subtract = global_var:bag_wtp_rgiven9 }
+	change_global_variable = { name = bag_wtp_rlagw9 multiply = 10000 }
+	set_global_variable = { name = bag_wtp_rlagv value = global_var:bag_wtp_rgiven10 }
+	change_global_variable = { name = bag_wtp_rlagv multiply = 2 }
+	set_global_variable = { name = bag_wtp_rlag10 value = 0 }
+	if = {
+		limit = { global_var:bag_wtp_rlagv < global_var:bag_wtp_rmax }
+		set_global_variable = { name = bag_wtp_rlag10 value = 1 }
+	}
+	set_global_variable = { name = bag_wtp_rlagw10 value = global_var:bag_wtp_rmax }
+	change_global_variable = { name = bag_wtp_rlagw10 subtract = global_var:bag_wtp_rgiven10 }
+	change_global_variable = { name = bag_wtp_rlagw10 multiply = 10000 }
+	set_global_variable = { name = bag_wtp_rlagv value = global_var:bag_wtp_rgiven11 }
+	change_global_variable = { name = bag_wtp_rlagv multiply = 2 }
+	set_global_variable = { name = bag_wtp_rlag11 value = 0 }
+	if = {
+		limit = { global_var:bag_wtp_rlagv < global_var:bag_wtp_rmax }
+		set_global_variable = { name = bag_wtp_rlag11 value = 1 }
+	}
+	set_global_variable = { name = bag_wtp_rlagw11 value = global_var:bag_wtp_rmax }
+	change_global_variable = { name = bag_wtp_rlagw11 subtract = global_var:bag_wtp_rgiven11 }
+	change_global_variable = { name = bag_wtp_rlagw11 multiply = 10000 }
+	set_global_variable = { name = bag_wtp_rlagv value = global_var:bag_wtp_rgiven12 }
+	change_global_variable = { name = bag_wtp_rlagv multiply = 2 }
+	set_global_variable = { name = bag_wtp_rlag12 value = 0 }
+	if = {
+		limit = { global_var:bag_wtp_rlagv < global_var:bag_wtp_rmax }
+		set_global_variable = { name = bag_wtp_rlag12 value = 1 }
+	}
+	set_global_variable = { name = bag_wtp_rlagw12 value = global_var:bag_wtp_rmax }
+	change_global_variable = { name = bag_wtp_rlagw12 subtract = global_var:bag_wtp_rgiven12 }
+	change_global_variable = { name = bag_wtp_rlagw12 multiply = 10000 }
+	set_global_variable = { name = bag_wtp_rlagv value = global_var:bag_wtp_rgiven13 }
+	change_global_variable = { name = bag_wtp_rlagv multiply = 2 }
+	set_global_variable = { name = bag_wtp_rlag13 value = 0 }
+	if = {
+		limit = { global_var:bag_wtp_rlagv < global_var:bag_wtp_rmax }
+		set_global_variable = { name = bag_wtp_rlag13 value = 1 }
+	}
+	set_global_variable = { name = bag_wtp_rlagw13 value = global_var:bag_wtp_rmax }
+	change_global_variable = { name = bag_wtp_rlagw13 subtract = global_var:bag_wtp_rgiven13 }
+	change_global_variable = { name = bag_wtp_rlagw13 multiply = 10000 }
+}
+
 # Urban rights, before any good is placed and only in towns.
 #
 # **A right is a bundle of goods bound to a town, and obeys the rules a good
@@ -102688,15 +102870,58 @@ bag_wtp_plan_grant_pass = {
 		# fits gets none.
 		set_variable = { name = bag_wtp_rbest value = -1 }
 		set_variable = { name = bag_wtp_rbest_k value = 0 }
+		# **Кто отстал -- пересчитывается перед каждым городом, а не раз за
+		# проход.** Счёт меняется этим же обходом: первый город берёт пивные,
+		# второй обязан уже знать, что пивных стало на один больше. Один
+		# пересчёт на проход оставил бы отставшими тех, кто отстал до его начала.
+		bag_wtp_plan_grant_lag = yes
 		# constantinopolitan_silk_monopoly_rights: cloth, fine_cloth, silk
 		set_variable = { name = bag_wtp_rtry value = bag_wtp_rq1 }
+		# **Ключ сравнения -- выгода плюс добавка отставшему.** Полоса ниже
+		# спрашивает саму выгоду, поэтому это две разные переменные: добавка
+		# решает, кому достанется город, и не делает вид, что земля платит больше.
+		set_variable = { name = bag_wtp_rkey value = var:bag_wtp_rtry }
+		# Добавка -- по расстоянию до самой раздатой (`_rlagw<k>`), а не «есть/нет»:
+		# одинаковая добавка шести отставшим ничего между ними не решает. Пол
+		# («только где платят») снимает галочка «Грамоты — поровну».
 		if = {
 			limit = {
-				var:bag_wtp_rtry > var:bag_wtp_rbest
+				global_var:bag_wtp_rlag1 = 1
+				OR = {
+					has_global_variable = bag_wtp_plan_rfair
+					var:bag_wtp_rtry > 0
+				}
+			}
+			change_variable = { name = bag_wtp_rkey add = global_var:bag_wtp_rlagw1 }
+		}
+		if = {
+			limit = {
+				var:bag_wtp_rkey > var:bag_wtp_rbest
 				bag_wtp_plan_right_fits_1 = yes
 				# The band: what this ground has to pay before the charter is taken
 				# here at all. The open pass sets it to 0.
-				var:bag_wtp_rtry >= global_var:bag_wtp_rband
+				#
+				# **Отставшую грамоту полоса не держит.** Она требует заплатить
+				# `_rband` прежде, чем грамоту тут рассмотрят, -- а отставшая
+				# отстала как раз потому, что земля ей платит мало, и до полосы 0
+				# свободной земли не доживало. **Но только там, где земля ей хоть
+				# что-то платит**: город, который не платит ей ничего, ничего ей и
+				# не даст, а у того, кто там зарабатывал, отнимет.
+				# **И только той, у которой город уже есть** (`_rn<k> > 0`): без
+				# этого все, кроме первой выдачи, «отстают» с нуля, и лестница полос
+				# перестаёт работать вовсе. Не получившая ещё ничего стоит в очереди,
+				# а не отстаёт, и очередь держит лестница уровней.
+				OR = {
+					var:bag_wtp_rtry >= global_var:bag_wtp_rband
+					AND = {
+						global_var:bag_wtp_rlag1 = 1
+						global_var:bag_wtp_rn1 > 0
+						OR = {
+							has_global_variable = bag_wtp_plan_rfair
+							var:bag_wtp_rtry > 0
+						}
+					}
+				}
 				# The level: how many towns any one charter may hold so far. It
 				# climbs by one at a time, so no charter takes an Nth town while
 				# another is still short of its Nth -- that, and not the quota it
@@ -102708,199 +102933,451 @@ bag_wtp_plan_grant_pass = {
 				}
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_1 = yes }
 			}
-			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rtry }
+			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rkey }
 			set_variable = { name = bag_wtp_rbest_k value = 1 }
 		}
 		# flemish_cloth_industries_right: cloth, fine_cloth
 		set_variable = { name = bag_wtp_rtry value = bag_wtp_rq2 }
+		set_variable = { name = bag_wtp_rkey value = var:bag_wtp_rtry }
 		if = {
 			limit = {
-				var:bag_wtp_rtry > var:bag_wtp_rbest
+				global_var:bag_wtp_rlag2 = 1
+				OR = {
+					has_global_variable = bag_wtp_plan_rfair
+					var:bag_wtp_rtry > 0
+				}
+			}
+			change_variable = { name = bag_wtp_rkey add = global_var:bag_wtp_rlagw2 }
+		}
+		if = {
+			limit = {
+				var:bag_wtp_rkey > var:bag_wtp_rbest
 				bag_wtp_plan_right_fits_2 = yes
-				var:bag_wtp_rtry >= global_var:bag_wtp_rband
+				OR = {
+					var:bag_wtp_rtry >= global_var:bag_wtp_rband
+					AND = {
+						global_var:bag_wtp_rlag2 = 1
+						global_var:bag_wtp_rn2 > 0
+						OR = {
+							has_global_variable = bag_wtp_plan_rfair
+							var:bag_wtp_rtry > 0
+						}
+					}
+				}
 				OR = {
 					global_var:bag_wtp_ropen = 1
 					global_var:bag_wtp_rn2 < global_var:bag_wtp_rlevel
 				}
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_2 = yes }
 			}
-			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rtry }
+			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rkey }
 			set_variable = { name = bag_wtp_rbest_k value = 2 }
 		}
 		# royal_artisan_rights: furniture, leather, pottery
 		set_variable = { name = bag_wtp_rtry value = bag_wtp_rq3 }
+		set_variable = { name = bag_wtp_rkey value = var:bag_wtp_rtry }
 		if = {
 			limit = {
-				var:bag_wtp_rtry > var:bag_wtp_rbest
+				global_var:bag_wtp_rlag3 = 1
+				OR = {
+					has_global_variable = bag_wtp_plan_rfair
+					var:bag_wtp_rtry > 0
+				}
+			}
+			change_variable = { name = bag_wtp_rkey add = global_var:bag_wtp_rlagw3 }
+		}
+		if = {
+			limit = {
+				var:bag_wtp_rkey > var:bag_wtp_rbest
 				bag_wtp_plan_right_fits_3 = yes
-				var:bag_wtp_rtry >= global_var:bag_wtp_rband
+				OR = {
+					var:bag_wtp_rtry >= global_var:bag_wtp_rband
+					AND = {
+						global_var:bag_wtp_rlag3 = 1
+						global_var:bag_wtp_rn3 > 0
+						OR = {
+							has_global_variable = bag_wtp_plan_rfair
+							var:bag_wtp_rtry > 0
+						}
+					}
+				}
 				OR = {
 					global_var:bag_wtp_ropen = 1
 					global_var:bag_wtp_rn3 < global_var:bag_wtp_rlevel
 				}
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_3 = yes }
 			}
-			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rtry }
+			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rkey }
 			set_variable = { name = bag_wtp_rbest_k value = 3 }
 		}
 		# royal_book_rights: books, dyes, paper
 		set_variable = { name = bag_wtp_rtry value = bag_wtp_rq4 }
+		set_variable = { name = bag_wtp_rkey value = var:bag_wtp_rtry }
 		if = {
 			limit = {
-				var:bag_wtp_rtry > var:bag_wtp_rbest
+				global_var:bag_wtp_rlag4 = 1
+				OR = {
+					has_global_variable = bag_wtp_plan_rfair
+					var:bag_wtp_rtry > 0
+				}
+			}
+			change_variable = { name = bag_wtp_rkey add = global_var:bag_wtp_rlagw4 }
+		}
+		if = {
+			limit = {
+				var:bag_wtp_rkey > var:bag_wtp_rbest
 				bag_wtp_plan_right_fits_4 = yes
-				var:bag_wtp_rtry >= global_var:bag_wtp_rband
+				OR = {
+					var:bag_wtp_rtry >= global_var:bag_wtp_rband
+					AND = {
+						global_var:bag_wtp_rlag4 = 1
+						global_var:bag_wtp_rn4 > 0
+						OR = {
+							has_global_variable = bag_wtp_plan_rfair
+							var:bag_wtp_rtry > 0
+						}
+					}
+				}
 				OR = {
 					global_var:bag_wtp_ropen = 1
 					global_var:bag_wtp_rn4 < global_var:bag_wtp_rlevel
 				}
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_4 = yes }
 			}
-			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rtry }
+			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rkey }
 			set_variable = { name = bag_wtp_rbest_k value = 4 }
 		}
 		# royal_brewing_rights: beer, liquor, wine
 		set_variable = { name = bag_wtp_rtry value = bag_wtp_rq5 }
+		set_variable = { name = bag_wtp_rkey value = var:bag_wtp_rtry }
 		if = {
 			limit = {
-				var:bag_wtp_rtry > var:bag_wtp_rbest
+				global_var:bag_wtp_rlag5 = 1
+				OR = {
+					has_global_variable = bag_wtp_plan_rfair
+					var:bag_wtp_rtry > 0
+				}
+			}
+			change_variable = { name = bag_wtp_rkey add = global_var:bag_wtp_rlagw5 }
+		}
+		if = {
+			limit = {
+				var:bag_wtp_rkey > var:bag_wtp_rbest
 				bag_wtp_plan_right_fits_5 = yes
-				var:bag_wtp_rtry >= global_var:bag_wtp_rband
+				OR = {
+					var:bag_wtp_rtry >= global_var:bag_wtp_rband
+					AND = {
+						global_var:bag_wtp_rlag5 = 1
+						global_var:bag_wtp_rn5 > 0
+						OR = {
+							has_global_variable = bag_wtp_plan_rfair
+							var:bag_wtp_rtry > 0
+						}
+					}
+				}
 				OR = {
 					global_var:bag_wtp_ropen = 1
 					global_var:bag_wtp_rn5 < global_var:bag_wtp_rlevel
 				}
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_5 = yes }
 			}
-			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rtry }
+			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rkey }
 			set_variable = { name = bag_wtp_rbest_k value = 5 }
 		}
 		# royal_jewelry_rights: jewelry
 		set_variable = { name = bag_wtp_rtry value = bag_wtp_rq6 }
+		set_variable = { name = bag_wtp_rkey value = var:bag_wtp_rtry }
 		if = {
 			limit = {
-				var:bag_wtp_rtry > var:bag_wtp_rbest
+				global_var:bag_wtp_rlag6 = 1
+				OR = {
+					has_global_variable = bag_wtp_plan_rfair
+					var:bag_wtp_rtry > 0
+				}
+			}
+			change_variable = { name = bag_wtp_rkey add = global_var:bag_wtp_rlagw6 }
+		}
+		if = {
+			limit = {
+				var:bag_wtp_rkey > var:bag_wtp_rbest
 				bag_wtp_plan_right_fits_6 = yes
-				var:bag_wtp_rtry >= global_var:bag_wtp_rband
+				OR = {
+					var:bag_wtp_rtry >= global_var:bag_wtp_rband
+					AND = {
+						global_var:bag_wtp_rlag6 = 1
+						global_var:bag_wtp_rn6 > 0
+						OR = {
+							has_global_variable = bag_wtp_plan_rfair
+							var:bag_wtp_rtry > 0
+						}
+					}
+				}
 				OR = {
 					global_var:bag_wtp_ropen = 1
 					global_var:bag_wtp_rn6 < global_var:bag_wtp_rlevel
 				}
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_6 = yes }
 			}
-			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rtry }
+			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rkey }
 			set_variable = { name = bag_wtp_rbest_k value = 6 }
 		}
 		# royal_masonry_rights: glass, masonry
 		set_variable = { name = bag_wtp_rtry value = bag_wtp_rq7 }
+		set_variable = { name = bag_wtp_rkey value = var:bag_wtp_rtry }
 		if = {
 			limit = {
-				var:bag_wtp_rtry > var:bag_wtp_rbest
+				global_var:bag_wtp_rlag7 = 1
+				OR = {
+					has_global_variable = bag_wtp_plan_rfair
+					var:bag_wtp_rtry > 0
+				}
+			}
+			change_variable = { name = bag_wtp_rkey add = global_var:bag_wtp_rlagw7 }
+		}
+		if = {
+			limit = {
+				var:bag_wtp_rkey > var:bag_wtp_rbest
 				bag_wtp_plan_right_fits_7 = yes
-				var:bag_wtp_rtry >= global_var:bag_wtp_rband
+				OR = {
+					var:bag_wtp_rtry >= global_var:bag_wtp_rband
+					AND = {
+						global_var:bag_wtp_rlag7 = 1
+						global_var:bag_wtp_rn7 > 0
+						OR = {
+							has_global_variable = bag_wtp_plan_rfair
+							var:bag_wtp_rtry > 0
+						}
+					}
+				}
 				OR = {
 					global_var:bag_wtp_ropen = 1
 					global_var:bag_wtp_rn7 < global_var:bag_wtp_rlevel
 				}
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_7 = yes }
 			}
-			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rtry }
+			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rkey }
 			set_variable = { name = bag_wtp_rbest_k value = 7 }
 		}
 		# royal_naval_rights: naval_supplies, tar
 		set_variable = { name = bag_wtp_rtry value = bag_wtp_rq8 }
+		set_variable = { name = bag_wtp_rkey value = var:bag_wtp_rtry }
 		if = {
 			limit = {
-				var:bag_wtp_rtry > var:bag_wtp_rbest
+				global_var:bag_wtp_rlag8 = 1
+				OR = {
+					has_global_variable = bag_wtp_plan_rfair
+					var:bag_wtp_rtry > 0
+				}
+			}
+			change_variable = { name = bag_wtp_rkey add = global_var:bag_wtp_rlagw8 }
+		}
+		if = {
+			limit = {
+				var:bag_wtp_rkey > var:bag_wtp_rbest
 				bag_wtp_plan_right_fits_8 = yes
-				var:bag_wtp_rtry >= global_var:bag_wtp_rband
+				OR = {
+					var:bag_wtp_rtry >= global_var:bag_wtp_rband
+					AND = {
+						global_var:bag_wtp_rlag8 = 1
+						global_var:bag_wtp_rn8 > 0
+						OR = {
+							has_global_variable = bag_wtp_plan_rfair
+							var:bag_wtp_rtry > 0
+						}
+					}
+				}
 				OR = {
 					global_var:bag_wtp_ropen = 1
 					global_var:bag_wtp_rn8 < global_var:bag_wtp_rlevel
 				}
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_8 = yes }
 			}
-			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rtry }
+			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rkey }
 			set_variable = { name = bag_wtp_rbest_k value = 8 }
 		}
 		# royal_textile_rights: cloth, dyes, fine_cloth
 		set_variable = { name = bag_wtp_rtry value = bag_wtp_rq9 }
+		set_variable = { name = bag_wtp_rkey value = var:bag_wtp_rtry }
 		if = {
 			limit = {
-				var:bag_wtp_rtry > var:bag_wtp_rbest
+				global_var:bag_wtp_rlag9 = 1
+				OR = {
+					has_global_variable = bag_wtp_plan_rfair
+					var:bag_wtp_rtry > 0
+				}
+			}
+			change_variable = { name = bag_wtp_rkey add = global_var:bag_wtp_rlagw9 }
+		}
+		if = {
+			limit = {
+				var:bag_wtp_rkey > var:bag_wtp_rbest
 				bag_wtp_plan_right_fits_9 = yes
-				var:bag_wtp_rtry >= global_var:bag_wtp_rband
+				OR = {
+					var:bag_wtp_rtry >= global_var:bag_wtp_rband
+					AND = {
+						global_var:bag_wtp_rlag9 = 1
+						global_var:bag_wtp_rn9 > 0
+						OR = {
+							has_global_variable = bag_wtp_plan_rfair
+							var:bag_wtp_rtry > 0
+						}
+					}
+				}
 				OR = {
 					global_var:bag_wtp_ropen = 1
 					global_var:bag_wtp_rn9 < global_var:bag_wtp_rlevel
 				}
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_9 = yes }
 			}
-			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rtry }
+			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rkey }
 			set_variable = { name = bag_wtp_rbest_k value = 9 }
 		}
 		# royal_tooling_rights: tools
 		set_variable = { name = bag_wtp_rtry value = bag_wtp_rq10 }
+		set_variable = { name = bag_wtp_rkey value = var:bag_wtp_rtry }
 		if = {
 			limit = {
-				var:bag_wtp_rtry > var:bag_wtp_rbest
+				global_var:bag_wtp_rlag10 = 1
+				OR = {
+					has_global_variable = bag_wtp_plan_rfair
+					var:bag_wtp_rtry > 0
+				}
+			}
+			change_variable = { name = bag_wtp_rkey add = global_var:bag_wtp_rlagw10 }
+		}
+		if = {
+			limit = {
+				var:bag_wtp_rkey > var:bag_wtp_rbest
 				bag_wtp_plan_right_fits_10 = yes
-				var:bag_wtp_rtry >= global_var:bag_wtp_rband
+				OR = {
+					var:bag_wtp_rtry >= global_var:bag_wtp_rband
+					AND = {
+						global_var:bag_wtp_rlag10 = 1
+						global_var:bag_wtp_rn10 > 0
+						OR = {
+							has_global_variable = bag_wtp_plan_rfair
+							var:bag_wtp_rtry > 0
+						}
+					}
+				}
 				OR = {
 					global_var:bag_wtp_ropen = 1
 					global_var:bag_wtp_rn10 < global_var:bag_wtp_rlevel
 				}
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_10 = yes }
 			}
-			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rtry }
+			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rkey }
 			set_variable = { name = bag_wtp_rbest_k value = 10 }
 		}
 		# royal_weaponry_rights: cannons, firearms, weaponry
 		set_variable = { name = bag_wtp_rtry value = bag_wtp_rq11 }
+		set_variable = { name = bag_wtp_rkey value = var:bag_wtp_rtry }
 		if = {
 			limit = {
-				var:bag_wtp_rtry > var:bag_wtp_rbest
+				global_var:bag_wtp_rlag11 = 1
+				OR = {
+					has_global_variable = bag_wtp_plan_rfair
+					var:bag_wtp_rtry > 0
+				}
+			}
+			change_variable = { name = bag_wtp_rkey add = global_var:bag_wtp_rlagw11 }
+		}
+		if = {
+			limit = {
+				var:bag_wtp_rkey > var:bag_wtp_rbest
 				bag_wtp_plan_right_fits_11 = yes
-				var:bag_wtp_rtry >= global_var:bag_wtp_rband
+				OR = {
+					var:bag_wtp_rtry >= global_var:bag_wtp_rband
+					AND = {
+						global_var:bag_wtp_rlag11 = 1
+						global_var:bag_wtp_rn11 > 0
+						OR = {
+							has_global_variable = bag_wtp_plan_rfair
+							var:bag_wtp_rtry > 0
+						}
+					}
+				}
 				OR = {
 					global_var:bag_wtp_ropen = 1
 					global_var:bag_wtp_rn11 < global_var:bag_wtp_rlevel
 				}
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_11 = yes }
 			}
-			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rtry }
+			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rkey }
 			set_variable = { name = bag_wtp_rbest_k value = 11 }
 		}
 		# scandinavian_bergslag_privileges: tools
 		set_variable = { name = bag_wtp_rtry value = bag_wtp_rq12 }
+		set_variable = { name = bag_wtp_rkey value = var:bag_wtp_rtry }
 		if = {
 			limit = {
-				var:bag_wtp_rtry > var:bag_wtp_rbest
+				global_var:bag_wtp_rlag12 = 1
+				OR = {
+					has_global_variable = bag_wtp_plan_rfair
+					var:bag_wtp_rtry > 0
+				}
+			}
+			change_variable = { name = bag_wtp_rkey add = global_var:bag_wtp_rlagw12 }
+		}
+		if = {
+			limit = {
+				var:bag_wtp_rkey > var:bag_wtp_rbest
 				bag_wtp_plan_right_fits_12 = yes
-				var:bag_wtp_rtry >= global_var:bag_wtp_rband
+				OR = {
+					var:bag_wtp_rtry >= global_var:bag_wtp_rband
+					AND = {
+						global_var:bag_wtp_rlag12 = 1
+						global_var:bag_wtp_rn12 > 0
+						OR = {
+							has_global_variable = bag_wtp_plan_rfair
+							var:bag_wtp_rtry > 0
+						}
+					}
+				}
 				OR = {
 					global_var:bag_wtp_ropen = 1
 					global_var:bag_wtp_rn12 < global_var:bag_wtp_rlevel
 				}
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_12 = yes }
 			}
-			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rtry }
+			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rkey }
 			set_variable = { name = bag_wtp_rbest_k value = 12 }
 		}
 		# scandinavian_tar_privileges: naval_supplies, tar
 		set_variable = { name = bag_wtp_rtry value = bag_wtp_rq13 }
+		set_variable = { name = bag_wtp_rkey value = var:bag_wtp_rtry }
 		if = {
 			limit = {
-				var:bag_wtp_rtry > var:bag_wtp_rbest
+				global_var:bag_wtp_rlag13 = 1
+				OR = {
+					has_global_variable = bag_wtp_plan_rfair
+					var:bag_wtp_rtry > 0
+				}
+			}
+			change_variable = { name = bag_wtp_rkey add = global_var:bag_wtp_rlagw13 }
+		}
+		if = {
+			limit = {
+				var:bag_wtp_rkey > var:bag_wtp_rbest
 				bag_wtp_plan_right_fits_13 = yes
-				var:bag_wtp_rtry >= global_var:bag_wtp_rband
+				OR = {
+					var:bag_wtp_rtry >= global_var:bag_wtp_rband
+					AND = {
+						global_var:bag_wtp_rlag13 = 1
+						global_var:bag_wtp_rn13 > 0
+						OR = {
+							has_global_variable = bag_wtp_plan_rfair
+							var:bag_wtp_rtry > 0
+						}
+					}
+				}
 				OR = {
 					global_var:bag_wtp_ropen = 1
 					global_var:bag_wtp_rn13 < global_var:bag_wtp_rlevel
 				}
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_13 = yes }
 			}
-			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rtry }
+			set_variable = { name = bag_wtp_rbest value = var:bag_wtp_rkey }
 			set_variable = { name = bag_wtp_rbest_k value = 13 }
 		}
 		if = {
@@ -103052,6 +103529,9 @@ bag_wtp_plan_grant_pass_prov = {
 		variable = bag_wtp_plan_prov_locs
 		set_global_variable = { name = bag_wtp_sprv value = -1 }
 		set_global_variable = { name = bag_wtp_sprk value = 0 }
+		# Кто отстал -- перед каждой провинцией, а не раз за проход: счёт
+		# меняется этим же обходом, и следующая провинция обязана его видеть.
+		bag_wtp_plan_grant_lag = yes
 		# constantinopolitan_silk_monopoly_rights
 		set_global_variable = { name = bag_wtp_sprt value = 0 }
 		set_global_variable = { name = bag_wtp_sprn value = 0 }
@@ -103073,16 +103553,74 @@ bag_wtp_plan_grant_pass_prov = {
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_1 = yes }
 			}
 			change_global_variable = { name = bag_wtp_sprt divide = bag_wtp_sprn_value }
+			# Ключ сравнения -- средняя выгода плюс добавка отставшей грамоте.
+			# Полоса ниже спрашивает саму выгоду, и это две разные глобалки.
+			set_global_variable = { name = bag_wtp_sprkey value = global_var:bag_wtp_sprt }
+			# **Добавка -- по расстоянию до самой раздатой, а не «есть/нет».**
+			# Шести отставшим одинаковая добавка ничего не решает: между ними снова
+			# выигрывает выгода, и грамота с 62 проигрывает грамоте с 715 столько же
+			# раз, сколько проигрывала без добавки.
+			#
+			# **Полом управляет галочка «Грамоты — поровну».** Снятая оставляет
+			# добавку только там, где земля грамоте хоть что-то платит: провинция,
+			# которая не платит ей ничего, ничего ей и не даст, а у того, кто там
+			# зарабатывал, отнимет. Стоящая -- ровняет счёт любой ценой, и это его
+			# трижды повторенная просьба: «относительно одинаковое количество
+			# каждого городского права». На его земле это разница между разбросом
+			# 8 и разбросом 3 (посчитано по дампу 2026-09-14).
 			if = {
 				limit = {
-					global_var:bag_wtp_sprt > global_var:bag_wtp_sprv
-					global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+					global_var:bag_wtp_rlag1 = 1
+					OR = {
+						has_global_variable = bag_wtp_plan_rfair
+						global_var:bag_wtp_sprt > 0
+					}
+				}
+				change_global_variable = { name = bag_wtp_sprkey add = global_var:bag_wtp_rlagw1 }
+			}
+			if = {
+				limit = {
+					global_var:bag_wtp_sprkey > global_var:bag_wtp_sprv
+					# **Полоса отставшую грамоту не держит, и в этом вся правка.**
+					# Полоса требует от земли заплатить `_rband` прежде, чем грамоту
+					# тут вообще рассмотрят, а оружейным эта земля платит 6 % --
+					# то есть 60 из 1000, и в полосы 800..200 они не попадали ни
+					# разу. К полосе 0 свободной земли уже не оставалось, и добавка
+					# отставшему не успевала ничего решить: его прогон 2026-09-14,
+					# «оружейные права как были на 1 провинции так и остались».
+					# Теперь отставшая рассматривается в любой полосе -- это и есть
+					# «поиск подходящей провинции **начнётся** для них в приоритете».
+					# **Но только там, где земля ей хоть что-то платит** (`> 0`):
+					# провинция, которая не платит ей ничего, ничего ей и не даст, а
+					# у того, кто там зарабатывал, отнимет.
+					#
+					# **И только той, у которой провинция уже есть** (`_rn<k> > 0`).
+					# Без этого условия послабление съедало бы лестницу полос целиком:
+					# после первой же выдачи все остальные грамоты «отстают» -- у них
+					# ноль, -- и вторая провинция досталась бы просто лучшей из них по
+					# ходу обхода, а не лучшей паре «земля -- грамота» на всей земле.
+					# Первый круг обязан идти полосами, как и шёл: «не получившая ещё
+					# ничего» -- это не отставание, это очередь, и её держит лестница
+					# уровней. Отставание, ради которого это написано, появляется
+					# **после** первого круга и берётся из размера провинций: у одной
+					# восемь городов, у другой один.
+					OR = {
+						global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+						AND = {
+							global_var:bag_wtp_rlag1 = 1
+							global_var:bag_wtp_rn1 > 0
+							OR = {
+								has_global_variable = bag_wtp_plan_rfair
+								global_var:bag_wtp_sprt > 0
+							}
+						}
+					}
 					OR = {
 						global_var:bag_wtp_ropen = 1
 						global_var:bag_wtp_rn1 < global_var:bag_wtp_rlevel
 					}
 				}
-				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprt }
+				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprkey }
 				set_global_variable = { name = bag_wtp_sprk value = 1 }
 			}
 		}
@@ -103107,16 +103645,37 @@ bag_wtp_plan_grant_pass_prov = {
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_2 = yes }
 			}
 			change_global_variable = { name = bag_wtp_sprt divide = bag_wtp_sprn_value }
+			set_global_variable = { name = bag_wtp_sprkey value = global_var:bag_wtp_sprt }
 			if = {
 				limit = {
-					global_var:bag_wtp_sprt > global_var:bag_wtp_sprv
-					global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+					global_var:bag_wtp_rlag2 = 1
+					OR = {
+						has_global_variable = bag_wtp_plan_rfair
+						global_var:bag_wtp_sprt > 0
+					}
+				}
+				change_global_variable = { name = bag_wtp_sprkey add = global_var:bag_wtp_rlagw2 }
+			}
+			if = {
+				limit = {
+					global_var:bag_wtp_sprkey > global_var:bag_wtp_sprv
+					OR = {
+						global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+						AND = {
+							global_var:bag_wtp_rlag2 = 1
+							global_var:bag_wtp_rn2 > 0
+							OR = {
+								has_global_variable = bag_wtp_plan_rfair
+								global_var:bag_wtp_sprt > 0
+							}
+						}
+					}
 					OR = {
 						global_var:bag_wtp_ropen = 1
 						global_var:bag_wtp_rn2 < global_var:bag_wtp_rlevel
 					}
 				}
-				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprt }
+				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprkey }
 				set_global_variable = { name = bag_wtp_sprk value = 2 }
 			}
 		}
@@ -103141,16 +103700,37 @@ bag_wtp_plan_grant_pass_prov = {
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_3 = yes }
 			}
 			change_global_variable = { name = bag_wtp_sprt divide = bag_wtp_sprn_value }
+			set_global_variable = { name = bag_wtp_sprkey value = global_var:bag_wtp_sprt }
 			if = {
 				limit = {
-					global_var:bag_wtp_sprt > global_var:bag_wtp_sprv
-					global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+					global_var:bag_wtp_rlag3 = 1
+					OR = {
+						has_global_variable = bag_wtp_plan_rfair
+						global_var:bag_wtp_sprt > 0
+					}
+				}
+				change_global_variable = { name = bag_wtp_sprkey add = global_var:bag_wtp_rlagw3 }
+			}
+			if = {
+				limit = {
+					global_var:bag_wtp_sprkey > global_var:bag_wtp_sprv
+					OR = {
+						global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+						AND = {
+							global_var:bag_wtp_rlag3 = 1
+							global_var:bag_wtp_rn3 > 0
+							OR = {
+								has_global_variable = bag_wtp_plan_rfair
+								global_var:bag_wtp_sprt > 0
+							}
+						}
+					}
 					OR = {
 						global_var:bag_wtp_ropen = 1
 						global_var:bag_wtp_rn3 < global_var:bag_wtp_rlevel
 					}
 				}
-				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprt }
+				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprkey }
 				set_global_variable = { name = bag_wtp_sprk value = 3 }
 			}
 		}
@@ -103175,16 +103755,37 @@ bag_wtp_plan_grant_pass_prov = {
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_4 = yes }
 			}
 			change_global_variable = { name = bag_wtp_sprt divide = bag_wtp_sprn_value }
+			set_global_variable = { name = bag_wtp_sprkey value = global_var:bag_wtp_sprt }
 			if = {
 				limit = {
-					global_var:bag_wtp_sprt > global_var:bag_wtp_sprv
-					global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+					global_var:bag_wtp_rlag4 = 1
+					OR = {
+						has_global_variable = bag_wtp_plan_rfair
+						global_var:bag_wtp_sprt > 0
+					}
+				}
+				change_global_variable = { name = bag_wtp_sprkey add = global_var:bag_wtp_rlagw4 }
+			}
+			if = {
+				limit = {
+					global_var:bag_wtp_sprkey > global_var:bag_wtp_sprv
+					OR = {
+						global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+						AND = {
+							global_var:bag_wtp_rlag4 = 1
+							global_var:bag_wtp_rn4 > 0
+							OR = {
+								has_global_variable = bag_wtp_plan_rfair
+								global_var:bag_wtp_sprt > 0
+							}
+						}
+					}
 					OR = {
 						global_var:bag_wtp_ropen = 1
 						global_var:bag_wtp_rn4 < global_var:bag_wtp_rlevel
 					}
 				}
-				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprt }
+				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprkey }
 				set_global_variable = { name = bag_wtp_sprk value = 4 }
 			}
 		}
@@ -103209,16 +103810,37 @@ bag_wtp_plan_grant_pass_prov = {
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_5 = yes }
 			}
 			change_global_variable = { name = bag_wtp_sprt divide = bag_wtp_sprn_value }
+			set_global_variable = { name = bag_wtp_sprkey value = global_var:bag_wtp_sprt }
 			if = {
 				limit = {
-					global_var:bag_wtp_sprt > global_var:bag_wtp_sprv
-					global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+					global_var:bag_wtp_rlag5 = 1
+					OR = {
+						has_global_variable = bag_wtp_plan_rfair
+						global_var:bag_wtp_sprt > 0
+					}
+				}
+				change_global_variable = { name = bag_wtp_sprkey add = global_var:bag_wtp_rlagw5 }
+			}
+			if = {
+				limit = {
+					global_var:bag_wtp_sprkey > global_var:bag_wtp_sprv
+					OR = {
+						global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+						AND = {
+							global_var:bag_wtp_rlag5 = 1
+							global_var:bag_wtp_rn5 > 0
+							OR = {
+								has_global_variable = bag_wtp_plan_rfair
+								global_var:bag_wtp_sprt > 0
+							}
+						}
+					}
 					OR = {
 						global_var:bag_wtp_ropen = 1
 						global_var:bag_wtp_rn5 < global_var:bag_wtp_rlevel
 					}
 				}
-				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprt }
+				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprkey }
 				set_global_variable = { name = bag_wtp_sprk value = 5 }
 			}
 		}
@@ -103243,16 +103865,37 @@ bag_wtp_plan_grant_pass_prov = {
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_6 = yes }
 			}
 			change_global_variable = { name = bag_wtp_sprt divide = bag_wtp_sprn_value }
+			set_global_variable = { name = bag_wtp_sprkey value = global_var:bag_wtp_sprt }
 			if = {
 				limit = {
-					global_var:bag_wtp_sprt > global_var:bag_wtp_sprv
-					global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+					global_var:bag_wtp_rlag6 = 1
+					OR = {
+						has_global_variable = bag_wtp_plan_rfair
+						global_var:bag_wtp_sprt > 0
+					}
+				}
+				change_global_variable = { name = bag_wtp_sprkey add = global_var:bag_wtp_rlagw6 }
+			}
+			if = {
+				limit = {
+					global_var:bag_wtp_sprkey > global_var:bag_wtp_sprv
+					OR = {
+						global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+						AND = {
+							global_var:bag_wtp_rlag6 = 1
+							global_var:bag_wtp_rn6 > 0
+							OR = {
+								has_global_variable = bag_wtp_plan_rfair
+								global_var:bag_wtp_sprt > 0
+							}
+						}
+					}
 					OR = {
 						global_var:bag_wtp_ropen = 1
 						global_var:bag_wtp_rn6 < global_var:bag_wtp_rlevel
 					}
 				}
-				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprt }
+				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprkey }
 				set_global_variable = { name = bag_wtp_sprk value = 6 }
 			}
 		}
@@ -103277,16 +103920,37 @@ bag_wtp_plan_grant_pass_prov = {
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_7 = yes }
 			}
 			change_global_variable = { name = bag_wtp_sprt divide = bag_wtp_sprn_value }
+			set_global_variable = { name = bag_wtp_sprkey value = global_var:bag_wtp_sprt }
 			if = {
 				limit = {
-					global_var:bag_wtp_sprt > global_var:bag_wtp_sprv
-					global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+					global_var:bag_wtp_rlag7 = 1
+					OR = {
+						has_global_variable = bag_wtp_plan_rfair
+						global_var:bag_wtp_sprt > 0
+					}
+				}
+				change_global_variable = { name = bag_wtp_sprkey add = global_var:bag_wtp_rlagw7 }
+			}
+			if = {
+				limit = {
+					global_var:bag_wtp_sprkey > global_var:bag_wtp_sprv
+					OR = {
+						global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+						AND = {
+							global_var:bag_wtp_rlag7 = 1
+							global_var:bag_wtp_rn7 > 0
+							OR = {
+								has_global_variable = bag_wtp_plan_rfair
+								global_var:bag_wtp_sprt > 0
+							}
+						}
+					}
 					OR = {
 						global_var:bag_wtp_ropen = 1
 						global_var:bag_wtp_rn7 < global_var:bag_wtp_rlevel
 					}
 				}
-				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprt }
+				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprkey }
 				set_global_variable = { name = bag_wtp_sprk value = 7 }
 			}
 		}
@@ -103311,16 +103975,37 @@ bag_wtp_plan_grant_pass_prov = {
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_8 = yes }
 			}
 			change_global_variable = { name = bag_wtp_sprt divide = bag_wtp_sprn_value }
+			set_global_variable = { name = bag_wtp_sprkey value = global_var:bag_wtp_sprt }
 			if = {
 				limit = {
-					global_var:bag_wtp_sprt > global_var:bag_wtp_sprv
-					global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+					global_var:bag_wtp_rlag8 = 1
+					OR = {
+						has_global_variable = bag_wtp_plan_rfair
+						global_var:bag_wtp_sprt > 0
+					}
+				}
+				change_global_variable = { name = bag_wtp_sprkey add = global_var:bag_wtp_rlagw8 }
+			}
+			if = {
+				limit = {
+					global_var:bag_wtp_sprkey > global_var:bag_wtp_sprv
+					OR = {
+						global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+						AND = {
+							global_var:bag_wtp_rlag8 = 1
+							global_var:bag_wtp_rn8 > 0
+							OR = {
+								has_global_variable = bag_wtp_plan_rfair
+								global_var:bag_wtp_sprt > 0
+							}
+						}
+					}
 					OR = {
 						global_var:bag_wtp_ropen = 1
 						global_var:bag_wtp_rn8 < global_var:bag_wtp_rlevel
 					}
 				}
-				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprt }
+				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprkey }
 				set_global_variable = { name = bag_wtp_sprk value = 8 }
 			}
 		}
@@ -103345,16 +104030,37 @@ bag_wtp_plan_grant_pass_prov = {
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_9 = yes }
 			}
 			change_global_variable = { name = bag_wtp_sprt divide = bag_wtp_sprn_value }
+			set_global_variable = { name = bag_wtp_sprkey value = global_var:bag_wtp_sprt }
 			if = {
 				limit = {
-					global_var:bag_wtp_sprt > global_var:bag_wtp_sprv
-					global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+					global_var:bag_wtp_rlag9 = 1
+					OR = {
+						has_global_variable = bag_wtp_plan_rfair
+						global_var:bag_wtp_sprt > 0
+					}
+				}
+				change_global_variable = { name = bag_wtp_sprkey add = global_var:bag_wtp_rlagw9 }
+			}
+			if = {
+				limit = {
+					global_var:bag_wtp_sprkey > global_var:bag_wtp_sprv
+					OR = {
+						global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+						AND = {
+							global_var:bag_wtp_rlag9 = 1
+							global_var:bag_wtp_rn9 > 0
+							OR = {
+								has_global_variable = bag_wtp_plan_rfair
+								global_var:bag_wtp_sprt > 0
+							}
+						}
+					}
 					OR = {
 						global_var:bag_wtp_ropen = 1
 						global_var:bag_wtp_rn9 < global_var:bag_wtp_rlevel
 					}
 				}
-				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprt }
+				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprkey }
 				set_global_variable = { name = bag_wtp_sprk value = 9 }
 			}
 		}
@@ -103379,16 +104085,37 @@ bag_wtp_plan_grant_pass_prov = {
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_10 = yes }
 			}
 			change_global_variable = { name = bag_wtp_sprt divide = bag_wtp_sprn_value }
+			set_global_variable = { name = bag_wtp_sprkey value = global_var:bag_wtp_sprt }
 			if = {
 				limit = {
-					global_var:bag_wtp_sprt > global_var:bag_wtp_sprv
-					global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+					global_var:bag_wtp_rlag10 = 1
+					OR = {
+						has_global_variable = bag_wtp_plan_rfair
+						global_var:bag_wtp_sprt > 0
+					}
+				}
+				change_global_variable = { name = bag_wtp_sprkey add = global_var:bag_wtp_rlagw10 }
+			}
+			if = {
+				limit = {
+					global_var:bag_wtp_sprkey > global_var:bag_wtp_sprv
+					OR = {
+						global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+						AND = {
+							global_var:bag_wtp_rlag10 = 1
+							global_var:bag_wtp_rn10 > 0
+							OR = {
+								has_global_variable = bag_wtp_plan_rfair
+								global_var:bag_wtp_sprt > 0
+							}
+						}
+					}
 					OR = {
 						global_var:bag_wtp_ropen = 1
 						global_var:bag_wtp_rn10 < global_var:bag_wtp_rlevel
 					}
 				}
-				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprt }
+				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprkey }
 				set_global_variable = { name = bag_wtp_sprk value = 10 }
 			}
 		}
@@ -103413,16 +104140,37 @@ bag_wtp_plan_grant_pass_prov = {
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_11 = yes }
 			}
 			change_global_variable = { name = bag_wtp_sprt divide = bag_wtp_sprn_value }
+			set_global_variable = { name = bag_wtp_sprkey value = global_var:bag_wtp_sprt }
 			if = {
 				limit = {
-					global_var:bag_wtp_sprt > global_var:bag_wtp_sprv
-					global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+					global_var:bag_wtp_rlag11 = 1
+					OR = {
+						has_global_variable = bag_wtp_plan_rfair
+						global_var:bag_wtp_sprt > 0
+					}
+				}
+				change_global_variable = { name = bag_wtp_sprkey add = global_var:bag_wtp_rlagw11 }
+			}
+			if = {
+				limit = {
+					global_var:bag_wtp_sprkey > global_var:bag_wtp_sprv
+					OR = {
+						global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+						AND = {
+							global_var:bag_wtp_rlag11 = 1
+							global_var:bag_wtp_rn11 > 0
+							OR = {
+								has_global_variable = bag_wtp_plan_rfair
+								global_var:bag_wtp_sprt > 0
+							}
+						}
+					}
 					OR = {
 						global_var:bag_wtp_ropen = 1
 						global_var:bag_wtp_rn11 < global_var:bag_wtp_rlevel
 					}
 				}
-				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprt }
+				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprkey }
 				set_global_variable = { name = bag_wtp_sprk value = 11 }
 			}
 		}
@@ -103447,16 +104195,37 @@ bag_wtp_plan_grant_pass_prov = {
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_12 = yes }
 			}
 			change_global_variable = { name = bag_wtp_sprt divide = bag_wtp_sprn_value }
+			set_global_variable = { name = bag_wtp_sprkey value = global_var:bag_wtp_sprt }
 			if = {
 				limit = {
-					global_var:bag_wtp_sprt > global_var:bag_wtp_sprv
-					global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+					global_var:bag_wtp_rlag12 = 1
+					OR = {
+						has_global_variable = bag_wtp_plan_rfair
+						global_var:bag_wtp_sprt > 0
+					}
+				}
+				change_global_variable = { name = bag_wtp_sprkey add = global_var:bag_wtp_rlagw12 }
+			}
+			if = {
+				limit = {
+					global_var:bag_wtp_sprkey > global_var:bag_wtp_sprv
+					OR = {
+						global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+						AND = {
+							global_var:bag_wtp_rlag12 = 1
+							global_var:bag_wtp_rn12 > 0
+							OR = {
+								has_global_variable = bag_wtp_plan_rfair
+								global_var:bag_wtp_sprt > 0
+							}
+						}
+					}
 					OR = {
 						global_var:bag_wtp_ropen = 1
 						global_var:bag_wtp_rn12 < global_var:bag_wtp_rlevel
 					}
 				}
-				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprt }
+				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprkey }
 				set_global_variable = { name = bag_wtp_sprk value = 12 }
 			}
 		}
@@ -103481,16 +104250,37 @@ bag_wtp_plan_grant_pass_prov = {
 				scope:bag_wtp_country = { bag_wtp_plan_right_gate_13 = yes }
 			}
 			change_global_variable = { name = bag_wtp_sprt divide = bag_wtp_sprn_value }
+			set_global_variable = { name = bag_wtp_sprkey value = global_var:bag_wtp_sprt }
 			if = {
 				limit = {
-					global_var:bag_wtp_sprt > global_var:bag_wtp_sprv
-					global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+					global_var:bag_wtp_rlag13 = 1
+					OR = {
+						has_global_variable = bag_wtp_plan_rfair
+						global_var:bag_wtp_sprt > 0
+					}
+				}
+				change_global_variable = { name = bag_wtp_sprkey add = global_var:bag_wtp_rlagw13 }
+			}
+			if = {
+				limit = {
+					global_var:bag_wtp_sprkey > global_var:bag_wtp_sprv
+					OR = {
+						global_var:bag_wtp_sprt >= global_var:bag_wtp_rband
+						AND = {
+							global_var:bag_wtp_rlag13 = 1
+							global_var:bag_wtp_rn13 > 0
+							OR = {
+								has_global_variable = bag_wtp_plan_rfair
+								global_var:bag_wtp_sprt > 0
+							}
+						}
+					}
 					OR = {
 						global_var:bag_wtp_ropen = 1
 						global_var:bag_wtp_rn13 < global_var:bag_wtp_rlevel
 					}
 				}
-				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprt }
+				set_global_variable = { name = bag_wtp_sprv value = global_var:bag_wtp_sprkey }
 				set_global_variable = { name = bag_wtp_sprk value = 13 }
 			}
 		}

@@ -7,21 +7,21 @@ This file is the part that is live. What has already been settled is in
 ## Вторая версия мода закрыта, работа возвращается в первую
 
 **2026-09-12: `where_to_produce_v2` построен и удалён в тот же день**
-([`archive/wtp2_failed.md`](archive/wtp2_failed.md)). **Чужой инструмент —
-копировать файлами, а не воспроизводить формулой.** Его список и всё, что из
-него выросло, — [`investigations/wtp_backlog.md`](investigations/wtp_backlog.md);
-**CM и Glorp UI сняты с плейсета, CMF остаётся.**
+([`archive/wtp2_failed.md`](archive/wtp2_failed.md)) — **чужой инструмент
+копировать файлами, а не воспроизводить формулой**. Его список —
+[`investigations/wtp_backlog.md`](investigations/wtp_backlog.md); **CM и Glorp UI
+сняты с плейсета, CMF остаётся.**
 
 ## Работа: `where_to_produce` — что ждёт прогона
 
 ## Glorp UI снят с плейсета, `glorpui_hints` автономен
 
-**Дорогим он не был** ([`investigations/glorp_ui_cost.md`](investigations/glorp_ui_cost.md)),
-но снят по его решению. **09-14 форкнуто** четыре их генерируемых файла под
-именами `svx_svh_*` («просто спизди нужные вещи… любые обновления уже свои
-сделаем»), одиннадцать языков шлются отсюда, зависимость `glorp.ui` снята.
-**Имя мода — всё ещё их, это его решение.** **Прогона форк не видел**; что
-смотреть — в [`../mods/glorpui_hints/README.md`](../mods/glorpui_hints/README.md#форк-что-взято-у-glorp-ui).
+Снят по его решению, дорогим он не был
+([`investigations/glorp_ui_cost.md`](investigations/glorp_ui_cost.md)). **09-14
+форкнуто** четыре их генерируемых файла под именами `svx_svh_*`, одиннадцать
+языков шлются отсюда, зависимость `glorp.ui` снята; **имя мода — всё ещё их, это
+его решение**. **Прогона форк не видел**, что смотреть —
+[`../mods/glorpui_hints/README.md`](../mods/glorpui_hints/README.md#форк-что-взято-у-glorp-ui).
 
 ## Игра вылетает, и причину назвать пока нечем
 
@@ -29,36 +29,41 @@ This file is the part that is live. What has already been settled is in
 видимых на то триггеров… чаще когда игра какое-то время свёрнута». Симптом с
 мышью он снял сам — оконный режим.
 
-**Что причиной не является:** наш файл поверх игрового полон (стережёт
-`stale_overrides`), а в логах 09-14 нет ни дампа, ни исключения.
+**Причиной не является** наш файл поверх игрового (полон, стережёт
+`stale_overrides`), и в логах 09-14 нет ни дампа, ни исключения. **Нужно от него
+одно сообщение:** папка `logs` **упавшего запуска** (сперва через
+`tools/which_build.py`) и **один заход без нашего мода**. **Гадать до этого
+нечего** ([`pitfalls/diagnosis.md`](pitfalls/diagnosis.md)).
 
-**Что нужно от него, одно сообщение:** (1) папка `logs` **упавшего запуска**,
-сперва через `tools/which_build.py`; (2) **один заход без нашего мода**.
-**Гадать до этого нечего** ([`pitfalls/diagnosis.md`](pitfalls/diagnosis.md)).
+**Раздача грамот принята прогоном 09-14**: с галочкой «Грамоты — поровну»
+разброс в его области 3..6, «пока что оставим это так». Галочка снята по
+умолчанию и взаимоисключима со «Специализацией» — у той своя раздача, и ноль у
+грамоты там **ответ, а не сбой**: сессия 09-14 уже «починила» этот режим, и он
+её снял.
+
+**«Из плана — сюда» отстаёт на локацию — на это есть кнопка «⟳»**, она
+пересобирает панель (`ShowLocationProductionView`, ваниль зовёт это сама после
+смены фильтров). **Прогона не видело.** Кнопка в общем с `rgo_bonus_filter`
+файле, и иначе никак.
+
+**Раздачу грамот больше не правят на глаз:** `rights_sim.py <дамп>` повторяет
+реальный заход город в город. **Просить дамп, а не скриншот**, когда речь о
+числах раздачи — скриншот не говорит ни режима, ни того, что земля платит.
 
 **Окно замены, порядок «Пригодности» и `ERROR` приняты прогонами 09-14.** **Не
-видело прогона главное:** `_cov_pass` наконец спрашивает **локацию**
-(`_stands_<здание>`) — без этого он предлагал городу сельское здание, а
-Вестфалии японское; «на конец» больше не пускает зданий, которых в конце игры
-нет; среднее провинции в лесенке поделено (было 90650 %); нули и нечитаемый
-разбор убраны. **Что смотреть — «Прогон: что смотреть» в конце
-[`investigations/wtp_backlog.md`](investigations/wtp_backlog.md)**, семь
-пунктов.
+видело прогона:** `_cov_pass` со спросом о локации, сторона в `_stands_` под
+галочкой ранга («Торговая деревня» в городе), «на конец» без устаревших зданий,
+поделённое среднее провинции в лесенке. **Что смотреть — в конце
+[`investigations/wtp_backlog.md`](investigations/wtp_backlog.md)**, семь пунктов.
 
 **Просить `debug.log`, а не только `error.log`:** три ошибки из четырёх за 09-14
 нашлись только там. Почему CM ест производительность —
 [`investigations/cm_performance.md`](investigations/cm_performance.md).
-
-**Community Mod Toolkit прочитан** —
-[`investigations/community_mod_toolkit.md`](investigations/community_mod_toolkit.md);
-игрового скрипта в нём нет. Ждёт его решения про `upload.py` со SteamworksPy —
-вечер работы и его Steam.
+**Community Mod Toolkit прочитан**, игрового скрипта в нём нет; ждёт его решения
+про `upload.py` со SteamworksPy —
 [`investigations/community_mod_toolkit.md`](investigations/community_mod_toolkit.md).
-Ждёт решения их `upload.py` со SteamworksPy — вечер работы и его Steam.
-
-**Автострой: закрыт, переоткрыт им же, построен, не заработал, снят целиком.**
-Мод откачен байт в байт, опыт записан —
-[`archive/wtp_vanilla_autoexpand_attempt.md`](archive/wtp_vanilla_autoexpand_attempt.md).
+**Автострой: закрыт, переоткрыт им же, построен, не заработал, снят целиком**
+([`archive/wtp_vanilla_autoexpand_attempt.md`](archive/wtp_vanilla_autoexpand_attempt.md)).
 **Не предлагать заново.**
 
 **Открыто из первых девяти:** режим ручного заполнения (9).
@@ -71,45 +76,34 @@ This file is the part that is live. What has already been settled is in
 
 ## Отложено его решением — не поднимать самому
 
-Оба вопроса он задал сам 2026-09-14, выслушал ответ и **сознательно оставил
-как есть**. Это не «не дошли руки»: у обоих есть разбор с числами, и оба ждут
-его, а не нас.
-
-- **Знаменатель покрытия.** Доля сырья от всего входа рецепта или от сырьевой
-  части; сейчас от всего, поэтому рецепт с переделами упирается в 66.7 %.
-  Правка — одно число, разбор и цена в
-  [`investigations/wtp_town_right_map.md`](investigations/wtp_town_right_map.md).
-  **Его слово: «сначала я поиграю с таким вариантом, потом может с другим и
-  посмотрю что лучше ощущается».**
-- **`bag_wtp_trmm_search_panel` на всегда истинном `visible`.** Перенос из CM:
-  при выключенной карте каждый кадр считаются ~40 `GetMapMode(...).IsActive`.
-  Чинится переносом проверки на корень,
-  [`investigations/cm_performance.md`](investigations/cm_performance.md).
-  **Его слово: «если эта полоска значков незначительна в нагрузке — то тоже пока
-  так оставим».** Делать заодно, если полосу придётся открывать.
+Два вопроса он задал сам 2026-09-14, выслушал ответ с числами и **сознательно
+оставил как есть**: знаменатель покрытия (от всего входа или от сырьевой части)
+и всегда истинный `visible` у `bag_wtp_trmm_search_panel`. Это не «не дошли
+руки». Разбор, цена и его слова —
+[`archive/next_deferred_by_him.md`](archive/next_deferred_by_him.md).
+**Придёт с ответом — тогда и делать.**
 
 ## The job: `mods.bat`, and one run to confirm it
 
 **Both halves are repaired and neither has been run on his machine** — a failed
 steamcmd run looked exactly like a successful one
-([`archive/mods_bat_repair.md`](archive/mods_bat_repair.md)). **Ask for:**
-`mods.bat → 1`, `→ 4`, `mods.bat check`, and the output of all three. Logs go
-through `python3 tools/which_build.py <logs folder>` first, as always.
+([`archive/mods_bat_repair.md`](archive/mods_bat_repair.md)). **Ask for** the
+output of `mods.bat → 1`, `→ 4` and `mods.bat check`.
 
 ## Then `glorpui_hints` goes out
 
 Nothing outstanding; five steps in
-[`WORKSHOP.md`](WORKSHOP.md#putting-glorpui_hints-out-in-order),
+[`WORKSHOP.md`](WORKSHOP.md#putting-glorpui_hints-out-in-order) and
 [`archive/next_glorpui_publish.md`](archive/next_glorpui_publish.md).
 
 ## Also waiting on the owner, all of it cheap
 
-- **`mods.bat → 2` on his machine.** The 2026-08-28 files of Advanced Auto Build
-  and Glorp UI are still not in this tree. Entry 2 does **not** re-extract the game.
+- **`mods.bat → 2` on his machine** — the 2026-08-28 files of Advanced Auto Build
+  and Glorp UI are still missing here; entry 2 does **not** re-extract the game.
 - **The panel-open bisect and the hover run** —
-  [`investigations/panel_hitch.md`](investigations/panel_hitch.md) and
-  [`investigations/widget_leak.md`](investigations/widget_leak.md), every branch
-  with its next step. **Do not design a different test until they have run.**
+  [`investigations/panel_hitch.md`](investigations/panel_hitch.md),
+  [`investigations/widget_leak.md`](investigations/widget_leak.md). **Do not
+  design a different test until they have run.**
 
 ## Before asking him for anything
 

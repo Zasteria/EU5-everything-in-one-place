@@ -837,6 +837,54 @@ window = {
 				}
 			}
 
+			# **«Грамоты — поровну» — своей строкой, и не от красоты.** Ряд
+			# тумблеров выше уже 1582 пикселя при 1660 доступных; четвёртая пара
+			# «галочка + подпись» в него не влезает, а лишнее срезается с правого
+			# края — это `check_script` и посчитал (1820 при окне 1700). Первая
+			# попытка разрезала тот ряд пополам, и во вторую половину уехали
+			# лимиты и «Сбросить пометки»: его скриншот 2026-09-14 — «галочки
+			# разъехались сильно и заняли даже часть следующей строки». Новый ряд
+			# ставится **после** старого целиком, и старого не касается.
+			#
+			# **Снята по умолчанию.** Ровный счёт ценой земли, которая грамоте не
+			# платит, — его выбор, а не наш.
+			#
+			# **Взаимоисключима с «Режимом специализации»**: у специализации своя
+			# раздача грамот, ровности в ней нет нарочно, и галочка там не делает
+			# ничего. Гасят друг друга сами переключатели, а не `visible`:
+			# пропадающая галочка читается как поломка, а погасшая — как выбор.
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				spacing = 8
+
+				widget = {
+					size = { 28 34 }
+					checkbutton_round_alt = {
+						size = { 24 24 }
+						parentanchor = center
+						widgetanchor = center
+						down = "[GetGlobalVariable('bag_wtp_plan_rfair').IsSet]"
+						tooltip = "bag_wtp_plan_rfair_tt"
+						onclick = "[GetScriptedGui('bag_wtp_toggle_plan_rfair').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+					}
+				}
+
+				text_single = {
+					size = { 300 34 }
+					autoresize = no
+					maximumsize = { 300 34 }
+					align = left|vcenter
+					fontsize = 13
+					fontsize_min = 10
+					elide = right
+					text = "bag_wtp_plan_rfair"
+					tooltip = "bag_wtp_plan_rfair_tt"
+				}
+
+				expand = {}
+			}
+
+
 			# The borders, the same four buttons the ranking window carries.
 			# They were only there before, and choosing the ground for a plan
 			# meant opening the other window to do it and coming back.
@@ -1405,7 +1453,17 @@ window = {
 					align = left|vcenter
 					fontsize = 13
 					text = "bag_wtp_plan_head_right"
-					tooltip = "bag_wtp_plan_right_tt"
+					# **Заголовок столбца локации не несёт, и живая подсказка
+					# здесь не работала ни разу.** `bag_wtp_plan_right_tt` весь
+					# состоит из `Location.Custom(...)`, а у шапки таблицы
+					# скоупа локации нет: его прогон 2026-09-14 напечатал
+					# «No context supplied (Use SetDataContext), wanted context
+					# of type 'Location'» по одному разу на каждый из
+					# тринадцати `_rq_slot_*` и трёх `_rq_bd_slot_*`, и следом
+					# «PdxDataFetchLocalizedData failed for
+					# 'bag_wtp_plan_right_tt'». Лесенка живёт на строке, где
+					# локация есть; шапке остаётся одно предложение о столбце.
+					tooltip = "bag_wtp_plan_head_right_tt"
 				}
 				widget = { size = { 6 24 } }
 				text_single = {

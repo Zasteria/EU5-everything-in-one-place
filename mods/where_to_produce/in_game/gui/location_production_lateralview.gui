@@ -373,12 +373,57 @@
 					}
 
 					blockoverride "custom_search_filter"{
+						# SHARED -- этот файл оба мода возят побайтово одинаковым
+						# (`tools/check_script.py`, `SHARED_COPIES`). Кнопка ниже
+						# понадобилась `where_to_produce`, но жить может только
+						# здесь: у списка это единственный слот, который движок
+						# отдаёт модам, и разойдись копии -- мод, загрузившийся
+						# последним, молча унесёт кнопку.
+						#
+						# **Кнопка «Обновить список».** Фильтр «Из плана — сюда»
+						# узнаёт локацию через глобалку, которую пишет проба ниже,
+						# а панель фильтрует список в тот же миг, когда его строит:
+						# проба не успевает, и при фильтре, оставленном в
+						# избранном, список отстаёт ровно на одну локацию (его
+						# прогон 2026-09-14). Пересобрать отфильтрованный список из
+						# скрипта нечем -- но панель умеет открыть себя заново, и
+						# ваниль делает ровно это после смены фильтров
+						# (`location_production_lateralview.gui:371`,
+						# `food_production_lateralview.gui:612`). К этому моменту
+						# проба уже записала верную локацию, поэтому пересборка
+						# даёт верный список.
+						#
+						# **Одно действие, а не «выключить и включить».** Состояние
+						# фильтров не трогается: что игрок выбрал, то и остаётся.
 						hbox = {
 							layoutpolicy_horizontal = expanding
 							spacing = 2
-							margin = { 2 5 }
-							datamodel = "[GetPopTypes]"
-							datacontext = "[LocationProductionView.GetSelectedLocation]"
+
+							widget = {
+								size = { 30 30 }
+								datacontext = "[LocationProductionView.GetSelectedLocation]"
+								button_regular = {
+									size = { 26 26 }
+									parentanchor = center
+									widgetanchor = center
+									tooltip = "bag_shared_refresh_list_tt"
+									onclick = "[ShowLocationProductionView(Location.GetId, '(bool)no')]"
+									text_single = {
+										parentanchor = center
+										widgetanchor = center
+										autoresize = yes
+										fontsize = 16
+										text = "bag_shared_refresh_list"
+									}
+								}
+							}
+
+							hbox = {
+								layoutpolicy_horizontal = expanding
+								spacing = 2
+								margin = { 2 5 }
+								datamodel = "[GetPopTypes]"
+								datacontext = "[LocationProductionView.GetSelectedLocation]"
 					
 							item = {
 								# ESTATES FILTERS
@@ -415,6 +460,7 @@
 									}
 								}
 							}
+						}
 						}
 					}
 
