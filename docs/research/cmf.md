@@ -36,6 +36,15 @@ exist for.
 A mod opts in by declaring the same on_action in its own file and appending a
 leaf action; the engine merges the `on_actions` lists.
 
+**And these are CMF's, not the engine's — checkable, not remembered.** The game's
+own dump marks every one of them `From Code: No`
+(`reference/game/docs/on_actions.log`); of the four hundred-odd on_actions it
+lists, only `on_game_start` among the start and load hooks is `From Code: Yes`,
+and it fires before country selection. So **a mod that wants to run anything at
+load and does not want CMF has no on_action to use at all** — it has to drive
+itself from a hidden window, the way `cm_maps` does. Established 2026-09-15,
+building it.
+
 ### Mod Menu settings (CMM)
 
 Registration effects, called from `cmf_on_mod_registration`:
