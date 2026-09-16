@@ -592,14 +592,47 @@ window = {
 			# `hbox` with room to spare divides it between its children, so
 			# without a child that takes the slack the two columns drift apart
 			# across the window. `docs/pitfalls/interface.md`.
-			text_single = {
-				size = { 700 22 }
-				autoresize = no
-				align = left|vcenter
-				fontsize = 13
-				elide = right
-				text = "bag_wtp_edit_rights_head"
-				tooltip = "bag_wtp_edit_rights_head_tt"
+			# **Заголовок и галочка режима в одном ряду.** Галочка -- его
+			# просьба 2026-09-14: «Можно добавить галочку режима на этот счёт.
+			# Менять по одному праву или по провинциям сразу». Стоит по
+			# умолчанию, значение ей ставит `bag_wtp_register`.
+			#
+			# **Растягивающаяся пустышка в конце ряда обязательна**: `hbox` с
+			# запасом делит его между детьми, и без неё заголовок с галочкой
+			# разъезжаются по ширине окна (`docs/pitfalls/interface.md`).
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				spacing = 8
+
+				text_single = {
+					size = { 700 22 }
+					autoresize = no
+					align = left|vcenter
+					fontsize = 13
+					elide = right
+					text = "bag_wtp_edit_rights_head"
+					tooltip = "bag_wtp_edit_rights_head_tt"
+				}
+
+				checkbutton_round_alt = {
+					size = { 22 22 }
+					down = "[GetGlobalVariable('bag_wtp_edit_rprov').IsSet]"
+					tooltip = "bag_wtp_edit_rprov_tt"
+					onclick = "[GetScriptedGui('bag_wtp_edit_rprov_toggle').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+				}
+
+				text_single = {
+					size = { 330 22 }
+					maximumsize = { 330 22 }
+					autoresize = no
+					align = left|vcenter
+					fontsize = 13
+					elide = right
+					text = "bag_wtp_edit_rprov"
+					tooltip = "bag_wtp_edit_rprov_tt"
+				}
+
+				expand = {}
 			}
 
 			vbox = {

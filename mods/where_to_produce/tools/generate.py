@@ -194,6 +194,40 @@ PLAN_BANDS = (800, 600, 400, 200, 0)
 # times over. Westphalia -- 48 towns, 9 charters -- climbs to 6.
 RIGHT_LEVELS = 12
 
+# **Насколько отставшая грамота обгоняет выгодную, и почему это одно число.**
+#
+# Лестница уровней делает поровну **те единицы, которыми раздача считает**:
+# города в обычном проходе, провинции в провинциальном. Провинции не одинаковы,
+# и его прогон 2026-09-14 показал, чего это стоит: «в Швабии у меня на двух
+# областях -- всего 1 город с правами на оружие и около 10 на пивных правах».
+# Обе грамоты взяли по одной провинции, лестница считает это ровным счётом, а на
+# экране он считает города.
+#
+# **Его правило, его словами:** «при распределении новых провинций должно
+# учитываться соотношение уже имеющихся городских прав… если прав на оружие
+# выдано меньше половины, чем какого-то другого самого большого по выдаче прав
+# -- то поиск подходящей провинции начнётся именно для оружейных прав в
+# приоритете». Считается по `_rgiven<k>` -- по **городам**, а не по тому, чем
+# ходит лестница: это и есть число, которое он видит.
+#
+# Реализовано ключом сортировки, а не отдельным проходом: отставшая грамота
+# получает к своей выгоде эту добавку, и выбор остаётся одним сравнением. Больше
+# любой выгоды (`RANK_SCALE`) на два порядка, так что отставшая обгоняет любую
+# неотставшую и **только их**: между двумя отставшими и между двумя обычными
+# по-прежнему решает земля.
+#
+# **«Подходящую» держат полосы, а не это число.** Полоса требует от земли
+# заплатить `_rband` до того, как грамота вообще рассматривается, поэтому
+# приоритет отставшей работает внутри полосы -- среди тех, кому эта земля платит
+# сравнимо, -- а не «дать оружейные там, где они не стоят ничего».
+RIGHT_LAG_BONUS = RANK_SCALE * 100
+
+# **Шаг уклона: сколько стоит один город отставания.** Больше любой выгоды
+# (`RANK_SCALE`) на порядок, так что отставшая на один город обгоняет любую
+# неотставшую, а отставшая на два -- отставшую на один. Между равными по
+# отставанию по-прежнему решает земля.
+RIGHT_LAG_STEP = RANK_SCALE * 10
+
 # **The rungs inside one lap of the draft, and the whole of the ordering.**
 #
 # **A lap is a level**: `_plan_lvl` rises by one and every good may add at most
@@ -1514,8 +1548,36 @@ def triggers_file(rows, split, game) -> str:
     seen: dict[str, eu5data.Method] = {}
     for method in rows:
         seen.setdefault(method.building, method)
+    # **Which side of the tick this building may stand on, and it was missing.**
+    # `can_build_building` answers the rank and the potential in one breath; the
+    # tick replaces it, and until 2026-09-14 what it put back was the potential
+    # alone. So under a tick the rank went unasked altogether, and a building
+    # that declares one side answered yes on both. `market_village` declares
+    # `rural_settlement` and nothing else and carries no `location_potential`,
+    # so on a location ticked «город» `_stands_market_village` was the bare
+    # `{MOD_ID}_rank_is_ticked = yes` -- true always. His run of 2026-09-14 is
+    # what that printed: the jewelry charter scored 100 % on a town and the
+    # breakdown under it named «Торговая деревня, Сельский ювелир 1/1», «а
+    # деревни в целом не могут вставать в города. Соответственно мод предлагает
+    # вариант, которые невозможен».
+    #
+    # **The sides are `eu5data.Method.urban` / `.rural`, the same two
+    # `plan_groups` deals by**, so the trigger and the plan cannot disagree about
+    # where a building goes. A building that declares both sides gets no test at
+    # all; one that declares neither gets `always = no`, because that is the side
+    # `plan_groups` puts it on -- neither.
+    def ticked_side(method: eu5data.Method) -> str:
+        if method.urban and method.rural:
+            return ""
+        if method.urban:
+            return f"{MOD_ID}_plan_is_town = yes"
+        if method.rural:
+            return f"{MOD_ID}_plan_is_town = no"
+        return "always = no"
+
     for building, method in sorted(seen.items()):
         potential = " ".join(method.potential.split())
+        side = ticked_side(method)
         # Two reasons to leave a building alone and ask the game as before: it
         # is gated by something besides the rank and the potential, or its
         # potential names a scope this one has not got. Twelve buildings of a
@@ -1531,13 +1593,24 @@ def triggers_file(rows, split, game) -> str:
         elif not potential:
             # The rank is the whole of what the game checks here, and the tick is
             # the answer to the rank. This is the manufacturing ladder.
-            out.append(f"{MOD_ID}_stands_{building} = {{\n"
+            ranks = " ".join(sorted(method.ranks)) or "none"
+            out.append(f"# declares {ranks}\n"
+                       f"{MOD_ID}_stands_{building} = {{\n"
                        f"\tOR = {{\n"
-                       f"\t\t{MOD_ID}_rank_is_ticked = yes\n"
-                       f"\t\tcan_build_building = building_type:{building}\n"
+                       f"\t\tAND = {{\n"
+                       f"\t\t\t{MOD_ID}_rank_is_ticked = no\n"
+                       f"\t\t\tcan_build_building = building_type:{building}\n"
+                       f"\t\t}}\n"
+                       f"\t\tAND = {{\n"
+                       f"\t\t\t{MOD_ID}_rank_is_ticked = yes\n"
+                       + (f"\t\t\t{side}\n" if side else "")
+                       + f"\t\t}}\n"
                        f"\t}}\n}}\n")
         else:
-            out.append(f"""{MOD_ID}_stands_{building} = {{
+            ranks = " ".join(sorted(method.ranks)) or "none"
+            line = f"\t\t\t{side}\n" if side else ""
+            out.append(f"""# declares {ranks}
+{MOD_ID}_stands_{building} = {{
 \tOR = {{
 \t\tAND = {{
 \t\t\t{MOD_ID}_rank_is_ticked = no
@@ -1545,7 +1618,7 @@ def triggers_file(rows, split, game) -> str:
 \t\t}}
 \t\tAND = {{
 \t\t\t{MOD_ID}_rank_is_ticked = yes
-\t\t\t# the building's own `location_potential`, copied from the game
+{line}\t\t\t# the building's own `location_potential`, copied from the game
 \t\t\t{potential}
 \t\t}}
 \t}}
@@ -3517,6 +3590,22 @@ def plan_loc_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\ttrigger = {{ global_var:{MOD_ID}_edit_done = 1 global_var:{MOD_ID}_edit_op = 4 }}
 \t\tlocalization_key = {MOD_ID}_edit_last_right_drop
 \t}}
+\t# **Провинциальные нажатия и ручная постановка -- свои три строки.**
+\t# «+1», взявшее восемь городов разом, и «+1», взявшее один, читаются
+\t# одинаково, если строка у них одна; названная локация -- представитель
+\t# провинции, и без слова «провинция» она читается как единственная.
+\ttext = {{
+\t\ttrigger = {{ global_var:{MOD_ID}_edit_done = 1 global_var:{MOD_ID}_edit_op = 7 }}
+\t\tlocalization_key = {MOD_ID}_edit_last_right_add_prov
+\t}}
+\ttext = {{
+\t\ttrigger = {{ global_var:{MOD_ID}_edit_done = 1 global_var:{MOD_ID}_edit_op = 8 }}
+\t\tlocalization_key = {MOD_ID}_edit_last_right_drop_prov
+\t}}
+\ttext = {{
+\t\ttrigger = {{ global_var:{MOD_ID}_edit_done = 1 global_var:{MOD_ID}_edit_op = 9 }}
+\t\tlocalization_key = {MOD_ID}_edit_last_right_hand
+\t}}
 \ttext = {{
 \t\ttrigger = {{ global_var:{MOD_ID}_edit_done = 1 }}
 \t\tlocalization_key = {MOD_ID}_edit_last_done
@@ -3529,15 +3618,26 @@ def plan_loc_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t# reason**: the town's charter could go, and no other charter this
 \t# country may grant can stand there.
 \ttext = {{
-\t\ttrigger = {{ global_var:{MOD_ID}_edit_op = 4 global_var:{MOD_ID}_edit_fail = 1 }}
+\t\ttrigger = {{
+\t\t\tOR = {{ global_var:{MOD_ID}_edit_op = 4 global_var:{MOD_ID}_edit_op = 8 }}
+\t\t\tglobal_var:{MOD_ID}_edit_fail = 1
+\t\t}}
 \t\tlocalization_key = {MOD_ID}_edit_last_right_noheir
 \t}}
 \ttext = {{
-\t\ttrigger = {{ global_var:{MOD_ID}_edit_op = 3 }}
+\t\ttrigger = {{
+\t\t\tOR = {{
+\t\t\t\tglobal_var:{MOD_ID}_edit_op = 3
+\t\t\t\tglobal_var:{MOD_ID}_edit_op = 7
+\t\t\t\tglobal_var:{MOD_ID}_edit_op = 9
+\t\t\t}}
+\t\t}}
 \t\tlocalization_key = {MOD_ID}_edit_last_right_notown
 \t}}
 \ttext = {{
-\t\ttrigger = {{ global_var:{MOD_ID}_edit_op = 4 }}
+\t\ttrigger = {{
+\t\t\tOR = {{ global_var:{MOD_ID}_edit_op = 4 global_var:{MOD_ID}_edit_op = 8 }}
+\t\t}}
 \t\tlocalization_key = {MOD_ID}_edit_last_right_none
 \t}}
 \ttext = {{
@@ -3602,7 +3702,8 @@ def plan_loc_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 {MOD_ID}_rwhy_{k} = {{
 \ttype = country
 """)
-        for code, key in ((1, "gate"), (2, "noland"), (3, "off"), (4, "quota")):
+        for code, key in ((1, "gate"), (2, "noland"), (3, "off"), (4, "quota"),
+                          (6, "capped")):
             out.append(f"""\ttext = {{
 \t\ttrigger = {{ global_var:{MOD_ID}_rwhy{k} = {code} }}
 \t\tlocalization_key = {MOD_ID}_rwhy_{key}
@@ -4391,9 +4492,17 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     # and no longer the score's** -- `_rq<k>` divides by `_rp<k>`, the count in
     # this province. A script value reading a global that is not there is the
     # silent failure, so it still has to be zeroed.
+    # **И флаг отставания, по грамоте.** Он читается в `limit` выбора, а `limit`,
+    # читающий глобалку, которой нет, молча не проходит: без этой строки первый
+    # же проход раздачи считал бы неотставшими всех.
     for k in range(1, len(rights) + 1):
         out.append(f"\tset_global_variable = {{ name = {MOD_ID}_rgiven{k} value = 0 }}\n"
-                   f"\tset_global_variable = {{ name = {MOD_ID}_rn{k} value = 0 }}\n")
+                   f"\tset_global_variable = {{ name = {MOD_ID}_rn{k} value = 0 }}\n"
+                   f"\tset_global_variable = {{ name = {MOD_ID}_rlag{k} value = 0 }}\n"
+                   f"\tset_global_variable = {{ name = {MOD_ID}_rlagw{k} value = 0 }}\n")
+    out.append(f"\tset_global_variable = {{ name = {MOD_ID}_rmax value = 0 }}\n"
+               f"\tset_global_variable = {{ name = {MOD_ID}_rlagv value = 0 }}\n"
+               f"\tset_global_variable = {{ name = {MOD_ID}_sprkey value = 0 }}\n")
     # The rights' band and quota, zeroed here for the same reason every other
     # counter is: a `limit` that reads a global which is not there fails silently.
     out.append(f"\tset_global_variable = {{ name = {MOD_ID}_rband value = 0 }}\n"
@@ -5078,6 +5187,65 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 {MOD_ID}_clear_granary_here = {{
 {gran_clear}}}
 """)
+    # ---- кто отстал ---------------------------------------------------------
+    #
+    # **Его правило, 2026-09-14.** «При распределении новых провинций должно
+    # учитываться соотношение уже имеющихся городских прав… если прав на оружие
+    # выдано меньше половины, чем какого-то другого самого большого по выдаче
+    # прав -- то поиск подходящей провинции начнётся именно для оружейных прав
+    # в приоритете.»
+    #
+    # **Отставание считается по `_rgiven<k>`, то есть по городам.** Лестница
+    # уровней (`_rn<k>`) считает то, чем раздача ходит: города в обычном проходе
+    # и **провинции** в провинциальном. Потому счёт выходил ровным в провинциях
+    # и каким угодно в городах -- провинция о восьми городах и провинция об
+    # одном для лестницы одно и то же, а на экране он считает города.
+    #
+    # **Ворот здесь нет, и они не нужны.** У грамоты, которую держава выдать не
+    # может, `_rgiven<k>` равен нулю: максимума она не поднимает, а пометить её
+    # отставшей безвредно -- сам выбор всё равно спрашивает
+    # `_plan_right_gate_<k>`.
+    rmax = "".join(
+        f"\tif = {{ limit = {{ global_var:{MOD_ID}_rgiven{k} > global_var:{MOD_ID}_rmax }}"
+        f" set_global_variable = {{ name = {MOD_ID}_rmax value = global_var:{MOD_ID}_rgiven{k} }} }}\n"
+        for k in range(1, len(rights) + 1))
+    # **`multiply = 2` у выданного, а не деление максимума пополам.** Счёт целый,
+    # деление целого молча округляет, и грамота с ровно половиной оказывалась то
+    # отставшей, то нет -- в зависимости от чётности максимума.
+    # **И насколько отстала, а не только «отстала ли».** Порог «меньше половины»
+    # -- обрыв, а не уклон: когда позади оказываются сразу шесть грамот, все шесть
+    # получают одну и ту же добавку, и между ними снова решает выгода -- то есть
+    # оружейные, которым платят 62, проигрывают книгопечатным с их 715 столько же
+    # раз, сколько проигрывали без добавки. Его прогон 2026-09-14 это и показал.
+    # `_rlagw<k>` -- расстояние до самой раздатой, в шагах: чем дальше, тем
+    # сильнее заявка, и шесть отставших выстраиваются в очередь по отставанию,
+    # а не сваливаются в одну кучу.
+    rlag = "".join(
+        f"\tset_global_variable = {{ name = {MOD_ID}_rlagv value = global_var:{MOD_ID}_rgiven{k} }}\n"
+        f"\tchange_global_variable = {{ name = {MOD_ID}_rlagv multiply = 2 }}\n"
+        f"\tset_global_variable = {{ name = {MOD_ID}_rlag{k} value = 0 }}\n"
+        f"\tif = {{\n"
+        f"\t\tlimit = {{ global_var:{MOD_ID}_rlagv < global_var:{MOD_ID}_rmax }}\n"
+        f"\t\tset_global_variable = {{ name = {MOD_ID}_rlag{k} value = 1 }}\n"
+        f"\t}}\n"
+        f"\tset_global_variable = {{ name = {MOD_ID}_rlagw{k} value = global_var:{MOD_ID}_rmax }}\n"
+        f"\tchange_global_variable = {{ name = {MOD_ID}_rlagw{k} "
+        f"subtract = global_var:{MOD_ID}_rgiven{k} }}\n"
+        f"\tchange_global_variable = {{ name = {MOD_ID}_rlagw{k} "
+        f"multiply = {RIGHT_LAG_STEP} }}\n"
+        for k in range(1, len(rights) + 1))
+    out.append(f"""
+# Какие грамоты отстали: выдано меньше половины от самой раздатой.
+#
+# **Только глобалки, поэтому зовётся из любого скоупа** -- в том числе изнутри
+# обхода по локациям, где он и нужен: счёт меняется этим же обходом, и следующий
+# город обязан видеть то, что взял предыдущий.
+# Scope: any
+{MOD_ID}_plan_grant_lag = {{
+\tset_global_variable = {{ name = {MOD_ID}_rmax value = 0 }}
+{rmax}{rlag}}}
+""")
+
     out.append(f"""
 # Urban rights, before any good is placed and only in towns.
 #
@@ -5150,6 +5318,11 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t# fits gets none.
 \t\tset_variable = {{ name = {MOD_ID}_rbest value = -1 }}
 \t\tset_variable = {{ name = {MOD_ID}_rbest_k value = 0 }}
+\t\t# **Кто отстал -- пересчитывается перед каждым городом, а не раз за
+\t\t# проход.** Счёт меняется этим же обходом: первый город берёт пивные,
+\t\t# второй обязан уже знать, что пивных стало на один больше. Один
+\t\t# пересчёт на проход оставил бы отставшими тех, кто отстал до его начала.
+\t\t{MOD_ID}_plan_grant_lag = yes
 """)
     for k, right in enumerate(rights, start=1):
         bundle = sorted(right.output)
@@ -5157,13 +5330,51 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
                 f"{{ {MOD_ID}_plan_right_gate_{k} = yes }}\n")
         out.append(f"""\t\t# {right.key}: {", ".join(bundle)}
 \t\tset_variable = {{ name = {MOD_ID}_rtry value = {MOD_ID}_rq{k} }}
+\t\t# **Ключ сравнения -- выгода плюс добавка отставшему.** Полоса ниже
+\t\t# спрашивает саму выгоду, поэтому это две разные переменные: добавка
+\t\t# решает, кому достанется город, и не делает вид, что земля платит больше.
+\t\tset_variable = {{ name = {MOD_ID}_rkey value = var:{MOD_ID}_rtry }}
+\t\t# Добавка -- по расстоянию до самой раздатой (`_rlagw<k>`), а не «есть/нет»:
+\t\t# одинаковая добавка шести отставшим ничего между ними не решает. Пол
+\t\t# («только где платят») снимает галочка «Грамоты — поровну».
 \t\tif = {{
 \t\t\tlimit = {{
-\t\t\t\tvar:{MOD_ID}_rtry > var:{MOD_ID}_rbest
+\t\t\t\tglobal_var:{MOD_ID}_rlag{k} = 1
+\t\t\t\tOR = {{
+\t\t\t\t\thas_global_variable = {MOD_ID}_plan_rfair
+\t\t\t\t\tvar:{MOD_ID}_rtry > 0
+\t\t\t\t}}
+\t\t\t}}
+\t\t\tchange_variable = {{ name = {MOD_ID}_rkey add = global_var:{MOD_ID}_rlagw{k} }}
+\t\t}}
+\t\tif = {{
+\t\t\tlimit = {{
+\t\t\t\tvar:{MOD_ID}_rkey > var:{MOD_ID}_rbest
 \t\t\t\t{MOD_ID}_plan_right_fits_{k} = yes
 \t\t\t\t# The band: what this ground has to pay before the charter is taken
 \t\t\t\t# here at all. The open pass sets it to 0.
-\t\t\t\tvar:{MOD_ID}_rtry >= global_var:{MOD_ID}_rband
+\t\t\t\t#
+\t\t\t\t# **Отставшую грамоту полоса не держит.** Она требует заплатить
+\t\t\t\t# `_rband` прежде, чем грамоту тут рассмотрят, -- а отставшая
+\t\t\t\t# отстала как раз потому, что земля ей платит мало, и до полосы 0
+\t\t\t\t# свободной земли не доживало. **Но только там, где земля ей хоть
+\t\t\t\t# что-то платит**: город, который не платит ей ничего, ничего ей и
+\t\t\t\t# не даст, а у того, кто там зарабатывал, отнимет.
+\t\t\t\t# **И только той, у которой город уже есть** (`_rn<k> > 0`): без
+\t\t\t\t# этого все, кроме первой выдачи, «отстают» с нуля, и лестница полос
+\t\t\t\t# перестаёт работать вовсе. Не получившая ещё ничего стоит в очереди,
+\t\t\t\t# а не отстаёт, и очередь держит лестница уровней.
+\t\t\t\tOR = {{
+\t\t\t\t\tvar:{MOD_ID}_rtry >= global_var:{MOD_ID}_rband
+\t\t\t\t\tAND = {{
+\t\t\t\t\t\tglobal_var:{MOD_ID}_rlag{k} = 1
+\t\t\t\t\t\tglobal_var:{MOD_ID}_rn{k} > 0
+\t\t\t\t\t\tOR = {{
+\t\t\t\t\t\t\thas_global_variable = {MOD_ID}_plan_rfair
+\t\t\t\t\t\t\tvar:{MOD_ID}_rtry > 0
+\t\t\t\t\t\t}}
+\t\t\t\t\t}}
+\t\t\t\t}}
 \t\t\t\t# The level: how many towns any one charter may hold so far. It
 \t\t\t\t# climbs by one at a time, so no charter takes an Nth town while
 \t\t\t\t# another is still short of its Nth -- that, and not the quota it
@@ -5174,7 +5385,7 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t\t\t\tglobal_var:{MOD_ID}_rn{k} < global_var:{MOD_ID}_rlevel
 \t\t\t\t}}
 {gate}\t\t\t}}
-\t\t\tset_variable = {{ name = {MOD_ID}_rbest value = var:{MOD_ID}_rtry }}
+\t\t\tset_variable = {{ name = {MOD_ID}_rbest value = var:{MOD_ID}_rkey }}
 \t\t\tset_variable = {{ name = {MOD_ID}_rbest_k value = {k} }}
 \t\t}}
 """)
@@ -5228,16 +5439,74 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t\t\tscope:{MOD_ID}_country = {{ {MOD_ID}_plan_right_gate_{k} = yes }}
 \t\t\t}}
 \t\t\tchange_global_variable = {{ name = {MOD_ID}_sprt divide = {MOD_ID}_sprn_value }}
+\t\t\t# Ключ сравнения -- средняя выгода плюс добавка отставшей грамоте.
+\t\t\t# Полоса ниже спрашивает саму выгоду, и это две разные глобалки.
+\t\t\tset_global_variable = {{ name = {MOD_ID}_sprkey value = global_var:{MOD_ID}_sprt }}
+\t\t\t# **Добавка -- по расстоянию до самой раздатой, а не «есть/нет».**
+\t\t\t# Шести отставшим одинаковая добавка ничего не решает: между ними снова
+\t\t\t# выигрывает выгода, и грамота с 62 проигрывает грамоте с 715 столько же
+\t\t\t# раз, сколько проигрывала без добавки.
+\t\t\t#
+\t\t\t# **Полом управляет галочка «Грамоты — поровну».** Снятая оставляет
+\t\t\t# добавку только там, где земля грамоте хоть что-то платит: провинция,
+\t\t\t# которая не платит ей ничего, ничего ей и не даст, а у того, кто там
+\t\t\t# зарабатывал, отнимет. Стоящая -- ровняет счёт любой ценой, и это его
+\t\t\t# трижды повторенная просьба: «относительно одинаковое количество
+\t\t\t# каждого городского права». На его земле это разница между разбросом
+\t\t\t# 8 и разбросом 3 (посчитано по дампу 2026-09-14).
 \t\t\tif = {{
 \t\t\t\tlimit = {{
-\t\t\t\t\tglobal_var:{MOD_ID}_sprt > global_var:{MOD_ID}_sprv
-\t\t\t\t\tglobal_var:{MOD_ID}_sprt >= global_var:{MOD_ID}_rband
+\t\t\t\t\tglobal_var:{MOD_ID}_rlag{k} = 1
+\t\t\t\t\tOR = {{
+\t\t\t\t\t\thas_global_variable = {MOD_ID}_plan_rfair
+\t\t\t\t\t\tglobal_var:{MOD_ID}_sprt > 0
+\t\t\t\t\t}}
+\t\t\t\t}}
+\t\t\t\tchange_global_variable = {{ name = {MOD_ID}_sprkey add = global_var:{MOD_ID}_rlagw{k} }}
+\t\t\t}}
+\t\t\tif = {{
+\t\t\t\tlimit = {{
+\t\t\t\t\tglobal_var:{MOD_ID}_sprkey > global_var:{MOD_ID}_sprv
+\t\t\t\t\t# **Полоса отставшую грамоту не держит, и в этом вся правка.**
+\t\t\t\t\t# Полоса требует от земли заплатить `_rband` прежде, чем грамоту
+\t\t\t\t\t# тут вообще рассмотрят, а оружейным эта земля платит 6 % --
+\t\t\t\t\t# то есть 60 из 1000, и в полосы 800..200 они не попадали ни
+\t\t\t\t\t# разу. К полосе 0 свободной земли уже не оставалось, и добавка
+\t\t\t\t\t# отставшему не успевала ничего решить: его прогон 2026-09-14,
+\t\t\t\t\t# «оружейные права как были на 1 провинции так и остались».
+\t\t\t\t\t# Теперь отставшая рассматривается в любой полосе -- это и есть
+\t\t\t\t\t# «поиск подходящей провинции **начнётся** для них в приоритете».
+\t\t\t\t\t# **Но только там, где земля ей хоть что-то платит** (`> 0`):
+\t\t\t\t\t# провинция, которая не платит ей ничего, ничего ей и не даст, а
+\t\t\t\t\t# у того, кто там зарабатывал, отнимет.
+\t\t\t\t\t#
+\t\t\t\t\t# **И только той, у которой провинция уже есть** (`_rn<k> > 0`).
+\t\t\t\t\t# Без этого условия послабление съедало бы лестницу полос целиком:
+\t\t\t\t\t# после первой же выдачи все остальные грамоты «отстают» -- у них
+\t\t\t\t\t# ноль, -- и вторая провинция досталась бы просто лучшей из них по
+\t\t\t\t\t# ходу обхода, а не лучшей паре «земля -- грамота» на всей земле.
+\t\t\t\t\t# Первый круг обязан идти полосами, как и шёл: «не получившая ещё
+\t\t\t\t\t# ничего» -- это не отставание, это очередь, и её держит лестница
+\t\t\t\t\t# уровней. Отставание, ради которого это написано, появляется
+\t\t\t\t\t# **после** первого круга и берётся из размера провинций: у одной
+\t\t\t\t\t# восемь городов, у другой один.
+\t\t\t\t\tOR = {{
+\t\t\t\t\t\tglobal_var:{MOD_ID}_sprt >= global_var:{MOD_ID}_rband
+\t\t\t\t\t\tAND = {{
+\t\t\t\t\t\t\tglobal_var:{MOD_ID}_rlag{k} = 1
+\t\t\t\t\t\t\tglobal_var:{MOD_ID}_rn{k} > 0
+\t\t\t\t\t\t\tOR = {{
+\t\t\t\t\t\t\t\thas_global_variable = {MOD_ID}_plan_rfair
+\t\t\t\t\t\t\t\tglobal_var:{MOD_ID}_sprt > 0
+\t\t\t\t\t\t\t}}
+\t\t\t\t\t\t}}
+\t\t\t\t\t}}
 \t\t\t\t\tOR = {{
 \t\t\t\t\t\tglobal_var:{MOD_ID}_ropen = 1
 \t\t\t\t\t\tglobal_var:{MOD_ID}_rn{k} < global_var:{MOD_ID}_rlevel
 \t\t\t\t\t}}
 \t\t\t\t}}
-\t\t\t\tset_global_variable = {{ name = {MOD_ID}_sprv value = global_var:{MOD_ID}_sprt }}
+\t\t\t\tset_global_variable = {{ name = {MOD_ID}_sprv value = global_var:{MOD_ID}_sprkey }}
 \t\t\t\tset_global_variable = {{ name = {MOD_ID}_sprk value = {k} }}
 \t\t\t}}
 \t\t}}
@@ -5263,6 +5532,9 @@ def plan_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\tvariable = {MOD_ID}_plan_prov_locs
 \t\tset_global_variable = {{ name = {MOD_ID}_sprv value = -1 }}
 \t\tset_global_variable = {{ name = {MOD_ID}_sprk value = 0 }}
+\t\t# Кто отстал -- перед каждой провинцией, а не раз за проход: счёт
+\t\t# меняется этим же обходом, и следующая провинция обязана его видеть.
+\t\t{MOD_ID}_plan_grant_lag = yes
 {prov_picks}\t\tif = {{
 \t\t\tlimit = {{ global_var:{MOD_ID}_sprk > 0 }}
 {prov_level}\t\t\tprovince_definition = {{
@@ -6539,6 +6811,14 @@ EDIT_RIGHT_W = 264
 EDIT_RIGHT_H = 32
 EDIT_RIGHT_ROW = 5
 
+# **Окно замены уже редактора, и его ячейки грамот свои.** Редактор -- 1450
+# пикселей и пять ячеек по 264; окно замены -- 1000, и те же пять ячеек дали бы
+# ряд в 1376, то есть срезанный правый край, а срезается там кнопка
+# (`docs/pitfalls/windows.md`). Четыре по 225 с зазором 10 -- 930 при примерно
+# 950 доступных.
+SWAP_RIGHT_W = 225
+SWAP_RIGHT_ROW = 4
+
 
 def edit_cells_file(order: list[str],
                     rights: list[eu5data.TownRight],
@@ -6838,6 +7118,57 @@ def edit_cells_file(order: list[str],
 	# у которого невидимы все дети, сам остаётся видимым и держит свои 32 пикселя.
 	type {MOD_ID}_edit_right_row{r + 1} = hbox {{
 		spacing = 14
+		ignoreinvisible = no
+		visible = "[GetPlayer.MakeScope.GetVariable('{MOD_ID}_rslotok{first}').IsSet]"
+{cells}{pad}	}}
+""")
+    # **Те же места, но кнопкой «поставить сюда» -- для окна замены.**
+    #
+    # Его слово, 2026-09-14: «иметь возможность заменять городские права
+    # вручную, так же как сейчас заменяется товар». Товар меняется руками в окне
+    # замены, значит и грамота там же, и тем же блоком мест: `_rslot<p>` уже
+    # говорит, какая грамота на месте сидит, а `_rslotok<p>` -- рисовать ли его
+    # вовсе. Ни счётчика, ни второй кнопки: место выбрано окном, выбирать
+    # осталось только грамоту.
+    for r in range((len(rights) + SWAP_RIGHT_ROW - 1) // SWAP_RIGHT_ROW):
+        first = r * SWAP_RIGHT_ROW + 1
+        last = min((r + 1) * SWAP_RIGHT_ROW, len(rights))
+        cells = ""
+        for p in range(first, last + 1):
+            cells += f"""
+		widget = {{
+			size = {{ {SWAP_RIGHT_W} {EDIT_RIGHT_H} }}
+			visible = "[GetPlayer.MakeScope.GetVariable('{MOD_ID}_rslotok{p}').IsSet]"
+			button_regular = {{
+				size = {{ {SWAP_RIGHT_W - 4} {EDIT_RIGHT_H - 4} }}
+				parentanchor = center
+				widgetanchor = center
+				tooltip = "{MOD_ID}_swap_right_put_tt"
+				onclick = "[GetScriptedGui('{MOD_ID}_swap_right_slot_{p}').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+				text_single = {{
+					size = {{ {SWAP_RIGHT_W - 16} {EDIT_RIGHT_H - 8} }}
+					maximumsize = {{ {SWAP_RIGHT_W - 16} {EDIT_RIGHT_H - 8} }}
+					parentanchor = center
+					widgetanchor = center
+					autoresize = no
+					fontsize = 14
+					fontsize_min = 11
+					align = center|vcenter
+					elide = right
+					text = "[GetPlayer.Custom('{MOD_ID}_rslot_name_{p}')]"
+				}}
+			}}
+		}}
+"""
+        pad = "".join(f"		widget = {{ size = {{ {SWAP_RIGHT_W} {EDIT_RIGHT_H} }} }}\n"
+                      for _ in range(SWAP_RIGHT_ROW - (last - first + 1)))
+        rows.append(f"""
+	# Места {first}..{last} в окне замены: нажатие ставит грамоту в открытую локацию.
+	#
+	# **Ряд гаснет по своему первому месту**, как и в редакторе: места заполняются
+	# подряд, а `hbox` с невидимыми детьми держит свою высоту.
+	type {MOD_ID}_swap_right_row{r + 1} = hbox {{
+		spacing = 10
 		ignoreinvisible = no
 		visible = "[GetPlayer.MakeScope.GetVariable('{MOD_ID}_rslotok{first}').IsSet]"
 {cells}{pad}	}}
@@ -9548,22 +9879,342 @@ def editor_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 
 """)
 
+    # ---- грамоты провинцией, а не по городу --------------------------------
+    #
+    # **Его слово, 2026-09-14.** «При нажатии на кнопку +1 -1 у городских прав --
+    # права и их здания должны заменяться по всей провинции, а не начинать рвать
+    # кусочки с разных провинций создавая мешанину в провинции. Но на счёт
+    # последнего не уверен, по 1 штучке тоже может понадобиться убирать городские
+    # права. Можно добавить галочку режима на этот счёт.»
+    #
+    # Поэтому нажатие раздваивается **снаружи**, в `_edit_right_plus_<k>`, а не
+    # внутри `_edit_right_add`: городской путь принят прогонами 09-06 и 09-13 и
+    # остаётся ровно таким, каким был.
+    #
+    # **Галочка стоит по умолчанию, и значение ей ставит регистрация**
+    # (`bag_wtp_registration.txt`), а не первое нажатие: `down` у галочки читает
+    # переменную, и невыставленная к первому кадру рисовалась бы снятой при том,
+    # что режим на деле провинциальный. Здесь остаётся один вопрос --
+    # `has_global_variable = _edit_rprov`, форма, которая не может отказать молча.
+    #
+    # **Разведка -- по грамоте, выкладка -- нет.** Выбор провинции спрашивает
+    # `_rq<k>` и `_edit_right_fits_<k>`, то есть тринадцать веток; а раздача
+    # выбранной грамоты всем городам провинции не спрашивает ничего, кроме
+    # `_edit_rfrom`/`_edit_rto`, которые `_edit_right_swap` и так читает
+    # глобалками. **Города, где связка не встанет целиком, грамоту всё равно
+    # получают** -- ровно как в раздаче плана: «Оно БУДЕТ выдано ОБЯЗАТЕЛЬНО», --
+    # иначе провинция снова вышла бы лоскутной, а это и есть то, на что он
+    # жалуется.
+    #
+    # **`_sprt`/`_sprn` -- те же две черновые глобалки, что у раздачи**, и
+    # нарочно: средняя по городам провинции считается здесь тем же способом и
+    # теми же именами. Редактор и раздача никогда не идут одновременно.
+    def prov_scan(k: int, strict: bool, tab: str) -> str:
+        over = (f"{tab}\t\t\t\t\tvar:{MOD_ID}_esover = 1\n" if strict else "")
+        return (f"{tab}every_in_global_list = {{\n"
+                f"{tab}\tvariable = {MOD_ID}_plan_prov_locs\n"
+                f"{tab}\tset_global_variable = {{ name = {MOD_ID}_sprt value = 0 }}\n"
+                f"{tab}\tset_global_variable = {{ name = {MOD_ID}_sprn value = 0 }}\n"
+                f"{tab}\tprovince_definition = {{\n"
+                f"{tab}\t\tevery_location_in_province_definition = {{\n"
+                f"{tab}\t\t\tlimit = {{\n"
+                f"{tab}\t\t\t\tis_target_in_global_variable_list = "
+                f"{{ name = {MOD_ID}_candidates target = this }}\n"
+                f"{tab}\t\t\t\t{MOD_ID}_plan_is_town = yes\n"
+                f"{tab}\t\t\t\thas_variable = {MOD_ID}_plan_right\n"
+                f"{tab}\t\t\t\tNOT = {{ var:{MOD_ID}_plan_right = {k} }}\n"
+                f"{tab}\t\t\t\t{MOD_ID}_edit_right_fits_{k} = yes\n"
+                f"{over}{tab}\t\t\t}}\n"
+                f"{tab}\t\t\tchange_global_variable = "
+                f"{{ name = {MOD_ID}_sprt add = {MOD_ID}_rq{k} }}\n"
+                f"{tab}\t\t\tchange_global_variable = {{ name = {MOD_ID}_sprn add = 1 }}\n"
+                f"{tab}\t\t}}\n"
+                f"{tab}\t}}\n"
+                f"{tab}\tif = {{\n"
+                f"{tab}\t\tlimit = {{ global_var:{MOD_ID}_sprn > 0 }}\n"
+                f"{tab}\t\tchange_global_variable = "
+                f"{{ name = {MOD_ID}_sprt divide = {MOD_ID}_sprn_value }}\n"
+                f"{tab}\t\tset_variable = {{ name = {MOD_ID}_esc value = 1 }}\n"
+                f"{tab}\t\tset_variable = {{ name = {MOD_ID}_esv "
+                f"value = global_var:{MOD_ID}_sprt }}\n"
+                f"{tab}\t}}\n"
+                f"{tab}}}\n")
+
+    prov_add_blocks = "".join(
+        f"\t\tif = {{\n"
+        f"\t\t\tlimit = {{ global_var:{MOD_ID}_edit_right = {k} "
+        f"global_var:{MOD_ID}_rok{k} = 1 }}\n"
+        f"{prov_scan(k, True, chr(9) * 3)}"
+        f"\t\t\t{MOD_ID}_edit_right_count = yes\n"
+        f"\t\t\tif = {{\n"
+        f"\t\t\t\tlimit = {{ global_var:{MOD_ID}_edit_cands = 0 }}\n"
+        f"{prov_scan(k, False, chr(9) * 4)}"
+        f"\t\t\t\t{MOD_ID}_edit_right_count = yes\n"
+        f"\t\t\t}}\n"
+        f"\t\t}}\n"
+        for k in range(1, len(rights) + 1))
+
+    # «−1» провинцией: провинция, в которой грамота зарабатывает меньше всего.
+    # `ordered_in_global_list` читает наибольшее и минимума не умеет, поэтому
+    # ключ перевёрнут -- та же инверсия, что у «−1» по городу.
+    prov_drop_blocks = "".join(
+        f"\t\tif = {{\n"
+        f"\t\t\tlimit = {{ global_var:{MOD_ID}_edit_right = {k} }}\n"
+        f"\t\t\tevery_in_global_list = {{\n"
+        f"\t\t\t\tvariable = {MOD_ID}_plan_prov_locs\n"
+        f"\t\t\t\tset_global_variable = {{ name = {MOD_ID}_sprt value = 0 }}\n"
+        f"\t\t\t\tset_global_variable = {{ name = {MOD_ID}_sprn value = 0 }}\n"
+        f"\t\t\t\tprovince_definition = {{\n"
+        f"\t\t\t\t\tevery_location_in_province_definition = {{\n"
+        f"\t\t\t\t\t\tlimit = {{\n"
+        f"\t\t\t\t\t\t\tis_target_in_global_variable_list = "
+        f"{{ name = {MOD_ID}_candidates target = this }}\n"
+        f"\t\t\t\t\t\t\thas_variable = {MOD_ID}_plan_right\n"
+        f"\t\t\t\t\t\t\tvar:{MOD_ID}_plan_right = {k}\n"
+        f"\t\t\t\t\t\t}}\n"
+        f"\t\t\t\t\t\tchange_global_variable = "
+        f"{{ name = {MOD_ID}_sprt add = {MOD_ID}_rq{k} }}\n"
+        f"\t\t\t\t\t\tchange_global_variable = {{ name = {MOD_ID}_sprn add = 1 }}\n"
+        f"\t\t\t\t\t}}\n"
+        f"\t\t\t\t}}\n"
+        f"\t\t\t\tif = {{\n"
+        f"\t\t\t\t\tlimit = {{ global_var:{MOD_ID}_sprn > 0 }}\n"
+        f"\t\t\t\t\tchange_global_variable = "
+        f"{{ name = {MOD_ID}_sprt divide = {MOD_ID}_sprn_value }}\n"
+        f"\t\t\t\t\tset_variable = {{ name = {MOD_ID}_esc value = 1 }}\n"
+        f"\t\t\t\t\tset_variable = {{ name = {MOD_ID}_esv value = {RANK_SCALE} }}\n"
+        f"\t\t\t\t\tchange_variable = {{ name = {MOD_ID}_esv "
+        f"subtract = global_var:{MOD_ID}_sprt }}\n"
+        f"\t\t\t\t}}\n"
+        f"\t\t\t}}\n"
+        f"\t\t}}\n"
+        for k in range(1, len(rights) + 1))
+
+    out.append(f"""
+# **«+1» на грамоте, провинцией целиком.** Лучшая провинция -- та, где города
+# платят этой грамоте в среднем больше всех, -- и грамота ложится на **каждый**
+# её город. Две разведки, строгая и открытая, ровно как у городского пути:
+# сперва только провинции, чьи грамоты выше своей доли, потом любые.
+# Scope: country
+{MOD_ID}_edit_right_add_prov = {{
+\tchange_global_variable = {{ name = {MOD_ID}_edit_presses add = 1 }}
+\t{MOD_ID}_edit_clear_trace = yes
+\tset_global_variable = {{ name = {MOD_ID}_edit_done value = 0 }}
+\tset_global_variable = {{ name = {MOD_ID}_edit_fail value = 0 }}
+\tset_global_variable = {{ name = {MOD_ID}_edit_norefill value = 0 }}
+\tset_global_variable = {{ name = {MOD_ID}_edit_op value = 7 }}
+\t{MOD_ID}_edit_right_prepare = yes
+\tset_global_variable = {{ name = {MOD_ID}_edit_cands value = 0 }}
+\tif = {{
+\t\tlimit = {{ global_var:{MOD_ID}_edit_right > 0 }}
+{prov_add_blocks}\t\tordered_in_global_list = {{
+\t\t\tvariable = {MOD_ID}_plan_prov_locs
+\t\t\tlimit = {{ var:{MOD_ID}_esc = 1 }}
+\t\t\torder_by = {MOD_ID}_edit_order
+\t\t\tmax = 1
+\t\t\tcheck_range_bounds = no
+\t\t\t# Строка нажатия показывает представителя провинции: он же ей и имя.
+\t\t\tset_global_variable = {{ name = {MOD_ID}_ev_hit value = 1 }}
+\t\t\tset_global_variable = {{ name = {MOD_ID}_ev_town value = 1 }}
+\t\t\tset_global_variable = {{ name = {MOD_ID}_ev_load value = var:{MOD_ID}_load }}
+\t\t\tsave_scope_as = {MOD_ID}_ev_where
+\t\t\tset_global_variable = {{ name = {MOD_ID}_ev_loc value = scope:{MOD_ID}_ev_where }}
+\t\t\tset_global_variable = {{ name = {MOD_ID}_edit_rto value = global_var:{MOD_ID}_edit_right }}
+\t\t\tprovince_definition = {{
+\t\t\t\tevery_location_in_province_definition = {{
+\t\t\t\t\tlimit = {{
+\t\t\t\t\t\tis_target_in_global_variable_list = {{ name = {MOD_ID}_candidates target = this }}
+\t\t\t\t\t\t{MOD_ID}_plan_is_town = yes
+\t\t\t\t\t\thas_variable = {MOD_ID}_plan_right
+\t\t\t\t\t\tNOT = {{ var:{MOD_ID}_plan_right = global_var:{MOD_ID}_edit_right }}
+\t\t\t\t\t}}
+\t\t\t\t\tset_global_variable = {{ name = {MOD_ID}_edit_rfrom value = var:{MOD_ID}_plan_right }}
+\t\t\t\t\t{MOD_ID}_edit_right_swap = yes
+\t\t\t\t}}
+\t\t\t}}
+\t\t\tset_global_variable = {{ name = {MOD_ID}_ev_load2 value = var:{MOD_ID}_load }}
+\t\t\tset_global_variable = {{ name = {MOD_ID}_edit_done value = 1 }}
+\t\t}}
+\t}}
+\tif = {{
+\t\tlimit = {{ global_var:{MOD_ID}_edit_done = 0 }}
+\t\tchange_global_variable = {{ name = {MOD_ID}_edit_idle add = 1 }}
+\t}}
+\t{MOD_ID}_edit_reshuffle = yes
+\t{MOD_ID}_edit_journal = yes
+\t{MOD_ID}_plan_rank = yes
+\t{MOD_ID}_plan_show = yes
+}}
+
+# **«−1» на грамоте, провинцией целиком.** Грамота уходит из той провинции, где
+# она зарабатывает меньше всего, и **вся провинция** получает одну замену --
+# ту, которую `_edit_right_best_here` назовёт её первому городу.
+#
+# **Замена выбирается один раз, а не в каждом городе.** Спросить каждый город
+# значило бы снова собрать в провинции мешанину -- то самое, на что он и
+# жалуется; поэтому ответ первого города лежит в `_edit_rprovto` и достаётся
+# всем. Города, где эта грамота встанет не целиком, всё равно её получают: так
+# же поступает и раздача плана.
+# Scope: country
+{MOD_ID}_edit_right_drop_prov = {{
+\tchange_global_variable = {{ name = {MOD_ID}_edit_presses add = 1 }}
+\t{MOD_ID}_edit_clear_trace = yes
+\tset_global_variable = {{ name = {MOD_ID}_edit_done value = 0 }}
+\tset_global_variable = {{ name = {MOD_ID}_edit_fail value = 0 }}
+\tset_global_variable = {{ name = {MOD_ID}_edit_norefill value = 0 }}
+\tset_global_variable = {{ name = {MOD_ID}_edit_op value = 8 }}
+\t{MOD_ID}_edit_right_prepare = yes
+\tset_global_variable = {{ name = {MOD_ID}_edit_cands value = 0 }}
+\tif = {{
+\t\tlimit = {{ global_var:{MOD_ID}_edit_right > 0 }}
+{prov_drop_blocks}\t\t{MOD_ID}_edit_right_count = yes
+\t\tordered_in_global_list = {{
+\t\t\tvariable = {MOD_ID}_plan_prov_locs
+\t\t\tlimit = {{ var:{MOD_ID}_esc = 1 }}
+\t\t\torder_by = {MOD_ID}_edit_order
+\t\t\tmax = 1
+\t\t\tcheck_range_bounds = no
+\t\t\tset_global_variable = {{ name = {MOD_ID}_ev_hit value = 1 }}
+\t\t\tset_global_variable = {{ name = {MOD_ID}_ev_town value = 1 }}
+\t\t\tset_global_variable = {{ name = {MOD_ID}_ev_load value = var:{MOD_ID}_load }}
+\t\t\tsave_scope_as = {MOD_ID}_ev_where
+\t\t\tset_global_variable = {{ name = {MOD_ID}_ev_loc value = scope:{MOD_ID}_ev_where }}
+\t\t\tset_global_variable = {{ name = {MOD_ID}_edit_rfrom value = global_var:{MOD_ID}_edit_right }}
+\t\t\t# Кем заменить -- спрашивается один раз, у первого города провинции,
+\t\t\t# который эту грамоту держит.
+\t\t\tset_global_variable = {{ name = {MOD_ID}_edit_rprovto value = 0 }}
+\t\t\tprovince_definition = {{
+\t\t\t\tevery_location_in_province_definition = {{
+\t\t\t\t\tlimit = {{
+\t\t\t\t\t\tis_target_in_global_variable_list = {{ name = {MOD_ID}_candidates target = this }}
+\t\t\t\t\t\thas_variable = {MOD_ID}_plan_right
+\t\t\t\t\t\tvar:{MOD_ID}_plan_right = global_var:{MOD_ID}_edit_right
+\t\t\t\t\t\tglobal_var:{MOD_ID}_edit_rprovto = 0
+\t\t\t\t\t}}
+\t\t\t\t\t{MOD_ID}_edit_right_best_here = yes
+\t\t\t\t\tset_global_variable = {{ name = {MOD_ID}_edit_rprovto value = var:{MOD_ID}_esrj }}
+\t\t\t\t}}
+\t\t\t}}
+\t\t\tif = {{
+\t\t\t\tlimit = {{ global_var:{MOD_ID}_edit_rprovto > 0 }}
+\t\t\t\tset_global_variable = {{ name = {MOD_ID}_edit_rto value = global_var:{MOD_ID}_edit_rprovto }}
+\t\t\t\tprovince_definition = {{
+\t\t\t\t\tevery_location_in_province_definition = {{
+\t\t\t\t\t\tlimit = {{
+\t\t\t\t\t\t\tis_target_in_global_variable_list = {{ name = {MOD_ID}_candidates target = this }}
+\t\t\t\t\t\t\thas_variable = {MOD_ID}_plan_right
+\t\t\t\t\t\t\tvar:{MOD_ID}_plan_right = global_var:{MOD_ID}_edit_right
+\t\t\t\t\t\t}}
+\t\t\t\t\t\t{MOD_ID}_edit_right_swap = yes
+\t\t\t\t\t}}
+\t\t\t\t}}
+\t\t\t\tset_global_variable = {{ name = {MOD_ID}_edit_done value = 1 }}
+\t\t\t}}
+\t\t\telse = {{ set_global_variable = {{ name = {MOD_ID}_edit_fail value = 1 }} }}
+\t\t\tset_global_variable = {{ name = {MOD_ID}_ev_load2 value = var:{MOD_ID}_load }}
+\t\t}}
+\t}}
+\tif = {{
+\t\tlimit = {{ global_var:{MOD_ID}_edit_done = 0 }}
+\t\tchange_global_variable = {{ name = {MOD_ID}_edit_idle add = 1 }}
+\t}}
+\t{MOD_ID}_edit_reshuffle = yes
+\t{MOD_ID}_edit_journal = yes
+\t{MOD_ID}_plan_rank = yes
+\t{MOD_ID}_plan_show = yes
+}}
+
+""")
+
+    # ---- грамота, поставленная в локацию руками ----------------------------
+    #
+    # **Его слово, 2026-09-14:** «иметь возможность заменять городские права
+    # вручную, так же как сейчас заменяется товар». Товары меняются руками в
+    # окне замены -- «Заменить домик в локации», -- значит и грамоты там же.
+    #
+    # **Это не «+1» и не «−1», и ничего у них не спрашивает.** Те две кнопки
+    # сами ищут, где лучше; здесь место выбрал он, и никакого счёта нет вовсе --
+    # ни доли, ни полос, ни отставания. Галочка «всей провинцией» сюда тоже не
+    # относится: окно открыто одной локацией и меняет её одну.
+    #
+    # **Ворота одни: город и грамота на нём.** Плану положена ровно одна грамота
+    # на город, город без грамоты -- состояние, которого он не производит, и
+    # менять там нечего. `_edit_right_fits_<k>` не спрашивается нарочно: связка,
+    # которая тут не встанет целиком, всё равно ставится -- так же поступает и
+    # раздача («Оно БУДЕТ выдано ОБЯЗАТЕЛЬНО»), и отказать молча было бы хуже.
     out.append("".join(
         f"""
-# «+1» on {right.key}: one more town for it.
+# {right.key} -- поставить руками в локацию, открытую окном замены.
+# Scope: country
+{MOD_ID}_swap_right_set_{k} = {{
+\tchange_global_variable = {{ name = {MOD_ID}_edit_presses add = 1 }}
+\t{MOD_ID}_edit_clear_trace = yes
+\tset_global_variable = {{ name = {MOD_ID}_edit_done value = 0 }}
+\tset_global_variable = {{ name = {MOD_ID}_edit_fail value = 0 }}
+\tset_global_variable = {{ name = {MOD_ID}_edit_norefill value = 0 }}
+\tset_global_variable = {{ name = {MOD_ID}_edit_op value = 9 }}
+\tset_global_variable = {{ name = {MOD_ID}_edit_right value = {k} }}
+\tset_global_variable = {{ name = {MOD_ID}_edit_reached value = 1 }}
+\t{MOD_ID}_edit_right_prepare = yes
+\tglobal_var:{MOD_ID}_swap_loc = {{
+\t\tif = {{
+\t\t\tlimit = {{
+\t\t\t\t{MOD_ID}_plan_is_town = yes
+\t\t\t\thas_variable = {MOD_ID}_plan_right
+\t\t\t\tNOT = {{ var:{MOD_ID}_plan_right = {k} }}
+\t\t\t}}
+\t\t\tset_global_variable = {{ name = {MOD_ID}_ev_hit value = 1 }}
+\t\t\tset_global_variable = {{ name = {MOD_ID}_ev_town value = 1 }}
+\t\t\tset_global_variable = {{ name = {MOD_ID}_ev_load value = var:{MOD_ID}_load }}
+\t\t\tsave_scope_as = {MOD_ID}_ev_where
+\t\t\tset_global_variable = {{ name = {MOD_ID}_ev_loc value = scope:{MOD_ID}_ev_where }}
+\t\t\tset_global_variable = {{ name = {MOD_ID}_edit_rfrom value = var:{MOD_ID}_plan_right }}
+\t\t\tset_global_variable = {{ name = {MOD_ID}_edit_rto value = {k} }}
+\t\t\t{MOD_ID}_edit_right_swap = yes
+\t\t\tset_global_variable = {{ name = {MOD_ID}_ev_load2 value = var:{MOD_ID}_load }}
+\t\t\tset_global_variable = {{ name = {MOD_ID}_edit_done value = 1 }}
+\t\t}}
+\t}}
+\tif = {{
+\t\tlimit = {{ global_var:{MOD_ID}_edit_done = 0 }}
+\t\tchange_global_variable = {{ name = {MOD_ID}_edit_idle add = 1 }}
+\t}}
+\t{MOD_ID}_edit_reshuffle = yes
+\t{MOD_ID}_edit_journal = yes
+\t{MOD_ID}_plan_rank = yes
+\t{MOD_ID}_plan_show = yes
+\t# Список домиков окна перестраивается: связка грамоты только что сменилась,
+\t# и левый список без этого показывал бы прежние домики.
+\t{MOD_ID}_swap_rebuild = yes
+}}
+"""
+        for k, right in enumerate(rights, start=1)))
+
+    out.append("".join(
+        f"""
+# «+1» on {right.key}: one more town for it -- or a whole province, by the tick.
 # Scope: country
 {MOD_ID}_edit_right_plus_{k} = {{
 \tset_global_variable = {{ name = {MOD_ID}_edit_right value = {k} }}
 \tset_global_variable = {{ name = {MOD_ID}_edit_reached value = 1 }}
-\t{MOD_ID}_edit_right_add = yes
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_edit_rprov }}
+\t\t{MOD_ID}_edit_right_add_prov = yes
+\t}}
+\telse = {{ {MOD_ID}_edit_right_add = yes }}
 }}
 
-# «−1» on {right.key}: its worst town goes to a charter that has fewer.
+# «−1» on {right.key}: its worst town -- or its worst province -- goes to a
+# charter that has fewer.
 # Scope: country
 {MOD_ID}_edit_right_minus_{k} = {{
 \tset_global_variable = {{ name = {MOD_ID}_edit_right value = {k} }}
 \tset_global_variable = {{ name = {MOD_ID}_edit_reached value = 1 }}
-\t{MOD_ID}_edit_right_drop = yes
+\tif = {{
+\t\tlimit = {{ has_global_variable = {MOD_ID}_edit_rprov }}
+\t\t{MOD_ID}_edit_right_drop_prov = yes
+\t}}
+\telse = {{ {MOD_ID}_edit_right_drop = yes }}
 }}
 """
         for k, right in enumerate(rights, start=1)))
@@ -11131,6 +11782,16 @@ def swap_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t# Ворота кандидата спрашивают доступность у державы, а стоят в скоупе
 \t# локации -- значит державу надо туда занести.
 \tsave_scope_as = {MOD_ID}_country
+\t# **Город это или село -- флагом, потому что `visible` триггеров не умеет.**
+\t# Блок городского права в этом окне рисуется только городу: грамота живёт
+\t# только там, и предлагать её селу значило бы предлагать невозможное.
+\tglobal_var:{MOD_ID}_swap_loc = {{
+\t\tif = {{
+\t\t\tlimit = {{ {MOD_ID}_plan_is_town = yes has_variable = {MOD_ID}_plan_right }}
+\t\t\tset_global_variable = {{ name = {MOD_ID}_swap_istown value = 1 }}
+\t\t}}
+\t\telse = {{ remove_global_variable = {MOD_ID}_swap_istown }}
+\t}}
 \tglobal_var:{MOD_ID}_swap_loc = {{ clear_variable_list = {MOD_ID}_swap_can }}
 \tclear_global_variable_list = {MOD_ID}_swap_slots
 \tclear_global_variable_list = {MOD_ID}_swap_here
@@ -14329,6 +14990,9 @@ def summary_file(rows: list[eu5data.Method], split: dict[str, list[str]],
     rights_calc = "".join(f"""\t# {right.key}
 \tset_global_variable = {{ name = {MOD_ID}_rfit{k} value = 0 }}
 \tset_global_variable = {{ name = {MOD_ID}_rtop{k} value = 0 }}
+\t# **Есть ли ей куда ещё пойти.** Города, где грамота подходит, где земля ей
+\t# хоть что-то платит и где её ещё нет: ноль здесь -- это потолок, а не обида.
+\tset_global_variable = {{ name = {MOD_ID}_rmore{k} value = 0 }}
 \tevery_in_global_list = {{
 \t\tvariable = {MOD_ID}_candidates
 \t\tlimit = {{
@@ -14340,6 +15004,13 @@ def summary_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\t\tlimit = {{ {MOD_ID}_rq{k} > global_var:{MOD_ID}_rtop{k} }}
 \t\t\tset_global_variable = {{ name = {MOD_ID}_rtop{k} value = {MOD_ID}_rq{k} }}
 \t\t}}
+\t\tif = {{
+\t\t\tlimit = {{
+\t\t\t\tNOT = {{ var:{MOD_ID}_plan_right = {k} }}
+\t\t\t\t{MOD_ID}_rq{k} > 0
+\t\t\t}}
+\t\t\tchange_global_variable = {{ name = {MOD_ID}_rmore{k} add = 1 }}
+\t\t}}
 \t}}
 \tset_global_variable = {{ name = {MOD_ID}_rwhy{k} value = 5 }}
 \tif = {{
@@ -14350,6 +15021,19 @@ def summary_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\tlimit = {{ NOT = {{ global_var:{MOD_ID}_rgiven{k} < global_var:{MOD_ID}_rquota }} }}
 \t\tset_global_variable = {{ name = {MOD_ID}_rwhy{k} value = 4 }}
 \t}}
+\t# **Отстала, и идти ей больше некуда -- это отдельный ответ.** «Её перебили»
+\t# и «на остальной земле ей не платят ничего» читаются на экране одинаково, а
+\t# делать с ними надо разное: первое чинится раздачей, второе не чинится
+\t# ничем. Его прогон 2026-09-14: оружейные на одной провинции, 6 % там и 6 %
+\t# ещё в одной, в остальных ноль.
+\tif = {{
+\t\tlimit = {{
+\t\t\tglobal_var:{MOD_ID}_rwhy{k} = 5
+\t\t\tglobal_var:{MOD_ID}_rlag{k} = 1
+\t\t\tglobal_var:{MOD_ID}_rmore{k} = 0
+\t\t}}
+\t\tset_global_variable = {{ name = {MOD_ID}_rwhy{k} value = 6 }}
+\t}}
 \tif = {{
 \t\tlimit = {{ global_var:{MOD_ID}_rfit{k} = 0 }}
 \t\tset_global_variable = {{ name = {MOD_ID}_rwhy{k} value = 2 }}
@@ -14359,7 +15043,11 @@ def summary_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 \t\tset_global_variable = {{ name = {MOD_ID}_rwhy{k} value = 1 }}
 \t}}
 """ for k, right in enumerate(output_rights(rows, game), start=1))
-    out.append(f"""{rights_calc}\t# Пустая земля оставила бы 9999 на экране.
+    # **Отставание пересчитывается перед сводкой, а не берётся от раздачи.**
+    # Нажатия редактора двигают `_rgiven<k>`, а `_rlag<k>` после них устарел бы;
+    # эффект чисто глобальный и стоит один проход по тринадцати числам.
+    out.append(f"""\t{MOD_ID}_plan_grant_lag = yes
+{rights_calc}\t# Пустая земля оставила бы 9999 на экране.
 \tif = {{
 \t\tlimit = {{ NOT = {{ has_global_variable = {MOD_ID}_sum_any }} }}
 \t\tset_global_variable = {{ name = {MOD_ID}_sum_min value = 0 }}
@@ -14804,6 +15492,15 @@ def spec_file(rows: list[eu5data.Method], split: dict[str, list[str]],
 # бы ей ни одного города (это уже стоило прогона 2026-09-03).
 # Scope: country
 {MOD_ID}_plan_spec_rights = {{
+\t# **Лестницы здесь нет, и это не недоделка.** 2026-09-14 она была сюда
+\t# вписана -- разброс на его земле падал с 15 до 7, -- и он снял правку в
+\t# тот же час: «если ты увидел, что я использовал режим специализации по
+\t# ошибке -- почему ты её исправляешь? В чём её суть по-твоему? Лучшее
+\t# ставить, и в ней вполне может быть 0 каких-то прав». **Ноль у грамоты
+\t# здесь -- ответ, а не сбой**: провинция берёт то, что ей подходит лучше
+\t# всего, и ровнять этот режим нечем и незачем. Равномерность живёт в
+\t# обычном плане, и спрашивать её надо там.
+\t#
 \t# Лесенка в подсказке спрашивает ворота грамоты у державы.
 \tsave_scope_as = {MOD_ID}_country
 \tevery_in_global_list = {{
@@ -15165,6 +15862,27 @@ def main() -> int:
 """
         for p_slot in range(1, len(output_rights(rows, game)) + 1)
         for what in ("plus", "minus")) + "".join(
+        f"""
+# Место {p_slot} блока грамот **в окне замены**: поставить эту грамоту в открытую
+# локацию руками. Диспетчер тот же, что у «+1»/«−1» редактора, и по той же
+# причине -- ячейка написана под место, а какая грамота на нём сидит, говорит
+# `_rslot{p_slot}`.
+{MOD_ID}_swap_right_slot_{p_slot} = {{
+\tscope = country
+
+\tis_shown = {{
+\t\talways = yes
+\t}}
+
+\teffect = {{
+""" + "".join(
+            f"\t\tif = {{ limit = {{ global_var:{MOD_ID}_rslot{p_slot} = {k} }} "
+            f"{MOD_ID}_swap_right_set_{k} = yes }}\n"
+            for k in range(1, len(output_rights(rows, game)) + 1)) + f"""\t\t{MOD_ID}_recompute_live = yes
+\t}}
+}}
+"""
+        for p_slot in range(1, len(output_rights(rows, game)) + 1)) + "".join(
         f"""
 # {good} in the ranking window's picker. One circle, one number.
 {MOD_ID}_pick_good_{i} = {{
