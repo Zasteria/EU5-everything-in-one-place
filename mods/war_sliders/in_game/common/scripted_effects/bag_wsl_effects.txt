@@ -1,0 +1,101 @@
+﻿# Состояние державы и всё, что из него следует.
+#
+# **Триггером служит переключение, а не конец войны.** `at_war` истинно, пока
+# идёт хоть одна война, поэтому при двух войнах сразу мод молчит до конца
+# последней — его условие, 2026-09-17: «может случиться так, что идёт несколько
+# войн одновременно и ползунки упадут после завершения первой».
+#
+# **Мод спит, пока не поймает переключение.** В мирный месяц такт читает один
+# флаг и выходит. Инфляцию он трогает только в те месяцы, когда правка идёт, и
+# засыпает, как только она доведена.
+
+# Scope: country
+bag_wsl_tick = {
+	if = {
+		limit = { at_war = yes }
+		# Война идёт. Запоминаем состояние и отменяем всё, что не доделали:
+		# начавшаяся война отменяет мирную правку целиком.
+		set_variable = { name = bag_wsl_at_war value = 1 }
+		if = {
+			limit = { has_variable = bag_wsl_mint_phase }
+			bag_wsl_mint_stand_down = yes
+		}
+		remove_variable = bag_wsl_army_go
+		remove_variable = bag_wsl_navy_go
+		remove_variable = bag_wsl_fort_go
+	}
+	else_if = {
+		limit = {
+			has_variable = bag_wsl_at_war
+			var:bag_wsl_at_war = 1
+		}
+		# Переключение «война → мир». Единственный момент, когда мод действует.
+		set_variable = { name = bag_wsl_at_war value = 0 }
+		bag_wsl_on_peace = yes
+	}
+	else_if = {
+		limit = { has_variable = bag_wsl_mint_phase }
+		# Идёт правка инфляции — единственная причина, по которой мод не спит.
+		bag_wsl_mint_check = yes
+	}
+}
+
+# **Взводится не целевым числом, а единицей.** Ползунок рождает событие только
+# когда значение под ним **меняется** — прогон 09-16 стоил ровно этой ошибки:
+# упор стоял в нуле с рождения, значение ни разу не двинулось, и обработчику
+# нечего было ловить. Поэтому привод взводится верхом шкалы, а настоящее число
+# приходит вторым шагом, когда ползунок уже показан и уже его читает.
+# Scope: country
+bag_wsl_on_peace = {
+	if = {
+		limit = { has_variable = bag_wsl_army_on }
+		set_variable = { name = bag_wsl_army_target value = 1 }
+		set_variable = { name = bag_wsl_army_go value = 1 }
+	}
+	if = {
+		limit = { has_variable = bag_wsl_navy_on }
+		set_variable = { name = bag_wsl_navy_target value = 1 }
+		set_variable = { name = bag_wsl_navy_go value = 1 }
+	}
+	if = {
+		limit = { has_variable = bag_wsl_fort_on }
+		set_variable = { name = bag_wsl_fort_target value = 1 }
+		set_variable = { name = bag_wsl_fort_go value = 1 }
+	}
+	if = {
+		limit = {
+			has_variable = bag_wsl_mint_on
+			inflation > bag_wsl_inflation_goal
+		}
+		set_variable = { name = bag_wsl_mint_target value = 1 }
+		set_variable = { name = bag_wsl_mint_phase value = 1 }
+	}
+}
+
+# Инфляция доведена — отпустить чеканку обратно ванильной автоматике.
+# Scope: country
+bag_wsl_mint_check = {
+	if = {
+		limit = { NOT = { inflation > bag_wsl_inflation_goal } }
+		bag_wsl_mint_stand_down = yes
+	}
+}
+
+# Снять правку: интерфейс увидит `bag_wsl_mint_release` и вернёт галочку
+# авто-чеканки, а `bag_wsl_mint_phase` без неё отпускает наш ползунок.
+# Scope: country
+bag_wsl_mint_stand_down = {
+	remove_variable = bag_wsl_mint_phase
+	set_variable = { name = bag_wsl_mint_release value = 1 }
+}
+
+# Счётчик сработавших приводов, его показывает окно диагностики.
+# `change_variable` поднимает то, что уже есть, поэтому первый раз — заводим.
+# Scope: country
+bag_wsl_count_run = {
+	if = {
+		limit = { NOT = { has_variable = bag_wsl_runs } }
+		set_variable = { name = bag_wsl_runs value = 0 }
+	}
+	change_variable = { name = bag_wsl_runs add = 1 }
+}

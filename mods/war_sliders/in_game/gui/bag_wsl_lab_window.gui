@@ -1,26 +1,14 @@
-﻿# Лаборатория ползунков, версия вторая. Прогон 2026-09-16 снял три вопроса и
-# оставил один — этот файл спрашивает оставшийся.
+﻿# Окно диагностики. Показывает то, чего в игре не видно: состояние державы,
+# каким моду оно запомнилось, какие приводы взведены и сколько их сработало.
 #
-# **Что сказал первый прогон (его слова и логи, `docs/TESTLOG.md`):**
-# 1. Вызов функции интерфейса из нашего окна до игры доходит — ванильная
-#    галочка авто-чеканки переключается кнопкой мода.
-# 2. `onclick = "[GetEconomyView.PostTaxes]"` не привязался вовсе:
-#    `gui.log` — «failed reading callback, at gui/bag_wsl_lab_window.gui:150»
-#    и `:162`, то есть кнопки «А» и «Б» были без обработчика и нажимались
-#    вхолостую. **Глобальный promote в колбэке игра не берёт** — ванилла зовёт
-#    эти функции только через `datacontext`, и здесь теперь так же.
-# 3. `datamodel = "[GetEconomyView.GetMaintenanceSettings]"` на `vbox` отвергнут:
-#    «Property 'datamodel'(1002) not handled». Та же причина; ванильная форма —
-#    `datacontext` на коробке, `EconomyView.` в самой датамодели.
-# 4. Наш ползунок с упорами 0/0 родился в нуле и не двигался ни мышью, ни
-#    кнопками «+»/«−» — упоры держали его намертво. **Значит, опыт не состоялся
-#    вовсе**: значение ни разу не менялось, и обработчику нечего было ловить.
+# **Пустой счётчик при взведённом флаге — это «привод не дошёл»**, и без него
+# это неотличимо от «мод не сработал вовсе». Ровно эта пара чисел и решает,
+# нужен ли следующий заход.
 #
-# **Оставшийся вопрос, и он весь тут.** Ползунок, живущий в нашем окне и
-# привязанный к панели экономики, — доходит ли его движение до игры? Опыт 1
-# отвечает рукой (тащить мышью), опыт 2 — модом (кнопка пишет число, ползунок
-# едет за числом). Если работает опыт 2 — мод готов: остальное складывается из
-# того, что в этом репозитории уже работает.
+# Окно включается галочкой «Показывать окно диагностики» на странице мода в
+# меню CMF и висит рядом с панелью экономики; кнопка «Закрепить» оставляет его
+# на экране с закрытой панелью — это и есть проверка «работает ли привод, когда
+# панель закрыта».
 window = {
 	name = "bag_wsl_lab_window"
 	datacontext = "[GetPlayer]"
@@ -30,10 +18,10 @@ window = {
 	widgetanchor = top|left
 	position = { 780 100 }
 	movable = yes
-	size = { 620 540 }
+	size = { 620 420 }
 	using = bg_window_default_alt
 
-	visible = "[Or(IsLateralViewOpened('economy'), GetVariableSystem.Exists('bag_wsl_pin'))]"
+	visible = "[And(GetPlayer.MakeScope.GetVariable('bag_wsl_lab_on').IsSet, Or(IsLateralViewOpened('economy'), GetVariableSystem.Exists('bag_wsl_pin')))]"
 
 	vbox = {
 		using = window_margin_alt
@@ -50,7 +38,6 @@ window = {
 			margin = { 12 12 }
 			spacing = 4
 
-			# ---- показания. Эти три строки в прогоне читались верно ------------
 			text_multi = {
 				layoutpolicy_horizontal = expanding
 				autoresize = yes
@@ -65,152 +52,20 @@ window = {
 				text = "bag_wsl_row_auto"
 			}
 
-			# ---- опыт 1: тащить рукой -----------------------------------------
-			text_single = {
+			text_multi = {
 				layoutpolicy_horizontal = expanding
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wsl_h1"
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wsl_row_state"
 			}
 
-			widget = {
-				size = { 580 24 }
-				datacontext = "[GetEconomyView]"
-
-				economy_slider = {
-					parentanchor = left|vcenter
-					size = { 560 10 }
-					min = 0
-					max = 1
-					value = "[EconomyView.GetDefaultCoinMinting]"
-					onvaluechanged = "[EconomyView.OnChangedCoinMinting]"
-					onchangefinish = "[EconomyView.PostTaxes]"
-				}
-			}
-
-			# ---- опыт 2: число пишет мод --------------------------------------
-			text_single = {
+			text_multi = {
 				layoutpolicy_horizontal = expanding
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wsl_h2"
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wsl_row_flags"
 			}
 
-			widget = {
-				size = { 580 24 }
-				datacontext = "[GetEconomyView]"
-
-				economy_slider = {
-					parentanchor = left|vcenter
-					size = { 560 10 }
-					min = 0
-					max = 1
-					# Ванильная форма чтения скриптового числа интерфейсом —
-					# `decline_of_majapahit.gui:196` делает ей ровно так же.
-					value = "[FixedPointToFloat(GetPlayer.MakeScope.GetVariable('bag_wsl_target').GetValue)]"
-					onvaluechanged = "[EconomyView.OnChangedCoinMinting]"
-					onchangefinish = "[EconomyView.PostTaxes]"
-				}
-			}
-
-			hbox = {
-				layoutpolicy_horizontal = expanding
-				spacing = 4
-
-				button_regular = {
-					size = { 140 26 }
-					tooltip = "bag_wsl_btn_t0_tt"
-					onclick = "[GetScriptedGui('bag_wsl_target_0').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-					text_single = {
-						parentanchor = center
-						widgetanchor = center
-						autoresize = yes
-						text = "bag_wsl_btn_t0"
-					}
-				}
-
-				button_regular = {
-					size = { 140 26 }
-					tooltip = "bag_wsl_btn_t0_tt"
-					onclick = "[GetScriptedGui('bag_wsl_target_25').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-					text_single = {
-						parentanchor = center
-						widgetanchor = center
-						autoresize = yes
-						text = "bag_wsl_btn_t25"
-					}
-				}
-
-				button_regular = {
-					size = { 140 26 }
-					tooltip = "bag_wsl_btn_t0_tt"
-					onclick = "[GetScriptedGui('bag_wsl_target_50').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-					text_single = {
-						parentanchor = center
-						widgetanchor = center
-						autoresize = yes
-						text = "bag_wsl_btn_t50"
-					}
-				}
-
-				button_regular = {
-					size = { 140 26 }
-					tooltip = "bag_wsl_btn_t0_tt"
-					onclick = "[GetScriptedGui('bag_wsl_target_100').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-					text_single = {
-						parentanchor = center
-						widgetanchor = center
-						autoresize = yes
-						text = "bag_wsl_btn_t100"
-					}
-				}
-			}
-
-			# ---- отправка и ванильная автоматика -------------------------------
-			hbox = {
-				layoutpolicy_horizontal = expanding
-				spacing = 4
-
-				# `datacontext` на самой кнопке: в прошлый раз именно его тут и
-				# не хватало, и колбэк не привязался.
-				button_regular = {
-					size = { 285 26 }
-					datacontext = "[GetEconomyView]"
-					tooltip = "bag_wsl_btn_post_tt"
-					onclick = "[EconomyView.PostTaxes]"
-					text_single = {
-						parentanchor = center
-						widgetanchor = center
-						autoresize = yes
-						text = "bag_wsl_btn_post"
-					}
-				}
-
-				button_regular = {
-					size = { 285 26 }
-					tooltip = "bag_wsl_btn_g_tt"
-					onclick = "[ToggleAutoMinting]"
-					text_single = {
-						parentanchor = center
-						widgetanchor = center
-						autoresize = yes
-						text = "bag_wsl_btn_g"
-					}
-				}
-			}
-
-			# ---- содержание: та же пара опытов на списке движка -----------------
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wsl_h3"
-			}
-
-			# Над датамоделью не бывает ничего, кроме политик раскладки: политика
-			# под коробкой со своим размером схлопывается в нулевую ширину, и
-			# ряды рисуются в ничто (`tools/check_script.py` это ловит). Поэтому
-			# скоуп панели берётся коробкой, у которой нет размера.
 			vbox = {
 				layoutpolicy_horizontal = expanding
 				datacontext = "[GetEconomyView]"
@@ -223,47 +78,61 @@ window = {
 					datamodel = "[EconomyView.GetMaintenanceSettings]"
 					item = {
 						widget = {
-							size = { 580 26 }
+							size = { 580 22 }
 							visible = "[Or3(MaintenanceSetting.IsArmy, MaintenanceSetting.IsNavy, MaintenanceSetting.IsFort)]"
 
 							hbox = {
 								layoutpolicy_horizontal = expanding
-								spacing = 4
 
 								text_single = {
-									size = { 250 22 }
+									layoutpolicy_horizontal = expanding
 									autoresize = no
 									align = left|nobaseline
 									text = "bag_wsl_row_maint"
 								}
-
-								widget = {
-									size = { 230 22 }
-
-									economy_slider = {
-										parentanchor = left|vcenter
-										size = { 220 10 }
-										min = 0
-										max = 1
-										value = "[MaintenanceSetting.GetDefault]"
-										onvaluechanged = "[MaintenanceSetting.OnChanged]"
-										onchangefinish = "[MaintenanceSetting.Post]"
-									}
-								}
-
-								button_regular = {
-									size = { 90 22 }
-									tooltip = "bag_wsl_btn_post_maint_tt"
-									onclick = "[MaintenanceSetting.Post]"
-									text_single = {
-										parentanchor = center
-										widgetanchor = center
-										autoresize = yes
-										text = "bag_wsl_btn_post_maint"
-									}
-								}
 							}
 						}
+					}
+				}
+			}
+
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				spacing = 4
+
+				button_regular = {
+					size = { 190 26 }
+					tooltip = "bag_wsl_btn_run_tt"
+					onclick = "[GetScriptedGui('bag_wsl_force_run').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+					text_single = {
+						parentanchor = center
+						widgetanchor = center
+						autoresize = yes
+						text = "bag_wsl_btn_run"
+					}
+				}
+
+				button_regular = {
+					size = { 190 26 }
+					tooltip = "bag_wsl_btn_reset_tt"
+					onclick = "[GetScriptedGui('bag_wsl_reset').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+					text_single = {
+						parentanchor = center
+						widgetanchor = center
+						autoresize = yes
+						text = "bag_wsl_btn_reset"
+					}
+				}
+
+				button_regular = {
+					size = { 190 26 }
+					tooltip = "bag_wsl_btn_h_tt"
+					onclick = "[GetVariableSystem.Toggle('bag_wsl_pin')]"
+					text_single = {
+						parentanchor = center
+						widgetanchor = center
+						autoresize = yes
+						text = "bag_wsl_btn_h"
 					}
 				}
 			}
@@ -275,27 +144,6 @@ window = {
 				text = "bag_wsl_lab_hint"
 			}
 
-			hbox = {
-				layoutpolicy_horizontal = expanding
-				spacing = 4
-
-				button_regular = {
-					size = { 285 26 }
-					tooltip = "bag_wsl_btn_h_tt"
-					onclick = "[GetVariableSystem.Toggle('bag_wsl_pin')]"
-					text_single = {
-						parentanchor = center
-						widgetanchor = center
-						autoresize = yes
-						text = "bag_wsl_btn_h"
-					}
-				}
-
-				widget = { size = { 285 26 } }
-			}
-
-			# Пустышка последним ребёнком: коробка с запасом места делит его
-			# между детьми, а не прижимает их к верху.
 			widget = {
 				layoutpolicy_horizontal = expanding
 				layoutpolicy_vertical = expanding

@@ -1,0 +1,224 @@
+﻿# Привод. Всё, что мод делает с игрой, делает этот виджет.
+#
+# **Почему это вообще работает** — прогоны 2026-09-16 и 09-17. Скриптом ползунки
+# «Чеканка» и «Содержание» не двигаются вовсе, эффекта нет ни одного; двигает их
+# только `onvaluechanged` самого ползунка, а аргумента он не берёт. Значит мод
+# заводит **свой** ползунок, привязанный к тем же объектам движка, и пишет ему
+# значение переменной страны. Прогон 09-17: «ползунок игры ходит вслед за нашим
+# ползунком», все три содержания и чеканка.
+#
+# **Панель экономики открывать не надо.** `GetEconomyView` — глобальный promote,
+# и топбар игры держит его в тултипе золота (`hud_topbar.gui:516`), то есть
+# панель отдаётся и закрытой.
+#
+# **Форма привязки — ванильная и только она.** Глобальный promote в колбэке и в
+# датамодели не берётся: прогон 09-16 дал «failed reading callback» и «Property
+# 'datamodel' not handled», и кнопки нажимались вхолостую. `datacontext` на
+# коробке, `EconomyView.` и `MaintenanceSetting.` внутри.
+#
+# **Упоры берутся у самой игры.** `mincap = "[MaintenanceSetting.GetMin]"` — его
+# условие 09-17: у содержаний свой минимум 0.50, и наш ползунок, ходящий от 0,
+# уронил бы содержание ниже того, что игра вообще позволяет. Теперь предел
+# ставит движок, а не мод. `value` объявлено **до** упоров: ванильный
+# комментарий `economy_lateralview.gui:2059` говорит, что упоры, поставленные
+# первыми, сбивают уже взятое значение.
+#
+# **Виджет живёт вне экрана, а не спрятанный.** `visible` всегда истинно, чтобы
+# вложенные ворота пересчитывались каждый кадр; форма списана с
+# `cm_maps/bcm_pf_map_mode_window.gui`.
+widget = {
+	name = "bag_wsl_driver"
+	visible = "[EqualTo_CFixedPoint('(CFixedPoint)0', '(CFixedPoint)0')]"
+	position = { -10000 1 }
+
+	# ---- чеканка -------------------------------------------------------------
+	widget = {
+		size = { 200 20 }
+		datacontext = "[GetEconomyView]"
+
+		# Пока идёт правка, ванильная автоматика должна молчать: она держит
+		# месячный прирост в нуле и вернула бы ползунок обратно.
+		state = {
+			name = bag_wsl_mint_auto_off
+			trigger_when = "[And(GetPlayer.MakeScope.GetVariable('bag_wsl_mint_phase').IsSet, GetPlayer.AutoCoinMinting)]"
+			on_start = "[ToggleAutoMinting]"
+		}
+
+		# Правка доведена — отпустить обратно автоматике. Она сама поставит
+		# ползунок в точку нулевого прироста, и мод снова засыпает.
+		state = {
+			name = bag_wsl_mint_auto_on
+			trigger_when = "[And(GetPlayer.MakeScope.GetVariable('bag_wsl_mint_release').IsSet, Not(GetPlayer.AutoCoinMinting))]"
+			on_start = "[ToggleAutoMinting]"
+			on_start = "[GetScriptedGui('bag_wsl_clear_mint_release').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+		}
+
+		# Если игрок держит автоматику выключенной сам, возвращать нечего —
+		# флаг всё равно надо погасить, иначе он останется висеть навсегда.
+		state = {
+			name = bag_wsl_mint_auto_on_noop
+			trigger_when = "[And(GetPlayer.MakeScope.GetVariable('bag_wsl_mint_release').IsSet, GetPlayer.AutoCoinMinting)]"
+			on_start = "[GetScriptedGui('bag_wsl_clear_mint_release').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+		}
+
+		widget = {
+			size = { 160 12 }
+			visible_at_creation = no
+			visible = "[GetPlayer.MakeScope.GetVariable('bag_wsl_mint_phase').IsSet]"
+
+			economy_slider = {
+				size = { 120 10 }
+				min = 0
+				max = 1
+				value = "[FixedPointToFloat(GetPlayer.MakeScope.GetVariable('bag_wsl_mint_target').GetValue)]"
+				onvaluechanged = "[EconomyView.OnChangedCoinMinting]"
+				onchangefinish = "[EconomyView.PostTaxes]"
+			}
+
+			# Тот же порядок, что и у содержания: показались верхом шкалы,
+			# следом пришло настоящее число, и только потом отправка.
+			state = {
+				name = _show
+				duration = 0.2
+				next = bag_wsl_mint_set
+				on_finish = "[GetScriptedGui('bag_wsl_set_mint_target').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			}
+
+			state = {
+				name = bag_wsl_mint_set
+				duration = 0.2
+				on_finish = "[EconomyView.PostTaxes]"
+			}
+		}
+	}
+
+	# ---- содержание ----------------------------------------------------------
+	# Список отдаёт движок. Над датамоделью не бывает ничего, кроме политик
+	# раскладки, и статических детей в её коробке тоже не бывает — обе формы
+	# роняли или ломали окна здесь раньше (`docs/pitfalls/windows.md`).
+	widget = {
+		size = { 200 20 }
+		datacontext = "[GetEconomyView]"
+
+		vbox = {
+			layoutpolicy_horizontal = expanding
+
+			vbox = {
+				layoutpolicy_horizontal = expanding
+				ignoreinvisible = yes
+
+				datamodel = "[EconomyView.GetMaintenanceSettings]"
+				item = {
+					widget = {
+						size = { 160 40 }
+
+						# Армия
+						widget = {
+							size = { 160 12 }
+							visible_at_creation = no
+							visible = "[And(MaintenanceSetting.IsArmy, GetPlayer.MakeScope.GetVariable('bag_wsl_army_go').IsSet)]"
+
+							economy_slider = {
+								size = { 120 10 }
+								min = 0
+								max = 1
+								value = "[FixedPointToFloat(GetPlayer.MakeScope.GetVariable('bag_wsl_army_target').GetValue)]"
+								mincap = "[MaintenanceSetting.GetMin]"
+								maxcap = "[MaintenanceSetting.GetMax]"
+								onvaluechanged = "[MaintenanceSetting.OnChanged]"
+								onchangefinish = "[MaintenanceSetting.Post]"
+							}
+
+							# Шаг первый: ползунок показан и взят верхом шкалы.
+							state = {
+								name = _show
+								duration = 0.2
+								next = bag_wsl_army_set
+								on_finish = "[GetScriptedGui('bag_wsl_set_army_target').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+							}
+
+							# Шаг второй: число сменилось под показанным ползунком —
+							# вот тут и рождается событие, — и уходит движку.
+							state = {
+								name = bag_wsl_army_set
+								duration = 0.2
+								on_finish = "[MaintenanceSetting.Post]"
+								on_finish = "[GetScriptedGui('bag_wsl_clear_army_go').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+							}
+						}
+
+						# Флот
+						widget = {
+							size = { 160 12 }
+							visible_at_creation = no
+							visible = "[And(MaintenanceSetting.IsNavy, GetPlayer.MakeScope.GetVariable('bag_wsl_navy_go').IsSet)]"
+
+							economy_slider = {
+								size = { 120 10 }
+								min = 0
+								max = 1
+								value = "[FixedPointToFloat(GetPlayer.MakeScope.GetVariable('bag_wsl_navy_target').GetValue)]"
+								mincap = "[MaintenanceSetting.GetMin]"
+								maxcap = "[MaintenanceSetting.GetMax]"
+								onvaluechanged = "[MaintenanceSetting.OnChanged]"
+								onchangefinish = "[MaintenanceSetting.Post]"
+							}
+
+							# Шаг первый: ползунок показан и взят верхом шкалы.
+							state = {
+								name = _show
+								duration = 0.2
+								next = bag_wsl_navy_set
+								on_finish = "[GetScriptedGui('bag_wsl_set_navy_target').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+							}
+
+							# Шаг второй: число сменилось под показанным ползунком —
+							# вот тут и рождается событие, — и уходит движку.
+							state = {
+								name = bag_wsl_navy_set
+								duration = 0.2
+								on_finish = "[MaintenanceSetting.Post]"
+								on_finish = "[GetScriptedGui('bag_wsl_clear_navy_go').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+							}
+						}
+
+						# Крепости
+						widget = {
+							size = { 160 12 }
+							visible_at_creation = no
+							visible = "[And(MaintenanceSetting.IsFort, GetPlayer.MakeScope.GetVariable('bag_wsl_fort_go').IsSet)]"
+
+							economy_slider = {
+								size = { 120 10 }
+								min = 0
+								max = 1
+								value = "[FixedPointToFloat(GetPlayer.MakeScope.GetVariable('bag_wsl_fort_target').GetValue)]"
+								mincap = "[MaintenanceSetting.GetMin]"
+								maxcap = "[MaintenanceSetting.GetMax]"
+								onvaluechanged = "[MaintenanceSetting.OnChanged]"
+								onchangefinish = "[MaintenanceSetting.Post]"
+							}
+
+							# Шаг первый: ползунок показан и взят верхом шкалы.
+							state = {
+								name = _show
+								duration = 0.2
+								next = bag_wsl_fort_set
+								on_finish = "[GetScriptedGui('bag_wsl_set_fort_target').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+							}
+
+							# Шаг второй: число сменилось под показанным ползунком —
+							# вот тут и рождается событие, — и уходит движку.
+							state = {
+								name = bag_wsl_fort_set
+								duration = 0.2
+								on_finish = "[MaintenanceSetting.Post]"
+								on_finish = "[GetScriptedGui('bag_wsl_clear_fort_go').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
