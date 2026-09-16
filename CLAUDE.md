@@ -1,19 +1,19 @@
 ﻿# Working in this repository
 
-Mods for Europa Universalis V. Six of them, in [`mods/`](mods/), plus the game's
-own files to grep and the tooling that rebuilds everything.
+Mods for Europa Universalis V in [`mods/`](mods/), the game's own files to grep,
+and the tooling around both.
 
 ## Do not read this repository. Ask it.
 
-The documents here are worth about ninety thousand tokens. Reading them is how a
-session spends its whole budget before writing a line — and pays for them again
-on every turn afterwards, because the context is resent each time. So:
+The documents here are worth about ninety thousand tokens, and a session pays for
+what it reads again on every turn afterwards — the context is resent each time.
+So:
 
     python3 tools/kb.py <words>            which section answers this, and what it costs
     python3 tools/kb.py --show FILE:LINE   read exactly that section
 
-**The code is larger than the documents — ask it the same way**, and that
-includes **the hand-written windows**: `code.py` indexes the comments in
+**The code is larger than the documents — ask it the same way**, the
+hand-written windows included: `code.py` indexes the comments in
 `in_game/gui/*.gui`, where the interface keeps what its runs cost.
 
     python3 tools/code.py <words>          which effect, window or rule, and its cost
@@ -31,9 +31,9 @@ a last resort. `grep -rn` over `reference/` beats reading a game file.
    pick.
 2. **The task names no mod** → [`docs/NEXT_SESSION.md`](docs/NEXT_SESSION.md) is
    the job in progress.
-3. **Before designing any test** → [`docs/SETTLED.md`](docs/SETTLED.md). It is
-   short, every row cost the owner an evening, and asking for one of those
-   measurements again is the one thing this repository cannot afford.
+3. **Before designing any test** → [`docs/SETTLED.md`](docs/SETTLED.md): every
+   row there cost the owner an evening, and asking for one of those measurements
+   again is the one thing this repository cannot afford.
 
 Everything else is on demand: [`docs/PITFALLS.md`](docs/PITFALLS.md) when
 something silently does nothing, [`docs/RESEARCH.md`](docs/RESEARCH.md) for how
@@ -71,15 +71,17 @@ for the reference tree and the rebuild loop,
   rule**; then a probe, so one run says where it breaks.
   [`docs/pitfalls/how_to_fix.md`](docs/pitfalls/how_to_fix.md) — the order of
   moves, and what each mistake cost here.
+- **«Мод этого не может» — вывод, а не первая мысль.** Пустой `effects.log` —
+  факт про скриптовый API, не про игру: свой виджет, привязанный к объекту
+  движка, пишет состояние игры. Ползунки экономики не двигает ни один эффект — и
+  мод их двигает. Лестница рычагов, и чем каждый проверен:
+  [`docs/research/engine_reach.md`](docs/research/engine_reach.md). Его
+  требование 09-17.
 - **Effects that merely do nothing log nothing.** `error.log` names the file and
   line for GUI and script failures; one that never runs is invisible.
-- **A `building_type` filter receives `root`**, whatever vanilla's comment says.
 - **Localization has its own checklist**,
-  [`docs/pitfalls/localization.md`](docs/pitfalls/localization.md): a
-  `customizable_localization` cannot be overridden, square brackets in a value
-  are data function syntax, a CMF action bar draws its `_icon` and `_color` from
-  localization. Script and localization files carry a UTF-8 BOM and keys take one
-  leading space; he plays in Russian, and a key missing there shows raw.
+  [`docs/pitfalls/localization.md`](docs/pitfalls/localization.md), read before
+  touching a `.yml`; **he plays in Russian**, where a missing key shows raw.
 
 ## Ask the game whether something exists
 
@@ -89,9 +91,9 @@ for the reference tree and the rebuild loop,
     python3 tools/api.py --where checkbox    every file naming it
 
 **Never state what the player sees, or what the game lacks, from memory** —
-both cost a round trip on 2026-09-05. Every `api.py` answer ends with what it
-did **not** search: `reference/` is partial. **An empty result is a fact about
-the tree, never about the game.** Say plainly when something is unproven.
+both cost a round trip on 2026-09-05. Every `api.py` answer ends with what it did
+**not** search. **An empty result is a fact about the tree, never about the
+game.** Say plainly when something is unproven.
 
 Do not hardcode a reference folder's name or trust a version written in prose:
 `python3 tools/refs.py`.
@@ -100,10 +102,10 @@ Do not hardcode a reference folder's name or trust a version written in prose:
 
     python3 tools/refresh.py           rebuild every generated file, report what moved
 
-Run it at the start of a session; it is cheaper than believing a document. The
-owner does this and the rest of his mod loop from `mods.bat`, a menu rather than
-a command to remember. **Do not tell him to run the pieces by hand when the menu
-covers it**, and do not build a step only a session can perform.
+The session hook runs it and reports what moved — believe it over a document.
+His whole mod loop is `mods.bat`, a menu rather than commands to remember: **do
+not tell him to run the pieces by hand when the menu covers it**, and do not
+build a step only a session can perform.
 
 ## Keeping this current
 

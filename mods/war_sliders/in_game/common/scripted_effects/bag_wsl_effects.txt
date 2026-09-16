@@ -67,17 +67,96 @@ bag_wsl_on_peace = {
 			has_variable = bag_wsl_mint_on
 			inflation > bag_wsl_inflation_goal
 		}
+		# Точка нулевого прироста — там, где ползунок стоит **сейчас**: пока
+		# работала ванильная автоматика, она держала его ровно в ней
+		# («Automated Minting with 0 Monthly Inflation»). Дальше это опора всей
+		# арифметики последнего месяца, поэтому снимается до того, как мод
+		# тронет ползунок.
+		set_variable = { name = bag_wsl_m0 value = slider_minting_value }
+		set_variable = { name = bag_wsl_mint_floor value = bag_wsl_mint_fraction }
+		# Положение, которое держится ближайший месяц: по нему потом читается
+		# измеренный темп. После частичного шага это уже не пол, поэтому
+		# записывается отдельно, а не берётся из настройки.
+		set_variable = { name = bag_wsl_held value = bag_wsl_mint_fraction }
+		set_variable = { name = bag_wsl_infl_prev value = inflation }
+		remove_variable = bag_wsl_drain
 		set_variable = { name = bag_wsl_mint_target value = 1 }
 		set_variable = { name = bag_wsl_mint_phase value = 1 }
 	}
 }
 
-# Инфляция доведена — отпустить чеканку обратно ванильной автоматике.
+# Месячный шаг правки. Мод меряет, **на сколько он сам снижает инфляцию**, и
+# последний месяц отрабатывает ровно на остаток, а не на полную.
+#
+# **Зачем.** Его слово 2026-09-17: при темпе −0.10%/мес и остатке 0.05% мод
+# добирал бы всё те же 0.10% — «эти 0.04% инфляции… значительная сумма». И темп
+# не константа: он зависит от страны, привилегий, чего угодно. Поэтому темп не
+# задаётся, а **измеряется**: сколько инфляции ушло за прошлый месяц при том
+# положении ползунка, которое мод держал.
+#
+# **Арифметика.** Прирост инфляции линеен по положению ползунка между точкой
+# нулевого прироста `m0` и полом `floor`, на котором мод держит чеканку. Измерив
+# `D` — сколько ушло за месяц на полу, — и зная остаток `R`, нужное положение
+# последнего месяца:
+#
+#     m = m0 − R × (m0 − held) / D
+#
+# где `held` — положение, на котором мод держал ползунок измеренный месяц. При
+# `held = 0` это `m0 × (1 − R/D)`: полпути к нулю снимает половину темпа.
+# Если промахнёмся — следующий месяц просто сделает ещё один маленький шаг,
+# цикл сам себя дотягивает.
 # Scope: country
 bag_wsl_mint_check = {
 	if = {
 		limit = { NOT = { inflation > bag_wsl_inflation_goal } }
 		bag_wsl_mint_stand_down = yes
+	}
+	else = {
+		# Остаток и измеренный темп.
+		set_variable = { name = bag_wsl_rem value = inflation }
+		change_variable = { name = bag_wsl_rem subtract = bag_wsl_inflation_goal }
+		set_variable = { name = bag_wsl_drain value = var:bag_wsl_infl_prev }
+		change_variable = { name = bag_wsl_drain subtract = inflation }
+		set_variable = { name = bag_wsl_infl_prev value = inflation }
+
+		if = {
+			limit = {
+				var:bag_wsl_drain > 0
+				var:bag_wsl_rem < var:bag_wsl_drain
+			}
+			# Остатка меньше, чем снимает полный месяц: последний шаг — частичный.
+			set_local_variable = { name = bag_wsl_span value = var:bag_wsl_m0 }
+			change_local_variable = { name = bag_wsl_span subtract = var:bag_wsl_held }
+			set_local_variable = { name = bag_wsl_step value = var:bag_wsl_rem }
+			change_local_variable = { name = bag_wsl_step multiply = local_var:bag_wsl_span }
+			change_local_variable = { name = bag_wsl_step divide = var:bag_wsl_drain }
+			set_local_variable = { name = bag_wsl_aim value = var:bag_wsl_m0 }
+			change_local_variable = { name = bag_wsl_aim subtract = local_var:bag_wsl_step }
+
+			# Выше точки нулевого прироста нельзя — это уже добавляло бы инфляцию;
+			# ниже пола незачем — там и так полный темп.
+			if = {
+				limit = { local_var:bag_wsl_aim > var:bag_wsl_m0 }
+				set_local_variable = { name = bag_wsl_aim value = var:bag_wsl_m0 }
+			}
+			if = {
+				limit = { local_var:bag_wsl_aim < var:bag_wsl_mint_floor }
+				set_local_variable = { name = bag_wsl_aim value = var:bag_wsl_mint_floor }
+			}
+
+			set_variable = { name = bag_wsl_mint_target value = local_var:bag_wsl_aim }
+			set_variable = { name = bag_wsl_mint_repost value = 1 }
+		}
+		else_if = {
+			limit = { NOT = { var:bag_wsl_mint_target = var:bag_wsl_mint_floor } }
+			# Ещё далеко — держим полный темп. Сюда же попадает первый месяц
+			# после частичного шага, если остаток не дотянули.
+			set_variable = { name = bag_wsl_mint_target value = var:bag_wsl_mint_floor }
+			set_variable = { name = bag_wsl_mint_repost value = 1 }
+		}
+
+		# Чем месяц держался — тем и мерится следующий.
+		set_variable = { name = bag_wsl_held value = var:bag_wsl_mint_target }
 	}
 }
 
@@ -86,6 +165,7 @@ bag_wsl_mint_check = {
 # Scope: country
 bag_wsl_mint_stand_down = {
 	remove_variable = bag_wsl_mint_phase
+	remove_variable = bag_wsl_mint_repost
 	set_variable = { name = bag_wsl_mint_release value = 1 }
 }
 
