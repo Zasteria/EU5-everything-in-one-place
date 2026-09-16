@@ -1,0 +1,296 @@
+﻿# Лаборатория ползунков: за один заход сказать, каким приводом мод может
+# двигать «Чеканку» и «Содержание», и может ли вообще.
+#
+# **Зачем зонд, а не сразу мод.** Скриптом эти ползунки не двигаются: эффекта
+# нет ни одного (`set_maintenance` — только для бюрократий), а со стороны
+# интерфейса запись идёт единственной дверью — обработчиком `onvaluechanged`
+# у самого ползунка (`EconomyView.OnChangedCoinMinting`,
+# `MaintenanceSetting.OnChanged`), и аргумента он не принимает: значение ему
+# даёт виджет. Отсюда единственный неизвестный вопрос, который стоит прогона:
+# **срабатывает ли `onvaluechanged`, когда значение поменял не игрок, а упор
+# (`mincap`/`maxcap`) нашего собственного ползунка.**
+#
+# Прецедент, ради которого это вообще строится: вызов ванильных функций
+# интерфейса из скрытого виджета здесь уже работал — здания реально строились
+# (`docs/archive/wtp_vanilla_autoexpand_attempt.md`). Не заработала там только
+# передача объекта из скрипта в интерфейс; здесь её нет вовсе — `GetEconomyView`
+# движковый, и список содержаний движок отдаёт сам.
+#
+# Форма окна — `bag_wtp_summary_window.gui`, оно взяло её у `ai_settings_menu.gui`:
+# `size` и `using = bg_window_default_alt` стоят на самом `window`, `vbox` лежит
+# в нём напрямую, и между ними нет ничего (`docs/pitfalls/windows.md`).
+window = {
+	name = "bag_wsl_lab_window"
+	datacontext = "[GetPlayer]"
+	allow_outside = yes
+	alwaystransparent = no
+	parentanchor = top|left
+	widgetanchor = top|left
+	position = { 780 120 }
+	movable = yes
+	size = { 620 470 }
+	using = bg_window_default_alt
+
+	# Само окно висит рядом с панелью экономики и пропадает вместе с ней, пока
+	# его не приколотили кнопкой «закрепить». Закреплённое окно — это и есть
+	# проверка «жив ли `GetEconomyView` при закрытой панели»: если числа ниже
+	# продолжают печататься, жив.
+	visible = "[Or(IsLateralViewOpened('economy'), GetVariableSystem.Exists('bag_wsl_pin'))]"
+
+	vbox = {
+		using = window_margin_alt
+
+		window_header_alt = {
+			blockoverride "header_text" { text = "bag_wsl_lab_title" }
+			blockoverride "window_header_alt_color_texture" { using = color_economy_texture }
+		}
+
+		vbox = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+			using = bg_secondary_inner_alt
+			margin = { 12 12 }
+			spacing = 6
+
+			# ---- показания ----------------------------------------------------
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wsl_row_panel"
+			}
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wsl_row_minting"
+			}
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wsl_row_auto"
+			}
+
+			# Содержания приходят датамоделью движка. В коробке с `datamodel` не
+			# бывает статических детей — это форма, которая роняла игру
+			# (`docs/pitfalls/windows.md`), поэтому коробка здесь своя и пустая.
+			vbox = {
+				layoutpolicy_horizontal = expanding
+				spacing = 2
+				ignoreinvisible = yes
+				datamodel = "[GetEconomyView.GetMaintenanceSettings]"
+
+				item = {
+					widget = {
+						size = { 580 24 }
+						visible = "[Or3(MaintenanceSetting.IsArmy, MaintenanceSetting.IsNavy, MaintenanceSetting.IsFort)]"
+
+						hbox = {
+							layoutpolicy_horizontal = expanding
+							spacing = 6
+
+							text_single = {
+								layoutpolicy_horizontal = expanding
+								autoresize = no
+								align = left|nobaseline
+								text = "bag_wsl_row_maint"
+							}
+
+							# Отдельная кнопка на ряд: послать движку то, что
+							# сейчас лежит в этом содержании. `Post` аргументов
+							# не берёт, скоуп у него — сам ряд.
+							button_regular = {
+								size = { 90 22 }
+								tooltip = "bag_wsl_btn_post_maint_tt"
+								onclick = "[MaintenanceSetting.Post]"
+								text_single = {
+									parentanchor = center
+									widgetanchor = center
+									autoresize = yes
+									text = "bag_wsl_btn_post_maint"
+								}
+							}
+
+							# Привод «Д»: наш собственный ползунок, привязанный к
+							# тому же содержанию, с обоими упорами в 50%. Если
+							# `onvaluechanged` срабатывает не только от руки
+							# игрока — значение поедет в 0.50 само.
+							widget = {
+								size = { 0 0 }
+								allow_outside = yes
+								visible_at_creation = no
+								visible = "[And(GetVariableSystem.Exists('bag_wsl_clamp_maint'), Or3(MaintenanceSetting.IsArmy, MaintenanceSetting.IsNavy, MaintenanceSetting.IsFort))]"
+
+								economy_slider = {
+									size = { 120 10 }
+									min = 0
+									max = 1
+									value = "[MaintenanceSetting.GetDefault]"
+									mincap = 0.5
+									maxcap = 0.5
+									onvaluechanged = "[MaintenanceSetting.OnChanged]"
+								}
+							}
+						}
+					}
+				}
+			}
+
+			# ---- приводы, по одному на кнопку ---------------------------------
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				spacing = 6
+
+				button_regular = {
+					size = { 283 26 }
+					tooltip = "bag_wsl_btn_a_tt"
+					onclick = "[GetEconomyView.OnChangedCoinMinting]"
+					text_single = {
+						parentanchor = center
+						widgetanchor = center
+						autoresize = yes
+						text = "bag_wsl_btn_a"
+					}
+				}
+
+				button_regular = {
+					size = { 283 26 }
+					tooltip = "bag_wsl_btn_b_tt"
+					onclick = "[GetEconomyView.PostTaxes]"
+					text_single = {
+						parentanchor = center
+						widgetanchor = center
+						autoresize = yes
+						text = "bag_wsl_btn_b"
+					}
+				}
+			}
+
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				spacing = 6
+
+				button_regular = {
+					size = { 283 26 }
+					tooltip = "bag_wsl_btn_c_tt"
+					onclick = "[GetVariableSystem.Set('bag_wsl_clamp', '1')]"
+					text_single = {
+						parentanchor = center
+						widgetanchor = center
+						autoresize = yes
+						text = "bag_wsl_btn_c"
+					}
+				}
+
+				button_regular = {
+					size = { 283 26 }
+					tooltip = "bag_wsl_btn_d_tt"
+					onclick = "[GetVariableSystem.Clear('bag_wsl_clamp')]"
+					text_single = {
+						parentanchor = center
+						widgetanchor = center
+						autoresize = yes
+						text = "bag_wsl_btn_d"
+					}
+				}
+			}
+
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				spacing = 6
+
+				button_regular = {
+					size = { 283 26 }
+					tooltip = "bag_wsl_btn_e_tt"
+					onclick = "[GetVariableSystem.Set('bag_wsl_clamp_maint', '1')]"
+					text_single = {
+						parentanchor = center
+						widgetanchor = center
+						autoresize = yes
+						text = "bag_wsl_btn_e"
+					}
+				}
+
+				button_regular = {
+					size = { 283 26 }
+					tooltip = "bag_wsl_btn_f_tt"
+					onclick = "[GetVariableSystem.Clear('bag_wsl_clamp_maint')]"
+					text_single = {
+						parentanchor = center
+						widgetanchor = center
+						autoresize = yes
+						text = "bag_wsl_btn_f"
+					}
+				}
+			}
+
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				spacing = 6
+
+				button_regular = {
+					size = { 283 26 }
+					tooltip = "bag_wsl_btn_g_tt"
+					onclick = "[ToggleAutoMinting]"
+					text_single = {
+						parentanchor = center
+						widgetanchor = center
+						autoresize = yes
+						text = "bag_wsl_btn_g"
+					}
+				}
+
+				button_regular = {
+					size = { 283 26 }
+					tooltip = "bag_wsl_btn_h_tt"
+					onclick = "[GetVariableSystem.Toggle('bag_wsl_pin')]"
+					text_single = {
+						parentanchor = center
+						widgetanchor = center
+						autoresize = yes
+						text = "bag_wsl_btn_h"
+					}
+				}
+			}
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wsl_lab_hint"
+			}
+
+			# Пустышка последним ребёнком: коробка с запасом места делит его
+			# между детьми, а не прижимает их к верху.
+			widget = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+			}
+		}
+	}
+
+	# Привод «В» для чеканки. Живёт вне рядов, скоуп берёт у движка сам.
+	# Упоры стоят в 0, поэтому пока он показан, ползунок чеканки прижат к нулю;
+	# `onchangefinish` нарочно не привязан — отправкой команды движку заведует
+	# отдельная кнопка, иначе привод слал бы её каждый кадр.
+	widget = {
+		size = { 0 0 }
+		allow_outside = yes
+		visible_at_creation = no
+		visible = "[And(GetVariableSystem.Exists('bag_wsl_clamp'), IsLateralViewOpened('economy'))]"
+		datacontext = "[GetEconomyView]"
+
+		economy_slider = {
+			size = { 120 10 }
+			min = 0
+			max = 1
+			value = "[EconomyView.GetDefaultCoinMinting]"
+			mincap = 0
+			maxcap = 0
+			onvaluechanged = "[EconomyView.OnChangedCoinMinting]"
+		}
+	}
+}

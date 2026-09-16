@@ -444,3 +444,45 @@ target, а не число) — запасной путь, если товар �
 `addcolumn`/`addrow`/`datamodel_wrap`/`flipdirection`, а не потому что виджет не
 годится. `flowcontainer` с datamodel — тот, что ронял игру, — сюда не годится
 и проверять его снова не нужно.
+
+
+## Ползунки экономики: запись есть только у интерфейса, и только через сам ползунок
+
+Искано под `war_sliders` 2026-09-16, по полным дампам, а не по памяти.
+
+**Скрипт до них не достаёт вовсе.** В `effects.log` нет ни одного эффекта на
+чеканку и на содержание армии, флота, крепостей; `set_maintenance` и
+`lock_maintenance` есть, но их scope — `bureaucracy`, то есть институты.
+`set_automated_system` знает систему `finances` целиком и отдельных ползунков
+не знает.
+
+**У интерфейса дверь одна.** Чеканка — `EconomyView.OnChangedCoinMinting` +
+`EconomyView.PostTaxes`, содержание — `MaintenanceSetting.OnChanged` +
+`MaintenanceSetting.Post` (`economy_lateralview.gui:1105`, `:2060`).
+**Аргументов ни один не берёт** — значение обработчику даёт виджет, а кнопки
+«+»/«−» сидят внутри движкового `ranged_slider` и функции под собой не имеют.
+Отсюда единственный незакрытый вопрос: срабатывает ли `onvaluechanged`, когда
+значение поменял `mincap`/`maxcap` чужого ползунка, привязанного к тому же
+объекту. Ванильный комментарий на `economy_lateralview.gui:2059` («set value
+first or setting the min/max/mincap/maxcap changes the existing value») и пара
+`PdxGuiWidget.DisableValueUpdate`/`EnableValueUpdate` говорят, что привязка
+значение двигает, и молчат о том, доходит ли это до обработчика.
+
+**Что ванильная автоматика делает — это её собственные тексты, не догадка.**
+`AUTOMATION_MINTING_ZERO_ON_TT` = «Automated Minting with 0 Monthly Inflation»:
+держит месячный прирост в нуле, накопленное не отыгрывает.
+`TOGGLE_AUTO_ARMY_MAINTENANCE_TOOLTIP_OFF_TT` = «**Raise** the army maintenance
+automatically **at the start of a conflict**»: опускающей половины нет.
+
+## `ExecuteConsoleCommand` — консоль игры доступна виджету
+
+`ExecuteConsoleCommand('<команда>')` зовётся из `onclick`/`on_start` как любая
+другая функция, и команда `effect <любой скриптовый эффект>` делает из неё
+полноценный мост «интерфейс → скрипт» без `scripted_gui`. Так CMF отправляет
+текстовые настройки (`cmm_text_setting.gui`) и чистит свой лог
+(`cmm_log_pane.gui:96`). Команды, которые уже встречаются в чужих модах:
+`debug_mode`, `fow`, `InstantConstruction`, `InstantSiege`, `YesMan`,
+`age <ключ>`, `gui.ClearWidgets <окно>`, `Log.ClearErrorLog`.
+
+CMF прячет такие настройки за `cmf_core__enable_unrestricted_tools` — то есть
+считает их читерскими, а не недоступными: в обычной игре они работают.

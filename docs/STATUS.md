@@ -1,4 +1,4 @@
-﻿# Where the eight mods stand
+﻿# Where the nine mods stand
 
 One line each, and a link to the brief. **Read the brief for the mod the task is
 about and no others** — `mods/<mod>/CLAUDE.md` holds the state, the commands and
@@ -13,12 +13,8 @@ what fails silently there.
 | [`rgo_bonus_filter`](../mods/rgo_bonus_filter/CLAUDE.md) | working, in use, nothing outstanding | the location-panel chip |
 | [`goods_target`](../mods/goods_target/CLAUDE.md) | paused, half working, four faults known | anything on the monthly pulse |
 | [`where_to_produce`](../mods/where_to_produce/CLAUDE.md) | **Единственная версия, и работа идёт в ней.** Его список и все заходы — [`investigations/wtp_backlog.md`](investigations/wtp_backlog.md), открыт пункт 9. Карта городских прав перенесена из CM dev целиком — [`investigations/wtp_town_right_map.md`](investigations/wtp_town_right_map.md) | окно замены, порядок «Пригодности» и `ERROR` прогонами 09-14 приняты; **не прогонялось ничего из 09-14:** `_cov_pass` со спросом о локации и сторона в `_stands_`, «на конец» без устаревших зданий, поделённое среднее провинции в лесенке, приоритет отставшей грамоты, правка грамот руками и провинцией; и **его слово 09-12: 90% из того, что документы звали непрогнанным, уже прогонялось или неактуально** — сверять с ним, не с документами |
-
-`where_to_produce` is the second attempt at a question the first one failed at
-without ever being tested. Why, and the lesson —
-[`archive/where_to_produce.md`](archive/where_to_produce.md).
-| [`where_to_produce`](../mods/where_to_produce/CLAUDE.md) | **Единственная версия, и работа идёт в ней.** Его список и все заходы по нему — [`investigations/wtp_backlog.md`](investigations/wtp_backlog.md); открыт пункт 9 (ручное заполнение). Карта «Лучшее городское право» перенесена из CM dev целиком — [`investigations/wtp_town_right_map.md`](investigations/wtp_town_right_map.md) | окно замены, порядок «Пригодности» и `ERROR` прогонами 09-14 приняты; **не видело прогона: `_cov_pass` со спросом о локации (`_stands_`), «на конец» без устаревших зданий, поделённое среднее провинции в лесенке**; и **его слово 09-12: 90% из того, что документы звали непрогнанным, уже прогонялось или неактуально** — сверять с ним, не с документами |
 | [`cm_maps`](../mods/cm_maps/CLAUDE.md) | **новый 09-15, в игре не был.** Три карты CM dev без CM и CMF: еда, права (+9 детских), губернатор | всё |
+| [`war_sliders`](../mods/war_sliders/CLAUDE.md) | **новый 09-16, в игре не был.** Ползунки «Чеканка» и «Содержание» после войны. Скриптом они не двигаются вовсе; в моде пока зонд, который спрашивает игру, каким приводом их двигает интерфейс | всё |
 
 `where_to_produce` is the **second** attempt; the first failed untested, and why
 is [`archive/where_to_produce.md`](archive/where_to_produce.md).
