@@ -1,0 +1,181 @@
+﻿# Состояние державы и всё, что из него следует.
+#
+# **Триггером служит переключение, а не конец войны.** `at_war` истинно, пока
+# идёт хоть одна война, поэтому при двух войнах сразу мод молчит до конца
+# последней — его условие, 2026-09-17: «может случиться так, что идёт несколько
+# войн одновременно и ползунки упадут после завершения первой».
+#
+# **Мод спит, пока не поймает переключение.** В мирный месяц такт читает один
+# флаг и выходит. Инфляцию он трогает только в те месяцы, когда правка идёт, и
+# засыпает, как только она доведена.
+
+# Scope: country
+bag_wsl_tick = {
+	if = {
+		limit = { at_war = yes }
+		# Война идёт. Запоминаем состояние и отменяем всё, что не доделали:
+		# начавшаяся война отменяет мирную правку целиком.
+		set_variable = { name = bag_wsl_at_war value = 1 }
+		if = {
+			limit = { has_variable = bag_wsl_mint_phase }
+			bag_wsl_mint_stand_down = yes
+		}
+		remove_variable = bag_wsl_army_go
+		remove_variable = bag_wsl_navy_go
+		remove_variable = bag_wsl_fort_go
+	}
+	else_if = {
+		limit = {
+			has_variable = bag_wsl_at_war
+			var:bag_wsl_at_war = 1
+		}
+		# Переключение «война → мир». Единственный момент, когда мод действует.
+		set_variable = { name = bag_wsl_at_war value = 0 }
+		bag_wsl_on_peace = yes
+	}
+	else_if = {
+		limit = { has_variable = bag_wsl_mint_phase }
+		# Идёт правка инфляции — единственная причина, по которой мод не спит.
+		bag_wsl_mint_check = yes
+	}
+}
+
+# **Взводится не целевым числом, а единицей.** Ползунок рождает событие только
+# когда значение под ним **меняется** — прогон 09-16 стоил ровно этой ошибки:
+# упор стоял в нуле с рождения, значение ни разу не двинулось, и обработчику
+# нечего было ловить. Поэтому привод взводится верхом шкалы, а настоящее число
+# приходит вторым шагом, когда ползунок уже показан и уже его читает.
+# Scope: country
+bag_wsl_on_peace = {
+	if = {
+		limit = { has_variable = bag_wsl_army_on }
+		set_variable = { name = bag_wsl_army_target value = 1 }
+		set_variable = { name = bag_wsl_army_go value = 1 }
+	}
+	if = {
+		limit = { has_variable = bag_wsl_navy_on }
+		set_variable = { name = bag_wsl_navy_target value = 1 }
+		set_variable = { name = bag_wsl_navy_go value = 1 }
+	}
+	if = {
+		limit = { has_variable = bag_wsl_fort_on }
+		set_variable = { name = bag_wsl_fort_target value = 1 }
+		set_variable = { name = bag_wsl_fort_go value = 1 }
+	}
+	if = {
+		limit = {
+			has_variable = bag_wsl_mint_on
+			inflation > bag_wsl_inflation_goal
+		}
+		# Точка нулевого прироста — там, где ползунок стоит **сейчас**: пока
+		# работала ванильная автоматика, она держала его ровно в ней
+		# («Automated Minting with 0 Monthly Inflation»). Дальше это опора всей
+		# арифметики последнего месяца, поэтому снимается до того, как мод
+		# тронет ползунок.
+		set_variable = { name = bag_wsl_m0 value = slider_minting_value }
+		set_variable = { name = bag_wsl_mint_floor value = bag_wsl_mint_fraction }
+		# Положение, которое держится ближайший месяц: по нему потом читается
+		# измеренный темп. После частичного шага это уже не пол, поэтому
+		# записывается отдельно, а не берётся из настройки.
+		set_variable = { name = bag_wsl_held value = bag_wsl_mint_fraction }
+		set_variable = { name = bag_wsl_infl_prev value = inflation }
+		remove_variable = bag_wsl_drain
+		set_variable = { name = bag_wsl_mint_target value = 1 }
+		set_variable = { name = bag_wsl_mint_phase value = 1 }
+	}
+}
+
+# Месячный шаг правки. Мод меряет, **на сколько он сам снижает инфляцию**, и
+# последний месяц отрабатывает ровно на остаток, а не на полную.
+#
+# **Зачем.** Его слово 2026-09-17: при темпе −0.10%/мес и остатке 0.05% мод
+# добирал бы всё те же 0.10% — «эти 0.04% инфляции… значительная сумма». И темп
+# не константа: он зависит от страны, привилегий, чего угодно. Поэтому темп не
+# задаётся, а **измеряется**: сколько инфляции ушло за прошлый месяц при том
+# положении ползунка, которое мод держал.
+#
+# **Арифметика.** Прирост инфляции линеен по положению ползунка между точкой
+# нулевого прироста `m0` и полом `floor`, на котором мод держит чеканку. Измерив
+# `D` — сколько ушло за месяц на полу, — и зная остаток `R`, нужное положение
+# последнего месяца:
+#
+#     m = m0 − R × (m0 − held) / D
+#
+# где `held` — положение, на котором мод держал ползунок измеренный месяц. При
+# `held = 0` это `m0 × (1 − R/D)`: полпути к нулю снимает половину темпа.
+# Если промахнёмся — следующий месяц просто сделает ещё один маленький шаг,
+# цикл сам себя дотягивает.
+# Scope: country
+bag_wsl_mint_check = {
+	if = {
+		limit = { NOT = { inflation > bag_wsl_inflation_goal } }
+		bag_wsl_mint_stand_down = yes
+	}
+	else = {
+		# Остаток и измеренный темп.
+		set_variable = { name = bag_wsl_rem value = inflation }
+		change_variable = { name = bag_wsl_rem subtract = bag_wsl_inflation_goal }
+		set_variable = { name = bag_wsl_drain value = var:bag_wsl_infl_prev }
+		change_variable = { name = bag_wsl_drain subtract = inflation }
+		set_variable = { name = bag_wsl_infl_prev value = inflation }
+
+		if = {
+			limit = {
+				var:bag_wsl_drain > 0
+				var:bag_wsl_rem < var:bag_wsl_drain
+			}
+			# Остатка меньше, чем снимает полный месяц: последний шаг — частичный.
+			set_local_variable = { name = bag_wsl_span value = var:bag_wsl_m0 }
+			change_local_variable = { name = bag_wsl_span subtract = var:bag_wsl_held }
+			set_local_variable = { name = bag_wsl_step value = var:bag_wsl_rem }
+			change_local_variable = { name = bag_wsl_step multiply = local_var:bag_wsl_span }
+			change_local_variable = { name = bag_wsl_step divide = var:bag_wsl_drain }
+			set_local_variable = { name = bag_wsl_aim value = var:bag_wsl_m0 }
+			change_local_variable = { name = bag_wsl_aim subtract = local_var:bag_wsl_step }
+
+			# Выше точки нулевого прироста нельзя — это уже добавляло бы инфляцию;
+			# ниже пола незачем — там и так полный темп.
+			if = {
+				limit = { local_var:bag_wsl_aim > var:bag_wsl_m0 }
+				set_local_variable = { name = bag_wsl_aim value = var:bag_wsl_m0 }
+			}
+			if = {
+				limit = { local_var:bag_wsl_aim < var:bag_wsl_mint_floor }
+				set_local_variable = { name = bag_wsl_aim value = var:bag_wsl_mint_floor }
+			}
+
+			set_variable = { name = bag_wsl_mint_target value = local_var:bag_wsl_aim }
+			set_variable = { name = bag_wsl_mint_repost value = 1 }
+		}
+		else_if = {
+			limit = { NOT = { var:bag_wsl_mint_target = var:bag_wsl_mint_floor } }
+			# Ещё далеко — держим полный темп. Сюда же попадает первый месяц
+			# после частичного шага, если остаток не дотянули.
+			set_variable = { name = bag_wsl_mint_target value = var:bag_wsl_mint_floor }
+			set_variable = { name = bag_wsl_mint_repost value = 1 }
+		}
+
+		# Чем месяц держался — тем и мерится следующий.
+		set_variable = { name = bag_wsl_held value = var:bag_wsl_mint_target }
+	}
+}
+
+# Снять правку: интерфейс увидит `bag_wsl_mint_release` и вернёт галочку
+# авто-чеканки, а `bag_wsl_mint_phase` без неё отпускает наш ползунок.
+# Scope: country
+bag_wsl_mint_stand_down = {
+	remove_variable = bag_wsl_mint_phase
+	remove_variable = bag_wsl_mint_repost
+	set_variable = { name = bag_wsl_mint_release value = 1 }
+}
+
+# Счётчик сработавших приводов, его показывает окно диагностики.
+# `change_variable` поднимает то, что уже есть, поэтому первый раз — заводим.
+# Scope: country
+bag_wsl_count_run = {
+	if = {
+		limit = { NOT = { has_variable = bag_wsl_runs } }
+		set_variable = { name = bag_wsl_runs value = 0 }
+	}
+	change_variable = { name = bag_wsl_runs add = 1 }
+}

@@ -1,0 +1,133 @@
+﻿# Обратная дорога: интерфейс сделал своё — скрипт гасит флаг.
+#
+# **Гасит именно интерфейс, а не такт.** Флаг живёт ровно от месячного такта до
+# того кадра, в котором ползунок встал и `Post` ушёл движку; иначе наш ползунок
+# держал бы содержание постоянно, а мод должен просыпаться на переключении и
+# засыпать обратно.
+#
+# `bag_wsl_runs` — счётчик сработавших приводов, его показывает окно
+# диагностики. Пустой счётчик при непустом флаге — это «привод не дошёл», и
+# отличить одно от другого без него нельзя.
+
+# Scope: country
+bag_wsl_clear_army_go = {
+	scope = country
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+	effect = {
+		remove_variable = bag_wsl_army_go
+		bag_wsl_count_run = yes
+	}
+}
+
+# Scope: country
+bag_wsl_clear_navy_go = {
+	scope = country
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+	effect = {
+		remove_variable = bag_wsl_navy_go
+		bag_wsl_count_run = yes
+	}
+}
+
+# Scope: country
+bag_wsl_clear_fort_go = {
+	scope = country
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+	effect = {
+		remove_variable = bag_wsl_fort_go
+		bag_wsl_count_run = yes
+	}
+}
+
+# Scope: country
+bag_wsl_clear_mint_release = {
+	scope = country
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+	effect = {
+		remove_variable = bag_wsl_mint_release
+		bag_wsl_count_run = yes
+	}
+}
+
+# Окно диагностики: «сработать сейчас» — тот же эффект, что и переключение
+# «война → мир», но без войны. Одна кнопка вместо микровойны ради проверки.
+# Scope: country
+bag_wsl_force_run = {
+	scope = country
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+	effect = {
+		bag_wsl_on_peace = yes
+	}
+}
+
+# Снять всё разом: и невыполненные приводы, и правку чеканки, и счётчик.
+# Scope: country
+bag_wsl_reset = {
+	scope = country
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+	effect = {
+		remove_variable = bag_wsl_army_go
+		remove_variable = bag_wsl_navy_go
+		remove_variable = bag_wsl_fort_go
+		remove_variable = bag_wsl_runs
+		if = {
+			limit = { has_variable = bag_wsl_mint_phase }
+			bag_wsl_mint_stand_down = yes
+		}
+	}
+}
+
+# Второй шаг привода: настоящее число вместо того, которым его взвели.
+# Смена значения под уже показанным ползунком — это и есть то событие, ради
+# которого всё построено.
+
+# Scope: country
+bag_wsl_set_army_target = {
+	scope = country
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+	effect = { set_variable = { name = bag_wsl_army_target value = bag_wsl_army_fraction } }
+}
+
+# Scope: country
+bag_wsl_set_navy_target = {
+	scope = country
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+	effect = { set_variable = { name = bag_wsl_navy_target value = bag_wsl_navy_fraction } }
+}
+
+# Scope: country
+bag_wsl_set_fort_target = {
+	scope = country
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+	effect = { set_variable = { name = bag_wsl_fort_target value = bag_wsl_fort_fraction } }
+}
+
+# Scope: country
+bag_wsl_set_mint_target = {
+	scope = country
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+	effect = { set_variable = { name = bag_wsl_mint_target value = bag_wsl_mint_fraction } }
+}
+
+# Правка сменила цель чеканки посреди месяца — ползунок уже поехал за числом,
+# осталось отправить движку и погасить флаг.
+# Scope: country
+bag_wsl_clear_mint_repost = {
+	scope = country
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+	effect = {
+		remove_variable = bag_wsl_mint_repost
+		bag_wsl_count_run = yes
+	}
+}

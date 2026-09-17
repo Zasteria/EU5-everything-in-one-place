@@ -1,4 +1,4 @@
-﻿# Where the eight mods stand
+﻿# Where the nine mods stand
 
 One line each, and a link to the brief. **Read the brief for the mod the task is
 about and no others** — `mods/<mod>/CLAUDE.md` holds the state, the commands and
@@ -13,12 +13,8 @@ what fails silently there.
 | [`rgo_bonus_filter`](../mods/rgo_bonus_filter/CLAUDE.md) | working, in use, nothing outstanding | the location-panel chip |
 | [`goods_target`](../mods/goods_target/CLAUDE.md) | paused, half working, four faults known | anything on the monthly pulse |
 | [`where_to_produce`](../mods/where_to_produce/CLAUDE.md) | **Единственная версия, и работа идёт в ней.** Его список и все заходы — [`investigations/wtp_backlog.md`](investigations/wtp_backlog.md), открыт пункт 9. Карта городских прав перенесена из CM dev целиком — [`investigations/wtp_town_right_map.md`](investigations/wtp_town_right_map.md) | окно замены, порядок «Пригодности» и `ERROR` прогонами 09-14 приняты; **не прогонялось ничего из 09-14:** `_cov_pass` со спросом о локации и сторона в `_stands_`, «на конец» без устаревших зданий, поделённое среднее провинции в лесенке, приоритет отставшей грамоты, правка грамот руками и провинцией; и **его слово 09-12: 90% из того, что документы звали непрогнанным, уже прогонялось или неактуально** — сверять с ним, не с документами |
-
-`where_to_produce` is the second attempt at a question the first one failed at
-without ever being tested. Why, and the lesson —
-[`archive/where_to_produce.md`](archive/where_to_produce.md).
-| [`where_to_produce`](../mods/where_to_produce/CLAUDE.md) | **Единственная версия, и работа идёт в ней.** Его список и все заходы по нему — [`investigations/wtp_backlog.md`](investigations/wtp_backlog.md); открыт пункт 9 (ручное заполнение). Карта «Лучшее городское право» перенесена из CM dev целиком — [`investigations/wtp_town_right_map.md`](investigations/wtp_town_right_map.md) | окно замены, порядок «Пригодности» и `ERROR` прогонами 09-14 приняты; **не видело прогона: `_cov_pass` со спросом о локации (`_stands_`), «на конец» без устаревших зданий, поделённое среднее провинции в лесенке**; и **его слово 09-12: 90% из того, что документы звали непрогнанным, уже прогонялось или неактуально** — сверять с ним, не с документами |
 | [`cm_maps`](../mods/cm_maps/CLAUDE.md) | **новый 09-15, в игре не был.** Три карты CM dev без CM и CMF: еда, права (+9 детских), губернатор | всё |
+| [`war_sliders`](../mods/war_sliders/CLAUDE.md) | **работает, проверено войной 09-17.** Содержание армии, флота и крепостей падает на мирное значение в месяц выхода из **всех** войн, чеканка гасит накопленную инфляцию и уходит обратно к ванильной автоматике. Настройки — страница в меню CMF | точный последний месяц правки инфляции (09-17, после его прогона) |
 
 `where_to_produce` is the **second** attempt; the first failed untested, and why
 is [`archive/where_to_produce.md`](archive/where_to_produce.md).
@@ -29,17 +25,15 @@ is [`archive/where_to_produce.md`](archive/where_to_produce.md).
 
 ## Two things being hunted that are not any mod's fault
 
-- **[The widget leak](investigations/widget_leak.md)** — the game accumulates
-  GUI widgets and never releases them. Measured across five runs, established as
-  the base game's, and the open question is whether a mod or a setting is a
-  lever. A run is prepared and the owner has agreed to it.
+- **[The widget leak](investigations/widget_leak.md)** — established as the base
+  game's across five runs; the open question is whether a mod or a setting is a
+  lever. A run is prepared and agreed.
 - **[The panel hitch](investigations/panel_hitch.md)** — panels open slower with
-  the playset from the first minute. A different thing, and it must not be filed
-  with the leak. The next step is a bisect the owner can do in five minutes.
+  the playset from the first minute. **A different thing, not to be filed with
+  the leak.** Next step is a bisect he can do in five minutes.
 
 ## The tooling around all of it
 
-`mods.bat` → `tools/mods.ps1` is his whole mod loop and `tools/workshop.py`
-answers whether a refresh is owed; both finished, and **not to be rebuilt** —
-that rule lives in [`SETTLED.md`](SETTLED.md). How it fits together:
-[`CONVENTIONS.md`](CONVENTIONS.md).
+`mods.bat` → `tools/mods.ps1` is his whole mod loop, `tools/workshop.py` answers
+whether a refresh is owed, and **neither is to be rebuilt** ([`SETTLED.md`](SETTLED.md)).
+How it fits together: [`CONVENTIONS.md`](CONVENTIONS.md).

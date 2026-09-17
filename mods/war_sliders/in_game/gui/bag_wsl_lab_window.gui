@@ -1,0 +1,160 @@
+﻿# Окно диагностики. Показывает то, чего в игре не видно: состояние державы,
+# каким моду оно запомнилось, какие приводы взведены и сколько их сработало.
+#
+# **Пустой счётчик при взведённом флаге — это «привод не дошёл»**, и без него
+# это неотличимо от «мод не сработал вовсе». Ровно эта пара чисел и решает,
+# нужен ли следующий заход.
+#
+# Окно включается галочкой «Показывать окно диагностики» на странице мода в
+# меню CMF и висит рядом с панелью экономики; кнопка «Закрепить» оставляет его
+# на экране с закрытой панелью — это и есть проверка «работает ли привод, когда
+# панель закрыта».
+window = {
+	name = "bag_wsl_lab_window"
+	datacontext = "[GetPlayer]"
+	allow_outside = yes
+	alwaystransparent = no
+	parentanchor = top|left
+	widgetanchor = top|left
+	position = { 780 100 }
+	movable = yes
+	size = { 620 420 }
+	using = bg_window_default_alt
+
+	visible = "[And(GetPlayer.MakeScope.GetVariable('bag_wsl_lab_on').IsSet, Or(IsLateralViewOpened('economy'), GetVariableSystem.Exists('bag_wsl_pin')))]"
+
+	vbox = {
+		using = window_margin_alt
+
+		window_header_alt = {
+			blockoverride "header_text" { text = "bag_wsl_lab_title" }
+			blockoverride "window_header_alt_color_texture" { using = color_economy_texture }
+		}
+
+		vbox = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+			using = bg_secondary_inner_alt
+			margin = { 12 12 }
+			spacing = 4
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wsl_row_minting"
+			}
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wsl_row_auto"
+			}
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wsl_row_state"
+			}
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wsl_row_mint"
+			}
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wsl_row_flags"
+			}
+
+			vbox = {
+				layoutpolicy_horizontal = expanding
+				datacontext = "[GetEconomyView]"
+
+				vbox = {
+					layoutpolicy_horizontal = expanding
+					spacing = 2
+					ignoreinvisible = yes
+
+					datamodel = "[EconomyView.GetMaintenanceSettings]"
+					item = {
+						widget = {
+							size = { 580 22 }
+							visible = "[Or3(MaintenanceSetting.IsArmy, MaintenanceSetting.IsNavy, MaintenanceSetting.IsFort)]"
+
+							hbox = {
+								layoutpolicy_horizontal = expanding
+
+								text_single = {
+									layoutpolicy_horizontal = expanding
+									autoresize = no
+									align = left|nobaseline
+									text = "bag_wsl_row_maint"
+								}
+							}
+						}
+					}
+				}
+			}
+
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				spacing = 4
+
+				button_regular = {
+					size = { 190 26 }
+					tooltip = "bag_wsl_btn_run_tt"
+					onclick = "[GetScriptedGui('bag_wsl_force_run').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+					text_single = {
+						parentanchor = center
+						widgetanchor = center
+						autoresize = yes
+						text = "bag_wsl_btn_run"
+					}
+				}
+
+				button_regular = {
+					size = { 190 26 }
+					tooltip = "bag_wsl_btn_reset_tt"
+					onclick = "[GetScriptedGui('bag_wsl_reset').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+					text_single = {
+						parentanchor = center
+						widgetanchor = center
+						autoresize = yes
+						text = "bag_wsl_btn_reset"
+					}
+				}
+
+				button_regular = {
+					size = { 190 26 }
+					tooltip = "bag_wsl_btn_h_tt"
+					onclick = "[GetVariableSystem.Toggle('bag_wsl_pin')]"
+					text_single = {
+						parentanchor = center
+						widgetanchor = center
+						autoresize = yes
+						text = "bag_wsl_btn_h"
+					}
+				}
+			}
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wsl_lab_hint"
+			}
+
+			widget = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+			}
+		}
+	}
+}
