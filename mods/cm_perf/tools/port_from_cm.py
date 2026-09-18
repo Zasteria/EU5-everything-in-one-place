@@ -124,9 +124,239 @@ def _widen_first_pass(text: str) -> str:
     )
 
 
+
+# ---------------------------------------------------------- the drain loop
+
+QUEUE = "in_game/gui/cm_construct_queue_window.gui"
+SGUI = "in_game/common/scripted_guis/cm_hidden_window_scripted_gui.txt"
+DISPATCH = "in_game/common/on_action/cm_on_action.txt"
+
+# CM 2.2.12's drain driver, verbatim. Rebuilt rather than patched line by line,
+# so a changed source stops the generator instead of being half-edited.
+_LOOP_OLD = (
+	"\t\t# Per-cycle driver: tears down when cm_should_construct clears and rebuilds next cycle, re-running _show.\n"
+	"\t\twidget = {\n"
+	"\t\t\tsize = { 0 0 }\n"
+	"\t\t\tvisible = \"[And(GetPlayer.Exists, GetScriptedGui('cm_should_construct')"
+	".IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End))]\"\n"
+	"\t\t\t# Step lengths only pace the loop; completion is decided by cm_q_sync_check.\n"
+	"\t\t\tstate = {\n"
+	"\t\t\t\tname = _show\n"
+	"\t\t\t\tduration = 0.1\n"
+	"\t\t\t\tnext = cm_q_round_fire\n"
+	"\t\t\t}\n"
+	"\t\t\t# Rounds are safe to repeat: executors skip entries already processed this cycle.\n"
+	"\t\t\tstate = {\n"
+	"\t\t\t\tname = cm_q_round_fire\n"
+	"\t\t\t\tduration = 0.15\n"
+)
+
+SWEEPS = (
+	"cm_q_construct", "cm_q_construct_upgrade", "cm_q_construct_ungated",
+	"cm_q_construct_urbanize", "cm_q_construct_food", "cm_q_construct_food_rgo",
+	"cm_q_construct_rgo",
+)
+
+
+def _fire(name: str, indent: str) -> str:
+	return f"{indent}on_finish = \"[PdxGuiTriggerAllAnimations('{name}')]\"\n"
+
+
+def _split_the_drain_loop(text: str) -> str:
+	"""One sweep per cycle instead of one per round.
+
+	CM's loop re-fired every construct sweep every 0.15s round for as long as the
+	cycle took. `PdxGuiTriggerAllAnimations` matches by state name across the
+	whole tree, so each sweep costs one scripted_gui_command per staged item, and
+	the round count multiplied that. On a large nation it is the monthly slow
+	stretch: the cycle drains for the first stretch of the month at a few rounds a
+	second, and the rest of the month runs at full speed once it is done.
+
+	**This is the author's own fix, taken off CM dev 2.3.0**, whose comment on the
+	same widget names the fault: "repeating it every poll round multiplied that by
+	the round count and flooded the engine's message queue on very large nations."
+	The sweeps move to a one-shot driver gated on `cm_q_scan_armed`; the loop keeps
+	only `cm_q_probe`, which verifies approved entries, and the sync check.
+
+	What repeating was for -- an item widget that had not instantiated when the
+	sweep fired -- is covered by the rescan in `_rescan_when_stalled`, dev's answer
+	to the same question.
+	"""
+	if text.count(_LOOP_OLD) != 1:
+		raise SystemExit(
+			f"{QUEUE}: the per-cycle drain driver is not the one this edit was "
+			"written against. Re-read the file and the dev build's version of it "
+			"before touching the loop again."
+		)
+	for name in SWEEPS + ("cm_q_probe",):
+		if _fire(name, "\t\t\t\t") not in text:
+			raise SystemExit(f"{QUEUE}: sweep {name} is gone; the split would drop it")
+	start = text.index(_LOOP_OLD)
+	# "\t\t}" also matches the last two tabs of a three-tab state close, which is how
+	# the first build of this edit left an orphan brace behind. Anchor on the newline.
+	loop_back = text.index("next = cm_q_round_fire\n", start + len(_LOOP_OLD))
+	end = text.index("\n\t\t}\n", loop_back) + 1
+	new = (
+		"\t\t# cm_perf: one-shot scan driver. CM fired every sweep below on every round of\n"
+		"\t\t# the poll loop; each sweep costs one scripted_gui_command per staged item, so\n"
+		"\t\t# the round count multiplied the whole queue. Taken off dev 2.3.0, which splits\n"
+		"\t\t# it the same way. Pinned hidden so the gate going true always gives a first show.\n"
+		"\t\twidget = {\n"
+		"\t\t\tsize = { 0 0 }\n"
+		"\t\t\tvisible_at_creation = no\n"
+		"\t\t\tvisible = \"[And(GetPlayer.Exists, GetScriptedGui('cm_q_scan_gate')"
+		".IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End))]\"\n"
+		"\t\t\t# 0.3 gives the staged datamodels time to instantiate before their one sweep.\n"
+		"\t\t\tstate = {\n"
+		"\t\t\t\tname = _show\n"
+		"\t\t\t\tduration = 0.3\n"
+		+ "".join(_fire(n, "\t\t\t\t") for n in SWEEPS)
+		+ "\t\t\t\tnext = cm_q_scan_done\n"
+		"\t\t\t}\n"
+		"\t\t\tstate = {\n"
+		"\t\t\t\tname = cm_q_scan_done\n"
+		"\t\t\t\tduration = 0.15\n"
+		"\t\t\t\ton_finish = \"[GetScriptedGui('cm_q_scan_disarm')"
+		".Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]\"\n"
+		"\t\t\t}\n"
+		"\t\t}\n"
+		"\t\t# Per-cycle poll driver: tears down when cm_should_construct clears and rebuilds\n"
+		"\t\t# next cycle, re-running _show. cm_perf: the construct sweeps have moved to the\n"
+		"\t\t# one-shot driver above; what is left is the probe, which verifies approved\n"
+		"\t\t# entries and costs nothing until the approval pass fills them.\n"
+		"\t\twidget = {\n"
+		"\t\t\tsize = { 0 0 }\n"
+		"\t\t\tvisible = \"[And(GetPlayer.Exists, GetScriptedGui('cm_should_construct')"
+		".IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End))]\"\n"
+		"\t\t\t# Step lengths only pace the loop; completion is decided by cm_q_sync_check.\n"
+		"\t\t\tstate = {\n"
+		"\t\t\t\tname = _show\n"
+		"\t\t\t\tduration = 0.1\n"
+		"\t\t\t\tnext = cm_q_round_probe\n"
+		"\t\t\t}\n"
+		"\t\t\tstate = {\n"
+		"\t\t\t\tname = cm_q_round_probe\n"
+		"\t\t\t\tduration = 0.15\n"
+		+ _fire("cm_q_probe", "\t\t\t\t")
+		+ "\t\t\t\tnext = cm_q_round_check\n"
+		"\t\t\t}\n"
+		"\t\t\tstate = {\n"
+		"\t\t\t\tname = cm_q_round_check\n"
+		"\t\t\t\tduration = 0.15\n"
+		"\t\t\t\ton_finish = \"[GetScriptedGui('cm_q_sync_check')"
+		".Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]\"\n"
+		"\t\t\t\tnext = cm_q_round_probe\n"
+		"\t\t\t}\n"
+	)
+	return text[:start] + new + text[end:]
+
+
+def _add_scan_gate(text: str) -> str:
+	"""The two scripted_guis the one-shot driver needs, verbatim from dev 2.3.0."""
+	# Above cm_q_sync_check's own comment block, not between it and its definition:
+	# a comment that ends up over the wrong block is worse than no comment.
+	anchor = "# Per-round completion check for the construct window's loop."
+	if anchor not in text:
+		raise SystemExit(
+			f"{SGUI}: cm_q_sync_check's comment block does not start where this edit "
+			"expects; the scan gate has "
+			"nowhere to sit without landing over the wrong definition"
+		)
+	block = (
+		"# cm_perf, from dev 2.3.0. Gates the construction-queue window's one-shot scan\n"
+		"# driver. Root is the player. Set by the dispatcher when a cycle arms, and again\n"
+		"# by cm_q_sync_check when a stalled cycle still has unscored entries; cleared by\n"
+		"# the scan driver's own terminal state.\n"
+		"cm_q_scan_gate = {\n"
+		"\tis_shown = {\n"
+		"\t\texists = var:cm_q_scan_armed\n"
+		"\t}\n"
+		"}\n"
+		"\n"
+		"# cm_perf, from dev 2.3.0. Ends the scan driver's one sweep. Root is the player.\n"
+		"cm_q_scan_disarm = {\n"
+		"\teffect = {\n"
+		"\t\tif = {\n"
+		"\t\t\tlimit = { exists = var:cm_q_scan_armed }\n"
+		"\t\t\tremove_variable = cm_q_scan_armed\n"
+		"\t\t}\n"
+		"\t}\n"
+		"}\n"
+		"\n"
+	)
+	i = text.index(anchor)
+	return text[:i] + block + text[i:]
+
+
+def _rescan_when_stalled(text: str) -> str:
+	"""Dev 2.3.0's rescan, which is what makes one sweep per cycle safe.
+
+	The repeated sweep CM had covered one case: an item widget that had not
+	instantiated when a sweep fired had no other way back in. Dev answers it by
+	re-arming the one-shot scan after six rounds with no progress, at most twice.
+	Placed before the give-up branch and resetting the stall counter, so a round
+	that rescans cannot also give up.
+	"""
+	anchor = (
+		"\t\t\t\t\tif = {\n"
+		"\t\t\t\t\t\t# 8 stalled rounds is about 2.4s with zero instantiation progress.\n"
+		"\t\t\t\t\t\tlimit = { var:cm_q_stall_rounds >= 8 }\n"
+	)
+	if text.count(anchor) != 1:
+		raise SystemExit(f"{SGUI}: the stall watchdog has moved; the rescan has nowhere to go")
+	branch = (
+		"\t\t\t\t\t# cm_perf, from dev 2.3.0. Scoring is the only side a re-sweep can help: an\n"
+		"\t\t\t\t\t# item widget that had not instantiated when the one sweep fired has no other\n"
+		"\t\t\t\t\t# way back in, while an unverified approved entry gets a probe every round.\n"
+		"\t\t\t\t\t# Resets the stall count, so the give-up branch below cannot fire this round.\n"
+		"\t\t\t\t\tif = {\n"
+		"\t\t\t\t\t\tlimit = {\n"
+		"\t\t\t\t\t\t\tvar:cm_q_stall_rounds >= 6\n"
+		"\t\t\t\t\t\t\tvar:cm_q_processed < var:cm_q_staged\n"
+		"\t\t\t\t\t\t\tvar:cm_q_rescans < 2\n"
+		"\t\t\t\t\t\t\tNOT = { exists = var:cm_q_scan_armed }\n"
+		"\t\t\t\t\t\t}\n"
+		"\t\t\t\t\t\tchange_variable = { name = cm_q_rescans add = 1 }\n"
+		"\t\t\t\t\t\tset_variable = { name = cm_q_stall_rounds value = 0 }\n"
+		"\t\t\t\t\t\tset_variable = { name = cm_q_scan_armed value = yes }\n"
+		"\t\t\t\t\t}\n"
+	)
+	return text.replace(anchor, branch + anchor)
+
+
+def _arm_the_scan(text: str) -> str:
+	"""Arm the one-shot scan with the cycle, and zero the rescan count with it."""
+	reset = "\t\t\tset_variable = { name = cm_q_stall_rounds value = 0 }\n"
+	arm = (
+		"\t\t\tif = { limit = { var:cm_q_staged >= 1 }\n"
+		"\t\t\t\tset_variable = { name = cm_should_construct value = yes }\n"
+	)
+	if text.count(reset) != 1 or text.count(arm) != 1:
+		raise SystemExit(
+			f"{DISPATCH}: the per-cycle reset or the arming branch has moved; "
+			"the one-shot scan cannot be armed blind"
+		)
+	text = text.replace(
+		reset,
+		reset
+		+ "\t\t\t# cm_perf: counts this cycle's rescans, read by cm_q_sync_check.\n"
+		"\t\t\tset_variable = { name = cm_q_rescans value = 0 }\n",
+	)
+	return text.replace(
+		arm,
+		arm
+		+ "\t\t\t\t# cm_perf: the one sweep this cycle gets, fired by the scan driver.\n"
+		"\t\t\t\tset_variable = { name = cm_q_scan_armed value = yes }\n",
+	)
+
+
 EDITS = (
     (WINDOW, "gate the building-type tree", _gate_the_tree),
     (WINDOW, "widen the first pass's instantiation window", _widen_first_pass),
+    (QUEUE, "one construct sweep per cycle, not per round", _split_the_drain_loop),
+    (SGUI, "the scan gate the one-shot driver needs", _add_scan_gate),
+    (SGUI, "dev 2.3.0's rescan, which makes one sweep safe", _rescan_when_stalled),
+    (DISPATCH, "arm the one-shot scan with the cycle", _arm_the_scan),
 )
 
 

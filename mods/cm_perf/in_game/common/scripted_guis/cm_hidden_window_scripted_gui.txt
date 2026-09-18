@@ -49,6 +49,26 @@ cm_q_probe_upgrade = {
 	}
 }
 
+# cm_perf, from dev 2.3.0. Gates the construction-queue window's one-shot scan
+# driver. Root is the player. Set by the dispatcher when a cycle arms, and again
+# by cm_q_sync_check when a stalled cycle still has unscored entries; cleared by
+# the scan driver's own terminal state.
+cm_q_scan_gate = {
+	is_shown = {
+		exists = var:cm_q_scan_armed
+	}
+}
+
+# cm_perf, from dev 2.3.0. Ends the scan driver's one sweep. Root is the player.
+cm_q_scan_disarm = {
+	effect = {
+		if = {
+			limit = { exists = var:cm_q_scan_armed }
+			remove_variable = cm_q_scan_armed
+		}
+	}
+}
+
 # Per-round completion check for the construct window's loop. Root is the player.
 # Arms the fire pass once every executor has run (processed >= staged) and every approved
 # entry's widget is verified by its probe mark. A cycle making no instantiation progress
@@ -122,6 +142,21 @@ cm_q_sync_check = {
 					set_variable = { name = cm_q_stall_rounds value = 0 }
 				} else = {
 					change_variable = { name = cm_q_stall_rounds add = 1 }
+					# cm_perf, from dev 2.3.0. Scoring is the only side a re-sweep can help: an
+					# item widget that had not instantiated when the one sweep fired has no other
+					# way back in, while an unverified approved entry gets a probe every round.
+					# Resets the stall count, so the give-up branch below cannot fire this round.
+					if = {
+						limit = {
+							var:cm_q_stall_rounds >= 6
+							var:cm_q_processed < var:cm_q_staged
+							var:cm_q_rescans < 2
+							NOT = { exists = var:cm_q_scan_armed }
+						}
+						change_variable = { name = cm_q_rescans add = 1 }
+						set_variable = { name = cm_q_stall_rounds value = 0 }
+						set_variable = { name = cm_q_scan_armed value = yes }
+					}
 					if = {
 						# 8 stalled rounds is about 2.4s with zero instantiation progress.
 						limit = { var:cm_q_stall_rounds >= 8 }
