@@ -95,6 +95,14 @@ BEING_READ = re.compile(
 # the line, the way `check_docs.py` takes `check-docs: ignore`.
 IGNORE_READ = "check-script: never set"
 
+# A folder in `mods/` that is a byte-for-byte copy of someone else's mod, with
+# its own edits named in its generator. Every rule here is about code this
+# repository writes; run over a copy they report the other author's patterns --
+# `cm_perf` alone answers with ten of CM's own -- and each refresh goes red on
+# findings nobody here is going to fix. Skipped in the sweep, still checked when
+# a session names the folder itself, which is how its own edits get looked at.
+VERBATIM_COPIES = {"cm_perf"}
+
 
 DEFINITION = re.compile(r'^(\w+)\s*=\s*\{', re.M)
 CALL = re.compile(r'(?<![\w.:])(\w+)\s*=\s*yes\b')
@@ -1342,7 +1350,10 @@ def shared_copies() -> list[str]:
 
 
 def main(argv: list[str]) -> int:
-    roots = [Path(a) for a in argv[1:]] or sorted((REPO / "mods").iterdir())
+    roots = [Path(a) for a in argv[1:]] or [
+        p for p in sorted((REPO / "mods").iterdir())
+        if p.name not in VERBATIM_COPIES
+    ]
     known = known_names()
     total = 0
     if not argv[1:]:
