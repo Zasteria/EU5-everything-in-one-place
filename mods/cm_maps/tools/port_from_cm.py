@@ -294,24 +294,31 @@ LOCALIZATION = (
 )
 
 
-# ------------------------------------------------------------- the four rewires
+# ------------------------------------------------------------------ the rewires
 #
-# Everything else in this port is a rename. These four are changes of behaviour,
-# and each is here because CM's own wiring runs through CMF or through a part of
-# CM this mod does not carry. Applied to the renamed text, and each one asserts
+# Everything else in this port is a rename. These are changes of behaviour, and
+# each is here because CM's own wiring runs through CMF, through a part of CM
+# this mod does not carry, or -- in the last one -- through a CM fault the port
+# is not obliged to inherit. Applied to the renamed text, and each one asserts
 # it matched, so a CM update that moves the line fails the build instead of
 # quietly dropping the rewire.
 
 EDITS: tuple[tuple[str, str, str, str], ...] = (
     # (destination file, what it was, what it becomes, why)
-    ("in_game/common/script_values/bcm_pf_values.txt",
-     "bcm_pf_accuracy_value = {\n\tvalue = 1",
-     "bcm_pf_accuracy_value = {\n\tvalue = 3",
-     "Search Accuracy: CM ships this as a CMF dropdown defaulting to index 3, "
-     "and the 1 below it is only the fallback for a country CMF has not reached "
-     "yet. Without CMF nothing ever writes the setting, so the fallback is what "
-     "every run would use — and 1 is Exhaustive, the slowest path there is. "
-     "3 is what a CM player actually gets."),
+    # **Search Accuracy is left at CM's fallback of 1 (Exhaustive), and that is a
+    # correction, not an oversight.** An earlier build rewired it to 3, reasoning
+    # that 3 is the CMF dropdown's default and therefore what a CM player gets.
+    # It is — because a CM player can move the dropdown. Here nothing can: there
+    # is no settings page, so the fallback is not a fallback, it is the only
+    # value the mod will ever use. Tiers 2-5 route through the phased runner,
+    # which leaves locations unevaluated and paints them black under
+    # `bcm_pf_tt_skipped` — a tooltip that tells the player to set Accuracy to
+    # Exhaustive and refresh. With no settings page that is a dead end, and it is
+    # what the first run of this mod reported: black patches over the empire and
+    # a tooltip pointing at a setting that does not exist (docs/TESTLOG.md,
+    # 2026-09-19). Tier 1 is the one path that skips nothing. It is also the
+    # slowest, which is the price; the map fills in batches on open, so it costs
+    # fill time, not a loading screen.
 
     # CM fires this from cm_on_init_human_country so the governor map is already
     # filled in the first time it is opened. That on_action is CMF's, and the
@@ -355,6 +362,25 @@ EDITS: tuple[tuple[str, str, str, str], ...] = (
      "\t}\n",
      "",
      "and so is its legend row"),
+
+    # A location whose best right scores zero is left unmarked. CM marks every
+    # location in a province definition that cleared the entry gate, and the gate
+    # takes a definition where *any* location has an input raw material **or** an
+    # output bonus. Coverage is definition-wide, so the input half marks nobody
+    # falsely; the output-bonus half does. A definition that qualified only on one
+    # location's bonus leaves every other location with nine scores of zero, and
+    # the encoding (round(score * 1000) * 10 + index, chained through `min`)
+    # resolves an all-zero tie to the highest index -- 9, tooling. The location is
+    # then painted royal_tooling_rights under a tooltip that prints its three
+    # headings with nothing under any of them: the first run's "colour and a
+    # window, empty description" (docs/TESTLOG.md, 2026-09-19). Unmarking sends it
+    # to MAPMODE_BCM_BEST_TOWN_RIGHT_TT_NONE, whose text -- the province has no
+    # raw materials specialized production uses -- is exactly true of it, because
+    # a location scores zero only when its whole definition covers nothing.
+    ("in_game/common/scripted_effects/bcm_trmm_effects.txt",
+     "\t\t\t}\n\t\t}\n\t}\n\telse = {\n\t\tevery_province_in_province_definition = {",
+     "\t\t\t\t# Only a location with a right worth naming is marked; see the note in\n\t\t\t\t# port_from_cm.py's EDITS. An all-zero encoding resolves to index 9 and\n\t\t\t\t# would paint the location as tooling under an empty tooltip, so it is\n\t\t\t\t# unmarked instead and falls to the map's no-data branch.\n\t\t\t\tif = {\n\t\t\t\t\t# enc below 10 = best score rounds to 0.\n\t\t\t\t\tlimit = { local_var:bcm_trmm_enc < 10 }\n\t\t\t\t\tif = {\n\t\t\t\t\t\tlimit = { has_variable = bcm_trmm_best_idx }\n\t\t\t\t\t\tremove_variable = bcm_trmm_best_idx\n\t\t\t\t\t}\n\t\t\t\t\tif = {\n\t\t\t\t\t\tlimit = { has_variable = bcm_trmm_best_mil }\n\t\t\t\t\t\tremove_variable = bcm_trmm_best_mil\n\t\t\t\t\t}\n\t\t\t\t\tif = {\n\t\t\t\t\t\tlimit = { has_variable = bcm_trmm_tie_idx }\n\t\t\t\t\t\tremove_variable = bcm_trmm_tie_idx\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\telse = {\n\t\tevery_province_in_province_definition = {",
+     "a location with no right worth naming is left unmarked"),
 
     # CM's setup log tells its own log pane that every load-time pass has
     # finished. There is no log pane here.
@@ -768,6 +794,17 @@ bcm_setup_pending = {
 			NOT = { bcm_trmm_data_is_current = yes }
 			NOT = { bcm_fpot_data_is_current = yes }
 			NOT = { bcm_pf_river_data_is_current = yes }
+			# The migration below, which a save that predates it still owes. It is
+			# a global stamp and not a check on what it retires, because what it
+			# retires is written again in normal use: a governor run that finishes
+			# sets bcm_pf_fresh_g, and gating on that flag would make this driver
+			# throw away every cache the moment it was built.
+			NOT = {
+				AND = {
+					has_global_variable = bcm_pf_epoch
+					global_var:bcm_pf_epoch = 1
+				}
+			}
 		}
 	}
 }
@@ -788,6 +825,39 @@ SETUP_EFFECTS = """# The once-per-save setup, cut down to what these three maps 
 # paying for a pass whose result is already in the save.
 
 bcm_run_lobby_setup = {
+	# **Retiring what the 2026-09-19 fixes invalidated, once per save.** Both
+	# fixes change stored data, and both stores outlive a reload on their own:
+	# the urban-rights pass is held by a global stamp until its version changes,
+	# and a finished governor run is held by bcm_pf_fresh_g for 1460 days. So a
+	# campaign already under way would keep the wrong marks -- locations painted
+	# tooling under an empty tooltip, and locations the old Search Accuracy of 3
+	# skipped and left black -- and neither would ever be recomputed. Dropping
+	# the trmm stamp costs one pass on the next load; dropping the governor
+	# cache costs one recompute the next time the map is opened.
+	#
+	# The version constants live in a file this port generates from CM, so the
+	# stamp is here instead, where a CM update cannot carry it away.
+	if = {
+		limit = {
+			NOT = {
+				AND = {
+					has_global_variable = bcm_pf_epoch
+					global_var:bcm_pf_epoch = 1
+				}
+			}
+		}
+		if = {
+			limit = { has_global_variable = bcm_trmm_stamp }
+			remove_global_variable = bcm_trmm_stamp
+		}
+		# Root is the player; the finder only ever runs for them.
+		if = {
+			limit = { exists = var:bcm_pf_fresh_g }
+			remove_variable = bcm_pf_fresh_g
+		}
+		set_global_variable = { name = bcm_pf_epoch value = 1 }
+	}
+
 	# Recommended urban rights coverage: one pass over every province definition,
 	# writing what the map and its tooltip then only read. Synchronous, so there
 	# is no partial state for the stamp to certify.

@@ -2443,6 +2443,26 @@ bcm_trmm_recompute_province_definition = {
 						}
 					}
 				}
+				# Only a location with a right worth naming is marked; see the note in
+				# port_from_cm.py's EDITS. An all-zero encoding resolves to index 9 and
+				# would paint the location as tooling under an empty tooltip, so it is
+				# unmarked instead and falls to the map's no-data branch.
+				if = {
+					# enc below 10 = best score rounds to 0.
+					limit = { local_var:bcm_trmm_enc < 10 }
+					if = {
+						limit = { has_variable = bcm_trmm_best_idx }
+						remove_variable = bcm_trmm_best_idx
+					}
+					if = {
+						limit = { has_variable = bcm_trmm_best_mil }
+						remove_variable = bcm_trmm_best_mil
+					}
+					if = {
+						limit = { has_variable = bcm_trmm_tie_idx }
+						remove_variable = bcm_trmm_tie_idx
+					}
+				}
 			}
 		}
 	}

@@ -7,6 +7,39 @@
 # paying for a pass whose result is already in the save.
 
 bcm_run_lobby_setup = {
+	# **Retiring what the 2026-09-19 fixes invalidated, once per save.** Both
+	# fixes change stored data, and both stores outlive a reload on their own:
+	# the urban-rights pass is held by a global stamp until its version changes,
+	# and a finished governor run is held by bcm_pf_fresh_g for 1460 days. So a
+	# campaign already under way would keep the wrong marks -- locations painted
+	# tooling under an empty tooltip, and locations the old Search Accuracy of 3
+	# skipped and left black -- and neither would ever be recomputed. Dropping
+	# the trmm stamp costs one pass on the next load; dropping the governor
+	# cache costs one recompute the next time the map is opened.
+	#
+	# The version constants live in a file this port generates from CM, so the
+	# stamp is here instead, where a CM update cannot carry it away.
+	if = {
+		limit = {
+			NOT = {
+				AND = {
+					has_global_variable = bcm_pf_epoch
+					global_var:bcm_pf_epoch = 1
+				}
+			}
+		}
+		if = {
+			limit = { has_global_variable = bcm_trmm_stamp }
+			remove_global_variable = bcm_trmm_stamp
+		}
+		# Root is the player; the finder only ever runs for them.
+		if = {
+			limit = { exists = var:bcm_pf_fresh_g }
+			remove_variable = bcm_pf_fresh_g
+		}
+		set_global_variable = { name = bcm_pf_epoch value = 1 }
+	}
+
 	# Recommended urban rights coverage: one pass over every province definition,
 	# writing what the map and its tooltip then only read. Synchronous, so there
 	# is no partial state for the stamp to certify.
