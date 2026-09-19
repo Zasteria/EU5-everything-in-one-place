@@ -387,8 +387,10 @@ to a global function is `[F(PdxGuiWidget.AccessParent.FindChild('name'))]`
 (`searchbar.gui:165`, `hud_bot.gui:1068`), so that is what `mods/widget_probe`
 tries.
 
-**And nothing enumerates children.** No data type in any dump returns a list of
-widgets; `FindChild` and `AccessChild` take a name. So even a working destroy
+**And nothing enumerates children — проверено в игре 2026-09-19.** No data type
+in any dump returns a list of widgets, and `AccessChild('(int32)N')` returns
+`nullptr` for every N from 0 to 23 on a container with 23 children. `FindChild`
+takes a name. So even a working destroy
 cannot sweep — every widget it removes has to be named in advance, and the leaked
 ones have no names a mod knows. `GetChildrenCount` is what a mod has instead: it
 measures a tree from inside the game, level by level, and that is how a container

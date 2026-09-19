@@ -1,32 +1,20 @@
-﻿# Пробник виджетов. Мод отладочный: ставится на один прогон и снимается.
+﻿# Пробник виджетов. Мод отладочный: ставится на прогон и снимается.
 #
-# Он отвечает на один вопрос — можно ли модом освободить виджеты, которые игра
-# копит за сессию (`../../docs/investigations/widget_leak.md`). Рычаги, и
-# каждый нажимается отдельно, потому что неизвестно, работает ли хоть один:
+# **Главное здесь — секундомер**, первая строка. Сколько реальных секунд занял
+# каждый из последних шести игровых месяцев, свежий слева. Это единственное
+# число, которое двигается, и оно меряет ровно то, на что он жалуется: «месяц
+# идёт всё медленнее». Считает его `bag_wpr_driver.gui`.
 #
-#   * `PdxGuiDestroyWidget` — единственная в дампах функция, уничтожающая
-#     виджет. Глобальная, поэтому прошлый поиск по методам типов её не нашёл.
-#     Здесь она бьёт по своей же жертве `bag_wpr_victim`, рядом счётчик детей
-#     той же коробки: 3 до нажатия, 2 после — значит вызов работает.
-#   * `gui.clearwidgets` — консольная команда, которой игра гасит свою же
-#     библиотеку интерфейса (`ui_library.gui:18261`).
-#   * `CloseAllTooltips` — то, чем игра закрывает подсказки сама.
+# **Чего здесь больше нет и почему.** Перепись корня через `AccessChild` снята:
+# прогон 2026-09-19 показал, что функция возвращает nullptr на любом номере от 0
+# до 23, то есть перечислить детей ею нельзя. Счётчики окон CM сняты вместе с
+# ней. Обе писали по три строки в `error.log` **каждый кадр** — 698 строк за
+# короткую сессию, — потому что **нулевой виджет гасит всю строку целиком и не
+# печатает `ERROR`**. Пустая строка в этом окне значит «выражение не
+# разрешилось», а не «ноль».
 #
-# **Перепись корня — главное, что тут есть.** Прогон 2026-09-19 показал, что
-# вверх по дереву цепочка кончается быстро: окно > `windows_layer` (32 ребёнка)
-# > `_root_` (23 ребёнка). Значит утечка сидит не наверху, а в одной из веток
-# корня, и её надо назвать. `AccessChild` берёт номер или имя — неизвестно, в
-# игровых файлах он не встречается ни разу; если номер, строки ниже назовут
-# ветку с десятками тысяч детей. Все `ERROR` — значит берёт имя, и эта дорога
-# закрыта.
-#
-# **Строки «CM» считают детей у трёх окон Construction Manager по имени.** Его
-# цена растёт за сессию и лечится выходом в меню — значит растёт что-то в
-# процессе, и эти три числа скажут, растёт ли оно внутри самого CM.
-#
-# Времени кадра здесь больше нет: `PdxProfilerGetFrameTimeMs` вернул «−» и после
-# кнопки «Профайлер», прогон 2026-09-19. Тем же прогоном подтверждено, что
-# `PdxGuiDestroyWidget` из мода **работает**.
+# `PdxGuiDestroyWidget` работает — подтверждено тем же прогоном, жертва внизу
+# осталась как способ это перепроверить.
 #
 # Панель висит на флаге `bag_wpr_open`, который переключает отдельное окно
 # `bag_wpr_button.gui`: играть с открытым зондом неудобно, и это его слова.
@@ -39,7 +27,7 @@ window = {
 	widgetanchor = top|left
 	position = { 20 200 }
 	movable = yes
-	size = { 620 700 }
+	size = { 620 300 }
 	using = bg_window_default_alt
 
 	visible = "[GetVariableSystem.Exists('bag_wpr_open')]"
@@ -56,30 +44,20 @@ window = {
 			layoutpolicy_vertical = expanding
 			using = bg_secondary_inner_alt
 			margin = { 12 12 }
-			spacing = 2
+			spacing = 4
 
-			text_single = {
+			text_multi = {
 				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_cm0"
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wpr_months"
 			}
 
-			text_single = {
+			text_multi = {
 				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_cm1"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_cm2"
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wpr_now"
 			}
 
 			text_multi = {
@@ -101,205 +79,6 @@ window = {
 				autoresize = yes
 				maximumsize = { 580 -1 }
 				text = "bag_wpr_lvl5"
-			}
-
-			text_multi = {
-				layoutpolicy_horizontal = expanding
-				autoresize = yes
-				maximumsize = { 580 -1 }
-				text = "bag_wpr_root_head"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_root00"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_root01"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_root02"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_root03"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_root04"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_root05"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_root06"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_root07"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_root08"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_root09"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_root10"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_root11"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_root12"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_root13"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_root14"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_root15"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_root16"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_root17"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_root18"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_root19"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_root20"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_root21"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_root22"
-			}
-
-			text_single = {
-				layoutpolicy_horizontal = expanding
-				size = { 580 17 }
-				autoresize = no
-				align = left|nobaseline
-				text = "bag_wpr_root23"
 			}
 
 			# Скамья для `PdxGuiDestroyWidget`. Жертва — первый ребёнок ряда,

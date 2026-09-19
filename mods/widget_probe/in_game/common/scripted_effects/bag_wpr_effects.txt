@@ -1,0 +1,27 @@
+﻿# Секундомер: заводим переменные и сдвигаем историю месяцев.
+#
+# **Заводим всё до первого чтения.** Незаведённая переменная в ключе локализации
+# гасит строку целиком и пишет три строки в `error.log` каждый кадр — это уже
+# случилось с переписью корня 2026-09-19.
+
+bag_wpr_init = {
+	if = { limit = { NOT = { exists = var:bag_wpr_secs } } set_variable = { name = bag_wpr_secs value = 0 } }
+	if = { limit = { NOT = { exists = var:bag_wpr_m1 } } set_variable = { name = bag_wpr_m1 value = 0 } }
+	if = { limit = { NOT = { exists = var:bag_wpr_m2 } } set_variable = { name = bag_wpr_m2 value = 0 } }
+	if = { limit = { NOT = { exists = var:bag_wpr_m3 } } set_variable = { name = bag_wpr_m3 value = 0 } }
+	if = { limit = { NOT = { exists = var:bag_wpr_m4 } } set_variable = { name = bag_wpr_m4 value = 0 } }
+	if = { limit = { NOT = { exists = var:bag_wpr_m5 } } set_variable = { name = bag_wpr_m5 value = 0 } }
+	if = { limit = { NOT = { exists = var:bag_wpr_m6 } } set_variable = { name = bag_wpr_m6 value = 0 } }
+}
+
+# Месяц кончился: свежее число встаёт слева, самое старое уходит.
+bag_wpr_roll = {
+	bag_wpr_init = yes
+	set_variable = { name = bag_wpr_m6 value = var:bag_wpr_m5 }
+	set_variable = { name = bag_wpr_m5 value = var:bag_wpr_m4 }
+	set_variable = { name = bag_wpr_m4 value = var:bag_wpr_m3 }
+	set_variable = { name = bag_wpr_m3 value = var:bag_wpr_m2 }
+	set_variable = { name = bag_wpr_m2 value = var:bag_wpr_m1 }
+	set_variable = { name = bag_wpr_m1 value = var:bag_wpr_secs }
+	set_variable = { name = bag_wpr_secs value = 0 }
+}
