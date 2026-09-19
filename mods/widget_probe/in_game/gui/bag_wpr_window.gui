@@ -1,0 +1,195 @@
+﻿# Пробник виджетов. Мод отладочный: ставится на один прогон и снимается.
+#
+# Он отвечает на один вопрос — можно ли модом освободить виджеты, которые игра
+# копит за сессию (`../../docs/investigations/widget_leak.md`). Три рычага, и
+# каждый нажимается отдельно, потому что неизвестно, работает ли хоть один:
+#
+#   * `PdxGuiDestroyWidget` — единственная в дампах функция, уничтожающая
+#     виджет. Глобальная, поэтому прошлый поиск по методам типов её не нашёл.
+#     Здесь она бьёт по своей же жертве `bag_wpr_victim`, рядом счётчик детей
+#     той же коробки: 3 до нажатия, 2 после — значит вызов работает.
+#   * `gui.clearwidgets` — консольная команда, которой игра гасит свою же
+#     библиотеку интерфейса (`ui_library.gui:18261`). Что она чистит на самом
+#     деле, неизвестно.
+#   * `CloseAllTooltips` — то, чем игра закрывает подсказки сама
+#     (`right_panel.gui:478`).
+#
+# Строки «уровень N» идут вверх по цепочке родителей и печатают имя и число
+# детей. Если какой-то контейнер держит десятки тысяч — вот он и назван, и
+# тогда у чистки есть адрес. `ERROR:` в строке значит, что цепочка кончилась
+# выше — это ответ, а не поломка.
+#
+# Время кадра сверху — чтобы эффект кнопки был виден сразу, без секундомера и
+# без разбора `performance_degradation.log`.
+window = {
+	name = "bag_wpr_window"
+	datacontext = "[GetPlayer]"
+	allow_outside = yes
+	alwaystransparent = no
+	parentanchor = top|left
+	widgetanchor = top|left
+	position = { 40 140 }
+	movable = yes
+	size = { 620 440 }
+	using = bg_window_default_alt
+
+	visible = "[GetPlayer.Exists]"
+
+	vbox = {
+		using = window_margin_alt
+
+		window_header_alt = {
+			blockoverride "header_text" { text = "bag_wpr_title" }
+		}
+
+		vbox = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+			using = bg_secondary_inner_alt
+			margin = { 12 12 }
+			spacing = 4
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wpr_frame"
+			}
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wpr_lvl0"
+			}
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wpr_lvl1"
+			}
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wpr_lvl2"
+			}
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wpr_lvl3"
+			}
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wpr_lvl4"
+			}
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wpr_lvl5"
+			}
+
+			# Скамья для `PdxGuiDestroyWidget`. Жертва — первый ребёнок ряда,
+			# счётчик читает число детей этого же ряда, кнопка бьёт по имени.
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				size = { -1 28 }
+				spacing = 4
+
+				widget = {
+					name = "bag_wpr_victim"
+					size = { 150 24 }
+
+					text_single = {
+						parentanchor = vcenter
+						autoresize = yes
+						text = "bag_wpr_victim_text"
+					}
+				}
+
+				text_single = {
+					layoutpolicy_horizontal = expanding
+					size = { 190 24 }
+					autoresize = no
+					align = left|nobaseline
+					text = "bag_wpr_row_count"
+				}
+
+				button_regular = {
+					size = { 210 26 }
+					tooltip = "bag_wpr_btn_kill_tt"
+					onclick = "[PdxGuiDestroyWidget(PdxGuiWidget.AccessParent.FindChild('bag_wpr_victim'))]"
+					text_single = {
+						parentanchor = center
+						widgetanchor = center
+						autoresize = yes
+						text = "bag_wpr_btn_kill"
+					}
+				}
+			}
+
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				size = { -1 30 }
+				spacing = 4
+
+				button_regular = {
+					size = { 190 26 }
+					tooltip = "bag_wpr_btn_clear_tt"
+					onclick = "[ExecuteConsoleCommand('gui.clearwidgets')]"
+					text_single = {
+						parentanchor = center
+						widgetanchor = center
+						autoresize = yes
+						text = "bag_wpr_btn_clear"
+					}
+				}
+
+				button_regular = {
+					size = { 190 26 }
+					tooltip = "bag_wpr_btn_tips_tt"
+					onclick = "[CloseAllTooltips]"
+					text_single = {
+						parentanchor = center
+						widgetanchor = center
+						autoresize = yes
+						text = "bag_wpr_btn_tips"
+					}
+				}
+
+				button_regular = {
+					size = { 190 26 }
+					tooltip = "bag_wpr_btn_prof_tt"
+					onclick = "[PdxProfilerToggleRecording]"
+					text_single = {
+						parentanchor = center
+						widgetanchor = center
+						autoresize = yes
+						text = "bag_wpr_btn_prof"
+					}
+				}
+			}
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wpr_hint"
+			}
+
+			widget = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+			}
+		}
+	}
+}

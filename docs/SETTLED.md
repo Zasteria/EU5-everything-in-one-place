@@ -8,7 +8,7 @@ game.
 
 | question | answer | where |
 | --- | --- | --- |
-| What is settled about the widget leak? | **Eight rows of it, in the file that owns them** since this one outgrew its budget. The short of it: it is the base game's, and no mod can free a widget or raise a pool. | [investigations/widget_leak.md](investigations/widget_leak.md) |
+| What is settled about the widget leak? | **Eight rows of it, in the file that owns them** since this one outgrew its budget. The short of it: it is the base game's, and no pool to raise. «Мод не может освободить виджет» — **снято 2026-09-19**: `PdxGuiDestroyWidget` есть, перечислить детей нечем, проверяет `mods/widget_probe`. | [investigations/widget_leak.md](investigations/widget_leak.md) |
 | What was settled about the localization errors? | Three rows, closed in August and moved out when this file outgrew its budget. | [archive](archive/settled_localization.md) |
 | What else is closed and out of this file? | Five rows: `glorpui_hints` loading, buildings upgrading in place, the two market-balance answers, and the age filter. | [archive](archive/settled_closed.md) |
 | What is settled about `where_to_produce`'s plan? | Two rows, closed by the 2026-09-02 and 09-07 runs and moved out when this file outgrew its budget: why glass went to villages (a ticked rank *is* the rank for the whole calculation), and that the plan is not uneven and reservation moved nothing. | [archive](archive/settled_wtp_plan.md) |

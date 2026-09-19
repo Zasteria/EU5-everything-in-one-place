@@ -70,11 +70,23 @@ never plateaus.
 новое — растёт, когда новое кончается — встаёт. Значит плато зависит от того,
 сколько разного успел посмотреть, а не от времени.
 
-**The engine offers nothing to release them.** `dump_data_types` has no widget
-`Destroy`, `Clear`, `Free`, `Collect` or `Prune` — the only such names belong to
-buildings, editors and variable systems. `PdxGuiWidget` can be hidden, found,
-counted and animated, and that is all. So there is no mod-side call that undoes
-this; a fix has to be something that stops the widgets being made.
+**Освобождающий вызов у движка есть — и это выяснилось только 2026-09-19.**
+`PdxGuiDestroyWidget( Arg0 )`, «Destroy widget», глобальная функция
+(`data_types_gui.txt:287`). Прошлый поиск шёл по методам типов и глобальную не
+увидел, поэтому здесь и в `SETTLED.md` стояло «нельзя». Рядом —
+`ExecuteConsoleCommand` и консольная команда **`gui.clearwidgets`**, которой
+игра гасит свою библиотеку интерфейса (`ui_library.gui:18261`).
+
+**Но метлы из этого не выходит.** Ни один тип ни в одном дампе не отдаёт список
+виджетов: `FindChild` и `AccessChild` берут **имя**. Значит уничтожить можно
+только то, что названо заранее, а у накопленного имён, известных моду, нет. И
+сама функция в игровых файлах не встречается ни разу — что она зовётся из мода,
+не доказано ничем.
+
+Отсюда пробник: [`mods/widget_probe`](../../mods/widget_probe/CLAUDE.md) —
+жертва со счётчиком (работает ли вызов), цепочка родителей с числом детей (есть
+ли один контейнер, который держит утечку) и кнопки на `gui.clearwidgets` и
+`CloseAllTooltips`. Один прогон, без секундомера.
 
 ### The candidate, and the lever that goes with it
 
@@ -179,6 +191,6 @@ the owner an evening and none of them is to be measured again.
 | Is it one bad window? | No. Diplomacy +1.86/frame, map modes +1.49, locations +0.29; none zero. | TESTLOG 2026-08-25 |
 | Is it the mod set? | No. Vanilla leaks +1.99/frame against the playset's +1.86. | TESTLOG 2026-08-25 vanilla |
 | Is it anything in this repository? | No. `rgo_bonus_filter` lives in the lightest panel of the three. | same |
-| Can a mod free widgets? | No. `dump_data_types` has no `Destroy`/`Clear`/`Free`/`Collect`/`Prune` on any GUI type. | research/engine.md |
+| Can a mod free widgets? | **Открыто снова, 2026-09-19.** `PdxGuiDestroyWidget` — глобальная функция, прошлый поиск шёл по методам типов и её не нашёл. Метлой она не станет: список детей не отдаёт никто, уничтожить можно только названное. Проверяет `mods/widget_probe`. | research/engine.md |
 | Is there a widget limit or pool size to raise? | No. `NGUI` in `00_defines.txt` is twenty lines of name lengths, queue sizes and alert thresholds. Nothing about pools, caches or arenas. | research/engine.md |
 

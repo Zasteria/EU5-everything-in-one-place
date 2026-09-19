@@ -360,7 +360,7 @@ wrong.
 `mods/ru_loc_fix/tools/locscan.py` is all of this written as rules, and can be
 pointed at any localization tree.
 
-## The interface is about 27 800 widgets, and nothing frees them
+## The interface is about 27 800 widgets, and one call destroys one
 
 Two numbers worth carrying, both asked of the files rather than guessed.
 
@@ -373,16 +373,31 @@ A live session holds about 37 000 right after loading, so the multiplier from
 `performance_degradation.log` reaches six figures, that is instances piling up,
 not a heavy panel.
 
-**The engine exposes no way to release a widget.** `dump_data_types` has no
-`Destroy`, `Clear`, `Free`, `Collect`, `Prune` or `Reset` on any GUI type — every
-such name in the dumps belongs to a building, an asset editor, or a variable
-system (`VariableSystem.Clear`, `UIVariables.ClearAll`). `PdxGuiWidget` offers
-`Hide`, `FindChild`, `FindParent`, `GetChildrenCount`, `CountVisibleChildren`,
-animation control and highlight setters, and nothing that unmakes anything. So a
-mod can stop widgets being created, and cannot make existing ones go away.
+**`PdxGuiDestroyWidget( Arg0 )` exists** — `data_types_gui.txt:287`, "Destroy
+widget", a **global function**, which is why a search over the methods of GUI
+types missed it and this section said the opposite until 2026-09-19. It is the
+only destroying call in the whole dump: `PdxGuiWidget` itself offers `Hide`,
+`FindChild`, `FindParent`, `GetChildrenCount`, `CountVisibleChildren`, animation
+control and highlight setters, and every other `Destroy`/`Clear`/`Free` in the
+dumps belongs to a building, an asset editor or a variable system.
 
-`PdxGuiWidget.GetChildrenCount` is worth remembering anyway: it is the one hook a
-mod has for measuring the size of a widget tree from inside the game.
+**What is still not proven** is whether a mod can call it at all — it appears in
+no shipped `.gui` — and what it takes. The game's own shape for passing a widget
+to a global function is `[F(PdxGuiWidget.AccessParent.FindChild('name'))]`
+(`searchbar.gui:165`, `hud_bot.gui:1068`), so that is what `mods/widget_probe`
+tries.
+
+**And nothing enumerates children.** No data type in any dump returns a list of
+widgets; `FindChild` and `AccessChild` take a name. So even a working destroy
+cannot sweep — every widget it removes has to be named in advance, and the leaked
+ones have no names a mod knows. `GetChildrenCount` is what a mod has instead: it
+measures a tree from inside the game, level by level, and that is how a container
+holding the leak would be found.
+
+**The console is reachable too.** `ExecuteConsoleCommand('...')` is a global the
+game uses on its own editor buttons, and one of those commands is
+**`gui.clearwidgets`** (`ui_library.gui:18261`, the UI Library's close button).
+What it actually clears is unknown.
 
 ## Defines, and where they actually live
 
