@@ -132,7 +132,10 @@ SGUI = "in_game/common/scripted_guis/cm_hidden_window_scripted_gui.txt"
 DISPATCH = "in_game/common/on_action/cm_on_action.txt"
 
 # Раз во сколько месяцев идёт весь цикл авторасширения. Должно делить 12.
-PULSE_MONTHS = 3
+# 1 — правка не применяется вовсе, цикл идёт каждый месяц, как у самого CM.
+# Стоит 1 по его слову 2026-09-19: месячный пересчёт ему не мешает, и трогать
+# его не надо.
+PULSE_MONTHS = 1
 
 # CM 2.2.12's drain driver, verbatim. Rebuilt rather than patched line by line,
 # so a changed source stops the generator instead of being half-edited.
@@ -407,7 +410,10 @@ EDITS = (
     (SGUI, "the scan gate the one-shot driver needs", _add_scan_gate),
     (SGUI, "dev 2.3.0's rescan, which makes one sweep safe", _rescan_when_stalled),
     (DISPATCH, "arm the one-shot scan with the cycle", _arm_the_scan),
-    (DISPATCH, "run the cycle once a quarter, not every month", _thin_the_pulse),
+) + (
+    ((DISPATCH, "run the cycle once every %d months" % PULSE_MONTHS, _thin_the_pulse),)
+    if PULSE_MONTHS > 1
+    else ()
 )
 
 
