@@ -2,7 +2,12 @@
 
 The first of the two slowdowns, and the one that is measured. Do not file the
 other one with it: [`panel_hitch.md`](panel_hitch.md) is a fixed cost present a
-minute after loading, this one grows over an hour and a reload clears it.
+minute after loading, this one grows with play.
+
+**«Перезагрузка» — это выход в главное меню и загрузка оттуда, не загрузка
+изнутри партии.** Виджеты живут в процессе, а не в сохранении, и прогон 09-18 это
+показал: загрузка сохранения без выхода в меню деградацию не сняла. Формулировка
+здесь до того дня была двусмысленной, и он потратил на неё попытку.
 
 Measured across five runs. The measurement is finished; what is open is whether a
 mod or a setting can do anything about it. Numbers and method in
@@ -57,6 +62,13 @@ flat. A decaying one says the cost is per *distinct thing looked at*: the first
 pass over a set of countries or map modes is expensive and the second is nearly
 free. Over an hour of real play you keep meeting new things, which is why it
 never plateaus.
+
+**И плато всё-таки бывает — его наблюдение 2026-09-18.** За минут двадцать
+обычной игры скорость сходит «очень шустрая → плавная → средняя → медленная с
+перепадами → стабильно медленная», и дальше держится. Это ровно та же
+затухающая кривая, что в таблице выше, только по всей сессии: пока встречается
+новое — растёт, когда новое кончается — встаёт. Значит плато зависит от того,
+сколько разного успел посмотреть, а не от времени.
 
 **The engine offers nothing to release them.** `dump_data_types` has no widget
 `Destroy`, `Clear`, `Free`, `Collect` or `Prune` — the only such names belong to

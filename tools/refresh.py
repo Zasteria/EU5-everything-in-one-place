@@ -47,6 +47,7 @@ GENERATORS = (
     ("goods_target", "mods/goods_target/tools/generate.py"),
     ("where_to_produce", "mods/where_to_produce/tools/generate.py"),
     ("cm_maps", "mods/cm_maps/tools/port_from_cm.py"),
+    ("cm_perf", "mods/cm_perf/tools/port_from_cm.py"),
     ("nd_ru", "mods/nd_ru/tools/generate_ru.py"),
     ("ru_loc_fix", "mods/ru_loc_fix/tools/generate.py"),
     ("glorpui_hints", "mods/glorpui_hints/tools/generate.py"),
