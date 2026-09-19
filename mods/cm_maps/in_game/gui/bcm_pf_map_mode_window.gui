@@ -96,6 +96,27 @@ widget = {
 		}
 	}
 
+	# Urban-rights repair driver. The coverage the tooltip reads lives on the
+	# province, and a province is the owner's slice of a province definition, so
+	# land changing hands leaves new slices with none of it: the map keeps its
+	# colour and the tooltip goes empty. Why the mark exists is in EDITS; this is
+	# what looks at it, once each time the player enters the rights mapmode
+	# family. The refresh modes are in the gate on purpose: a repaint must not
+	# read as leaving and re-entering.
+	#
+	# _show fires on the hidden->shown edge, so entering on one mode of the family
+	# and switching to another inside it costs one scan, not two.
+	widget = {
+		size = { 0 0 }
+		visible_at_creation = no
+		visible = "[And(GetPlayer.Exists, Or(Or(Or5(GetMapMode('bcm_best_town_right').IsActive, GetMapMode('bcm_trmm_search_tooling').IsActive, GetMapMode('bcm_trmm_search_jewelry').IsActive, GetMapMode('bcm_trmm_search_naval').IsActive, GetMapMode('bcm_trmm_search_textile').IsActive), Or5(GetMapMode('bcm_trmm_search_weaponry').IsActive, GetMapMode('bcm_trmm_search_book').IsActive, GetMapMode('bcm_trmm_search_artisan').IsActive, GetMapMode('bcm_trmm_search_brewing').IsActive, GetMapMode('bcm_trmm_search_masonry').IsActive)), Or(Or5(GetMapMode('bcm_best_town_right_refresh').IsActive, GetMapMode('bcm_trmm_search_tooling_refresh').IsActive, GetMapMode('bcm_trmm_search_jewelry_refresh').IsActive, GetMapMode('bcm_trmm_search_naval_refresh').IsActive, GetMapMode('bcm_trmm_search_textile_refresh').IsActive), Or5(GetMapMode('bcm_trmm_search_weaponry_refresh').IsActive, GetMapMode('bcm_trmm_search_book_refresh').IsActive, GetMapMode('bcm_trmm_search_artisan_refresh').IsActive, GetMapMode('bcm_trmm_search_brewing_refresh').IsActive, GetMapMode('bcm_trmm_search_masonry_refresh').IsActive))))]"
+		state = {
+			name = _show
+			duration = 0.1
+			on_finish = "[GetScriptedGui('bcm_trmm_run_repair').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+		}
+	}
+
 	# River-adjacency harvest, lifted out of CM's own hidden window. The
 	# placement finder reads the neighbour lists it writes, and
 	# Location.GetRiverProximityLocations is readable only from GUI, which is

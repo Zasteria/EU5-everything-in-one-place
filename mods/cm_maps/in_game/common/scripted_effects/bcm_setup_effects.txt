@@ -6,16 +6,41 @@
 # three walk every location on the map; the stamp is what keeps a reload from
 # paying for a pass whose result is already in the save.
 
+# **Repairing what a change of owner loses.** The rights tooltip reads coverage
+# stored on the province, and a province is the owner's slice of a province
+# definition, so land changing hands makes slices that carry none of it. This
+# recomputes exactly the definitions that have such a slice, and nothing else.
+# One pass over the definitions with one cheap check each; the recompute only
+# touches those that failed it. Fired by the driver in bcm_pf_map_mode_window.gui
+# each time the rights mapmode family is entered, which is the moment the data is
+# about to be read.
+#
+# **The check asks whether the province holds the data, not why it stopped.**
+# A definition whose pass found nothing is marked too, so it is not recomputed
+# every open.
+bcm_trmm_repair = {
+	every_province_definition = {
+		limit = {
+			any_province_in_province_definition = {
+				NOT = { has_variable = bcm_trmm_cov_v }
+			}
+		}
+		bcm_trmm_recompute_province_definition = yes
+	}
+}
+
 bcm_run_lobby_setup = {
-	# **Retiring what the 2026-09-19 fixes invalidated, once per save.** Both
-	# fixes change stored data, and both stores outlive a reload on their own:
+	# **Retiring what the 2026-09-19 fixes invalidated, once per save.** The
+	# fixes change stored data, and the stores outlive a reload on their own:
 	# the urban-rights pass is held by a global stamp until its version changes,
 	# and a finished governor run is held by bcm_pf_fresh_g for 1460 days. So a
-	# campaign already under way would keep the wrong marks -- locations painted
-	# tooling under an empty tooltip, and locations the old Search Accuracy of 3
+	# campaign already under way would keep what they retire -- province slices
+	# with no coverage mark on them, and locations the old Search Accuracy of 3
 	# skipped and left black -- and neither would ever be recomputed. Dropping
-	# the trmm stamp costs one pass on the next load; dropping the governor
-	# cache costs one recompute the next time the map is opened.
+	# the trmm stamp costs one pass on the next load, which is also what puts
+	# the mark on every slice; dropping the governor cache costs one recompute
+	# the next time that map is opened. Epoch 2 is the second such retirement:
+	# 1 was the accuracy fix alone, and a save that took it still owes the mark.
 	#
 	# The version constants live in a file this port generates from CM, so the
 	# stamp is here instead, where a CM update cannot carry it away.
@@ -24,7 +49,7 @@ bcm_run_lobby_setup = {
 			NOT = {
 				AND = {
 					has_global_variable = bcm_pf_epoch
-					global_var:bcm_pf_epoch = 1
+					global_var:bcm_pf_epoch = 2
 				}
 			}
 		}
@@ -37,7 +62,7 @@ bcm_run_lobby_setup = {
 			limit = { exists = var:bcm_pf_fresh_g }
 			remove_variable = bcm_pf_fresh_g
 		}
-		set_global_variable = { name = bcm_pf_epoch value = 1 }
+		set_global_variable = { name = bcm_pf_epoch value = 2 }
 	}
 
 	# Recommended urban rights coverage: one pass over every province definition,

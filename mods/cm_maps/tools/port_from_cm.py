@@ -363,24 +363,46 @@ EDITS: tuple[tuple[str, str, str, str], ...] = (
      "",
      "and so is its legend row"),
 
-    # A location whose best right scores zero is left unmarked. CM marks every
-    # location in a province definition that cleared the entry gate, and the gate
-    # takes a definition where *any* location has an input raw material **or** an
-    # output bonus. Coverage is definition-wide, so the input half marks nobody
-    # falsely; the output-bonus half does. A definition that qualified only on one
-    # location's bonus leaves every other location with nine scores of zero, and
-    # the encoding (round(score * 1000) * 10 + index, chained through `min`)
-    # resolves an all-zero tie to the highest index -- 9, tooling. The location is
-    # then painted royal_tooling_rights under a tooltip that prints its three
-    # headings with nothing under any of them: the first run's "colour and a
-    # window, empty description" (docs/TESTLOG.md, 2026-09-19). Unmarking sends it
-    # to MAPMODE_BCM_BEST_TOWN_RIGHT_TT_NONE, whose text -- the province has no
-    # raw materials specialized production uses -- is exactly true of it, because
-    # a location scores zero only when its whole definition covers nothing.
+    # **The coverage mark, and why the coverage needs one.** CM stores a province
+    # definition's industry coverage on each of its provinces, because a variable
+    # set on the definition itself does not read back. But a province is the
+    # owner's slice of a definition (docs/research/map_modes.md): when land
+    # changes hands the game makes new slices, and a new slice carries none of
+    # what the pass wrote. The location keeps its bcm_trmm_best_idx, so the map
+    # goes on colouring it while its tooltip prints three empty lists -- reported
+    # 2026-09-19, hours into a campaign, on provinces that plainly do have the raw
+    # materials (docs/TESTLOG.md). Nothing announces a new slice, so every slice
+    # is marked when it is written, and bcm_trmm_repair recomputes the definitions
+    # whose slices are missing the mark. The mark asks "does this province hold
+    # the data", not "why is it gone", so it repairs any way of losing it.
     ("in_game/common/scripted_effects/bcm_trmm_effects.txt",
-     "\t\t\t}\n\t\t}\n\t}\n\telse = {\n\t\tevery_province_in_province_definition = {",
-     "\t\t\t\t# Only a location with a right worth naming is marked; see the note in\n\t\t\t\t# port_from_cm.py's EDITS. An all-zero encoding resolves to index 9 and\n\t\t\t\t# would paint the location as tooling under an empty tooltip, so it is\n\t\t\t\t# unmarked instead and falls to the map's no-data branch.\n\t\t\t\tif = {\n\t\t\t\t\t# enc below 10 = best score rounds to 0.\n\t\t\t\t\tlimit = { local_var:bcm_trmm_enc < 10 }\n\t\t\t\t\tif = {\n\t\t\t\t\t\tlimit = { has_variable = bcm_trmm_best_idx }\n\t\t\t\t\t\tremove_variable = bcm_trmm_best_idx\n\t\t\t\t\t}\n\t\t\t\t\tif = {\n\t\t\t\t\t\tlimit = { has_variable = bcm_trmm_best_mil }\n\t\t\t\t\t\tremove_variable = bcm_trmm_best_mil\n\t\t\t\t\t}\n\t\t\t\t\tif = {\n\t\t\t\t\t\tlimit = { has_variable = bcm_trmm_tie_idx }\n\t\t\t\t\t\tremove_variable = bcm_trmm_tie_idx\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\telse = {\n\t\tevery_province_in_province_definition = {",
-     "a location with no right worth naming is left unmarked"),
+     "\t\tevery_province_in_province_definition = {\n"
+     "\t\t\tset_variable = {\n"
+     "\t\t\t\tname = bcm_trmm_cov_tools",
+     "\t\tevery_province_in_province_definition = {\n"
+     "\t\t\t# This slice now holds the definition's coverage; see EDITS.\n"
+     "\t\t\tset_variable = {\n"
+     "\t\t\t\tname = bcm_trmm_cov_v\n"
+     "\t\t\t\tvalue = bcm_trmm_version_value\n"
+     "\t\t\t}\n"
+     "\t\t\tset_variable = {\n"
+     "\t\t\t\tname = bcm_trmm_cov_tools",
+     "every written province slice is marked"),
+
+    ("in_game/common/scripted_effects/bcm_trmm_effects.txt",
+     "\telse = {\n"
+     "\t\tevery_province_in_province_definition = {\n"
+     "\t\t\tevery_location_in_province = {",
+     "\telse = {\n"
+     "\t\tevery_province_in_province_definition = {\n"
+     "\t\t\t# Marked here too, though this definition covers nothing: an unmarked\n"
+     "\t\t\t# slice is one bcm_trmm_repair would recompute again on every open.\n"
+     "\t\t\tset_variable = {\n"
+     "\t\t\t\tname = bcm_trmm_cov_v\n"
+     "\t\t\t\tvalue = bcm_trmm_version_value\n"
+     "\t\t\t}\n"
+     "\t\t\tevery_location_in_province = {",
+     "and so is a slice the pass found nothing for"),
 
     # CM's setup log tells its own log pane that every load-time pass has
     # finished. There is no log pane here.
@@ -802,7 +824,7 @@ bcm_setup_pending = {
 			NOT = {
 				AND = {
 					has_global_variable = bcm_pf_epoch
-					global_var:bcm_pf_epoch = 1
+					global_var:bcm_pf_epoch = 2
 				}
 			}
 		}
@@ -812,6 +834,14 @@ bcm_setup_pending = {
 bcm_run_setup = {
 	effect = {
 		bcm_run_lobby_setup = yes
+	}
+}
+
+# Fired on entering the urban-rights mapmode family. No is_shown: the effect's own
+# per-definition check is the gate, and it is far too expensive to put in one.
+bcm_trmm_run_repair = {
+	effect = {
+		bcm_trmm_repair = yes
 	}
 }
 """
@@ -824,16 +854,41 @@ SETUP_EFFECTS = """# The once-per-save setup, cut down to what these three maps 
 # three walk every location on the map; the stamp is what keeps a reload from
 # paying for a pass whose result is already in the save.
 
+# **Repairing what a change of owner loses.** The rights tooltip reads coverage
+# stored on the province, and a province is the owner's slice of a province
+# definition, so land changing hands makes slices that carry none of it. This
+# recomputes exactly the definitions that have such a slice, and nothing else.
+# One pass over the definitions with one cheap check each; the recompute only
+# touches those that failed it. Fired by the driver in bcm_pf_map_mode_window.gui
+# each time the rights mapmode family is entered, which is the moment the data is
+# about to be read.
+#
+# **The check asks whether the province holds the data, not why it stopped.**
+# A definition whose pass found nothing is marked too, so it is not recomputed
+# every open.
+bcm_trmm_repair = {
+	every_province_definition = {
+		limit = {
+			any_province_in_province_definition = {
+				NOT = { has_variable = bcm_trmm_cov_v }
+			}
+		}
+		bcm_trmm_recompute_province_definition = yes
+	}
+}
+
 bcm_run_lobby_setup = {
-	# **Retiring what the 2026-09-19 fixes invalidated, once per save.** Both
-	# fixes change stored data, and both stores outlive a reload on their own:
+	# **Retiring what the 2026-09-19 fixes invalidated, once per save.** The
+	# fixes change stored data, and the stores outlive a reload on their own:
 	# the urban-rights pass is held by a global stamp until its version changes,
 	# and a finished governor run is held by bcm_pf_fresh_g for 1460 days. So a
-	# campaign already under way would keep the wrong marks -- locations painted
-	# tooling under an empty tooltip, and locations the old Search Accuracy of 3
+	# campaign already under way would keep what they retire -- province slices
+	# with no coverage mark on them, and locations the old Search Accuracy of 3
 	# skipped and left black -- and neither would ever be recomputed. Dropping
-	# the trmm stamp costs one pass on the next load; dropping the governor
-	# cache costs one recompute the next time the map is opened.
+	# the trmm stamp costs one pass on the next load, which is also what puts
+	# the mark on every slice; dropping the governor cache costs one recompute
+	# the next time that map is opened. Epoch 2 is the second such retirement:
+	# 1 was the accuracy fix alone, and a save that took it still owes the mark.
 	#
 	# The version constants live in a file this port generates from CM, so the
 	# stamp is here instead, where a CM update cannot carry it away.
@@ -842,7 +897,7 @@ bcm_run_lobby_setup = {
 			NOT = {
 				AND = {
 					has_global_variable = bcm_pf_epoch
-					global_var:bcm_pf_epoch = 1
+					global_var:bcm_pf_epoch = 2
 				}
 			}
 		}
@@ -855,7 +910,7 @@ bcm_run_lobby_setup = {
 			limit = { exists = var:bcm_pf_fresh_g }
 			remove_variable = bcm_pf_fresh_g
 		}
-		set_global_variable = { name = bcm_pf_epoch value = 1 }
+		set_global_variable = { name = bcm_pf_epoch value = 2 }
 	}
 
 	# Recommended urban rights coverage: one pass over every province definition,
@@ -926,7 +981,8 @@ def pf_window() -> str:
     closing = text.rstrip().rfind("\n}")
     if closing < 0:
         raise SystemExit("cm_pf_map_mode_window.gui: no closing brace found")
-    return text[:closing] + "\n" + SETUP_DRIVER + _river_driver() + text[closing:]
+    return (text[:closing] + "\n" + SETUP_DRIVER + TRMM_REPAIR_DRIVER
+            + _river_driver() + text[closing:])
 
 
 # The setup driver. CM runs these passes from an on_action; those on_actions are
@@ -934,6 +990,30 @@ def pf_window() -> str:
 # driver below uses and CM relies on all over: visible_at_creation = no pins the
 # widget hidden at creation, so a load whose gate is already true still gets a
 # hidden->shown edge, and _show fires exactly once on that edge.
+TRMM_REPAIR_DRIVER = """	# Urban-rights repair driver. The coverage the tooltip reads lives on the
+	# province, and a province is the owner's slice of a province definition, so
+	# land changing hands leaves new slices with none of it: the map keeps its
+	# colour and the tooltip goes empty. Why the mark exists is in EDITS; this is
+	# what looks at it, once each time the player enters the rights mapmode
+	# family. The refresh modes are in the gate on purpose: a repaint must not
+	# read as leaving and re-entering.
+	#
+	# _show fires on the hidden->shown edge, so entering on one mode of the family
+	# and switching to another inside it costs one scan, not two.
+	widget = {
+		size = { 0 0 }
+		visible_at_creation = no
+		visible = "[And(GetPlayer.Exists, Or(Or(Or5(GetMapMode('bcm_best_town_right').IsActive, GetMapMode('bcm_trmm_search_tooling').IsActive, GetMapMode('bcm_trmm_search_jewelry').IsActive, GetMapMode('bcm_trmm_search_naval').IsActive, GetMapMode('bcm_trmm_search_textile').IsActive), Or5(GetMapMode('bcm_trmm_search_weaponry').IsActive, GetMapMode('bcm_trmm_search_book').IsActive, GetMapMode('bcm_trmm_search_artisan').IsActive, GetMapMode('bcm_trmm_search_brewing').IsActive, GetMapMode('bcm_trmm_search_masonry').IsActive)), Or(Or5(GetMapMode('bcm_best_town_right_refresh').IsActive, GetMapMode('bcm_trmm_search_tooling_refresh').IsActive, GetMapMode('bcm_trmm_search_jewelry_refresh').IsActive, GetMapMode('bcm_trmm_search_naval_refresh').IsActive, GetMapMode('bcm_trmm_search_textile_refresh').IsActive), Or5(GetMapMode('bcm_trmm_search_weaponry_refresh').IsActive, GetMapMode('bcm_trmm_search_book_refresh').IsActive, GetMapMode('bcm_trmm_search_artisan_refresh').IsActive, GetMapMode('bcm_trmm_search_brewing_refresh').IsActive, GetMapMode('bcm_trmm_search_masonry_refresh').IsActive))))]"
+		state = {
+			name = _show
+			duration = 0.1
+			on_finish = "[GetScriptedGui('bcm_trmm_run_repair').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+		}
+	}
+
+"""
+
+
 SETUP_DRIVER = """	# Setup driver. Runs the urban-rights pass, the food-potential pass and the
 	# river harvest's enumeration the first time any of the three is out of date,
 	# which is a new game, a save made before this mod, or a version bump. Each

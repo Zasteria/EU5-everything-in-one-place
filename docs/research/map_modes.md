@@ -1,4 +1,4 @@
-﻿# Map selection, map modes and what a mod may have
+# Map selection, map modes and what a mod may have
 
 Split out of [`interface.md`](interface.md) 2026-09-17, when it outgrew its
 budget. `cm_maps` and `where_to_produce` are what reads this.
@@ -100,6 +100,13 @@ are reachable:
 `ProvinceDefinition` carries `GetName`, `GetLocations`, `GetNumLocations` and
 `GetArea`, so an interface can list the whole thing; the definition's name is the
 plain one, without the owner in front of it.
+
+**И потому переменная, положенная на провинцию, не вечна.** Срезы рождаются и
+исчезают вместе с владением: земля перешла — на её месте новый объект, и он не
+несёт ничего из записанного на прежний. Локация переживает это, определение тоже,
+провинция — нет. Карта прав `cm_maps` поймала это прогоном 2026-09-19: цвет она
+читает с локации и продолжал рисоваться, а покрытие — с провинции, и подсказка
+пустела спустя часы игры ([`../TESTLOG.md`](../TESTLOG.md)).
 
 **Which of the two the engine's own RGO bonus counts is not known.** The three
 tooltips the formula was verified against do not separate the cases, and
