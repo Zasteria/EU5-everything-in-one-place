@@ -131,6 +131,9 @@ QUEUE = "in_game/gui/cm_construct_queue_window.gui"
 SGUI = "in_game/common/scripted_guis/cm_hidden_window_scripted_gui.txt"
 DISPATCH = "in_game/common/on_action/cm_on_action.txt"
 
+# Раз во сколько месяцев идёт весь цикл авторасширения. Должно делить 12.
+PULSE_MONTHS = 3
+
 # CM 2.2.12's drain driver, verbatim. Rebuilt rather than patched line by line,
 # so a changed source stops the generator instead of being half-edited.
 _LOOP_OLD = (
@@ -350,6 +353,53 @@ def _arm_the_scan(text: str) -> str:
 	)
 
 
+def _thin_the_pulse(text: str) -> str:
+	"""Run the whole auto-expand cycle once every PULSE_MONTHS, not every month.
+
+	CM does all of its work on one monthly on_action, and the cost grows with the
+	number of auto-expand points — his words 2026-09-19, after removing this mod
+	because it still slowed a large country. Dividing the pulse divides that cost
+	by the same number, and it is one insertion: an on_action takes a `trigger`
+	block (the game does it in `appanage_monthly.txt`), and `current_month` is a
+	trigger of its own (1..12, no scope). Nothing else in the file moves.
+
+	The two lighter monthly hooks — the CMF list refresh and auto town rights —
+	stay monthly on purpose: if the dip survives this, they are what is left.
+	"""
+	if 12 % PULSE_MONTHS:
+		raise SystemExit(
+			f"PULSE_MONTHS = {PULSE_MONTHS} does not divide 12; the pattern would "
+			"drift from year to year"
+		)
+	anchor = (
+		"cm_unified_auto_expand = {\n"
+		"\teffect = {\n"
+		"\t\tsave_scope_as = cm_country\n"
+	)
+	if text.count(anchor) != 1:
+		raise SystemExit(
+			f"{DISPATCH}: the unified dispatcher's head has moved; the pulse cannot "
+			"be thinned blind"
+		)
+	months = "".join(
+		"\t\t\tcurrent_month = %d\n" % m for m in range(1, 13, PULSE_MONTHS)
+	)
+	gate = (
+		"cm_unified_auto_expand = {\n"
+		"\t# cm_perf: the whole cycle runs once every %d months, not every month.\n"
+		"\t# An on_action's own trigger gates its effect; the game does the same in\n"
+		"\t# in_game/common/on_action/appanage_monthly.txt.\n"
+		"\ttrigger = {\n"
+		"\t\tOR = {\n"
+		"%s"
+		"\t\t}\n"
+		"\t}\n"
+		"\teffect = {\n"
+		"\t\tsave_scope_as = cm_country\n"
+	) % (PULSE_MONTHS, months)
+	return text.replace(anchor, gate)
+
+
 EDITS = (
     (WINDOW, "gate the building-type tree", _gate_the_tree),
     (WINDOW, "widen the first pass's instantiation window", _widen_first_pass),
@@ -357,6 +407,7 @@ EDITS = (
     (SGUI, "the scan gate the one-shot driver needs", _add_scan_gate),
     (SGUI, "dev 2.3.0's rescan, which makes one sweep safe", _rescan_when_stalled),
     (DISPATCH, "arm the one-shot scan with the cycle", _arm_the_scan),
+    (DISPATCH, "run the cycle once a quarter, not every month", _thin_the_pulse),
 )
 
 

@@ -1,7 +1,7 @@
 ﻿# Пробник виджетов. Мод отладочный: ставится на один прогон и снимается.
 #
 # Он отвечает на один вопрос — можно ли модом освободить виджеты, которые игра
-# копит за сессию (`../../docs/investigations/widget_leak.md`). Три рычага, и
+# копит за сессию (`../../docs/investigations/widget_leak.md`). Рычаги, и
 # каждый нажимается отдельно, потому что неизвестно, работает ли хоть один:
 #
 #   * `PdxGuiDestroyWidget` — единственная в дампах функция, уничтожающая
@@ -9,18 +9,19 @@
 #     Здесь она бьёт по своей же жертве `bag_wpr_victim`, рядом счётчик детей
 #     той же коробки: 3 до нажатия, 2 после — значит вызов работает.
 #   * `gui.clearwidgets` — консольная команда, которой игра гасит свою же
-#     библиотеку интерфейса (`ui_library.gui:18261`). Что она чистит на самом
-#     деле, неизвестно.
-#   * `CloseAllTooltips` — то, чем игра закрывает подсказки сама
-#     (`right_panel.gui:478`).
+#     библиотеку интерфейса (`ui_library.gui:18261`).
+#   * `CloseAllTooltips` — то, чем игра закрывает подсказки сама.
 #
-# Строки «уровень N» идут вверх по цепочке родителей и печатают имя и число
-# детей. Если какой-то контейнер держит десятки тысяч — вот он и назван, и
-# тогда у чистки есть адрес. `ERROR:` в строке значит, что цепочка кончилась
-# выше — это ответ, а не поломка.
+# **Перепись корня — главное, что тут есть.** Прогон 2026-09-19 показал, что
+# вверх по дереву цепочка кончается быстро: окно > `windows_layer` (32 ребёнка)
+# > `_root_` (23 ребёнка). Значит утечка сидит не наверху, а в одной из веток
+# корня, и её надо назвать. `AccessChild` берёт номер или имя — неизвестно, в
+# игровых файлах он не встречается ни разу; если номер, строки ниже назовут
+# ветку с десятками тысяч детей. Все `ERROR` — значит берёт имя, и эта дорога
+# закрыта.
 #
-# Время кадра сверху — чтобы эффект кнопки был виден сразу, без секундомера и
-# без разбора `performance_degradation.log`.
+# Панель висит на флаге `bag_wpr_open`, который переключает отдельное окно
+# `bag_wpr_button.gui`: играть с открытым зондом неудобно, и это его слова.
 window = {
 	name = "bag_wpr_window"
 	datacontext = "[GetPlayer]"
@@ -28,12 +29,12 @@ window = {
 	alwaystransparent = no
 	parentanchor = top|left
 	widgetanchor = top|left
-	position = { 40 140 }
+	position = { 20 200 }
 	movable = yes
-	size = { 620 440 }
+	size = { 620 700 }
 	using = bg_window_default_alt
 
-	visible = "[GetPlayer.Exists]"
+	visible = "[GetVariableSystem.Exists('bag_wpr_open')]"
 
 	vbox = {
 		using = window_margin_alt
@@ -47,34 +48,13 @@ window = {
 			layoutpolicy_vertical = expanding
 			using = bg_secondary_inner_alt
 			margin = { 12 12 }
-			spacing = 4
+			spacing = 2
 
 			text_multi = {
 				layoutpolicy_horizontal = expanding
 				autoresize = yes
 				maximumsize = { 580 -1 }
 				text = "bag_wpr_frame"
-			}
-
-			text_multi = {
-				layoutpolicy_horizontal = expanding
-				autoresize = yes
-				maximumsize = { 580 -1 }
-				text = "bag_wpr_lvl0"
-			}
-
-			text_multi = {
-				layoutpolicy_horizontal = expanding
-				autoresize = yes
-				maximumsize = { 580 -1 }
-				text = "bag_wpr_lvl1"
-			}
-
-			text_multi = {
-				layoutpolicy_horizontal = expanding
-				autoresize = yes
-				maximumsize = { 580 -1 }
-				text = "bag_wpr_lvl2"
 			}
 
 			text_multi = {
@@ -96,6 +76,205 @@ window = {
 				autoresize = yes
 				maximumsize = { 580 -1 }
 				text = "bag_wpr_lvl5"
+			}
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wpr_root_head"
+			}
+
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				size = { 580 17 }
+				autoresize = no
+				align = left|nobaseline
+				text = "bag_wpr_root00"
+			}
+
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				size = { 580 17 }
+				autoresize = no
+				align = left|nobaseline
+				text = "bag_wpr_root01"
+			}
+
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				size = { 580 17 }
+				autoresize = no
+				align = left|nobaseline
+				text = "bag_wpr_root02"
+			}
+
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				size = { 580 17 }
+				autoresize = no
+				align = left|nobaseline
+				text = "bag_wpr_root03"
+			}
+
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				size = { 580 17 }
+				autoresize = no
+				align = left|nobaseline
+				text = "bag_wpr_root04"
+			}
+
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				size = { 580 17 }
+				autoresize = no
+				align = left|nobaseline
+				text = "bag_wpr_root05"
+			}
+
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				size = { 580 17 }
+				autoresize = no
+				align = left|nobaseline
+				text = "bag_wpr_root06"
+			}
+
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				size = { 580 17 }
+				autoresize = no
+				align = left|nobaseline
+				text = "bag_wpr_root07"
+			}
+
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				size = { 580 17 }
+				autoresize = no
+				align = left|nobaseline
+				text = "bag_wpr_root08"
+			}
+
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				size = { 580 17 }
+				autoresize = no
+				align = left|nobaseline
+				text = "bag_wpr_root09"
+			}
+
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				size = { 580 17 }
+				autoresize = no
+				align = left|nobaseline
+				text = "bag_wpr_root10"
+			}
+
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				size = { 580 17 }
+				autoresize = no
+				align = left|nobaseline
+				text = "bag_wpr_root11"
+			}
+
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				size = { 580 17 }
+				autoresize = no
+				align = left|nobaseline
+				text = "bag_wpr_root12"
+			}
+
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				size = { 580 17 }
+				autoresize = no
+				align = left|nobaseline
+				text = "bag_wpr_root13"
+			}
+
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				size = { 580 17 }
+				autoresize = no
+				align = left|nobaseline
+				text = "bag_wpr_root14"
+			}
+
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				size = { 580 17 }
+				autoresize = no
+				align = left|nobaseline
+				text = "bag_wpr_root15"
+			}
+
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				size = { 580 17 }
+				autoresize = no
+				align = left|nobaseline
+				text = "bag_wpr_root16"
+			}
+
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				size = { 580 17 }
+				autoresize = no
+				align = left|nobaseline
+				text = "bag_wpr_root17"
+			}
+
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				size = { 580 17 }
+				autoresize = no
+				align = left|nobaseline
+				text = "bag_wpr_root18"
+			}
+
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				size = { 580 17 }
+				autoresize = no
+				align = left|nobaseline
+				text = "bag_wpr_root19"
+			}
+
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				size = { 580 17 }
+				autoresize = no
+				align = left|nobaseline
+				text = "bag_wpr_root20"
+			}
+
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				size = { 580 17 }
+				autoresize = no
+				align = left|nobaseline
+				text = "bag_wpr_root21"
+			}
+
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				size = { 580 17 }
+				autoresize = no
+				align = left|nobaseline
+				text = "bag_wpr_root22"
+			}
+
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				size = { 580 17 }
+				autoresize = no
+				align = left|nobaseline
+				text = "bag_wpr_root23"
 			}
 
 			# Скамья для `PdxGuiDestroyWidget`. Жертва — первый ребёнок ряда,
@@ -168,22 +347,15 @@ window = {
 
 				button_regular = {
 					size = { 190 26 }
-					tooltip = "bag_wpr_btn_prof_tt"
-					onclick = "[PdxProfilerToggleRecording]"
+					tooltip = "bag_wpr_btn_close_tt"
+					onclick = "[GetVariableSystem.Toggle('bag_wpr_open')]"
 					text_single = {
 						parentanchor = center
 						widgetanchor = center
 						autoresize = yes
-						text = "bag_wpr_btn_prof"
+						text = "bag_wpr_btn_close"
 					}
 				}
-			}
-
-			text_multi = {
-				layoutpolicy_horizontal = expanding
-				autoresize = yes
-				maximumsize = { 580 -1 }
-				text = "bag_wpr_hint"
 			}
 
 			widget = {
