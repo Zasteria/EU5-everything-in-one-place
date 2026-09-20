@@ -1,4 +1,4 @@
-﻿# Where the eleven mods stand
+﻿# Where the twelve mods stand
 
 One line each, and a link to the brief. **Read the brief for the mod the task is
 about and no others** — `mods/<mod>/CLAUDE.md` holds the state, the commands and
@@ -8,20 +8,20 @@ what fails silently there.
 | --- | --- | --- |
 | [`glorpui_hints`](../mods/glorpui_hints/CLAUDE.md) | **автономен с 09-14**: машинерия подсказок Glorp UI форкнута под `svx_svh_*`, окно ценностей своё и подтверждено | весь форк; религиозный аспект |
 | [`ru_loc_fix`](../mods/ru_loc_fix/CLAUDE.md) | working; repairs the base game's own Russian markup, 209 keys. **09-20: тултип выгоды здания сыпал 362 строки за 87 с, починен** | новый ключ и круги два-три |
-| [`auto_build_ru`](../mods/auto_build_ru/CLAUDE.md) | done and confirmed; 1269 keys. **Пересобрать нельзя**: Advanced Auto Build убран из дерева 2026-09-12, а генератор читает его английские ключи | the 0.9.3 work, 28 keys |
+| [`auto_build_ru`](../mods/auto_build_ru/CLAUDE.md) | done and confirmed; 1269 keys. **Пересобрать нельзя**: Advanced Auto Build убран из дерева 09-12 | the 0.9.3 work, 28 keys |
 | [`nd_ru`](../mods/nd_ru/CLAUDE.md) | in progress; 4 174 keys, 10.2% | everything except Westphalia and the override itself |
 | [`rgo_bonus_filter`](../mods/rgo_bonus_filter/CLAUDE.md) | working, in use, nothing outstanding | the location-panel chip |
 | [`goods_target`](../mods/goods_target/CLAUDE.md) | paused, half working, four faults known | anything on the monthly pulse |
-| [`where_to_produce`](../mods/where_to_produce/CLAUDE.md) | **Единственная версия, работа идёт в ней.** Список и заходы — [`investigations/wtp_backlog.md`](investigations/wtp_backlog.md), открыт пункт 9; карта городских прав из CM dev — [`investigations/wtp_town_right_map.md`](investigations/wtp_town_right_map.md) | [`archive/status_wtp_untested.md`](archive/status_wtp_untested.md) |
+| [`where_to_produce`](../mods/where_to_produce/CLAUDE.md) | **Единственная версия, работа идёт в ней.** Заходы — [`investigations/wtp_backlog.md`](investigations/wtp_backlog.md), открыт пункт 9 | [`archive/status_wtp_untested.md`](archive/status_wtp_untested.md) |
 | [`cm_maps`](../mods/cm_maps/CLAUDE.md) | **новый 09-15, в игре не был.** Три карты CM dev без CM и CMF: еда, права (+9 детских), губернатор | всё |
 | [`cm_perf`](../mods/cm_perf/CLAUDE.md) | **потолок скорости снят 09-18, но 09-19 он снял мод: тормозит тем сильнее, чем больше точек авторасширения.** Копия CM. Месячный пульс трогать нельзя — его слово 09-19. Ставится **вместо** CM | правки 3 и 5 |
+| [`marker_throttle`](../mods/marker_throttle/CLAUDE.md) | **новый 09-20, в игре не был.** Тормоз `max_update_rate` на типы значка отряда: игра и FUM им пользуются, но на отрядах его нет ни у кого. Ставить **после** Faster Universalis | всё |
 | [`widget_probe`](../mods/widget_probe/CLAUDE.md) | **отладочный. Прогоны 09-19: `PdxGuiDestroyWidget` работает, перечислить детей нечем.** Теперь меряет сам: сколько реальных секунд занял каждый из шести последних игровых месяцев | секундомер месяца, `gui.clearwidgets` |
-| [`war_sliders`](../mods/war_sliders/CLAUDE.md) | **работает, проверено войной 09-17.** Содержание армии, флота и крепостей падает на мирное значение в месяц выхода из **всех** войн, чеканка гасит накопленную инфляцию и уходит обратно к ванильной автоматике. Настройки — страница в меню CMF | точный последний месяц правки инфляции (09-17, после его прогона) |
+| [`war_sliders`](../mods/war_sliders/CLAUDE.md) | **работает, проверено войной 09-17.** Содержание падает на мирное значение при выходе из всех войн, чеканка гасит инфляцию. Настройки — страница в меню CMF | точный последний месяц правки инфляции (09-17, после его прогона) |
 
-`where_to_produce` is the **second** attempt; the first failed untested, and why
-is [`archive/where_to_produce.md`](archive/where_to_produce.md).
-
-**Вылетов больше нет — его слово 2026-09-17, причину искать не нужно.**
+`where_to_produce` — **вторая** попытка; первая провалилась непроверенной:
+[`archive/where_to_produce.md`](archive/where_to_produce.md).
+**Вылетов больше нет — его слово 2026-09-17.**
 
 ## Two things being hunted that are not any mod's fault
 
@@ -29,12 +29,8 @@ is [`archive/where_to_produce.md`](archive/where_to_produce.md).
   09-19: **уничтожать виджеты мод умеет**, не умеет их перечислять. И цена CM,
   по-видимому, умножается на эту утечку —
   [`investigations/cm_performance.md`](investigations/cm_performance.md).
-- **[The panel hitch](investigations/panel_hitch.md)** — panels open slower with
-  the playset from the first minute. **A different thing, not to be filed with
-  the leak.** Next step is a bisect he can do in five minutes.
+- **[The panel hitch](investigations/panel_hitch.md)** — панели открываются
+  медленнее с плейсетом с первой минуты. **Не путать с утечкой.**
 
-## The tooling around all of it
-
-`mods.bat` → `tools/mods.ps1` is his whole mod loop, `tools/workshop.py` answers
-whether a refresh is owed, and **neither is to be rebuilt** ([`SETTLED.md`](SETTLED.md)).
-How it fits together: [`CONVENTIONS.md`](CONVENTIONS.md).
+Инструменты вокруг всего этого — [`CONVENTIONS.md`](CONVENTIONS.md);
+`mods.bat` и `tools/workshop.py` **перестраивать не надо** ([`SETTLED.md`](SETTLED.md)).

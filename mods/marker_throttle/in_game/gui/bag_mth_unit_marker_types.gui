@@ -1,0 +1,396 @@
+﻿# Собрано mods/marker_throttle/tools/port_from_fum.py -- руками не писать.
+# Тела типов -- дословная копия из fum_map_markers_vanilla_types.gui;
+# добавлена одна строка max_update_rate на тип.
+
+types unit_marker_types {
+
+	type unit_maker_siege_banner = widget {
+		max_update_rate = 1000 # marker_throttle
+		allow_outside = yes
+		size = { 59 85 }
+
+		background = {
+			texture = "gfx/interface/component_tiles/map_markers/map_marker_shadow.dds"
+			texture_density = 2
+			spriteType = corneredstretched
+			spriteBorder = {35 35}
+			margin_bottom = 15
+			blend_mode = multiply
+			alpha = 0.7
+		}
+
+		circular_widget_button = {
+			parentanchor = top
+			size = { 57 57 }
+			
+			background = {
+				texture = "gfx/interface/buttons/bg_button.dds"
+				texture_density = 2
+				modify_texture = {
+					using = color_bg_brown_texture
+					blend_mode = multiply
+				}
+				modify_texture = {
+					using = overlay_paper_03
+					blend_mode = overlay
+					alpha = 0.3
+				}
+			}
+
+			onclick = "[SelectLocation(Siege.GetLocation)]"
+			onmousehierarchyenter = "[PdxGuiWidget.SetHighlightLocation(Siege.GetLocation)]"
+			datacontext = "[Siege]"
+			tooltipwidget = {
+				container = {
+					alwaystransparent = no
+					container = {
+						using = SiegeMarker_tooltip
+						visible = "[Siege.IsSiege]"
+					}
+
+					container = {
+						using = OccupationMarker_tooltip
+						visible = "[Not(Siege.IsSiege)]"
+					}
+				}
+			}
+
+			action_tooltip = {
+				click_type = left
+				click_mode = single
+				title = "GO_TO_SIEGE"
+				on_action = "[SelectLocation(Siege.GetLocation)]"
+			}
+
+			action_tooltip = {
+				click_modifier = shift
+				click_type = left
+				title = "ALERT_HINT"
+				click_modifier_description = "OPEN_HINT_TEXT"
+				using = snd_UI_alert_openAndCycle
+				on_action = "[SelectLocation(Siege.GetLocation)]"
+				on_action = "[OpenLateralViewWithParams('hints', 'selected_hint = hint_siege_and_occupation')]"
+				on_action = "[PdxGuiTriggerAllAnimations('reset_carousel')]"
+			}
+
+			widget = { # siege
+				size = { 47 47 }
+				parentanchor = center
+				piechart = {
+					parentanchor = center
+					size = { 100% 100% }
+					using = piechart_angles
+
+					pieslice_no_highlight = {
+						texture = "gfx/interface/pie_charts/pie_chart_alpha_80.dds"
+						value = "[Siege.GetSiegePhaseProgress]"
+						color = { 0.01 0.6 0.9 1 }
+						alwaystransparent = yes
+					}
+
+					pieslice_no_highlight = {
+						texture = "gfx/interface/pie_charts/pie_chart_alpha_80.dds"
+						value = "[Subtract_float('(float)100.0', Siege.GetSiegePhaseProgress)]"
+						color = { 0.0 0.1 0.1 1 }
+						alwaystransparent = yes
+					}
+				}
+				siege_icon = {
+					parentanchor = center
+					size = { 70% 70% }
+				}
+				icon = {
+					visible = "[Siege.IsTooFewMen]"
+					parentanchor = center
+					size = { 70% 70% }
+					texture = "gfx/interface/icons/flat_icons/disable_icon.dds"
+					using = color_red
+				}
+			}
+		}
+
+		unit_siege_banner_button = {
+			size = { 40 30 }
+			parentanchor = hcenter|bottom
+			position = {0 2}
+
+			using = marker_siege_side_color
+
+			modify_texture = {
+				using = overlay_striped_texture
+				blend_mode = overlay
+				alpha = 0.2
+			}
+
+			tooltipwidget = {
+				container = {
+					container = {
+						using = SiegeMarker_tooltip
+						visible = "[Siege.IsSiege]"
+					}
+
+					container = {
+						using = OccupationMarker_tooltip
+						visible = "[Not(Siege.IsSiege)]"
+					}
+				}
+			}
+
+			action_tooltip = {
+				click_type = left
+				click_mode = single
+				title = "GO_TO_SIEGE"
+				on_action = "[SelectLocation(Siege.GetLocation)]"
+			}
+			
+			onmousehierarchyenter = "[PdxGuiWidget.SetHighlightLocation(Siege.GetLocation)]"
+
+			text_single = {
+				visible = "[Not(Siege.IsTooFewMen)]"
+				size = { 30 16 }
+				position = { 0 -2 }
+				autoresize = yes
+				parentanchor = center
+				align = center|nobaseline
+
+				text = "[Siege.GetFallChance|2%]"
+			}
+			
+			text_single = {
+				visible = "[Siege.IsTooFewMen]"
+
+				size = { 30 16 }
+				position = { 0 -2 }
+				autoresize = no
+				parentanchor = center
+				align = center|nobaseline
+
+				text = "SIEGE_TOO_FEW_MEN_TXT"
+			}
+		}
+
+		widget = {
+			parentanchor = center
+			size = {55 13}
+			position = {0 13}
+
+			background = {
+				texture = "gfx/interface/component_tiles/map_markers/siege_pole.dds"
+				texture_density = 2
+				spriteborder = {35 0}
+				spriteType = corneredstretched
+			}
+		}
+	}
+
+	type unit_marker_item_modifiers = widget {
+		max_update_rate = 1000 # marker_throttle
+		layoutpolicy_horizontal = expanding
+		size = {-1 26}
+		hbox = {
+			layoutpolicy_horizontal = expanding
+			margin = { 10 0 }
+			using = unit_marker_item_modifiers
+			ignoreinvisible = yes
+
+			blockoverride "item_container_size" {
+				allow_outside = yes
+				size = { 1 1 }
+			}
+		}
+	}
+
+	type unit_marker_item_units = widget {
+		max_update_rate = 1000 # marker_throttle
+		layoutpolicy_horizontal = expanding
+		size = {-1 15 }
+		hbox = {
+			layoutpolicy_horizontal = expanding
+			margin_left = 5
+			margin_right = 15
+
+			overlappingitembox = {
+				visible = "[GreaterThan_int32(GetDataModelSize(UnitMarkerItem.GetAllUnits), '(int32)1')]"
+
+				layoutpolicy_horizontal = expanding
+				size = { -1 15 }
+				spacing = 5
+				autoresize = yes
+				max_width = 100
+
+				ignoreinvisible = yes
+				alwaystransparent = no
+				using = unit_marker_item_unit_banners
+			}
+		}
+	}
+
+	type unit_marker_item_unit_info = widget {
+		max_update_rate = 1000 # marker_throttle
+		block "unit_marker_item_unit_info_size" {
+			layoutpolicy_horizontal = expanding 
+			size = {-1 @unit_marker_frame_height}
+		}
+
+		hbox = {
+			layoutpolicy_horizontal = expanding
+			ignoreinvisible = yes
+			spacing = -5
+			
+			# widget = { using = unit_marker_item_total_units }
+			# widget = { size = { 0 @unit_marker_morale_progressbar_size } }
+			widget = {
+				visible = "[And(Not(Unit.IsArmy), UnitMarkerItem.IsTransporting)]"
+				using = unit_marker_item_transport
+			}
+			widget = { 
+				# using = bg_unit_marker_item_unit_strength
+				using = unit_marker_item_unit_strength 
+			}
+		}
+	}
+
+	type unit_marker_compass = widget {
+		max_update_rate = 1000 # marker_throttle
+		visible = "[UnitMarkerItem.ShouldShowCompass]"
+		size = { 24 24 }
+		using = bg_circle_piechart
+
+		icon = {
+			parentanchor = center
+			size = { 120% 120% }
+			texture = "gfx/interface/component_tiles/map_markers/unit_movement.dds"
+			ignore_layout = yes
+
+			background = {
+				texture = "gfx/interface/component_tiles/map_markers/unit_movement.dds"
+				alpha = 0.4
+				margin_bottom = 2
+				modify_texture = {
+					using = color_black_texture
+					blend_mode = multiply
+				}
+			}
+
+			glow = {
+				glow_radius = 5
+				color = { 1.0 0.85 0.55 1.0 }
+				alpha = 0.6
+
+				block "glow_visible" {
+					visible = no
+				}
+			}
+		}
+
+		icon = {
+			parentanchor = center
+			size = { 110% 110% }
+			texture = "gfx/interface/buttons/round_button_alt.dds"
+
+			modify_texture = {
+				using = color_new_gold_texture
+				blend_mode = normal
+			}
+
+			modify_texture = {
+				using = color_new_gold_texture
+				alpha = 0.4
+			}
+
+			modify_texture = {
+				texture = "gfx/interface/buttons/flats/button_simple.dds"
+				blend_mode = alphamultiply
+				rotate_uv = "[UnitMarker.GetCompassAngle]"
+			}
+		}
+	}
+
+	type unit_marker_item_layout = vbox {
+		max_update_rate = 1000 # marker_throttle
+		# modifiers
+		unit_marker_item_modifiers = {}
+
+		# total units and strength
+		unit_marker_item_unit_info = {}
+
+		# multi units
+		unit_marker_item_units = {}
+	}
+
+	type unit_marker_battle_side_flank = widget {
+		max_update_rate = 1000 # marker_throttle
+		size = { 10 10 }
+		using = bg_square_tile_shadow
+
+		tooltipwidget = {
+			using = CombatSubUnitArray_tooltip
+		}
+	
+		background = {
+			texture = "gfx/interface/icons/flat_icons/battle/base.dds"
+			texture_density = 2
+
+			modify_texture = {
+				using = color_black_texture
+				alpha = 0.4
+				blend_mode = overlay
+			}
+
+			# Flank without regiments
+			modify_texture = {
+				visible = "[Or(And3(Not(Combat.IsInBombardPhase), IsDataModelEmpty(CombatSubUnitArray.GetEngaged), IsDataModelEmpty(CombatSubUnitArray.GetNonEngaged)), And(Combat.IsInBombardPhase, IsDataModelEmpty(CombatSubUnitArray.GetCanBombard)))]"
+				using = color_enemy_red_texture
+			}
+
+			# Flank with regiments not engaged
+			modify_texture = {
+				visible = "[And3(Not(Combat.IsInBombardPhase), IsDataModelEmpty(CombatSubUnitArray.GetEngaged), Not(IsDataModelEmpty(CombatSubUnitArray.GetNonEngaged)))]"
+				using = color_mid_yellow_texture
+				alpha = 0.8
+			}
+
+			# Flank with regiments engaged
+			modify_texture = {
+				visible = "[Or(
+				And(Not(Combat.IsInBombardPhase), GreaterThan_CFixedPoint(CombatSubUnitArray.GetEngagedFrontage,'(CFixedPoint)0.0')),
+				And(Combat.IsInBombardPhase, Not(IsDataModelEmpty(CombatSubUnitArray.GetCanBombard))))]"
+				using = color_light_green_texture
+				alpha = 0.4
+			}
+		}
+	}
+
+	# type unit_marker_morale_piechart = widget
+	# {
+	# 	size = { @unit_marker_morale_progressbar_size @unit_marker_morale_progressbar_size }
+
+	# 	using = bg_circle_piechart
+	# 	blockoverride "marker_bg_circle_extra_modifiers" {
+	# 		using = marker_unit_side_color
+	# 	}
+
+	# 	piechart = {
+	# 		parentanchor = center
+	# 		size = { 90% 90% }
+	# 		using = piechart_angles
+	# 		tooltipwidget = {
+	# 			using = UnitMorale_tooltip
+	# 		}
+
+	# 		pieslice_no_highlight = {
+	# 			texture = "gfx/interface/pie_charts/pie_chart_alpha_80.dds"
+	# 			value = "[UnitMarkerItem.GetAverageMoralePercent]"
+	# 			color = { 0.01 0.9 0.3 0.8 }
+	# 			alwaystransparent = yes
+	# 		}
+
+	# 		pieslice_no_highlight = {
+	# 			texture = "gfx/interface/pie_charts/pie_chart_alpha_80.dds"
+	# 			value = "[Subtract_float('(float)100.0', UnitMarkerItem.GetAverageMoralePercent)]"
+	# 			color = { 0.0 0.1 0.1 1 }
+	# 			alwaystransparent = yes
+	# 		}
+	# 	}
+	# }
+}
