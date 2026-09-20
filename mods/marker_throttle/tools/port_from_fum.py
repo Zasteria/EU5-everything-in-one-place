@@ -48,15 +48,25 @@ RATE = 1000
 
 BLOCK = "types unit_marker_types {"
 
-# Типы, на которые вешается тормоз, и что каждый несёт. Список проверяется:
-# пропал тип — генератор падает, а не тихо throttl-ит половину.
+# Типы, на которые вешается тормоз. Список проверяется: пропал тип — генератор
+# падает, а не тихо throttl-ит половину.
+#
+# **Только те, в которых нет ни кнопки, ни раскладки.** Первая сборка вешала
+# тормоз на все семь, и его прогон 2026-09-20 показал, во что это обходится:
+# значки отрядов рисовались, но **щелчком не выбирались** — только рамкой. То
+# есть тормоз на типе портит попадание мышью, а не только числа. Поэтому здесь
+# остались три, которые ничего не ловят и ничего не раскладывают, и в них же
+# лежат оба тяжёлых шаблона: `unit_marker_item_modifiers` (24 покадровых
+# выражения) и `unit_marker_item_unit_info` (полоса силы, ещё 44).
+#
+# Убраны и почему: `unit_maker_siege_banner` (кнопка, `onclick`,
+# `alwaystransparent = no`), `unit_marker_compass` (кнопка),
+# `unit_marker_item_units` (`overlappingitembox`, `alwaystransparent = no`),
+# `unit_marker_item_layout` (`vbox`, то есть раскладка: устаревшая раскладка и
+# есть самый вероятный виновник промаха).
 TARGETS = (
-    "unit_maker_siege_banner",
     "unit_marker_item_modifiers",
-    "unit_marker_item_units",
     "unit_marker_item_unit_info",
-    "unit_marker_compass",
-    "unit_marker_item_layout",
     "unit_marker_battle_side_flank",
 )
 
@@ -124,7 +134,7 @@ def metadata() -> str:
     return json.dumps({
         "name": "Map Marker Throttle",
         "id": "bag.marker_throttle",
-        "version": "0.1.1",
+        "version": "0.2.0",
         "game_id": "eu5",
         "supported_game_version": "1.3.*",
         "short_description": (
