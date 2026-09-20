@@ -17,3 +17,14 @@ upgrade-in-place row is why `where_to_produce` never asks about demolition.
 | Is a market a map region the target picker can outline and click? | **Yes**, like an area — but only markets named in `interaction_source_list`. | TESTLOG 2026-08-31, twenty-seventh load |
 | Should the owner's flag stay under an expanded `where_to_produce` row? | Yes — a row is the whole province and its locations can belong to two or three countries, which is the split the ranking deliberately ignores. | TESTLOG 2026-08-30, seventh load |
 | Why did «выгода от места» fall from 80–95% to 64%? | **Different questions, and it is the ground, not the algorithm.** The old number ranked locations for *one* good; the plan places 35, and Westphalia has RGOs for eleven. **A bigger ground raising it is a prediction, not a measurement.** | TESTLOG 2026-09-04 |
+
+**Почему окно выбора на карте у `where_to_produce` закрывается после каждого
+клика.** Жизненный цикл общего действия, а не поломка: это единственный канал
+клика по карте, который есть у мода, а кликать по карте с открытым окном
+невозможно. Перенесено из `SETTLED.md` 2026-09-20; подробности —
+`docs/research/interface.md`.
+
+**Здание с двумя слотами производства получает два бонуса РГО, по одному на
+метод, каждый над своим выпуском.** Тултип панели строительства озаглавлен
+именем *метода*, так что пара — это суммарный выпуск на взвешенной по выпуску
+смеси. TESTLOG 2026-08-31, двадцать первый заход. Перенесено 2026-09-20.
