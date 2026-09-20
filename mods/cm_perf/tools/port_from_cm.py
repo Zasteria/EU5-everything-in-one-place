@@ -37,6 +37,7 @@ only consumer.
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -403,6 +404,98 @@ def _thin_the_pulse(text: str) -> str:
 	return text.replace(anchor, gate)
 
 
+
+# ------------------------------------------- вердикт авторасширения в переменной
+
+FEATURE = "in_game/common/scripted_effects/cm_feature_effects.txt"
+AE_BUTTON = "in_game/gui/cm_auto_expand_button.gui"
+AE_ICONS = "in_game/gui/cm_auto_expand_icon_types.gui"
+
+# Тяжёлый гейт отрисовки: один `GetScriptedGui` из восемнадцати условий, семь из
+# которых раскрываются примерно в сотню строк скриптовых триггеров, и пять
+# экономических функций движка, занесённых в него через `AddScope`. Стоит на
+# каждом нарисованном слоте здания и считается по два раза — отдельно для
+# зелёного кружка и отдельно для красного. Десять вхождений, два корня.
+_HEAVY_GATE = re.compile(
+    r"GetScriptedGui\('cm_is_building_able_to_auto_expand'\)\.IsShown\("
+    r"GuiScope\.SetRoot\(([A-Za-z.]+)\.MakeScope\)"
+    r"(?:\.AddScope\('cm_[a-z_]+', MakeScope(?:Value|Bool)\([^\n]*?\)\))+"
+    r"\.End\)"
+)
+
+# Сколько вхождений ждём в каждом файле. Меньше или больше — CM пересобрали, и
+# правка должна упасть, а не применить половину.
+_HEAVY_GATE_COUNTS = {AE_BUTTON: 8, AE_ICONS: 2}
+
+
+def _cache_the_verdict(text: str) -> str:
+    """Записать вердикт на здание в месячном проходе.
+
+    `cm_stage_expand_or_upgrade_candidate` — общий вход обоих режимов
+    авторасширения, и он уже считает в скрипте ровно то, что гейт отрисовки
+    пересчитывает на кадр. Здесь он дополнительно кладёт ответ на само здание,
+    а `visible` в GUI его читает.
+
+    Ветки повторяют ветки самого эффекта, чтобы вердикт не разошёлся с ним:
+    обычное расширение, апгрейд устаревшего, и всё остальное — нельзя.
+    """
+    anchor = "cm_stage_expand_or_upgrade_candidate = {\n"
+    if text.count(anchor) != 1:
+        raise SystemExit(
+            f"{FEATURE}: cm_stage_expand_or_upgrade_candidate объявлен не один "
+            "раз -- CM пересобрали, перечитай файл прежде чем верить генератору."
+        )
+    stamp = (
+        "cm_stage_expand_or_upgrade_candidate = {\n"
+        "\t# cm_perf: вердикт, который отрисовка пересчитывала каждый кадр на\n"
+        "\t# каждом слоте. Условия — те же, что у веток ниже.\n"
+        "\tif = {\n"
+        "\t\tlimit = {\n"
+        "\t\t\tcm_is_building_type_obsolete = no\n"
+        "\t\t\tscope:cm_building = {\n"
+        "\t\t\t\tcm_building_can_auto_expand_other_than_checking_for_upgrades = yes\n"
+        "\t\t\t\tis_at_max_level = no\n"
+        "\t\t\t\tcm_is_not_under_construction = yes\n"
+        "\t\t\t}\n"
+        "\t\t}\n"
+        "\t\tscope:cm_building = { set_variable = { name = cm_ae_ok value = yes } }\n"
+        "\t} else_if = {\n"
+        "\t\tlimit = {\n"
+        "\t\t\tcm_is_building_type_obsolete = yes\n"
+        "\t\t\tscope:cm_location = { cm_is_building_type_upgradeable_and_can_be_upgraded_by_owner = yes }\n"
+        "\t\t}\n"
+        "\t\tscope:cm_building = { set_variable = { name = cm_ae_ok value = yes } }\n"
+        "\t} else = {\n"
+        "\t\tscope:cm_building = { remove_variable = cm_ae_ok }\n"
+        "\t}\n"
+    )
+    return text.replace(anchor, stamp, 1)
+
+
+def _read_the_verdict(path: str):
+    """Заменить тяжёлый гейт чтением переменной, записанной месячным проходом.
+
+    `Scope.GetVariable` и `Scope.IsSet` — обе объявлены в
+    `data_types_script.txt`; существование переменной и есть ответ «можно».
+    Отрицательная половина пары (красный кружок) после этого стоит столько же,
+    сколько положительная, так что удвоение больше ничего не стоит.
+    """
+
+    def edit(text: str) -> str:
+        want = _HEAVY_GATE_COUNTS[path]
+        found = len(_HEAVY_GATE.findall(text))
+        if found != want:
+            raise SystemExit(
+                f"{path}: тяжёлых гейтов {found}, ждали {want} -- CM пересобрали, "
+                "перечитай файл прежде чем верить генератору."
+            )
+        return _HEAVY_GATE.sub(
+            lambda m: f"{m.group(1)}.MakeScope.GetVariable('cm_ae_ok').IsSet", text
+        )
+
+    return edit
+
+
 EDITS = (
     (WINDOW, "gate the building-type tree", _gate_the_tree),
     (WINDOW, "widen the first pass's instantiation window", _widen_first_pass),
@@ -410,6 +503,9 @@ EDITS = (
     (SGUI, "the scan gate the one-shot driver needs", _add_scan_gate),
     (SGUI, "dev 2.3.0's rescan, which makes one sweep safe", _rescan_when_stalled),
     (DISPATCH, "arm the one-shot scan with the cycle", _arm_the_scan),
+    (FEATURE, "cache the auto-expand verdict on the building", _cache_the_verdict),
+    (AE_BUTTON, "read the cached verdict instead of recomputing it", _read_the_verdict(AE_BUTTON)),
+    (AE_ICONS, "read the cached verdict instead of recomputing it", _read_the_verdict(AE_ICONS)),
 ) + (
     ((DISPATCH, "run the cycle once every %d months" % PULSE_MONTHS, _thin_the_pulse),)
     if PULSE_MONTHS > 1

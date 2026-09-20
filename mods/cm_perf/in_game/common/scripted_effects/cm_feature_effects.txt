@@ -168,6 +168,27 @@ cm_stage_from_zero_candidate = {
 # Staging decision for a building that already has levels at the location. Expects scope:cm_country,
 # scope:cm_location, scope:cm_building, and scope:cm_building_type as the standing type.
 cm_stage_expand_or_upgrade_candidate = {
+	# cm_perf: вердикт, который отрисовка пересчитывала каждый кадр на
+	# каждом слоте. Условия — те же, что у веток ниже.
+	if = {
+		limit = {
+			cm_is_building_type_obsolete = no
+			scope:cm_building = {
+				cm_building_can_auto_expand_other_than_checking_for_upgrades = yes
+				is_at_max_level = no
+				cm_is_not_under_construction = yes
+			}
+		}
+		scope:cm_building = { set_variable = { name = cm_ae_ok value = yes } }
+	} else_if = {
+		limit = {
+			cm_is_building_type_obsolete = yes
+			scope:cm_location = { cm_is_building_type_upgradeable_and_can_be_upgraded_by_owner = yes }
+		}
+		scope:cm_building = { set_variable = { name = cm_ae_ok value = yes } }
+	} else = {
+		scope:cm_building = { remove_variable = cm_ae_ok }
+	}
 	if = {
 		limit = { cm_is_building_type_obsolete = no }
 		if = {
