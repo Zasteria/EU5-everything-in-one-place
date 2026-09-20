@@ -111,18 +111,38 @@ def throttle(body: str) -> str:
 
 
 def metadata() -> str:
+    """Форма ровно та же, что у остальных модов этого репозитория.
+
+    **`game_custom_data` и `relationships` обязательны**: 2026-09-20 мод без них
+    не появился в лаунчере вообще, а все одиннадцать работающих модов здесь их
+    везут. Файл пишется с BOM, как и они.
+
+    Зависимость от Faster Universalis объявлена не для красоты: тела типов —
+    копия его тел, и лаунчер по этой строке сам ставит мод **после** FUM.
+    Без неё порядок надо помнить руками, а забытый порядок FUM затирает молча.
+    """
     return json.dumps({
         "name": "Map Marker Throttle",
         "id": "bag.marker_throttle",
-        "version": "0.1.0",
+        "version": "0.1.1",
         "game_id": "eu5",
         "supported_game_version": "1.3.*",
         "short_description": (
             "Throttles how often unit-marker widgets re-evaluate their "
             "expressions, the way the base game and Faster Universalis already "
-            "do for other map markers. Load AFTER Faster Universalis."
+            "do for other map markers."
         ),
-        "tags": ["Utilities", "Map"],
+        "tags": ["User Interface", "Utilities", "1.3"],
+        "relationships": [
+            {
+                "rel_type": "dependency",
+                "id": "faster.universalis",
+                "display_name": "Faster Universalis",
+                "resource_type": "mod",
+                "version": "1.*",
+            }
+        ],
+        "game_custom_data": {},
     }, indent=4, ensure_ascii=False) + "\n"
 
 
@@ -137,7 +157,7 @@ def main() -> int:
         + body + "\n",
         encoding="utf-8")
     (MOD / ".metadata").mkdir(parents=True, exist_ok=True)
-    (MOD / ".metadata/metadata.json").write_text(metadata(), encoding="utf-8")
+    (MOD / ".metadata/metadata.json").write_text("\ufeff" + metadata(), encoding="utf-8")
     print("marker_throttle: %d типов с max_update_rate = %d, из %s"
           % (len(TARGETS), RATE, src.parent.parent.parent.name))
     return 0
