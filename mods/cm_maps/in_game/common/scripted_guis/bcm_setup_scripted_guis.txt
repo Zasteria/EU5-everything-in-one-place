@@ -19,6 +19,17 @@ bcm_setup_pending = {
 			NOT = { bcm_trmm_data_is_current = yes }
 			NOT = { bcm_fpot_data_is_current = yes }
 			NOT = { bcm_pf_river_data_is_current = yes }
+			# The migration below, which a save that predates it still owes. It is
+			# a global stamp and not a check on what it retires, because what it
+			# retires is written again in normal use: a governor run that finishes
+			# sets bcm_pf_fresh_g, and gating on that flag would make this driver
+			# throw away every cache the moment it was built.
+			NOT = {
+				AND = {
+					has_global_variable = bcm_pf_epoch
+					global_var:bcm_pf_epoch = 2
+				}
+			}
 		}
 	}
 }
@@ -26,5 +37,13 @@ bcm_setup_pending = {
 bcm_run_setup = {
 	effect = {
 		bcm_run_lobby_setup = yes
+	}
+}
+
+# Fired on entering the urban-rights mapmode family. No is_shown: the effect's own
+# per-definition check is the gate, and it is far too expensive to put in one.
+bcm_trmm_run_repair = {
+	effect = {
+		bcm_trmm_repair = yes
 	}
 }
