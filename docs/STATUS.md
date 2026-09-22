@@ -1,4 +1,4 @@
-﻿# Where the thirteen mods stand
+# Where the thirteen mods stand
 
 One line each, and a link to the brief. **Read the brief for the mod the task is
 about and no others** — `mods/<mod>/CLAUDE.md` holds the state, the commands and
@@ -8,7 +8,7 @@ what fails silently there.
 | --- | --- | --- |
 | [`ru_loc_fix`](../mods/ru_loc_fix/CLAUDE.md) | working; repairs the base game's own Russian markup, 209 keys. **09-20: тултип выгоды здания сыпал 362 строки за 87 с, починен** | новый ключ и круги два-три |
 | [`nd_ru`](../mods/nd_ru/CLAUDE.md) | in progress; 4 174 keys, 10.2% | everything except Westphalia and the override itself |
-| [`nmt_ru`](../mods/nmt_ru/CLAUDE.md) | **новый 09-22, в игре не был.** Русский для National Mission Trees: Валахия, Византия, Феодоро, Грузия — 716 ключей из 8 348. База без русского и без отката, поэтому дерево пишется целиком | всё |
+| [`nmt_ru`](../mods/nmt_ru/CLAUDE.md) | **новый 09-22, в игре не был: лаунчер его не показал, не хватало `relationships` — дописан.** Русский для National Mission Trees: Валахия, Византия, Феодоро, Грузия — 716 ключей из 8 348. База без русского и без отката, дерево пишется целиком | всё |
 | [`where_to_produce`](../mods/where_to_produce/CLAUDE.md) | **Единственная версия, работа идёт в ней.** Заходы — [`investigations/wtp_backlog.md`](investigations/wtp_backlog.md), открыт пункт 9 | [`archive/status_wtp_untested.md`](archive/status_wtp_untested.md) |
 | [`cm_maps`](../mods/cm_maps/CLAUDE.md) | **загружен 09-19, рисует**; губернатор починен и подтверждён, права починены. Три карты CM dev без CM и CMF | починка прав, карта еды |
 | [`cm_perf`](../mods/cm_perf/CLAUDE.md) | **потолок скорости снят 09-18, но 09-19 он снял мод: тормозит тем сильнее, чем больше точек авторасширения.** Копия CM. Месячный пульс трогать нельзя — его слово 09-19. Ставится **вместо** CM | правки 3 и 5 |
