@@ -56,6 +56,7 @@ KNOWN = {
     "construction_manager": ("romaimperator.construction_manager", "construction manager"),
     "glorp_ui": ("glorp.ui", "glorp"),
     "national_destinies": ("trin.national_destinies", "national destinies"),
+    "national_mission_trees": ("national_mission_trees", "mission trees"),
 }
 
 
