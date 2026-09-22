@@ -1,4 +1,4 @@
-# Pitfalls
+﻿# Pitfalls
 
 Mistakes already made here, each with the symptom that gave it away. Every one
 cost at least one round trip through the game: none of them raises an error you
