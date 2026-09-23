@@ -1,0 +1,201 @@
+﻿# Страница мода в меню CMF, и то, что делают её кнопки.
+#
+# **`cmf_on_mod_registration` бьёт каждый раз, когда страницу открывают** — не
+# на новой игре и не на загрузке. Поэтому регистрация только регистрирует:
+# ничего не считает и ничего не сносит.
+#
+# **Макрос CMM, позванный с аргументом, которого CMF не объявляет, молча не
+# делает ничего и уносит с собой весь остаток эффекта.** После любой правки
+# здесь: `python3 tools/check_cmm.py mods/cm_maps/in_game/common`.
+
+# Scope: country
+bcm_register = {
+	## Рекомендуемый губернатор (governor)
+	#
+	# Значения по умолчанию — те же, что мод вёл себя до страницы: метод 1,
+	# дороги 2, море 2. Точность — 1, а не авторские 3: три оставляют локации
+	# неоценёнными и чёрными, и это то, с чем мод вернулся из игры 2026-09-19.
+	cmm_register_dropdown_setting = {
+		mod_id = bcm
+		setting_id = placement_finder_accuracy
+		tab_id = main
+		group_id = governor
+		default_index = 1
+		option_count = 5
+	}
+	cmm_sync_setting_alias = {
+		setting = bcm__placement_finder_accuracy
+		alias = bcm_placement_finder_accuracy
+	}
+
+	cmm_register_dropdown_setting = {
+		mod_id = bcm
+		setting_id = placement_finder_method
+		tab_id = main
+		group_id = governor
+		default_index = 1
+		option_count = 3
+	}
+	cmm_sync_setting_alias = {
+		setting = bcm__placement_finder_method
+		alias = bcm_placement_finder_method
+	}
+
+	cmm_register_dropdown_setting = {
+		mod_id = bcm
+		setting_id = placement_finder_roads
+		tab_id = main
+		group_id = governor
+		default_index = 2
+		option_count = 3
+	}
+	cmm_sync_setting_alias = {
+		setting = bcm__placement_finder_roads
+		alias = bcm_placement_finder_roads
+	}
+
+	cmm_register_dropdown_setting = {
+		mod_id = bcm
+		setting_id = placement_finder_naval
+		tab_id = main
+		group_id = governor
+		default_index = 2
+		option_count = 3
+	}
+	cmm_sync_setting_alias = {
+		setting = bcm__placement_finder_naval
+		alias = bcm_placement_finder_naval
+	}
+
+	cmm_register_button_setting = {
+		mod_id = bcm
+		setting_id = governor_refresh
+		tab_id = main
+		group_id = governor
+	}
+	cmm_add_scripted_gui = {
+		mod_id = bcm
+		setting_id = governor_refresh
+	}
+
+	## Данные карт (data)
+	cmm_register_button_setting = {
+		mod_id = bcm
+		setting_id = rebuild_setup
+		tab_id = main
+		group_id = data
+	}
+	cmm_add_scripted_gui = {
+		mod_id = bcm
+		setting_id = rebuild_setup
+	}
+
+	## Диагностика (debug)
+	cmm_register_bool_setting = {
+		mod_id = bcm
+		setting_id = placement_finder_debug_path
+		tab_id = main
+		group_id = debug
+		default_value = 0
+	}
+	cmm_sync_bool_alias = {
+		setting = bcm__placement_finder_debug_path
+		alias = bcm_placement_finder_debug_path
+	}
+}
+
+# Обратный звонок CMF: `var:cmf_callback` — флаг того, что тронули.
+# Scope: country
+bcm_handle_callback = {
+	switch = {
+		trigger = var:cmf_callback
+		flag:bcm__placement_finder_accuracy = {
+			cmm_sync_setting_alias = {
+				setting = bcm__placement_finder_accuracy
+				alias = bcm_placement_finder_accuracy
+			}
+			bcm_pf_settings_changed = yes
+		}
+		flag:bcm__placement_finder_method = {
+			cmm_sync_setting_alias = {
+				setting = bcm__placement_finder_method
+				alias = bcm_placement_finder_method
+			}
+			bcm_pf_settings_changed = yes
+		}
+		flag:bcm__placement_finder_roads = {
+			cmm_sync_setting_alias = {
+				setting = bcm__placement_finder_roads
+				alias = bcm_placement_finder_roads
+			}
+			bcm_pf_settings_changed = yes
+		}
+		flag:bcm__placement_finder_naval = {
+			cmm_sync_setting_alias = {
+				setting = bcm__placement_finder_naval
+				alias = bcm_placement_finder_naval
+			}
+			bcm_pf_settings_changed = yes
+		}
+		flag:bcm__placement_finder_debug_path = {
+			cmm_sync_bool_alias = {
+				setting = bcm__placement_finder_debug_path
+				alias = bcm_placement_finder_debug_path
+			}
+			bcm_pf_settings_changed = yes
+		}
+		flag:bcm__governor_refresh = {
+			bcm_pf_settings_changed = yes
+		}
+		flag:bcm__rebuild_setup = {
+			bcm_dbg_rebuild_setup = yes
+		}
+	}
+}
+
+# **Что делать с уже посчитанной картой губернатора, когда её вход изменился.**
+# Форма CM'а, из cm_apply_placement_finder_*_change: если карта сейчас открыта,
+# пересчитать на месте; если нет — снять отметку свежести, и следующее открытие
+# посчитает заново. Без этого правка настройки ничего бы не поменяла до
+# истечения кэша, а он держится 1460 дней.
+#
+# Это же и есть кнопка «пересчитать сейчас»: нажатие её ничего не настраивает,
+# а просто проходит этот путь.
+# Scope: country
+bcm_pf_settings_changed = {
+	if = {
+		limit = { exists = var:bcm_pf_mode_open }
+		bcm_pf_force_refresh = yes
+	}
+	else_if = {
+		limit = { exists = var:bcm_pf_fresh_g }
+		remove_variable = bcm_pf_fresh_g
+	}
+}
+
+# Клейма трёх проходов загрузки. Снять их — значит заставить bcm_run_lobby_setup
+# посчитать всё заново; форма CM'а, cm_setup_drop_stamps, из тех же трёх имён.
+# No scope.
+bcm_setup_drop_stamps = {
+	if = {
+		limit = { has_global_variable = bcm_trmm_stamp }
+		remove_global_variable = bcm_trmm_stamp
+	}
+	if = {
+		limit = { has_global_variable = bcm_fpot_stamp }
+		remove_global_variable = bcm_fpot_stamp
+	}
+	if = {
+		limit = { has_global_variable = bcm_pf_river_stamp }
+		remove_global_variable = bcm_pf_river_stamp
+	}
+}
+
+# Кнопка «Пересобрать данные карт». CM'а же, cm_dbg_rebuild_setup, один в один:
+# снять клейма и позвать проход. Права и потенциал еды считаются синхронно и
+# занимают несколько секунд; обход рек ставится в очередь и идёт фоном.
+# Scope: country
+bcm_dbg_rebuild_setup = {
+	bcm_setup_drop_stamps = yes
+	bcm_run_lobby_setup = yes
+}

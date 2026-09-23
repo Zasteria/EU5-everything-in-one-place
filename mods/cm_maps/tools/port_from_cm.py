@@ -415,7 +415,10 @@ EDITS: tuple[tuple[str, str, str, str], ...] = (
 
 # ------------------------------------------------------------------- the writing
 
-# Variables this port reads and never writes, and why each is sound. The reason
+# Variables this port reads and never writes, and why each is sound. The five
+# `bcm_placement_finder_*` names were here until 2026-09-23 with the reason "a
+# CMF setting; there is no settings page here": there is one now, in
+# `CMM_REGISTRATION` below, and its alias sync writes all five. The reason
 # goes on the line, which is `tools/check_script.py`'s own convention for a read
 # it should stop asking about — and the rule it enforces is a real one: a
 # variable with a reader, a remover and nobody to set it is what broke both of
@@ -445,21 +448,6 @@ NEVER_SET: tuple[tuple[str, str], ...] = (
     ("bcm_trmm_refresh_armed",
      "set by CM's grant effect, which goes with the grant panel. Nothing arms "
      "the repaint here, so its drivers sit idle"),
-    ("bcm_placement_finder_accuracy",
-     "a CMF setting. There is no settings page here; the exists check falls "
-     "through to the default"),
-    ("bcm_placement_finder_method",
-     "a CMF setting. There is no settings page here; the exists check falls "
-     "through to the default"),
-    ("bcm_placement_finder_roads",
-     "a CMF setting. There is no settings page here; the exists check falls "
-     "through to the default"),
-    ("bcm_placement_finder_naval",
-     "a CMF setting. There is no settings page here; the exists check falls "
-     "through to the default"),
-    ("bcm_placement_finder_debug_path",
-     "a CMF setting. There is no settings page here; the exists check falls "
-     "through to the default"),
 )
 
 # Longest first: `bcm_pf_` is a prefix of `bcm_pf_view_c`, and an alternation
@@ -695,6 +683,10 @@ def port_localization() -> int:
             have |= loc_keys(text)
             emit(MOD / f"main_menu/localization/{language}/{target}_l_{language}.yml", text)
             count += 1
+        cmm = cmm_localization(language)
+        have |= loc_keys(cmm)
+        emit(MOD / f"main_menu/localization/{language}/bcm_cmm_l_{language}.yml", cmm)
+        count += 1
         borrowed = borrow_keys(language, have)
         if borrowed:
             emit(MOD / f"main_menu/localization/{language}/bcm_borrowed_l_{language}.yml",
@@ -792,6 +784,9 @@ def hand_written() -> dict[str, str]:
         "in_game/common/scripted_guis/bcm_setup_scripted_guis.txt": SETUP_SCRIPTED_GUIS,
         "in_game/gui/scripted_widgets/bcm_scripted_widgets.txt": SCRIPTED_WIDGETS,
         "in_game/gui/bcm_pf_map_mode_window.gui": pf_window(),
+        "in_game/common/scripted_effects/bcm_cmm_effects.txt": CMM_EFFECTS,
+        "in_game/common/scripted_guis/bcm_cmm_scripted_gui.txt": CMM_SCRIPTED_GUIS,
+        "in_game/common/on_action/bcm_cmm_on_actions.txt": CMM_ON_ACTIONS,
     }
 
 
@@ -942,6 +937,394 @@ SCRIPTED_WIDGETS = """# What makes these two windows exist at all. A .gui file t
 gui/bcm_pf_map_mode_window.gui = bcm_pf_map_mode_window
 gui/bcm_town_rights_search_panel.gui = bcm_town_rights_search_panel
 """
+
+
+# ------------------------------------------------------- the CMF settings page
+#
+# **CMF is optional in the code and required in the metadata, and those are not
+# in conflict.** Every read of a `bcm_placement_finder_*` setting is an `exists`
+# check that falls through to the value this mod used before there was a page,
+# so without CMF nothing here runs and nothing changes. But a scripted effect
+# calling a macro that is not loaded is the silent kind of failure this
+# repository keeps paying for, and there is no reason to take the risk: CMF is
+# declared a dependency, as it is in four other mods here.
+#
+# **Every macro argument below is checked by `tools/check_cmm.py`** against the
+# CMF in `reference/`, because a CMM macro called with an argument CMF does not
+# declare fails silently and takes the rest of its effect with it.
+
+CMM_EFFECTS = """# Страница мода в меню CMF, и то, что делают её кнопки.
+#
+# **`cmf_on_mod_registration` бьёт каждый раз, когда страницу открывают** — не
+# на новой игре и не на загрузке. Поэтому регистрация только регистрирует:
+# ничего не считает и ничего не сносит.
+#
+# **Макрос CMM, позванный с аргументом, которого CMF не объявляет, молча не
+# делает ничего и уносит с собой весь остаток эффекта.** После любой правки
+# здесь: `python3 tools/check_cmm.py mods/cm_maps/in_game/common`.
+
+# Scope: country
+bcm_register = {
+	## Рекомендуемый губернатор (governor)
+	#
+	# Значения по умолчанию — те же, что мод вёл себя до страницы: метод 1,
+	# дороги 2, море 2. Точность — 1, а не авторские 3: три оставляют локации
+	# неоценёнными и чёрными, и это то, с чем мод вернулся из игры 2026-09-19.
+	cmm_register_dropdown_setting = {
+		mod_id = bcm
+		setting_id = placement_finder_accuracy
+		tab_id = main
+		group_id = governor
+		default_index = 1
+		option_count = 5
+	}
+	cmm_sync_setting_alias = {
+		setting = bcm__placement_finder_accuracy
+		alias = bcm_placement_finder_accuracy
+	}
+
+	cmm_register_dropdown_setting = {
+		mod_id = bcm
+		setting_id = placement_finder_method
+		tab_id = main
+		group_id = governor
+		default_index = 1
+		option_count = 3
+	}
+	cmm_sync_setting_alias = {
+		setting = bcm__placement_finder_method
+		alias = bcm_placement_finder_method
+	}
+
+	cmm_register_dropdown_setting = {
+		mod_id = bcm
+		setting_id = placement_finder_roads
+		tab_id = main
+		group_id = governor
+		default_index = 2
+		option_count = 3
+	}
+	cmm_sync_setting_alias = {
+		setting = bcm__placement_finder_roads
+		alias = bcm_placement_finder_roads
+	}
+
+	cmm_register_dropdown_setting = {
+		mod_id = bcm
+		setting_id = placement_finder_naval
+		tab_id = main
+		group_id = governor
+		default_index = 2
+		option_count = 3
+	}
+	cmm_sync_setting_alias = {
+		setting = bcm__placement_finder_naval
+		alias = bcm_placement_finder_naval
+	}
+
+	cmm_register_button_setting = {
+		mod_id = bcm
+		setting_id = governor_refresh
+		tab_id = main
+		group_id = governor
+	}
+	cmm_add_scripted_gui = {
+		mod_id = bcm
+		setting_id = governor_refresh
+	}
+
+	## Данные карт (data)
+	cmm_register_button_setting = {
+		mod_id = bcm
+		setting_id = rebuild_setup
+		tab_id = main
+		group_id = data
+	}
+	cmm_add_scripted_gui = {
+		mod_id = bcm
+		setting_id = rebuild_setup
+	}
+
+	## Диагностика (debug)
+	cmm_register_bool_setting = {
+		mod_id = bcm
+		setting_id = placement_finder_debug_path
+		tab_id = main
+		group_id = debug
+		default_value = 0
+	}
+	cmm_sync_bool_alias = {
+		setting = bcm__placement_finder_debug_path
+		alias = bcm_placement_finder_debug_path
+	}
+}
+
+# Обратный звонок CMF: `var:cmf_callback` — флаг того, что тронули.
+# Scope: country
+bcm_handle_callback = {
+	switch = {
+		trigger = var:cmf_callback
+		flag:bcm__placement_finder_accuracy = {
+			cmm_sync_setting_alias = {
+				setting = bcm__placement_finder_accuracy
+				alias = bcm_placement_finder_accuracy
+			}
+			bcm_pf_settings_changed = yes
+		}
+		flag:bcm__placement_finder_method = {
+			cmm_sync_setting_alias = {
+				setting = bcm__placement_finder_method
+				alias = bcm_placement_finder_method
+			}
+			bcm_pf_settings_changed = yes
+		}
+		flag:bcm__placement_finder_roads = {
+			cmm_sync_setting_alias = {
+				setting = bcm__placement_finder_roads
+				alias = bcm_placement_finder_roads
+			}
+			bcm_pf_settings_changed = yes
+		}
+		flag:bcm__placement_finder_naval = {
+			cmm_sync_setting_alias = {
+				setting = bcm__placement_finder_naval
+				alias = bcm_placement_finder_naval
+			}
+			bcm_pf_settings_changed = yes
+		}
+		flag:bcm__placement_finder_debug_path = {
+			cmm_sync_bool_alias = {
+				setting = bcm__placement_finder_debug_path
+				alias = bcm_placement_finder_debug_path
+			}
+			bcm_pf_settings_changed = yes
+		}
+		flag:bcm__governor_refresh = {
+			bcm_pf_settings_changed = yes
+		}
+		flag:bcm__rebuild_setup = {
+			bcm_dbg_rebuild_setup = yes
+		}
+	}
+}
+
+# **Что делать с уже посчитанной картой губернатора, когда её вход изменился.**
+# Форма CM'а, из cm_apply_placement_finder_*_change: если карта сейчас открыта,
+# пересчитать на месте; если нет — снять отметку свежести, и следующее открытие
+# посчитает заново. Без этого правка настройки ничего бы не поменяла до
+# истечения кэша, а он держится 1460 дней.
+#
+# Это же и есть кнопка «пересчитать сейчас»: нажатие её ничего не настраивает,
+# а просто проходит этот путь.
+# Scope: country
+bcm_pf_settings_changed = {
+	if = {
+		limit = { exists = var:bcm_pf_mode_open }
+		bcm_pf_force_refresh = yes
+	}
+	else_if = {
+		limit = { exists = var:bcm_pf_fresh_g }
+		remove_variable = bcm_pf_fresh_g
+	}
+}
+
+# Клейма трёх проходов загрузки. Снять их — значит заставить bcm_run_lobby_setup
+# посчитать всё заново; форма CM'а, cm_setup_drop_stamps, из тех же трёх имён.
+# No scope.
+bcm_setup_drop_stamps = {
+	if = {
+		limit = { has_global_variable = bcm_trmm_stamp }
+		remove_global_variable = bcm_trmm_stamp
+	}
+	if = {
+		limit = { has_global_variable = bcm_fpot_stamp }
+		remove_global_variable = bcm_fpot_stamp
+	}
+	if = {
+		limit = { has_global_variable = bcm_pf_river_stamp }
+		remove_global_variable = bcm_pf_river_stamp
+	}
+}
+
+# Кнопка «Пересобрать данные карт». CM'а же, cm_dbg_rebuild_setup, один в один:
+# снять клейма и позвать проход. Права и потенциал еды считаются синхронно и
+# занимают несколько секунд; обход рек ставится в очередь и идёт фоном.
+# Scope: country
+bcm_dbg_rebuild_setup = {
+	bcm_setup_drop_stamps = yes
+	bcm_run_lobby_setup = yes
+}
+"""
+
+CMM_SCRIPTED_GUIS = """# Кнопке CMF нужен свой `_on_changed`, иначе она не рисуется: строка настройки
+# спрашивает `CMMHasScriptedGui`, а помечает настройку как имеющую его вызов
+# `cmm_add_scripted_gui` в регистрации. Сама работа — в обратном звонке, поэтому
+# эффект тут пустой; так же у CM.
+#
+# У CM обе эти кнопки стоят под `debug_only = yes`. Здесь они не отладочные: в
+# моде из трёх карт пересчёт — это единственное, чем игрок ими управляет.
+
+bcm__governor_refresh_on_changed = {
+	scope = country
+
+	is_shown = {
+		always = yes
+	}
+	effect = { }
+}
+
+bcm__rebuild_setup_on_changed = {
+	scope = country
+
+	is_shown = {
+		always = yes
+	}
+	effect = { }
+}
+"""
+
+CMM_ON_ACTIONS = """# Два крючка CMF, и больше мод к игре ничем не привязан: проходы по-прежнему
+# гонят скрытые виджеты, потому что у движка нет своего крючка загрузки
+# (README.md, «Why there is no on_action»).
+
+cmf_on_mod_registration = {
+	on_actions = {
+		bcm_on_register
+	}
+}
+
+# Scope: country
+bcm_on_register = {
+	effect = {
+		bcm_register = yes
+	}
+}
+
+cmf_on_callback = {
+	on_actions = {
+		bcm_on_callback
+	}
+}
+
+# Scope: country
+bcm_on_callback = {
+	effect = {
+		bcm_handle_callback = yes
+	}
+}
+"""
+
+
+# -------------------------------------------------- the settings page's strings
+#
+# CM's own text for the four dropdowns, lifted key by key rather than rewritten:
+# it is the same search with the same options, and its wording is the author's.
+# **But CM's text names two maps and this mod carries one.** Every sentence that
+# offered «Рекомендуемая столица» alongside the governor is cut down to the
+# governor, and each cut asserts it matched -- a string that quietly stopped
+# matching would leave the page promising a map that is not there.
+
+CMM_LOC_LIFT = (
+    "cm__placement_finder_method",
+    "cm__placement_finder_roads",
+    "cm__placement_finder_naval",
+    "cm__placement_finder_accuracy",
+    "cm__placement_finder_debug_path",
+)
+
+CMM_LOC_FIXES = {
+    "russian": (
+        ("режимы карты «Рекомендуемый наместник» и «Рекомендуемая столица» ранжируют",
+         "режим карты «Рекомендуемый губернатор» ранжирует"),
+        ("Будут ли режимы карты «Рекомендуемый губернатор» и «Рекомендуемая столица» предполагать",
+         "Будет ли режим карты «Рекомендуемый губернатор» предполагать"),
+        ("будут ли режимы карты «Рекомендуемый губернатор» и «Рекомендуемая столица» предполагать",
+         "будет ли режим карты «Рекомендуемый губернатор» предполагать"),
+        ("Насколько тщательно режимы карты «Рекомендуемый губернатор» и «Рекомендуемая столица» ищут",
+         "Насколько тщательно режим карты «Рекомендуемый губернатор» ищет"),
+        ("подсказки режимов карты «Рекомендуемый губернатор» и «Рекомендуемая столица»",
+         "подсказки режима карты «Рекомендуемый губернатор»"),
+        ("назначение губернатора или размещение столицы увеличит",
+         "назначение губернатора увеличит"),
+        ("размещение там губернатора или столицы", "размещение там губернатора"),
+        ("размещение здесь губернатора или столицы", "размещение здесь губернатора"),
+    ),
+    "english": (
+        ("the Recommended Governor and Recommended Capital map modes rank",
+         "the Recommended Governor map mode ranks"),
+        ("the Recommended Governor and Recommended Capital map modes assume",
+         "the Recommended Governor map mode assumes"),
+        ("the Recommended Governor and Recommended Capital map modes search",
+         "the Recommended Governor map mode searches"),
+        ("the Recommended Governor and Recommended Capital map mode tooltips",
+         "the Recommended Governor map mode tooltips"),
+        ("a governor or capital placed there would raise",
+         "a governor placed there would raise"),
+        ("a governor or capital placed there would add",
+         "a governor placed there would add"),
+    ),
+}
+
+# The page itself, the groups, and the two buttons: no CM original, because CM's
+# page is CM's. A button's caption is its own `_text` key -- the setting row
+# reads it by name, and a missing one prints the name in the button.
+CMM_LOC_OWN = {
+    "russian": """ bcm_name: "Карты Construction Manager"
+ bcm_desc: "Три карты Construction Manager, стоящие без него: потенциал продовольствия, пригодность городских прав и рекомендуемое размещение губернатора."
+ bcm__main_name: "Карты"
+ bcm__main__governor_name: "Рекомендуемый губернатор"
+ bcm__main__governor_desc: "Как карта ищет места под губернатора и что считает за инфраструктуру."
+ bcm__main__data_name: "Данные карт"
+ bcm__main__data_desc: "Права и потенциал еды считаются один раз за сохранение, а не каждый месяц: цвета по ходу партии стареют."
+ bcm__main__debug_name: "Диагностика"
+ bcm__governor_refresh_name: "Пересчитать размещение губернатора"
+ bcm__governor_refresh_desc: "Посчитать карту заново прямо сейчас, не дожидаясь, пока истечёт её кэш. Результат поиска держится четыре игровых года, поэтому новые дороги, порты и губернаторы до этого на карту не попадают. Если карта сейчас открыта, она пересчитается на глазах; если нет — при следующем открытии."
+ bcm__governor_refresh_text: "Пересчитать"
+ bcm__rebuild_setup_name: "Пересобрать данные карт"
+ bcm__rebuild_setup_desc: "Посчитать заново то, что считается один раз за сохранение: охват промышленности для «Рекомендуемых городских прав», потенциал продовольствия и речные переправы, по которым ищет путь размещение губернатора. Занимает несколько секунд, игра при этом продолжает работать."
+ bcm__rebuild_setup_text: "Пересобрать"
+""",
+    "english": """ bcm_name: "Construction Manager Maps"
+ bcm_desc: "Three of Construction Manager's map modes, standing without it: food potential, urban right suitability and recommended governor placement."
+ bcm__main_name: "Maps"
+ bcm__main__governor_name: "Recommended Governor"
+ bcm__main__governor_desc: "How the map searches for governor sites, and what it counts as infrastructure."
+ bcm__main__data_name: "Map Data"
+ bcm__main__data_desc: "Urban rights and food potential are computed once per save rather than monthly, so their colours age as the campaign goes on."
+ bcm__main__debug_name: "Diagnostics"
+ bcm__governor_refresh_name: "Recompute Governor Placement"
+ bcm__governor_refresh_desc: "Compute the map again now, instead of waiting for its cache to expire. A finished search is kept for four years of game time, so roads, harbors and governors built since then do not reach the map until it does. If the map is open it recomputes in front of you; if not, on the next opening."
+ bcm__governor_refresh_text: "Recompute"
+ bcm__rebuild_setup_name: "Rebuild Map Data"
+ bcm__rebuild_setup_desc: "Compute again what is computed once per save: the industry coverage behind Recommended Urban Rights, food potential, and the river crossings the governor search routes through. It takes a few seconds and the game keeps running."
+ bcm__rebuild_setup_text: "Rebuild"
+""",
+}
+
+
+def cmm_localization(language: str) -> str:
+    """CM's strings for the four dropdowns, plus this mod's own page and buttons."""
+    src = SRC / f"main_menu/localization/{language}/cm_cmm_l_{language}.yml"
+    wanted = []
+    for line in read(src).lstrip(BOM).split("\n"):
+        key = line.strip().split(":", 1)[0]
+        if any(key == name or key.startswith(name + "_") for name in CMM_LOC_LIFT):
+            wanted.append(line)
+    if not wanted:
+        raise SystemExit(f"cm_cmm_l_{language}.yml: none of the settings keys are there")
+    text = rename("\n".join(wanted))
+    for was, becomes in CMM_LOC_FIXES[language]:
+        if was not in text:
+            raise SystemExit(
+                f"cm_cmm_l_{language}.yml: «{was[:40]}…» is not in CM's text any "
+                "more. Read what it says now before shipping it: the cut is there "
+                "because this mod has no capital map."
+            )
+        text = text.replace(was, becomes)
+    return ("# Generated by mods/cm_maps/tools/port_from_cm.py - do not edit by hand.\n"
+            "# The four dropdowns are CM's own strings, cut down to the one map this\n"
+            "# mod carries; the page, the groups and the buttons are this mod's.\n"
+            f"\nl_{language}:\n" + CMM_LOC_OWN[language] + text + "\n")
 
 
 def pf_window() -> str:
