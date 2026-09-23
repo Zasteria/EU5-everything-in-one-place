@@ -38,6 +38,7 @@ effect or trigger in the engine's own dumps.
 from __future__ import annotations
 
 import os
+import json
 import re
 import sys
 from pathlib import Path
@@ -271,8 +272,37 @@ def unwritten(root: Path) -> list[str]:
     return found
 
 
+# Ключи, без которых лаунчер мод не показывает вовсе. Куплено 2026-09-20:
+# `marker_throttle` собрался, прошёл все проверки и **не появился в списке
+# модов** — в его `metadata.json` не было `game_custom_data`, а в одиннадцати
+# работающих модах здесь он есть у каждого. Лаунчер про это не говорит ничего.
+METADATA_KEYS = ("name", "id", "version", "game_id", "supported_game_version",
+                 "game_custom_data")
+
+
+def metadata_problems(root: Path) -> list[str]:
+    """Метаданные, без которых мода для лаунчера не существует."""
+    path = root / ".metadata/metadata.json"
+    where = path.relative_to(REPO)
+    if not path.is_file():
+        return [f"{where}: нет файла — лаунчер такую папку модом не считает"]
+    raw = path.read_bytes()
+    found = []
+    if not raw.startswith(b"\xef\xbb\xbf"):
+        found.append(f"{where}: no byte order mark — остальные моды здесь его везут")
+    try:
+        data = json.loads(raw.decode("utf-8-sig"))
+    except ValueError as error:
+        return found + [f"{where}: не разбирается как JSON — {error}"]
+    for key in METADATA_KEYS:
+        if key not in data:
+            found.append(f"{where}: нет ключа `{key}` — мод не появится в "
+                         f"лаунчере, и лаунчер не скажет почему")
+    return found
+
+
 def problems(root: Path) -> list[str]:
-    found: list[str] = []
+    found: list[str] = metadata_problems(root)
     for pattern in PARSED:
         for path in sorted(root.rglob(pattern)):
             if not path.is_file() or not set(path.parts) & set(MOUNTS):

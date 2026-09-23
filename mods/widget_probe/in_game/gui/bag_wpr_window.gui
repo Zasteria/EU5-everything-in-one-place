@@ -1,0 +1,171 @@
+﻿# Пробник виджетов. Мод отладочный: ставится на прогон и снимается.
+#
+# **Главное здесь — секундомер**, первая строка. Сколько реальных секунд занял
+# каждый из последних шести игровых месяцев, свежий слева. Это единственное
+# число, которое двигается, и оно меряет ровно то, на что он жалуется: «месяц
+# идёт всё медленнее». Считает его `bag_wpr_driver.gui`.
+#
+# **Чего здесь больше нет и почему.** Перепись корня через `AccessChild` снята:
+# прогон 2026-09-19 показал, что функция возвращает nullptr на любом номере от 0
+# до 23, то есть перечислить детей ею нельзя. Счётчики окон CM сняты вместе с
+# ней. Обе писали по три строки в `error.log` **каждый кадр** — 698 строк за
+# короткую сессию, — потому что **нулевой виджет гасит всю строку целиком и не
+# печатает `ERROR`**. Пустая строка в этом окне значит «выражение не
+# разрешилось», а не «ноль».
+#
+# `PdxGuiDestroyWidget` работает — подтверждено тем же прогоном, жертва внизу
+# осталась как способ это перепроверить.
+#
+# Панель висит на флаге `bag_wpr_open`, который переключает отдельное окно
+# `bag_wpr_button.gui`: играть с открытым зондом неудобно, и это его слова.
+window = {
+	name = "bag_wpr_window"
+	datacontext = "[GetPlayer]"
+	allow_outside = yes
+	alwaystransparent = no
+	parentanchor = top|left
+	widgetanchor = top|left
+	position = { 20 200 }
+	movable = yes
+	size = { 620 300 }
+	using = bg_window_default_alt
+
+	visible = "[GetVariableSystem.Exists('bag_wpr_open')]"
+
+	vbox = {
+		using = window_margin_alt
+
+		window_header_alt = {
+			blockoverride "header_text" { text = "bag_wpr_title" }
+		}
+
+		vbox = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+			using = bg_secondary_inner_alt
+			margin = { 12 12 }
+			spacing = 4
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wpr_months"
+			}
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wpr_now"
+			}
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wpr_lvl3"
+			}
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wpr_lvl4"
+			}
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 580 -1 }
+				text = "bag_wpr_lvl5"
+			}
+
+			# Скамья для `PdxGuiDestroyWidget`. Жертва — первый ребёнок ряда,
+			# счётчик читает число детей этого же ряда, кнопка бьёт по имени.
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				size = { -1 28 }
+				spacing = 4
+
+				widget = {
+					name = "bag_wpr_victim"
+					size = { 150 24 }
+
+					text_single = {
+						parentanchor = vcenter
+						autoresize = yes
+						text = "bag_wpr_victim_text"
+					}
+				}
+
+				text_single = {
+					layoutpolicy_horizontal = expanding
+					size = { 190 24 }
+					autoresize = no
+					align = left|nobaseline
+					text = "bag_wpr_row_count"
+				}
+
+				button_regular = {
+					size = { 210 26 }
+					tooltip = "bag_wpr_btn_kill_tt"
+					onclick = "[PdxGuiDestroyWidget(PdxGuiWidget.AccessParent.FindChild('bag_wpr_victim'))]"
+					text_single = {
+						parentanchor = center
+						widgetanchor = center
+						autoresize = yes
+						text = "bag_wpr_btn_kill"
+					}
+				}
+			}
+
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				size = { -1 30 }
+				spacing = 4
+
+				button_regular = {
+					size = { 190 26 }
+					tooltip = "bag_wpr_btn_clear_tt"
+					onclick = "[ExecuteConsoleCommand('gui.clearwidgets')]"
+					text_single = {
+						parentanchor = center
+						widgetanchor = center
+						autoresize = yes
+						text = "bag_wpr_btn_clear"
+					}
+				}
+
+				button_regular = {
+					size = { 190 26 }
+					tooltip = "bag_wpr_btn_tips_tt"
+					onclick = "[CloseAllTooltips]"
+					text_single = {
+						parentanchor = center
+						widgetanchor = center
+						autoresize = yes
+						text = "bag_wpr_btn_tips"
+					}
+				}
+
+				button_regular = {
+					size = { 190 26 }
+					tooltip = "bag_wpr_btn_close_tt"
+					onclick = "[GetVariableSystem.Toggle('bag_wpr_open')]"
+					text_single = {
+						parentanchor = center
+						widgetanchor = center
+						autoresize = yes
+						text = "bag_wpr_btn_close"
+					}
+				}
+			}
+
+			widget = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+			}
+		}
+	}
+}

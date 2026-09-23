@@ -1,0 +1,34 @@
+﻿# Секундомер. Считает, сколько реальных секунд занимает игровой месяц.
+#
+# **Это единственное число в зонде, которое двигается**, и ради него он и
+# существует: его жалоба — «месяц идёт всё медленнее», а счётчики детей у
+# корня стоят на месте, потому что утечка сидит глубже (прогон 2026-09-19).
+#
+# Форма привода списана с `cm_construct_queue_window.gui`: состояния с
+# `duration` и `next` гоняют друг друга по кругу. `PdxGuiTriggerAllAnimations`
+# здесь нарочно нет — это глобальный обход всего дерева, и именно он, похоже,
+# и стоит CM дорого.
+widget = {
+	name = "bag_wpr_driver"
+	# `_show` ловит переход в видимость, а не рождение: без этой строки привод
+	# родится уже видимым и первое состояние не запустится никогда
+	# (`docs/pitfalls/windows.md`, форма — `cm_construct_queue_window.gui`).
+	visible_at_creation = no
+	visible = "[GetPlayer.Exists]"
+	position = { -10000 1 }
+	size = { 0 0 }
+
+	state = {
+		name = _show
+		duration = 1.0
+		on_finish = "[GetScriptedGui('bag_wpr_tick').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+		next = bag_wpr_beat
+	}
+
+	state = {
+		name = bag_wpr_beat
+		duration = 1.0
+		on_finish = "[GetScriptedGui('bag_wpr_tick').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+		next = bag_wpr_beat
+	}
+}

@@ -70,69 +70,45 @@ never plateaus.
 новое — растёт, когда новое кончается — встаёт. Значит плато зависит от того,
 сколько разного успел посмотреть, а не от времени.
 
-**The engine offers nothing to release them.** `dump_data_types` has no widget
-`Destroy`, `Clear`, `Free`, `Collect` or `Prune` — the only such names belong to
-buildings, editors and variable systems. `PdxGuiWidget` can be hidden, found,
-counted and animated, and that is all. So there is no mod-side call that undoes
-this; a fix has to be something that stops the widgets being made.
+**Освобождающий вызов у движка есть — и это выяснилось только 2026-09-19.**
+`PdxGuiDestroyWidget( Arg0 )`, «Destroy widget», глобальная функция
+(`data_types_gui.txt:287`). Прошлый поиск шёл по методам типов и глобальную не
+увидел, поэтому здесь и в `SETTLED.md` стояло «нельзя». Рядом —
+`ExecuteConsoleCommand` и консольная команда **`gui.clearwidgets`**, которой
+игра гасит свою библиотеку интерфейса (`ui_library.gui:18261`).
 
-### The candidate, and the lever that goes with it
+**И она работает — прогон 2026-09-19.** Кнопка зонда нажата, виджет пропал,
+счётчик детей ряда упал. В игровых файлах функция не встречается ни разу, так
+что доказательство только своё.
 
-Hover. It fits everything: idle costs nothing because an unmoving mouse shows no
-tooltips; clicking through diplomacy sweeps the pointer over dozens of new flags,
-names and numbers; map modes sweep it over a new legend each time; and the decay
-within a block is what a per-subject tooltip cache would look like.
+**Метлы из этого не выходит, и это тоже прогон, а не довод.** `AccessChild`
+вернул `nullptr` на каждом номере от 0 до 23 у контейнера с 23 детьми
+(2026-09-19), а список виджетов не отдаёт ни один тип в дампах. `FindChild`
+берёт имя. Значит уничтожить можно только названное заранее, а у накопленного
+имён, известных моду, нет.
 
-**And the defines say tooltips are built with no delay at all.**
-`game/loading_screen/common/defines/jomini/00_tooltips.txt`, in full:
+Отсюда пробник: [`mods/widget_probe`](../../mods/widget_probe/CLAUDE.md) —
+жертва со счётчиком (работает ли вызов), цепочка родителей с числом детей (есть
+ли один контейнер, который держит утечку) и кнопки на `gui.clearwidgets` и
+`CloseAllTooltips`. Один прогон, без секундомера.
 
-```
-NTooltip = {
-    OPEN_DELAYED_TIME = 0.0f;
-    CLOSE_TIME = 0.2f;
-    TENDENCY_BUFFER = 15;
-    MIDDLE_MOUSE_LOCK_TIME = 0.25;
-    MOUSE_MOVE_DISTANCE_TO_UPDATE_TOOLTIP_POSITION = 10.0f;
-    MOUSE_MOVE_DURATION_TO_UPDATE_TOOLTIP_POSITION = 0.2;
-}
-```
+### Подсказки от мыши — версия отвергнута 2026-09-20
 
-Zero delay means every brush of the cursor over anything builds a tooltip
-immediately. Sweeping across the map builds them by the dozen a second.
+**Его слово: «про подсказки от мышки тоже забудь — это бред».** Ниже — разбор,
+который к этому привёл; он остаётся как запись, а не как план. Дефайн
+`OPEN_DELAYED_TIME = 0.0f` в файле действительно стоит, но поверх лежит
+настройка игры, так что сам по себе он про его игру не говорит ничего, и
+предлагать «потыкай настройки» вместо разбора — не ответ.
 
-That file's own first line is `# This file overrides
-cw/jomini/modules/tooltip_manager/data/common/defines/jomini/00_tooltips.txt`, so
-overriding a defines file is the ordinary mechanism and **a mod can do the same
-thing**. If hover is the source, a one-file mod setting `OPEN_DELAYED_TIME` to
-something like `0.35f` cuts the creation rate by whatever fraction of hovers are
-incidental — which is most of them.
+**И перепись виджетов его опыту не соответствует.** Таблица ниже говорит, что
+течёт работа руками; он говорит обратное: большая война с сотнями значков
+отрядов роняет игру **сразу**, а тихое развитие с тысячей кликов по картам вреда
+не приносит. Значит перепись мерила не ту популяцию, которая стоит дорого.
+Живая дорога теперь — `max_update_rate` на значках
+([`../../mods/marker_throttle/CLAUDE.md`](../../mods/marker_throttle/CLAUDE.md)).
 
-Better still, the game's own **Settings → Tooltip Settings → Show Delay** almost
-certainly drives the same value. So the setting tests the mod before the mod is
-written.
-
-### The run that decides it
-
-One session, one save, paused throughout:
-
-1. **A** — move the mouse over the map and the top bar for two minutes, sweeping
-   across countries and buttons, **without a single click**.
-2. Settings → Tooltip Settings: `Show Delay` to **maximum**, `Map Tooltips` to
-   **Disabled**, `Map tooltips delay` to **maximum**.
-3. **B** — exactly the same two minutes of sweeping.
-
-Then `performance_degradation.log`.
-
-- **A leaks and B does not** → the mechanism is tooltips. Write the defines mod,
-  and then look at what else can be trimmed from the heaviest tooltip files
-  (`shared/location_tooltips.gui` 438 widgets, `shared/combat_tooltips.gui` 428,
-  `cooltip.gui` 627).
-- **A leaks and B leaks the same** → the delay is not the knob, but hover still
-  is. Then the tooltip `.gui` files are the place to look.
-- **A does not leak at all** → hover is out entirely and the leak needs clicks.
-  The next test is then the same panel opened thirty times against thirty
-  different panels opened once, which separates a per-open leak (a mod can make
-  panels cheaper) from a per-object cache (only Paradox can).
+Разбор версии и прогон, который её решал бы, вынесены:
+[`../archive/widget_leak_tooltip_theory.md`](../archive/widget_leak_tooltip_theory.md).
 
 ### The other route, if the run does not settle it
 
@@ -179,6 +155,45 @@ the owner an evening and none of them is to be measured again.
 | Is it one bad window? | No. Diplomacy +1.86/frame, map modes +1.49, locations +0.29; none zero. | TESTLOG 2026-08-25 |
 | Is it the mod set? | No. Vanilla leaks +1.99/frame against the playset's +1.86. | TESTLOG 2026-08-25 vanilla |
 | Is it anything in this repository? | No. `rgo_bonus_filter` lives in the lightest panel of the three. | same |
-| Can a mod free widgets? | No. `dump_data_types` has no `Destroy`/`Clear`/`Free`/`Collect`/`Prune` on any GUI type. | research/engine.md |
+| Can a mod free widgets? | **Да — прогон 2026-09-19 нажал кнопку и виджет пропал.** `PdxGuiDestroyWidget`, глобальная функция; прошлый поиск шёл по методам типов и её не нашёл. Метлой она пока не станет: список детей не отдаёт никто, уничтожить можно только названное. | research/engine.md |
 | Is there a widget limit or pool size to raise? | No. `NGUI` in `00_defines.txt` is twenty lines of name lengths, queue sizes and alert thresholds. Nothing about pools, caches or arenas. | research/engine.md |
 
+
+## Почему скорость не возвращается, когда нагрузка ушла (2026-09-20)
+
+**Его вопрос:** «очевидно отрисовка убивает производительность… почему тогда
+производительность практически не восстанавливается, когда на карте туман войны,
+один отрядик и немного домиков?»
+
+Потому что платится не за то, что нарисовано сейчас, а за то, что накопилось.
+Замеры выше: 364 виджета в меню, ~37 000 сразу после загрузки партии, **294 013
+через час**, время кадра 14 → 21 мс. Ничего не освобождается.
+
+**И приток — не значки.** Таблица выше это меряла: на паузе, руки прочь, утечка
+**0.00 виджета на кадр** через 10 800 кадров, дважды, при том что значки на
+экране. Рост не следует ни за днями, ни за числом отрядов. Течёт **работа
+руками** — клики по странам, дипломатия, перебор карт. Три часа активной войны —
+это ровно такой профиль.
+
+Поэтому две разные вещи, и путать их нельзя:
+
+- **Покадровая цена отрисовки** — настоящая, и она **возвращается**: закрыл
+  карту прав, разошлись армии — тики ускорились, он это видел сам.
+- **Утечка** — от его же рук, и она **не возвращается** ничем, кроме выхода в
+  меню. Всё, что обходит дерево виджетов, платит за накопленное, а не за
+  видимое: покадровые ворота и `PdxGuiTriggerAllAnimations` (глобальная, слив
+  очереди CM зовёт её кругами).
+
+Отсюда и форма, которую он описывает третий раз: первый час хорошо, второй
+терпимо, третий душит, **лечится только перезагрузкой** — выход в меню сбрасывает
+накопленное, а больше ничто его не сбрасывает.
+
+**Урезать покадровый счёт ванильных значков** (переопределить типы) — это про
+FPS, а не про утечку. Освободить накопленное упирается в то, что уничтожить можно
+только названное по имени.
+
+**`gui.clearwidgets` из кандидатов выбыл, 2026-09-20.** В игре это **кнопка
+закрытия окна UI Library** (`ui_library.gui:18261`), а не метла: она гасит
+виджеты самого отладочного окна. Его наблюдение того же дня: команда и так
+печатается в консоль время от времени сама, и игре это не помогает. Кнопка в
+зонде остаётся, но ждать от неё нечего.
