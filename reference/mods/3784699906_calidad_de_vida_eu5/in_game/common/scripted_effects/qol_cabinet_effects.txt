@@ -1,0 +1,80 @@
+﻿# Calidad de vida EU5 - cabinet action "at max" alerts.
+#
+# The mod stops the stabilize_country / strengthen_government actions from
+# auto-completing at 100 (is_finished removed), so the player keeps the reduced
+# upkeep cost of staying at max while the action runs. These checks raise a CMF
+# alert when a human player's active cabinet action first reaches its max, so the
+# player knows they can cancel it manually to free the slot.
+#
+# Edge-detection via a saved country variable qol_cab_watch_<action>, which
+# survives save/load, so the alert is raised once per crossing of the threshold:
+#   - action active + value at max + not tracked -> start tracking + raise alert
+#   - action cancelled / value below max / toggle off -> drop tracking + clear alert
+# Left-clicking the alert dismisses it (cmf_on_callback, handled in
+# qol_cabinet_cmm_effects.txt) without re-raising while the value stays at max.
+#
+# Gated on the "Enable Cabinet Action Alerts" CMM toggle (qol__cab_enable_alerts,
+# qol_cabinet_cmm_effects.txt). Scope: country.
+
+# Run both cabinet-action checks. Scope: country (monthly_country_pulse).
+qol_cab_check_all = {
+	qol_cab_check_stabilize = yes
+	qol_cab_check_strengthen = yes
+}
+
+# Stabilize Country reached 100 stability.
+# Scope: country.
+qol_cab_check_stabilize = {
+	# Currently at the max (toggle on + action active + stability at 100).
+	if = {
+		limit = {
+			has_variable = qol__cab_enable_alerts
+			any_cabinet = {
+				has_cabinet_action = yes
+				cabinet_action = cabinet_action:stabilize_country
+			}
+			stability >= 100
+		}
+		# Edge: first pulse reaching the max -> track + raise the alert.
+		if = {
+			limit = { NOT = { has_variable = qol_cab_watch_stabilize } }
+			set_variable = { name = qol_cab_watch_stabilize value = yes }
+			cmf_show_alert = { alert = qol_cab_ready_stabilize }
+		}
+	}
+	else = {
+		# Action cancelled, value dropped or toggle off: drop tracking + clear alert.
+		if = {
+			limit = { has_variable = qol_cab_watch_stabilize }
+			remove_variable = qol_cab_watch_stabilize
+			cmf_remove_alert = { alert = qol_cab_ready_stabilize }
+		}
+	}
+}
+
+# Strengthen Government reached 100 government power.
+# Scope: country.
+qol_cab_check_strengthen = {
+	if = {
+		limit = {
+			has_variable = qol__cab_enable_alerts
+			any_cabinet = {
+				has_cabinet_action = yes
+				cabinet_action = cabinet_action:strengthen_government
+			}
+			government_power >= 100
+		}
+		if = {
+			limit = { NOT = { has_variable = qol_cab_watch_strengthen } }
+			set_variable = { name = qol_cab_watch_strengthen value = yes }
+			cmf_show_alert = { alert = qol_cab_ready_strengthen }
+		}
+	}
+	else = {
+		if = {
+			limit = { has_variable = qol_cab_watch_strengthen }
+			remove_variable = qol_cab_watch_strengthen
+			cmf_remove_alert = { alert = qol_cab_ready_strengthen }
+		}
+	}
+}

@@ -1,0 +1,80 @@
+﻿# Francia: National Destinies new formable, the Frankish restoration.
+# The tier 4 that continues France, and the Frankish capstone of the
+# Burgundian chains. Approved design: PLAN.md section 10, "the France
+# package", item 4 (2026-09-10).
+FRK_f = {
+
+	level = 4
+	required_locations_fraction = 0.6
+	rule = plausible
+	# Listed from day one (user ruling 2026-09-10): France starts with no land
+	# in these imperial areas, so the default would hide its own tier 4 until
+	# the first conquest there. Vanilla precedent: IRE_high_kingship_f,
+	# IRE_lordship_of_ireland_f, ROM_BYZ_f.
+	potential_requires_own = no
+
+	# No religion gate (user ruling). The tag clauses admit rulers the culture
+	# group misses: vanilla LOT_f accepts rhine_alemannic and GBU_f accepts
+	# low_franconian and frisian, none of them in french_group.
+	potential = {
+		OR = {
+			culture = { has_culture_group = culture_group:french_group }
+			has_or_had_tag = GBU
+			has_or_had_tag = LOT
+		}
+	}
+
+	allow = {
+		# Any cause of the Empire's end counts, so a multiplayer rival who
+		# dismantles it does not strand the formable. The check is permanent:
+		# the Empire can never be recreated (international_organizations/
+		# hre.txt:169, create_visible_trigger = { always = no }).
+		custom_tooltip = {
+			text = FRK_f_hre_gone_tt
+			NOT = { exists = international_organization:hre }
+		}
+		owns = location:paris
+		owns = location:aachen
+		owns = location:frankfurt
+		in_civil_war = no
+		has_any_active_disaster = no
+	}
+
+	name = FRK
+	flag = FRK
+	adjective = FRK_ADJ
+	tag = FRK
+	color = map_FRK
+
+	# Imperial land only, no france_region, so the share must be taken from
+	# the Empire: 245 locations, 231 held by Empire members and none by France
+	# at start, so 0.6 is about 147. Paris sits outside on purpose.
+	areas = {
+		rhineland_area
+		hesse_area
+		lorraine_area
+		alsace_area
+		franche_comte_area
+		brabant_area
+		holland_area
+		wallonia_area
+		friesland_area
+		lombardy_area
+	}
+
+	form_effect = {
+		# Formation markers live here, not only in the event's options, so a
+		# scripted formation whose popup is never answered still unlocks the
+		# content gated on them.
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_frk_formed
+		}
+		if = {
+			limit = { country_rank_level < 4 }
+			set_country_rank_effect = { rank = country_rank:rank_empire }
+		}
+		trigger_event_non_silently = nd_frk.1
+		add_stability = stability_severe_bonus
+	}
+}

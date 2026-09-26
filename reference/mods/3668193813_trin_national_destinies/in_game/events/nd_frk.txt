@@ -1,0 +1,481 @@
+﻿namespace = nd_frk
+
+# === Formation Event: Francia Restored ===
+# The realm that the Treaty of Verdun split in 843 is whole again, over
+# subjects who speak French, German, Dutch, Frisian and Lombard. The two
+# options are the two legal principles the Carolingian realm lived under at
+# once: capitularies that bound every subject, and the leges nationum that
+# left each people its own law. Neither is army versus economy.
+nd_frk.1 = {
+	type = country_event
+	title = nd_frk.1.t
+	# A republic can form Francia (the potential has no government gate), so
+	# the scene must not assume a crowned ruler.
+	desc = {
+		first_valid = {
+			triggered_desc = {
+				trigger = { government_type = government_type:republic }
+				desc = nd_frk.1.d_republic
+			}
+			triggered_desc = {
+				desc = nd_frk.1.d
+			}
+		}
+	}
+	outcome = positive
+	# Per-country guard, not fire_only_once: that is per CAMPAIGN
+	# (events/readme.txt:62), so an earlier former would burn the popup for
+	# every later one. form_effect already sets nd_formed and nd_frk_formed,
+	# so the content never depends on this popup being answered.
+	trigger = {
+		NOT = { has_variable = nd_frk_e1_done }
+	}
+	immediate = {
+		hidden_effect = { set_variable = nd_frk_e1_done }
+	}
+
+	# Path A: One law over all.
+	option = {
+		name = nd_frk.1.a
+		add_country_modifier = {
+			modifier = nd_frk_one_law_over_all
+			years = 40
+			mode = add_and_extend
+		}
+		change_societal_value = {
+			type = centralization_vs_decentralization
+			value = societal_value_large_move_to_left
+		}
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_frk_formed
+			set_variable = nd_frk_path_a
+		}
+	}
+
+	# Path B: Each people under its own law.
+	option = {
+		name = nd_frk.1.b
+		add_country_modifier = {
+			modifier = nd_frk_law_of_the_peoples
+			years = 40
+			mode = add_and_extend
+		}
+		change_societal_value = {
+			type = centralization_vs_decentralization
+			value = societal_value_large_move_to_right
+		}
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_frk_formed
+			set_variable = nd_frk_path_b
+		}
+	}
+}
+
+# === DHE: The Shrine at Aachen ===
+# From 1349 the relics of Aachen were shown to pilgrims every seventh year,
+# and the crowds rivalled Rome's. The same church was the coronation church
+# of the German kings from 936 to 1531. A shrine can serve the crowd or the
+# crown, and the choice sets what Charlemagne's tomb means to the realm.
+nd_frk.2 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = FRK
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_frk_sanctus_karolus
+	}
+
+	title = nd_frk.2.t
+	desc = nd_frk.2.d
+	outcome = neutral
+
+	option = {
+		name = nd_frk.2.a
+		add_country_modifier = {
+			modifier = nd_frk_relics_shown
+			years = 20
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_frk.2.b
+		add_country_modifier = {
+			modifier = nd_frk_coronation_church
+			years = 20
+			mode = add_and_extend
+		}
+	}
+}
+
+# === DHE: Karl or Charles ===
+# In 1501 Jakob Wimpfeling's Germania argued that Charlemagne was a German
+# and that the left bank of the Rhine had never been French. In 1502 Thomas
+# Murner answered from the same city, Strasbourg, that he was French. For
+# every other realm this was a quarrel between neighbours. For Francia it is
+# a question about which half of the realm is its heart.
+nd_frk.3 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = FRK
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_frk_germania_debate
+	}
+
+	title = nd_frk.3.t
+	desc = nd_frk.3.d
+	outcome = neutral
+
+	option = {
+		name = nd_frk.3.a
+		add_country_modifier = {
+			modifier = nd_frk_karl_of_the_rhine
+			years = 20
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_frk.3.b
+		add_country_modifier = {
+			modifier = nd_frk_charles_of_the_franks
+			years = 20
+			mode = add_and_extend
+		}
+	}
+}
+
+# === DHE: Which Law the Court Keeps ===
+# The Chamber Court of 1495 was staffed half by doctors of Roman law, and
+# its ordinance made the learned common law the default wherever local
+# custom could not be proved. That reception of Roman law is what displaced
+# the lay assessors of the village courts across the Rhineland.
+nd_frk.4 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = FRK
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_frk_court_ordinance
+	}
+
+	title = nd_frk.4.t
+	desc = nd_frk.4.d
+	outcome = neutral
+
+	option = {
+		name = nd_frk.4.a
+		add_country_modifier = {
+			modifier = nd_frk_learned_law
+			years = 20
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_frk.4.b
+		add_country_modifier = {
+			modifier = nd_frk_custom_of_the_land
+			years = 20
+			mode = add_and_extend
+		}
+	}
+}
+
+# === DHE: The Tolls of the Rhine ===
+# Some thirty toll stations stood on the Rhine between Basel and the sea.
+# The octroi convention of 1804 replaced them with one uniform duty, and the
+# Congress of Vienna in 1815 declared the river free and set a commission at
+# Mainz to make it so; the Mainz Convention of 1831 finished the work.
+# Francia holds both banks and can decide the question alone.
+nd_frk.5 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = FRK
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_frk_free_navigation
+	}
+
+	title = nd_frk.5.t
+	desc = nd_frk.5.d
+	outcome = neutral
+
+	option = {
+		name = nd_frk.5.a
+		add_country_modifier = {
+			modifier = nd_frk_free_rhine
+			years = 20
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_frk.5.b
+		add_country_modifier = {
+			modifier = nd_frk_rhine_octroi
+			years = 20
+			mode = add_and_extend
+		}
+	}
+}
+
+# ===== DESTINY EVENTS =====
+
+# === Destiny: Renovatio Regni Francorum ===
+# Charlemagne's bull read Renovatio Romani imperii; from 814 Louis the Pious
+# changed it to Renovatio regni Francorum.
+nd_frk.6 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = FRK
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_frk_destiny
+	}
+
+	title = nd_frk.6.t
+	desc = nd_frk.6.d
+	outcome = neutral
+
+	option = {
+		name = nd_frk.6.a
+	}
+}
+
+# === Destiny A1: The Saxon Capitulary ===
+nd_frk.7 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = FRK
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_frk_dest_saxon_capitulary
+	}
+
+	title = nd_frk.7.t
+	desc = nd_frk.7.d
+	outcome = neutral
+
+	option = {
+		name = nd_frk.7.a
+	}
+}
+
+# === Destiny A2: Tassilo at Ingelheim ===
+# Gerold's prefecture (788 to 799) against the realm of counts that followed.
+nd_frk.8 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = FRK
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_frk_dest_counts_of_bavaria
+	}
+
+	title = nd_frk.8.t
+	desc = nd_frk.8.d
+	outcome = neutral
+
+	option = {
+		name = nd_frk.8.a
+		add_country_modifier = {
+			modifier = nd_frk_dest_prefect_of_bavaria
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_frk.8.b
+		add_country_modifier = {
+			modifier = nd_frk_dest_counts_of_the_crown
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# === Destiny A3: The Posts of Thionville ===
+# The capitulary of 805 banned selling weapons and mail beyond the posts.
+nd_frk.9 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = FRK
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_frk_dest_thionville
+	}
+
+	title = nd_frk.9.t
+	desc = nd_frk.9.d
+	outcome = neutral
+
+	option = {
+		name = nd_frk.9.a
+		add_country_modifier = {
+			modifier = nd_frk_dest_no_mail_beyond_the_posts
+			years = 20
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_frk.9.b
+		add_country_modifier = {
+			modifier = nd_frk_dest_markets_of_the_posts
+			years = 20
+			mode = add_and_extend
+		}
+	}
+}
+
+# === Destiny B1: The Spanish March ===
+nd_frk.10 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = FRK
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_frk_dest_spanish_march
+	}
+
+	title = nd_frk.10.t
+	desc = nd_frk.10.d
+	outcome = neutral
+
+	option = {
+		name = nd_frk.10.a
+	}
+}
+
+# === Destiny B2: The Treasure of the Ring ===
+# Einhard: no war in memory made the Franks so rich. Charlemagne sent a share
+# to the pope and to Offa of Mercia and gave the rest to churches and magnates.
+nd_frk.11 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = FRK
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_frk_dest_avar_march
+	}
+
+	title = nd_frk.11.t
+	desc = nd_frk.11.d
+	outcome = neutral
+
+	option = {
+		name = nd_frk.11.a
+		add_country_modifier = {
+			modifier = nd_frk_dest_gifts_of_the_ring
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_frk.11.b
+		add_country_modifier = {
+			modifier = nd_frk_dest_hoard_of_aachen
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# === Destiny B3: The Division of the Kingdoms ===
+# The two Carolingian answers: the Divisio regnorum of 806 (equal kingdoms)
+# and the Ordinatio imperii of 817 (one emperor over sub-kings).
+nd_frk.12 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = FRK
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_frk_dest_divisio_regnorum
+	}
+
+	title = nd_frk.12.t
+	desc = nd_frk.12.d
+	outcome = neutral
+
+	option = {
+		name = nd_frk.12.a
+		add_country_modifier = {
+			modifier = nd_frk_dest_kingdoms_of_the_princes
+			years = 20
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_frk.12.b
+		add_country_modifier = {
+			modifier = nd_frk_dest_one_crown_over_the_kings
+			years = 20
+			mode = add_and_extend
+		}
+	}
+}

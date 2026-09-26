@@ -1,0 +1,361 @@
+﻿lbv_niederbayern_mission_pack = {
+	icon = nmt_bavaria
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = LBV
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = { always = yes }
+
+	on_start = { set_variable = lbv_mission_started }
+	on_completion = { remove_variable = lbv_mission_started }
+	on_abort = { remove_variable = lbv_mission_started }
+
+	# ===== ROOT =====
+
+	lbv_straubing_holland_legacy = {
+		icon = bavarian_legitimacy
+		requires = { }
+		enabled = { always = yes }
+		on_completion = {
+			add_country_modifier = { modifier = lbv_legacy_mod years = 20 mode = add }
+		}
+	}
+
+	# ===== A: ランツフート家の礎 =====
+
+	lbv_secure_landshut = {
+		icon = city_building_advance
+		requires = { lbv_straubing_holland_legacy }
+		enabled = {
+			location:landshut = {
+				owner = root
+				total_building_levels >= 15
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:landshut = {
+				add_location_modifier = { modifier = lbv_landshut_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	lbv_danube_trade = {
+		icon = crossroads_of_commerce
+		requires = { lbv_straubing_holland_legacy }
+		enabled = {
+			monthly_income_trade_and_tax >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lbv_danube_mod years = 20 mode = add }
+		}
+	}
+
+	lbv_low_countries_ties = {
+		icon = crossroads_of_commerce
+		requires = { lbv_straubing_holland_legacy }
+		enabled = {
+			OR = {
+				is_allied_with = { target = c:HOL }
+				has_royal_marriage_with = c:HOL
+				is_allied_with = { target = c:BRB }
+				has_royal_marriage_with = c:BRB
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lbv_low_countries_mod years = 20 mode = add }
+		}
+	}
+
+	lbv_bavarian_ambition = {
+		icon = imperial_creed
+		requires = { lbv_secure_landshut lbv_danube_trade lbv_low_countries_ties }
+		enabled = {
+			OR = {
+				c:UBV = { monthly_income_trade_and_tax <= root.monthly_income_trade_and_tax }
+				c:UBV = { is_rival_of = root }
+				location:munich = { owner = root }
+				NOT = { country_exists = c:UBV }
+			}
+		}
+		on_completion = {
+			add_casus_belli = {
+				type = casus_belli:cb_annex
+				target = c:UBV
+				years = 20
+			}
+		}
+	}
+
+	lbv_reunite_bavaria = {
+		icon = imperial_ambitions
+		requires = { lbv_bavarian_ambition }
+		enabled = {
+			OR = {
+				NOT = { country_exists = c:UBV }
+				c:UBV = { is_subject_of = root }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lbv_reunite_mod years = -1 mode = add }
+		}
+	}
+
+	lbv_duke_of_all_bavaria = {
+		icon = legacy_of_great_empires
+		requires = { lbv_reunite_bavaria }
+		enabled = {
+			any_owned_location = {
+				area = area:bavaria_area
+				owner = root
+				count >= 38
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = lbv_events.1
+			set_variable = lbv_bavaria_unified_flag
+		}
+	}
+
+	# ===== ROOT =====
+
+	lbv_unified_duchy = {
+		icon = legacy_of_great_empires
+		requires = { }
+		enabled = { has_variable = lbv_bavaria_unified_flag }
+		on_completion = {
+			add_country_modifier = { modifier = lbv_unified_mod years = 20 mode = add }
+		}
+	}
+
+	# ===== B: 統一公国の再編 =====
+
+	lbv_landrecht = {
+		icon = crown_rights_laws_advance
+		requires = { lbv_unified_duchy }
+		enabled = {
+			OR = {
+				stability >= 60
+				"estate_power(estate_type:crown_estate)" >= 0.25
+			}
+		}
+		on_completion = {
+			unlock_government_reform_effect = { type = lbv_landrecht_reform }
+			add_reform = government_reform:lbv_landrecht_reform
+		}
+	}
+
+
+	lbv_tyrol_ambition = {
+		icon = settle_the_frontier_advance
+		requires = { lbv_unified_duchy }
+		enabled = {
+			OR = {
+				NOT = { country_exists = c:TYR }
+				c:TYR = { is_rival_of = root }
+				has_royal_marriage_with = c:TYR
+				has_insulted = c:TYR
+			}
+		}
+		on_completion = {
+			area:tirol_area = {
+				every_location_in_area = {
+					limit = { NOT = { owner = root } }
+					save_scope_as = temp_location
+					root = {
+						add_casus_belli = {
+							target = scope:temp_location.owner
+							type = casus_belli:cb_conquer_province
+							province = scope:temp_location.province
+							years = 20
+						}
+					}
+				}
+			}
+		}
+	}
+
+	lbv_swabian_expansion = {
+		icon = expansionism
+		requires = { lbv_unified_duchy }
+		enabled = {
+			any_owned_location = {
+				area = area:swabia_area
+				OR = { owner = root owner = { is_subject_of = root } }
+				count >= 2
+			}
+		}
+		on_completion = {
+			area:swabia_area = {
+				every_location_in_area = {
+					limit = { NOT = { owner = root } }
+					save_scope_as = temp_location
+					root = {
+						add_casus_belli = {
+							target = scope:temp_location.owner
+							type = casus_belli:cb_conquer_province
+							province = scope:temp_location.province
+							years = 20
+						}
+					}
+				}
+			}
+		}
+	}
+
+	lbv_greater_bavaria = {
+		icon = imperial_ambitions
+		requires = { lbv_landrecht lbv_tyrol_ambition lbv_swabian_expansion }
+		enabled = {
+			num_locations >= 60
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lbv_greater_mod years = 30 mode = add }
+		}
+	}
+
+	# ===== C: 反宗教改革とカトリック同盟 =====
+
+
+	lbv_counter_reformation_leader = {
+		icon = church_councils
+		requires = { lbv_greater_bavaria }
+		enabled = {
+			OR = {
+				situation:reformation = { situation_is_active = yes }
+				situation:reformation = { situation_has_ended = yes }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lbv_counter_reformation_mod years = 20 mode = add }
+		}
+	}
+
+
+
+	lbv_electoral_dignity = {
+		icon = crown_power_advance_renaissance
+		requires = { lbv_counter_reformation_leader }
+		enabled = {
+			OR = {
+				country_rank_level >= 3
+				any_owned_location = {
+					owner = root
+					count >= 90
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lbv_electoral_dignity_mod years = 20 mode = add }
+			set_country_rank_effect = { rank = country_rank:rank_kingdom }
+		}
+	}
+
+	# ===== D: オーストリアとの対抗、帝冠 =====
+
+	lbv_austrian_rivalry = {
+		icon = austrian_military_flexibility
+		requires = { lbv_electoral_dignity }
+		enabled = {
+			OR = {
+				c:HAB = { is_rival_of = root }
+				NOT = { country_exists = c:HAB }
+				has_royal_marriage_with = c:HAB
+				has_casus_belli = { target = c:HAB type = casus_belli:cb_claim_throne }
+			}
+		}
+		on_completion = {
+			add_casus_belli = {
+				type = casus_belli:cb_claim_throne
+				target = c:HAB
+				target_character = root.ruler
+				years = 20
+			}
+		}
+	}
+
+	lbv_war_of_austrian_succession = {
+		icon = a_fortified_border
+		requires = { lbv_austrian_rivalry }
+		enabled = {
+			OR = {
+				any_current_war = {
+					OR = { attacker_leader = root defender_leader = root }
+					any_war_participant = { NOT = { this = root } this = c:HAB }
+				}
+				NOT = { country_exists = c:HAB }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lbv_succession_war_mod years = 20 mode = add }
+		}
+	}
+
+	lbv_imperial_crown = {
+		icon = imperial_creed
+		requires = { lbv_war_of_austrian_succession }
+		enabled = {
+			OR = {
+				is_leader_of_international_organization = international_organization:hre
+				country_rank_level >= 4
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = lbv_events.3
+		}
+	}
+
+	lbv_enlightened_absolutism = {
+		icon = crown_rights_laws_advance
+		requires = { lbv_electoral_dignity }
+		enabled = {
+			average_country_literacy >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lbv_enlightenment_mod years = 20 mode = add }
+		}
+	}
+
+	# ===== E: 王国の樹立 =====
+
+	lbv_napoleonic_alliance = {
+		icon = liberty_egalite_fraternity
+		requires = { lbv_imperial_crown lbv_enlightened_absolutism }
+		enabled = {
+			c:FRA = { monthly_income_trade_and_tax <= root.monthly_income_trade_and_tax }
+		}
+		on_completion = {
+			add_casus_belli = {
+				type = casus_belli:cb_claim_throne
+				target = c:FRA
+				target_character = root.ruler
+				years = 20
+			}
+		}
+	}
+
+	lbv_kingdom_of_bavaria = {
+		icon = legacy_of_great_empires
+		requires = { lbv_napoleonic_alliance }
+		final = yes
+		enabled = {
+			country_rank_level = 4
+			any_owned_location = {
+				owner = root
+				count >= 500
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = lbv_events.99
+		}
+	}
+}

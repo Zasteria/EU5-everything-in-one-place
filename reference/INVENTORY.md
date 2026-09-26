@@ -13,12 +13,12 @@ python3 tools/refresh.py
 | `3600272327_sakuya` | `sakuya` | 1.6.0 | 1.3.* |
 | `3601047146_glorp_ui` | `glorp.ui` | 10.08.26 | 1.3.* |
 | `3619540530_no_more_becoming_hre` | no metadata | 1.0 | 1.3.10 |
-| `3668193813_trin_national_destinies` | `trin.national_destinies` | 1.3.8 | 1.*.* |
+| `3668193813_trin_national_destinies` | `trin.national_destinies` | 1.3.9 | 1.*.* |
 | `3680208976_sakuya_afterburner` | `sakuya_afterburner` | 1.6.0 | 1.3.* |
 | `3692202776_community_mod_framework` | `community_mod_framework` | 2.4.1 | 1.3.* |
 | `3736668860_construction_manager` | `romaimperator.construction_manager` | 2.2.12 | 1.3.* |
 | `3742578604_national_mission_trees` | `national_mission_trees` | 0.2 | 1.3.10 |
-| `3784699906_calidad_de_vida_eu5` | `calidad_de_vida_eu5` | 1.0.6 | 1.3.* |
+| `3784699906_calidad_de_vida_eu5` | `calidad_de_vida_eu5` | 1.1.0 | 1.3.* |
 | `3789103426_community_mod_framework_dev` | `community_mod_framework.dev` | 2.4.1 | 1.3.* |
 | `3789151637_romaimperator_construction_manager_dev` | `romaimperator.construction_manager.dev` | 2.3.0 | 1.3.* |
 | `3790151926_bag_glorpui_hints` | `bag.glorpui_hints` | 1.1.0 | 1.3.* |

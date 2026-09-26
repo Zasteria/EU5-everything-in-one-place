@@ -1,0 +1,489 @@
+﻿namespace = nd_fra
+
+# nd_fra.1: the kingdom made whole.
+# One event, two deliveries:
+#   game-start France: the monthly gate in 99_nd_on_actions.txt fires it
+#     once the appanages are consolidated (vanilla flavor_fra.1103,
+#     DHE/flavor_FRA.txt:2912, sets the permanent variable
+#     enable_centralized_fra_reform at :2953) or the Hundred Years' War is won
+#     (the gate records nd_fra_won_hyw while victory_in_the_hyw_modifier holds);
+#   any country that forms France: INJECT:FRA_f form_effect.
+# The description follows how the moment was earned. If both deeds are on
+# record at once, the war is the headline. The event sets NO destiny path
+# variable: France's two destiny roads open through deeds, not this choice.
+nd_fra.1 = {
+	type = country_event
+	title = nd_fra.1.t
+	desc = {
+		first_valid = {
+			triggered_desc = {
+				trigger = { has_variable = nd_fra_won_hyw }
+				desc = nd_fra.1.d.hyw
+			}
+			triggered_desc = {
+				trigger = { has_variable = enable_centralized_fra_reform }
+				desc = nd_fra.1.d.appanages
+			}
+			triggered_desc = {
+				desc = nd_fra.1.d.formed
+			}
+		}
+	}
+	outcome = positive
+	# Per-country guard, not fire_only_once: that is per CAMPAIGN
+	# (events/readme.txt:62), so a France that falls and is formed again
+	# would never see its founding moment. Country variables die with the
+	# country, so this guard re-arms on re-formation.
+	trigger = {
+		NOT = { has_variable = nd_fra_e1_done }
+	}
+	immediate = {
+		hidden_effect = { set_variable = nd_fra_e1_done }
+	}
+
+	# Bodin's sovereignty: one king, one faith, one law.
+	option = {
+		name = nd_fra.1.a
+		add_country_modifier = {
+			modifier = nd_fra_un_roi_une_foi_une_loi
+			years = 30
+			mode = add_and_extend
+		}
+		change_societal_value = {
+			type = absolutism_vs_liberalism
+			value = societal_value_move_to_left
+		}
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_fra_formed
+		}
+		ai_chance = { base = 1 }
+	}
+	# Seyssel's tempered monarchy: the three bridles of religion, justice
+	# and police (La Grande Monarchie de France, 1519).
+	option = {
+		name = nd_fra.1.b
+		add_country_modifier = {
+			modifier = nd_fra_monarchie_temperee
+			years = 30
+			mode = add_and_extend
+		}
+		change_societal_value = {
+			type = absolutism_vs_liberalism
+			value = societal_value_move_to_right
+		}
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_fra_formed
+		}
+		ai_chance = { base = 1 }
+	}
+}
+
+# DHE 2: The Concordat of Bologna (1516)
+nd_fra.2 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = FRA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_fra_concordat_de_bologne
+	}
+
+	title = nd_fra.2.t
+	desc = nd_fra.2.d
+	outcome = neutral
+
+	option = {
+		name = nd_fra.2.a
+		add_country_modifier = {
+			modifier = nd_fra_benefices_du_roi
+			years = 20
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_fra.2.b
+		add_country_modifier = {
+			modifier = nd_fra_libertes_gallicanes
+			years = 20
+			mode = add_and_extend
+		}
+	}
+}
+
+# DHE 3: The silk staple of Lyon (1536 letters patent, 1540 monopoly)
+nd_fra.3 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = FRA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_fra_soieries_de_lyon
+	}
+
+	title = nd_fra.3.t
+	desc = nd_fra.3.d
+	outcome = neutral
+
+	option = {
+		name = nd_fra.3.a
+		add_country_modifier = {
+			modifier = nd_fra_lyon_silk_staple
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_fra.3.b
+		add_country_modifier = {
+			modifier = nd_fra_soieries_du_royaume
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# DHE 4: The Canal of the Two Seas opens (May 1681)
+nd_fra.4 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = FRA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_fra_canal_des_deux_mers
+	}
+
+	title = nd_fra.4.t
+	desc = nd_fra.4.d
+	outcome = positive
+
+	option = {
+		name = nd_fra.4.a
+		add_country_modifier = {
+			modifier = nd_fra_canal_des_deux_mers_opened
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# DHE 5: The quarrel of the Reds and the Blues (Gribeauval, 1765 to 1776)
+nd_fra.5 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = FRA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_fra_systeme_gribeauval
+	}
+
+	title = nd_fra.5.t
+	desc = nd_fra.5.d
+	outcome = neutral
+
+	option = {
+		name = nd_fra.5.a
+		add_country_modifier = {
+			modifier = nd_fra_les_bleus
+			years = 20
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_fra.5.b
+		add_country_modifier = {
+			modifier = nd_fra_les_rouges
+			years = 20
+			mode = add_and_extend
+		}
+	}
+}
+
+# DHE 6: The decree of 23 August 1793. Gated on is_revolutionary because the
+# text is the Convention's; a royal France keeps the advance and its levy
+# (the milice of 1688 is the royal precedent) but not this popup.
+nd_fra.6 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = FRA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_fra_requisition_permanente
+		is_revolutionary = yes
+	}
+
+	title = nd_fra.6.t
+	desc = nd_fra.6.d
+	outcome = neutral
+
+	option = {
+		name = nd_fra.6.a
+		add_country_modifier = {
+			modifier = nd_fra_nation_en_armes
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# ===== DESTINY EVENTS =====
+# Numbering starts at nd_fra.8: the brief for this tree listed nd_fra.1 to
+# nd_fra.7 as taken. Stage 2 modifiers last 15 years, stage 3 modifiers 20.
+
+# DHE 8: the destiny of France opens
+nd_fra.8 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = FRA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_fra_destiny
+	}
+
+	title = nd_fra.8.t
+	desc = nd_fra.8.d
+	outcome = neutral
+
+	option = {
+		name = nd_fra.8.a
+	}
+}
+
+# DHE 9: the Three Bishoprics (1552)
+nd_fra.9 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = FRA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_fra_dest_trois_eveches
+	}
+
+	title = nd_fra.9.t
+	desc = nd_fra.9.d
+	outcome = neutral
+
+	option = {
+		name = nd_fra.9.a
+	}
+}
+
+# DHE 10: Strasbourg, 1681
+nd_fra.10 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = FRA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_fra_dest_alsace
+	}
+
+	title = nd_fra.10.t
+	desc = nd_fra.10.d
+	outcome = neutral
+
+	option = {
+		name = nd_fra.10.a
+		add_country_modifier = {
+			modifier = nd_fra_dest_affaires_d_alsace
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_fra.10.b
+		add_country_modifier = {
+			modifier = nd_fra_dest_chambres_de_reunion
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# DHE 11: the natural frontiers
+nd_fra.11 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = FRA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_fra_dest_frontieres_naturelles
+	}
+
+	title = nd_fra.11.t
+	desc = nd_fra.11.d
+	outcome = neutral
+
+	option = {
+		name = nd_fra.11.a
+		add_country_modifier = {
+			modifier = nd_fra_dest_rhin_rempart
+			years = 20
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_fra.11.b
+		add_country_modifier = {
+			modifier = nd_fra_dest_rhin_passage
+			years = 20
+			mode = add_and_extend
+		}
+	}
+}
+
+# DHE 12: the English driven out
+nd_fra.12 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = FRA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_fra_dest_calais
+	}
+
+	title = nd_fra.12.t
+	desc = nd_fra.12.d
+	outcome = neutral
+
+	option = {
+		name = nd_fra.12.a
+	}
+}
+
+# DHE 13: Beachy Head and La Hougue (1690 and 1692)
+nd_fra.13 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = FRA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_fra_dest_la_royale
+	}
+
+	title = nd_fra.13.t
+	desc = nd_fra.13.d
+	outcome = neutral
+
+	option = {
+		name = nd_fra.13.a
+		add_country_modifier = {
+			modifier = nd_fra_dest_guerre_d_escadre
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_fra.13.b
+		add_country_modifier = {
+			modifier = nd_fra_dest_guerre_de_course
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# DHE 14: the Second Hundred Years' War
+nd_fra.14 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = FRA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_fra_dest_seconde_guerre_de_cent_ans
+	}
+
+	title = nd_fra.14.t
+	desc = nd_fra.14.d
+	outcome = neutral
+
+	option = {
+		name = nd_fra.14.a
+		add_country_modifier = {
+			modifier = nd_fra_dest_iles_a_sucre
+			years = 20
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_fra.14.b
+		add_country_modifier = {
+			modifier = nd_fra_dest_nouvelle_france
+			years = 20
+			mode = add_and_extend
+		}
+	}
+}
