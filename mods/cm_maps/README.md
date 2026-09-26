@@ -1,8 +1,8 @@
 # CM Maps
 
 Three of Construction Manager's map modes, lifted out and made to stand on their
-own. No Construction Manager, no Community Mod Framework, nothing to configure —
-three entries in the map-mode flyout under **Economy**:
+own. No Construction Manager — three entries in the map-mode flyout under
+**Economy**:
 
 - **Потенциал продовольствия локации** — every land location coloured by how much
   food a level of raw-material village could take out of it, green through black.
@@ -74,10 +74,42 @@ governor scores. `bcm_pf_recompute_now` is still there, marked NOT WIRED UP; a
 CMF-aware version of this mod would call it and have the map already filled the
 first time it opens.
 
-**Search Accuracy is fixed at 3 of 5.** In Construction Manager that is a
-dropdown in the CMF settings page, defaulting to 3; there is no settings page
-here, so 3 is what it is — the same middle setting a CM player gets without
-touching anything. 1 would be exhaustive and slow; 5 fastest and roughest.
+## The settings page
+
+**Community Mod Framework is a dependency**, and the one thing it carries is the
+mod's settings page. Everything else drives itself; without CMF the page is all
+that would be missing, since every setting below is read through an `exists`
+check that falls through to the value the mod used before the page existed.
+
+Under **Recommended Governor**:
+
+- **Search Accuracy**, 1 (Exhaustive) to 5 (Fastest) — how hard the search looks.
+  **It defaults to 1 here, where Construction Manager defaults to 3.** Tiers 2-5
+  leave locations unevaluated and paint them black; that is fine in CM, where the
+  tooltip over a black location tells you to raise the setting, and it was not
+  fine here for as long as there was no setting to raise (2026-09-19). 1 is the
+  only tier that skips nothing. It is also the slowest, so raising it is the
+  first thing to try if the map is slow to fill.
+- **Placement Finder Scoring**, **Land Infrastructure** and **Naval
+  Infrastructure** — Construction Manager's three, at Construction Manager's
+  defaults, which are also what this mod did before the page.
+- **Recompute Governor Placement** — a button. A finished search is cached for
+  four years of game time, so roads, harbors and governors built since do not
+  reach the map until it expires. The button computes now: in front of you if the
+  map is open, on the next opening if not. Changing any of the four settings does
+  the same thing on its own.
+
+Under **Map Data**:
+
+- **Rebuild Map Data** — drops the three load-time stamps and runs the passes
+  again: the industry coverage behind Recommended Urban Rights, food potential,
+  and the river crossings the governor search routes through. Those are computed
+  once per save, so their colours age as the campaign goes on. This is
+  Construction Manager's own `cm_dbg_rebuild_setup`, which CM keeps behind debug
+  mode; in a mod that is three maps it is not a debug button.
+
+Under **Diagnostics**: **Enable Debug Diagnostics**, Construction Manager's path
+dump in the governor tooltip.
 
 ## What was left behind
 
@@ -95,9 +127,9 @@ and those are not here:
   same code the governor map runs — but the mode itself is not published, so that
   half never runs. Publishing it is a two-line change in the porter if it is ever
   wanted.
-- **The manual refresh button.** CM puts one on the CMF action bar while a finder
-  map is open. Without CMF there is nowhere to put it; the four-year cache and the
-  per-load recompute are what refresh the governor map instead.
+- **The action-bar refresh button.** CM puts one on the CMF action bar while a
+  finder map is open. This mod has the same thing as a button on its settings
+  page instead, which is a click further away and does not need the bar.
 
 ## How it is built
 
@@ -108,7 +140,7 @@ python3 mods/cm_maps/tools/port_from_cm.py
 ```
 
 It reads `reference/mods/<construction manager dev>/`, takes the blocks named in
-its own manifest, renames every `cm_` to `bcm_`, applies five wiring changes it
+its own manifest, renames every `cm_` to `bcm_`, applies the wiring changes it
 lists and explains one by one, and then refuses to finish if it left behind a
 name it calls and does not define, or a name it failed to rename. `tools/refresh.py`
 runs it with the other generators, so a Construction Manager update is picked up
