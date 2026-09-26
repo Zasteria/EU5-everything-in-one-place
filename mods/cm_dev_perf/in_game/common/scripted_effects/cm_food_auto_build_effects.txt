@@ -1,0 +1,175 @@
+﻿# Food auto-build effects - marginal comparison and construction dispatch.
+
+# The cm_food_* local vars are owned by the calling effect.
+cm_food_consider_option = {
+	if = { limit = { $CAN$ = yes }
+		set_local_variable = { name = cm_food_m value = $MARGINAL$ }
+		if = { limit = { local_var:cm_food_m > local_var:cm_food_best }
+			set_local_variable = { name = cm_food_best value = local_var:cm_food_m }
+			set_local_variable = { name = cm_food_action value = $ACTION$ }
+		}
+	}
+}
+
+# Root is the location.
+cm_food_stage_building_option = {
+	if = { limit = { local_var:cm_food_action = $ACTION$ $BT$ = { save_temporary_scope_as = cm_building_type } cm_building_meets_minimum_discount = { threshold = cm_get_min_discount_for_auto_food } }
+		$BT$ = { save_scope_as = cm_building_type }
+		cm_stage_food_building_candidate = yes
+	}
+}
+
+# Main per-location effect. Computes each buildable option's food rank, picks the highest, and builds it.
+# Root is the location. Expects scopes: country, location, food_good.
+cm_food_auto_build_in_location = {
+	cm_pop_track = yes
+	# Preconditions: pause, build queue, market access, gold reserve
+	if = { limit = { scope:cm_country = { cm_should_pause_auto_expand = no } }
+	if = { limit = { cm_get_open_build_queue_slots > 0 }
+	if = { limit = { cm_check_location_meets_min_market_access = yes }
+	if = { limit = { cm_check_country_gold_above = { threshold = cm_food_gold_threshold } }
+
+	# Skip the location when no pop-restricted option is buildable.
+	if = { limit = { NOT = { cm_food_location_pops_still_filling = yes } }
+
+		# Track best rank and action: 0=none, 1=rgo, 2=farming_village, 3=windmill, 4=irrigation, 5=fishing_village
+		set_local_variable = { name = cm_food_best value = 0 }
+		set_local_variable = { name = cm_food_action value = 0 }
+
+		# construct_rgo_upgrade has no payer arg, so a subject's RGO can't be overlord-funded.
+		if = { limit = { owner = scope:cm_country }
+			cm_food_consider_option = { CAN = cm_food_can_build_rgo MARGINAL = cm_food_marginal_rgo ACTION = 1 }
+		}
+		cm_food_consider_option = { CAN = cm_food_can_build_farming_village MARGINAL = cm_food_marginal_farming_village ACTION = 2 }
+		cm_food_consider_option = { CAN = cm_food_can_build_windmill MARGINAL = cm_food_rank_windmill ACTION = 3 }
+		cm_food_consider_option = { CAN = cm_food_can_build_irrigation MARGINAL = cm_food_rank_irrigation ACTION = 4 }
+		cm_food_consider_option = { CAN = cm_food_can_build_fishing_village MARGINAL = cm_food_marginal_fishing_village ACTION = 5 }
+
+		# --- Execute best action, discount-gated: if the winner fails min discount, build nothing ---
+		if = { limit = { local_var:cm_food_action = 1 cm_rgo_meets_minimum_discount = { threshold = cm_get_min_discount_for_auto_food } }
+			cm_stage_food_rgo_candidate = yes
+		}
+		cm_food_stage_building_option = { ACTION = 2 BT = building_type:farming_village }
+		cm_food_stage_building_option = { ACTION = 3 BT = building_type:windmill }
+		cm_food_stage_building_option = { ACTION = 4 BT = building_type:irrigation_systems }
+		cm_food_stage_building_option = { ACTION = 5 BT = building_type:fishing_village }
+
+	} # end pops_still_filling check
+	} # end gold reserve
+	} # end market_access
+	} # end build queue
+	} # end pause
+}
+
+# This cycle's opted-in rural locations, most control first, each built out for whichever food
+# its own raw material is. Root is the country.
+cm_food_auto_build_pass = {
+	save_scope_as = cm_country
+
+	ordered_in_list = {
+		variable = cm_slice_locations
+		order_by = max_control
+		max = cm_max_guess_at_number_of_locations
+		check_range_bounds = no
+		limit = {
+			location_rank = location_rank:rural_settlement
+			exists = var:cm_auto_food_location_enabled
+			cm_food_location_rgo_is_on_roster = yes
+		}
+		save_scope_as = cm_location
+		raw_material = { save_scope_as = cm_food_good }
+		cm_food_auto_build_in_location = yes
+	}
+}
+
+# --- Subsidies ---
+
+# Records a food building auto-food has just approved. The engine build action fires from the queue
+# window after this pass, so there is nothing standing to subsidize yet and the entry waits for the
+# next cycle. Root is the location. Expects scope:cm_country, scope:cm_building_type.
+cm_food_mark_subsidize = {
+	if = {
+		limit = {
+			scope:cm_country = { exists = var:cm_ab_food_subsidize }
+			scope:cm_building_type = { cm_is_building_type_production_building = yes }
+		}
+		save_temporary_scope_as = cm_food_sub_loc
+		add_to_variable_list = { name = cm_food_subsidize_types target = scope:cm_building_type }
+		scope:cm_country = { add_to_variable_list = { name = cm_food_subsidize_locs target = scope:cm_food_sub_loc } }
+	}
+}
+
+# Subsidizes the food buildings auto-food built, so one that is not earning still takes on its
+# workers and grows its food. An entry whose level has not appeared yet stays for the next cycle.
+# Root is the country.
+cm_food_apply_subsidies = {
+	if = {
+		limit = { has_variable_list = cm_food_subsidize_locs }
+		save_scope_as = cm_country
+		clear_variable_list = cm_food_sub_drop_locs
+		# Named apart from cm_location and cm_building_type, which the staging that follows in the
+		# same cycle owns.
+		every_in_list = {
+			variable = cm_food_subsidize_locs
+			save_temporary_scope_as = cm_food_sub_loc
+			every_in_list = {
+				variable = cm_food_subsidize_types
+				save_temporary_scope_as = cm_food_sub_type
+				if = {
+					limit = {
+						scope:cm_food_sub_loc = {
+							any_buildings_in_location = {
+								owner = scope:cm_country
+								building_type = scope:cm_food_sub_type
+							}
+						}
+					}
+					scope:cm_food_sub_loc = {
+						"building(scope:cm_food_sub_type|scope:cm_country)" = { set_subsidized = yes }
+						remove_list_variable = { name = cm_food_subsidize_types target = scope:cm_food_sub_type }
+					}
+				}
+			}
+			# A location whose list has emptied is staged rather than dropped where it is found,
+			# which would mutate the walk it is found in.
+			if = {
+				limit = { NOT = { variable_list_size = { name = cm_food_subsidize_types value >= 1 } } }
+				scope:cm_country = { add_to_variable_list = { name = cm_food_sub_drop_locs target = scope:cm_food_sub_loc } }
+			}
+		}
+		every_in_list = {
+			variable = cm_food_sub_drop_locs
+			save_temporary_scope_as = cm_food_sub_loc
+			scope:cm_country = { remove_list_variable = { name = cm_food_subsidize_locs target = scope:cm_food_sub_loc } }
+		}
+		clear_variable_list = cm_food_sub_drop_locs
+	}
+}
+
+# Root is the country. The new tag holds different locations, so the pending marks go with the old
+# one rather than subsidizing buildings it never built.
+cm_food_clear_subsidize_marks = {
+	if = {
+		limit = { has_variable_list = cm_food_subsidize_locs }
+		every_in_list = {
+			variable = cm_food_subsidize_locs
+			clear_variable_list = cm_food_subsidize_types
+		}
+		clear_variable_list = cm_food_subsidize_locs
+	}
+}
+
+# Root is the location. Drops the player's auto-food opt-in where the location is no longer
+# rural. Its cm_auto_food_locked_location modifier runs a thousand years and the toggle's button
+# is hidden above rural rank, so a location that ranks up anyway would block every later rank
+# step with nothing the player can reach to lift it.
+cm_drop_auto_food_toggle_off_rural = {
+	if = {
+		limit = {
+			exists = var:cm_auto_food_location_enabled
+			NOT = { location_rank = location_rank:rural_settlement }
+		}
+		remove_variable = cm_auto_food_location_enabled
+		remove_location_modifier = cm_auto_food_locked_location
+	}
+}

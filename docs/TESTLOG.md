@@ -174,6 +174,11 @@ Inspect есть; clearwidgets — не метла:
 The next session should start here rather than designing anything new. All of
 these are prepared, all are cheap, and the owner has agreed to the hover one.
 
+**`cm_dev_perf` вместо CM Dev, та же партия.**
+Ставится через `mods.bat`, CM Dev в плейсете выключить. Верный ответ: фильтры
+и стройка работают как с CM Dev, тики на её глаз
+быстрее. `widget_probe` она удалила 26.09, зонда нет. Подробно — `mods/cm_dev_perf/CLAUDE.md`.
+
 **`cm_maps`, страница настроек CMF и починка прав — один заход, всё видно
 сразу.** Мод ставится через `mods.bat` → 4, партия та же. Страница должна
 появиться в меню CMF под именем «Карты Construction Manager».

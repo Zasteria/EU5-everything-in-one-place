@@ -1,0 +1,174 @@
+﻿# Every log line this mod writes goes through one of these, gated on its category's toggle in the
+# Debug tab. The action log is a single 200-entry pane shared with every other mod and nothing
+# evicts, so one talkative feature fills it before anything else has said a word.
+#
+# $cat$ is the category's alias suffix and $action$ the localization key. The toggles are global
+# settings, so the alias is a global variable and a lucky nation reads the same one the player set.
+# Categories, registered in cm_cmm_effects.txt: cycle, production, core, food, roads, cleanup,
+# governors, military, government.
+
+# Root is the country.
+cm_dbg_log = {
+	if = {
+		limit = { exists = global_var:cm_dbg_$cat$ }
+		cmf_log = { action = $action$ }
+	}
+}
+
+# Root is the country. $value$ renders as a whole number.
+cm_dbg_log_value = {
+	if = {
+		limit = { exists = global_var:cm_dbg_$cat$ }
+		cmf_log_value = { action = $action$ value = $value$ }
+	}
+}
+
+# Root is the country. Expects scope:cmf_log_loc.
+cm_dbg_log_at_loc = {
+	if = {
+		limit = { exists = global_var:cm_dbg_$cat$ }
+		cmf_log_at_location = { action = $action$ }
+	}
+}
+
+# Root is the country. Expects scope:cmf_log_loc. $arg1$ labels $value$.
+cm_dbg_log_loc = {
+	if = {
+		limit = { exists = global_var:cm_dbg_$cat$ }
+		cmf_log_with_location = { action = $action$ arg1 = $arg1$ value = $value$ }
+	}
+}
+
+# Root is the country. Expects scope:cmf_log_loc. $arg1$ labels all three values.
+cm_dbg_log_loc_values = {
+	if = {
+		limit = { exists = global_var:cm_dbg_$cat$ }
+		cmf_log_with_location_values = {
+			action = $action$
+			arg1 = $arg1$
+			value = $value$
+			value2 = $value2$
+			value3 = $value3$
+		}
+	}
+}
+
+# Root is the country. Expects scope:cmf_log_bt and scope:cmf_log_loc.
+cm_dbg_log_bld = {
+	if = {
+		limit = { exists = global_var:cm_dbg_$cat$ }
+		cmf_log_with_building_location = {
+			action = $action$
+			arg1 = $arg1$
+			arg2 = $arg2$
+			value = $value$
+			value2 = $value2$
+		}
+	}
+}
+
+# Console: effect location:<key> = { owner = { cm_dbg_alias_probe = yes } }
+# The Core Goods category as the gate above sees it, beside the value the settings menu shows, so a
+# category that reads on in the menu and off at the gate is separable from one that is simply off.
+# Ungated, or it could not report a category being off. Root is the country.
+cm_dbg_alias_probe = {
+	save_temporary_scope_value_as = {
+		name = cm_dbg_alias_gate
+		value = {
+			value = 0
+			if = {
+				limit = { exists = global_var:cm_dbg_core }
+				value = 1
+			}
+		}
+	}
+	save_temporary_scope_value_as = {
+		name = cm_dbg_alias_stored
+		value = {
+			value = -1
+			if = {
+				limit = {
+					has_global_variable_map = cmm
+					is_key_in_global_variable_map = { name = cmm target = flag:cm__log_core }
+				}
+				value = "global_variable_map(cmm|flag:cm__log_core)"
+			}
+		}
+	}
+	cmf_log_value = { action = cm_log_dbg_gate value = scope:cm_dbg_alias_gate }
+	cmf_log_value = { action = cm_log_dbg_stored value = scope:cm_dbg_alias_stored }
+}
+
+# The Debug tab's probe buttons run the same probes as the console commands. Clicking one is the
+# request the same way typing the command is, so a probe whose lines go through a category-gated
+# wrapper arms that category for the call and re-syncs it from the setting afterwards.
+
+# The location cm_ab_core_watch_on marked, or the capital. $PROBE$ = the probe effect.
+# Root is the country.
+cm_dbg_probe_location = {
+	if = {
+		limit = { exists = var:cm_ab_core_watch_loc }
+		var:cm_ab_core_watch_loc = { $PROBE$ = yes }
+	}
+	else = {
+		capital = { $PROBE$ = yes }
+	}
+}
+
+# Root is the country.
+cm_dbg_probe_production_anchors = {
+	set_global_variable = { name = cm_dbg_production value = yes }
+	cm_ab_prod_anchor_probe = yes
+	cmm_sync_bool_alias = { setting = cm__log_production alias = cm_dbg_production }
+}
+
+# Root is the country.
+cm_dbg_probe_production_rgo = {
+	set_global_variable = { name = cm_dbg_production value = yes }
+	cm_dbg_probe_location = { PROBE = cm_ab_rgo_why_probe }
+	cmm_sync_bool_alias = { setting = cm__log_production alias = cm_dbg_production }
+}
+
+# Root is the country.
+cm_dbg_probe_core = {
+	set_global_variable = { name = cm_dbg_core value = yes }
+	cm_dbg_probe_location = { PROBE = cm_ab_core_probe }
+	cmm_sync_bool_alias = { setting = cm__log_core alias = cm_dbg_core }
+}
+
+# Console diagnostic: effect location:<key> = { cm_dbg_indirect_probe = yes }
+# Reports the marginal chain per producing building: whether the classification's good still
+# matches the method the building runs, the price that good fetches in its market, and how much of
+# its full output the building is making. Producing types only, since the term applies to no other.
+# The age step is left out because it is a per-age constant, and the two decimals the log renders
+# would show every one of them as 0.00. Ungated like every other probe. Root is the location.
+cm_dbg_indirect_probe = {
+	save_temporary_scope_as = cm_dbg_prod_loc
+	save_temporary_scope_as = cmf_log_loc
+	every_buildings_in_location = {
+		limit = {
+			owner = scope:cm_dbg_prod_loc.owner
+			building_type = { cm_is_building_type_production_building = yes }
+		}
+		building_type = {
+			save_temporary_scope_as = cm_building_type
+			save_temporary_scope_as = cmf_log_bt
+		}
+		scope:cm_dbg_prod_loc.owner = {
+			cmf_log_with_building_location = {
+				action = cm_log_prod_probe
+				arg1 = cm_log_prod_a_match
+				arg2 = cm_log_prod_a_price
+				value = scope:cm_dbg_prod_loc.cm_dbg_good_match_value
+				value2 = scope:cm_dbg_prod_loc.cm_bld_marginal_price
+			}
+			cmf_log_with_building_location = {
+				action = cm_log_prod_probe
+				arg1 = cm_log_prod_a_real
+				arg2 = cm_log_prod_a_lvl
+				value = scope:cm_dbg_prod_loc.cm_bld_marginal_output_realized
+				value2 = scope:cm_dbg_prod_loc.cm_bld_marginal_next_level
+			}
+		}
+	}
+}

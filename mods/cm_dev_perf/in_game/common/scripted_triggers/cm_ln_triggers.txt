@@ -1,0 +1,118 @@
+﻿# Lucky Nations triggers.
+
+# Root is the country. is_ai is part of the test because a human who tag-switches onto a
+# marked country must take the ordinary player path, not the script-construct one.
+cm_ln_is_active = {
+	exists = var:cm_ln_active
+	is_ai = yes
+}
+
+# The engine buildability bools take no country argument and the engine only ever adds an
+# explicit country parameter where it supports acting for someone else (Location.CanBuildArmy
+# beside Location.CanBuildArmyForCountry), so a lucky nation reads the script mirror instead.
+# Root is the location. Expects scope:cm_country, scope:cm_building_type, scope:cm_can_build.
+cm_ln_can_place = {
+	trigger_if = {
+		limit = { scope:cm_country = { cm_ln_is_active = yes } }
+		cm_location_can_place_building = { target = scope:cm_building_type }
+	}
+	trigger_else = {
+		# The engine buildability bool is unverified for subject locations.
+		OR = {
+			NOT = { owner = scope:cm_country }
+			scope:cm_can_build = yes
+		}
+	}
+}
+
+# Root is the location. Expects scope:cm_country. The player's own auto-urbanize carries no
+# tooltip row for this, so only a lucky nation's is gated.
+cm_ln_location_proximity_ok = {
+	trigger_if = {
+		limit = { scope:cm_country = { cm_ln_is_active = yes } }
+		cm_ab_location_has_proximity = yes
+	}
+}
+
+# Root is the building type. The five main-chain forts, the only ones the fort category builds
+# or removes: in_game/common/building_types/forts.txt (stockade :1, castle :49, bastion :97,
+# star_fort :145, fortress :190). city_walls and the unique walls are left standing.
+cm_ln_ft_is_chain_fort = {
+	OR = {
+		this = building_type:stockade
+		this = building_type:castle
+		this = building_type:bastion
+		this = building_type:star_fort
+		this = building_type:fortress
+	}
+}
+
+# Root is the location. Expects scope:cm_country. A fort the yearly teardown could remove.
+cm_ln_ft_has_chain_fort = {
+	any_buildings_in_location = {
+		owner = scope:cm_country
+		cm_is_not_under_construction = yes
+		building_type = { cm_ln_ft_is_chain_fort = yes }
+	}
+}
+
+# Root is the country. Overshooting the limit applies global_defensive -1.0
+# (in_game/common/auto_modifiers/country.txt:1476), so staging stops at the cap.
+cm_ln_ft_has_room = {
+	used_fort_limit < {
+		value = modifier:fort_limit
+		subtract = var:cm_ln_ft_claimed
+	}
+}
+
+# Root is the location. Expects scope:cm_country, scope:cm_building_type.
+cm_ln_ft_site_placeable = {
+	NOT = { has_variable = cm_ln_ft_zx }
+	has_fort = no
+	cm_location_allowed_to_build = { target = scope:cm_building_type }
+}
+
+# Root is the location. Expects scope:cm_building_type. The Military category's own claim on this
+# location, which is what lets a drain walk the shared build list and visit only what it staged.
+# The map is keyed by building type, so the two lines sharing a category code stay apart: border
+# and coastal forts both write cat 6, the manpower chain and the two capital types both write cat 7.
+cm_ln_mil_site_claimed = {
+	has_variable_map = cm_ab_b_cat_$CAT$
+	is_key_in_variable_map = { name = cm_ab_b_cat_$CAT$ target = scope:cm_building_type }
+}
+
+# Root is the country. Whether this country already holds the seeded settings that never move.
+cm_ln_settings_are_current = {
+	exists = var:cm_ln_seed_stamp
+	var:cm_ln_seed_stamp = cm_ln_seed_version_value
+}
+
+# Root is the country. A governor the country has bought and does not have. cm_ln_gov_paid_seats only
+# ever rises, so a seated count below it is a seat already paid for however it came to be missing,
+# and the next placement is not charged again.
+cm_ln_gov_seat_is_prepaid = {
+	exists = var:cm_ln_gov_paid_seats
+	var:cm_ln_gov_paid_seats > cm_gov_seated_value
+}
+
+# Root is the country. The harvest is a real-time GUI pass while the opening move's wait counts
+# game months, so a fast game can burn the whole wait while it is still running. Its cursor moving
+# since the last pulse is what separates that from a harvest that will never finish.
+cm_ln_open_river_advancing = {
+	has_global_variable = cm_pf_river_process
+	OR = {
+		NOT = { exists = var:cm_ln_open_idx }
+		NOT = { var:cm_ln_open_idx = global_var:cm_pf_river_idx }
+	}
+}
+
+# Root is the player's own country. In multiplayer the lucky-nation window's drivers gate on global
+# counters, so without this every client fires the same sweep and every machine runs all of them.
+# is_host reads false while observing, where the root is the AI country being watched, which is what
+# the singleplayer arm covers.
+cm_ln_client_drives = {
+	OR = {
+		is_multiplayer_session = no
+		is_host = yes
+	}
+}

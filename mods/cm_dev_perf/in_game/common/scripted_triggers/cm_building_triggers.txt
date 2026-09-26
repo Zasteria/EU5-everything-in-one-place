@@ -1,0 +1,470 @@
+﻿
+# No scope. True when a completed building-type classification at the current version covers every
+# building type now in the database, so the maps script reads can be trusted without reclassifying.
+# The stamp is written only by the classification's completion branch, so a save taken mid-pass
+# reads false, and the per-type check catches a mod added since, whose types no pass ever saw.
+cm_building_classification_is_current = {
+	has_global_variable = cm_bt_class_stamp
+	global_var:cm_bt_class_stamp = cm_bt_class_version_value
+	NOT = { has_global_variable = cm_process_buildings }
+	has_global_variable_map = cm_building_type_processed
+	NOT = {
+		any_building_type = {
+			NOT = { is_key_in_global_variable_map = { name = cm_building_type_processed target = this } }
+		}
+	}
+}
+
+# Affordability gate for the construction drain.
+cm_country_can_afford_staged_cost = {
+	scope:cm_country = { gold >= { value = scope:cm_cost add = cm_get_minimum_gold add = var:cm_q_planned_spend } }
+}
+
+# Root is the location, expects scope:cm_country. True when the queue window's fire pass builds
+# this approval later, which is what makes cm_q_slots_used the stand-in for the construction the
+# location does not carry yet. A lucky nation and a subject's location both construct at approval
+# instead, so num_civil_constructions already counts them and a claim would double count.
+cm_q_build_is_deferred = {
+	owner = scope:cm_country
+	scope:cm_country = { cm_ln_is_active = no }
+}
+
+# Affordability gate for the auto-expand tooltips.
+cm_country_can_afford_predicted_cost = {
+	scope:cm_country = { gold >= { value = scope:cm_cost add = cm_get_minimum_gold } }
+}
+
+# Expects scopes: building type
+cm_does_building_type_count_for_fort_building_cost_modifier = {
+	AND = {
+		has_global_variable_map = cm_building_type_to_is_fort
+		is_key_in_global_variable_map = { name = cm_building_type_to_is_fort target = scope:cm_building_type }
+		"global_variable_map(cm_building_type_to_is_fort|scope:cm_building_type)" = 1
+	}
+}
+
+# Root is the building
+cm_is_building_obsolete = {
+	building_type = { save_temporary_scope_as = cm_the_building_type }
+	owner = { building_type_is_obsolete = scope:cm_the_building_type }
+}
+# Expects scope:cm_building_type and scope:cm_country. Root scope is unused.
+cm_is_building_type_obsolete = {
+	scope:cm_country = { building_type_is_obsolete = scope:cm_building_type }
+}
+
+# Root is the location, expects scope:cm_building_type. Plain-script mirror of the GUI-only
+# cm_is_auto_expand_active_for_building_type, for use in effect/trigger context.
+# The foreign branch additionally expects scope:cm_country: a foreign location's owner is not
+# the country whose toggles decide this, and its state lives on the acting country instead.
+cm_location_is_auto_expand_active_for_building_type = {
+	trigger_if = {
+		limit = { scope:cm_building_type = { is_foreign = yes } }
+		OR = {
+			cm_fb_is_registered_here = yes
+			AND = {
+				scope:cm_country = { cm_fb_type_is_mass_enabled = yes }
+				cm_fb_is_excluded_here = no
+			}
+		}
+	}
+	trigger_else = {
+		OR = {
+			is_target_in_variable_list = { name = cm_auto_expand_registered_building_types target = scope:cm_building_type }
+			AND = {
+				owner = { is_target_in_variable_list = { name = cm_mass_auto_expand_building_types target = scope:cm_building_type } }
+				NOT = { is_target_in_variable_list = { name = cm_auto_expand_excluded_building_types target = scope:cm_building_type } }
+			}
+		}
+	}
+}
+
+# Root is the building
+cm_is_building_upgradeable = {
+	building_type = { is_upgradeable = yes }
+}
+
+# Root is the location, also expects scope:cm_building_type and scope:cm_country.
+# False if the location doesn't have the building.
+cm_building_type_can_be_upgraded_by_owner = {
+	has_building = scope:cm_building_type
+	"building(scope:cm_building_type|scope:cm_country)" = { building_can_be_upgraded_by = scope:cm_country }
+}
+
+# Root is the building
+cm_is_building_upgradeable_and_can_be_upgraded_by_owner = {
+	AND = {
+		cm_is_building_upgradeable = yes
+		building_can_be_upgraded_by = owner
+	}
+}
+# Root is the location, also expects scope:cm_building_type and scope:cm_country
+cm_is_building_type_upgradeable_and_can_be_upgraded_by_owner = {
+	AND = {
+		scope:cm_building_type = { is_upgradeable = yes }
+		cm_building_type_can_be_upgraded_by_owner = yes
+	}
+}
+
+# Root is the building
+cm_is_building_not_max_level_and_not_obsolete_or_is_building_type_upgradeable_and_can_be_upgraded_by_owner = {
+	OR = {
+		cm_is_building_not_max_level_already_and_not_obsolete = yes
+		cm_is_building_upgradeable_and_can_be_upgraded_by_owner = yes
+	}
+}
+
+# Root is the location. Effective cap is free_building_levels plus the builder's cm_allowed_building_overbuild_levels.
+cm_is_location_under_building_limit = {
+	0 < { value = cm_get_remaining_free_building_levels_allowed ceiling = yes }
+}
+
+# Root is the building
+cm_is_building_not_max_level_already_and_not_obsolete = {
+	AND = {
+		is_at_max_level = no
+		cm_is_building_obsolete = no
+	}
+}
+
+# Expects scope:cm_country.
+cm_expand_metric_is_tax_income = {
+	OR = {
+		NOT = { scope:cm_country = { exists = var:cm_expand_metric } }
+		scope:cm_country.var:cm_expand_metric = 1
+	}
+}
+
+# Expects scope:cm_country. $metric$ = dropdown index 2 to 4.
+cm_expand_metric_is = {
+	scope:cm_country = {
+		exists = var:cm_expand_metric
+		var:cm_expand_metric = $metric$
+	}
+}
+
+# Whether cm_bld_income_value and cm_bld_profit_value read the standing building instead of
+# the engine's type-scope estimate. Root is the location. Expects scope:cm_building_type and
+# scope:cm_profit. scope:cm_old_building_type marks an upgrade item, which is out of scope
+# here and whose Auto-Build scorer passes no profit. Nested rather than one AND list
+# because each read is only valid once the one above it holds, and short-circuiting is
+# unverified.
+cm_bld_use_standing_value = {
+	trigger_if = {
+		limit = {
+			exists = scope:cm_building_type
+			NOT = { exists = scope:cm_old_building_type }
+		}
+		trigger_if = {
+			limit = { has_building = scope:cm_building_type }
+			"building(scope:cm_building_type|owner)" = { building_level >= 1 }
+			scope:cm_profit > 0
+		}
+		trigger_else = { always = no }
+	}
+	trigger_else = { always = no }
+}
+
+# Whether the standing building runs the method cm_bt_output measured. That map holds the best
+# producing method's output and cm_building_type_to_produced_good one good per type, so a building
+# running something else is left out rather than priced on a good it does not make. Root is the
+# location. Expects scope:cm_building_type. Nested for the reason above: each read is only valid
+# once the one over it holds.
+cm_bld_marginal_good_matches = {
+	trigger_if = {
+		limit = {
+			exists = scope:cm_building_type
+			has_global_variable_map = cm_building_type_to_produced_good
+		}
+		trigger_if = {
+			limit = {
+				is_key_in_global_variable_map = { name = cm_building_type_to_produced_good target = scope:cm_building_type }
+				has_building = scope:cm_building_type
+			}
+			"global_variable_map(cm_building_type_to_produced_good|scope:cm_building_type)" = {
+				save_temporary_scope_as = cm_bld_marg_good
+			}
+			"building(scope:cm_building_type|owner)" = {
+				building_produced_goods = scope:cm_bld_marg_good
+			}
+		}
+		trigger_else = { always = no }
+	}
+	trigger_else = { always = no }
+}
+
+# Whether the classification recorded this type as making a good the construction chain runs on:
+# the four materials, plus the two masonry itself is made from, so a supplier of those is not held
+# back by a rule meant to protect them (mason's stone_bricks method takes stone 0.417 and its
+# clay_bricks method clay 0.833, game/in_game/common/building_types/common_buildings.txt).
+# Root is the building type. The Building Cleanup twin cm_cu_produces_core_good reads
+# building_produced_goods off a standing building, which a from-zero candidate has none of.
+cm_bt_type_produces_construction_good = {
+	save_temporary_scope_as = cm_bt_cg_t
+	has_global_variable_map = cm_building_type_to_produced_good
+	is_key_in_global_variable_map = { name = cm_building_type_to_produced_good target = scope:cm_bt_cg_t }
+	"global_variable_map(cm_building_type_to_produced_good|scope:cm_bt_cg_t)" = {
+		OR = {
+			this = goods:masonry
+			this = goods:lumber
+			this = goods:sand
+			this = goods:glass
+			this = goods:stone
+			this = goods:clay
+		}
+	}
+}
+
+# Metric gate for the GUI construction executor. Expects scopes: country, building_type,
+# cost, income, profit. Non-production types, zero construction demand, and a zero
+# threshold are exempt. The threshold is monthly gold per level for Tax Income and
+# Profit, years to recoup the cost for the ROI metrics. Every branch compares
+# cm_bld_income_value or cm_bld_profit_value, and the ROI branches add the indirect value
+# through cm_bld_adjusted_income and cm_bld_adjusted_profit; both need the location, so
+# they run under scope:cm_indirect_loc and the else branches keep the raw engine values.
+cm_gui_metric_gate_passes = {
+	OR = {
+		NOT = { scope:cm_building_type = { cm_is_building_type_production_building = yes } }
+		cm_get_construction_demand_total_count = 0
+		NOT = { scope:cm_country = { has_variable_map = cm_priority_min_profit } }
+		"scope:cm_country.variable_map(cm_priority_min_profit|flag:cm_feature_auto_expand_buildings)" = 0
+		AND = {
+			cm_expand_metric_is_tax_income = yes
+			trigger_if = {
+				limit = { exists = scope:cm_indirect_loc }
+				scope:cm_indirect_loc = {
+					cm_bld_income_value >= "scope:cm_country.variable_map(cm_priority_min_profit|flag:cm_feature_auto_expand_buildings)"
+				}
+			}
+			trigger_else = {
+				scope:cm_income >= "scope:cm_country.variable_map(cm_priority_min_profit|flag:cm_feature_auto_expand_buildings)"
+			}
+		}
+		AND = {
+			cm_expand_metric_is = { metric = 2 }
+			trigger_if = {
+				limit = { exists = scope:cm_indirect_loc }
+				scope:cm_indirect_loc = {
+					cm_bld_profit_value >= "scope:cm_country.variable_map(cm_priority_min_profit|flag:cm_feature_auto_expand_buildings)"
+				}
+			}
+			trigger_else = {
+				scope:cm_profit >= "scope:cm_country.variable_map(cm_priority_min_profit|flag:cm_feature_auto_expand_buildings)"
+			}
+		}
+		AND = {
+			cm_expand_metric_is = { metric = 3 }
+			trigger_if = {
+				limit = { exists = scope:cm_indirect_loc }
+				scope:cm_indirect_loc = {
+					scope:cm_cost <= {
+						value = cm_bld_adjusted_income
+						multiply = "scope:cm_country.variable_map(cm_priority_min_profit|flag:cm_feature_auto_expand_buildings)"
+						multiply = 12
+					}
+				}
+			}
+			trigger_else = {
+				scope:cm_cost <= {
+					value = scope:cm_income
+					multiply = "scope:cm_country.variable_map(cm_priority_min_profit|flag:cm_feature_auto_expand_buildings)"
+					multiply = 12
+				}
+			}
+		}
+		AND = {
+			cm_expand_metric_is = { metric = 4 }
+			trigger_if = {
+				limit = { exists = scope:cm_indirect_loc }
+				scope:cm_indirect_loc = {
+					scope:cm_cost <= {
+						value = cm_bld_adjusted_profit
+						multiply = "scope:cm_country.variable_map(cm_priority_min_profit|flag:cm_feature_auto_expand_buildings)"
+						multiply = 12
+					}
+				}
+			}
+			trigger_else = {
+				scope:cm_cost <= {
+					value = scope:cm_profit
+					multiply = "scope:cm_country.variable_map(cm_priority_min_profit|flag:cm_feature_auto_expand_buildings)"
+					multiply = 12
+				}
+			}
+		}
+	}
+}
+
+# Root is the location. $TYPE$ = the building type. The engine does not staff an unprofitable
+# unsubsidized building, so a level added to one stands empty while the pops it would have taken
+# still read as unemployed, which is what lets a location build past its own population.
+# Non-production types are exempt, and a type with nothing standing here yet has no profit to
+# read, so its first level is always allowed. The comparison is multiplied out rather than
+# dividing by building_level, which reads 0 while the first level is under construction.
+# $FLOOR$ = the profit per level a standing building must reach when none of its type here is
+# subsidized.
+cm_building_type_clears_profit_floor = {
+	$TYPE$ = { save_temporary_scope_as = cm_profit_floor_type }
+	OR = {
+		NOT = { scope:cm_profit_floor_type = { cm_is_building_type_production_building = yes } }
+		NOT = { has_building = scope:cm_profit_floor_type }
+		any_buildings_in_location = {
+			building_type = scope:cm_profit_floor_type
+			is_subsidized = yes
+		}
+		"building(scope:cm_profit_floor_type|owner)" = {
+			building_profit >= {
+				value = $FLOOR$
+				multiply = building_level
+			}
+		}
+	}
+}
+
+cm_building_type_profitable_or_subsidized = {
+	cm_building_type_clears_profit_floor = { FLOOR = cm_min_profit_per_level TYPE = $TYPE$ }
+}
+
+# Expects scope:cm_building_type. Checks if the building type produces a good that is also
+# one of its construction demand goods, e.g. horse_breeders produces and requires horses.
+# Precomputed by the hidden window GUI at game start.
+cm_building_type_produces_own_construction_good = {
+	AND = {
+		has_global_variable_map = cm_building_type_produces_own_construction_good
+		is_key_in_global_variable_map = { name = cm_building_type_produces_own_construction_good target = scope:cm_building_type }
+		"global_variable_map(cm_building_type_produces_own_construction_good|scope:cm_building_type)" = 1
+	}
+}
+
+# Checks construction cost adjustment against the min discount threshold
+# from the priority list, field slot 2, mapped to cm_priority_min_discount, pre-scaled by 0.01.
+# Expects scopes: country, building_type.
+# $threshold$ = the full variable_map lookup expression for the discount threshold.
+# The 0.005 added to $threshold$ is a 0.5% tolerance so that a setting of -33%
+# matches a cost adjustment of -32.5%, avoiding float-rounding misses at the boundary.
+cm_building_meets_minimum_discount = {
+	OR = {
+		NOT = { scope:cm_country = { has_variable_map = cm_priority_min_discount } }
+		cm_get_construction_demand_total_count = 0
+		cm_building_type_produces_own_construction_good = yes
+		cm_get_standard_construction_demand_total = 0
+		scope:cm_building_type = {
+			cm_get_standard_construction_cost_adjustment_for_building_type <= { value = $threshold$ add = 0.005 }
+		}
+	}
+}
+
+# Root is the building. Shared core of the two cm_building_can_auto_expand_* triggers.
+# Expects scope:cm_building_type as the type whose discount and pops gates are evaluated:
+# expansion callers pass the building's own type, upgrade staging passes the replacement.
+# can_build_building fails for obsolete building types; the upgrade path omits it and
+# the normal path adds it via cm_building_can_auto_expand_other_than_checking_for_upgrades.
+cm_building_can_auto_expand_for_upgrade = {
+	location = { save_temporary_scope_as = cm_location }
+	owner = { save_temporary_scope_as = cm_country }
+	AND = {
+		is_opened = yes
+		is_lacking_goods = no
+		cm_building_meets_minimum_discount = { threshold = cm_get_min_discount_for_auto_expand_buildings }
+		location = { cm_location_has_enough_pops_available = yes }
+		location = { cm_location_auto_food_workers_ok_for_type = yes }
+		location = { cm_is_location_under_building_limit = yes }
+	}
+}
+
+# Root is the building. Same checks as cm_building_can_auto_expand_for_upgrade, plus can_build_building.
+cm_building_can_auto_expand_other_than_checking_for_upgrades = {
+	AND = {
+		cm_building_can_auto_expand_for_upgrade = yes
+		location = { cm_location_allowed_to_build = { target = scope:cm_building_type } }
+	}
+}
+
+# Expects scopes: building type, country, and location
+cm_location_can_auto_expand_from_zero_levels = {
+	scope:cm_location = { cm_location_will_auto_expand_from_zero_levels = yes }
+}
+
+# Root is the location, also expects scope:cm_building_type and scope:cm_country.
+cm_location_will_auto_expand_from_zero_levels = {
+	AND = {
+		scope:cm_country = { cm_should_pause_auto_expand = no }
+		NOT = { integration_level = conquered }
+		cm_location_has_enough_pops_available = yes
+		cm_location_auto_food_workers_ok_for_type = yes
+		cm_is_location_under_building_limit = yes
+		cm_get_open_build_queue_slots > 0
+		save_temporary_scope_as = cm_location
+		cm_building_meets_minimum_discount = { threshold = cm_get_min_discount_for_auto_expand_buildings }
+		cm_location_allowed_to_build = { target = scope:cm_building_type }
+		cm_market_has_construction_goods_for_building = yes
+	}
+}
+
+# Expects scope:cm_country. Checks that the player has gold above their minimum reserve setting.
+# Used for upgrade branches where the exact upgrade cost is resolved by the GUI.
+cm_auto_expand_check_minimum_gold_reserve = {
+	OR = {
+		NOT = { scope:cm_country = { exists = var:cm_minimum_gold } }
+		scope:cm_country.gold > scope:cm_country.var:cm_minimum_gold
+	}
+}
+
+# Root is the building
+cm_is_not_under_construction = {
+	building_levels_under_construction = 0
+}
+
+# Root is the location, expects scope:cm_building_type. False if this building type already has
+# levels queued or under construction at the location, including a queued first level.
+cm_location_building_type_not_under_construction = {
+	NOT = {
+		any_buildings_in_location = {
+			building_type = scope:cm_building_type
+			building_levels_under_construction > 0
+		}
+	}
+}
+
+# Root is the building. Thin wrapper: saves scopes and delegates to the shared trigger.
+cm_upgrade_all_meets_minimum_discount = {
+	owner = { save_temporary_scope_as = cm_country }
+	building_type = { save_temporary_scope_as = cm_building_type }
+	cm_building_meets_minimum_discount = { threshold = cm_get_min_discount_for_upgrade_all_buildings }
+}
+
+# Root is the country
+cm_should_pause_auto_expand = {
+	exists = var:cm_pause_auto_expand
+}
+
+# Root is the building type
+cm_is_building_type_production_building = {
+	AND = {
+		has_global_variable_map = cm_building_type_to_is_production_building
+		is_key_in_global_variable_map = { name = cm_building_type_to_is_production_building target = this }
+		"global_variable_map(cm_building_type_to_is_production_building|this)" = 1
+	}
+}
+
+
+# Types the slot-filling batch may queue several levels of in one cycle. The production flag is
+# also the multi-level test, which is what keeps a single-level type out. granary runs no
+# production method with an output so that flag misses it, while its cap is guild_max_level and
+# every level grants local_food_capacity 500 (in_game/common/building_types/town_buildings.txt:149).
+# Root is the building type.
+cm_building_type_batches_levels = {
+	OR = {
+		cm_is_building_type_production_building = yes
+		this = building_type:granary
+	}
+}
+
+
+# Root is the location.
+cm_location_has_governor = {
+	OR = {
+		has_building = building_type:local_governor
+		has_building = building_type:naval_governor
+	}
+}

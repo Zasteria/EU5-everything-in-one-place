@@ -102,7 +102,7 @@ IGNORE_READ = "check-script: never set"
 # `cm_perf` alone answers with ten of CM's own -- and each refresh goes red on
 # findings nobody here is going to fix. Skipped in the sweep, still checked when
 # a session names the folder itself, which is how its own edits get looked at.
-VERBATIM_COPIES = {"cm_perf"}
+VERBATIM_COPIES = {"cm_perf", "cm_dev_perf"}
 
 
 DEFINITION = re.compile(r'^(\w+)\s*=\s*\{', re.M)

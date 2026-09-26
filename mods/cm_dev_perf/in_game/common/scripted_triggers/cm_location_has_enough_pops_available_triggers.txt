@@ -1,0 +1,65 @@
+﻿# Root is the location, also expects scope:cm_building_type.
+cm_location_has_enough_pops_available = {
+	has_global_variable_map = cm_building_type_to_pop_type
+	is_key_in_global_variable_map = { name = cm_building_type_to_pop_type target = scope:cm_building_type }
+	OR = {
+		cm_location_unemployed_for_building_type > 0
+		cm_location_promotion_buffer_covers_deficit = yes
+	}
+}
+
+# Buffer branch of cm_location_has_enough_pops_available (root location, expects scope:cm_building_type):
+# the pop deficit fills within six years at the location's own fill rate. The switch confines the
+# projection to the six types cm_location_promotion_buffer_slack has a branch for.
+cm_location_promotion_buffer_covers_deficit = {
+	switch = { trigger = "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)"
+		pop_type:nobles = { always = yes }
+		pop_type:clergy = { always = yes }
+		pop_type:burghers = { always = yes }
+		pop_type:laborers = { always = yes }
+		pop_type:soldiers = { always = yes }
+		pop_type:peasants = { always = yes }
+		fallback = { always = no }
+	}
+	cm_location_promotion_buffer_slack >= 0
+}
+
+# Root is the location. Some pop type's building jobs, plus the RGO's share, outnumber the pops
+# that can fill them. The laborers/slaves pool is read combined so the RGO and the jobs either
+# type can take are not counted twice; between them the six values cover seven of the eight pop
+# types. Tribesmen has no surplus value, so its jobs are never tested.
+cm_location_has_worker_deficit = {
+	OR = {
+		cm_location_nobles_available < 0
+		cm_location_clergy_available < 0
+		cm_location_burghers_available < 0
+		cm_location_soldiers_available < 0
+		cm_location_peasants_available < 0
+		cm_location_laborers_or_slaves_available < 0
+	}
+}
+
+# Root is the location, expects scope:cm_country. Construction gate for locations auto-food is
+# working: a new building level would take pops the food buildings and RGO need, either because
+# a pop type is already short or because an option is valid here and waiting on nothing else.
+# The trigger_if is what keeps the five option tests off every location food automation is not
+# working, which is almost all of them.
+cm_location_auto_food_workers_ok = {
+	trigger_if = { limit = { cm_ab_food_location_effectively_active = yes }
+		cm_location_has_worker_deficit = no
+		cm_food_location_has_option_but_for_pops = no
+	}
+}
+
+# Root is the location, expects scope:cm_country and scope:cm_building_type. The type-aware form,
+# for the surfaces that know which building is asking. A type the player registered for
+# auto-expand at this location by hand is an instruction about this location and outranks the
+# hold; mass-enabling a type across the country is not, and is still held. Production's location
+# sweep and Auto-Build's staging read the plain form, neither of them having a player
+# registration behind it.
+cm_location_auto_food_workers_ok_for_type = {
+	OR = {
+		is_target_in_variable_list = { name = cm_auto_expand_registered_building_types target = scope:cm_building_type }
+		cm_location_auto_food_workers_ok = yes
+	}
+}

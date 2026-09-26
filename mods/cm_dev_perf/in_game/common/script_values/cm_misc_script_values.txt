@@ -1,0 +1,421 @@
+﻿@cm_overbuild_limit_max = 200 # Mirrors the cm__allowed_building_overbuild_levels slider max (cm_cmm_effects.txt).
+@cm_overbuild_unlimited_levels = 1000000 # Stands in for no limit, past any location's level count.
+
+# An ordered_ iterator carrying no max visits exactly one object, so every sweep that wants the
+# whole set passes one of these. Past any count the game can produce, so neither ever truncates.
+cm_max_guess_at_number_of_locations = 1000000
+
+cm_max_guess_at_number_of_buildings = 1000000
+
+# Version of the building-type classification. Bump when any of the hidden window's classification
+# passes changes what it records, so every save reclassifies once on its next load. A mod adding
+# building types needs no bump: cm_building_classification_is_current checks each one.
+cm_bt_class_version_value = 3
+
+# Version of the Recommended Urban Rights coverage precompute. Bump when
+# cm_trmm_recompute_province_definition changes what it stores on each province slice.
+cm_trmm_version_value = 1
+
+# Version of the R.G.O. Bonus coverage sweep. Bump when cm_rgob_recompute_province changes what it
+# stores. A reclassification drops this stamp on its own, the pair and row maps the sweep reads
+# being the classification's own output.
+cm_rgob_version_value = 1
+
+# Version of the observer bridge's location and building-type id maps.
+cm_ln_ids_version_value = 1
+
+# Version of the food potential precompute. Bump when cm_location_food_potential_live changes what
+# it computes.
+cm_fpot_version_value = 2
+
+# Rounds of no progress before a construction cycle gives up and fires whatever verified.
+# The scorer sweep dispatches once per cycle, so a round can make no progress simply
+# because that one burst is still draining, and the wait has to scale with how much was
+# dispatched. The ceiling keeps it under the dispatcher's own two-pulse force reset, which
+# drops the month outright rather than firing a partial one. Root is the country.
+cm_q_give_up_rounds = {
+	value = var:cm_q_staged
+	divide = 100
+	min = 12
+	max = 60
+}
+
+# Root is the country
+cm_get_allowed_building_overbuild_levels = {
+	if = { limit = { NOT = { exists = var:cm_allowed_building_overbuild_levels } }
+		value = 0
+	} else_if = { limit = { var:cm_allowed_building_overbuild_levels >= @cm_overbuild_limit_max }
+		value = @cm_overbuild_unlimited_levels
+	} else = { value = var:cm_allowed_building_overbuild_levels }
+}
+
+# Root is the country
+cm_grant_town_rights_cost = {
+	value = 5 # Mirrors vanilla grant_town_rights price: in_game/common/prices/00_hardcoded.txt:61
+	multiply = {
+		value = 1
+		add = modifier:grant_town_rights_cost_modifier
+		min = 0
+	}
+}
+
+# Minimum government power needed to grant without dropping below the floor. Root is the country.
+cm_town_rights_grant_min_required = {
+	if = { limit = { exists = var:cm_town_rights_min_gov_power }
+		value = var:cm_town_rights_min_gov_power
+	}
+	add = cm_grant_town_rights_cost
+}
+
+
+# Root is the location. scope:cm_country is the builder where one is in scope: a subject's location
+# carries no Overbuild Limit of its own.
+cm_get_remaining_free_building_levels_allowed = {
+	value = modifier:free_building_levels
+	if = { limit = { exists = scope:cm_country }
+		scope:cm_country = { add = cm_get_allowed_building_overbuild_levels }
+	} else = {
+		owner = { add = cm_get_allowed_building_overbuild_levels }
+	}
+	subtract = total_building_levels
+}
+
+# Root is the location
+cm_get_available_building_levels = {
+  value = modifier:free_building_levels
+  subtract = total_building_levels
+}
+
+# Location-wide unemployed pops of the building type's pop type. Root is the location, expects scope:cm_building_type.
+cm_location_unemployed_for_building_type = {
+  value = 0
+  if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:nobles }    value = "unemployed_pops_of_pop_type_in_location(pop_type:nobles)" }
+  if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:clergy }    value = "unemployed_pops_of_pop_type_in_location(pop_type:clergy)" }
+  if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:burghers }  value = "unemployed_pops_of_pop_type_in_location(pop_type:burghers)" }
+  if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:laborers }  value = "unemployed_pops_of_pop_type_in_location(pop_type:laborers)" }
+  if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:soldiers }  value = "unemployed_pops_of_pop_type_in_location(pop_type:soldiers)" }
+  if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:peasants }  value = "unemployed_pops_of_pop_type_in_location(pop_type:peasants)" }
+  if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:slaves }    value = "unemployed_pops_of_pop_type_in_location(pop_type:slaves)" }
+  if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:tribesmen } value = "unemployed_pops_of_pop_type_in_location(pop_type:tribesmen)" }
+}
+
+# Every unemployed pop at the location, whatever its type. The engine offers no total-unemployment
+# read: employment_percentage is the only candidate and its own trigger localization calls it an
+# employment percentage while the vanilla filter built on it is named location_unemployed_percentage
+# (game/in_game/gui/filters/05_location.txt:64), so the eight types are summed instead.
+# Root is the location.
+cm_location_total_unemployed_pops = {
+  value = "unemployed_pops_of_pop_type_in_location(pop_type:nobles)"
+  add   = "unemployed_pops_of_pop_type_in_location(pop_type:clergy)"
+  add   = "unemployed_pops_of_pop_type_in_location(pop_type:burghers)"
+  add   = "unemployed_pops_of_pop_type_in_location(pop_type:laborers)"
+  add   = "unemployed_pops_of_pop_type_in_location(pop_type:soldiers)"
+  add   = "unemployed_pops_of_pop_type_in_location(pop_type:peasants)"
+  add   = "unemployed_pops_of_pop_type_in_location(pop_type:slaves)"
+  add   = "unemployed_pops_of_pop_type_in_location(pop_type:tribesmen)"
+}
+
+# Root is the location
+cm_combined_pop_promotion_speed = {
+  value = modifier:local_pop_promotion_speed
+  owner = { add = modifier:global_pop_promotion_speed }
+  add = {
+    value = modifier:local_pop_promotion_speed_scaled
+    multiply = population
+  }
+  multiply = {
+    value = 1
+    owner = { add = modifier:global_pop_promotion_speed_modifier }
+    add = modifier:local_pop_promotion_speed_modifier
+  }
+}
+
+# Root is the location
+cm_combined_pop_promotion_speed_for_laborers = {
+  value = cm_combined_pop_promotion_speed
+  multiply = 1.5
+}
+
+# Root is the location
+cm_combined_pop_promotion_speed_for_peasants = {
+  value = cm_combined_pop_promotion_speed
+  multiply = 0.5
+}
+
+# Per-target promotion speed = base speed * the target type's vanilla promotion_factor. Root is the location.
+cm_combined_pop_promotion_speed_for_nobles = {
+  value = cm_combined_pop_promotion_speed
+  multiply = 0.1
+}
+cm_combined_pop_promotion_speed_for_clergy = {
+  value = cm_combined_pop_promotion_speed
+  multiply = 0.1
+}
+cm_combined_pop_promotion_speed_for_burghers = {
+  value = cm_combined_pop_promotion_speed
+  multiply = 0.5
+}
+cm_combined_pop_promotion_speed_for_soldiers = {
+  value = cm_combined_pop_promotion_speed
+  multiply = 1.0
+}
+
+# Root is the location
+cm_location_laborers_needed_for_buildings = {
+  value = 0
+  every_buildings_in_location = {
+    limit = { building_pop_type = laborers }
+    save_temporary_scope_as = cm_building
+    add = cm_building_employment_required
+  }
+}
+
+# Root is the location
+cm_location_laborers_available = {
+  value = num_pop_type:laborers
+  subtract = cm_location_laborers_needed_for_buildings
+  subtract = {
+    value = cm_modifier_rgo_level
+    add = cm_get_rgos_under_construction
+    subtract = num_pop_type:slaves
+    min = 0
+  }
+}
+
+# Root is the location
+cm_location_peasants_needed_for_buildings = {
+  value = 0
+  every_buildings_in_location = {
+    limit = { building_pop_type = peasants }
+    save_temporary_scope_as = cm_building
+    add = cm_building_employment_required
+  }
+}
+
+# Root is the location
+cm_location_peasants_available = {
+  value = num_pop_type:peasants
+  subtract = cm_location_peasants_needed_for_buildings
+}
+
+# Root is the location
+cm_location_slaves_needed_for_buildings = {
+  value = 0
+  every_buildings_in_location = {
+    limit = { building_pop_type = slaves }
+    save_temporary_scope_as = cm_building
+    add = cm_building_employment_required
+  }
+}
+
+# Root is the location. Combined laborer+slave pool minus the jobs either pop type can fill.
+cm_location_laborers_or_slaves_available = {
+  value = num_pop_type:laborers
+  add = num_pop_type:slaves
+  subtract = cm_location_laborers_needed_for_buildings
+  subtract = cm_location_slaves_needed_for_buildings
+  subtract = cm_modifier_rgo_level
+  subtract = cm_get_rgos_under_construction
+}
+
+# Includes potential employment from levels under construction and from buildings that are subsidized but not fully employed
+# Expects scope: building
+cm_building_employment_required = {
+  value = 0
+  scope:cm_building = {
+    if = { limit = { is_opened = yes }
+      if = { limit = { AND = { building_type = { cm_is_building_type_production_building = yes } is_subsidized = yes } }
+        add = {
+          value = building_level
+          multiply = building_type.employment_size
+        }
+      } else = {
+        add = building_employment_size_amount
+      }
+      add = {
+        value = building_levels_under_construction
+        multiply = building_type.employment_size
+      }
+    }
+  }
+}
+
+# Location-wide available (pops minus building employment need) for the promotable target types beyond
+# laborers/peasants. Root is the location.
+cm_location_nobles_needed_for_buildings = {
+  value = 0
+  every_buildings_in_location = {
+    limit = { building_pop_type = nobles }
+    save_temporary_scope_as = cm_building
+    add = cm_building_employment_required
+  }
+}
+cm_location_nobles_available = {
+  value = num_pop_type:nobles
+  subtract = cm_location_nobles_needed_for_buildings
+}
+cm_location_clergy_needed_for_buildings = {
+  value = 0
+  every_buildings_in_location = {
+    limit = { building_pop_type = clergy }
+    save_temporary_scope_as = cm_building
+    add = cm_building_employment_required
+  }
+}
+cm_location_clergy_available = {
+  value = num_pop_type:clergy
+  subtract = cm_location_clergy_needed_for_buildings
+}
+cm_location_burghers_needed_for_buildings = {
+  value = 0
+  every_buildings_in_location = {
+    limit = { building_pop_type = burghers }
+    save_temporary_scope_as = cm_building
+    add = cm_building_employment_required
+  }
+}
+cm_location_burghers_available = {
+  value = num_pop_type:burghers
+  subtract = cm_location_burghers_needed_for_buildings
+}
+cm_location_soldiers_needed_for_buildings = {
+  value = 0
+  every_buildings_in_location = {
+    limit = { building_pop_type = soldiers }
+    save_temporary_scope_as = cm_building
+    add = cm_building_employment_required
+  }
+}
+cm_location_soldiers_available = {
+  value = num_pop_type:soldiers
+  subtract = cm_location_soldiers_needed_for_buildings
+}
+
+# Unemployed pops that can promote into each target type (direct promoters per vanilla). Root is the location.
+cm_location_nobles_promotion_source_pool = {
+  value = "unemployed_pops_of_pop_type_in_location(pop_type:peasants)"
+}
+cm_location_clergy_promotion_source_pool = {
+  value = "unemployed_pops_of_pop_type_in_location(pop_type:peasants)"
+}
+cm_location_burghers_promotion_source_pool = {
+  value = "unemployed_pops_of_pop_type_in_location(pop_type:peasants)"
+  add = "unemployed_pops_of_pop_type_in_location(pop_type:laborers)"
+}
+cm_location_laborers_promotion_source_pool = {
+  value = "unemployed_pops_of_pop_type_in_location(pop_type:peasants)"
+}
+cm_location_soldiers_promotion_source_pool = {
+  value = "unemployed_pops_of_pop_type_in_location(pop_type:peasants)"
+  add = "unemployed_pops_of_pop_type_in_location(pop_type:laborers)"
+}
+cm_location_peasants_promotion_source_pool = {
+  value = "unemployed_pops_of_pop_type_in_location(pop_type:tribesmen)"
+}
+
+# The source pool for the building type's pop type. Slaves and tribesmen promote from nothing and stay 0.
+# Root is the location, expects scope:cm_building_type.
+cm_location_promotion_source_pool_for_building_type = {
+  value = 0
+  if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:nobles }   value = cm_location_nobles_promotion_source_pool }
+  if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:clergy }   value = cm_location_clergy_promotion_source_pool }
+  if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:burghers } value = cm_location_burghers_promotion_source_pool }
+  if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:laborers } value = cm_location_laborers_promotion_source_pool }
+  if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:soldiers } value = cm_location_soldiers_promotion_source_pool }
+  if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:peasants } value = cm_location_peasants_promotion_source_pool }
+}
+
+# Pops of the type arriving at the location each month: the change cm_pop_sample measured since its
+# last reading, which covers births, demotions and migration as well as promotion. Falls back to the
+# modelled promotion rate until the sampler has two readings there, where the source-pool ceiling
+# applies because only promotion draws on that pool. Root is the location.
+cm_location_fill_rate_for_nobles = {
+  if = { limit = { exists = var:cm_pop_rate_nobles }
+    value = var:cm_pop_rate_nobles
+  } else = {
+    value = { value = cm_combined_pop_promotion_speed_for_nobles max = cm_location_nobles_promotion_source_pool min = 0 }
+  }
+}
+cm_location_fill_rate_for_clergy = {
+  if = { limit = { exists = var:cm_pop_rate_clergy }
+    value = var:cm_pop_rate_clergy
+  } else = {
+    value = { value = cm_combined_pop_promotion_speed_for_clergy max = cm_location_clergy_promotion_source_pool min = 0 }
+  }
+}
+cm_location_fill_rate_for_burghers = {
+  if = { limit = { exists = var:cm_pop_rate_burghers }
+    value = var:cm_pop_rate_burghers
+  } else = {
+    value = { value = cm_combined_pop_promotion_speed_for_burghers max = cm_location_burghers_promotion_source_pool min = 0 }
+  }
+}
+cm_location_fill_rate_for_laborers = {
+  if = { limit = { exists = var:cm_pop_rate_laborers }
+    value = var:cm_pop_rate_laborers
+  } else = {
+    value = { value = cm_combined_pop_promotion_speed_for_laborers max = cm_location_laborers_promotion_source_pool min = 0 }
+  }
+}
+cm_location_fill_rate_for_soldiers = {
+  if = { limit = { exists = var:cm_pop_rate_soldiers }
+    value = var:cm_pop_rate_soldiers
+  } else = {
+    value = { value = cm_combined_pop_promotion_speed_for_soldiers max = cm_location_soldiers_promotion_source_pool min = 0 }
+  }
+}
+cm_location_fill_rate_for_peasants = {
+  if = { limit = { exists = var:cm_pop_rate_peasants }
+    value = var:cm_pop_rate_peasants
+  } else = {
+    value = { value = cm_combined_pop_promotion_speed_for_peasants max = cm_location_peasants_promotion_source_pool min = 0 }
+  }
+}
+
+# The RGO pool's twin. cm_pop_sample writes both types in one pass, so the laborers reading answers
+# for the pair. Root is the location.
+cm_location_fill_rate_for_laborers_or_slaves = {
+  if = { limit = { exists = var:cm_pop_rate_laborers }
+    value = var:cm_pop_rate_laborers
+    add = var:cm_pop_rate_slaves
+  } else = {
+    value = { value = cm_combined_pop_promotion_speed_for_laborers max = cm_location_laborers_promotion_source_pool min = 0 }
+  }
+}
+
+# Projected six-year pop slack for the building pop type: location surplus plus six years at the
+# location's fill rate. Negative means the deficit will not fill within six years.
+# Root is the location, expects scope:cm_building_type.
+cm_location_promotion_buffer_slack = {
+  value = 0
+  if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:nobles }
+    add = cm_location_nobles_available
+    add = { value = cm_location_fill_rate_for_nobles multiply = 72 }
+  }
+  if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:clergy }
+    add = cm_location_clergy_available
+    add = { value = cm_location_fill_rate_for_clergy multiply = 72 }
+  }
+  if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:burghers }
+    add = cm_location_burghers_available
+    add = { value = cm_location_fill_rate_for_burghers multiply = 72 }
+  }
+  if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:laborers }
+    add = cm_location_laborers_available
+    add = { value = cm_location_fill_rate_for_laborers multiply = 72 }
+  }
+  if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:soldiers }
+    add = cm_location_soldiers_available
+    add = { value = cm_location_fill_rate_for_soldiers multiply = 72 }
+  }
+  if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:peasants }
+    add = cm_location_peasants_available
+    add = { value = cm_location_fill_rate_for_peasants multiply = 72 }
+  }
+}
+
+# Projected six-year laborers/slaves slack for RGO expansion. Root is the location.
+cm_location_rgo_promotion_buffer_slack = {
+  value = cm_location_laborers_or_slaves_available
+  add = { value = cm_location_fill_rate_for_laborers_or_slaves multiply = 72 }
+}
