@@ -1,0 +1,692 @@
+﻿# Auto-Build Custom: the capital-only set, the control buildings (bailiffs and the unique
+# local_max_control types), the market-center buildings (game
+# in_game/common/building_types/market_buildings.txt, the is_market_center-gated set, plus
+# city_walls for its market_center_modifier), and the player's own roster (auto_build_list,
+# cm_cmm_effects.txt). Each of the four is a row of the ab_custom settings list.
+# The market-center block and every roster row walk one shared candidate list, built once per cycle
+# from the markets in the slice (cm_slice_effects.txt); the unique control types walk that slice's
+# locations directly and the capital set reaches its own. The roster's subject branch takes its
+# locations from that same walk and from a rotation of its own over the markets only the subjects
+# hold. The bailiff surveys the slice every cycle into a pick list the country's best sites settle
+# into over a rotation, and stages from it once the whole map has been surveyed.
+
+# How many sites the bailiff plan carries past the room it can fill right now. It keeps the plan
+# populated while the cap is full, so the next slot an urbanizing location opens goes to a site
+# the whole map was ranked for rather than to whatever this cycle's slice offered. Nothing is
+# lost below it: a site the trim drops is surveyed again when its market comes round.
+@cm_ab_bailiff_pool_slack = 20
+
+# Root is the country, scope:cm_country set.
+cm_ab_run_custom = {
+	# Ahead of the owned builder, which sorts subject locations out of the same market walk.
+	if = {
+		limit = { cm_ab_custom_subjects_wanted = yes }
+		set_local_variable = { name = cm_ab_custom_subj_on value = 1 }
+		cm_sub_pick_slice = yes
+	}
+	else = {
+		set_local_variable = { name = cm_ab_custom_subj_on value = 0 }
+	}
+	if = {
+		limit = {
+			OR = {
+				exists = var:cm_ab_custom_market_centers
+				exists = var:cm_ab_custom_roster
+			}
+		}
+		cm_ab_custom_build_candidates = yes
+	}
+	if = {
+		limit = { local_var:cm_ab_custom_subj_on = 1 }
+		cm_ab_custom_build_subject_candidates = yes
+	}
+	if = {
+		limit = {
+			exists = var:cm_ab_custom_capital
+			exists = capital
+		}
+		capital = { save_scope_as = cm_location }
+		if = {
+			limit = { scope:cm_location = { NOT = { integration_level = conquered } } }
+			scope:cm_location = {
+				cm_pop_track = yes
+				cm_ab_stage_capital_type_here = { bt = royal_garden }
+				cm_ab_stage_capital_type_here = { bt = royal_court }
+				cm_ab_stage_capital_type_here = { bt = house_of_parliament }
+				cm_ab_stage_capital_type_here = { bt = order_headquarters }
+				cm_ab_stage_capital_type_here = { bt = admiralty }
+				cm_ab_stage_capital_type_here = { bt = war_college }
+				cm_ab_stage_capital_type_here = { bt = tax_assessor }
+				cm_ab_stage_capital_type_here = { bt = supreme_court }
+				cm_ab_stage_capital_type_here = { bt = chancery }
+				cm_ab_stage_capital_type_here = { bt = republican_assembly }
+				cm_ab_stage_capital_type_here = { bt = pirate_stronghold }
+				cm_ab_stage_capital_type_here = { bt = sergeantry }
+				cm_ab_stage_capital_type_here = { bt = city_guard }
+			}
+		}
+	}
+	if = {
+		limit = { exists = var:cm_ab_custom_control }
+		# Each drain reads its own marker rather than walking the shared queue on the chance
+		# something is there: by drain time that queue holds every location any category staged.
+		remove_variable = cm_ab_bailiff_staged
+		remove_variable = cm_ab_ctrl_staged
+		cm_ab_survey_bailiffs = yes
+		cm_ab_stage_bailiffs = yes
+		cm_ab_stage_max_control_types = yes
+	}
+	if = {
+		limit = {
+			exists = var:cm_ab_custom_market_centers
+			has_variable_list = cm_ab_custom_cands
+		}
+		every_in_list = {
+			variable = cm_ab_custom_cands
+			save_scope_as = cm_location
+			# Once per location rather than per type: this set has no type exempt from the gate.
+			if = {
+				limit = {
+					is_market_center = yes
+					cm_ab_location_has_proximity = yes
+				}
+				cm_ab_stage_custom_type_here = { bt = entrepot }
+				cm_ab_stage_custom_type_here = { bt = trading_hub }
+				cm_ab_stage_custom_type_here = { bt = customs_house }
+				cm_ab_stage_custom_type_here = { bt = stock_exchange }
+				cm_ab_stage_custom_type_here = { bt = clearing_house }
+				cm_ab_stage_custom_type_here = { bt = market_warehouse }
+				# Not an is_market_center type: its market_center_modifier grants
+				# local_trade_center_power 0.1 (game in_game/common/building_types/forts.txt:282).
+				cm_ab_stage_custom_type_here = { bt = city_walls }
+			}
+		}
+	}
+	if = {
+		limit = { exists = var:cm_ab_custom_roster }
+		cm_ab_stage_custom_roster = yes
+	}
+	clear_variable_list = cm_ab_custom_cands
+	clear_variable_list = cm_ab_custom_subj_cands
+}
+
+# This cycle's candidates for the market-center block and the roster: the owned, unconquered
+# locations in the slice's markets, in country-wide max_control order. Ordered in one pass over the
+# whole slice rather than per market, because cm_ab_stage_build_candidate appends into the shared
+# cm_ab_b_locations and the insertion-order drains read whatever order the appends were made in.
+# The proximity gate is deliberately left off, since a type exempt from it needs the locations it
+# would remove. The same walk sorts subject-owned locations into the subject list, so a market both
+# sides want is visited once. Root is the country, scope:cm_country set.
+cm_ab_custom_build_candidates = {
+	clear_variable_list = cm_ab_custom_raw
+	clear_variable_list = cm_ab_custom_cands
+	every_market_present_in_country = {
+		limit = { cm_market_in_slice = yes }
+		# The market iterators carry no ownership filter of their own, and a shared market holds
+		# other countries' locations.
+		every_location_in_market = {
+			if = {
+				limit = {
+					owner ?= scope:cm_country
+					NOT = { integration_level = conquered }
+				}
+				save_scope_as = cm_ab_custom_cand
+				scope:cm_country = { add_to_variable_list = { name = cm_ab_custom_raw target = scope:cm_ab_custom_cand } }
+			}
+			# The location-scope form rather than a scope block on owner, which a market's
+			# unowned locations would follow into nothing.
+			else_if = {
+				limit = {
+					local_var:cm_ab_custom_subj_on = 1
+					is_owned_or_owned_by_subjects_or_below_of = scope:cm_country
+					NOT = { integration_level = conquered }
+				}
+				save_scope_as = cm_ab_custom_cand
+				cm_pop_track = yes
+				scope:cm_country = { add_to_variable_list = { name = cm_ab_custom_subj_cands target = scope:cm_ab_custom_cand } }
+			}
+		}
+	}
+	ordered_in_list = {
+		variable = cm_ab_custom_raw
+		order_by = max_control
+		max = cm_max_guess_at_number_of_locations
+		check_range_bounds = no
+		save_scope_as = cm_ab_custom_cand
+		cm_pop_track = yes
+		scope:cm_country = { add_to_variable_list = { name = cm_ab_custom_cands target = scope:cm_ab_custom_cand } }
+	}
+	clear_variable_list = cm_ab_custom_raw
+}
+
+# The rest of this cycle's subject-side candidates, from the markets the subject rotation admitted,
+# which are by construction the ones the owned walk above never visits. It appends rather than
+# clearing, that walk having already filled its share of the list.
+# Root is the country, scope:cm_country set.
+cm_ab_custom_build_subject_candidates = {
+	if = {
+		limit = { has_variable_list = cm_sub_slice_now }
+		every_in_list = {
+			variable = cm_sub_slice_now
+			every_location_in_market = {
+				limit = {
+					is_owned_or_owned_by_subjects_or_below_of = scope:cm_country
+					NOT = { integration_level = conquered }
+				}
+				save_scope_as = cm_ab_custom_cand
+				cm_pop_track = yes
+				scope:cm_country = { add_to_variable_list = { name = cm_ab_custom_subj_cands target = scope:cm_ab_custom_cand } }
+			}
+		}
+	}
+}
+
+# Stages one market-center type at this location when it fits; that set has no obsolete chains.
+# The not-at-max-level check keeps multi-level types topping up. Root is the location. Expects
+# scope:cm_country, scope:cm_location; $bt$ = the type key.
+cm_ab_stage_custom_type_here = {
+	building_type:$bt$ = { save_scope_as = cm_building_type }
+	if = {
+		limit = {
+			cm_location_building_type_is_not_at_max_level = { target = scope:cm_building_type }
+			cm_location_allowed_to_build = { target = scope:cm_building_type }
+			cm_location_has_enough_pops_available = yes
+			cm_check_location_meets_min_market_access = yes
+			cm_get_open_build_queue_slots > 0
+		}
+		cm_ab_stage_build_candidate = { cat = 4 }
+	}
+}
+
+# Stages one capital-only type at the capital. Not slot-gated, so the set reaches the queue
+# whatever the capital is already building and gold is the only thing that can stop it, which is
+# what lets the category hold its allotment for one it cannot yet afford. Root is the location.
+# Expects scope:cm_country, scope:cm_location; $bt$ = the type key.
+cm_ab_stage_capital_type_here = {
+	building_type:$bt$ = { save_scope_as = cm_building_type }
+	if = {
+		limit = {
+			cm_location_building_type_is_not_at_max_level = { target = scope:cm_building_type }
+			cm_location_allowed_to_build = { target = scope:cm_building_type }
+			cm_location_has_enough_pops_available = yes
+			cm_check_location_meets_min_market_access = yes
+		}
+		cm_ab_stage_build_candidate = { cat = 4 }
+	}
+}
+
+# Walks the roster in the player's order, resolving each row's chain base to the current buildable
+# tier. The subjects flag is read before the resolve overwrites scope:cm_building_type. Root is
+# the country.
+cm_ab_stage_custom_roster = {
+	if = {
+		limit = { has_variable_list = cm_ab_building_types_list }
+		every_in_list = {
+			variable = cm_ab_building_types_list
+			save_scope_as = cm_building_type
+			scope:cm_country = {
+				if = {
+					limit = { is_target_in_variable_list = { name = cm_ab_building_types_enabled target = scope:cm_building_type } }
+					if = {
+						limit = { is_target_in_variable_list = { name = cm_ab_building_types_in_subjects_enabled target = scope:cm_building_type } }
+						set_local_variable = { name = cm_ab_custom_subjects value = 1 }
+					} else = {
+						set_local_variable = { name = cm_ab_custom_subjects value = 0 }
+					}
+					cm_ab_resolve_building_type = yes
+					cm_ab_stage_roster_type_owned = yes
+					if = {
+						limit = { local_var:cm_ab_custom_subjects = 1 }
+						cm_ab_stage_roster_type_in_subjects = yes
+					}
+				}
+			}
+		}
+	}
+}
+
+# One roster type across this cycle's candidates, in the order cm_ab_custom_build_candidates set.
+# Root is the country. Expects the resolved scope:cm_building_type and the raw key in
+# scope:cm_ab_settings_type.
+cm_ab_stage_roster_type_owned = {
+	if = {
+		limit = { has_variable_list = cm_ab_custom_cands }
+		every_in_list = {
+			variable = cm_ab_custom_cands
+			save_scope_as = cm_location
+			cm_ab_stage_roster_type_here = yes
+		}
+	}
+}
+
+# The same roster type across the subject locations the row opted into, on top of the owned pass
+# every row takes. Root is the country. Expects the resolved scope:cm_building_type and the raw
+# key in scope:cm_ab_settings_type.
+cm_ab_stage_roster_type_in_subjects = {
+	if = {
+		limit = { has_variable_list = cm_ab_custom_subj_cands }
+		every_in_list = {
+			variable = cm_ab_custom_subj_cands
+			save_scope_as = cm_location
+			cm_ab_stage_roster_type_here = yes
+		}
+	}
+}
+
+# Tops up to max level, since nothing else in Auto-Build grows these types: Production only
+# touches production buildings. A location holding an older tier of the chain is left to the upgrade
+# features. The three per-row gates take scope:cm_ab_settings_type, the raw list key
+# cm_ab_resolve_building_type saves, because the settings maps are keyed by it. The
+# proximity gate sits here rather than on the candidate list because a type can be exempt from it.
+# Root is the location. Expects scope:cm_country, scope:cm_location, scope:cm_building_type.
+cm_ab_stage_roster_type_here = {
+	if = {
+		limit = {
+			OR = {
+				cm_ab_location_has_proximity = yes
+				scope:cm_building_type = { cm_ab_type_ignores_proximity = yes }
+			}
+			cm_ab_custom_type_has_room = yes
+			cm_location_allowed_to_build = { target = scope:cm_building_type }
+			cm_location_has_no_auto_build_chain_predecessor = yes
+			cm_location_has_enough_pops_available = yes
+			cm_ab_check_meets_minimum_control = { target = scope:cm_ab_settings_type }
+			cm_ab_check_meets_minimum_market_price_impact = { target = scope:cm_ab_settings_type }
+			cm_ab_check_rgo_level_requirement_met = { target = scope:cm_ab_settings_type }
+			cm_check_location_meets_min_market_access = yes
+			cm_get_open_build_queue_slots > 0
+		}
+		cm_ab_stage_build_candidate = { cat = 4 }
+	}
+}
+
+# The bailiff plan: this cycle's slice surveyed into a pick list the country's best remaining
+# sites settle into over a rotation, richest RGO first at what its market pays for it now, the
+# bailiff standing only on rural land where the raw material is what the location is worth.
+# A site the trim drops is offered again when its market comes round, at most one rotation away,
+# and re-ranking every cycle keeps the list honest against a price that moves.
+# The country-wide num_bailiffs modifier caps how many can stand (game
+# in_game/common/building_types/rural_buildings.txt, bailiff allow), which is what staging waits
+# on cm_ab_bailiff_open for: a cap is spent permanently, so spending it before the whole map has
+# been surveyed hands it to sites the country's own best beat.
+# Root is the country, expects scope:cm_country.
+cm_ab_survey_bailiffs = {
+	building_type:bailiff = { save_scope_as = cm_building_type }
+	if = {
+		limit = { NOT = { exists = var:cm_ab_bailiff_open } }
+		cm_ab_bailiff_mark_slice_surveyed = yes
+	}
+	# A variable list holds each target once, so a site already in the list re-enters as a no-op.
+	# An ordered_ iterator filters before it sorts, so the limit keeps the market price read off
+	# everything but rural sites without a bailiff.
+	ordered_in_list = {
+		variable = cm_slice_locations
+		order_by = cm_location_rgo_market_value
+		max = cm_max_guess_at_number_of_locations
+		check_range_bounds = no
+		limit = { cm_ab_bailiff_site_viable = yes }
+		save_scope_as = cm_ab_bailiff_pick
+		scope:cm_country = { add_to_variable_list = { name = cm_ab_bailiff_picks target = scope:cm_ab_bailiff_pick } }
+	}
+	cm_ab_bailiff_trim_picks = yes
+}
+
+# Records this cycle's markets against the plan's own coverage and opens staging once every
+# market present has been surveyed. Its own map rather than cm_slice_seen, which resets at the
+# rotation boundary, so reading that one would make the opening a single cycle a skipped cycle
+# could miss. Opening is one-way, so conquest does not stall an established country: a new
+# market's sites reach the list on its turn and the trim ranks them against the rest.
+# Root is the country, expects scope:cm_country.
+cm_ab_bailiff_mark_slice_surveyed = {
+	every_market_present_in_country = {
+		limit = { cm_market_in_slice = yes }
+		save_scope_as = cm_ab_bailiff_mkt
+		scope:cm_country = { add_to_variable_map = { name = cm_ab_bailiff_seen key = scope:cm_ab_bailiff_mkt value = 1 } }
+	}
+	if = {
+		limit = { NOT = { cm_ab_bailiff_has_unseen_market = yes } }
+		set_variable = { name = cm_ab_bailiff_open value = 1 }
+		clear_variable_map = cm_ab_bailiff_seen
+	}
+}
+
+# Trims the list back to the cap's remaining room plus @cm_ab_bailiff_pool_slack, at this month's
+# prices. Rebuilt through a scratch list because a variable list cannot be trimmed in place, the
+# shape cm_ab_custom_build_candidates uses for the same reason. The viability test is what retires
+# a site lost, urbanized, or already carrying a bailiff.
+# Root is the country, expects scope:cm_country, scope:cm_building_type.
+cm_ab_bailiff_trim_picks = {
+	if = {
+		limit = { has_variable_list = cm_ab_bailiff_picks }
+		clear_variable_list = cm_ab_bailiff_raw
+		every_in_list = {
+			variable = cm_ab_bailiff_picks
+			save_scope_as = cm_ab_bailiff_pick
+			scope:cm_country = { add_to_variable_list = { name = cm_ab_bailiff_raw target = scope:cm_ab_bailiff_pick } }
+		}
+		clear_variable_list = cm_ab_bailiff_picks
+		set_local_variable = { name = cm_ab_bailiff_keep value = @cm_ab_bailiff_pool_slack }
+		# The room as a branch, so a cap that has fallen below what already stands leaves the
+		# slack rather than shortening the plan past it.
+		if = {
+			limit = { modifier:num_bailiffs > total_building_levels_including_construction:bailiff }
+			change_local_variable = { name = cm_ab_bailiff_keep add = modifier:num_bailiffs }
+			change_local_variable = { name = cm_ab_bailiff_keep subtract = total_building_levels_including_construction:bailiff }
+		}
+		# The count is an inner if rather than the iterator's max, every max in this codebase
+		# being a constant, so which scope one is read in has never had to be settled.
+		ordered_in_list = {
+			variable = cm_ab_bailiff_raw
+			order_by = cm_location_rgo_market_value
+			max = cm_max_guess_at_number_of_locations
+			check_range_bounds = no
+			limit = { cm_ab_bailiff_site_viable = yes }
+			save_scope_as = cm_ab_bailiff_pick
+			if = {
+				limit = { local_var:cm_ab_bailiff_keep >= 1 }
+				scope:cm_country = { add_to_variable_list = { name = cm_ab_bailiff_picks target = scope:cm_ab_bailiff_pick } }
+				change_local_variable = { name = cm_ab_bailiff_keep subtract = 1 }
+			}
+		}
+		clear_variable_list = cm_ab_bailiff_raw
+	}
+}
+
+# Stages the picks the country can act on this month, richest RGO first. A pick the Custom pool
+# cannot cover is left in the list and staged again next month; the room is re-read each month
+# because bailiffs finished since have taken part of the cap. This is where can_build_building
+# runs, over the plan rather than over the country. Root is the country.
+cm_ab_stage_bailiffs = {
+	if = {
+		limit = {
+			exists = var:cm_ab_bailiff_open
+			has_variable_list = cm_ab_bailiff_picks
+			variable_list_size = { name = cm_ab_bailiff_picks value >= 1 }
+		}
+		building_type:bailiff = { save_scope_as = cm_building_type }
+		set_local_variable = { name = cm_ab_bailiff_room value = modifier:num_bailiffs }
+		change_local_variable = { name = cm_ab_bailiff_room subtract = total_building_levels_including_construction:bailiff }
+		ordered_in_list = {
+			variable = cm_ab_bailiff_picks
+			order_by = cm_location_rgo_market_value
+			max = cm_max_guess_at_number_of_locations
+			check_range_bounds = no
+			save_scope_as = cm_location
+			if = {
+				limit = {
+					local_var:cm_ab_bailiff_room >= 1
+					cm_ab_max_control_site_ok = yes
+				}
+				cm_ab_stage_build_candidate = { cat = 4 }
+				scope:cm_country = { set_variable = { name = cm_ab_bailiff_staged value = 1 } }
+				change_local_variable = { name = cm_ab_bailiff_room subtract = 1 }
+			}
+		}
+	}
+}
+
+# The plan and its coverage, dropped on a tag switch beside the market rotation: the new tag's
+# markets are different, so the plan is rebuilt and staging waits on the new map being surveyed
+# rather than on the old one. Root is the country.
+cm_ab_clear_bailiff_plan = {
+	clear_variable_list = cm_ab_bailiff_picks
+	clear_variable_list = cm_ab_bailiff_raw
+	clear_variable_map = cm_ab_bailiff_seen
+	remove_variable = cm_ab_bailiff_open
+}
+
+# The unique local_max_control types across this cycle's slice, wealthiest first: tax base over
+# control is what a control building earns, which is why the proximity gate does not apply - a
+# location carrying no control is the one such a building is for. A location takes every type it
+# can hold before the walk moves on. No country-wide cap limits these, so they take no survey and
+# a location newly meeting a type's own rules stages the cycle its market comes round.
+# One level per location. Root is the country.
+cm_ab_stage_max_control_types = {
+	cm_ab_build_control_types = yes
+	if = {
+		limit = {
+			has_variable_list = cm_ab_control_types
+			variable_list_size = { name = cm_ab_control_types value >= 1 }
+		}
+		ordered_in_list = {
+			variable = cm_slice_locations
+			order_by = cm_location_raw_wealth
+			max = cm_max_guess_at_number_of_locations
+			check_range_bounds = no
+			save_scope_as = cm_location
+			scope:cm_country = {
+				every_in_list = {
+					variable = cm_ab_control_types
+					save_scope_as = cm_building_type
+					scope:cm_location = {
+						if = {
+							limit = { cm_ab_max_control_site_ok = yes }
+							cm_ab_stage_build_candidate = { cat = 4 }
+							scope:cm_country = { set_variable = { name = cm_ab_ctrl_staged value = 1 } }
+						}
+					}
+				}
+			}
+		}
+	}
+	clear_variable_list = cm_ab_control_types
+}
+
+# The unique types this country can build at all, most control first (game
+# in_game/common/building_types/unique_buildings.txt: ostrog 0.10, zhixian 0.10,
+# tur_kodjabashi_office 0.1, eng_royal_forest 0.05, eghabho_nore_mansion 0.05, tambo 0.05).
+# Resolving the country half of each type's placement rules once keeps can_build_building out of
+# the per-location walk, and leaves it empty for a country holding none. Root is the country.
+cm_ab_build_control_types = {
+	clear_variable_list = cm_ab_control_types
+	cm_ab_add_control_type = { bt = ostrog }
+	cm_ab_add_control_type = { bt = zhixian }
+	cm_ab_add_control_type = { bt = tur_kodjabashi_office }
+	cm_ab_add_control_type = { bt = eng_royal_forest }
+	cm_ab_add_control_type = { bt = eghabho_nore_mansion }
+	cm_ab_add_control_type = { bt = tambo }
+}
+
+# Root is the country. $bt$ = the type key.
+cm_ab_add_control_type = {
+	building_type:$bt$ = { save_scope_as = cm_building_type }
+	if = {
+		limit = { cm_ab_country_can_build_type = yes }
+		add_to_variable_list = { name = cm_ab_control_types target = scope:cm_building_type }
+	}
+}
+
+# Custom drain, in the same four blocks staging uses. The three fixed sets drain ahead of the
+# roster because each is small and bounded - the control buildings by the country-wide num_bailiffs
+# cap, the market centers by the handful of centers a country owns - while the roster is every
+# enabled type at every owned location and would otherwise take the pool before they were reached.
+# Root is the country.
+cm_ab_pass_custom = {
+	if = {
+		limit = { exists = var:cm_ab_custom_capital }
+		cm_ab_drain_capital_type = { bt = royal_garden }
+		cm_ab_drain_capital_type = { bt = royal_court }
+		cm_ab_drain_capital_type = { bt = house_of_parliament }
+		cm_ab_drain_capital_type = { bt = order_headquarters }
+		cm_ab_drain_capital_type = { bt = admiralty }
+		cm_ab_drain_capital_type = { bt = war_college }
+		cm_ab_drain_capital_type = { bt = tax_assessor }
+		cm_ab_drain_capital_type = { bt = supreme_court }
+		cm_ab_drain_capital_type = { bt = chancery }
+		cm_ab_drain_capital_type = { bt = republican_assembly }
+		cm_ab_drain_capital_type = { bt = pirate_stronghold }
+		cm_ab_drain_capital_type = { bt = sergeantry }
+		cm_ab_drain_capital_type = { bt = city_guard }
+	}
+	if = {
+		limit = { exists = var:cm_ab_custom_control }
+		cm_ab_drain_bailiffs = yes
+		cm_ab_drain_max_control_types = yes
+	}
+	if = {
+		limit = { exists = var:cm_ab_custom_market_centers }
+		cm_ab_drain_custom_type = { bt = entrepot }
+		cm_ab_drain_custom_type = { bt = trading_hub }
+		cm_ab_drain_custom_type = { bt = customs_house }
+		cm_ab_drain_custom_type = { bt = stock_exchange }
+		cm_ab_drain_custom_type = { bt = clearing_house }
+		cm_ab_drain_custom_type = { bt = market_warehouse }
+		# Last, so the trade buildings claim the pool ahead of it.
+		cm_ab_drain_custom_type = { bt = city_walls }
+	}
+	if = {
+		limit = { exists = var:cm_ab_custom_roster }
+		cm_ab_drain_custom_roster = yes
+	}
+}
+
+# One capital-only type, past the capital's open slots on the max-control buildings' terms, so
+# gold is the only thing that can stop it and the category holds for one it cannot afford. The
+# staged location is walked rather than reached through capital, since a capital moved between
+# staging and this drain would leave the entry unconsumed. Root is the country. $bt$ = the type key.
+cm_ab_drain_capital_type = {
+	building_type:$bt$ = { save_scope_as = cm_building_type }
+	if = {
+		limit = {
+			local_var:cm_ab_cost_blocked = 0
+			has_variable_list = cm_ab_b_locations
+		}
+		every_in_list = {
+			variable = cm_ab_b_locations
+			save_temporary_scope_as = cm_ab_drain_loc
+			scope:cm_ab_drain_loc = {
+				cm_ab_try_approve_build = { cat = 4 POOL = cm_ab_pool_custom GOODS_GATE = cm_market_has_construction_goods_for_building SLOTS_GATE = always }
+			}
+		}
+	}
+}
+
+# Root is the country. $bt$ = a type key with no chain.
+cm_ab_drain_custom_type = {
+	building_type:$bt$ = { save_scope_as = cm_building_type }
+	cm_ab_drain_custom_resolved = yes
+}
+
+# The bailiff, richest RGO first at what its market pays for it now, which is the order its survey
+# and its staging both pick in. It drains on its own rather than taking a turn in the raw-wealth
+# walk below: the bailiff stands only on rural land and of the six unique types can share a
+# location with ostrog, eng_royal_forest (both country-exclusive) and tambo, so grouping it with
+# them buys nothing. Root is the country.
+cm_ab_drain_bailiffs = {
+	building_type:bailiff = { save_scope_as = cm_building_type }
+	if = {
+		limit = {
+			local_var:cm_ab_cost_blocked = 0
+			exists = var:cm_ab_bailiff_staged
+		}
+		ordered_in_list = {
+			variable = cm_ab_b_locations
+			order_by = cm_location_rgo_market_value
+			max = cm_max_guess_at_number_of_locations
+			check_range_bounds = no
+			save_temporary_scope_as = cm_ab_drain_loc
+			scope:cm_ab_drain_loc = {
+				cm_ab_try_approve_build = { cat = 4 POOL = cm_ab_pool_custom GOODS_GATE = cm_market_has_construction_goods_for_building SLOTS_GATE = always }
+			}
+		}
+	}
+}
+
+# The unique types, wealthiest locations first and past each location's open slots: a location takes
+# every unique type staged there before the walk moves on, so its slots and labour go to the whole
+# set, and inside a location they come in local_max_control order. Root is the country.
+cm_ab_drain_max_control_types = {
+	if = {
+		limit = {
+			local_var:cm_ab_cost_blocked = 0
+			exists = var:cm_ab_ctrl_staged
+		}
+		ordered_in_list = {
+			variable = cm_ab_b_locations
+			order_by = cm_location_raw_wealth
+			max = cm_max_guess_at_number_of_locations
+			check_range_bounds = no
+			save_temporary_scope_as = cm_ab_drain_loc
+			scope:cm_ab_drain_loc = {
+				cm_ab_drain_control_type_here = { bt = ostrog }
+				cm_ab_drain_control_type_here = { bt = zhixian }
+				cm_ab_drain_control_type_here = { bt = tur_kodjabashi_office }
+				cm_ab_drain_control_type_here = { bt = eng_royal_forest }
+				cm_ab_drain_control_type_here = { bt = eghabho_nore_mansion }
+				cm_ab_drain_control_type_here = { bt = tambo }
+			}
+		}
+	}
+}
+
+# Root is the location. $bt$ = the type key.
+cm_ab_drain_control_type_here = {
+	building_type:$bt$ = { save_scope_as = cm_building_type }
+	cm_ab_try_approve_build = { cat = 4 POOL = cm_ab_pool_custom GOODS_GATE = cm_market_has_construction_goods_for_building SLOTS_GATE = always }
+}
+
+# Drains the roster in the player's order, so a row's position decides which types claim the pool
+# first. Root is the country.
+cm_ab_drain_custom_roster = {
+	if = {
+		limit = { has_variable_list = cm_ab_building_types_list }
+		every_in_list = {
+			variable = cm_ab_building_types_list
+			save_scope_as = cm_building_type
+			scope:cm_country = {
+				if = {
+					limit = { is_target_in_variable_list = { name = cm_ab_building_types_enabled target = scope:cm_building_type } }
+					cm_ab_resolve_building_type = yes
+					# The raw key, not the resolved one: the resolve walks marketplace up to its
+					# current tier, which no longer matches building_type:marketplace.
+					if = {
+						limit = { scope:cm_ab_settings_type = building_type:marketplace }
+						cm_ab_drain_custom_by_market_access = yes
+					} else = {
+						cm_ab_drain_custom_resolved = yes
+					}
+				}
+			}
+		}
+	}
+}
+
+# Lowest market access first: the marketplace chain grants local_market_access per level (game
+# in_game/common/building_types/trade_buildings.txt, marketplace), so the locations with the least
+# of it gain the most. ordered_ iterators sort high to low, hence the negated order value.
+# Root is the country. Expects scope:cm_building_type.
+cm_ab_drain_custom_by_market_access = {
+	if = {
+		limit = {
+			local_var:cm_ab_cost_blocked = 0
+			has_variable_list = cm_ab_b_locations
+		}
+		ordered_in_list = {
+			variable = cm_ab_b_locations
+			order_by = cm_ab_market_access_inverted
+			max = cm_max_guess_at_number_of_locations
+			check_range_bounds = no
+			save_temporary_scope_as = cm_ab_drain_loc
+			scope:cm_ab_drain_loc = {
+				cm_ab_try_approve_build = { cat = 4 POOL = cm_ab_pool_custom GOODS_GATE = cm_market_has_construction_goods_for_building SLOTS_GATE = cm_ab_location_has_open_build_slot }
+			}
+		}
+	}
+}
+
+# Root is the country. Expects scope:cm_building_type.
+cm_ab_drain_custom_resolved = {
+	if = {
+		limit = {
+			local_var:cm_ab_cost_blocked = 0
+			has_variable_list = cm_ab_b_locations
+		}
+		every_in_list = {
+			variable = cm_ab_b_locations
+			save_temporary_scope_as = cm_ab_drain_loc
+			scope:cm_ab_drain_loc = {
+				cm_ab_try_approve_build = { cat = 4 POOL = cm_ab_pool_custom GOODS_GATE = cm_market_has_construction_goods_for_building SLOTS_GATE = cm_ab_location_has_open_build_slot }
+			}
+		}
+	}
+}

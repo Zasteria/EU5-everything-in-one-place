@@ -1,0 +1,90 @@
+﻿# Mapmode helper triggers.
+
+# Root is location. True if auto-food currently processes this location for its owner:
+# player-enabled or picked by Auto-Build. The player branch takes the same rank test the system
+# branch carries in cm_ab_location_is_system_food_active, the toggle's own button being hidden
+# above rural rank.
+cm_location_is_auto_food_active = {
+	exists = owner
+	OR = {
+		AND = {
+			exists = var:cm_auto_food_location_enabled
+			location_rank = location_rank:rural_settlement
+		}
+		cm_ab_location_is_system_food_active = yes
+	}
+}
+
+# Root is country. Tax-base placement scoring (the default; option 2 is proximity, option 3 is
+# population).
+cm_pf_method_is_tax_base = {
+	OR = {
+		NOT = { exists = var:cm_placement_finder_method }
+		var:cm_placement_finder_method = 1
+	}
+}
+
+# Root is country. Population placement scoring (method option 3): weights each reached location by
+# its population where tax base weights it by cm_location_raw_wealth.
+cm_pf_method_is_population = {
+	exists = var:cm_placement_finder_method
+	var:cm_placement_finder_method = 3
+}
+
+# Root is country. Current-roads placement scoring (roads option 1; option 2 Max Roads is the default, option 3 is Best Possible).
+cm_pf_roads_is_current = {
+	exists = var:cm_placement_finder_roads
+	var:cm_placement_finder_roads = 1
+}
+
+# Root is country. Best-possible land infrastructure placement scoring (roads option 3): assumes
+# the best roads everywhere (as option 2, Max Roads) plus unlocked, not-yet-built land
+# infrastructure buildings.
+cm_pf_roads_is_best_possible = {
+	exists = var:cm_placement_finder_roads
+	var:cm_placement_finder_roads = 3
+}
+
+# Root is country. Current naval presence in the sea legs (naval option 1; option 2 Max Presence is the default); options 2-3 assume max.
+cm_pf_naval_is_current_presence = {
+	exists = var:cm_placement_finder_naval
+	var:cm_placement_finder_naval = 1
+}
+
+# Root is country. Optimal harbor capacity in the port legs (naval option 3).
+cm_pf_naval_is_optimal_harbor = {
+	exists = var:cm_placement_finder_naval
+	var:cm_placement_finder_naval = 3
+}
+
+# No scope. True when a completed river-adjacency harvest at the current version is in the save,
+# so the per-location cm_pf_river_neighbors lists the path search reads can be trusted. The stamp
+# is written only by the harvest's completion branch, so a save taken mid-harvest reads false.
+cm_pf_river_data_is_current = {
+	has_global_variable = cm_pf_river_stamp
+	global_var:cm_pf_river_stamp = cm_pf_river_version_value
+	NOT = { has_global_variable = cm_pf_river_process }
+}
+
+# Root is location. The three is_lake = yes topographies: in_game/common/topography/00_default.txt:228-286
+cm_pf_location_is_lake = {
+	OR = {
+		topography = lakes
+		topography = high_lakes
+		topography = salt_pans
+	}
+}
+
+# Root is location. True if this location has a road (any type - gravel/paved/modern/railroad
+# all count equally, see cm_pf_edge_road_reduction_value) or a river. The road-or-river
+# vegetation-cancel rule's location-only proxy for cm_location_proximity_modifier: a bare
+# location has no path-search direction to check a specific edge against, so num_roads/has_river
+# (both direction-agnostic) are used as-is, assuming any road or river on this location runs the
+# right way. The placement finder does NOT use this trigger - cm_pf_prime_land_location checks
+# each specific edge instead, since it knows the real hop-by-hop direction of travel.
+cm_location_has_road_or_river = {
+	OR = {
+		num_roads >= 1
+		has_river = yes
+	}
+}

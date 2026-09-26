@@ -1,0 +1,160 @@
+﻿# Auto-Grant Urban Rights, specialization half: one royal specialization right per location,
+# the one worth the most gold among those suiting the location well enough. Fit is
+# cm_trmm_rightv_*, value is cm_trmm_rightval_*, both the Recommended Urban Rights map mode's.
+# Runs after the player's own enabled rights are granted.
+
+# Best-fitting locations first. Root is the country, scope:cm_country set.
+# town_rights_enable unlocks all 9 royal rights: in_game/common/advances/0_age_of_discovery.txt:556
+cm_atr_ur_specialization_pass = {
+	if = {
+		limit = { cm_town_rights_grant_affordable = yes }
+		set_local_variable = { name = cm_atr_ur_win value = cm_atr_ur_window_ratio }
+		ordered_in_list = {
+			variable = cm_slice_locations
+			order_by = cm_atr_ur_order
+			max = cm_max_guess_at_number_of_locations
+			check_range_bounds = no
+			limit = {
+				has_max_town_rights = no
+				has_variable = cm_trmm_best_idx
+				cm_atr_ur_has_no_specialization = yes
+			}
+			# The iterator snapshots its limit before the body runs.
+			if = {
+				limit = { scope:cm_country = { cm_town_rights_grant_affordable = yes } }
+				cm_atr_ur_pick_specialization = yes
+			}
+		}
+	}
+}
+
+# Grants $RIGHT$ and, unless the player turned it off, turns on auto-expand for the
+# industries it boosts, the same set the map mode's right-click grant registers.
+# $ALIAS$ = the right's short alias. Root is the location, expects scope:cm_country.
+cm_atr_ur_grant = {
+	cm_trmm_grant_right = { RIGHT = $RIGHT$ }
+	if = {
+		limit = { scope:cm_country = { exists = var:cm_specialization_expand } }
+		cm_trmm_enable_expands_$ALIAS$ = yes
+	}
+}
+
+# Stages $RIGHT$'s fit score into local_var:cm_atr_ur_v_$ALIAS$, leaving 0 where the right
+# cannot be granted here. Root is the location, expects scope:cm_country.
+cm_atr_ur_stage_right = {
+	set_local_variable = { name = cm_atr_ur_v_$ALIAS$ value = 0 }
+	if = {
+		limit = { cm_trmm_right_fits_location = { RIGHT = $RIGHT$ ALLOW = cm_can_grant_specialization_right_at_location } }
+		set_local_variable = { name = cm_atr_ur_v_$ALIAS$ value = cm_trmm_rightv_$ALIAS$ }
+	}
+}
+
+# Stages $ALIAS$'s value where it clears the fit bar, so only the shortlist is priced
+# and a right that cannot be granted here is never reached.
+# Root is the location, expects scope:cm_country.
+cm_atr_ur_value_right = {
+	set_local_variable = { name = cm_atr_ur_val_$ALIAS$ value = 0 }
+	if = {
+		limit = { local_var:cm_atr_ur_v_$ALIAS$ >= local_var:cm_atr_ur_thresh }
+		set_local_variable = { name = cm_atr_ur_val_$ALIAS$ value = cm_trmm_rightval_$ALIAS$ }
+	}
+}
+
+# Grants the most valuable of the rights scoring within the player's window of the best
+# right still grantable here. Root is the location, expects scope:cm_country.
+# Rights: in_game/common/town_rights/01_discovery.txt
+cm_atr_ur_pick_specialization = {
+	cm_atr_ur_stage_right = { RIGHT = royal_tooling_rights ALIAS = tooling }
+	cm_atr_ur_stage_right = { RIGHT = royal_jewelry_rights ALIAS = jewelry }
+	cm_atr_ur_stage_right = { RIGHT = royal_naval_rights ALIAS = naval }
+	cm_atr_ur_stage_right = { RIGHT = royal_textile_rights ALIAS = textile }
+	cm_atr_ur_stage_right = { RIGHT = royal_weaponry_rights ALIAS = weaponry }
+	cm_atr_ur_stage_right = { RIGHT = royal_book_rights ALIAS = book }
+	cm_atr_ur_stage_right = { RIGHT = royal_artisan_rights ALIAS = artisan }
+	cm_atr_ur_stage_right = { RIGHT = royal_brewing_rights ALIAS = brewing }
+	cm_atr_ur_stage_right = { RIGHT = royal_masonry_rights ALIAS = masonry }
+	set_local_variable = { name = cm_atr_ur_best value = local_var:cm_atr_ur_v_tooling }
+	change_local_variable = { name = cm_atr_ur_best max = local_var:cm_atr_ur_v_jewelry }
+	change_local_variable = { name = cm_atr_ur_best max = local_var:cm_atr_ur_v_naval }
+	change_local_variable = { name = cm_atr_ur_best max = local_var:cm_atr_ur_v_textile }
+	change_local_variable = { name = cm_atr_ur_best max = local_var:cm_atr_ur_v_weaponry }
+	change_local_variable = { name = cm_atr_ur_best max = local_var:cm_atr_ur_v_book }
+	change_local_variable = { name = cm_atr_ur_best max = local_var:cm_atr_ur_v_artisan }
+	change_local_variable = { name = cm_atr_ur_best max = local_var:cm_atr_ur_v_brewing }
+	change_local_variable = { name = cm_atr_ur_best max = local_var:cm_atr_ur_v_masonry }
+	if = {
+		limit = { local_var:cm_atr_ur_best > 0 }
+		# Floor at 0.001: fit scores carry three decimals (cm_trmm_best_mil holds them in
+		# thousandths), so a window of 0 still leaves out a right with no fit at all.
+		set_local_variable = {
+			name = cm_atr_ur_thresh
+			value = {
+				value = local_var:cm_atr_ur_best
+				multiply = local_var:cm_atr_ur_win
+				min = 0.001
+			}
+		}
+		# The shortlist priced, then the one adding the most gold per level. Value is
+		# not weighed against fit: the bar above is what fit decides.
+		cm_atr_ur_value_right = { ALIAS = tooling }
+		cm_atr_ur_value_right = { ALIAS = jewelry }
+		cm_atr_ur_value_right = { ALIAS = naval }
+		cm_atr_ur_value_right = { ALIAS = textile }
+		cm_atr_ur_value_right = { ALIAS = weaponry }
+		cm_atr_ur_value_right = { ALIAS = book }
+		cm_atr_ur_value_right = { ALIAS = artisan }
+		cm_atr_ur_value_right = { ALIAS = brewing }
+		cm_atr_ur_value_right = { ALIAS = masonry }
+		set_local_variable = { name = cm_atr_ur_bestval value = local_var:cm_atr_ur_val_tooling }
+		change_local_variable = { name = cm_atr_ur_bestval max = local_var:cm_atr_ur_val_jewelry }
+		change_local_variable = { name = cm_atr_ur_bestval max = local_var:cm_atr_ur_val_naval }
+		change_local_variable = { name = cm_atr_ur_bestval max = local_var:cm_atr_ur_val_textile }
+		change_local_variable = { name = cm_atr_ur_bestval max = local_var:cm_atr_ur_val_weaponry }
+		change_local_variable = { name = cm_atr_ur_bestval max = local_var:cm_atr_ur_val_book }
+		change_local_variable = { name = cm_atr_ur_bestval max = local_var:cm_atr_ur_val_artisan }
+		change_local_variable = { name = cm_atr_ur_bestval max = local_var:cm_atr_ur_val_brewing }
+		change_local_variable = { name = cm_atr_ur_bestval max = local_var:cm_atr_ur_val_masonry }
+		# A right can clear the fit bar on the location's own output bonus alone while
+		# every one of its goods is barred by a location gate, and that right adds
+		# nothing, so nothing is granted. Ties fall to list order, as the map mode's do.
+		if = {
+			limit = { local_var:cm_atr_ur_bestval > 0 }
+			if = {
+				limit = { local_var:cm_atr_ur_val_tooling = local_var:cm_atr_ur_bestval }
+				cm_atr_ur_grant = { RIGHT = royal_tooling_rights ALIAS = tooling }
+			}
+			else_if = {
+				limit = { local_var:cm_atr_ur_val_jewelry = local_var:cm_atr_ur_bestval }
+				cm_atr_ur_grant = { RIGHT = royal_jewelry_rights ALIAS = jewelry }
+			}
+			else_if = {
+				limit = { local_var:cm_atr_ur_val_naval = local_var:cm_atr_ur_bestval }
+				cm_atr_ur_grant = { RIGHT = royal_naval_rights ALIAS = naval }
+			}
+			else_if = {
+				limit = { local_var:cm_atr_ur_val_textile = local_var:cm_atr_ur_bestval }
+				cm_atr_ur_grant = { RIGHT = royal_textile_rights ALIAS = textile }
+			}
+			else_if = {
+				limit = { local_var:cm_atr_ur_val_weaponry = local_var:cm_atr_ur_bestval }
+				cm_atr_ur_grant = { RIGHT = royal_weaponry_rights ALIAS = weaponry }
+			}
+			else_if = {
+				limit = { local_var:cm_atr_ur_val_book = local_var:cm_atr_ur_bestval }
+				cm_atr_ur_grant = { RIGHT = royal_book_rights ALIAS = book }
+			}
+			else_if = {
+				limit = { local_var:cm_atr_ur_val_artisan = local_var:cm_atr_ur_bestval }
+				cm_atr_ur_grant = { RIGHT = royal_artisan_rights ALIAS = artisan }
+			}
+			else_if = {
+				limit = { local_var:cm_atr_ur_val_brewing = local_var:cm_atr_ur_bestval }
+				cm_atr_ur_grant = { RIGHT = royal_brewing_rights ALIAS = brewing }
+			}
+			else_if = {
+				limit = { local_var:cm_atr_ur_val_masonry = local_var:cm_atr_ur_bestval }
+				cm_atr_ur_grant = { RIGHT = royal_masonry_rights ALIAS = masonry }
+			}
+		}
+	}
+}

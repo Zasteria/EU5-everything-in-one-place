@@ -1,0 +1,476 @@
+﻿# Lucky Nations: this mod's construction automation running on selected AI countries.
+# The engine build actions in cm_construct_queue_window.gui take no country argument, so a
+# lucky nation scores its queues in cm_ln_queue_window.gui and constructs from script.
+
+# Marks the lucky set from the game rule, at lobby and every month, so a rule change in the pause
+# menu applies without a reload. The rule's answer is staged in cm_ln_want and diffed against the
+# marks, so a country losing the mark is handed to cm_ln_undesignate rather than dropped silently.
+# No scope.
+cm_ln_seed_marks = {
+	every_country = {
+		limit = { exists = var:cm_ln_want }
+		remove_variable = cm_ln_want
+	}
+	# Each tag's formables are listed lowest first, so a country that has passed through two ends up
+	# holding the seat at the furthest.
+	cm_ln_seed_claim_formable = { TAG = BRA FORM = PRU }
+	cm_ln_seed_claim_formable = { TAG = BRA FORM = GER }
+	cm_ln_seed_claim_formable = { TAG = CAS FORM = SPA }
+	cm_ln_seed_claim_formable = { TAG = ENG FORM = GBR }
+	cm_ln_seed_claim_formable = { TAG = HOL FORM = NED }
+	cm_ln_seed_claim_formable = { TAG = MOS FORM = RUS }
+	cm_ln_seed_claim_formable = { TAG = POL FORM = PLC }
+	cm_ln_seed_claim_formable = { TAG = SWE FORM = SCA }
+	cm_ln_seed_mark_seat = { RULE = cm_ln_lucky_nations_brandenburg TAG = BRA }
+	cm_ln_seed_mark_seat = { RULE = cm_ln_lucky_nations_castile TAG = CAS }
+	cm_ln_seed_mark_seat = { RULE = cm_ln_lucky_nations_china TAG = CHI }
+	cm_ln_seed_mark_seat = { RULE = cm_ln_lucky_nations_england TAG = ENG }
+	cm_ln_seed_mark_seat = { RULE = cm_ln_lucky_nations_ottomans TAG = TUR }
+	cm_ln_seed_mark_seat = { RULE = cm_ln_lucky_nations_european_powers TAG = BRA }
+	cm_ln_seed_mark_seat = { RULE = cm_ln_lucky_nations_european_powers TAG = CAS }
+	cm_ln_seed_mark_seat = { RULE = cm_ln_lucky_nations_european_powers TAG = ENG }
+	cm_ln_seed_mark_seat = { RULE = cm_ln_lucky_nations_european_powers TAG = FRA }
+	cm_ln_seed_mark_seat = { RULE = cm_ln_lucky_nations_european_powers TAG = HAB }
+	cm_ln_seed_mark_seat = { RULE = cm_ln_lucky_nations_european_powers TAG = HOL }
+	cm_ln_seed_mark_seat = { RULE = cm_ln_lucky_nations_european_powers TAG = MOS }
+	cm_ln_seed_mark_seat = { RULE = cm_ln_lucky_nations_european_powers TAG = POL }
+	cm_ln_seed_mark_seat = { RULE = cm_ln_lucky_nations_european_powers TAG = POR }
+	cm_ln_seed_mark_seat = { RULE = cm_ln_lucky_nations_european_powers TAG = SWE }
+	cm_ln_seed_mark_seat = { RULE = cm_ln_lucky_nations_european_powers TAG = TUR }
+	# Nothing else on designation: cm_ln_open_done is never removed, so a country marked for the
+	# first time runs the opening capital move from its own next monthly pulse, and one marked
+	# again after a rule change correctly does not repeat it.
+	every_country = {
+		limit = {
+			exists = var:cm_ln_want
+			NOT = { exists = var:cm_ln_active }
+		}
+		set_variable = { name = cm_ln_active value = yes }
+	}
+	every_country = {
+		limit = {
+			exists = var:cm_ln_active
+			NOT = { exists = var:cm_ln_want }
+		}
+		remove_variable = cm_ln_active
+		cm_ln_undesignate = yes
+	}
+}
+
+# Stages the want mark for one rule setting. Forming a country changes its tag and keeps the
+# country itself, so the rule follows a seat variable planted on the starting tag rather than the
+# tag: Castile keeps the seat as Spain, and c:CAS takes it back only once no living country holds
+# it. No scope.
+cm_ln_seed_mark_seat = {
+	if = {
+		limit = {
+			has_game_rule = $RULE$
+		}
+		if = {
+			limit = {
+				NOT = { any_country = { exists = var:cm_ln_seat_$TAG$ } }
+				country_exists = c:$TAG$
+			}
+			c:$TAG$ = { set_variable = { name = cm_ln_seat_$TAG$ value = yes } }
+		}
+		every_country = {
+			# Marking a human would have the seeded values overwrite their own settings.
+			limit = {
+				exists = var:cm_ln_seat_$TAG$
+				is_ai = yes
+			}
+			set_variable = { name = cm_ln_want value = yes }
+		}
+	}
+}
+
+# Hands a seat to the AI country now holding a formable's tag, which is what transfers a lucky nation
+# to whoever formed its successor: the Teutonic Order forming Prussia becomes the lucky nation and a
+# living Brandenburg stops being one. Refusing a human holder is what keeps a player forming Prussia
+# from taking a lucky nation out of the game. It reads no rule, since which country a seat's heir is
+# does not depend on which settings are on. No scope.
+cm_ln_seed_claim_formable = {
+	# Nested rather than a second condition beside country_exists, so nothing reads a tag no living
+	# country holds, which most of these are in most games.
+	if = {
+		limit = { country_exists = c:$FORM$ }
+		c:$FORM$ = {
+			if = {
+				limit = {
+					is_ai = yes
+					NOT = { exists = var:cm_ln_seat_$TAG$ }
+				}
+				every_country = {
+					limit = { exists = var:cm_ln_seat_$TAG$ }
+					remove_variable = cm_ln_seat_$TAG$
+				}
+				set_variable = { name = cm_ln_seat_$TAG$ value = yes }
+			}
+		}
+	}
+}
+
+# Everything a game is handed at the start on a lucky nation's behalf, which is the half of the
+# system the Decisions and Setup rule setting adds. Each change carries its own gate below, since
+# nothing here makes sense unless the country it is for is one of the lucky ones. No scope.
+cm_ln_run_setup_changes = {
+	if = {
+		limit = { has_game_rule = cm_ln_lucky_nation_effects_decisions_and_setup }
+		cm_ln_seed_portugal_guarantees = yes
+	}
+}
+
+# An experiment against Portugal dying to Castile: the preset opens with four guarantees on it.
+# Nothing renews or replaces one a guarantor lets lapse or breaks. No scope.
+cm_ln_seed_portugal_guarantees = {
+	if = {
+		limit = { has_game_rule = cm_ln_lucky_nations_european_powers }
+		cm_ln_guarantee_portugal = { TAG = FRA }
+		cm_ln_guarantee_portugal = { TAG = ENG }
+		cm_ln_guarantee_portugal = { TAG = ARA }
+		cm_ln_guarantee_portugal = { TAG = MOR }
+	}
+}
+
+# first is the giving side of a one-way relation, so $TAG$ is the guarantor; vanilla's Auld Alliance
+# places France's guarantee of Scotland the same way (in_game/events/DHE/flavor_SCO.txt:1676).
+# No scope.
+cm_ln_guarantee_portugal = {
+	create_relation = {
+		first = c:$TAG$
+		second = c:POR
+		type = relation_type:guarantee
+	}
+}
+
+# Rebuilds the GUI's iteration set and re-seeds each member. Runs at lobby and monthly, so
+# annexation, tag switches and a player passing through a lucky tag all resolve on their own.
+# No scope.
+cm_ln_refresh_countries = {
+	clear_global_variable_list = cm_ln_countries
+	every_country = {
+		limit = { cm_ln_is_active = yes }
+		add_to_global_variable_list = { name = cm_ln_countries target = this }
+		cm_ln_assign_country_id = yes
+		cm_ln_seed_settings = yes
+	}
+}
+
+# Counts the lucky nations with a cycle open, and goes absent at zero. The queue window's
+# driver gate reads it. No scope.
+cm_ln_sync_open_cycles = {
+	set_global_variable = { name = cm_ln_open_cycles value = 0 }
+	every_country = {
+		limit = {
+			cm_ln_is_active = yes
+			exists = var:cm_should_construct
+		}
+		change_global_variable = { name = cm_ln_open_cycles add = 1 }
+	}
+	if = {
+		limit = {
+			has_global_variable = cm_ln_open_cycles
+			global_var:cm_ln_open_cycles = 0
+		}
+		remove_global_variable = cm_ln_open_cycles
+	}
+}
+
+# Counts the lucky nations with Building Cleanup toggles waiting, and goes absent at zero.
+# The queue window's toggle driver gate reads it. No scope.
+cm_ln_sync_cu_pending = {
+	set_global_variable = { name = cm_ln_cu_pending value = 0 }
+	every_country = {
+		limit = {
+			cm_ln_is_active = yes
+			exists = var:cm_cu_fire
+		}
+		change_global_variable = { name = cm_ln_cu_pending add = 1 }
+	}
+	if = {
+		limit = {
+			has_global_variable = cm_ln_cu_pending
+			global_var:cm_ln_cu_pending = 0
+		}
+		remove_global_variable = cm_ln_cu_pending
+	}
+}
+
+# Per-lobby country setup, mirroring cm_on_init_human_country's share of it. Root is the country.
+cm_ln_init_country = {
+	# A loaded save can have a cycle's flags stuck on, which stops auto-construction.
+	cm_q_reset_cycle_state = yes
+	# A save taken between the cleanup toggles and their end state would otherwise
+	# toggle the same buildings a second time after the load.
+	remove_variable = cm_cu_fire
+	clear_variable_list = cm_cu_toggle
+	set_variable = { name = cm_q_planned_spend value = 0 }
+}
+
+# Writes the settings an AI country has no CMM registration to give it. Values are the
+# registered defaults in cm_cmm_effects.txt and cm_cmm_custom_effects.txt except where
+# marked. Root is the country.
+#
+# Only the three values that move with the treasury and the calendar are rewritten every month; the
+# rest are stamped, so a country already seeded costs three writes instead of two full roster
+# rebuilds and the category list. A player who passes through the tag still leaves nothing behind,
+# because cm_ln_undesignate drops the stamp: the mark goes on the next cm_ln_seed_marks diff,
+# undesignate runs, and the AI taking the tag back seeds in full over CMF's transfer re-sync.
+cm_ln_seed_settings = {
+	# The gold floor follows the one reserve rule rather than the registered default.
+	set_variable = { name = cm_minimum_gold value = cm_ln_reserve_value }
+	# Driven off the treasury rather than holding the registered 20.
+	set_variable = { name = cm_ab_production_min_roi value = cm_ln_production_min_roi_value }
+	# Registered default is off. The de-urbanizer starts in 1410.
+	if = {
+		limit = { current_date >= 1410.1.1 }
+		set_variable = { name = cm_deurbanize value = yes }
+	} else = {
+		remove_variable = cm_deurbanize
+	}
+	if = {
+		limit = { cm_ln_settings_are_current = no }
+		cm_ln_seed_constant_settings = yes
+		set_variable = { name = cm_ln_seed_stamp value = cm_ln_seed_version_value }
+	}
+}
+
+# The seeded settings that never move once written. Bump cm_ln_seed_version_value when one of them
+# changes. Root is the country.
+cm_ln_seed_constant_settings = {
+	set_variable = { name = cm_allowed_building_overbuild_levels value = 200 }
+	set_variable = { name = cm_urbanize_town_to_city value = yes }
+	# Registered default is off. Lucky nations run every option on.
+	set_variable = { name = cm_urbanize_rural_to_town value = yes }
+
+	# Auto-urbanize is the one Auto-Expand tab feature a lucky nation runs itself, so the priority
+	# list stays empty.
+	clear_variable_list = cm_priority_features_list
+	clear_variable_list = cm_priority_features_enabled
+	set_variable = { name = cm_auto_urbanize_enabled value = yes }
+	set_variable = { name = cm_auto_urbanize_min_discount value = 0 }
+
+	clear_variable_list = cm_auto_urbanize_ignored_rgo_goods
+	add_to_variable_list = { name = cm_auto_urbanize_ignored_rgo_goods target = goods:goods_gold }
+	add_to_variable_list = { name = cm_auto_urbanize_ignored_rgo_goods target = goods:silver }
+	add_to_variable_list = { name = cm_auto_urbanize_ignored_rgo_goods target = goods:iron }
+
+	cm_seed_food_roster = yes
+
+	# Auto-Grant Urban Rights: the granary right off the list, then the specialization draw.
+	set_variable = { name = cm_auto_grant_town_rights value = yes }
+	set_variable = { name = cm_auto_grant_specialization value = yes }
+	set_variable = { name = cm_specialization_window value = 50 }
+	set_variable = { name = cm_specialization_expand value = yes }
+	set_variable = { name = cm_town_rights_min_gov_power value = 90 }
+	clear_variable_list = cm_auto_town_rights_list
+	clear_variable_list = cm_auto_town_rights_enabled
+	add_to_variable_list = { name = cm_auto_town_rights_list target = town_rights_type:granary_town }
+	add_to_variable_list = { name = cm_auto_town_rights_enabled target = town_rights_type:granary_town }
+
+	set_variable = { name = cm_ab_enabled value = yes }
+	set_variable = { name = cm_ab_save_unaffordable value = yes }
+	set_variable = { name = cm_ab_production_max_rel_roi value = 5 }
+	set_variable = { name = cm_ab_production_min_discount value = 0 }
+	set_variable = { name = cm_ab_core_target value = -33 }
+	set_variable = { name = cm_ab_food_subsidize value = yes }
+	set_variable = { name = cm_cu_close_open value = yes }
+	set_variable = { name = cm_cu_destroy value = yes }
+	set_variable = { name = cm_cu_core_goods value = yes }
+	set_variable = { name = cm_cu_auto_food value = yes }
+	set_variable = { name = cm_ab_roads_proximity value = yes }
+	set_variable = { name = cm_ab_roads_market_access value = yes }
+	set_variable = { name = cm_ab_roads_capital value = yes }
+	set_variable = { name = cm_ab_roads_min_discount value = 0 }
+	set_variable = { name = cm_ab_gov_move_seats value = yes }
+	set_variable = { name = cm_ab_gov_prepare_sites value = yes }
+	set_variable = { name = cm_ab_custom_capital value = yes }
+	set_variable = { name = cm_ab_custom_control value = yes }
+	set_variable = { name = cm_ab_custom_market_centers value = yes }
+	set_variable = { name = cm_ab_custom_roster value = yes }
+	cm_seed_custom_roster = yes
+
+	clear_variable_list = cm_ab_core_goods_enabled
+	add_to_variable_list = { name = cm_ab_core_goods_enabled target = goods:masonry }
+	add_to_variable_list = { name = cm_ab_core_goods_enabled target = goods:lumber }
+	add_to_variable_list = { name = cm_ab_core_goods_enabled target = goods:sand }
+	add_to_variable_list = { name = cm_ab_core_goods_enabled target = goods:glass }
+
+	cm_ln_seed_categories = yes
+}
+
+# Category order is the drain priority and the enabled filter at once, so Military going last
+# is what makes it the lowest-priority category, taking its own share and reaching the leftover
+# only once every category above it has passed on it. Only Custom is registered on; lucky nations
+# run every option on. Core Goods gives up 5 of its 10 to Military.
+# Root is the country.
+cm_ln_seed_categories = {
+	clear_variable_list = cm_ab_categories_enabled
+	add_to_variable_list = { name = cm_ab_categories_enabled target = flag:cm_ab_cat_custom }
+	add_to_variable_list = { name = cm_ab_categories_enabled target = flag:cm_ab_cat_core }
+	add_to_variable_list = { name = cm_ab_categories_enabled target = flag:cm_ab_cat_food }
+	add_to_variable_list = { name = cm_ab_categories_enabled target = flag:cm_ab_cat_production }
+	add_to_variable_list = { name = cm_ab_categories_enabled target = flag:cm_ab_cat_roads }
+	add_to_variable_list = { name = cm_ab_categories_enabled target = flag:cm_ab_cat_governors }
+	add_to_variable_list = { name = cm_ab_categories_enabled target = flag:cm_ab_cat_military }
+
+	set_variable = { name = cm_ab_custom_enabled value = 1 }
+	set_variable = { name = cm_ab_core_enabled value = 1 }
+	set_variable = { name = cm_ab_food_enabled value = 1 }
+	set_variable = { name = cm_ab_production_enabled value = 1 }
+	set_variable = { name = cm_ab_roads_enabled value = 1 }
+	set_variable = { name = cm_ab_governors_enabled value = 1 }
+	set_variable = { name = cm_ab_military_enabled value = 1 }
+
+	set_variable = { name = cm_ab_custom_budget value = 10 }
+	set_variable = { name = cm_ab_core_budget value = 5 }
+	set_variable = { name = cm_ab_food_budget value = 10 }
+	set_variable = { name = cm_ab_production_budget value = 60 }
+	set_variable = { name = cm_ab_roads_budget value = 10 }
+	set_variable = { name = cm_ab_military_budget value = 5 }
+}
+
+# The monthly cycle. Nothing is staged until the opening capital move has resolved, so a lucky
+# nation never builds into a capital it is about to leave. Root is the country.
+cm_ln_monthly_cycle = {
+	save_scope_as = cm_country
+	# Ahead of everything that places or gives up a governor, so the count of the ones this country
+	# has bought takes in whatever changed since last month before any of them reads it.
+	cm_ln_sync_paid_seats = yes
+	# Neither depends on the capital move, and a burgher grant lands ahead of the budget refresh
+	# below, so the month's pools count it.
+	cm_ln_bur_trim = yes
+	cm_ln_est_run = yes
+	# set_capital shifts proximity and has_road_to_capital everywhere and the opening governor
+	# placement reads both, so it takes the month after the capital tick resolves.
+	set_local_variable = { name = cm_ln_cap_settled value = 0 }
+	if = {
+		limit = { exists = var:cm_ln_open_done }
+		set_local_variable = { name = cm_ln_cap_settled value = 1 }
+	}
+	cm_ln_open_capital_tick = yes
+	if = {
+		limit = { local_var:cm_ln_cap_settled = 1 }
+		cm_ln_open_gov_tick = yes
+	}
+	if = {
+		limit = { exists = var:cm_ln_open_done }
+		# Ahead of the reorganization tick, so a seat rebuilt this month closes the open slot that
+		# would otherwise start a run.
+		cm_ln_seat_restore_pass = yes
+		# Ahead of the budget refresh, so the month a reorganization claims the treasury is the
+		# month the pools go to zero.
+		cm_gov_reorg_tick = yes
+		# After everything that could have moved a governor or the capital, and ahead of the construction
+		# cycle, so this month's drain walks the new queue rather than next month's.
+		if = {
+			limit = { exists = var:cm_ab_rd_replan }
+			cm_ab_rd_plan = yes
+		}
+		if = {
+			limit = { cm_ab_master_active = yes }
+			cm_ab_monthly_budget_refresh = yes
+			cm_ab_food_sample_markets = yes
+		}
+		cm_run_construction_cycle = yes
+		# The standalone auto-grant hook is human-only, so a lucky nation runs it here.
+		if = {
+			limit = {
+				cm_should_pause_auto_expand = no
+				exists = var:cm_auto_grant_town_rights
+			}
+			cm_run_auto_town_rights = yes
+		}
+		# Building Cleanup steps a few markets a month rather than every one once a year, and
+		# its own hook is human-only too.
+		cm_cu_monthly_pass = yes
+		cm_ln_sync_cu_pending = yes
+	}
+	cm_ln_sync_open_cycles = yes
+}
+
+# The yearly passes, matching cm_ab_yearly_pulse, plus the fort teardown, which is a lucky
+# nation's alone. Root is the country.
+cm_ln_yearly_cycle = {
+	cm_ab_food_yearly_evaluation = yes
+	cm_ln_ft_delete_pass = yes
+}
+
+# Ends a lucky nation's cycle. Root is the country.
+cm_ln_end_cycle = {
+	cm_q_reset_cycle_state = yes
+	cm_ln_sync_open_cycles = yes
+}
+
+# Stops a country the rule no longer marks. The reorganization holds the global cm_gov_token across
+# months through its search phases, so a country dropped part-way through one would hold it for the
+# rest of the session and no lucky nation could search again. Root is the country.
+cm_ln_undesignate = {
+	save_scope_as = cm_country
+	if = {
+		limit = { exists = var:cm_gov_phase }
+		if = {
+			limit = { var:cm_gov_phase > 0 }
+			cm_gov_reorg_teardown = yes
+		}
+	}
+	remove_variable = cm_cu_fire
+	clear_variable_list = cm_cu_toggle
+	# The finder floors its basis proximity at these, so a human taking the tag would score
+	# governor spots against an AI's committed sites.
+	clear_variable_list = cm_ln_open_gov_sites
+	cm_ln_clear_seats = yes
+	remove_variable = cm_ln_gov_paid_seats
+	# A human on the tag overwrites the seeded settings, so the stamp goes with the mark and the AI
+	# taking it back seeds in full.
+	remove_variable = cm_ln_seed_stamp
+	cm_ln_end_cycle = yes
+	cm_ln_sync_cu_pending = yes
+	# Only the scan driver's own disarm clears this global, so an arm carried out of the set would
+	# leave the gate true and no later cycle could make the hidden->shown edge that scans.
+	if = {
+		limit = { NOT = { has_global_variable = cm_ln_open_cycles } }
+		remove_global_variable = cm_ln_scan_armed
+	}
+}
+
+# --- Diagnostics ---
+
+# Run from the console: effect c:<TAG> = { cm_ln_mark_probe = yes }. Reporting the seat beside the
+# mark separates a seat the country never held from one it holds while the mark is refused.
+# Root is the country.
+cm_ln_mark_probe = {
+	set_local_variable = { name = cm_ln_dbg value = 0 }
+	if = {
+		limit = { exists = var:cm_ln_active }
+		set_local_variable = { name = cm_ln_dbg value = 1 }
+	}
+	cmf_log_value = { action = cm_log_mark_active value = local_var:cm_ln_dbg }
+
+	set_local_variable = { name = cm_ln_dbg value = 0 }
+	if = {
+		limit = { exists = var:cm_ln_seat_CAS }
+		set_local_variable = { name = cm_ln_dbg value = 1 }
+	}
+	else_if = {
+		limit = { exists = var:cm_ln_seat_CHI }
+		set_local_variable = { name = cm_ln_dbg value = 2 }
+	}
+	else_if = {
+		limit = { exists = var:cm_ln_seat_ENG }
+		set_local_variable = { name = cm_ln_dbg value = 3 }
+	}
+	else_if = {
+		limit = { exists = var:cm_ln_seat_BRA }
+		set_local_variable = { name = cm_ln_dbg value = 4 }
+	}
+	else_if = {
+		limit = { exists = var:cm_ln_seat_TUR }
+		set_local_variable = { name = cm_ln_dbg value = 5 }
+	}
+	else_if = {
+		limit = { exists = var:cm_ln_seat_FRA }
+		set_local_variable = { name = cm_ln_dbg value = 6 }
+	}
+	cmf_log_value = { action = cm_log_mark_seat value = local_var:cm_ln_dbg }
+}

@@ -1,0 +1,138 @@
+﻿# Root is location; returns true if location is a rural settlement with one of the 13 food good RGOs.
+# Used by the location window widget to gate visibility of the auto-food button - towns and cities
+# can't build the food-specific buildings such as farming village or fishing village, so the button is
+# hidden there.
+cm_is_food_rgo_location = {
+	is_shown = {
+		location_rank = location_rank:rural_settlement
+		OR = {
+			raw_material = goods:rice
+			raw_material = goods:wheat
+			raw_material = goods:maize
+			raw_material = goods:potato
+			raw_material = goods:livestock
+			raw_material = goods:millet
+			raw_material = goods:legumes
+			raw_material = goods:fish
+			raw_material = goods:olives
+			raw_material = goods:fruit
+			raw_material = goods:wild_game
+			raw_material = goods:beeswax
+			raw_material = goods:fur
+		}
+	}
+}
+
+# Root is location. Expects scope:cm_food_good, scope:cm_country as owner. Optional bool scope:cm_set_off.
+# The opt-in flag also locks the location against rank upgrades via cm_auto_food_locked_location.
+cm_set_auto_food_for_location = {
+	effect = {
+		if = { limit = { NOT = { exists = scope:cm_set_off } }
+			if = { limit = { exists = var:cm_auto_food_location_enabled }
+				remove_variable = cm_auto_food_location_enabled
+				remove_location_modifier = cm_auto_food_locked_location
+			} else = {
+				set_variable = { name = cm_auto_food_location_enabled value = yes }
+				add_location_modifier = { modifier = cm_auto_food_locked_location years = 1000 mode = replace }
+			}
+		} else = {
+			if = { limit = { scope:cm_set_off = yes }
+				remove_variable = cm_auto_food_location_enabled
+				remove_location_modifier = cm_auto_food_locked_location
+			} else = {
+				set_variable = { name = cm_auto_food_location_enabled value = yes }
+				add_location_modifier = { modifier = cm_auto_food_locked_location years = 1000 mode = replace }
+			}
+		}
+	}
+
+	is_shown = {
+		exists = var:cm_auto_food_location_enabled
+	}
+}
+
+# --- Glow / tooltip gates ---
+
+# Root is country.
+# True if auto-food is active in the country's priority feature list.
+cm_is_auto_food_feature_enabled = {
+	is_shown = {
+		is_target_in_variable_list = { name = cm_priority_features_enabled target = flag:cm_feature_auto_food }
+	}
+}
+
+# Root is location.
+# Thin wrapper so the tooltip row can call a scripted_gui.
+cm_food_location_has_market_access = {
+	is_shown = {
+		cm_check_location_meets_min_market_access = yes
+	}
+}
+
+# Root is location. Expects scope:cm_country.
+# True when at least one pop-restricted food option is buildable.
+cm_food_location_pops_not_still_filling = {
+	is_shown = {
+		NOT = { cm_food_location_pops_still_filling = yes }
+	}
+}
+
+# Root is location. Expects scope:cm_country, scope:cm_food_good.
+# True if at least one of the six food-building options is viable right now:
+# can-build AND affordable AND meets minimum discount.
+cm_food_location_has_viable_option = {
+	is_shown = {
+		cm_food_location_has_viable_option = yes
+	}
+}
+
+# Root is location. Expects scope:cm_country, scope:cm_food_good.
+# True if at least one food-building option could physically be built here:
+# can-build only, ignores gold/discount. Used to disambiguate the "no option"
+# tooltip row from the "no option meets min discount" tooltip row.
+cm_food_location_has_buildable_option = {
+	is_shown = {
+		cm_food_location_has_buildable_option = yes
+	}
+}
+
+# Root is location.
+# True while every food building standing here still earns or is subsidized. Disambiguates the
+# "no option can be built" tooltip row from the "what is here has stopped earning" row.
+cm_food_location_buildings_still_earn = {
+	is_shown = {
+		cm_food_location_buildings_still_earn = yes
+	}
+}
+
+# Root is location. Expects scope:cm_country, scope:cm_food_good.
+# True if at least one buildable food option meets the minimum discount, ignoring gold.
+# Disambiguates the "no option meets min discount" tooltip row from the "not enough gold" row.
+cm_food_location_has_discounted_option = {
+	is_shown = {
+		cm_food_location_has_discounted_option = yes
+	}
+}
+
+# Root is location. Expects scope:cm_country, scope:cm_food_good.
+# Top-level glow gate for the per-location auto-food button. Mirrors the preconditions
+# inside cm_food_auto_build_in_location, minus transient/queue conditions.
+cm_is_able_to_auto_food_location = {
+	is_shown = {
+		scope:cm_country = {
+			cm_should_pause_auto_expand = no
+			is_target_in_variable_list = { name = cm_priority_features_enabled target = flag:cm_feature_auto_food }
+		}
+		cm_check_location_meets_min_market_access = yes
+		NOT = { cm_food_location_pops_still_filling = yes }
+		cm_food_location_has_viable_option = yes
+		cm_food_location_has_unshortaged_discounted_option = yes
+	}
+}
+
+# Root is location. Expects scope:cm_country, scope:cm_food_good.
+cm_food_location_has_unshortaged_discounted_option = {
+	is_shown = {
+		cm_food_location_has_unshortaged_discounted_option = yes
+	}
+}

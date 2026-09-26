@@ -1,0 +1,811 @@
+﻿# Root = Building. A building's owner is the country that built it, which for a foreign
+# building is not the location's owner.
+cm_set_auto_expand_for_building = {
+	effect = {
+		save_scope_as = cm_the_building
+		building_type = { save_scope_as = cm_building_type }
+		owner = { save_scope_as = cm_country }
+		location = {
+			cm_apply_auto_expand_toggle = yes
+		}
+	}
+}
+
+# Ctrl-click bulk toggle from an existing building's button. Root = Building.
+cm_set_auto_expand_for_building_province = {
+	effect = {
+		save_scope_as = cm_the_building
+		building_type = { save_scope_as = cm_building_type }
+		owner = { save_scope_as = cm_country }
+		location = {
+			cm_toggle_auto_expand_for_building_type_in_province = yes
+		}
+	}
+}
+
+# Manual-upgrade auto-expand swap. Root is the obsolete building being upgraded;
+# scope:cm_new_building_type is its engine replacement tier from the call site, unset when none.
+cm_check_for_auto_expand_when_upgrading_building = {
+	effect = {
+		save_scope_as = cm_the_building
+		scope:cm_the_building = { building_type = { save_temporary_scope_as = cm_old_building_type } }
+		if = { limit = { exists = scope:cm_new_building_type }
+			location = {
+				if = { limit = { owner = { is_target_in_variable_list = { name = cm_mass_auto_expand_building_types target = scope:cm_old_building_type } } }
+					# Mass mode: add new type to country mass list, swap exclusion entries
+					owner = {
+						if = { limit = { NOT = { is_target_in_variable_list = { name = cm_mass_auto_expand_building_types target = scope:cm_new_building_type } } }
+							add_to_variable_list = { name = cm_mass_auto_expand_building_types target = scope:cm_new_building_type }
+						}
+					}
+					if = { limit = { is_target_in_variable_list = { name = cm_auto_expand_excluded_building_types target = scope:cm_old_building_type } }
+						remove_list_variable = { name = cm_auto_expand_excluded_building_types target = scope:cm_old_building_type }
+						if = { limit = { NOT = { is_target_in_variable_list = { name = cm_auto_expand_excluded_building_types target = scope:cm_new_building_type } } }
+							add_to_variable_list = { name = cm_auto_expand_excluded_building_types target = scope:cm_new_building_type }
+						}
+					}
+				} else = {
+					# Normal mode: swap registration from old to new
+					if = { limit = { is_target_in_variable_list = { name = cm_auto_expand_registered_building_types target = scope:cm_old_building_type } }
+						remove_list_variable = { name = cm_auto_expand_registered_building_types target = scope:cm_old_building_type }
+						if = { limit = { NOT = { is_target_in_variable_list = { name = cm_auto_expand_registered_building_types target = scope:cm_new_building_type } } }
+							add_to_variable_list = { name = cm_auto_expand_registered_building_types target = scope:cm_new_building_type }
+						}
+					}
+				}
+			}
+		}
+	}
+}
+# Construction-queue scorer for staged building upgrades: stores gated entries in the metric
+# domain and upgrade-all entries in the list-order domain for cm_q_approval_pass.
+# Root = location, scope:cm_old_building_type = obsolete type, scope:cm_new_building_type = upgrade target from GetNextReplacementBuilding, scope:cm_country = player
+# scope:cm_cost, scope:cm_income, scope:cm_profit = engine values for the replacement type.
+# scope:cm_can_build = CanUpgradeToBuilding for the replacement type.
+# Plus the indirect inputs: cm_indirect_loc, cm_cur_market_access, cm_cur_total_income, cm_cur_rgo_profit.
+cm_gui_construct_upgrade = {
+	is_valid = {
+		always = yes
+	}
+	effect = {
+		# The round loop re-triggers every item: run each staged entry once, skip stale widgets,
+		# and freeze once the fire pass is armed.
+		if = {
+			limit = {
+				scope:cm_country = { NOT = { exists = var:cm_q_fire_approved } }
+				is_target_in_variable_list = { name = cm_gui_upgrade_building_types target = scope:cm_old_building_type }
+				NOT = { is_target_in_variable_list = { name = cm_q_done_upgrade_types target = scope:cm_old_building_type } }
+			}
+			add_to_variable_list = { name = cm_q_done_upgrade_types target = scope:cm_old_building_type }
+			scope:cm_country = { change_variable = { name = cm_q_processed add = 1 } }
+			if = {
+				limit = {
+					exists = scope:cm_new_building_type
+					scope:cm_can_build = yes
+					scope:cm_new_building_type = { save_temporary_scope_as = cm_building_type }
+					# Auto-expand's obsolete upgrades are gated on the replacement's engine values;
+					# upgrade-all entries are not marked gated and skip the metric check.
+					OR = {
+						NOT = { is_target_in_variable_list = { name = cm_q_upgrade_gated_types target = scope:cm_old_building_type } }
+						cm_gui_metric_gate_passes = yes
+					}
+				}
+				# The replacement resolves only in GUI context; the approval pass reads it from here.
+				add_to_variable_map = { name = cm_q_upg_new_types key = scope:cm_old_building_type value = scope:cm_new_building_type }
+				if = {
+					limit = { is_target_in_variable_list = { name = cm_q_upgrade_gated_types target = scope:cm_old_building_type } }
+					save_temporary_scope_as = cm_q_scored_loc
+					save_temporary_scope_value_as = { name = cm_q_score_cost value = scope:cm_cost }
+					cm_q_compute_metric_score = yes
+					add_to_variable_map = { name = cm_q_upg_scores key = scope:cm_old_building_type value = scope:cm_q_score_val }
+					add_to_variable_map = { name = cm_q_upg_costs key = scope:cm_old_building_type value = scope:cm_cost }
+					if = {
+						limit = { OR = { NOT = { has_variable = cm_q_upg_best } var:cm_q_upg_best < scope:cm_q_score_val } }
+						set_variable = { name = cm_q_upg_best value = scope:cm_q_score_val }
+					}
+					scope:cm_country = {
+						add_to_variable_list = { name = cm_q_upg_cand_locations target = scope:cm_q_scored_loc }
+					}
+				} else = {
+					add_to_variable_map = { name = cm_q_upgall_costs key = scope:cm_old_building_type value = scope:cm_cost }
+				}
+			}
+		}
+	}
+}
+# Construction-queue scorer for building kinds. Root is the location.
+# Invoked by the construct queue window per queued entry; applies the metric and
+# profitable-or-subsidized gates using the engine values grabbed in GUI, then stores the
+# item's score and cost for cm_q_approval_pass.
+# scope:cm_cost = GetBuildOrExpandBuildingCost, scope:cm_income = income-to-owner per level,
+# scope:cm_profit = profit per level, scope:cm_can_build = CanBuildOrExpandBuilding.
+# scope:cm_obsolete_building = the standing obsolete predecessor from GetObsoleteBuildingInLocation, unset when none.
+# Plus the indirect inputs: cm_indirect_loc, cm_cur_market_access, cm_cur_total_income, cm_cur_rgo_profit.
+cm_gui_try_build = {
+	saved_scopes = { cm_building_type cm_country cm_cost cm_income cm_profit cm_can_build cm_obsolete_building cm_indirect_loc cm_cur_market_access cm_cur_total_income cm_cur_rgo_profit }
+	is_valid = {
+		always = yes
+	}
+	effect = {
+		if = {
+			limit = {
+				scope:cm_country = { NOT = { exists = var:cm_q_fire_approved } }
+				is_target_in_variable_list = { name = cm_q_building_types target = scope:cm_building_type }
+				NOT = { is_target_in_variable_list = { name = cm_q_done_build_types target = scope:cm_building_type } }
+			}
+			add_to_variable_list = { name = cm_q_done_build_types target = scope:cm_building_type }
+			scope:cm_country = { change_variable = { name = cm_q_processed add = 1 } }
+			if = {
+				limit = {
+					cm_gui_metric_gate_passes = yes
+					cm_building_type_profitable_or_subsidized = { TYPE = scope:cm_building_type }
+					scope:cm_can_build = yes
+					# A staged upgrade already constructs this type here
+					NOT = { is_target_in_variable_list = { name = cm_q_upgrade_target_types target = scope:cm_building_type } }
+					# The engine converts a build into the standing obsolete predecessor's upgrade.
+					trigger_if = {
+						limit = { exists = scope:cm_obsolete_building }
+						scope:cm_obsolete_building = { building_type = { save_temporary_scope_as = cm_build_obsolete_type } }
+						NOT = { is_target_in_variable_list = { name = cm_gui_upgrade_building_types target = scope:cm_build_obsolete_type } }
+					}
+				}
+				save_temporary_scope_as = cm_q_scored_loc
+				save_temporary_scope_value_as = { name = cm_q_score_cost value = scope:cm_cost }
+				cm_q_compute_metric_score = yes
+				add_to_variable_map = { name = cm_q_scores key = scope:cm_building_type value = scope:cm_q_score_val }
+				add_to_variable_map = { name = cm_q_costs key = scope:cm_building_type value = scope:cm_cost }
+				# The standing predecessor resolves only in GUI context; the approval pass
+				# records the conversion bookkeeping from here.
+				if = {
+					limit = { exists = scope:cm_obsolete_building }
+					scope:cm_obsolete_building = { building_type = { save_temporary_scope_as = cm_build_obsolete_type } }
+					add_to_variable_map = { name = cm_q_conv_types key = scope:cm_building_type value = scope:cm_build_obsolete_type }
+				}
+				if = {
+					limit = { OR = { NOT = { has_variable = cm_q_best } var:cm_q_best < scope:cm_q_score_val } }
+					set_variable = { name = cm_q_best value = scope:cm_q_score_val }
+				}
+				scope:cm_country = {
+					add_to_variable_list = { name = cm_q_cand_locations target = scope:cm_q_scored_loc }
+				}
+			}
+		}
+	}
+}
+# Construction-queue RGO scorer. Root is the location; re-checks RGO eligibility and the
+# metric gate at drain time, then stores the score for cm_q_approval_pass, which applies
+# the gold gate and upgrades in metric order.
+# Expects scopes: country, location, income, profit. scope:cm_profit = Location.GetRGOProfitPerLevel / Location.GetControl.
+# scope:cm_income = scope:cm_profit scaled by the location income-to-wealth ratio.
+cm_gui_try_rgo = {
+	saved_scopes = { cm_country cm_location cm_income cm_profit }
+	is_valid = {
+		always = yes
+	}
+	effect = {
+		if = {
+			limit = {
+				scope:cm_country = { NOT = { exists = var:cm_q_fire_approved } }
+				scope:cm_country = {
+					has_variable_map = cm_q_rgo_locations_set
+					is_key_in_variable_map = { name = cm_q_rgo_locations_set target = scope:cm_location }
+				}
+				NOT = { has_variable = cm_q_done_rgo }
+			}
+			set_variable = { name = cm_q_done_rgo value = yes }
+			scope:cm_country = { change_variable = { name = cm_q_processed add = 1 } }
+			if = {
+				limit = {
+					cm_rgo_drain_eligibility = yes
+					cm_rgo_metric_gate_passes = yes
+					cm_market_has_construction_goods_for_rgo = yes
+				}
+				save_temporary_scope_value_as = { name = cm_q_score_cost value = glorpui_rgo_expand_cost }
+				cm_q_compute_metric_score = yes
+				set_variable = { name = cm_q_rgo_score value = scope:cm_q_score_val }
+			}
+		}
+	}
+}
+# Foreign construction-queue scorer. Root is the location; stores the engine cost for
+# cm_q_approval_pass, which applies the gold reserve at the auto-expand buildings turn.
+# The queue window binds the country's whole staged type list under every staged location, so
+# cm_q_fb_pair is what picks this location's own type out of that cross product, and the
+# presence of a cost entry is the processed marker.
+# Expects scopes: country, building_type, cost.
+cm_gui_try_foreign = {
+	saved_scopes = { cm_country cm_building_type cm_cost }
+	is_valid = {
+		always = yes
+	}
+	effect = {
+		save_temporary_scope_as = cm_location
+		if = {
+			limit = {
+				scope:cm_country = {
+					NOT = { exists = var:cm_q_fire_approved }
+					trigger_if = {
+						limit = {
+							has_variable_map = cm_q_fb_pair
+							is_key_in_variable_map = { name = cm_q_fb_pair target = scope:cm_location }
+						}
+						"variable_map(cm_q_fb_pair|scope:cm_location)" = scope:cm_building_type
+					}
+					trigger_else = { always = no }
+					NOT = {
+						AND = {
+							has_variable_map = cm_q_fb_costs
+							is_key_in_variable_map = { name = cm_q_fb_costs target = scope:cm_location }
+						}
+					}
+				}
+			}
+			scope:cm_country = {
+				add_to_variable_map = { name = cm_q_fb_costs key = scope:cm_location value = scope:cm_cost }
+				change_variable = { name = cm_q_processed add = 1 }
+			}
+		}
+	}
+}
+# Urbanize construction-queue scorer. Root is the location; stores the engine cost for
+# cm_q_approval_pass, which re-checks rank eligibility and affordability at the feature's
+# priority turn. Expects scopes: country, building_type, cost.
+cm_gui_try_urbanize = {
+	saved_scopes = { cm_country cm_building_type cm_cost }
+	is_valid = {
+		always = yes
+	}
+	effect = {
+		cm_q_urbanize_apply = yes
+	}
+}
+# Food building construction-queue scorer. Root is the location; stores the engine cost for
+# cm_q_approval_pass, which re-checks build-queue slots and the food gold reserve at the
+# feature's priority turn. Expects scopes: country, building_type, cost, can_build.
+cm_gui_try_food_building = {
+	saved_scopes = { cm_country cm_building_type cm_cost cm_can_build }
+	is_valid = {
+		always = yes
+	}
+	effect = {
+		if = {
+			limit = {
+				scope:cm_country = { NOT = { exists = var:cm_q_fire_approved } }
+				is_target_in_variable_list = { name = cm_q_food_building_types target = scope:cm_building_type }
+				NOT = { is_target_in_variable_list = { name = cm_q_done_food_types target = scope:cm_building_type } }
+			}
+			add_to_variable_list = { name = cm_q_done_food_types target = scope:cm_building_type }
+			scope:cm_country = { change_variable = { name = cm_q_processed add = 1 } }
+			if = {
+				limit = {
+					# The engine buildability bool is unverified for subject locations.
+					OR = {
+						NOT = { owner = scope:cm_country }
+						scope:cm_can_build = yes
+					}
+				}
+				add_to_variable_map = { name = cm_q_food_costs key = scope:cm_building_type value = scope:cm_cost }
+			}
+		}
+	}
+}
+# Food RGO construction-queue scorer. Root is the location; marks the staged location for
+# cm_q_approval_pass, which re-checks build-queue slots and the food gold reserve at the
+# feature's priority turn. Expects scopes: country.
+cm_gui_try_food_rgo = {
+	saved_scopes = { cm_country }
+	is_valid = {
+		always = yes
+	}
+	effect = {
+		if = {
+			limit = {
+				scope:cm_country = { NOT = { exists = var:cm_q_fire_approved } }
+				save_temporary_scope_as = cm_q_item_loc
+				scope:cm_country = {
+					has_variable_map = cm_q_food_rgo_locations_set
+					is_key_in_variable_map = { name = cm_q_food_rgo_locations_set target = scope:cm_q_item_loc }
+				}
+				NOT = { has_variable = cm_q_done_food_rgo }
+			}
+			set_variable = { name = cm_q_done_food_rgo value = yes }
+			scope:cm_country = { change_variable = { name = cm_q_processed add = 1 } }
+			if = {
+				limit = {
+					cm_market_has_construction_goods_for_rgo = yes
+				}
+				set_variable = { name = cm_q_food_rgo_ok value = yes }
+			}
+		}
+	}
+}
+
+# Megalopolis rank scorer. Root is the location. Stores the engine upgrade price (its presence is the
+# eligibility marker cm_q_pass_auto_rank drains) only when CanUpgradeRank passed, and always increments
+# cm_q_processed so an ineligible staged city cannot stall the handshake. Expects scopes: country,
+# can_upgrade_rank, cost.
+cm_gui_try_rank = {
+	saved_scopes = { cm_country cm_can_upgrade_rank cm_cost }
+	is_valid = {
+		always = yes
+	}
+	effect = {
+		if = {
+			limit = {
+				scope:cm_country = { NOT = { exists = var:cm_q_fire_approved } }
+				save_temporary_scope_as = cm_q_item_loc
+				scope:cm_country = {
+					has_variable_map = cm_q_rank_locations_set
+					is_key_in_variable_map = { name = cm_q_rank_locations_set target = scope:cm_q_item_loc }
+				}
+				NOT = { has_variable = cm_q_done_rank }
+			}
+			set_variable = { name = cm_q_done_rank value = yes }
+			scope:cm_country = { change_variable = { name = cm_q_processed add = 1 } }
+			if = {
+				limit = { scope:cm_can_upgrade_rank = yes }
+				set_variable = { name = cm_q_rank_price value = scope:cm_cost }
+			}
+		}
+	}
+}
+cm_check_for_auto_expand_when_removing_building = {
+	effect = {
+		save_scope_as = cm_the_building
+		scope:cm_the_building = { building_type = { save_temporary_scope_as = cm_building_type } }
+		owner = { save_scope_as = cm_country }
+		location = {
+			if = { limit = { scope:cm_the_building = { building_level < 2 } }
+				if = {
+					limit = { scope:cm_building_type = { is_foreign = yes } }
+					cm_fb_unregister_here = yes
+					cm_fb_unexclude_here = yes
+				}
+				scope:cm_building_type = { cm_find_current_building_type = yes }
+				# Clean up both lists - only the relevant one will have an entry
+				if = { limit = { is_target_in_variable_list = { name = cm_auto_expand_registered_building_types target = scope:cm_building_type } }
+					remove_list_variable = { name = cm_auto_expand_registered_building_types target = scope:cm_building_type }
+				}
+				if = { limit = { is_target_in_variable_list = { name = cm_auto_expand_excluded_building_types target = scope:cm_building_type } }
+					remove_list_variable = { name = cm_auto_expand_excluded_building_types target = scope:cm_building_type }
+				}
+				# Demolishing the last tier of a transferred lineage clears the replacement's entries
+				if = {
+					limit = {
+						scope:cm_country = { building_type_is_obsolete = scope:cm_building_type }
+						NOT = { scope:cm_country = { building_type_is_obsolete = scope:cm_current_building_type } }
+						NOT = { has_building = scope:cm_current_building_type }
+					}
+					if = { limit = { is_target_in_variable_list = { name = cm_auto_expand_registered_building_types target = scope:cm_current_building_type } }
+						remove_list_variable = { name = cm_auto_expand_registered_building_types target = scope:cm_current_building_type }
+					}
+					if = { limit = { is_target_in_variable_list = { name = cm_auto_expand_excluded_building_types target = scope:cm_current_building_type } }
+						remove_list_variable = { name = cm_auto_expand_excluded_building_types target = scope:cm_current_building_type }
+					}
+				}
+			}
+		}
+	}
+}
+# Root is the building type
+
+cm_is_auto_expand_active_for_building = {
+	is_shown = {
+		save_temporary_scope_as = cm_the_building
+		scope:cm_the_building = { building_type = { save_temporary_scope_as = cm_building_type } }
+		owner = { save_temporary_scope_as = cm_country }
+		location = { cm_location_is_auto_expand_active_for_building_type = yes }
+	}
+}
+
+cm_set_auto_expand_for_building_type = {
+	effect = {
+		save_scope_as = cm_building_type
+		scope:cm_location = {
+			cm_apply_auto_expand_toggle = yes
+		}
+	}
+}
+
+# Ctrl-click bulk toggle from a not-yet-built location's button. Root = BuildingType,
+# expects scope:cm_location.
+cm_set_auto_expand_for_building_type_province = {
+	effect = {
+		save_scope_as = cm_building_type
+		scope:cm_location = {
+			cm_toggle_auto_expand_for_building_type_in_province = yes
+		}
+	}
+}
+
+cm_is_auto_expand_active_for_building_type = {
+	is_shown = {
+		save_temporary_scope_as = cm_building_type
+		scope:cm_location = { cm_location_is_auto_expand_active_for_building_type = yes }
+	}
+}
+
+cm_can_build_building = {
+	is_shown = {
+		trigger_if = { limit = { exists = owner }
+			owner = { save_temporary_scope_as = actor }
+		}
+		trigger_else = {
+			save_temporary_scope_as = actor
+		}
+		can_build_building = scope:cm_building_type
+	}
+}
+
+# Root is the location. Expects scope:cm_building_type, scope:cm_country, scope:cm_cost, scope:cm_can_build.
+cm_location_will_auto_expand_from_zero_levels = {
+	is_shown = {
+		save_temporary_scope_as = cm_location
+		scope:cm_country = { is_target_in_variable_list = { name = cm_priority_features_enabled target = flag:cm_feature_auto_expand_buildings } }
+		trigger_if = {
+			limit = { scope:cm_building_type = { is_foreign = yes } }
+			cm_fb_site_requirements_pass = yes
+		}
+		trigger_else = {
+			# Ends in cm_location_allowed_to_build, which vetoes every foreign type.
+			cm_location_will_auto_expand_from_zero_levels = yes
+			cm_gui_metric_gate_passes = yes
+			cm_building_type_profitable_or_subsidized = { TYPE = scope:cm_building_type }
+			cm_country_can_afford_predicted_cost = yes
+			scope:cm_can_build = yes
+		}
+	}
+}
+
+# Foreign auto-expand tooltip rows. Root is the location; expects scope:cm_building_type,
+# scope:cm_country and, for the gold row, scope:cm_cost.
+# The aggregate is the exact conjunction of the row checks below, so the met message and the
+# failing-row list stay complements.
+cm_fb_site_requirements_met = {
+	is_shown = {
+		scope:cm_country = { is_target_in_variable_list = { name = cm_priority_features_enabled target = flag:cm_feature_auto_expand_buildings } }
+		cm_fb_site_requirements_pass = yes
+	}
+}
+
+cm_fb_type_is_allowed = {
+	is_shown = {
+		cm_fb_type_is_allowed = yes
+	}
+}
+
+cm_fb_can_place_building = {
+	is_shown = {
+		cm_location_can_place_building = { target = scope:cm_building_type }
+	}
+}
+
+cm_fb_relations_ok = {
+	is_shown = {
+		cm_fb_relations_ok = yes
+	}
+}
+
+cm_fb_no_level_in_flight = {
+	is_shown = {
+		cm_fb_no_level_in_flight = yes
+	}
+}
+
+cm_fb_has_level_room = {
+	is_shown = {
+		cm_fb_has_level_room = yes
+	}
+}
+
+cm_fb_has_enough_gold = {
+	is_shown = {
+		cm_country_can_afford_predicted_cost = yes
+	}
+}
+
+# following functions are used for gui/tooltips
+
+cm_is_building_able_to_auto_expand = {
+	is_shown = {
+		building_type = { save_temporary_scope_as = cm_building_type }
+		location = { save_temporary_scope_as = cm_location }
+		owner = { save_temporary_scope_as = cm_country }
+		# Same individual checks as the tooltip rows, in the same order
+		owner = { cm_should_pause_auto_expand = no }
+		owner = { is_target_in_variable_list = { name = cm_priority_features_enabled target = flag:cm_feature_auto_expand_buildings } }
+		trigger_if = {
+			limit = { scope:cm_building_type = { is_foreign = yes } }
+			location = { cm_fb_site_requirements_pass = yes }
+		}
+		trigger_else = {
+			location = { NOT = { integration_level = conquered } }
+			scope:cm_building_type = { cm_cu_is_always_delete = no }
+			cm_gui_metric_gate_passes = yes
+			# Upgrades are not profit-gated.
+			trigger_if = { limit = { owner = { NOT = { building_type_is_obsolete = scope:cm_building_type } } }
+				location = { cm_building_type_profitable_or_subsidized = { TYPE = scope:cm_building_type } }
+			}
+			is_opened = yes
+			is_lacking_goods = no
+			location = { cm_location_has_enough_pops_available = yes }
+			location = { cm_location_auto_food_workers_ok_for_type = yes }
+			location = { cm_is_location_under_building_limit = yes }
+			# Upgrades are not slot-gated.
+			trigger_if = { limit = { owner = { NOT = { building_type_is_obsolete = scope:cm_building_type } } }
+				location = { cm_get_open_build_queue_slots > 0 }
+			}
+			cm_building_meets_minimum_discount = { threshold = cm_get_min_discount_for_auto_expand_buildings }
+			cm_country_can_afford_predicted_cost = yes
+			cm_is_building_not_max_level_and_not_obsolete_or_is_building_type_upgradeable_and_can_be_upgraded_by_owner = yes
+			location.owner = { can_build_building = scope:cm_building_type }
+			# can_build_building - doesn't work from Building-rooted scripted GUI so moved to GUI visibility
+			# scope:cm_can_build = CanBuildOrExpandBuilding, scope:cm_can_upgrade = CanUpgradeToBuilding for the replacement.
+			trigger_if = { limit = { owner = { building_type_is_obsolete = scope:cm_building_type } }
+				scope:cm_can_upgrade = yes
+			}
+			trigger_else = {
+				scope:cm_can_build = yes
+			}
+			location = { cm_market_has_construction_goods_for_building = yes }
+		}
+	}
+}
+
+cm_is_building_not_max_level_already = {
+	is_shown = {
+		is_at_max_level = no
+	}
+}
+
+# Tooltip/visibility wrapper for the metric gate. The caller computes the GUI-only engine
+# values and passes them as scopes, so this evaluates the same gate the construction
+# executor uses. Expects scopes: country, building_type, cost, income, profit.
+cm_metric_gate_shown = {
+	is_shown = {
+		cm_gui_metric_gate_passes = yes
+	}
+}
+
+# Root is the building type.
+cm_is_building_type_not_always_deleted = {
+	is_shown = {
+		cm_cu_is_always_delete = no
+	}
+}
+
+# Shown when the metric gate exempts this building type. Expects scope:cm_building_type.
+cm_is_building_type_metric_exempt = {
+	is_shown = {
+		cm_get_construction_demand_total_count = 0
+	}
+}
+
+cm_building_meets_minimum_discount_for_auto_expand = {
+	is_shown = {
+		building_type = { save_temporary_scope_as = cm_building_type }
+		location = { save_temporary_scope_as = cm_location }
+		owner = { save_temporary_scope_as = cm_country }
+		cm_building_meets_minimum_discount = { threshold = cm_get_min_discount_for_auto_expand_buildings }
+	}
+}
+
+# Root is the building type, also expects scope:cm_country and scope:cm_location
+cm_building_type_meets_minimum_discount_for_auto_expand = {
+	is_shown = {
+		save_temporary_scope_as = cm_building_type
+		cm_building_meets_minimum_discount = { threshold = cm_get_min_discount_for_auto_expand_buildings }
+	}
+}
+
+cm_is_building_open = {
+	is_shown = {
+		is_opened = yes
+	}
+}
+
+cm_is_building_not_lacking_goods = {
+	is_shown = {
+		is_lacking_goods = no
+	}
+}
+
+cm_is_building_not_max_level_already_and_not_obsolete = {
+	is_shown = {
+		cm_is_building_not_max_level_already_and_not_obsolete = yes
+	}
+}
+
+# Root is location, also expects the scope building type
+cm_location_has_enough_pops_available = {
+	is_shown = {
+		cm_location_has_enough_pops_available = yes
+	}
+}
+
+# Root is the location, expects scope:cm_building_type and scope:cm_country
+cm_location_auto_food_workers_ok_for_type = {
+	is_shown = {
+		cm_location_auto_food_workers_ok_for_type = yes
+	}
+}
+
+# Root is the location
+cm_is_location_under_building_limit = {
+	is_shown = {
+		cm_is_location_under_building_limit = yes
+	}
+}
+
+# Root is the location
+cm_location_has_open_build_slot = {
+	is_shown = {
+		cm_get_open_build_queue_slots > 0
+	}
+}
+
+# Root is the building. Obsolete buildings pass because their upgrade is not slot-gated.
+cm_building_expand_has_open_slot = {
+	is_shown = {
+		building_type = { save_temporary_scope_as = cm_building_type }
+		trigger_if = { limit = { owner = { NOT = { building_type_is_obsolete = scope:cm_building_type } } }
+			location = { cm_get_open_build_queue_slots > 0 }
+		}
+	}
+}
+
+# Root is the building.
+cm_is_building_profitable_or_subsidized = {
+	is_shown = {
+		building_type = { save_temporary_scope_as = cm_building_type }
+		trigger_if = { limit = { owner = { NOT = { building_type_is_obsolete = scope:cm_building_type } } }
+			location = { cm_building_type_profitable_or_subsidized = { TYPE = scope:cm_building_type } }
+		}
+	}
+}
+
+# Root is the location. Expects scope:cm_building_type.
+cm_is_building_type_profitable_or_subsidized = {
+	is_shown = {
+		cm_building_type_profitable_or_subsidized = { TYPE = scope:cm_building_type }
+	}
+}
+
+# Root is the location
+cm_is_location_not_conquered = {
+	is_shown = {
+		NOT = { integration_level = conquered }
+	}
+}
+
+# Root is the building
+cm_has_enough_gold_for_auto_expand = {
+	is_shown = {
+		building_type = { save_temporary_scope_as = cm_building_type }
+		location = { save_temporary_scope_as = cm_location }
+		owner = { save_temporary_scope_as = cm_country }
+		cm_country_can_afford_predicted_cost = yes
+	}
+}
+
+# Root is the location, expects scope:cm_building_type and scope:cm_country
+cm_has_enough_gold_for_auto_expand_from_zero_levels = {
+	is_shown = {
+		save_temporary_scope_as = cm_location
+		cm_country_can_afford_predicted_cost = yes
+	}
+}
+
+cm_is_building_type_producing = {
+	is_shown = {
+		scope:cm_building_type = { cm_is_building_type_production_building = yes }
+	}
+}
+cm_is_building_obsolete = {
+	is_shown = {
+		cm_is_building_obsolete = yes
+	}
+}
+cm_is_building_type_obsolete = {
+	is_shown = {
+		scope:cm_building_type = { cm_is_building_type_obsolete = yes }
+	}
+}
+
+cm_is_building_upgradeable = {
+	is_shown = {
+		cm_is_building_upgradeable = yes
+	}
+}
+
+cm_building_can_be_upgraded_by_owner = {
+	is_shown = {
+		building_can_be_upgraded_by = owner
+	}
+}
+
+cm_is_building_upgradeable_and_can_be_upgraded_by_owner_and_auto_expand_upgrade_is_on = {
+	is_shown = {
+		cm_is_building_upgradeable_and_can_be_upgraded_by_owner = yes
+	}
+}
+
+cm_is_building_not_max_level_and_not_obsolete_or_is_building_type_upgradeable_and_can_be_upgraded_by_owner = {
+	is_shown = {
+		cm_is_building_not_max_level_and_not_obsolete_or_is_building_type_upgradeable_and_can_be_upgraded_by_owner = yes
+	}
+}
+
+# Root is the country
+cm_pause_auto_expand = {
+	effect = {
+		if = { limit = { exists = var:cm_pause_auto_expand }
+			remove_variable = cm_pause_auto_expand
+		} else = {
+			set_variable = { name = cm_pause_auto_expand value = yes }
+		}
+	}
+
+	is_shown = {
+		cm_should_pause_auto_expand = yes
+	}
+}
+
+# Root is the building type. Toggles mass auto-expand for this specific building type.
+# When ON: this building type auto-expands at all owned locations, exclusion-based per location.
+# When OFF: this building type is removed from mass tracking and location exclusion lists are cleaned.
+# A foreign type's per-site state lives in the country maps instead, so it gets the same
+# cleanup against those.
+cm_toggle_mass_auto_expand_for_building_type = {
+	saved_scopes = { cm_country }
+	effect = {
+		save_scope_as = cm_building_type
+		if = { limit = { scope:cm_building_type = { is_foreign = yes } }
+			cm_fb_toggle_mass_for_type = yes
+		} else = {
+			if = { limit = { scope:cm_country = { is_target_in_variable_list = { name = cm_mass_auto_expand_building_types target = scope:cm_building_type } } }
+				# Turning OFF - remove from country list and clear exclusion entries for this type
+				scope:cm_country = {
+					remove_list_variable = { name = cm_mass_auto_expand_building_types target = scope:cm_building_type }
+					every_owned_location = {
+						limit = { is_target_in_variable_list = { name = cm_auto_expand_excluded_building_types target = scope:cm_building_type } }
+						remove_list_variable = { name = cm_auto_expand_excluded_building_types target = scope:cm_building_type }
+					}
+				}
+			} else = {
+				# Turning ON - add to country list and clear per-location registrations for this type
+				scope:cm_country = {
+					add_to_variable_list = { name = cm_mass_auto_expand_building_types target = scope:cm_building_type }
+					every_owned_location = {
+						limit = { is_target_in_variable_list = { name = cm_auto_expand_registered_building_types target = scope:cm_building_type } }
+						remove_list_variable = { name = cm_auto_expand_registered_building_types target = scope:cm_building_type }
+					}
+				}
+			}
+		}
+	}
+	is_shown = {
+		save_temporary_scope_as = cm_building_type
+		scope:cm_country = { is_target_in_variable_list = { name = cm_mass_auto_expand_building_types target = scope:cm_building_type } }
+	}
+}
+
+# Fired per shown build-panel row when the mass toggle above turns a foreign type on.
+# Root = the location, expects scope:cm_building_type and scope:cm_country.
+cm_fb_seed_mass_site = {
+	saved_scopes = { cm_building_type cm_country }
+	effect = {
+		cm_fb_add_mass_site = yes
+	}
+}
+
+# Stores the build-location list's viewed building type for the R.G.O. Bonus location
+# filter (cm_rgob_coverage_selected reads it as the coverage map key).
+# Root = player country, scope:cm_rgob_type = the viewed building type.
+cm_rgob_store_selected_type = {
+	saved_scopes = { cm_rgob_type }
+	effect = {
+		set_variable = { name = cm_rgob_selected_type value = scope:cm_rgob_type }
+	}
+}
+

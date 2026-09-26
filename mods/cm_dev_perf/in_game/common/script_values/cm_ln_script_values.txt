@@ -1,0 +1,96 @@
+﻿# Lucky Nations values.
+
+# Version of the settings cm_ln_seed_constant_settings writes. Bump when one of them changes, so
+# every lucky nation takes the new value on its next monthly pass.
+cm_ln_seed_version_value = 3
+
+# Country scope. A lucky nation keeps nothing back for its first year, then holds its tax base.
+# Re-seeded monthly, so it tracks the tax base as the country grows.
+cm_ln_reserve_value = {
+	value = 0
+	if = {
+		# One year past the grand campaign start of 1337.4.1 (START_DATE,
+		# loading_screen/common/defines/00_defines.txt:2).
+		limit = { current_date >= 1338.4.1 }
+		add = country_tax_base
+	}
+}
+
+# Country scope. The Production payback cap, one step higher for each multiple of its tax base a
+# country's treasury holds, so gold loosens the bar rather than piling up.
+# Re-seeded monthly, so it falls back as the treasury drains.
+cm_ln_production_min_roi_value = {
+	value = 20 # The ab_production_min_roi registration default: cm_cmm_effects.txt:863
+	if = { limit = { gold >= { value = country_tax_base multiply = 5 } } add = 10 }
+	if = { limit = { gold >= { value = country_tax_base multiply = 10 } } add = 10 }
+	if = { limit = { gold >= { value = country_tax_base multiply = 15 } } add = 10 }
+	if = { limit = { gold >= { value = country_tax_base multiply = 20 } } add = 10 }
+	if = { limit = { gold >= { value = country_tax_base multiply = 25 } } add = 10 }
+	if = { limit = { gold >= { value = country_tax_base multiply = 30 } } add = 10 }
+	if = { limit = { gold >= { value = country_tax_base multiply = 35 } } add = 10 }
+	if = { limit = { gold >= { value = country_tax_base multiply = 40 } } add = 10 }
+}
+
+# Country scope. The gold half of cm_ln_open_charge_move, capped at the treasury so the
+# opening capital move cannot overdraw it.
+cm_ln_open_capital_charge = {
+	value = country_economical_base
+	multiply = 0.4
+	max = gold
+	min = 0
+}
+
+# Country scope. What the opening governor placement charges, capped at the treasury so a country
+# that cannot cover it pays what it has. Expects scope:cm_ln_open_gov_site, scope:cm_building_type
+# and scope:cm_location.
+cm_ln_open_gov_charge = {
+	value = scope:cm_ln_open_gov_site.cm_gov_build_cost_value
+	max = gold
+	min = 0
+}
+
+# Location scope. The fort drain walks the shared build list, most of whose
+# entries belong to other categories and carry no rank.
+cm_ln_ft_prio_value = {
+	value = 0
+	if = {
+		limit = { has_variable = cm_ln_ft_prio }
+		add = var:cm_ln_ft_prio
+	}
+}
+
+# Building type scope. The id cm_ln_populate_building_type_ids assigned, read from GUI so a
+# building type can cross into a console command as a number.
+cm_ln_bt_id_value = {
+	if = { limit = { NOT = { exists = scope:cm_ln_bt } } save_temporary_scope_as = cm_ln_bt }
+	value = "global_variable_map(cm_ln_bt_id|scope:cm_ln_bt)"
+}
+
+# Location scope. The id cm_ln_populate_location_ids assigned.
+cm_ln_loc_id_value = {
+	if = { limit = { NOT = { exists = scope:cm_ln_loc } } save_temporary_scope_as = cm_ln_loc }
+	value = "global_variable_map(cm_ln_loc_id|scope:cm_ln_loc)"
+}
+
+# Country scope. The id cm_ln_assign_country_id gave this lucky nation.
+cm_ln_ctry_id_value = {
+	if = { limit = { NOT = { exists = scope:cm_ln_ctry } } save_temporary_scope_as = cm_ln_ctry }
+	value = "global_variable_map(cm_ln_ctry_id|scope:cm_ln_ctry)"
+}
+
+# Country scope. Diplomacy slider position in tenths, for the auto modifier that cancels what the
+# slider pays out. diplomatic_maintenance is a trigger rather than a value, so the position can
+# only be read by comparison. Rounded down, so the cancel can never exceed the gain it mirrors.
+cm_ln_dip_slider = {
+	value = 0
+	if = { limit = { diplomatic_maintenance >= 1 } add = 1 }
+	else_if = { limit = { diplomatic_maintenance >= 0.9 } add = 0.9 }
+	else_if = { limit = { diplomatic_maintenance >= 0.8 } add = 0.8 }
+	else_if = { limit = { diplomatic_maintenance >= 0.7 } add = 0.7 }
+	else_if = { limit = { diplomatic_maintenance >= 0.6 } add = 0.6 }
+	else_if = { limit = { diplomatic_maintenance >= 0.5 } add = 0.5 }
+	else_if = { limit = { diplomatic_maintenance >= 0.4 } add = 0.4 }
+	else_if = { limit = { diplomatic_maintenance >= 0.3 } add = 0.3 }
+	else_if = { limit = { diplomatic_maintenance >= 0.2 } add = 0.2 }
+	else_if = { limit = { diplomatic_maintenance >= 0.1 } add = 0.1 }
+}

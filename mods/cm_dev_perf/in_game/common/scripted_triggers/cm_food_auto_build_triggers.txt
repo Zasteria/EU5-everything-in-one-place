@@ -1,0 +1,277 @@
+﻿# Food auto-build triggers - eligibility, affordability, pop, and cap checks.
+# Gold threshold checks are done in the effects file via per-building script values.
+
+# Affordability gate for the auto-food drain, in the form cm_q_fill_build_slots takes.
+# Root is the location. Expects scope:cm_country, scope:cm_location.
+cm_q_food_can_afford_staged_cost = {
+	cm_check_country_gold_above = { threshold = cm_food_gold_threshold_plus_planned_spend }
+}
+
+# Root is the location. Expects $target$ = a building_type.
+# For 1-level buildings such as windmill, the max-level check also subsumes NOT has_building.
+cm_food_location_buildable_for_building_type = {
+	cm_location_allowed_to_build = { target = $target$ }
+	cm_location_building_type_is_not_at_max_level = { target = $target$ }
+	cm_food_building_type_is_staffed = { target = $target$ }
+	cm_building_type_profitable_or_subsidized = { TYPE = $target$ }
+}
+
+# Root is the location. Expects $target$ = a building_type.
+# True when the existing instance has filled all but one level's worth of its jobs, so a new level
+# has somebody left to put in it.
+cm_food_building_type_is_staffed = {
+	$target$ = { save_temporary_scope_as = cm_food_staffed_check_type }
+	trigger_if = { limit = { has_building = $target$ }
+		"building(scope:cm_food_staffed_check_type|owner)" = {
+			building_employed_amount > { value = building_employment_size_amount subtract = building_type.employment_size }
+		}
+	}
+}
+
+# --- Location matching ---
+
+# Root is the location. Expects scope:cm_country.
+# True if this location's RGO is one of the foods on the roster.
+cm_food_location_rgo_is_on_roster = {
+	exists = raw_material
+	raw_material = { save_temporary_scope_as = cm_food_roster_good }
+	scope:cm_country = { is_target_in_variable_list = { name = cm_auto_food_rgo_types_list target = scope:cm_food_roster_good } }
+}
+
+# --- Pool pop checks ---
+
+# Auto-food gates on the pops a location has left over of any type, never on the type a building
+# draws. Open jobs are what speed promotion, and a location reaches its population cap long before
+# it reaches its building caps, so holding a level back until the right type has promoted costs
+# more food than it saves.
+# Root is the location. Expects $target$ = a building_type.
+cm_food_location_has_pops_for = {
+	$target$ = { save_temporary_scope_as = cm_food_pops_type }
+	cm_location_total_unemployed_pops >= scope:cm_food_pops_type.employment_size
+}
+
+# Root is the location. True when the location has nobody left to put in a new job.
+cm_food_location_pops_still_filling = {
+	NOT = { cm_location_total_unemployed_pops > 0 }
+}
+
+# --- Can-build checks per option ---
+# Each checks: requirements met, not at cap, pops available. The _but_for_pops half of each is
+# everything except the pop term, so a true reading says the option is waiting on this
+# location's own pops and on nothing else.
+# Gold threshold is checked separately in the effects file.
+# Root is the location. Expects scopes: country, location.
+
+# Option 1: +1 RGO level
+cm_food_option_rgo_but_for_pops = {
+	AND = {
+		cm_is_rgo_not_max_level_already = yes
+		cm_is_rgo_under_construction = no
+	}
+}
+
+cm_food_can_build_rgo = {
+	cm_food_option_rgo_but_for_pops = yes
+	# An RGO level takes one worker unit off the pool, per cm_location_rgo_laborer_reserve.
+	cm_location_total_unemployed_pops >= 1
+}
+
+# Option 2: +1 Farming Village level
+# Requires: farming RGO, rural settlement, not at max level, not already under construction
+cm_food_option_farming_village_but_for_pops = {
+	AND = {
+		location_rank = location_rank:rural_settlement
+		OR = {
+			raw_material = goods:wheat
+			raw_material = goods:maize
+			raw_material = goods:rice
+			raw_material = goods:millet
+			raw_material = goods:legumes
+			raw_material = goods:potato
+			raw_material = goods:livestock
+			raw_material = goods:olives
+			raw_material = goods:fruit
+		}
+		cm_food_location_buildable_for_building_type = { target = building_type:farming_village }
+	}
+}
+
+cm_food_can_build_farming_village = {
+	cm_food_option_farming_village_but_for_pops = yes
+	cm_food_location_has_pops_for = { target = building_type:farming_village }
+}
+
+# Option 3: Windmill, 1 level max
+# Requires: wheat/rice/millet RGO, rural, windmills advance researched
+cm_food_option_windmill_but_for_pops = {
+	AND = {
+		location_rank = location_rank:rural_settlement
+		OR = {
+			raw_material = goods:wheat
+			raw_material = goods:rice
+			raw_material = goods:millet
+		}
+		scope:cm_country = { has_advance = windmills_advance }
+		cm_food_location_buildable_for_building_type = { target = building_type:windmill }
+	}
+}
+
+cm_food_can_build_windmill = {
+	cm_food_option_windmill_but_for_pops = yes
+	cm_food_location_has_pops_for = { target = building_type:windmill }
+}
+
+# Option 4: +1 Irrigation level
+# Requires: river OR adjacent to lake, not at max level, not already under construction
+cm_food_option_irrigation_but_for_pops = {
+	AND = {
+		OR = { has_river = yes is_adjacent_to_lake = yes }
+		cm_food_location_buildable_for_building_type = { target = building_type:irrigation_systems }
+	}
+}
+
+cm_food_can_build_irrigation = {
+	cm_food_option_irrigation_but_for_pops = yes
+	cm_food_location_has_pops_for = { target = building_type:irrigation_systems }
+}
+
+# Option 5: +1 Fishing Village level
+# Requires: coastal, rural, not at max level, not already under construction
+cm_food_option_fishing_village_but_for_pops = {
+	AND = {
+		is_coastal = yes
+		location_rank = location_rank:rural_settlement
+		cm_food_location_buildable_for_building_type = { target = building_type:fishing_village }
+	}
+}
+
+cm_food_can_build_fishing_village = {
+	cm_food_option_fishing_village_but_for_pops = yes
+	cm_food_location_has_pops_for = { target = building_type:fishing_village }
+}
+
+# True if any of the five options is valid here on every count but pops, which is auto-food
+# still having somewhere to put this location's pops.
+# Root is the location. Expects scope:cm_country.
+cm_food_location_has_option_but_for_pops = {
+	OR = {
+		cm_food_option_rgo_but_for_pops = yes
+		cm_food_option_farming_village_but_for_pops = yes
+		cm_food_option_windmill_but_for_pops = yes
+		cm_food_option_irrigation_but_for_pops = yes
+		cm_food_option_fishing_village_but_for_pops = yes
+	}
+}
+
+# Per-option discount check: can-build AND meets minimum discount, ignoring gold.
+# Root is the location. Expects scopes: country, location.
+
+cm_food_option_rgo_discounted = {
+	cm_food_can_build_rgo = yes
+	cm_rgo_meets_minimum_discount = { threshold = cm_get_min_discount_for_auto_food }
+}
+
+cm_food_option_farming_village_discounted = {
+	cm_food_can_build_farming_village = yes
+	building_type:farming_village = { save_temporary_scope_as = cm_building_type }
+	cm_building_meets_minimum_discount = { threshold = cm_get_min_discount_for_auto_food }
+}
+
+cm_food_option_windmill_discounted = {
+	cm_food_can_build_windmill = yes
+	building_type:windmill = { save_temporary_scope_as = cm_building_type }
+	cm_building_meets_minimum_discount = { threshold = cm_get_min_discount_for_auto_food }
+}
+
+cm_food_option_irrigation_discounted = {
+	cm_food_can_build_irrigation = yes
+	building_type:irrigation_systems = { save_temporary_scope_as = cm_building_type }
+	cm_building_meets_minimum_discount = { threshold = cm_get_min_discount_for_auto_food }
+}
+
+cm_food_option_fishing_village_discounted = {
+	cm_food_can_build_fishing_village = yes
+	building_type:fishing_village = { save_temporary_scope_as = cm_building_type }
+	cm_building_meets_minimum_discount = { threshold = cm_get_min_discount_for_auto_food }
+}
+
+# True if ANY of the five food-building options meets its minimum discount, ignoring gold.
+cm_food_location_has_discounted_option = {
+	OR = {
+		cm_food_option_rgo_discounted = yes
+		cm_food_option_farming_village_discounted = yes
+		cm_food_option_windmill_discounted = yes
+		cm_food_option_irrigation_discounted = yes
+		cm_food_option_fishing_village_discounted = yes
+	}
+}
+
+# Per-option discount check plus the market-shortage gate: discounted AND construction goods not short.
+cm_food_option_rgo_unshortaged = {
+	cm_food_option_rgo_discounted = yes
+	cm_market_has_construction_goods_for_rgo = yes
+}
+
+cm_food_option_farming_village_unshortaged = {
+	cm_food_option_farming_village_discounted = yes
+	building_type:farming_village = { save_temporary_scope_as = cm_building_type }
+	cm_market_has_construction_goods_for_building = yes
+}
+
+cm_food_option_windmill_unshortaged = {
+	cm_food_option_windmill_discounted = yes
+	building_type:windmill = { save_temporary_scope_as = cm_building_type }
+	cm_market_has_construction_goods_for_building = yes
+}
+
+cm_food_option_irrigation_unshortaged = {
+	cm_food_option_irrigation_discounted = yes
+	building_type:irrigation_systems = { save_temporary_scope_as = cm_building_type }
+	cm_market_has_construction_goods_for_building = yes
+}
+
+cm_food_option_fishing_village_unshortaged = {
+	cm_food_option_fishing_village_discounted = yes
+	building_type:fishing_village = { save_temporary_scope_as = cm_building_type }
+	cm_market_has_construction_goods_for_building = yes
+}
+
+# True if ANY of the five food options is discounted and its construction goods are not short.
+cm_food_location_has_unshortaged_discounted_option = {
+	OR = {
+		cm_food_option_rgo_unshortaged = yes
+		cm_food_option_farming_village_unshortaged = yes
+		cm_food_option_windmill_unshortaged = yes
+		cm_food_option_irrigation_unshortaged = yes
+		cm_food_option_fishing_village_unshortaged = yes
+	}
+}
+
+# True if the location has a discounted food option AND the treasury covers the most expensive
+# food option plus the Gold Reserve. Decides green vs red glow for the location auto-food button.
+cm_food_location_has_viable_option = {
+	cm_food_location_has_discounted_option = yes
+	cm_check_country_gold_above = { threshold = cm_food_gold_threshold }
+}
+
+# True if ANY food-building option could physically be built here right now, ignoring gold/discount.
+cm_food_location_has_buildable_option = {
+	OR = {
+		cm_food_can_build_rgo = yes
+		cm_food_can_build_farming_village = yes
+		cm_food_can_build_windmill = yes
+		cm_food_can_build_irrigation = yes
+		cm_food_can_build_fishing_village = yes
+	}
+}
+
+# True while every food building already standing here still clears the profit floor or is
+# subsidized. All four building options end in that floor, so this is what tells "nothing left to
+# build here" apart from "what is here has stopped earning".
+# Root is the location.
+cm_food_location_buildings_still_earn = {
+	cm_building_type_profitable_or_subsidized = { TYPE = building_type:farming_village }
+	cm_building_type_profitable_or_subsidized = { TYPE = building_type:windmill }
+	cm_building_type_profitable_or_subsidized = { TYPE = building_type:irrigation_systems }
+	cm_building_type_profitable_or_subsidized = { TYPE = building_type:fishing_village }
+}

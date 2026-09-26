@@ -48,6 +48,7 @@ GENERATORS = (
     ("where_to_produce", "mods/where_to_produce/tools/generate.py"),
     ("cm_maps", "mods/cm_maps/tools/port_from_cm.py"),
     ("cm_perf", "mods/cm_perf/tools/port_from_cm.py"),
+    ("cm_dev_perf", "mods/cm_dev_perf/tools/port_from_cm_dev.py"),
     ("marker_throttle", "mods/marker_throttle/tools/port_from_fum.py"),
     ("nd_ru", "mods/nd_ru/tools/generate_ru.py"),
     ("nmt_ru", "mods/nmt_ru/tools/generate_ru.py"),

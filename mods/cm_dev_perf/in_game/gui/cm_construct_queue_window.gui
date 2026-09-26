@@ -1,0 +1,508 @@
+﻿# Construction executor: the monthly dispatcher stages candidates into per-cycle queue lists,
+# and this always-present widget drains them one cycle later and runs the builds.
+# Cost, income, and next-tier values come from GUI-only engine bindings, so building runs here.
+widget = {
+	name = "cm_construct_queue_window"
+	# Keeps descendant visibility gates re-evaluating each frame.
+	visible = "[EqualTo_CFixedPoint('(CFixedPoint)0', '(CFixedPoint)0')]"
+	position = { -10000 1 }
+	widget = {
+		# Scan driver: one sweep per cycle. PdxGuiTriggerAllAnimations matches by state name
+		# across the whole tree, so a sweep costs one scripted_gui_command per staged item;
+		# repeating it every poll round multiplied that by the round count and flooded the
+		# engine's message queue on very large nations. Pinned hidden so the gate going true
+		# always makes a hidden->shown first show.
+		widget = {
+			size = { 0 0 }
+			visible_at_creation = no
+			visible = "[And(GetPlayer.Exists, GetScriptedGui('cm_q_scan_gate').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End))]"
+			# 0.3 gives the staged datamodels time to instantiate before their one sweep.
+			state = {
+				name = _show
+				duration = 0.3
+				on_finish = "[PdxGuiTriggerAllAnimations('cm_q_construct')]"
+				on_finish = "[PdxGuiTriggerAllAnimations('cm_q_construct_upgrade')]"
+				on_finish = "[PdxGuiTriggerAllAnimations('cm_q_construct_urbanize')]"
+				on_finish = "[PdxGuiTriggerAllAnimations('cm_q_construct_food')]"
+				on_finish = "[PdxGuiTriggerAllAnimations('cm_q_construct_food_rgo')]"
+				on_finish = "[PdxGuiTriggerAllAnimations('cm_q_construct_rgo')]"
+				on_finish = "[PdxGuiTriggerAllAnimations('cm_q_construct_foreign')]"
+				on_finish = "[PdxGuiTriggerAllAnimations('cm_q_construct_rank')]"
+				on_finish = "[PdxGuiTriggerAllAnimations('cm_ab_construct_build')]"
+				on_finish = "[PdxGuiTriggerAllAnimations('cm_ab_construct_upgrade')]"
+				on_finish = "[PdxGuiTriggerAllAnimations('cm_ab_construct_rgo')]"
+				next = cm_q_scan_done
+			}
+			state = {
+				name = cm_q_scan_done
+				duration = 0.15
+				on_finish = "[GetScriptedGui('cm_q_scan_disarm').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			}
+		}
+		# Per-cycle poll driver: tears down when cm_should_construct clears and rebuilds next cycle, re-running _show.
+		widget = {
+			size = { 0 0 }
+			visible = "[And(GetPlayer.Exists, GetScriptedGui('cm_should_construct').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End))]"
+			# Step lengths only pace the loop; completion is decided by cm_q_sync_check.
+			state = {
+				name = _show
+				duration = 0.1
+				next = cm_q_round_probe
+			}
+			# The approved lists populate mid-cycle, so their widgets need more than one
+			# chance to instantiate. Costs nothing until the approval pass fills them.
+			state = {
+				name = cm_q_round_probe
+				duration = 0.15
+				on_finish = "[PdxGuiTriggerAllAnimations('cm_q_probe')]"
+				next = cm_q_round_check
+			}
+			state = {
+				name = cm_q_round_check
+				duration = 0.15
+				on_finish = "[GetScriptedGui('cm_q_sync_check').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+				next = cm_q_round_probe
+			}
+		}
+		# Fire driver: the gate flag flips once per cycle, so _show runs the engine actions exactly once.
+		widget = {
+			size = { 0 0 }
+			visible = "[And(GetPlayer.Exists, GetScriptedGui('cm_q_fire_approved_gate').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End))]"
+			state = {
+				name = _show
+				duration = 0.1
+				on_finish = "[PdxGuiTriggerAllAnimations('cm_q_fire_build')]"
+				on_finish = "[PdxGuiTriggerAllAnimations('cm_q_fire_upgrade')]"
+				on_finish = "[PdxGuiTriggerAllAnimations('cm_q_fire_rank')]"
+				next = cm_q_fire_done
+			}
+			# 0.25s lets the fire playbacks land before teardown; one deferred past it drops rather than double-fires.
+			state = {
+				name = cm_q_fire_done
+				duration = 0.25
+				on_finish = "[GetScriptedGui('cm_q_end_cycle').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			}
+		}
+		# Building Cleanup toggle driver: the yearly pass arms the gate, so _show runs the
+		# engine toggles exactly once. Pinned hidden at creation so the gate going true always
+		# makes a hidden->shown first show.
+		widget = {
+			size = { 0 0 }
+			visible_at_creation = no
+			visible = "[And(GetPlayer.Exists, GetScriptedGui('cm_cu_fire_gate').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End))]"
+			state = {
+				name = _show
+				duration = 0.1
+				on_finish = "[PdxGuiTriggerAllAnimations('cm_cu_toggle')]"
+				next = cm_cu_toggle_done
+			}
+			state = {
+				name = cm_cu_toggle_done
+				duration = 0.25
+				on_finish = "[GetScriptedGui('cm_cu_end').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			}
+		}
+		# One list carries both the closes and the reopens: ToggleBuilding flips whichever
+		# state the building is in, and a variable list holds each target once.
+		widget = {
+			datamodel = "[GetPlayer.MakeScope.GetList('cm_cu_toggle')]"
+			item = {
+				widget = {
+					datacontext = "[Scope.GetBuilding]"
+					state = {
+						name = cm_cu_toggle
+						on_finish = "[ToggleBuilding(Building.Self)]"
+					}
+				}
+			}
+		}
+		# Foreign building constructs. Both lists are the country's, because a foreign location's
+		# variables are shared with every other player, so this is a cross product of the staged
+		# sites and the staged types; cm_gui_try_foreign drops every pair the staging did not make.
+		widget = {
+			datamodel = "[GetPlayer.MakeScope.GetList('cm_q_fb_locations')]"
+			item = {
+				widget = {
+					datacontext = "[Scope.GetLocation]"
+					datamodel = "[GetPlayer.MakeScope.GetList('cm_q_fb_types')]"
+					item = {
+						widget = {
+							datacontext = "[Scope.GetBuildingType]"
+							state = {
+								name = cm_q_construct_foreign
+								on_finish = "[GetScriptedGui('cm_gui_try_foreign').Execute(GuiScope.SetRoot(Location.MakeScope).AddScope('cm_building_type', BuildingType.MakeScope).AddScope('cm_country', GetPlayer.MakeScope).AddScope('cm_cost', MakeScopeValue(GetBuildOrExpandBuildingCost(BuildingType.Self, Location.Self))).End)]"
+							}
+						}
+					}
+				}
+			}
+		}
+		# Metric-gated building constructs: per-location list of building types.
+		widget = {
+			datamodel = "[GetPlayer.MakeScope.GetList('cm_q_locations')]"
+			item = {
+				widget = {
+					datacontext = "[Scope.GetLocation]"
+					datamodel = "[Location.MakeScope.GetList('cm_q_building_types')]"
+					item = {
+						widget = {
+							datacontext = "[Scope.GetBuildingType]"
+							state = {
+								name = cm_q_construct
+								on_finish = "[GetScriptedGui('cm_gui_try_build').Execute(GuiScope.SetRoot(Location.MakeScope).AddScope('cm_building_type', BuildingType.MakeScope).AddScope('cm_country', GetPlayer.MakeScope).AddScope('cm_cost', MakeScopeValue(GetBuildOrExpandBuildingCost(BuildingType.Self, Location.Self))).AddScope('cm_income', MakeScopeValue(GetBuildingTypeIncomeToOwnerInLocation(BuildingType.Self, Location.Self))).AddScope('cm_profit', MakeScopeValue(GetBuildingTypeProfitInLocation(BuildingType.Self, Location.Self))).AddScope('cm_can_build', MakeScopeBool(CanBuildOrExpandBuilding(BuildingType.Self, Location.Self))).AddScope('cm_obsolete_building', BuildingType.GetObsoleteBuildingInLocation(Location.Self, Player.Self).MakeScope).AddScope('cm_indirect_loc', Location.MakeScope).AddScope('cm_cur_market_access', MakeScopeValue(Location.GetMarketAccess)).AddScope('cm_cur_total_income', MakeScopeValue(Location.GetTotalIncome)).AddScope('cm_cur_rgo_profit', MakeScopeValue(Location.GetRGOProfitPerLevel)).End)]"
+							}
+						}
+					}
+				}
+			}
+		}
+		# Obsolete-building upgrades: per-location list of obsolete types, replaced with the engine's next tier.
+		widget = {
+			datamodel = "[GetPlayer.MakeScope.GetList('cm_gui_upgrade_locations')]"
+			item = {
+				widget = {
+					datacontext = "[Scope.GetLocation]"
+					datamodel = "[Location.MakeScope.GetList('cm_gui_upgrade_building_types')]"
+					item = {
+						widget = {
+							datacontext = "[Scope.GetBuildingType]"
+							state = {
+								name = cm_q_construct_upgrade
+								on_finish = "[GetScriptedGui('cm_gui_construct_upgrade').Execute(GuiScope.SetRoot(Location.MakeScope).AddScope('cm_old_building_type', BuildingType.MakeScope).AddScope('cm_new_building_type', BuildingType.GetNextReplacementBuilding(Player.Self).MakeScope).AddScope('cm_building_type', BuildingType.GetNextReplacementBuilding(Player.Self).MakeScope).AddScope('cm_country', GetPlayer.MakeScope).AddScope('cm_cost', MakeScopeValue(GetBuildOrExpandBuildingCost(BuildingType.GetNextReplacementBuilding(Player.Self), Location.Self))).AddScope('cm_income', MakeScopeValue(GetBuildingTypeIncomeToOwnerInLocation(BuildingType.GetNextReplacementBuilding(Player.Self), Location.Self))).AddScope('cm_profit', MakeScopeValue(GetBuildingTypeProfitInLocation(BuildingType.GetNextReplacementBuilding(Player.Self), Location.Self))).AddScope('cm_can_build', MakeScopeBool(CanUpgradeToBuilding(BuildingType.GetNextReplacementBuilding(Player.Self), Location.Self))).AddScope('cm_indirect_loc', Location.MakeScope).AddScope('cm_cur_market_access', MakeScopeValue(Location.GetMarketAccess)).AddScope('cm_cur_total_income', MakeScopeValue(Location.GetTotalIncome)).AddScope('cm_cur_rgo_profit', MakeScopeValue(Location.GetRGOProfitPerLevel)).End)]"
+							}
+						}
+					}
+				}
+			}
+		}
+		# Urbanize rank upgrades: per-location list of upgrade building types.
+		widget = {
+			datamodel = "[GetPlayer.MakeScope.GetList('cm_q_urbanize_locations')]"
+			item = {
+				widget = {
+					datacontext = "[Scope.GetLocation]"
+					datamodel = "[Location.MakeScope.GetList('cm_q_urbanize_building_types')]"
+					item = {
+						widget = {
+							datacontext = "[Scope.GetBuildingType]"
+							state = {
+								name = cm_q_construct_urbanize
+								on_finish = "[GetScriptedGui('cm_gui_try_urbanize').Execute(GuiScope.SetRoot(Location.MakeScope).AddScope('cm_building_type', BuildingType.MakeScope).AddScope('cm_country', GetPlayer.MakeScope).AddScope('cm_cost', MakeScopeValue(GetBuildOrExpandBuildingCost(BuildingType.Self, Location.Self))).End)]"
+							}
+						}
+					}
+				}
+			}
+		}
+		# Megalopolis rank upgrades: per-location; the executor reads the engine CanUpgradeRank and price.
+		widget = {
+			datamodel = "[GetPlayer.MakeScope.GetList('cm_q_rank_locations')]"
+			item = {
+				widget = {
+					datacontext = "[Scope.GetLocation]"
+					state = {
+						name = cm_q_construct_rank
+						on_finish = "[GetScriptedGui('cm_gui_try_rank').Execute(GuiScope.SetRoot(Location.MakeScope).AddScope('cm_country', GetPlayer.MakeScope).AddScope('cm_can_upgrade_rank', MakeScopeBool(Location.CanUpgradeRank)).AddScope('cm_cost', MakeScopeValue(Location.GetUpgradeRankPrice)).End)]"
+					}
+				}
+			}
+		}
+		# Food buildings: per-location list of the chosen food building type.
+		widget = {
+			datamodel = "[GetPlayer.MakeScope.GetList('cm_q_food_locations')]"
+			item = {
+				widget = {
+					datacontext = "[Scope.GetLocation]"
+					datamodel = "[Location.MakeScope.GetList('cm_q_food_building_types')]"
+					item = {
+						widget = {
+							datacontext = "[Scope.GetBuildingType]"
+							state = {
+								name = cm_q_construct_food
+								on_finish = "[GetScriptedGui('cm_gui_try_food_building').Execute(GuiScope.SetRoot(Location.MakeScope).AddScope('cm_building_type', BuildingType.MakeScope).AddScope('cm_country', GetPlayer.MakeScope).AddScope('cm_cost', MakeScopeValue(GetBuildOrExpandBuildingCost(BuildingType.Self, Location.Self))).AddScope('cm_can_build', MakeScopeBool(CanBuildOrExpandBuilding(BuildingType.Self, Location.Self))).End)]"
+							}
+						}
+					}
+				}
+			}
+		}
+		# Food RGO upgrades: per-location; the executor re-checks slots and the food gold reserve.
+		widget = {
+			datamodel = "[GetPlayer.MakeScope.GetList('cm_q_food_rgo_locations')]"
+			item = {
+				widget = {
+					datacontext = "[Scope.GetLocation]"
+					state = {
+						name = cm_q_construct_food_rgo
+						on_finish = "[GetScriptedGui('cm_gui_try_food_rgo').Execute(GuiScope.SetRoot(Location.MakeScope).AddScope('cm_country', GetPlayer.MakeScope).End)]"
+					}
+				}
+			}
+		}
+		# RGO upgrades: per-location; the executor re-checks eligibility and gold.
+		widget = {
+			datamodel = "[GetPlayer.MakeScope.GetList('cm_q_rgo_locations')]"
+			item = {
+				widget = {
+					datacontext = "[Scope.GetLocation]"
+					state = {
+						name = cm_q_construct_rgo
+						on_finish = "[GetScriptedGui('cm_gui_try_rgo').Execute(GuiScope.SetRoot(Location.MakeScope).AddScope('cm_location', Location.MakeScope).AddScope('cm_country', GetPlayer.MakeScope).AddScope('cm_profit', MakeScopeValue(Divide_CFixedPoint(Location.GetRGOProfitPerLevel, Location.GetControl))).AddScope('cm_income', MakeScopeValue(Multiply_CFixedPoint(Divide_CFixedPoint(Location.GetRGOProfitPerLevel, Location.GetControl), Divide_CFixedPoint(Location.GetTotalIncome, Location.GetTotalPossibleTaxBase)))).End)]"
+					}
+				}
+			}
+		}
+		# Auto-Build builds (expand and from-zero for all four categories; the
+		# per-location category map decides which drain claims each entry).
+		widget = {
+			datamodel = "[GetPlayer.MakeScope.GetList('cm_ab_b_locations')]"
+			item = {
+				widget = {
+					datacontext = "[Scope.GetLocation]"
+					datamodel = "[Location.MakeScope.GetList('cm_ab_b_types')]"
+					item = {
+						widget = {
+							datacontext = "[Scope.GetBuildingType]"
+							state = {
+								name = cm_ab_construct_build
+								on_finish = "[GetScriptedGui('cm_ab_score_build').Execute(GuiScope.SetRoot(Location.MakeScope).AddScope('cm_building_type', BuildingType.MakeScope).AddScope('cm_country', GetPlayer.MakeScope).AddScope('cm_cost', MakeScopeValue(GetBuildOrExpandBuildingCost(BuildingType.Self, Location.Self))).AddScope('cm_income', MakeScopeValue(GetBuildingTypeIncomeToOwnerInLocation(BuildingType.Self, Location.Self))).AddScope('cm_profit', MakeScopeValue(GetBuildingTypeProfitInLocation(BuildingType.Self, Location.Self))).AddScope('cm_can_build', MakeScopeBool(CanBuildOrExpandBuilding(BuildingType.Self, Location.Self))).AddScope('cm_obsolete_building', BuildingType.GetObsoleteBuildingInLocation(Location.Self, Player.Self).MakeScope).AddScope('cm_indirect_loc', Location.MakeScope).AddScope('cm_cur_market_access', MakeScopeValue(Location.GetMarketAccess)).AddScope('cm_cur_total_income', MakeScopeValue(Location.GetTotalIncome)).AddScope('cm_cur_rgo_profit', MakeScopeValue(Location.GetRGOProfitPerLevel)).End)]"
+							}
+						}
+					}
+				}
+			}
+		}
+		# Auto-Build obsolete upgrades, replaced with the engine's next tier.
+		widget = {
+			datamodel = "[GetPlayer.MakeScope.GetList('cm_ab_u_locations')]"
+			item = {
+				widget = {
+					datacontext = "[Scope.GetLocation]"
+					datamodel = "[Location.MakeScope.GetList('cm_ab_u_types')]"
+					item = {
+						widget = {
+							datacontext = "[Scope.GetBuildingType]"
+							state = {
+								name = cm_ab_construct_upgrade
+								on_finish = "[GetScriptedGui('cm_ab_score_upgrade').Execute(GuiScope.SetRoot(Location.MakeScope).AddScope('cm_old_building_type', BuildingType.MakeScope).AddScope('cm_new_building_type', BuildingType.GetNextReplacementBuilding(Player.Self).MakeScope).AddScope('cm_building_type', BuildingType.GetNextReplacementBuilding(Player.Self).MakeScope).AddScope('cm_country', GetPlayer.MakeScope).AddScope('cm_cost', MakeScopeValue(GetBuildOrExpandBuildingCost(BuildingType.GetNextReplacementBuilding(Player.Self), Location.Self))).AddScope('cm_income', MakeScopeValue(GetBuildingTypeIncomeToOwnerInLocation(BuildingType.GetNextReplacementBuilding(Player.Self), Location.Self))).AddScope('cm_can_build', MakeScopeBool(CanUpgradeToBuilding(BuildingType.GetNextReplacementBuilding(Player.Self), Location.Self))).AddScope('cm_indirect_loc', Location.MakeScope).AddScope('cm_cur_market_access', MakeScopeValue(Location.GetMarketAccess)).AddScope('cm_cur_total_income', MakeScopeValue(Location.GetTotalIncome)).AddScope('cm_cur_rgo_profit', MakeScopeValue(Location.GetRGOProfitPerLevel)).End)]"
+							}
+						}
+					}
+				}
+			}
+		}
+		# Auto-Build RGO expansions; income read is GUI-only, cost is script-side.
+		widget = {
+			datamodel = "[GetPlayer.MakeScope.GetList('cm_ab_r_locations')]"
+			item = {
+				widget = {
+					datacontext = "[Scope.GetLocation]"
+					state = {
+						name = cm_ab_construct_rgo
+						on_finish = "[GetScriptedGui('cm_ab_score_rgo').Execute(GuiScope.SetRoot(Location.MakeScope).AddScope('cm_location', Location.MakeScope).AddScope('cm_country', GetPlayer.MakeScope).AddScope('cm_income', MakeScopeValue(Multiply_CFixedPoint(Divide_CFixedPoint(Location.GetRGOProfitPerLevel, Location.GetControl), Divide_CFixedPoint(Location.GetTotalIncome, Location.GetTotalPossibleTaxBase)))).End)]"
+					}
+				}
+			}
+		}
+		# Approved builds from the executors; each entry fires the engine build action once.
+		widget = {
+			datamodel = "[GetPlayer.MakeScope.GetList('cm_q_approved_build_locations')]"
+			item = {
+				widget = {
+					datacontext = "[Scope.GetLocation]"
+					datamodel = "[Location.MakeScope.GetList('cm_q_approved_build_types')]"
+					item = {
+						widget = {
+							datacontext = "[Scope.GetBuildingType]"
+							state = {
+								name = cm_q_fire_build
+								on_finish = "[BuildOrExpandBuildingDefault(BuildingType.Self, Location.Self)]"
+							}
+							# Probe on a child so its re-triggers stay off the fire state's machine.
+							widget = {
+								size = { 0 0 }
+								state = {
+									name = cm_q_probe
+									on_finish = "[GetScriptedGui('cm_q_probe_build').Execute(GuiScope.SetRoot(Location.MakeScope).AddScope('cm_building_type', BuildingType.MakeScope).End)]"
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		# Extra approved levels: a variable list holds a target once, so rank list k fires each type's k+1th level.
+		widget = {
+			datamodel = "[GetPlayer.MakeScope.GetList('cm_q_approved_build_locations')]"
+			item = {
+				widget = {
+					datacontext = "[Scope.GetLocation]"
+					datamodel = "[Location.MakeScope.GetList('cm_q_approved_build_x2')]"
+					item = {
+						widget = {
+							datacontext = "[Scope.GetBuildingType]"
+							state = {
+								name = cm_q_fire_build
+								on_finish = "[BuildOrExpandBuildingDefault(BuildingType.Self, Location.Self)]"
+							}
+						}
+					}
+				}
+			}
+		}
+		widget = {
+			datamodel = "[GetPlayer.MakeScope.GetList('cm_q_approved_build_locations')]"
+			item = {
+				widget = {
+					datacontext = "[Scope.GetLocation]"
+					datamodel = "[Location.MakeScope.GetList('cm_q_approved_build_x3')]"
+					item = {
+						widget = {
+							datacontext = "[Scope.GetBuildingType]"
+							state = {
+								name = cm_q_fire_build
+								on_finish = "[BuildOrExpandBuildingDefault(BuildingType.Self, Location.Self)]"
+							}
+						}
+					}
+				}
+			}
+		}
+		widget = {
+			datamodel = "[GetPlayer.MakeScope.GetList('cm_q_approved_build_locations')]"
+			item = {
+				widget = {
+					datacontext = "[Scope.GetLocation]"
+					datamodel = "[Location.MakeScope.GetList('cm_q_approved_build_x4')]"
+					item = {
+						widget = {
+							datacontext = "[Scope.GetBuildingType]"
+							state = {
+								name = cm_q_fire_build
+								on_finish = "[BuildOrExpandBuildingDefault(BuildingType.Self, Location.Self)]"
+							}
+						}
+					}
+				}
+			}
+		}
+		widget = {
+			datamodel = "[GetPlayer.MakeScope.GetList('cm_q_approved_build_locations')]"
+			item = {
+				widget = {
+					datacontext = "[Scope.GetLocation]"
+					datamodel = "[Location.MakeScope.GetList('cm_q_approved_build_x5')]"
+					item = {
+						widget = {
+							datacontext = "[Scope.GetBuildingType]"
+							state = {
+								name = cm_q_fire_build
+								on_finish = "[BuildOrExpandBuildingDefault(BuildingType.Self, Location.Self)]"
+							}
+						}
+					}
+				}
+			}
+		}
+		widget = {
+			datamodel = "[GetPlayer.MakeScope.GetList('cm_q_approved_build_locations')]"
+			item = {
+				widget = {
+					datacontext = "[Scope.GetLocation]"
+					datamodel = "[Location.MakeScope.GetList('cm_q_approved_build_x6')]"
+					item = {
+						widget = {
+							datacontext = "[Scope.GetBuildingType]"
+							state = {
+								name = cm_q_fire_build
+								on_finish = "[BuildOrExpandBuildingDefault(BuildingType.Self, Location.Self)]"
+							}
+						}
+					}
+				}
+			}
+		}
+		widget = {
+			datamodel = "[GetPlayer.MakeScope.GetList('cm_q_approved_build_locations')]"
+			item = {
+				widget = {
+					datacontext = "[Scope.GetLocation]"
+					datamodel = "[Location.MakeScope.GetList('cm_q_approved_build_x7')]"
+					item = {
+						widget = {
+							datacontext = "[Scope.GetBuildingType]"
+							state = {
+								name = cm_q_fire_build
+								on_finish = "[BuildOrExpandBuildingDefault(BuildingType.Self, Location.Self)]"
+							}
+						}
+					}
+				}
+			}
+		}
+		widget = {
+			datamodel = "[GetPlayer.MakeScope.GetList('cm_q_approved_build_locations')]"
+			item = {
+				widget = {
+					datacontext = "[Scope.GetLocation]"
+					datamodel = "[Location.MakeScope.GetList('cm_q_approved_build_x8')]"
+					item = {
+						widget = {
+							datacontext = "[Scope.GetBuildingType]"
+							state = {
+								name = cm_q_fire_build
+								on_finish = "[BuildOrExpandBuildingDefault(BuildingType.Self, Location.Self)]"
+							}
+						}
+					}
+				}
+			}
+		}
+		# Approved upgrades keyed by the obsolete type; each entry fires the engine upgrade action on the replacement.
+		widget = {
+			datamodel = "[GetPlayer.MakeScope.GetList('cm_q_approved_upgrade_locations')]"
+			item = {
+				widget = {
+					datacontext = "[Scope.GetLocation]"
+					datamodel = "[Location.MakeScope.GetList('cm_q_approved_upgrade_types')]"
+					item = {
+						widget = {
+							datacontext = "[Scope.GetBuildingType]"
+							state = {
+								name = cm_q_fire_upgrade
+								on_finish = "[UpgradeBuildingDefault(BuildingType.GetNextReplacementBuilding(Player.Self), Location.Self)]"
+							}
+							widget = {
+								size = { 0 0 }
+								state = {
+									name = cm_q_probe
+									on_finish = "[GetScriptedGui('cm_q_probe_upgrade').Execute(GuiScope.SetRoot(Location.MakeScope).AddScope('cm_building_type', BuildingType.MakeScope).End)]"
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		# Approved megalopolis rank upgrades; each entry fires the engine rank upgrade once.
+		widget = {
+			datamodel = "[GetPlayer.MakeScope.GetList('cm_q_approved_rank_locations')]"
+			item = {
+				widget = {
+					datacontext = "[Scope.GetLocation]"
+					state = {
+						name = cm_q_fire_rank
+						on_finish = "[UpgradeLocationRank(Location.Self)]"
+					}
+					widget = {
+						size = { 0 0 }
+						state = {
+							name = cm_q_probe
+							on_finish = "[GetScriptedGui('cm_q_probe_rank').Execute(GuiScope.SetRoot(Location.MakeScope).End)]"
+						}
+					}
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,561 @@
+﻿# Building Cleanup: once a year, closes production buildings that stopped earning, destroys
+# them where the location has no building levels to spare, reopens the ones whose market
+# recovered, and clears non-food production out of shorthanded auto-food locations. Closing
+# and reopening are GUI-only (ToggleBuilding), so both queue into cm_cu_toggle and fire from
+# cm_construct_queue_window.gui; destroying is the script effect destroy_building and runs
+# inline.
+#
+# The year's markets are stepped a few a month rather than all in one tick. cm_cu_seen holds
+# each market to one visit a cycle, so spreading adds nothing to the year's work, and
+# cm_cu_cycle holds the next cycle to a year after this one opened rather than a year after
+# it finished. Locations carrying a closed building are listed in cm_cu_closed_locs, which is
+# what the reopen, delete and validation passes walk instead of every owned location.
+
+# Markets stepped per monthly pulse.
+@cm_cu_markets_per_pulse = 2
+
+# Root is the country.
+cm_cu_open_cycle = {
+	set_variable = { name = cm_cu_cycle_open value = 1 }
+	set_variable = { name = cm_cu_cycle value = 1 days = 365 }
+	clear_variable_map = cm_cu_seen
+	cm_dbg_log = { cat = cleanup action = cm_log_cu_run }
+	if = {
+		limit = { exists = var:cm_cu_destroy }
+		cm_cu_purge_pass = yes
+	}
+	if = {
+		limit = {
+			exists = var:cm_cu_destroy
+			exists = var:cm_cu_auto_food
+			# Without the food roster every building reads as non-food.
+			has_variable_list = cm_auto_food_rgo_types_list
+		}
+		cm_cu_auto_food_pass = yes
+	}
+}
+
+# A new tag's markets are different, so the cycle restarts rather than carrying over.
+# Root is the country.
+cm_cu_clear_cycle_state = {
+	remove_variable = cm_cu_cycle_open
+	remove_variable = cm_cu_cycle
+	clear_variable_map = cm_cu_seen
+}
+
+# One market's survey, closes and reopens. Root is the country, expects scope:cm_ab_market.
+cm_cu_market_step = {
+	cm_cu_survey_market = yes
+	cm_cu_close_pass = yes
+	if = {
+		limit = { exists = var:cm_cu_close_open }
+		cm_cu_reopen_pass = yes
+	}
+}
+
+# Root is the country.
+cm_cu_close_cycle = {
+	remove_variable = cm_cu_cycle_open
+	if = {
+		limit = { exists = var:cm_cu_destroy }
+		cm_cu_delete_closed_pass = yes
+	}
+}
+
+# Hands this pulse's closes and reopens to the GUI driver. Root is the country.
+cm_cu_arm_toggles = {
+	if = {
+		limit = {
+			has_variable_list = cm_cu_toggle
+			variable_list_size = { name = cm_cu_toggle value >= 1 }
+		}
+		set_variable = { name = cm_cu_fire value = 1 }
+		set_variable = { name = cm_cu_fire_skips value = 0 }
+	}
+}
+
+# cm_cu_fire is cleared by the toggle driver's own end call, which for an observed lucky nation
+# rides a console command the engine drops when another is already running. A dropped one would
+# otherwise hold the pass shut for the rest of the game, so a batch still pending two pulses on is
+# abandoned; cm_cu_validate_tracking then reads a close that never landed as a fresh candidate.
+# Root is the country.
+cm_cu_clear_stuck_fire = {
+	change_variable = { name = cm_cu_fire_skips add = 1 }
+	if = {
+		limit = { var:cm_cu_fire_skips >= 2 }
+		remove_variable = cm_cu_fire
+	}
+}
+
+# Steps this cycle's next few markets, opening a cycle once the last one is a year behind and
+# closing it once every market has been visited. Root is the country.
+cm_cu_monthly_pass = {
+	# A pulse holding a batch runs nothing else. The toggle driver fires on a hidden->shown edge,
+	# so an abandon and a fresh arm in one execution leave its gate true throughout and the rebuilt
+	# list never fires.
+	if = {
+		limit = { exists = var:cm_cu_fire }
+		cm_cu_clear_stuck_fire = yes
+	} else_if = {
+		limit = { cm_cu_can_run = yes }
+		save_scope_as = cm_country
+		if = {
+			limit = {
+				NOT = { exists = var:cm_cu_cycle_open }
+				NOT = { exists = var:cm_cu_cycle }
+			}
+			cm_cu_open_cycle = yes
+		}
+		if = {
+			limit = { exists = var:cm_cu_cycle_open }
+			# Each pulse's batch fires on its own rather than waiting out the cycle, and the
+			# tracking behind the survey counts is revalidated with it.
+			clear_variable_list = cm_cu_toggle
+			cm_cu_validate_tracking = yes
+			set_local_variable = { name = cm_cu_room value = @cm_cu_markets_per_pulse }
+			every_market_present_in_country = {
+				# The room test is an inner if, not the iterator's limit, because a limit does
+				# not see the decrements its own body makes.
+				if = {
+					limit = {
+						local_var:cm_cu_room > 0
+						cm_cu_market_unseen_this_cycle = yes
+					}
+					change_local_variable = { name = cm_cu_room subtract = 1 }
+					save_scope_as = cm_ab_market
+					scope:cm_country = {
+						add_to_variable_map = { name = cm_cu_seen key = scope:cm_ab_market value = 1 }
+						cm_cu_market_step = yes
+					}
+				}
+			}
+			if = {
+				limit = { NOT = { cm_cu_cycle_has_unseen = yes } }
+				cm_cu_close_cycle = yes
+			}
+			cm_cu_arm_toggles = yes
+		}
+	}
+}
+
+# Every market in one execution, which is what the Run Building Cleanup button does. It opens a
+# fresh cycle, so a part-stepped one is superseded rather than resumed.
+# Root is the country.
+cm_cu_full_pass = {
+	# A press is deliberate, so a pending batch is abandoned outright rather than counted against
+	# the monthly skips. The pass itself waits for the next press, for the reason the monthly one
+	# does: the driver needs its gate to fall before a fresh arm can raise it.
+	if = {
+		limit = { exists = var:cm_cu_fire }
+		remove_variable = cm_cu_fire
+	} else_if = {
+		limit = { cm_cu_can_run = yes }
+		save_scope_as = cm_country
+		cm_cu_open_cycle = yes
+		clear_variable_list = cm_cu_toggle
+		cm_cu_validate_tracking = yes
+		every_market_present_in_country = {
+			save_scope_as = cm_ab_market
+			scope:cm_country = {
+				add_to_variable_map = { name = cm_cu_seen key = scope:cm_ab_market value = 1 }
+				cm_cu_market_step = yes
+			}
+		}
+		cm_cu_close_cycle = yes
+		cm_cu_arm_toggles = yes
+	}
+}
+
+# Destroys the always-delete types outright, no profit, subsidy, cap, or share check. Runs
+# before everything else so the removals never reach the survey counts.
+# Root is the country, scope:cm_country set.
+cm_cu_purge_pass = {
+	every_owned_location = {
+		limit = { NOT = { integration_level = conquered } }
+		save_scope_as = cm_location
+		every_buildings_in_location = {
+			limit = {
+				owner = scope:cm_country
+				building_type = { cm_cu_is_always_delete = yes }
+			}
+			save_scope_as = cm_building
+			cm_cu_log = { ACTION = cm_log_cu_purged }
+			scope:cm_location = { destroy_building = scope:cm_building }
+		}
+	}
+}
+
+# Clears the way for food production where auto-food is running and the pops are already
+# spoken for. Runs beside the purge, ahead of the survey counts, and ahead of
+# cm_cu_validate_tracking so a destroyed building's closed-tracking entry is dropped there.
+# Root is the country, scope:cm_country set.
+cm_cu_auto_food_pass = {
+	every_owned_location = {
+		limit = {
+			NOT = { integration_level = conquered }
+			cm_ab_food_location_effectively_active = yes
+			cm_location_has_worker_deficit = yes
+		}
+		save_scope_as = cm_location
+		every_buildings_in_location = {
+			limit = {
+				owner = scope:cm_country
+				# Do not tear down what the treasury is still paying to build.
+				cm_is_not_under_construction = yes
+				cm_cu_af_is_removable = yes
+			}
+			save_scope_as = cm_building
+			if = {
+				# market_village keeps its first level for the burghers it puts in the location.
+				limit = { building_type = building_type:market_village }
+				if = {
+					limit = { building_level > 1 }
+					cm_cu_log = { ACTION = cm_log_cu_food_trimmed }
+					scope:cm_location = {
+						change_building_level_in_location = {
+							building = building_type:market_village
+							value = { value = 1 subtract = scope:cm_building.building_level }
+							owner = scope:cm_country
+						}
+					}
+				}
+			}
+			else = {
+				cm_cu_log = { ACTION = cm_log_cu_food_destroyed }
+				scope:cm_location = { destroy_building = scope:cm_building }
+			}
+		}
+	}
+}
+
+# Drops tracking for buildings that are gone, no longer ours, or open again, so a building
+# reopened by hand goes back to the player and a close that never landed becomes a fresh
+# candidate. Root is the country, scope:cm_country set.
+cm_cu_validate_tracking = {
+	if = {
+		limit = { has_variable_list = cm_cu_closed_locs }
+		every_in_list = {
+			variable = cm_cu_closed_locs
+			save_scope_as = cm_location
+			every_in_list = {
+				variable = cm_cu_closed_types
+				save_scope_as = cm_building_type
+				if = {
+					limit = {
+						scope:cm_location = {
+							NOT = {
+								any_buildings_in_location = {
+									owner = scope:cm_country
+									building_type = scope:cm_building_type
+									is_opened = no
+								}
+							}
+						}
+					}
+					scope:cm_location = { remove_list_variable = { name = cm_cu_closed_types target = scope:cm_building_type } }
+				}
+			}
+			cm_cu_stage_untrack_if_empty = yes
+		}
+		cm_cu_apply_untracked_locs = yes
+	}
+}
+
+# A location whose type list has emptied is staged rather than dropped where it is found, which
+# would mutate the cm_cu_closed_locs walk each caller runs inside.
+# Expects scope:cm_location and scope:cm_country.
+cm_cu_stage_untrack_if_empty = {
+	if = {
+		limit = { scope:cm_location = { NOT = { variable_list_size = { name = cm_cu_closed_types value >= 1 } } } }
+		scope:cm_country = { add_to_variable_list = { name = cm_cu_untracked_locs target = scope:cm_location } }
+	}
+}
+
+# Root is the country.
+cm_cu_apply_untracked_locs = {
+	every_in_list = {
+		variable = cm_cu_untracked_locs
+		save_scope_as = cm_location
+		scope:cm_country = { remove_list_variable = { name = cm_cu_closed_locs target = scope:cm_location } }
+	}
+	clear_variable_list = cm_cu_untracked_locs
+}
+
+# Counts one market's production buildings per type: how many are open, whether any open one
+# still earns, and how many this system has closed. Root is the country, expects
+# scope:cm_ab_market.
+cm_cu_survey_market = {
+	clear_variable_map = cm_cu_open
+	clear_variable_map = cm_cu_prof_open
+	clear_variable_map = cm_cu_closed_n
+	clear_variable_map = cm_cu_acted
+	clear_variable_map = cm_cu_reop
+	# The iterator carries no ownership filter of its own.
+	scope:cm_ab_market = {
+		every_location_in_market = {
+			limit = {
+				owner ?= scope:cm_country
+				NOT = { integration_level = conquered }
+			}
+			save_scope_as = cm_location
+			every_buildings_in_location = {
+				limit = {
+					owner = scope:cm_country
+					building_type = { cm_is_building_type_production_building = yes }
+				}
+				save_scope_as = cm_building
+				building_type = { save_scope_as = cm_building_type }
+				if = {
+					limit = { scope:cm_building = { is_opened = yes } }
+					scope:cm_country = {
+						cm_cu_bump_open = yes
+						if = {
+							limit = { scope:cm_building = { cm_cu_is_unprofitable = no } }
+							add_to_variable_map = { name = cm_cu_prof_open key = scope:cm_building_type value = 1 }
+						}
+					}
+				} else_if = {
+					limit = { scope:cm_building = { cm_cu_is_tracked_closed = yes } }
+					scope:cm_country = { cm_cu_bump_closed_n = yes }
+				}
+			}
+		}
+	}
+}
+
+# Closes one market's unprofitable production buildings least profitable first, destroying
+# instead where the location is near its cap, until each type's half share is spent. A market
+# village is cut back to one level instead, never closed or destroyed.
+# Root is the country, expects scope:cm_ab_market.
+cm_cu_close_pass = {
+	scope:cm_ab_market = {
+		every_location_in_market = {
+			limit = {
+				owner ?= scope:cm_country
+				NOT = { integration_level = conquered }
+			}
+			save_scope_as = cm_location
+			ordered_buildings_in_location = {
+				order_by = cm_cu_neg_profit
+				max = cm_max_guess_at_number_of_buildings
+				check_range_bounds = no
+				limit = {
+					owner = scope:cm_country
+					# One map read that rejects most of what a location holds, so it leads
+					# the profit reads behind it.
+					building_type = {
+						cm_is_building_type_production_building = yes
+						cm_cu_is_never_removed = no
+					}
+					is_opened = yes
+					is_subsidized = no
+					# A building exists and reads no profit from the moment its first level is
+					# queued, so without this the pass closes what it is still paying to build.
+					cm_is_not_under_construction = yes
+					cm_cu_core_good_protected = no
+					cm_cu_is_unprofitable = yes
+					# market_village keeps its first level for the burghers it puts in the location.
+					trigger_if = {
+						limit = { building_type = building_type:market_village }
+						building_level > 1
+					}
+					cm_cu_close_pass_can_act = yes
+				}
+				save_scope_as = cm_building
+				building_type = { save_scope_as = cm_building_type }
+				# The iterator snapshots its limit; the share spent advances live.
+				if = {
+					limit = { scope:cm_country = { cm_cu_group_has_room = yes } }
+					scope:cm_country = { cm_cu_bump_acted = yes }
+					if = {
+						limit = { building_type = building_type:market_village }
+						cm_cu_log = { ACTION = cm_log_cu_trimmed }
+						scope:cm_location = {
+							change_building_level_in_location = {
+								building = building_type:market_village
+								value = { value = 1 subtract = scope:cm_building.building_level }
+								owner = scope:cm_country
+							}
+						}
+					}
+					else_if = {
+						limit = {
+							scope:cm_country = { exists = var:cm_cu_destroy }
+							scope:cm_location = { cm_cu_location_near_cap = yes }
+						}
+						cm_cu_log = { ACTION = cm_log_cu_destroyed }
+						scope:cm_location = { destroy_building = scope:cm_building }
+					}
+					else = {
+						cm_cu_log = { ACTION = cm_log_cu_closed }
+						scope:cm_country = {
+							add_to_variable_list = { name = cm_cu_toggle target = scope:cm_building }
+						}
+						cm_cu_track_closed = yes
+					}
+				}
+			}
+		}
+	}
+}
+
+# Reopens the closed buildings of one market's recovered types, best potential profit first.
+# Walks the tracked locations rather than the market's, that being exactly where a closed
+# building can be. Root is the country, expects scope:cm_ab_market.
+cm_cu_reopen_pass = {
+	if = {
+		limit = { has_variable_list = cm_cu_closed_locs }
+		every_in_list = {
+			variable = cm_cu_closed_locs
+			limit = {
+				owner ?= scope:cm_country
+				market = scope:cm_ab_market
+			}
+			save_scope_as = cm_location
+			ordered_buildings_in_location = {
+				order_by = building_potential_profit
+				max = cm_max_guess_at_number_of_buildings
+				check_range_bounds = no
+				limit = {
+					owner = scope:cm_country
+					cm_cu_is_tracked_closed = yes
+				}
+				save_scope_as = cm_building
+				building_type = { save_scope_as = cm_building_type }
+				if = {
+					# A protected core-goods producer is not judged on profit, so its group's recovery is
+					# not what decides it. This is also what restores the ones closed before the setting
+					# was turned on.
+					limit = {
+						OR = {
+							cm_cu_core_good_protected = yes
+							scope:cm_country = { cm_cu_group_reopen_room = yes }
+						}
+					}
+					cm_cu_log = { ACTION = cm_log_cu_reopened }
+					scope:cm_country = {
+						cm_cu_bump_reop = yes
+						add_to_variable_list = { name = cm_cu_toggle target = scope:cm_building }
+					}
+					cm_cu_untrack = yes
+				}
+			}
+		}
+		cm_cu_apply_untracked_locs = yes
+	}
+}
+
+# Destroys the buildings this system closed wherever the location has since run out of
+# building levels. Runs after the reopens, so a recovered type is restored rather than lost.
+# Root is the country, scope:cm_country set.
+cm_cu_delete_closed_pass = {
+	if = {
+		limit = { has_variable_list = cm_cu_closed_locs }
+		every_in_list = {
+			variable = cm_cu_closed_locs
+			limit = {
+				owner ?= scope:cm_country
+				cm_cu_location_near_cap = yes
+			}
+			save_scope_as = cm_location
+			every_buildings_in_location = {
+				limit = {
+					owner = scope:cm_country
+					cm_cu_is_tracked_closed = yes
+				}
+				save_scope_as = cm_building
+				building_type = { save_scope_as = cm_building_type }
+				cm_cu_log = { ACTION = cm_log_cu_deleted }
+				scope:cm_location = { destroy_building = scope:cm_building }
+				cm_cu_untrack = yes
+			}
+		}
+		cm_cu_apply_untracked_locs = yes
+	}
+}
+
+# Expects scope:cm_location, scope:cm_building_type.
+cm_cu_track_closed = {
+	scope:cm_location = {
+		add_to_variable_list = { name = cm_cu_closed_types target = scope:cm_building_type }
+	}
+	scope:cm_country = {
+		add_to_variable_list = { name = cm_cu_closed_locs target = scope:cm_location }
+	}
+}
+
+# Expects scope:cm_location, scope:cm_building_type.
+cm_cu_untrack = {
+	scope:cm_location = {
+		remove_list_variable = { name = cm_cu_closed_types target = scope:cm_building_type }
+	}
+	cm_cu_stage_untrack_if_empty = yes
+}
+
+# add_to_variable_map overwrites, so each counter reads its entry, bumps it, and writes it
+# back; the read is inlined per map because a quoted variable_map() map name cannot be a
+# macro. Root is the country, expects scope:cm_building_type.
+cm_cu_bump_open = {
+	set_local_variable = { name = cm_cu_n value = 0 }
+	if = {
+		limit = { is_key_in_variable_map = { name = cm_cu_open target = scope:cm_building_type } }
+		set_local_variable = { name = cm_cu_n value = "variable_map(cm_cu_open|scope:cm_building_type)" }
+	}
+	change_local_variable = { name = cm_cu_n add = 1 }
+	add_to_variable_map = { name = cm_cu_open key = scope:cm_building_type value = local_var:cm_cu_n }
+}
+
+cm_cu_bump_closed_n = {
+	set_local_variable = { name = cm_cu_n value = 0 }
+	if = {
+		limit = { is_key_in_variable_map = { name = cm_cu_closed_n target = scope:cm_building_type } }
+		set_local_variable = { name = cm_cu_n value = "variable_map(cm_cu_closed_n|scope:cm_building_type)" }
+	}
+	change_local_variable = { name = cm_cu_n add = 1 }
+	add_to_variable_map = { name = cm_cu_closed_n key = scope:cm_building_type value = local_var:cm_cu_n }
+}
+
+cm_cu_bump_acted = {
+	set_local_variable = { name = cm_cu_n value = 0 }
+	if = {
+		limit = { is_key_in_variable_map = { name = cm_cu_acted target = scope:cm_building_type } }
+		set_local_variable = { name = cm_cu_n value = "variable_map(cm_cu_acted|scope:cm_building_type)" }
+	}
+	change_local_variable = { name = cm_cu_n add = 1 }
+	add_to_variable_map = { name = cm_cu_acted key = scope:cm_building_type value = local_var:cm_cu_n }
+}
+
+cm_cu_bump_reop = {
+	set_local_variable = { name = cm_cu_n value = 0 }
+	if = {
+		limit = { is_key_in_variable_map = { name = cm_cu_reop target = scope:cm_building_type } }
+		set_local_variable = { name = cm_cu_n value = "variable_map(cm_cu_reop|scope:cm_building_type)" }
+	}
+	change_local_variable = { name = cm_cu_n add = 1 }
+	add_to_variable_map = { name = cm_cu_reop key = scope:cm_building_type value = local_var:cm_cu_n }
+}
+
+# One CMM log line per action this system takes on a building, naming the building, its
+# location, the profit it read and the floor that profit is judged against. Call it before
+# the action, since a destroyed building reads nothing. $ACTION$ = the action's log key.
+# Root is the building, expects scope:cm_country and scope:cm_location.
+cm_cu_log = {
+	if = {
+		# The two values are the pass's most expensive reads, so the category gate leads
+		# rather than sitting inside cm_dbg_log_bld.
+		limit = { exists = global_var:cm_dbg_cleanup }
+		save_temporary_scope_value_as = { name = cm_cu_dbg_profit value = cm_cu_profit_per_level }
+		save_temporary_scope_value_as = { name = cm_cu_dbg_floor value = cm_cu_effective_floor }
+		building_type = { save_scope_as = cmf_log_bt }
+		scope:cm_location = { save_scope_as = cmf_log_loc }
+		scope:cm_country = {
+			cm_dbg_log_bld = { cat = cleanup
+				action = $ACTION$
+				arg1 = cm_log_cu_profit
+				arg2 = cm_log_cu_floor
+				value = scope:cm_cu_dbg_profit
+				value2 = scope:cm_cu_dbg_floor
+			}
+		}
+	}
+}

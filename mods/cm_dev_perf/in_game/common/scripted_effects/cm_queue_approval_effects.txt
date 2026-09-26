@@ -1,0 +1,973 @@
+﻿# Score-then-approve drain for the construction queue. The queue-window executors score
+# staged items, capturing the GUI-only engine values; cm_q_approval_pass then approves in
+# the player's priority-list feature order, best metric first inside the two auto-expand
+# features.
+
+# Unified metric score, bigger = better: Tax Income and Profit store the value itself; the
+# ROI metrics store negated years-to-recoup so a faster payback sorts first. The ROI
+# branches use the indirect-adjusted income/profit, which equal the raw scopes on the RGO
+# path (it passes no indirect scopes).
+# Root is the item's location. Expects scope:cm_country, scope:cm_income, scope:cm_profit,
+# scope:cm_q_score_cost. Result exported as scope:cm_q_score_val.
+cm_q_compute_metric_score = {
+	if = {
+		limit = { cm_expand_metric_is_tax_income = yes }
+		save_temporary_scope_value_as = { name = cm_q_score_val value = cm_bld_income_value }
+	} else_if = {
+		limit = { cm_expand_metric_is = { metric = 2 } }
+		save_temporary_scope_value_as = { name = cm_q_score_val value = cm_bld_profit_value }
+	} else_if = {
+		limit = { cm_expand_metric_is = { metric = 3 } }
+		if = {
+			limit = { cm_bld_adjusted_income > 0 }
+			# The 12 converts monthly income to yearly, matching the metric gate's ROI formula.
+			set_local_variable = { name = cm_q_tmp_denom value = cm_bld_adjusted_income }
+			change_local_variable = { name = cm_q_tmp_denom multiply = 12 }
+			set_local_variable = { name = cm_q_tmp_score value = scope:cm_q_score_cost }
+			change_local_variable = { name = cm_q_tmp_score divide = local_var:cm_q_tmp_denom }
+			change_local_variable = { name = cm_q_tmp_score multiply = -1 }
+			# Floor at the unmeasurable sentinel so every stored score stays above the pick
+			# loop's -2000000 empty-domain marker.
+			change_local_variable = { name = cm_q_tmp_score max = -99999 }
+			save_temporary_scope_value_as = { name = cm_q_score_val value = local_var:cm_q_tmp_score }
+		} else = {
+			# No measurable payback sorts behind every measured candidate.
+			save_temporary_scope_value_as = { name = cm_q_score_val value = -99999 }
+		}
+	} else = {
+		if = {
+			limit = { cm_bld_adjusted_profit > 0 }
+			set_local_variable = { name = cm_q_tmp_denom value = cm_bld_adjusted_profit }
+			change_local_variable = { name = cm_q_tmp_denom multiply = 12 }
+			set_local_variable = { name = cm_q_tmp_score value = scope:cm_q_score_cost }
+			change_local_variable = { name = cm_q_tmp_score divide = local_var:cm_q_tmp_denom }
+			change_local_variable = { name = cm_q_tmp_score multiply = -1 }
+			change_local_variable = { name = cm_q_tmp_score max = -99999 }
+			save_temporary_scope_value_as = { name = cm_q_score_val value = local_var:cm_q_tmp_score }
+		} else = {
+			save_temporary_scope_value_as = { name = cm_q_score_val value = -99999 }
+		}
+	}
+}
+
+# Per-location scoring-state teardown, one effect per queue, called by cm_q_reset_cycle_state
+# so no cycle's scores survive into the next. Root is the location.
+cm_q_loc_reset_build_scoring = {
+	clear_variable_map = cm_q_scores
+	clear_variable_map = cm_q_costs
+	clear_variable_map = cm_q_conv_types
+	remove_variable = cm_q_best
+	cm_q_loc_reset_cycle_counters = yes
+}
+
+cm_q_loc_reset_upgrade_scoring = {
+	clear_variable_map = cm_q_upg_scores
+	clear_variable_map = cm_q_upg_costs
+	clear_variable_map = cm_q_upgall_costs
+	clear_variable_map = cm_q_upg_new_types
+	remove_variable = cm_q_upg_best
+	cm_q_loc_reset_cycle_counters = yes
+}
+
+cm_q_loc_reset_rgo_scoring = {
+	remove_variable = cm_q_rgo_score
+}
+
+cm_q_loc_reset_urbanize_scoring = {
+	clear_variable_map = cm_q_urb_costs
+}
+
+cm_q_loc_reset_food_scoring = {
+	clear_variable_map = cm_q_food_costs
+	cm_q_loc_reset_cycle_counters = yes
+}
+
+cm_q_loc_reset_food_rgo_scoring = {
+	remove_variable = cm_q_food_rgo_ok
+}
+
+cm_q_loc_reset_rank_scoring = {
+	remove_variable = cm_q_rank_price
+	remove_variable = cm_q_seen_rank
+}
+
+cm_ab_loc_reset_build_scoring = {
+	clear_variable_map = cm_ab_b_scores
+	clear_variable_map = cm_ab_b_costs
+	clear_variable_map = cm_ab_b_conv
+	clear_variable_map = cm_ab_b_profit
+	clear_variable_map = cm_ab_b_cat_1
+	clear_variable_map = cm_ab_b_cat_2
+	clear_variable_map = cm_ab_b_cat_3
+	clear_variable_map = cm_ab_b_cat_4
+	clear_variable_map = cm_ab_b_cat_6
+	clear_variable_map = cm_ab_b_cat_7
+	remove_variable = cm_ab_b_best
+	remove_variable = cm_ab_b_best_type
+	remove_variable = cm_ab_core_touched
+	remove_variable = cm_ab_core_levels
+	cm_q_loc_reset_cycle_counters = yes
+}
+
+cm_ab_loc_reset_upgrade_scoring = {
+	clear_variable_map = cm_ab_u_scores
+	clear_variable_map = cm_ab_u_costs
+	clear_variable_map = cm_ab_u_new_types
+	remove_variable = cm_ab_u_best
+	remove_variable = cm_ab_u_best_type
+}
+
+cm_ab_loc_reset_rgo_scoring = {
+	remove_variable = cm_ab_r_score
+}
+
+# Within-cycle construction slot claims. Root is the location.
+cm_q_loc_reset_cycle_counters = {
+	remove_variable = cm_q_slots_used
+}
+
+# Claims this location's RGO for the cycle. Root is the location, expects scope:cm_country.
+cm_q_mark_rgo_served = {
+	set_variable = { name = cm_q_rgo_served value = yes }
+	scope:cm_country = { add_to_variable_list = { name = cm_q_rgo_served_locations target = prev } }
+}
+
+# Root is the country.
+cm_q_clear_rgo_served = {
+	every_in_list = {
+		variable = cm_q_rgo_served_locations
+		save_scope_as = cm_q_clear_loc
+		scope:cm_q_clear_loc = { remove_variable = cm_q_rgo_served }
+	}
+	clear_variable_list = cm_q_rgo_served_locations
+}
+
+# Root is the location.
+cm_q_loc_clear_build_ranks = {
+	clear_variable_list = cm_q_approved_build_x2
+	clear_variable_list = cm_q_approved_build_x3
+	clear_variable_list = cm_q_approved_build_x4
+	clear_variable_list = cm_q_approved_build_x5
+	clear_variable_list = cm_q_approved_build_x6
+	clear_variable_list = cm_q_approved_build_x7
+	clear_variable_list = cm_q_approved_build_x8
+}
+
+# Approves this cycle's scored items. Runs once per cycle from cm_q_sync_check after every
+# executor has scored (processed >= staged). Features drain in the player's priority-list
+# order, so earlier features claim gold, build slots, and market goods first.
+# Root is the player country.
+cm_q_approval_pass = {
+	save_scope_as = cm_country
+	if = {
+		limit = { has_variable_list = cm_priority_features_list }
+		every_in_list = {
+			variable = cm_priority_features_list
+			save_scope_as = cm_q_pass_feature
+			if = {
+				limit = { scope:cm_country = { is_target_in_variable_list = { name = cm_priority_features_enabled target = scope:cm_q_pass_feature }  cm_dbg_solo_allows = { TARGET = scope:cm_q_pass_feature } } }
+				switch = {
+					trigger = scope:cm_q_pass_feature
+					flag:cm_feature_auto_expand_buildings = { scope:cm_country = { cm_q_pass_auto_expand_buildings = yes } }
+					flag:cm_feature_auto_expand_rgos = { scope:cm_country = { cm_q_pass_auto_expand_rgos = yes } }
+					flag:cm_feature_upgrade_all_buildings = { scope:cm_country = { cm_q_pass_upgrade_all = yes } }
+					flag:cm_feature_auto_food = { scope:cm_country = { cm_q_pass_auto_food = yes } }
+				}
+			}
+		}
+	}
+	# Auto-Build category drains after every priority feature has claimed, in the player's
+	# category order. Each category spends its own share, then whatever none of them spent is
+	# offered again from the top, so the highest category that still wants gold takes it.
+	if = {
+		limit = {
+			cm_ab_master_active = yes
+			has_variable_list = cm_ab_categories_enabled
+		}
+		set_local_variable = { name = cm_ab_cost_blocked value = 0 }
+		set_local_variable = { name = cm_ab_no_hold value = 0 }
+		set_local_variable = { name = cm_ab_ledger value = 0 }
+		set_local_variable = { name = cm_ab_reoffer value = 0 }
+		cm_ab_init_drain_signals = { CAT = production }
+		cm_ab_init_drain_signals = { CAT = core }
+		cm_ab_init_drain_signals = { CAT = food }
+		cm_ab_init_drain_signals = { CAT = custom }
+		cm_ab_init_drain_signals = { CAT = roads }
+		cm_ab_init_drain_signals = { CAT = military }
+		set_variable = { name = cm_ab_surplus value = 0 }
+		every_in_list = {
+			variable = cm_ab_categories_enabled
+			save_scope_as = cm_ab_cat
+			# Roads drains off its own road plan rather than off a staged queue, so a
+			# category held back by a Run Now has to be stopped here as well as at staging.
+			if = {
+				limit = { scope:cm_country = { cm_dbg_solo_allows = { TARGET = scope:cm_ab_cat } } }
+				scope:cm_country = { cm_ab_drain_category = { WRAP = cm_ab_drain_one } }
+			}
+		}
+		# One walk places the whole leftover: it reaches every category that stopped on a pick it
+		# could not pay for, in order, and each takes everything it can. A category that stopped on
+		# anything else wanted no more gold, so it can never become spendable here.
+		if = {
+			limit = { var:cm_ab_surplus > 0 }
+			set_local_variable = { name = cm_ab_reoffer value = 1 }
+			every_in_list = {
+				variable = cm_ab_categories_enabled
+				save_scope_as = cm_ab_cat
+				if = {
+					limit = { scope:cm_country = { cm_dbg_solo_allows = { TARGET = scope:cm_ab_cat } } }
+					scope:cm_country = { cm_ab_drain_category = { WRAP = cm_ab_drain_surplus } }
+				}
+			}
+		}
+		set_variable = { name = cm_ab_surplus_last value = var:cm_ab_surplus }
+		remove_variable = cm_ab_surplus
+		if = {
+			# Core's cycle tallies once the whole drain has run, so the re-offer's builds are in them.
+			limit = { exists = var:cm_ab_core_enabled }
+			cm_ab_core_log_counts = yes
+		}
+	}
+	# Auto-urbanize claims last, after every priority feature and every Auto-Build
+	# category.
+	if = {
+		limit = {
+			exists = var:cm_auto_urbanize_enabled
+			cm_dbg_solo_allows = { TARGET = flag:cm_feature_auto_urbanize }
+		}
+		cm_q_pass_auto_urbanize = yes
+	}
+}
+
+# How many candidates one scan caches for a max-pick domain. A cache serves at least this many
+# picks before it has to be refilled, and reading it costs an ordered scan of this many entries
+# rather than one over the whole candidate list.
+@cm_q_pick_cache_size = 8
+
+# One domain's best candidate for the next pick, re-derived only when the last pick touched that
+# domain: a pick writes scores only in its own domain, at its own location. Refills the cache
+# once its best live entry falls under the bar, below which an uncached candidate could win.
+# $D$ = the domain's name suffix, $LIST$ = its candidate list, $BEST$ = its per-location best
+# score variable, $PICK$ = the scope the caller's pick reads. Root is the country.
+cm_q_pick_domain_refresh = {
+	if = {
+		limit = { local_var:cm_q_pd_dirty_$D$ = 1 }
+		cm_q_pick_domain_read = { D = $D$ BEST = $BEST$ PICK = $PICK$ }
+		if = {
+			limit = { local_var:cm_q_pd_best_$D$ < local_var:cm_q_pd_bar_$D$ }
+			cm_q_pick_domain_fill = { D = $D$ LIST = $LIST$ BEST = $BEST$ }
+			cm_q_pick_domain_read = { D = $D$ BEST = $BEST$ PICK = $PICK$ }
+		}
+		set_local_variable = { name = cm_q_pd_dirty_$D$ value = 0 }
+	}
+}
+
+# Caches the domain's top candidates. The scan runs high to low, so the last entry visited leaves
+# the lowest cached score in the bar, which every uncached candidate is at or below and stays at
+# or below: a pick takes the top key of the location it picks from, so that location's best only
+# ever falls. Root is the country.
+cm_q_pick_domain_fill = {
+	save_temporary_scope_as = cm_q_pd_country
+	clear_variable_list = cm_q_pd_cache_$D$
+	set_local_variable = { name = cm_q_pd_bar_$D$ value = -2000000 }
+	set_local_variable = { name = cm_q_pd_n_$D$ value = 0 }
+	ordered_in_list = {
+		variable = $LIST$
+		limit = { has_variable = $BEST$ }
+		order_by = { value = var:$BEST$ }
+		max = @cm_q_pick_cache_size
+		check_range_bounds = no
+		save_temporary_scope_as = cm_q_pd_fill_loc
+		set_local_variable = { name = cm_q_pd_bar_$D$ value = var:$BEST$ }
+		change_local_variable = { name = cm_q_pd_n_$D$ add = 1 }
+		scope:cm_q_pd_country = { add_to_variable_list = { name = cm_q_pd_cache_$D$ target = scope:cm_q_pd_fill_loc } }
+	}
+	if = {
+		# A short fill is the whole domain, so nothing uncached can outrank it.
+		limit = { local_var:cm_q_pd_n_$D$ < @cm_q_pick_cache_size }
+		set_local_variable = { name = cm_q_pd_bar_$D$ value = -2000000 }
+	}
+}
+
+# Best live cache entry into local_var:cm_q_pd_best_$D$ and scope:$PICK$; an entry that has lost
+# $BEST$ left the domain after the fill. -2000000 marks an empty domain: strictly below every
+# stored score, which the scorer floors at -99999. Root is the country.
+cm_q_pick_domain_read = {
+	set_local_variable = { name = cm_q_pd_best_$D$ value = -2000000 }
+	ordered_in_list = {
+		variable = cm_q_pd_cache_$D$
+		limit = { has_variable = $BEST$ }
+		order_by = { value = var:$BEST$ }
+		position = 0
+		check_range_bounds = no
+		save_scope_as = $PICK$
+		set_local_variable = { name = cm_q_pd_best_$D$ value = var:$BEST$ }
+	}
+}
+
+# Loop prologue: arms the domain and takes its first scan. Root is the country.
+cm_q_pick_domain_arm = {
+	set_local_variable = { name = cm_q_pd_dirty_$D$ value = 1 }
+	cm_q_pick_domain_fill = { D = $D$ LIST = $LIST$ BEST = $BEST$ }
+}
+
+# Exact best-first drain for auto-expand buildings: repeatedly approves the single
+# highest-scored item across the expand and gated-upgrade domains, stopping early once the
+# current best pick is blocked by gold alone. The two domains hold separate candidate lists and
+# separate refreshes, so a pick in one leaves the other's answer standing.
+# Root is the country.
+cm_q_pass_auto_expand_buildings = {
+	set_local_variable = { name = cm_q_pick_guard value = 0 }
+	set_local_variable = { name = cm_q_budget_exhausted value = 0 }
+	cm_q_pick_domain_arm = { D = build LIST = cm_q_cand_locations BEST = cm_q_best }
+	cm_q_pick_domain_arm = { D = upg LIST = cm_q_upg_cand_locations BEST = cm_q_upg_best }
+	while = {
+		limit = {
+			# 999 stays under the engine's 1000-iteration while abort; anything past it waits
+			# for next month's staging.
+			local_var:cm_q_pick_guard < 999
+			local_var:cm_q_budget_exhausted = 0
+			OR = {
+				AND = {
+					has_variable_list = cm_q_cand_locations
+					variable_list_size = { name = cm_q_cand_locations value >= 1 }
+				}
+				AND = {
+					has_variable_list = cm_q_upg_cand_locations
+					variable_list_size = { name = cm_q_upg_cand_locations value >= 1 }
+				}
+			}
+		}
+		change_local_variable = { name = cm_q_pick_guard add = 1 }
+		cm_q_pick_domain_refresh = { D = build LIST = cm_q_cand_locations BEST = cm_q_best PICK = cm_q_pick_build_loc }
+		cm_q_pick_domain_refresh = { D = upg LIST = cm_q_upg_cand_locations BEST = cm_q_upg_best PICK = cm_q_pick_upg_loc }
+		if = {
+			# Ties go to the expand domain.
+			limit = {
+				local_var:cm_q_pd_best_build >= local_var:cm_q_pd_best_upg
+				local_var:cm_q_pd_best_build > -2000000
+			}
+			scope:cm_q_pick_build_loc = { cm_q_pick_best_build_item = yes }
+			set_local_variable = { name = cm_q_pd_dirty_build value = 1 }
+		} else_if = {
+			limit = { local_var:cm_q_pd_best_upg > -2000000 }
+			scope:cm_q_pick_upg_loc = { cm_q_pick_best_upgrade_item = yes }
+			set_local_variable = { name = cm_q_pd_dirty_upg value = 1 }
+		}
+	}
+	clear_variable_list = cm_q_pd_cache_build
+	clear_variable_list = cm_q_pd_cache_upg
+	cm_q_pass_foreign = yes
+}
+
+# Foreign drain for auto-expand buildings, after the owned domains have claimed. Foreign items
+# carry no metric, so there is nothing to rank them by and they drain in staging order.
+# Root is the country.
+cm_q_pass_foreign = {
+	if = {
+		limit = { has_variable_map = cm_q_fb_costs }
+		every_key_in_variable_map = {
+			variable = cm_q_fb_costs
+			save_scope_as = cm_location
+			set_local_variable = { name = cm_fb_cost value = "scope:cm_country.variable_map(cm_q_fb_costs|scope:cm_location)" }
+			save_temporary_scope_value_as = { name = cm_cost value = local_var:cm_fb_cost }
+			"scope:cm_country.variable_map(cm_q_fb_pair|scope:cm_location)" = { save_scope_as = cm_building_type }
+			scope:cm_location = { cm_q_fb_build_levels = yes }
+		}
+	}
+}
+
+# Queues ONE level at the site. Its owner and payer params are what make the player the owner
+# of a building in someone else's location. One per cycle rather than a batch because
+# construct_building validates nothing: it places a level whatever the type's allow block,
+# need_good_relation or level cap say, so every level has to come through this gate
+# individually and the gate is checked immediately before the only construct. The monthly
+# top-up grows the site from here.
+# Root is the location. Expects scope:cm_country, scope:cm_building_type and scope:cm_cost.
+cm_q_fb_build_levels = {
+	if = {
+		limit = {
+			cm_fb_type_is_allowed = yes
+			cm_fb_location_can_expand = yes
+			cm_country_can_afford_staged_cost = yes
+		}
+		construct_building = { building_type = scope:cm_building_type owner = scope:cm_country payer = scope:cm_country }
+	}
+}
+
+# Approves the highest-scored expand item at this location, then consumes it. The key is
+# removed even when the gates fail: one shot per item per cycle, and the pick loop only
+# terminates because every pick shrinks a map. Root is the location.
+cm_q_pick_best_build_item = {
+	save_temporary_scope_as = cm_q_pick_loc
+	ordered_key_in_variable_map = {
+		variable = cm_q_scores
+		order_by = {
+			save_temporary_scope_as = cm_q_try_type
+			value = "scope:cm_q_pick_loc.variable_map(cm_q_scores|scope:cm_q_try_type)"
+		}
+		position = 0
+		check_range_bounds = no
+		save_temporary_scope_as = cm_q_pick_type
+	}
+	scope:cm_q_pick_type = { save_scope_as = cm_building_type }
+	save_temporary_scope_value_as = { name = cm_cost value = "variable_map(cm_q_costs|scope:cm_q_pick_type)" }
+	# cm_commit_market_demand leaves the previous item's market in scope:cm_market.
+	market = { save_temporary_scope_as = cm_market }
+	if = {
+		limit = {
+			cm_get_open_build_queue_slots > 0
+			cm_market_has_construction_goods_for_building = yes
+		}
+		if = {
+			limit = { cm_country_can_afford_staged_cost = yes }
+			cm_approve_gui_build = yes
+			# The engine converts this build into the standing obsolete predecessor's upgrade.
+			if = {
+				limit = {
+					has_variable_map = cm_q_conv_types
+					is_key_in_variable_map = { name = cm_q_conv_types target = scope:cm_q_pick_type }
+				}
+				"variable_map(cm_q_conv_types|scope:cm_q_pick_type)" = { save_temporary_scope_as = cm_build_obsolete_type }
+				add_to_variable_list = { name = cm_upgrade_in_progress target = scope:cm_build_obsolete_type }
+				add_to_variable_map = { name = cm_upgrade_in_progress_targets key = scope:cm_build_obsolete_type value = scope:cm_building_type }
+			} else = {
+				# A conversion must fire exactly once.
+				cm_q_fill_build_slots = { AFFORD = cm_country_can_afford_staged_cost CLAIM = cm_q_claim_build_copy }
+				if = {
+					# The batch stopped on gold alone: stop picking rather than substitute a worse
+					# candidate.
+					limit = { local_var:cm_q_copy_stop = 2 }
+					set_local_variable = { name = cm_q_budget_exhausted value = 1 }
+				}
+			}
+		} else = {
+			set_local_variable = { name = cm_q_budget_exhausted value = 1 }
+		}
+	}
+	remove_from_variable_map = { name = cm_q_scores key = scope:cm_q_pick_type }
+	remove_from_variable_map = { name = cm_q_costs key = scope:cm_q_pick_type }
+	remove_from_variable_map = { name = cm_q_conv_types key = scope:cm_q_pick_type }
+	cm_q_refresh_build_best = yes
+}
+
+# Queues further levels of a just-approved build until the location's construction room is
+# spent. Approving the first level settled the rest, so pops, the promotion buffer, the overbuild
+# allowance and the market goods gate do not stop a level that would otherwise leave a
+# construction slot idle. The profit floor does stop it: a standing building that is not earning
+# and not subsidized takes on nobody, so the batch would stack levels onto an empty building.
+# $AFFORD$ = the per-level affordability trigger, $CLAIM$ = the per-level claim effect.
+# Leaves local_var:cm_q_copy_stop = 2 when affordability alone ended the batch, which is what a
+# caller with an early stop reads; 1 when the room gates closed and 0 when it ran to the rank
+# limit. Also leaves local_var:cm_q_copy_guard = the levels queued.
+# Root is the location. Expects scope:cm_country, scope:cm_building_type, scope:cm_cost.
+cm_q_fill_build_slots = {
+	set_local_variable = { name = cm_q_copy_guard value = 0 }
+	set_local_variable = { name = cm_q_copy_stop value = 0 }
+	# Levels the type reaches once the queued batch completes, counting the approved first copy.
+	# A subject's location can hold its owner's building of the same type, which is not the one
+	# the batch adds to.
+	set_local_variable = { name = cm_q_copy_type_levels value = 1 }
+	if = {
+		limit = {
+			any_buildings_in_location = {
+				owner = scope:cm_country
+				building_type = scope:cm_building_type
+			}
+		}
+		"building(scope:cm_building_type|scope:cm_country)" = {
+			change_local_variable = { name = cm_q_copy_type_levels add = building_level }
+			change_local_variable = { name = cm_q_copy_type_levels add = building_levels_under_construction }
+		}
+	}
+	while = {
+		limit = {
+			# One rank list per extra level, so at most 8 levels per type per cycle.
+			local_var:cm_q_copy_guard < 7
+			local_var:cm_q_copy_stop = 0
+		}
+		if = {
+			limit = {
+				cm_get_open_build_queue_slots > 0
+				scope:cm_building_type = { cm_building_type_batches_levels = yes }
+				cm_building_type_profitable_or_subsidized = { TYPE = scope:cm_building_type }
+				# The batch's own count against the engine cap. building_max_level is building scope
+				# and reports correctly where building_type_max_level reads 0 (cmf-engine-test 176),
+				# so a type with nothing of ours standing here yet cannot be read and is left to the
+				# construction-room bound.
+				OR = {
+					NOT = {
+						any_buildings_in_location = {
+							owner = scope:cm_country
+							building_type = scope:cm_building_type
+						}
+					}
+					"building(scope:cm_building_type|scope:cm_country)" = {
+						building_max_level > local_var:cm_q_copy_type_levels
+					}
+				}
+			}
+			if = {
+				limit = { $AFFORD$ = yes }
+				change_local_variable = { name = cm_q_copy_guard add = 1 }
+				cm_q_add_build_rank_copy = { GUARD = cm_q_copy_guard }
+				$CLAIM$ = yes
+				change_local_variable = { name = cm_q_copy_type_levels add = 1 }
+			} else = {
+				set_local_variable = { name = cm_q_copy_stop value = 2 }
+			}
+		} else = {
+			set_local_variable = { name = cm_q_copy_stop value = 1 }
+		}
+	}
+}
+
+# Recomputes this location's best expand score after a pick, or retires the location from
+# the candidate list once its map is empty. Root is the location.
+cm_q_refresh_build_best = {
+	save_temporary_scope_as = cm_q_refresh_loc
+	remove_variable = cm_q_best
+	if = {
+		limit = {
+			has_variable_map = cm_q_scores
+			variable_map_size = { name = cm_q_scores value >= 1 }
+		}
+		ordered_key_in_variable_map = {
+			variable = cm_q_scores
+			order_by = {
+				save_temporary_scope_as = cm_q_try_type
+				value = "scope:cm_q_refresh_loc.variable_map(cm_q_scores|scope:cm_q_try_type)"
+			}
+			position = 0
+			check_range_bounds = no
+			save_temporary_scope_as = cm_q_next_type
+		}
+		set_variable = { name = cm_q_best value = "variable_map(cm_q_scores|scope:cm_q_next_type)" }
+	} else = {
+		scope:cm_country = { remove_list_variable = { name = cm_q_cand_locations target = scope:cm_q_refresh_loc } }
+	}
+}
+
+# Gated-upgrade twin of cm_q_pick_best_build_item. Root is the location.
+cm_q_pick_best_upgrade_item = {
+	save_temporary_scope_as = cm_q_pick_loc
+	ordered_key_in_variable_map = {
+		variable = cm_q_upg_scores
+		order_by = {
+			save_temporary_scope_as = cm_q_try_type
+			value = "scope:cm_q_pick_loc.variable_map(cm_q_upg_scores|scope:cm_q_try_type)"
+		}
+		position = 0
+		check_range_bounds = no
+		save_temporary_scope_as = cm_q_pick_type
+	}
+	save_temporary_scope_value_as = { name = cm_q_scored_upgrade_pick value = 1 }
+	cm_q_pass_approve_upgrade_item = yes
+	remove_from_variable_map = { name = cm_q_upg_scores key = scope:cm_q_pick_type }
+	remove_from_variable_map = { name = cm_q_upg_costs key = scope:cm_q_pick_type }
+	cm_q_refresh_upg_best = yes
+}
+
+# Gated-upgrade twin of cm_q_refresh_build_best. Root is the location.
+cm_q_refresh_upg_best = {
+	save_temporary_scope_as = cm_q_refresh_loc
+	remove_variable = cm_q_upg_best
+	if = {
+		limit = {
+			has_variable_map = cm_q_upg_scores
+			variable_map_size = { name = cm_q_upg_scores value >= 1 }
+		}
+		ordered_key_in_variable_map = {
+			variable = cm_q_upg_scores
+			order_by = {
+				save_temporary_scope_as = cm_q_try_type
+				value = "scope:cm_q_refresh_loc.variable_map(cm_q_upg_scores|scope:cm_q_try_type)"
+			}
+			position = 0
+			check_range_bounds = no
+			save_temporary_scope_as = cm_q_next_type
+		}
+		set_variable = { name = cm_q_upg_best value = "variable_map(cm_q_upg_scores|scope:cm_q_next_type)" }
+	} else = {
+		scope:cm_country = { remove_list_variable = { name = cm_q_upg_cand_locations target = scope:cm_q_refresh_loc } }
+	}
+}
+
+# Approves one staged upgrade with the order-dependent gates, reproducing the approval side
+# effects the executor performed before the score-then-approve split: approved lists,
+# planned spend, market commit, the auto-expand registration swap, and the in-progress
+# records. Root is the location. Expects scope:cm_q_pick_type = the obsolete type,
+# scope:cm_country. Optional scope:cm_q_scored_upgrade_pick (set only by
+# cm_q_pick_best_upgrade_item, never by cm_q_pass_upgrade_all) lets a gold-only block set
+# cm_q_budget_exhausted.
+cm_q_pass_approve_upgrade_item = {
+	if = {
+		limit = {
+			has_variable_map = cm_q_upg_new_types
+			is_key_in_variable_map = { name = cm_q_upg_new_types target = scope:cm_q_pick_type }
+		}
+		scope:cm_q_pick_type = { save_scope_as = cm_old_building_type }
+		"variable_map(cm_q_upg_new_types|scope:cm_q_pick_type)" = { save_scope_as = cm_new_building_type }
+		scope:cm_new_building_type = { save_scope_as = cm_building_type }
+		if = {
+			limit = {
+				has_variable_map = cm_q_upg_costs
+				is_key_in_variable_map = { name = cm_q_upg_costs target = scope:cm_q_pick_type }
+			}
+			save_temporary_scope_value_as = { name = cm_cost value = "variable_map(cm_q_upg_costs|scope:cm_q_pick_type)" }
+		} else = {
+			save_temporary_scope_value_as = { name = cm_cost value = "variable_map(cm_q_upgall_costs|scope:cm_q_pick_type)" }
+		}
+		market = { save_temporary_scope_as = cm_market }
+		if = {
+			limit = { cm_market_has_construction_goods_for_building = yes }
+			if = {
+				limit = { cm_country_can_afford_staged_cost = yes }
+				cm_q_record_upgrade_approval = yes
+			} else = {
+				if = {
+					limit = { exists = scope:cm_q_scored_upgrade_pick }
+					# Set only by cm_q_pick_best_upgrade_item, never by cm_q_pass_upgrade_all.
+					set_local_variable = { name = cm_q_budget_exhausted value = 1 }
+				}
+			}
+		}
+	}
+}
+
+# The approval bookkeeping shared by the player upgrade drains and the Auto-Build
+# upgrade pick, which applies its own gates before calling: approved lists, planned spend,
+# the slot claim, the market commit, the auto-expand registration swap, and the in-progress
+# records. Root is the location. Expects scope:cm_country, scope:cm_old_building_type,
+# scope:cm_new_building_type, scope:cm_cost, scope:cm_market.
+cm_q_record_upgrade_approval = {
+	if = {
+		limit = { NOT = { is_target_in_variable_list = { name = cm_q_approved_upgrade_types target = scope:cm_old_building_type } } }
+		add_to_variable_list = { name = cm_q_approved_upgrade_types target = scope:cm_old_building_type }
+		save_temporary_scope_as = cm_approved_location
+		scope:cm_country = {
+			if = {
+				limit = { NOT = { is_target_in_variable_list = { name = cm_q_approved_upgrade_locations target = scope:cm_approved_location } } }
+				add_to_variable_list = { name = cm_q_approved_upgrade_locations target = scope:cm_approved_location }
+				scope:cm_approved_location = { clear_variable_list = cm_q_seen_upgrade_types }
+			}
+		}
+		# A deferred upgrade still has its gold to reserve, and occupies a construction slot while
+		# it converts; the immediate construct below has already taken both.
+		if = {
+			limit = { cm_q_build_is_deferred = yes }
+			scope:cm_country = { change_variable = { name = cm_q_planned_spend add = scope:cm_cost } }
+			if = {
+				limit = { NOT = { has_variable = cm_q_slots_used } }
+				set_variable = { name = cm_q_slots_used value = 0 }
+			}
+			change_variable = { name = cm_q_slots_used add = 1 }
+		}
+		cm_commit_market_demand = yes
+		# The engine upgrade action is the player's. Building the replacement over the standing
+		# obsolete predecessor is the same conversion, which is why every scorer skips a build
+		# whose predecessor is staged for upgrade.
+		if = {
+			limit = { cm_q_build_is_deferred = no }
+			construct_building = {
+				building_type = scope:cm_new_building_type
+				owner = scope:cm_country
+				payer = scope:cm_country
+			}
+		}
+	}
+	# Swap auto-expand tracking from old to new
+	if = { limit = { owner = { is_target_in_variable_list = { name = cm_mass_auto_expand_building_types target = scope:cm_old_building_type } } }
+		# Mass mode: add new type to country mass list and swap exclusion entries
+		owner = {
+			add_to_variable_list = { name = cm_mass_auto_expand_building_types target = scope:cm_new_building_type }
+		}
+		if = { limit = { is_target_in_variable_list = { name = cm_auto_expand_excluded_building_types target = scope:cm_old_building_type } }
+			remove_list_variable = { name = cm_auto_expand_excluded_building_types target = scope:cm_old_building_type }
+			add_to_variable_list = { name = cm_auto_expand_excluded_building_types target = scope:cm_new_building_type }
+		}
+	} else = {
+		# Normal mode: swap registration entries, only if old type was registered.
+		if = { limit = { is_target_in_variable_list = { name = cm_auto_expand_registered_building_types target = scope:cm_old_building_type } }
+			remove_list_variable = { name = cm_auto_expand_registered_building_types target = scope:cm_old_building_type }
+			add_to_variable_list = { name = cm_auto_expand_registered_building_types target = scope:cm_new_building_type }
+		}
+	}
+	# Track that this building type has an upgrade queued so the monthly script won't re-flag it
+	add_to_variable_list = { name = cm_upgrade_in_progress target = scope:cm_old_building_type }
+	# Record the constructed target for the finished-upgrade check
+	add_to_variable_map = { name = cm_upgrade_in_progress_targets key = scope:cm_old_building_type value = scope:cm_new_building_type }
+}
+
+# Exact best-first drain for auto-expand RGOs: one ordered pass, best stored score first,
+# with the gold gate applied live per item, stopping the pass once a location is blocked by
+# gold alone. Root is the country.
+cm_q_pass_auto_expand_rgos = {
+	if = {
+		limit = { has_variable_list = cm_q_rgo_locations }
+		set_local_variable = { name = cm_q_rgo_budget_exhausted value = 0 }
+		ordered_in_list = {
+			variable = cm_q_rgo_locations
+			order_by = { value = var:cm_q_rgo_score }
+			max = cm_max_guess_at_number_of_locations
+			check_range_bounds = no
+			limit = {
+				has_variable = cm_q_rgo_score
+				cm_location_rgo_free_this_cycle = yes
+				local_var:cm_q_rgo_budget_exhausted = 0
+			}
+			save_temporary_scope_as = cm_location
+			remove_variable = cm_q_rgo_score
+			# Deterministic copy budget; the live reads below tighten it as constructs queue.
+			set_local_variable = { name = cm_q_rgo_budget value = cm_get_open_build_queue_slots }
+			set_local_variable = { name = cm_q_rgo_headroom value = cm_get_max_rgo_workers_floor }
+			change_local_variable = { name = cm_q_rgo_headroom subtract = cm_modifier_rgo_level }
+			change_local_variable = { name = cm_q_rgo_headroom subtract = cm_get_rgos_under_construction }
+			if = {
+				limit = { local_var:cm_q_rgo_headroom < local_var:cm_q_rgo_budget }
+				set_local_variable = { name = cm_q_rgo_budget value = local_var:cm_q_rgo_headroom }
+			}
+			set_local_variable = { name = cm_q_rgo_slack value = cm_location_rgo_promotion_buffer_slack }
+			set_local_variable = { name = cm_q_rgo_done value = 0 }
+			while = {
+				limit = {
+					local_var:cm_q_rgo_budget > 0
+					local_var:cm_q_rgo_slack >= local_var:cm_q_rgo_done
+					cm_get_open_build_queue_slots > 0
+					cm_get_max_rgo_workers_floor > { value = cm_modifier_rgo_level add = cm_get_rgos_under_construction }
+					cm_check_country_gold_above = { threshold = cm_expected_gold_available_for_rgo_auto_expand_plus_planned_spend }
+				}
+				construct_rgo_upgrade = { }
+				change_local_variable = { name = cm_q_rgo_budget subtract = 1 }
+				change_local_variable = { name = cm_q_rgo_done add = 1 }
+			}
+			if = {
+				limit = { local_var:cm_q_rgo_done > 0 }
+				cm_q_mark_rgo_served = yes
+			}
+			if = {
+				# Same non-gold conditions as the while above, gold negated: true only when gold
+				# alone stopped this location, whether zero copies were approved or several were.
+				limit = {
+					local_var:cm_q_rgo_budget > 0
+					local_var:cm_q_rgo_slack >= local_var:cm_q_rgo_done
+					cm_get_open_build_queue_slots > 0
+					cm_get_max_rgo_workers_floor > { value = cm_modifier_rgo_level add = cm_get_rgos_under_construction }
+					NOT = { cm_check_country_gold_above = { threshold = cm_expected_gold_available_for_rgo_auto_expand_plus_planned_spend } }
+				}
+				set_local_variable = { name = cm_q_rgo_budget_exhausted value = 1 }
+			}
+		}
+	}
+}
+
+# List-order drain for Upgrade All Buildings entries. Root is the country.
+cm_q_pass_upgrade_all = {
+	if = {
+		limit = { has_variable_list = cm_gui_upgrade_locations }
+		every_in_list = {
+			variable = cm_gui_upgrade_locations
+			save_temporary_scope_as = cm_q_pass_loc
+			every_in_list = {
+				variable = cm_gui_upgrade_building_types
+				save_temporary_scope_as = cm_q_pick_type
+				scope:cm_q_pass_loc = {
+					if = {
+						limit = {
+							has_variable_map = cm_q_upgall_costs
+							is_key_in_variable_map = { name = cm_q_upgall_costs target = scope:cm_q_pick_type }
+						}
+						cm_q_pass_approve_upgrade_item = yes
+						remove_from_variable_map = { name = cm_q_upgall_costs key = scope:cm_q_pick_type }
+					}
+				}
+			}
+		}
+	}
+}
+
+# Auto-food drain: staged food buildings, then food RGO upgrades, in list order. Root is
+# the country.
+cm_q_pass_auto_food = {
+	if = {
+		limit = { has_variable_list = cm_q_food_locations }
+		every_in_list = {
+			variable = cm_q_food_locations
+			save_temporary_scope_as = cm_q_pass_loc
+			every_in_list = {
+				variable = cm_q_food_building_types
+				save_scope_as = cm_building_type
+				scope:cm_q_pass_loc = {
+					if = {
+						limit = {
+							has_variable_map = cm_q_food_costs
+							is_key_in_variable_map = { name = cm_q_food_costs target = scope:cm_building_type }
+						}
+						save_temporary_scope_value_as = { name = cm_cost value = "variable_map(cm_q_food_costs|scope:cm_building_type)" }
+						market = { save_temporary_scope_as = cm_market }
+						if = {
+							limit = {
+								cm_get_open_build_queue_slots > 0
+								cm_check_country_gold_above = { threshold = cm_food_gold_threshold_plus_planned_spend }
+								cm_market_has_construction_goods_for_building = yes
+							}
+							if = {
+								limit = { owner = scope:cm_country }
+								cm_approve_gui_build = yes
+							} else = {
+								construct_building = { building_type = scope:cm_building_type owner = scope:cm_country payer = scope:cm_country }
+								cm_commit_market_demand = yes
+							}
+							cm_food_mark_subsidize = yes
+							cm_q_fill_build_slots = { AFFORD = cm_q_food_can_afford_staged_cost CLAIM = cm_q_claim_build_copy }
+						}
+						remove_from_variable_map = { name = cm_q_food_costs key = scope:cm_building_type }
+					}
+				}
+			}
+		}
+	}
+	if = {
+		limit = { has_variable_list = cm_q_food_rgo_locations }
+		every_in_list = {
+			variable = cm_q_food_rgo_locations
+			if = {
+				limit = {
+					has_variable = cm_q_food_rgo_ok
+					cm_location_rgo_free_this_cycle = yes
+				}
+				remove_variable = cm_q_food_rgo_ok
+				set_local_variable = { name = cm_q_food_rgo_guard value = 0 }
+				# Counted down rather than left to the room read, which the batch's own
+				# constructs are what move.
+				set_local_variable = { name = cm_q_food_rgo_budget value = cm_get_open_build_queue_slots }
+				while = {
+					limit = {
+						local_var:cm_q_food_rgo_guard < local_var:cm_q_food_rgo_budget
+						cm_get_open_build_queue_slots > 0
+						cm_get_max_rgo_workers_floor > { value = cm_modifier_rgo_level add = cm_get_rgos_under_construction }
+						cm_check_country_gold_above = { threshold = cm_food_gold_threshold_plus_planned_spend }
+					}
+					change_local_variable = { name = cm_q_food_rgo_guard add = 1 }
+					construct_rgo_upgrade = { }
+				}
+				if = {
+					limit = { local_var:cm_q_food_rgo_guard > 0 }
+					cm_q_mark_rgo_served = yes
+				}
+			}
+		}
+	}
+}
+
+# Urbanize drain: staged rank upgrades in list order (cities, then towns, then the megalopolis
+# tail call), with rank eligibility re-checked at approval time and the pass stopping once an
+# item is blocked by gold alone, so the treasury saves toward that rank step across months
+# instead of founding the cheaper ones behind it. Root is the country.
+cm_q_pass_auto_urbanize = {
+	set_local_variable = { name = cm_q_urb_budget_exhausted value = 0 }
+	if = {
+		limit = { has_variable_list = cm_q_urbanize_locations }
+		building_type:cm_upgrade_town_to_city_building = { save_scope_as = cm_q_urb_city_type }
+		building_type:cm_upgrade_rural_to_town_building = { save_scope_as = cm_q_urb_town_type }
+		every_in_list = {
+			variable = cm_q_urbanize_locations
+			save_temporary_scope_as = cm_q_pass_loc
+			every_in_list = {
+				variable = cm_q_urbanize_building_types
+				save_scope_as = cm_building_type
+				scope:cm_q_pass_loc = {
+					if = {
+						limit = {
+							local_var:cm_q_urb_budget_exhausted = 0
+							has_variable_map = cm_q_urb_costs
+							is_key_in_variable_map = { name = cm_q_urb_costs target = scope:cm_building_type }
+						}
+						save_temporary_scope_value_as = { name = cm_cost value = "variable_map(cm_q_urb_costs|scope:cm_building_type)" }
+						market = { save_temporary_scope_as = cm_market }
+						if = {
+							limit = {
+								scope:cm_building_type = scope:cm_q_urb_city_type
+								cm_location_can_mass_upgrade_to_city = yes
+								cm_market_has_construction_goods_for_building = yes
+							}
+							if = {
+								limit = { cm_country_can_afford_staged_cost = yes }
+								construct_building = { building_type = scope:cm_building_type }
+								cm_commit_market_demand = yes
+							} else = {
+								set_local_variable = { name = cm_q_urb_budget_exhausted value = 1 }
+							}
+						}
+						if = {
+							limit = {
+								scope:cm_building_type = scope:cm_q_urb_town_type
+								cm_location_can_mass_upgrade_to_town = yes
+								cm_market_has_construction_goods_for_building = yes
+							}
+							if = {
+								limit = { cm_country_can_afford_staged_cost = yes }
+								construct_building = { building_type = scope:cm_building_type }
+								cm_commit_market_demand = yes
+							} else = {
+								set_local_variable = { name = cm_q_urb_budget_exhausted value = 1 }
+							}
+						}
+						remove_from_variable_map = { name = cm_q_urb_costs key = scope:cm_building_type }
+					}
+				}
+			}
+		}
+	}
+	cm_q_pass_auto_rank = yes
+}
+
+# Megalopolis rank drain: engine-deferred rank upgrades approved into cm_q_approved_rank_locations
+# and fired once by the queue window. Affordability uses the gold reserve; the min-discount
+# and market-goods gates use the Found building as a build_megalopolis_demand proxy. Skipped whole
+# while cm_q_pass_auto_urbanize is saving for a rank step it could not afford. Root is the country.
+cm_q_pass_auto_rank = {
+	if = {
+		limit = {
+			local_var:cm_q_urb_budget_exhausted = 0
+			has_variable_list = cm_q_rank_locations
+		}
+		building_type:cm_upgrade_city_to_megalopolis_building = { save_scope_as = cm_building_type }
+		every_in_list = {
+			variable = cm_q_rank_locations
+			save_temporary_scope_as = cm_q_pass_loc
+			scope:cm_q_pass_loc = {
+				if = {
+					limit = { has_variable = cm_q_rank_price }
+					save_temporary_scope_value_as = { name = cm_cost value = var:cm_q_rank_price }
+					market = { save_temporary_scope_as = cm_market }
+					if = {
+						limit = {
+							cm_mass_upgrade_city_to_megalopolis_discount_check = yes
+							cm_country_can_afford_staged_cost = yes
+							cm_market_has_construction_goods_for_building = yes
+						}
+						cm_q_approve_rank_location = yes
+					}
+					remove_variable = cm_q_rank_price
+				}
+			}
+		}
+	}
+}
+
+# Approves one rank upgrade: records the location, commits its price to planned spend so a second
+# megalopolis this cycle sees the reduced gold, and commits the proxy market demand. Root is the
+# location. Expects scope:cm_country, scope:cm_cost, scope:cm_building_type, scope:cm_market.
+cm_q_approve_rank_location = {
+	save_temporary_scope_as = cm_approved_rank_loc
+	scope:cm_country = {
+		if = {
+			limit = { NOT = { is_target_in_variable_list = { name = cm_q_approved_rank_locations target = scope:cm_approved_rank_loc } } }
+			add_to_variable_list = { name = cm_q_approved_rank_locations target = scope:cm_approved_rank_loc }
+			scope:cm_approved_rank_loc = { remove_variable = cm_q_seen_rank }
+			change_variable = { name = cm_q_planned_spend add = scope:cm_cost }
+		}
+	}
+	cm_commit_market_demand = yes
+}

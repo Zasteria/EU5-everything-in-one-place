@@ -1,0 +1,74 @@
+﻿# Placement finder controllers. Root is the player country for all.
+cm_pf_prep_gov = {
+	effect = {
+		# Flags the finder mode open for the action bar refresh button (cm_pf_refresh) is_shown.
+		set_variable = { name = cm_pf_mode_open value = 1 }
+		# The viewed mode; the run computes only this one.
+		set_variable = { name = cm_pf_view_g value = 1 }
+		remove_variable = cm_pf_view_c
+		cm_pf_prep_gated = yes
+	}
+}
+
+cm_pf_prep_cap = {
+	effect = {
+		set_variable = { name = cm_pf_mode_open value = 1 }
+		set_variable = { name = cm_pf_view_c value = 1 }
+		remove_variable = cm_pf_view_g
+		cm_pf_prep_gated = yes
+	}
+}
+
+cm_pf_run_batch = {
+	effect = {
+		cm_pf_run_batch_all = yes
+	}
+}
+
+# Gates the tick drivers on the same pair cm_pf_run_batch_all's own entry gate reads. cm_pf_prep_core
+# removes cm_pf_all_done as it primes, so priming is what re-arms a driver that has gone idle.
+cm_pf_batch_ready = {
+	is_shown = {
+		has_variable = cm_pf_n
+		NOT = { has_variable = cm_pf_all_done }
+	}
+}
+
+# is_shown gates the repaint driver; Execute clears the flag after the repaint fires.
+cm_pf_repaint_ready = {
+	is_shown = {
+		exists = var:cm_pf_repaint
+	}
+	effect = {
+		remove_variable = cm_pf_repaint
+	}
+}
+
+# Action bar refresh button, shown while a finder mapmode is open (cm_pf_mode_open, set in
+# cm_pf_prep on open and cleared by cm_pf_clear_mode_open on close).
+cm_pf_refresh = {
+	scope = country
+	is_shown = {
+		exists = var:cm_pf_mode_open
+	}
+}
+
+# Clears the finder-mode-open and viewed-mode flags, plus any abandoned run's transients; fired by
+# the mapmode window when the last finder mode closes.
+cm_pf_clear_mode_open = {
+	effect = {
+		remove_variable = cm_pf_mode_open
+		remove_variable = cm_pf_view_g
+		remove_variable = cm_pf_view_c
+		# Closing the mode stops the driver that would have reached cm_pf_finalize, so this run's
+		# per-location transients and cm_pf_en / cm_pf_ev maps would otherwise sit in the save until
+		# some later run's prep happened to clear them.
+		if = {
+			limit = {
+				has_variable = cm_pf_n
+				NOT = { has_variable = cm_pf_all_done }
+			}
+			cm_pf_clear_run_state = yes
+		}
+	}
+}

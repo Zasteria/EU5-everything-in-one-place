@@ -1,0 +1,84 @@
+﻿# The once-per-lobby setup. cm_run_lobby_setup owns the body so the Rebuild Setup Data button runs
+# the same thing.
+on_game_start_after_lobby = {
+	on_actions = {
+		cm_on_init_lobby_globals
+	}
+}
+
+on_game_load_after_lobby = {
+	on_actions = {
+		cm_on_init_lobby_globals
+	}
+}
+
+cm_on_init_lobby_globals = {
+	effect = {
+		cm_run_lobby_setup = yes
+	}
+}
+
+# Seed food data, list visibility, and the first GUI tick at game start so the UI is populated immediately.
+on_game_start_after_lobby_human_country = {
+	on_actions = {
+		cm_on_init_human_country
+	}
+}
+
+on_game_load_after_lobby_human_country = {
+	on_actions = {
+		cm_on_init_human_country
+	}
+}
+
+cm_on_init_human_country = {
+	effect = {
+		cm_seed_food_roster = yes
+		cm_update_auto_build_list_visibility = yes
+		cm_update_auto_town_rights_list_visibility = yes
+		cm_update_auto_urbanize_ignore_list_visibility = yes
+		# A loaded save can have a cycle's flags stuck on, which stops auto-construction.
+		cm_q_reset_cycle_state = yes
+		# A save taken between the cleanup toggles and their end state would otherwise
+		# toggle the same buildings a second time after the load.
+		remove_variable = cm_cu_fire
+		clear_variable_list = cm_cu_toggle
+		set_variable = { name = cm_q_planned_spend value = 0 }
+		cm_reset_market_committed_demand = yes
+		cm_suppress_engine_automation = yes
+		# Initialize the placement finder scores for the starting country.
+		cm_pf_recompute_now = yes
+	}
+}
+
+# CMF copies CMM setting values and re-runs registration before this fires; only the non-CMM expand-threshold memory is copied here.
+cmf_on_country_transfer = {
+	on_actions = {
+		cm_on_country_transfer
+	}
+}
+
+cm_on_country_transfer = {
+	effect = {
+		cm_copy_expand_thresholds = { m = 1 }
+		cm_copy_expand_thresholds = { m = 2 }
+		cm_copy_expand_thresholds = { m = 3 }
+		cm_copy_expand_thresholds = { m = 4 }
+		cm_ab_copy_budget_state = yes
+		# The corridors were planned over land the new tag may not hold, and the in-flight list does
+		# not carry, so the plan is dropped and the next planning pass rebuilds it.
+		cm_ab_rd_clear_plan = yes
+		# The new tag's markets are different, so both rotations restart rather than carrying
+		# over, and the anchors the old tag's markets set go with them.
+		cm_clear_slice_state = yes
+		cm_ab_clear_bailiff_plan = yes
+		cm_ab_prod_clear_memory = yes
+		cm_cu_clear_cycle_state = yes
+		cm_food_clear_subsidize_marks = yes
+		cm_fb_copy_state = yes
+		# The new tag carries its own engine automation flags.
+		cm_suppress_engine_automation = yes
+		# An interrupted cycle on this country must not resume with stale approvals.
+		cm_q_reset_cycle_state = yes
+	}
+}

@@ -1,0 +1,79 @@
+﻿@cm_build_slot_buffer = 1 # Levels queued past the location's capacity, waiting for a slot to free.
+
+# Expects scopes: country, location
+cm_expected_gold_available_for_rgo_auto_expand = {
+	value = glorpui_rgo_expand_cost
+	if = { limit = { exists = scope:cm_country.var:cm_minimum_gold }
+		add = scope:cm_country.var:cm_minimum_gold
+	}
+}
+
+# RGO gold threshold raised by the spend already approved this drain.
+# Expects scopes: country, location.
+cm_expected_gold_available_for_rgo_auto_expand_plus_planned_spend = {
+	value = cm_expected_gold_available_for_rgo_auto_expand
+	scope:cm_country = { add = var:cm_q_planned_spend }
+}
+
+cm_get_max_rgo_workers_floor = {
+	value = max_rgo_workers
+	floor = yes
+}
+
+cm_get_buildings_under_construction = {
+	value = 0
+	every_buildings_in_location = {
+		add = building_levels_under_construction
+	}
+}
+
+# Floored because a negative reads as extra RGO room everywhere it is subtracted.
+cm_get_rgos_under_construction = {
+	value = num_civil_constructions
+	subtract = cm_get_buildings_under_construction
+	min = 0
+}
+
+cm_get_max_constructions_at_same_time = {
+	value = modifier:max_constructions_at_same_time
+}
+
+# Root scope is the location
+cm_get_open_build_queue_slots = {
+	value = cm_get_max_constructions_at_same_time
+	subtract = num_civil_constructions
+	# Deferred approvals claim their slot before the fire pass runs; the owner gate skips counters a dead country never reset.
+	if = {
+		limit = {
+			exists = var:cm_q_slots_used
+			owner = { exists = var:cm_should_construct }
+		}
+		subtract = var:cm_q_slots_used
+	}
+	# The buffer level starts the moment a construction finishes, instead of idling until the
+	# next monthly cycle stages one.
+	add = @cm_build_slot_buffer
+}
+
+# Root scope is the location
+cm_modifier_rgo_level = {
+  value = modifier:cm_rgo_level
+}
+
+# The laborers this location keeps back from a building of scope:cm_building_type: one RGO
+# level's worth where the building draws laborers and the RGO is one worth reserving for, and
+# none otherwise. One is what a level costs, cm_location_laborers_available taking the RGO's
+# whole level count off the laborer pool one for one.
+# Root is the location, expects scope:cm_building_type and scope:cm_country.
+cm_location_rgo_laborer_reserve = {
+	value = 0
+	if = {
+		limit = {
+			has_global_variable_map = cm_building_type_to_pop_type
+			is_key_in_global_variable_map = { name = cm_building_type_to_pop_type target = scope:cm_building_type }
+			"global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:laborers
+			cm_location_rgo_reserves_laborers = yes
+		}
+		value = 1
+	}
+}

@@ -1,0 +1,550 @@
+﻿# Auto-Build gates.
+
+# The payback a construction-material consumer has to make, against the general cap's 20 default.
+# Deliberately not driven off that cap: a lucky nation's climbs toward 100 as gold accumulates
+# (cm_ln_production_min_roi_value), which is exactly when it mass-builds these.
+@cm_ab_prod_core_max_roi = 10
+
+# Root is the country.
+cm_ab_master_active = {
+	exists = var:cm_ab_enabled
+	OR = {
+		cm_should_pause_auto_expand = no
+		cm_dbg_solo_active = yes
+	}
+}
+
+# A Debug tab Run Now button is driving this cycle by hand (cm_dbg_run_effects.txt).
+# Root is the country.
+cm_dbg_solo_active = {
+	exists = var:cm_dbg_solo
+}
+
+# Whether $TARGET$ may stage and drain this cycle: everything, unless a Run Now button
+# named one feature. Root is the country.
+cm_dbg_solo_allows = {
+	OR = {
+		NOT = { exists = var:cm_dbg_solo }
+		is_target_in_variable_list = { name = cm_dbg_solo_list target = $TARGET$ }
+	}
+}
+
+# True when some roster row builds in subject locations. Root is the country.
+cm_ab_custom_subjects_wanted = {
+	exists = var:cm_ab_custom_roster
+	has_variable_list = cm_ab_building_types_in_subjects_enabled
+	variable_list_size = { name = cm_ab_building_types_in_subjects_enabled value >= 1 }
+}
+
+# Root is the location, expects scope:cm_country. A location no proximity source reaches carries
+# no control, so it earns almost nothing from anything built there.
+cm_ab_location_has_proximity = {
+	proximity >= cm_ab_min_proximity_value
+}
+
+# Root is the location. A capital-connection corridor delivers nothing until every segment between
+# it and the capital exists, so only the ring touching what is already connected is worth ordering.
+# It advances on its own as each corridor completes.
+cm_ab_rd_cc_at_frontier = {
+	has_variable = cm_ab_rd_par_3
+	var:cm_ab_rd_par_3 = { has_road_to_capital = yes }
+}
+
+# Root is the country. The category's drain runs from cm_q_approval_pass, which only runs once a
+# cycle has opened, so this is what opens one in a month nothing else staged. Target 3 is the one
+# that still needs a per-corridor test, a corridor off the frontier paying nothing until the chain
+# in front of it lands.
+cm_ab_rd_has_work = {
+	OR = {
+		AND = {
+			has_variable_list = cm_ab_rd_queue_1
+			variable_list_size = { name = cm_ab_rd_queue_1 value >= 1 }
+		}
+		AND = {
+			has_variable_list = cm_ab_rd_queue_2
+			variable_list_size = { name = cm_ab_rd_queue_2 value >= 1 }
+		}
+		AND = {
+			has_variable_list = cm_ab_rd_queue_3
+			any_in_list = {
+				variable = cm_ab_rd_queue_3
+				cm_ab_rd_cc_at_frontier = yes
+			}
+		}
+	}
+}
+
+# Root is the location, expects scope:cm_country. The road's own construction goods measured as a
+# demand-weighted mean deviation, against the Roads Min Discount. The 0.005 tolerance matches the
+# building and RGO discount triggers, so a -33 setting still admits a -32.5 reading.
+cm_ab_rd_meets_min_discount = {
+	cm_ab_rd_goods_price_index_value <= { value = cm_get_min_discount_for_ab_roads add = 0.005 }
+}
+
+# True while the category may buy past its allotment and owe the difference: its ledger is
+# running, which only the two drain wrappers start, and the setting is on. Root is the country.
+cm_ab_may_borrow = {
+	local_var:cm_ab_ledger = 1
+	exists = var:cm_ab_save_unaffordable
+}
+
+# Affordability gate for Auto-Build approvals: anything left in the category pool covers a
+# borrowing category's pick, the whole cost otherwise, and the treasury stays above the
+# gold reserve after this drain's committed spend.
+# $POOL$ = the category pool variable name. Expects scope:cm_country, scope:cm_cost.
+cm_ab_can_afford = {
+	scope:cm_country = {
+		trigger_if = {
+			limit = { cm_ab_may_borrow = yes }
+			var:$POOL$ > 0
+		}
+		trigger_else = { var:$POOL$ >= scope:cm_cost }
+	}
+	cm_ab_treasury_covers_cost = yes
+}
+
+# The treasury half of cm_ab_can_afford. Expects scope:cm_country, scope:cm_cost.
+cm_ab_treasury_covers_cost = {
+	scope:cm_country = { gold >= { value = scope:cm_cost add = cm_get_minimum_gold add = var:cm_q_planned_spend } }
+}
+
+# Per-level affordability for an Auto-Build batch: the pool balance the batch has left,
+# which cm_ab_fill_build_slots holds in var:cm_ab_copy_pool so one trigger serves every category.
+# Expects scope:cm_country, scope:cm_cost.
+cm_ab_copy_can_afford = {
+	scope:cm_country = {
+		trigger_if = {
+			limit = { cm_ab_may_borrow = yes }
+			var:cm_ab_copy_pool > 0
+		}
+		trigger_else = { var:cm_ab_copy_pool >= scope:cm_cost }
+	}
+	cm_ab_treasury_covers_cost = yes
+}
+
+# RGO twin of cm_ab_can_afford: the cost is the live glorpui_rgo_expand_cost.
+# $POOL$ = the category pool variable name. Root is the location, expects scope:cm_country,
+# scope:cm_location.
+cm_ab_can_afford_rgo = {
+	trigger_if = {
+		limit = { scope:cm_country = { cm_ab_may_borrow = yes } }
+		scope:cm_country.var:$POOL$ > 0
+	}
+	trigger_else = { scope:cm_country.var:$POOL$ >= glorpui_rgo_expand_cost }
+	cm_check_country_gold_above = { threshold = cm_ab_rgo_gold_threshold }
+}
+
+# Production candidacy: measurable payback inside the max-payback-years cap (0 = no cap).
+# The adjusted income adds the indirect gain when the indirect scopes are present, matching
+# the metric-3 branch of cm_gui_metric_gate_passes. Root is the item's location.
+# Expects scope:cm_country, scope:cm_income; $COST$ = the cost value.
+cm_ab_prod_roi_passes = {
+	cm_bld_adjusted_income > 0
+	OR = {
+		NOT = { scope:cm_country = { exists = var:cm_ab_production_min_roi } }
+		scope:cm_country.var:cm_ab_production_min_roi = 0
+		$COST$ <= {
+			value = cm_bld_adjusted_income
+			multiply = scope:cm_country.var:cm_ab_production_min_roi
+			multiply = 12
+		}
+	}
+}
+
+# A construction-material consumer draws on the same masonry, lumber, sand and glass every other
+# build in the country is competing for, and that draw is permanent while the payback is one-off,
+# so it is held to a shorter payback than the general cap. Passes untouched for every other type,
+# and for one that makes a construction good itself. Runs after cm_ab_prod_roi_passes, which has
+# already established income above 0. Root is the item's location.
+# Expects scope:cm_country, scope:cm_income; $COST$ = the cost value,
+# $TYPE$ = the scope holding the type that gets built.
+cm_ab_prod_core_roi_passes = {
+	trigger_if = {
+		limit = {
+			has_global_variable_map = cm_bt_core_input
+			is_key_in_global_variable_map = { name = cm_bt_core_input target = $TYPE$ }
+			$TYPE$ = { cm_bt_type_produces_construction_good = no }
+		}
+		$COST$ <= {
+			value = cm_bld_adjusted_income
+			multiply = @cm_ab_prod_core_max_roi
+			multiply = 12
+		}
+	}
+}
+
+# The Production Min Discount, named once for the drain and the probe that reports it.
+# Expects scope:cm_country, scope:cm_location, scope:cm_building_type.
+cm_ab_prod_meets_min_discount = {
+	cm_building_meets_minimum_discount = { threshold = cm_get_min_discount_for_ab_production }
+}
+
+# RGO twin. Root is the location, expects scope:cm_country.
+cm_ab_rgo_meets_min_discount = {
+	cm_rgo_meets_minimum_discount = { threshold = cm_get_min_discount_for_ab_production }
+}
+
+# Never staged by Auto-Build, whatever it scores. slave_market's profit swings month to
+# month, so a payback the ROI ranking likes is a loss by the time the level stands.
+# Root is the building type.
+cm_ab_type_is_never_built = {
+	OR = {
+		this = building_type:slave_market
+	}
+}
+
+# Staged whatever the location's proximity. settlement_building seeds pops where a country wants
+# them later rather than earning where it stands: local_migration_attraction 1.0 and
+# local_population_growth 0.01, and its own remove_if deletes it once the location passes 10% of
+# the location population (in_game/common/building_types/rural_buildings.txt:704).
+# Root is the building type.
+cm_ab_type_ignores_proximity = {
+	OR = {
+		this = building_type:settlement_building
+	}
+}
+
+# Root is unused. Expects scope:cm_building_type. market_village's value is almost entirely its
+# first level, which puts burghers in the location and so makes their literacy bonus apply there
+# at all; further levels add little.
+cm_ab_type_is_single_level = {
+	scope:cm_building_type = building_type:market_village
+}
+
+# Room for another level of the roster type here. Root is the location, expects
+# scope:cm_building_type.
+cm_ab_custom_type_has_room = {
+	trigger_if = {
+		limit = { cm_ab_type_is_single_level = yes }
+		NOT = { has_building = scope:cm_building_type }
+	}
+	trigger_else = {
+		cm_location_building_type_is_not_at_max_level = { target = scope:cm_building_type }
+	}
+}
+
+# A site worth carrying in the bailiff plan. The cap-free half of cm_ab_max_control_site_ok:
+# can_build_building reads the country-wide num_bailiffs cap, so asking it here would empty the
+# plan every time the cap filled and the map would have to be relearned before the next slot
+# could be spent well. Bailiff lists only rural_settlement among the four rank fields (game
+# in_game/common/building_types/rural_buildings.txt:10), so a rank upgrade retires a site for
+# good, and has_building holds from the moment the first level is queued.
+# Root is the location, expects scope:cm_country, scope:cm_building_type.
+cm_ab_bailiff_site_viable = {
+	owner ?= scope:cm_country
+	NOT = { integration_level = conquered }
+	location_rank = location_rank:rural_settlement
+	NOT = { has_building = scope:cm_building_type }
+}
+
+# True while a market the bailiff plan has never surveyed is present, which is what holds staging
+# shut until the plan has seen the whole map. Mirrors cm_slice_has_unseen against the plan's own
+# map. Its temporary scopes carry their own names, cm_ab_survey_bailiffs saving permanent ones.
+# Root is the country.
+cm_ab_bailiff_has_unseen_market = {
+	save_temporary_scope_as = cm_ab_bf_ctry
+	any_market_present_in_country = {
+		save_temporary_scope_as = cm_ab_bf_mkt
+		scope:cm_ab_bf_ctry = {
+			OR = {
+				NOT = { has_variable_map = cm_ab_bailiff_seen }
+				NOT = { is_key_in_variable_map = { name = cm_ab_bailiff_seen target = scope:cm_ab_bf_mkt } }
+			}
+		}
+	}
+}
+
+# A max-control building can go up here right now: the bailiff staging and the unique types share
+# it, so a pick is only ever made on the terms it will later be staged on. Queueing several
+# control buildings at one location is wanted, since it reserves the location's slots and its
+# labour for them.
+# Root is the location, expects scope:cm_country, scope:cm_building_type.
+cm_ab_max_control_site_ok = {
+	NOT = { integration_level = conquered }
+	NOT = { has_building = scope:cm_building_type }
+	cm_location_allowed_to_build = { target = scope:cm_building_type }
+}
+
+# The country side of scope:cm_building_type's placement rules, which for a unique type is
+# its country_potential and its advance unlock. Root is the country.
+cm_ab_country_can_build_type = {
+	save_temporary_scope_as = actor
+	can_build_building = scope:cm_building_type
+}
+
+# Root is the location.
+cm_ab_location_has_open_build_slot = {
+	cm_get_open_build_queue_slots > 0
+}
+
+# True when scope:cm_ab_good_t has reached its goal price in scope:cm_ab_market, either at the
+# price it trades at now or at the one it is converging to. Market price closes only 5% of that
+# gap a month (MONTHLY_PRICE_CHANGE, game/loading_screen/common/defines/00_defines.txt:1755), so
+# without the second branch a market keeps being built into for over a year after its supply is
+# already enough. The > 0 guard keeps a target_price of 0 from reading as every goal met.
+# Expects scope:cm_ab_market, scope:cm_ab_good_t, scope:cm_country.
+cm_ab_core_target_met = {
+	OR = {
+		"scope:cm_ab_market.market_price(scope:cm_ab_good_t)" <= cm_ab_core_goal_price
+		AND = {
+			"scope:cm_ab_market.target_price(scope:cm_ab_good_t)" > 0
+			"scope:cm_ab_market.target_price(scope:cm_ab_good_t)" <= cm_ab_core_goal_price
+		}
+	}
+}
+
+# Root is the location, expects scope:cm_building_type and scope:cm_country. The pop half of
+# cm_ab_core_type_room, named so the probe and the skip lines can report it on its own; staging
+# reads the room itself, which carries this. Dropping the six-year projection
+# cm_location_has_enough_pops_available applies is deliberate and stays confined to this
+# category - a location short of one of the four core construction goods is often exactly the
+# one whose pops are furthest behind, and those goods block every other build when they run out.
+# Open jobs do not convert to promotions one for one, so this is not a general relaxation.
+cm_ab_core_pops_ok = {
+	cm_ab_core_pop_room > 0
+}
+
+# Root is the location. The RGO twin of cm_ab_core_pops_ok.
+cm_ab_core_rgo_pops_ok = {
+	OR = {
+		cm_location_laborers_or_slaves_available > 0
+		cm_location_laborers_promotion_source_pool > 0
+	}
+}
+
+# Root is the location. $TYPE$ = the building type. Core Goods holds a producer to
+# cm_ab_core_min_profit in place of the shared floor.
+cm_ab_core_profitable_or_subsidized = {
+	cm_building_type_clears_profit_floor = { FLOOR = cm_ab_core_min_profit TYPE = $TYPE$ }
+}
+
+# Root is the location. Locations Core Goods leaves alone: the capital and anything food
+# automation is working are both short of construction slots, and a level placed there
+# displaces work that has nowhere else to go.
+cm_ab_core_candidate_ok = {
+	is_capital = no
+	cm_ab_food_location_effectively_active = no
+}
+
+# Root is the location, expects scope:cm_country. The Core Goods trace follows one location
+# through a whole cycle, so the log stays inside its 200 entries.
+cm_ab_core_watched = {
+	save_temporary_scope_as = cm_ab_core_loc
+	scope:cm_country = {
+		exists = var:cm_ab_core_watch_loc
+		var:cm_ab_core_watch_loc = { this = scope:cm_ab_core_loc }
+	}
+}
+
+# Root is the market, expects scope:cm_country.
+cm_ab_core_market_watched = {
+	save_temporary_scope_as = cm_ab_core_mkt
+	scope:cm_country = {
+		exists = var:cm_ab_core_watch_loc
+		var:cm_ab_core_watch_loc = { market ?= scope:cm_ab_core_mkt }
+	}
+}
+
+# The staging conditions the trace reports one at a time, each wrapped so the skip-line helper
+# can take it by name. Root is the location, expects scope:cm_building_type.
+cm_ab_core_room_left = {
+	local_var:cm_ab_good_room > 0
+}
+
+cm_ab_core_untouched = {
+	NOT = { exists = var:cm_ab_core_touched }
+}
+
+cm_ab_core_type_has_room = {
+	cm_ab_core_type_room > 0
+}
+
+cm_ab_core_not_at_max = {
+	cm_location_building_type_is_not_at_max_level = { target = scope:cm_building_type }
+}
+
+cm_ab_core_placeable = {
+	cm_location_allowed_to_build = { target = scope:cm_building_type }
+}
+
+cm_ab_core_not_claimed = {
+	NOT = { is_target_in_variable_list = { name = cm_q_building_types target = scope:cm_building_type } }
+	NOT = { is_target_in_variable_list = { name = cm_q_upgrade_target_types target = scope:cm_building_type } }
+}
+
+# The probe's remaining verdicts. Root is the location, expects scope:cm_country,
+# scope:cm_building_type, scope:cm_ab_market and scope:cm_ab_good_t.
+cm_ab_core_has_pop_type = {
+	has_global_variable_map = cm_building_type_to_pop_type
+	is_key_in_global_variable_map = { name = cm_building_type_to_pop_type target = scope:cm_building_type }
+}
+
+cm_ab_core_market_center_owned = {
+	scope:cm_ab_market = { location = { owner ?= scope:cm_country } }
+}
+
+cm_ab_core_target_met_here = {
+	cm_ab_core_target_met = yes
+}
+
+cm_ab_core_cat_enabled = {
+	scope:cm_country = {
+		has_variable_list = cm_ab_core_goods_enabled
+		is_target_in_variable_list = { name = cm_ab_core_goods_enabled target = scope:cm_ab_good_t }
+	}
+}
+
+# The iterator's own limit, split so the trace names which one kept the location out of the
+# sweep entirely. Root is the location, expects scope:cm_country.
+cm_ab_core_owned = {
+	owner ?= scope:cm_country
+}
+
+cm_ab_core_unconquered = {
+	NOT = { integration_level = conquered }
+}
+
+# The two drain-side conditions, split so the trace names which one dropped the item.
+cm_ab_core_claimed_by_cat = {
+	cm_ab_core_cat_key_present = yes
+}
+
+cm_ab_core_cat_key_present = {
+	has_variable_map = cm_ab_b_cat_2
+	is_key_in_variable_map = { name = cm_ab_b_cat_2 target = scope:cm_building_type }
+}
+
+cm_ab_core_production_also_wants = {
+	has_variable_map = cm_ab_b_cat_1
+	is_key_in_variable_map = { name = cm_ab_b_cat_1 target = scope:cm_building_type }
+}
+
+cm_ab_core_has_cost_key = {
+	has_variable_map = cm_ab_b_costs
+	is_key_in_variable_map = { name = cm_ab_b_costs target = scope:cm_building_type }
+}
+
+# Root is the location. The Auto-Build food system picked this location; membership
+# in the owner's list is the authority, so a stale marker after an ownership change is
+# inert and never clobbers the new owner's own pick.
+cm_ab_location_is_system_food_picked = {
+	exists = owner
+	exists = var:cm_ab_food_marked
+	owner = { is_target_in_variable_list = { name = cm_ab_food_locations target = prev } }
+}
+
+# Root is the location. Picked and currently operating.
+cm_ab_location_is_system_food_active = {
+	cm_ab_location_is_system_food_picked = yes
+	location_rank = location_rank:rural_settlement
+	owner = {
+		exists = var:cm_ab_enabled
+		exists = var:cm_ab_food_enabled
+	}
+}
+
+# Root is the location. Auto-food that actually operates here: a system pick builds under the
+# food pool on its own, while a player toggle or mass coverage only counts while the player's
+# auto-food feature is enabled - a manual toggle with that feature off builds nothing, so it
+# neither counts toward a market's coverage nor blocks the location from being picked.
+# Mirrors the gating in cm_location_auto_food_supersedes_rgo. The glow and tooltip keep using
+# cm_location_is_auto_food_active, so a manually toggled location still displays as enabled.
+cm_ab_food_location_effectively_active = {
+	OR = {
+		AND = {
+			owner = { is_target_in_variable_list = { name = cm_priority_features_enabled target = flag:cm_feature_auto_food } }
+			cm_location_is_auto_food_active = yes
+		}
+		cm_ab_location_is_system_food_active = yes
+	}
+}
+
+# Root is the location. The 13 food RGO goods, mirroring cm_is_food_rgo_location
+# (cm_food_auto_build_scripted_gui.txt).
+cm_ab_location_has_food_rgo = {
+	OR = {
+		raw_material = goods:rice
+		raw_material = goods:wheat
+		raw_material = goods:maize
+		raw_material = goods:potato
+		raw_material = goods:livestock
+		raw_material = goods:millet
+		raw_material = goods:legumes
+		raw_material = goods:fish
+		raw_material = goods:olives
+		raw_material = goods:fruit
+		raw_material = goods:wild_game
+		raw_material = goods:beeswax
+		raw_material = goods:fur
+	}
+}
+
+# Root is the location, expects scope:cm_country. A location the yearly evaluation may pick,
+# whether to fill a market's coverage or to take a worse pick's place.
+cm_ab_food_candidate_ok = {
+	owner ?= scope:cm_country
+	NOT = { integration_level = conquered }
+	cm_ab_location_has_proximity = yes
+	location_rank = location_rank:rural_settlement
+	cm_ab_location_has_food_rgo = yes
+	NOT = { cm_ab_food_location_effectively_active = yes }
+	cm_check_location_meets_min_market_access = yes
+	cm_location_food_potential >= cm_ab_food_min_potential_value
+}
+
+# Root is the location, expects scope:cm_country. The lenient expandability test: a
+# location waiting on pop promotion (the *_or_will_be checks inside the buildable chain)
+# or on a level under construction still counts as able to expand; only a genuine pop
+# shortage or no available levels disqualify.
+cm_ab_food_location_counts_as_expandable = {
+	OR = {
+		cm_food_location_has_buildable_option = yes
+		cm_is_rgo_under_construction = yes
+		any_buildings_in_location = {
+			building_levels_under_construction > 0
+			OR = {
+				building_type = building_type:farming_village
+				building_type = building_type:windmill
+				building_type = building_type:irrigation_systems
+				building_type = building_type:fishing_village
+			}
+		}
+	}
+}
+
+# Governors gates.
+
+# Copied from the vanilla local_governor allow block, where lieutenancies share the pool
+# (game in_game/common/building_types/capital_buildings.txt:627-630; lieutenancy repeats it at
+# in_game/common/building_types/unique_buildings.txt:1267-1270). Root is the country.
+cm_ab_gov_has_land_room = {
+	total_building_levels_including_construction:local_governor < {
+		value = modifier:num_local_governors
+		subtract = total_building_levels_including_construction:lieutenancy
+	}
+}
+
+# Copied from the vanilla naval_governor allow block
+# (game in_game/common/building_types/capital_buildings.txt:792). num_naval_governors has no base
+# value, so a country holds none until an advance or a naval reform grants one.
+# Root is the country.
+cm_ab_gov_has_naval_room = {
+	total_building_levels_including_construction:naval_governor < modifier:num_naval_governors
+}
+
+# A governor of either kind can go up here. The two are mutually exclusive by location: land
+# needs a road to the capital, naval needs the capital to be unreachable by land.
+# Root is the location, expects scope:cm_country.
+cm_ab_gov_location_placeable = {
+	NOT = { cm_location_deurbanize_would_undo = yes }
+	OR = {
+		AND = {
+			scope:cm_country = { cm_ab_gov_has_land_room = yes }
+			cm_location_allowed_to_build = { target = building_type:local_governor }
+		}
+		AND = {
+			scope:cm_country = { cm_ab_gov_has_naval_room = yes }
+			cm_location_allowed_to_build = { target = building_type:naval_governor }
+		}
+	}
+}
