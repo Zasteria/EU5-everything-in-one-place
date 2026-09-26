@@ -1,12 +1,11 @@
 # Where the thirteen mods stand
 
-One line each, and a link to the brief. **Read the brief for the mod the task is
-about and no others** — `mods/<mod>/CLAUDE.md` holds the state, the commands and
-what fails silently there.
+One line each. **Read only the brief of the mod the task is about** —
+`mods/<mod>/CLAUDE.md`.
 
 | mod | state | never been in game |
 | --- | --- | --- |
-| [`ru_loc_fix`](../mods/ru_loc_fix/CLAUDE.md) | working; repairs the base game's own Russian markup, 224 keys and the Ottoman panel. **09-26: круг четвёртый, в игре не был** | круг четвёртый |
+| [`ru_loc_fix`](../mods/ru_loc_fix/CLAUDE.md) | разметка русского в игре, 266 ключей; **09-26: круг 4 подтверждён** | круг 5–6 |
 | [`nd_ru`](../mods/nd_ru/CLAUDE.md) | in progress; 4 174 keys, 10.2% | everything except Westphalia and the override itself |
 | [`nmt_ru`](../mods/nmt_ru/CLAUDE.md) | **новый 09-22, в игре не был: лаунчер его не показал, не хватало `relationships` — дописан.** Русский для National Mission Trees: Валахия, Византия, Феодоро, Грузия — 716 ключей из 8 348. База без русского и без отката, дерево пишется целиком | всё |
 | [`where_to_produce`](../mods/where_to_produce/CLAUDE.md) | **Единственная версия, работа идёт в ней.** Заходы — [`investigations/wtp_backlog.md`](investigations/wtp_backlog.md), открыт пункт 9 | [`archive/status_wtp_untested.md`](archive/status_wtp_untested.md) |

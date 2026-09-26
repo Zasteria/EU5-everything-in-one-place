@@ -183,6 +183,32 @@ def read_observed(path: Path) -> dict[str, str]:
     return seen
 
 
+# The rank declensions (`LR_GEN`, `LR_ACC`, ...) test `location_rank = ...`, and
+# a location with no rank — sea, lakes, impassable land — answers with a script
+# error per test, four per call, every frame the tooltip is up (2026-09-26: the
+# army-movement tooltip over sea and mountains). `?=` is the game's own guarded
+# form, used a few lines above in the same file; with it such a location simply
+# matches no rank. Custom localizations are overridden by file, so the whole
+# file is copied and only these lines change.
+CUSTOM_LOC = "in_game/common/customizable_localization/ru_EU5_custom_loc.txt"
+RANK_TEST = "trigger = { location_rank = location_rank:"
+RANK_GUARDED = "trigger = { location_rank ?= location_rank:"
+
+
+def write_custom_loc() -> str | None:
+    source = locscan.refs.GAME / CUSTOM_LOC
+    raw = source.read_bytes()
+    text = raw.decode("utf-8-sig")
+    count = text.count(RANK_TEST)
+    if count == 0:
+        return "%s: no unguarded rank test left — the game fixed it, drop the override" % CUSTOM_LOC
+    target = MOD / CUSTOM_LOC
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(b"\xef\xbb\xbf" + text.replace(RANK_TEST, RANK_GUARDED).encode("utf-8"))
+    print("wrote %s: %d rank tests guarded" % (target.relative_to(MOD.parent.parent), count))
+    return None
+
+
 def main() -> int:
     russian, english = locscan.load()
     flagged = {f.key: f for f in locscan.scan(russian, english, locscan.HARD)}
@@ -264,6 +290,10 @@ def main() -> int:
         if '"' in value:
             complaints.append("the fix for %s contains a double quote, "
                               "which truncates the line in game" % key)
+
+    problem = write_custom_loc()
+    if problem:
+        complaints.append(problem)
 
     if complaints:
         for line in complaints:

@@ -585,3 +585,86 @@ to: GetSituationByKey('rise_of_the_ottomans').
 why: the engine builds a location surname in a `Container` context, where there is no `Character` to ask `IsFemale` ("Wrong context supplied … got context 'Container'"). The English key is a bare suffix, "skiy"; so is ours now, in the masculine form a dynasty name takes.
 from: [Select_CString(Character.IsFemale, 'ская', 'ский' )]
 to: ский
+
+# Round six — 2026-09-26, 18:02 log.
+
+key: CULTURAL_TRADITION_TT_TEXT
+why: Glorp UI's left statistics panel shows the culture tooltip outside the culture window ("No context supplied … wanted context of type 'CountryCultureLateralView'", 318x). The English key reads `[Culture.GetTradition]`, the context the tooltip itself sets.
+from: [CountryCultureLateralView.GetCulture.
+to: [Culture.
+
+key: CULTURAL_INFLUENCE_TT_TEXT
+why: the same tooltip's influence row, the same missing context.
+from: [CountryCultureLateralView.GetCulture.
+to: [Culture.
+
+key: dynastic.14.b.nickname
+why: a nickname is drawn with no character behind it ("Promote 'CHARACTER' returned nullptr, in 'CHARACTER.IsFemale'"). The English is a bare "the False"; ours is now the masculine form.
+from: [Select_CString(CHARACTER.IsFemale, 'Ложная', 'Ложный')]
+to: Ложный
+
+# Round six, the rule `foreign_context`: the Russian key asks a window's own
+# context, or the player, where the English asks the thing the tooltip is about.
+
+why: the unit type tooltips, 25 of them; English asks `SubUnitType`, which the tooltip sets wherever it is shown.
+from: [UnitTypeLateralView.GetUnitType.
+to: [SubUnitType.
+
+key: RIGHTEOUSNESS_TT_TEXT
+why: English asks `Country`.
+from: CountryReligionLateralView.GetCountry.
+to: Country.
+
+key: flavor_eng.25.b
+why: an event option; the English asks ROOT, and an event has no government window behind it.
+from: [GovernmentView.GetPlayer.GetParliament.Custom('parliament_ru_GEN')
+to: [ROOT.GetCountry.Custom('parliament_ru_GEN')
+
+key: IO_PARLIAMENT_SUPPORT_BIG_TT
+why: named the player's own parliament in an international organization's debate; English names the organization's.
+from: [GovernmentView.GetPlayer.Custom('parliament_ru_GEN')
+to: [InternationalOrganizationsView.GetInternationalOrganization.Custom('parliament_ru_GEN')
+
+key: PROMOTE_LABEL
+why: English asks `Location`.
+from: LocationView.GetLocation.
+to: Location.
+
+key: POP_CULTURE_OF_ITEM
+why: English names only the culture; the location part needs a window this row is not always in. The space after «в» is a no-break space, as in the game's file.
+from: ая культура в [LocationView.GetLocation.Custom('LR_PREP')|l] [LocationView.GetLocation.GetNameWithNoTooltip]
+to: ая культура
+
+key: FOREIGN_REL_INCOME
+why: printed the player's name on every other country's income; English asks `Country`.
+from: [Player.
+to: [Country.
+
+key: MARKET_HUB_TC_BUTTON_PROFIT
+why: English asks `Country` throughout.
+from: Player.
+to: Country.
+
+key: TT_ARMYTRADITION_TEXT
+why: the player's name and the unit overview's number on every country; English asks `Country` for both.
+from: [Player.Custom('longname_ru_GEN')] составляет [UnitOverview.GetArmyTradition|/%2V]
+to: [Country.Custom('longname_ru_GEN')] составляют [Country.GetCurrencyValue('army_tradition')|2V]%
+
+key: TT_NAVYTRADITION_TEXT
+why: the same, navy.
+from: [Player.Custom('longname_ru_GEN')] составляет [UnitOverview.GetNavyTradition|%2V]
+to: [Country.Custom('longname_ru_GEN')] составляют [Country.GetCurrencyValue('navy_tradition')|2V]%
+
+key: TT_AVERAGE_DISCIPLINE_TEXT
+why: the player's discipline printed under another country's name.
+from: [Player.
+to: [Country.
+
+key: TT_MILITARYTACTICS_TEXT
+why: the same, military tactics.
+from: [Player.
+to: [Country.
+
+why: a war score breakdown row splits at its colon into label and value; «Цель войны: …» put the whole sentence in the value column, which widened to the full tooltip and left every other row's label empty (Lena's screenshot, 2026-09-26). English has no colon there.
+from: 'Цель войны')|e]:
+to: 'Цель войны')|e] —
