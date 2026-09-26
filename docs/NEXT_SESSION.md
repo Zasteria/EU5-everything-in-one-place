@@ -1,4 +1,4 @@
-﻿# Next session: the job in progress
+# Next session: the job in progress
 
 Six mods, a pile of documents and more history than any session should read.
 This file is the part that is live. What has already been settled is in
@@ -23,17 +23,8 @@ This file is the part that is live. What has already been settled is in
 его решение**. **Прогона форк не видел**, что смотреть —
 [`../mods/glorpui_hints/README.md`](../mods/glorpui_hints/README.md#форк-что-взято-у-glorp-ui).
 
-## Игра вылетает, и причину назвать пока нечем
-
-**Его слово 2026-09-14:** «игра 1-2 слияния веток назад начала вылетать… без
-видимых на то триггеров… чаще когда игра какое-то время свёрнута». Симптом с
-мышью он снял сам — оконный режим.
-
-**Причиной не является** наш файл поверх игрового (полон, стережёт
-`stale_overrides`), и в логах 09-14 нет ни дампа, ни исключения. **Нужно от него
-одно сообщение:** папка `logs` **упавшего запуска** (сперва через
-`tools/which_build.py`) и **один заход без нашего мода**. **Гадать до этого
-нечего** ([`pitfalls/diagnosis.md`](pitfalls/diagnosis.md)).
+**Вылеты игры закрыты 09-17** — прекратились сами, причину он искать не
+просил ([`archive/next_crashes_0914.md`](archive/next_crashes_0914.md)).
 
 **Раздача грамот принята прогоном 09-14**: с галочкой «Грамоты — поровну»
 разброс в его области 3..6, «пока что оставим это так». Галочка снята по
@@ -104,6 +95,20 @@ Nothing outstanding; five steps in
   [`investigations/panel_hitch.md`](investigations/panel_hitch.md),
   [`investigations/widget_leak.md`](investigations/widget_leak.md). **Do not
   design a different test until they have run.**
+
+## Задача на будущее: подсказки по действию
+
+**Его просьба 2026-09-22:** подсказки при наведении открываются по таймеру и
+лезут отовсюду; закрепление он перевёл на колёсико, хочет и **появление** по
+действию.
+
+**Разобрано 09-22 в**
+[`research/engine_reach.md`](research/engine_reach.md): режима «по действию» нет,
+ванильную настройку мод не двигает, но своя клавиша ему доступна, а
+`tooltip_enabled` принимает выражение — гасить по виджетам, форкая ваниль.
+
+**Первый шаг:** клавиша плюс **одна** ванильная панель; прогон скажет, гаснет ли
+подсказка совсем или остаётся пустая рамка. **Панель выбирает он.**
 
 ## Before asking him for anything
 
