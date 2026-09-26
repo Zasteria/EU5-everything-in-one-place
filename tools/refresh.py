@@ -52,7 +52,6 @@ GENERATORS = (
     ("nd_ru", "mods/nd_ru/tools/generate_ru.py"),
     ("nmt_ru", "mods/nmt_ru/tools/generate_ru.py"),
     ("ru_loc_fix", "mods/ru_loc_fix/tools/generate.py"),
-    ("playset_fixes", "mods/playset_fixes/tools/generate.py"),
 )
 
 
