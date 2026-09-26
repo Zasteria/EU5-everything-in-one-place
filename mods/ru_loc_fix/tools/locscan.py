@@ -535,8 +535,30 @@ def argument_difference(value: str, english: str) -> str | None:
     return None
 
 
+# A window's own context (`CountryCultureLateralView`, `LocationView`) or the
+# player, where English asks the thing the tooltip is about.
+FOREIGN_CONTEXT = re.compile(r"(View|^Player)$")
+
+
+def foreign_context_fault(value: str, english: str) -> str | None:
+    """A window context or `Player` the English key does not use.
+
+    The key then works only inside that one window, and only for the player:
+    Glorp UI's left panel shows `CULTURAL_TRADITION_TT_TEXT` outside the
+    culture window and got "No context supplied … 'CountryCultureLateralView'"
+    318 times in a minute; `TT_AVERAGE_DISCIPLINE_TEXT` printed the player's
+    discipline on every other country. Hard only when English has roots of its
+    own — a key with none has nothing to say which scope was meant.
+    """
+    theirs = roots(english)
+    if not theirs:
+        return None
+    extra = sorted(r for r in roots(value) - theirs if FOREIGN_CONTEXT.search(r))
+    return "asks %s, English asks %s" % (", ".join(extra), ", ".join(sorted(theirs))) if extra else None
+
+
 HARD = ("brackets", "custom_on_text", "filter_nested", "unknown_root",
-        "unknown_member", "missing_ref")
+        "unknown_member", "missing_ref", "foreign_context")
 ADVISORY = ("scope", "arguments", "member_on_root", "declension_ref")
 RULES = HARD + ADVISORY
 
@@ -581,6 +603,7 @@ def scan(russian: dict[str, Entry], english: dict[str, Entry],
             ("unknown_member", lambda: unknown_member_fault(entry.value, members)),
             ("missing_ref", lambda: missing_ref_fault(
                 key, entry.value, repairs, russian, english)),
+            ("foreign_context", lambda: foreign_context_fault(entry.value, pair.value) if pair else None),
             ("scope", lambda: scope_difference(entry.value, pair.value) if pair else None),
             ("arguments", lambda: argument_difference(entry.value, pair.value) if pair else None),
             ("member_on_root", lambda: member_on_root_fault(entry.value, en_pairs, en_roots)),
