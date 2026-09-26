@@ -12,21 +12,49 @@ nd_dnb_is_crown = {
 	}
 }
 
+# ROOT sits in a union that has an ESTABLISHED senior partner, and it is
+# not us: vanilla's own junior_union_with test (country_triggers.txt:929),
+# without the partner argument.
+#
+# Seniority is a union LAW, not a fact of every union (Workshop reports
+# 2026-09-15, minddrag and Marcell56). Every union opens under
+# union_maintain_federal_status_policy (international_organizations/
+# union.txt, laws block), the senior_partner status can only be bestowed
+# once the union has voted union_establish_seniority_policy
+# (international_organization_special_statuses/union.txt:8), that vote is
+# locked for the union's first five years (laws/40_personal_unions.txt:9)
+# and the AI keeps federal status at +50 ("not anyone's puppet",
+# 40_personal_unions.txt:156). The old test asked country_is_senior_partner
+# of every union member, which is false for BOTH members of a federal
+# union: a player Austria that inherited any union lost every Danube
+# action, read as a captive crown on the map and in the alerts, and the
+# Contest lever opened against it. Vanilla's own idiom for "free to act"
+# is NOT has_active_senior_partner OR is the senior
+# (generic_actions/create_province_subject.txt:14-21); this follows it.
+nd_dnb_union_junior = {
+	exists = union
+	union ?= {
+		has_active_senior_partner = yes
+		NOT = {
+			country_has_special_status = {
+				type = special_status:senior_partner
+				country = prev
+			}
+		}
+	}
+}
+
 # A crown that runs its own candidacy: alive, master of itself. A union
-# SENIOR is independent (its juniors are the fold); a junior is not.
-# `trigger_if` with a false limit passes, so countries outside any union
-# fall through the union check correctly. `prev` rather than `root`: this
-# trigger runs inside select_trigger candidate lists and any_country
-# blocks, where root binds to the interaction actor, not the candidate.
+# SENIOR is independent (its juniors are the fold), a member of a union
+# with no established senior is independent (nobody's junior), a junior
+# under an established senior is not. `prev`, never `root`: this trigger
+# runs inside every_country blocks of the situation, where root is the
+# situation (readme: select_trigger visible/enabled bind root to the
+# candidate, so root would have been fine there, but not here).
 nd_dnb_crown_independent = {
 	nd_dnb_is_crown = yes
 	is_subject = no
-	trigger_if = {
-		limit = { exists = union }
-		union = {
-			country_is_senior_partner = { country = prev }
-		}
-	}
+	NOT = { nd_dnb_union_junior = yes }
 }
 
 # This crown's candidacy is merged into c:$WHO$ (subject of it, or union
@@ -34,13 +62,7 @@ nd_dnb_crown_independent = {
 nd_dnb_merged_under = {
 	OR = {
 		is_subject_of = c:$WHO$
-		AND = {
-			exists = union
-			in_union_with = c:$WHO$
-			union = {
-				country_is_senior_partner = { country = c:$WHO$ }
-			}
-		}
+		junior_union_with = { target = c:$WHO$ }
 	}
 }
 
@@ -73,14 +95,7 @@ nd_dnb_crown_foreign_backed = {
 	NOT = { nd_dnb_crown_merged = yes }
 	OR = {
 		is_subject = yes
-		AND = {
-			exists = union
-			union = {
-				NOT = {
-					country_is_senior_partner = { country = prev }
-				}
-			}
-		}
+		nd_dnb_union_junior = yes
 	}
 }
 
@@ -352,22 +367,29 @@ nd_dnb_house_on_two_thrones = {
 	}
 }
 
-# ROOT is a crown whose king belongs to the ruling house of an OUTSIDE
+# THIS is a crown whose king belongs to the ruling house of an OUTSIDE
 # monarchy (the Jagiellon case): dynastic capture without political
 # subjection, which nd_dnb_crown_foreign_backed cannot see. The size
 # floor keeps a shared minor comital house from reading as capture.
+# The crown is pinned with save_temporary_scope_as (vanilla
+# religion_triggers.txt:72 idiom) because root is NOT the crown at two
+# of the call sites: the situation's on_ended (root = situation, so
+# root.ruler.dynasty resolved to nothing and the Foreign Crown coda
+# never fired) and the Contest interaction's ai_will_do (root = actor,
+# so the AI tested its own house instead of the target's).
 nd_dnb_under_outside_house = {
+	save_temporary_scope_as = nd_dnb_house_crown
 	has_ruler = yes
 	ruler ?= { has_dynasty = yes }
 	any_country = {
 		NOT = { nd_dnb_is_crown = yes }
-		NOT = { this = root }
+		NOT = { this = scope:nd_dnb_house_crown }
 		government_type = government_type:monarchy
 		num_locations >= 10
 		has_ruler = yes
 		ruler ?= {
 			has_dynasty = yes
-			dynasty ?= { this = root.ruler.dynasty }
+			dynasty ?= { this = scope:nd_dnb_house_crown.ruler.dynasty }
 		}
 	}
 }

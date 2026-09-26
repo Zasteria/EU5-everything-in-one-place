@@ -1,0 +1,37 @@
+﻿# France (FRA): National Destinies form_effect injection
+#
+# Vanilla FRA_f (00_formable_countries.txt:2230; level 3, fraction 0.75,
+# potential french_group, allow owns Paris) ships an EMPTY form_effect
+# (:2252), so INJECT merges ours and loses nothing.
+#
+# This hook serves only a country that FORMS France, for example a
+# Burgundian or Breton crown after the Valois kingdom has fallen. Game-start
+# France cannot form what it already is; it earns nd_fra.1 from the
+# monthly gate in 99_nd_on_actions.txt (appanages consolidated, or the
+# Hundred Years' War won), which this file does not touch.
+#
+# Rank: France was a kingdom for the whole of the game's span. Guarded so a
+# higher rank is never lowered, and by nd_can_take_kingdom_rank like the
+# other kingdom-granting formables (GBU, LOT, BGP): a Lorrainer or other
+# imperial French crown that forms France inside the Empire stays a duchy
+# unless the lobby rank rule allows otherwise.
+INJECT:FRA_f = {
+	form_effect = {
+		# Markers live here, not only in the event options: a content layer
+		# must never depend on a popup being answered, and country variables
+		# die with the country, so a re-formed France re-arms cleanly.
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_fra_formed
+		}
+		if = {
+			limit = {
+				country_rank_level < 3
+				nd_can_take_kingdom_rank = yes
+			}
+			set_country_rank_effect = { rank = country_rank:rank_kingdom }
+		}
+		trigger_event_non_silently = nd_fra.1
+		add_stability = stability_mild_bonus
+	}
+}

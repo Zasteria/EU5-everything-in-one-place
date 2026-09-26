@@ -1,0 +1,454 @@
+﻿# ============================================================================
+# France (FRA): custom buildings
+# ============================================================================
+# Every building carries a location_potential and a line saying why that
+# reach is correct. Vanilla has no buildable France building at all
+# (versailles and fra_louvre_museum are event-only, country_potential
+# always = no), so none of these shadows a vanilla one.
+
+# ----------------------------------------------------------------------------
+# Fabrique of Lyon (age 3): silk weaving
+# ----------------------------------------------------------------------------
+# location_potential: Lyon and Tours only. Francis I gave Lyon the kingdom's
+# raw silk monopoly in 1540; Tours had woven silk for the crown since Louis
+# XI moved the looms there in 1470. Nowhere else held the privilege.
+# Produces fine_cloth, a manufactured good, so no raw material gate applies.
+nd_fra_fabrique_lyonnaise = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	startup_ramp_target = guild_startup_ramp_target
+	category = consumer_goods_category
+	employment_size = guild_employment
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_fra_soieries_de_lyon
+	}
+
+	location_potential = {
+		OR = {
+			this = location:lyon
+			this = location:tours
+		}
+	}
+
+	unique_production_methods = {
+		nd_fra_pm_soie_lyonnaise = {
+			silk = 0.875
+			produced = fine_cloth
+			output = 0.7
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+		# The 1536 patent chartered "cloths of gold, silver and silk".
+		nd_fra_pm_drap_d_or = {
+			silk = 0.7
+			silver = 0.1
+			produced = fine_cloth
+			output = 0.68
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+	custom_tags = { guild }
+}
+
+# ----------------------------------------------------------------------------
+# Magnanerie (age 4): silkworm house
+# ----------------------------------------------------------------------------
+# Produces raw silk, so it is bound to the good (strict idiom, as vanilla
+# glass_guild binds sand) AND to the silk country Henri IV's mulberry edicts
+# built: the Languedoc (Cevennes, Vivarais, Gevaudan, Nimois), Provence and
+# the Lyonnais. In 1.3.11 location_templates.txt that admits Florac and Ales
+# in the Cevennes, Fenouillet, Tarascon and Lyon, five locations inside
+# FRA_f's required region. The area clause keeps it French sericulture, not a
+# silk booster for Genoa or Florence after a conquest. Rural and town tiers
+# only: a silkworm house is a farm building, not a city one.
+# fiber_crops stands in for mulberry leaf, as in vanilla's
+# lucca_silk_production_guild (event_only_buildings.txt), at the same 0.6.
+nd_fra_magnanerie = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = guild_max_level
+	startup_ramp_target = rural_startup_ramp_target
+	category = rgo_building_category
+	employment_size = advanced_peasant_building_employment
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_fra_meuriers_du_roi
+	}
+
+	location_potential = {
+		is_produced_in_location_market = goods:silk
+		OR = {
+			area = area:languedoc_area
+			area = area:provence_area
+			area = area:lyonnais_area
+		}
+	}
+
+	unique_production_methods = {
+		nd_fra_pm_magnanerie = {
+			fiber_crops = 1.0
+			produced = silk
+			output = 0.6
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = village_construction
+}
+
+# ----------------------------------------------------------------------------
+# Manufacture Royale (age 5; porcelain PM unlocked in age 6)
+# ----------------------------------------------------------------------------
+# location_potential: the France region. A royal manufacture was a crown
+# charter inside the kingdom (the Gobelins at Paris, the glassworks at
+# Saint-Gobain in Picardy, the porcelain works at Sevres); the crown never
+# chartered one abroad. Produced goods only, no raw material gate.
+nd_fra_manufacture_royale = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = manufactory_max_level
+	startup_ramp_target = manufactory_startup_ramp_target
+	category = consumer_goods_category
+	employment_size = manufactory_employment
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = manufactory_build_time
+
+	country_potential = {
+		has_advance = nd_fra_manufactures_royales
+	}
+
+	location_potential = {
+		region = region:france_region
+	}
+
+	unique_production_methods = {
+		nd_fra_pm_tapisserie_des_gobelins = {
+			wool = 1.0
+			dyes = 0.2
+			produced = fine_cloth
+			output = 0.715
+			category = manufactory_input
+			debug_max_profit = manufactory_profit_margin
+		}
+		nd_fra_pm_glaces_de_saint_gobain = {
+			sand = 1.0
+			lumber = 0.2
+			tools = 0.3
+			lead = 0.08
+			produced = glass
+			output = 0.8059
+			category = manufactory_input
+			debug_max_profit = manufactory_profit_margin
+		}
+		nd_fra_pm_porcelaine_de_sevres = {
+			# unlocked by nd_fra_porcelaine_de_sevres (age 6)
+			clay = 2.5
+			coal = 0.5
+			dyes = 0.05
+			produced = porcelain
+			output = 1.0616
+			category = manufactory_input
+			debug_max_profit = manufactory_profit_margin
+		}
+	}
+	construction_demand = manufactory_construction
+}
+
+# ----------------------------------------------------------------------------
+# Hotel des Invalides (age 5)
+# ----------------------------------------------------------------------------
+# location_potential: capital only. There was one Invalides, in Paris, and it
+# served the whole army. The country effect mirrors vanilla telpochcalli
+# (unique_buildings.txt: capital-only, army_reinforce_efficiency 0.10);
+# local_manpower sits under telpochcalli's 0.03, which the building audit
+# puts at the 91st percentile of vanilla buildings.
+nd_fra_hotel_des_invalides = {
+	is_special = yes
+	is_foreign = no
+	pop_type = soldiers
+	max_levels = 1
+	category = military_category
+	employment_size = manpower_employment
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = big_soldier_building
+
+	country_potential = {
+		has_advance = nd_fra_hotel_royal_des_invalides
+	}
+
+	location_potential = {
+		is_capital = yes
+	}
+
+	modifier = {
+		local_manpower = 0.02
+	}
+
+	capital_country_modifier = {
+		army_reinforce_efficiency = 0.1
+		global_manpower_modifier = 0.05
+	}
+
+	unique_production_methods = {
+		nd_fra_invalides_maintenance = {
+			wheat = 0.15
+			wine = 0.08
+			cloth = 0.08
+			medicaments = 0.12
+			category = building_maintenance
+		}
+	}
+	construction_demand = important_building_construction
+}
+
+# ----------------------------------------------------------------------------
+# Canal Royal de Languedoc (age 5)
+# ----------------------------------------------------------------------------
+# location_potential: the five locations on Riquet's line from the Garonne
+# to the Etang de Thau (Toulouse, Castelnaudary, Carcassonne, Beziers, Agde).
+# Every settlement tier is admitted because the list itself is the limit: the
+# canal ran through towns and open country alike. max_levels = 1.
+# Modifiers follow vanilla pound_lock_canal_infrastructure
+# (common_buildings.txt:77) plus market access at twice market_village's
+# 0.005: this canal joined two seas.
+nd_fra_canal_du_midi = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = 1
+	category = infrastructure_category
+	employment_size = generic_peasant_building_employment
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = infrastructure_build_time
+
+	country_potential = {
+		has_advance = nd_fra_canal_des_deux_mers
+	}
+
+	location_potential = {
+		OR = {
+			this = location:toulouse
+			this = location:castelnaudary
+			this = location:carcassonne
+			this = location:beziers
+			this = location:agde
+		}
+	}
+
+	modifier = {
+		local_market_access = 0.01
+		movement_cost = -0.1
+		local_distance_from_capital_speed_propagation = 0.1
+		local_monthly_food_modifier = 0.05
+	}
+
+	unique_production_methods = {
+		nd_fra_canal_maintenance = {
+			masonry = 0.08
+			lumber = 0.05
+			tools = 0.03
+			category = building_maintenance
+		}
+	}
+	construction_demand = pound_lock_canal_infrastructure_construction
+}
+
+# ----------------------------------------------------------------------------
+# Librairie du Louvre (age 2)
+# ----------------------------------------------------------------------------
+# location_potential: capital only. There was one royal library, kept in the
+# king's own palace, and it served the king and his council.
+# Local values are vanilla library's (culture_buildings.txt:52). The country
+# effect is noble literacy at 5, the value vanilla's own capital building
+# grants (unique_buildings.txt:3387): Charles V had Aristotle, Augustine and
+# John of Salisbury put into French so that his counsellors could read them.
+nd_fra_librairie_du_louvre = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = cultural_employment
+	category = cultural_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = cultural_building_time
+
+	country_potential = {
+		has_advance = nd_fra_librairie_du_roi
+	}
+
+	location_potential = {
+		is_capital = yes
+	}
+
+	modifier = {
+		local_max_literacy = 5
+		local_monthly_literacy = 0.1
+	}
+
+	capital_country_modifier = {
+		global_nobles_max_literacy = 5
+	}
+
+	unique_production_methods = {
+		nd_fra_librairie_maintenance = {
+			paper = 0.08
+			books = 0.06
+			beeswax = 0.03
+			category = building_maintenance
+		}
+	}
+	construction_demand = library_construction
+}
+
+# ===== DESTINY BUILDINGS =====
+
+# ----------------------------------------------------------------------------
+# Place forte du Rhin (capstone of the Rhine road)
+# ----------------------------------------------------------------------------
+# location_potential: seven fortress towns of the eastern frontier that
+# Vauban built or rebuilt: the citadel of Strasbourg (1681 to 1684), Belfort
+# (1687), Landau (1688), Sarrelouis (founded 1680 beside Wallerfangen, whose
+# people moved into it), Longwy (1679), Luxembourg (1684 to 1688) and the
+# citadel of Besancon (from 1674). The list itself is the limit, so every
+# settlement tier is admitted. max_levels = 1.
+# Values: fort_level 1 with zone of control as vanilla
+# repaired_great_wall_of_china, the garrison of vanilla castle (0.5), and
+# local_defensive under fortezza_di_sant_andrea's 0.25.
+nd_fra_place_forte_du_rhin = {
+	is_special = yes
+	is_foreign = no
+	pop_type = soldiers
+	max_levels = 1
+	employment_size = castle_employment
+	category = defense_category
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = large_fort_building
+
+	country_potential = {
+		has_advance = nd_fra_dest_frontieres_naturelles
+	}
+
+	location_potential = {
+		OR = {
+			this = location:strasbourg
+			this = location:belfort
+			this = location:landau_rhineland
+			this = location:wallerfangen
+			this = location:longwy
+			this = location:luxembourg
+			this = location:besancon
+		}
+	}
+
+	modifier = {
+		local_garrison_size = 0.5
+		local_defensive = 0.15
+		local_unrest = -0.05
+	}
+
+	raw_modifier = {
+		fort_level = 1
+		propagating_zone_of_control = yes
+	}
+
+	unique_production_methods = {
+		nd_fra_place_forte_maintenance = {
+			stone = 0.5
+			cannons = 0.3
+			firearms = 0.2
+			tools = 0.2
+			category = building_maintenance
+		}
+	}
+	construction_demand = castle_construction
+}
+
+# ----------------------------------------------------------------------------
+# Arsenal de Marine (capstone of the Channel road)
+# ----------------------------------------------------------------------------
+# location_potential: the three arsenals of the royal navy: Brest (a naval
+# base under Richelieu from 1631), Toulon (Henri IV's arsenal of 1599,
+# enlarged by Vauban from 1680) and Rochefort (founded by Colbert on the
+# Charente in 1666). All three are ports in map_data/ports.csv. Rochefort
+# was raised on open marshland, so every settlement tier is admitted; the
+# list is the limit. max_levels = 1.
+# Build speed is vanilla copenhagen_dockyard's and venetian_arsenal's 0.33
+# (unique_buildings.txt); slips and sailors are lower than Copenhagen's
+# because three can be built where Copenhagen's is one.
+nd_fra_arsenal_de_marine = {
+	is_special = yes
+	is_foreign = no
+	pop_type = soldiers
+	max_levels = 1
+	employment_size = dock_employment
+	category = military_category
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = large_port_building_time
+
+	country_potential = {
+		has_advance = nd_fra_dest_seconde_guerre_de_cent_ans
+	}
+
+	location_potential = {
+		is_port = yes
+		OR = {
+			this = location:brest
+			this = location:toulon
+			this = location:rochefort
+		}
+	}
+
+	modifier = {
+		max_ships_built_at_same_time = 1
+		local_sailors = 0.02
+		local_ship_build_speed = 0.33
+		can_build_ships_in_this_location = yes
+		local_repair_speed = 0.025
+	}
+
+	unique_production_methods = {
+		nd_fra_arsenal_maintenance = {
+			lumber = 0.6
+			naval_supplies = 0.5
+			tar = 0.25
+			tools = 0.15
+			category = building_maintenance
+		}
+	}
+	construction_demand = port_building_construction
+}

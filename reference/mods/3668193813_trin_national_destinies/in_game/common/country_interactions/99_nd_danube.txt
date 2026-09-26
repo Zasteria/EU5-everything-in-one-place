@@ -35,6 +35,11 @@ nd_dnb_propose_the_pact = {
 			# A concluded question does not reopen; pacts lose their
 			# object once the books are closed.
 			NOT = { has_global_variable = nd_dnb_concluded }
+			# Same Hussite deferral as the spark watcher (2026-08-29):
+			# no pact opens the Danube question while the Hussite Wars
+			# are being fought, so the dynastic union waits its turn
+			# behind the Basel settlement.
+			NOT = { situation:hussite_wars ?= { situation_is_active = yes } }
 		}
 	}
 
@@ -585,15 +590,27 @@ nd_dnb_contest_foreign_crown = {
 		visible = {
 			nd_dnb_is_crown = yes
 			NOT = { this = scope:actor }
-			# v2 (PLAN.md 13/v2): dynastic capture counts. A crown whose
-			# king belongs to an outside monarchy's ruling house is as
-			# contested as one bound by treaty, even while politically
-			# independent (the Jagiellon case).
-			OR = {
-				nd_dnb_crown_foreign_backed = yes
-				AND = {
-					nd_dnb_crown_independent = yes
-					nd_dnb_under_outside_house = yes
+		}
+		# The captive test sits in `enabled`, not `visible` (Workshop
+		# report 2026-09-15, Marcell56: a Hungary that wanted the
+		# Austrian crown could not find the action at all, because a
+		# free crown was filtered out of the list and the interaction
+		# vanished with it). Now every other crown is listed, greyed
+		# with the reason when it is not captive, so the player learns
+		# what the lever is for instead of hunting for it.
+		enabled = {
+			custom_tooltip = {
+				text = nd_dnb_contest_captive_req_tt
+				# v2 (PLAN.md 13/v2): dynastic capture counts. A crown
+				# whose king belongs to an outside monarchy's ruling
+				# house is as contested as one bound by treaty, even
+				# while politically independent (the Jagiellon case).
+				OR = {
+					nd_dnb_crown_foreign_backed = yes
+					AND = {
+						nd_dnb_crown_independent = yes
+						nd_dnb_under_outside_house = yes
+					}
 				}
 			}
 		}

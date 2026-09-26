@@ -28,8 +28,9 @@
 #     `biyearly_country_pulse`, `yearly_country_pulse`,
 #     `four_yearly_country_pulse` (no `on_` prefix). An `on_`-prefixed pulse
 #     name is almost certainly invented and will never fire.
-#   * Slot ledger as of 2026-08-03: WE hold monthly_country_pulse.effect
-#     (bootstrap + DNM chain + Danube spark watch + AI formables),
+#   * Slot ledger as of 2026-09-10: WE hold monthly_country_pulse.effect
+#     (bootstrap + DNM chain + France unlock + Danube spark watch + AI
+#     formables),
 #     on_four_yearly_check_for_script.on_actions (BYZ achievement) and
 #     on_new_ruler.on_actions (Danube succession checkpoint). Still free:
 #     biyearly_country_pulse.effect, on_country_specific_pulse.{effect,
@@ -464,6 +465,41 @@ monthly_country_pulse = {
 			trigger_event_non_silently = nd_dnm.32
 		}
 
+		# ===== FRANCE: CONTENT UNLOCK (user-approved 2026-09-10, PLAN.md section 10) =====
+		# Game-start France never presses a form button, so like BYZ it earns
+		# nd_fra.1 (and with it the bureaucracies and destiny tree) by
+		# achievement, here either of two. Its appanages consolidated: vanilla
+		# flavor_fra.1103 sets enable_centralized_fra_reform permanently
+		# (DHE/flavor_FRA.txt:2953). Or the Hundred Years' War won: vanilla
+		# keeps no permanent record of that, only victory_in_the_hyw_modifier
+		# for 20 years (flavor_fra.26), so the win is recorded here while the
+		# modifier is present. Monthly rather than the four-yearly BYZ hook so
+		# the content arrives with the achievement; the cost is one tag test
+		# per country-month. The _formed markers are set here and not left to
+		# the popup, for the reason given at the bootstrap block above.
+		if = {
+			limit = {
+				tag = FRA
+				has_country_modifier = victory_in_the_hyw_modifier
+				NOT = { has_variable = nd_fra_won_hyw }
+			}
+			hidden_effect = { set_variable = nd_fra_won_hyw }
+		}
+		if = {
+			limit = {
+				tag = FRA
+				NOT = { has_variable = nd_fra_formed }
+				OR = {
+					has_variable = enable_centralized_fra_reform
+					has_variable = nd_fra_won_hyw
+				}
+			}
+			hidden_effect = {
+				set_variable = nd_formed
+				set_variable = nd_fra_formed
+			}
+			trigger_event_non_silently = nd_fra.1
+		}
 
 		# ===== SUCCESSION OF THE DANUBE: SPARK WATCH =====
 		# One cheap guarded call per crown-month until the question opens,

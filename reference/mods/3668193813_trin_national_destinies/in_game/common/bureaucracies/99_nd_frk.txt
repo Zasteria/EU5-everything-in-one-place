@@ -1,0 +1,356 @@
+﻿# ==========================================================================
+# Francia (FRK): bureaucracies
+# ==========================================================================
+# Six institutions of the Carolingian realm that the heritage tree does not
+# already carry (it has the missi, the capitularies, the palace and cathedral
+# schools, the marches, the chamber court, the imperial circles, the
+# Frankfurt fair and the Rhine commission). Two slots from the auto-modifier
+# plus the capital's one: three of six.
+#
+# A Francia born of France keeps 99_nd_fra.txt, one born of Burgundy or
+# Lotharingia keeps 99_nd_gbu.txt or 99_nd_lot.txt, so no institution and no
+# modifier key here repeats those three files, vanilla byz.txt, or FRK's own
+# advances, buildings and timed modifiers (checked 2026-09-10). Values sit
+# near the vanilla median for their key unless a line says otherwise.
+#
+# Each estate is liked once and the crown twice; nobles and peasants are
+# disliked twice. The pattern follows who held each institution, not balance.
+
+# --------------------------------------------------------------------------
+# Scabini (from about 780; the town echevins and Schoeffen until the 1790s)
+# --------------------------------------------------------------------------
+# Sworn judges of the county court who had to know every people's law, so
+# the gate is the heritage Leges nationum. The later benches were the town
+# patriciates (Metz, Aachen, Cologne), hence burghers like and nobles, whose
+# own courts they displaced, dislike. Neglected, the bench closes into a
+# caste; the longer it has sat, the more closed (entrenchment 1x to 2x).
+# Recovery 0.001 is the only vanilla advance value for the burgher and
+# peasant forms (culture_dalmatian.txt:260, government_monarchy.txt:19).
+frk_scabini_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.003
+	}
+
+	potential = {
+		has_or_had_tag = FRK
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		has_advance = nd_frk_leges_nationum
+	}
+
+	estates_that_like = {
+		burghers_estate
+	}
+	estates_that_dislike = {
+		nobles_estate
+	}
+
+	neutral_modifier = {
+		burghers_estate_satisfaction_recovery = 0.001
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		cultures_capacity_modifier = 0.15
+		global_burghers_max_literacy = 5
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+			multiply = {
+				value = 1
+				add = { value = scope:entrenchment divide = 100 }
+			}
+		}
+		base_burghers_estate_power_modifier = 0.1
+	}
+}
+
+# --------------------------------------------------------------------------
+# Precaria verbo regis (Estinnes 743; hereditary in practice by Quierzy 877)
+# --------------------------------------------------------------------------
+# Church land held by royal vassals at the king's word, so the gate is a
+# monarchy: a republic has no king whose word binds the church. The
+# benefices settled armed men across the countryside (rural nobles) and
+# mounted them at the church's cost. Neglected, the census goes unpaid and
+# the loan becomes a lordship owing nothing, the church suing to get it
+# back; the older the tenures, the harder to recall (entrenchment 1x to 2x).
+# global_nobles_rural_desired_pop has one vanilla value (0.002, a reform).
+frk_precaria_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.002
+	}
+
+	potential = {
+		has_or_had_tag = FRK
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		government_type = government_type:monarchy
+	}
+
+	estates_that_like = {
+		nobles_estate
+	}
+	estates_that_dislike = {
+		clergy_estate
+	}
+
+	neutral_modifier = {
+		global_nobles_rural_desired_pop = 0.002
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		global_army_levy_size_modifier = 0.1
+		army_heavy_cavalry_build_cost_modifier = -0.1
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+			multiply = {
+				value = 1
+				add = { value = scope:entrenchment divide = 100 }
+			}
+		}
+		nobles_estate_max_tax = -0.1
+		monthly_clergy_estate_rebel_growth = 0.005
+	}
+}
+
+# --------------------------------------------------------------------------
+# The tithe of Herstal (March 779; abolished in France August 1789)
+# --------------------------------------------------------------------------
+# A church tax by royal law, so Christian realms only. It paid a priest in
+# every parish (desired clergy) and made the church rich enough for the
+# crown to tax in turn, as France's decimes and don gratuit did (clergy max
+# tax). Neglected, lay lords take the tithe: the peasant pays it and has less
+# left for the crown, and the preachers turn on it (the Twelve Articles of
+# 1525). Not the vanilla papal tithe: that is gold sent to Rome, and no key
+# of that mechanic is used here.
+frk_decima_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.002
+	}
+
+	potential = {
+		has_or_had_tag = FRK
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		religion.group = religion_group:christian
+	}
+
+	estates_that_like = {
+		clergy_estate
+	}
+	estates_that_dislike = {
+		peasants_estate
+	}
+
+	neutral_modifier = {
+		global_clergy_desired_pop = 0.01
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		clergy_estate_max_tax = 0.1
+		global_pop_conversion_speed_modifier = 0.1
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		monthly_religious_rebel_growth = 0.01
+		peasants_estate_max_tax = -0.1
+	}
+}
+
+# --------------------------------------------------------------------------
+# The public measure (the Frankfurt capitulary of 794)
+# --------------------------------------------------------------------------
+# Fixed grain and bread prices and a new public modius after the famine of
+# 792 and 793, with royal grain sold under the tariff. The gate is Frankfurt,
+# where it was proclaimed; the formation requires Frankfurt, so this only
+# closes if the city is lost. Peasants like it and the grain dealers
+# (burghers) do not. Neglected, the dealers hoard and the stored grain spoils.
+# global_food_capacity_modifier: vanilla 0.15 and 0.25 (static modifiers).
+frk_modius_publicus_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	# The granaries that undersell the dealers are the costliest part.
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = FRK
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		owns = location:frankfurt
+	}
+
+	estates_that_like = {
+		peasants_estate
+	}
+	estates_that_dislike = {
+		burghers_estate
+	}
+
+	neutral_modifier = {
+		global_food_capacity_modifier = 0.15
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		food_purchase_efficiency = 0.2
+		peasants_estate_satisfaction_recovery = 0.001
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		global_food_decay = 0.005
+		peasants_estate_satisfaction_decay = 0.02
+	}
+}
+
+# --------------------------------------------------------------------------
+# The general oath (789 and 802; undone by Meerssen 847)
+# --------------------------------------------------------------------------
+# Every free man sworn to the ruler directly, taken county by county by the
+# missi, so the gate is the heritage Missi dominici. Crown power per pop is
+# the mechanism itself: each subject is the ruler's own man (vanilla gives
+# every country 1.0, auto_modifiers/country.txt:64, and the Italian Wars
+# victory 0.1). The oath was a remedy against conspiracy, so the funded side
+# is rebels and pretenders. Neglected, men swear to their lords instead.
+frk_general_oath_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.003
+	}
+
+	potential = {
+		has_or_had_tag = FRK
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		has_advance = nd_frk_missi_dominici
+	}
+
+	estates_that_like = {
+		crown_estate
+	}
+	estates_that_dislike = {
+		nobles_estate
+	}
+
+	neutral_modifier = {
+		crown_power_from_population = 0.1
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		monthly_nobles_estate_rebel_growth = -0.005
+		monthly_pretender_rebel_growth = -0.01
+		pop_leave_rebels_threshold = -0.05
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		base_nobles_estate_power_modifier = 0.1
+		global_monthly_control_decline = 0.002
+	}
+}
+
+# --------------------------------------------------------------------------
+# Paraveredi and tractoria (revived by Louis the Pious)
+# --------------------------------------------------------------------------
+# Post horses owed by the free men of each district to any envoy carrying a
+# sealed letter of requisition. Francia is governed from Paris or Aachen over
+# the plains of Brabant and Lombardy, the hills of the Rhine and Hesse and
+# the wetlands of Holland and Friesland, so those three terrains carry the
+# proximity gain (vanilla advances: hills 0.15 to 0.33; the flatland and
+# wetlands forms 0.2, static modifiers only, so half that here since they
+# cover most of the realm). The relay eats horses (the smallest vanilla step
+# for the pop demand family is 0.25, age/00_default.txt). Neglected, the
+# letters stop and armies on the march must feed themselves.
+frk_paraveredi_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.003
+	}
+
+	potential = {
+		has_or_had_tag = FRK
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	# Unrestricted: every realm has roads and free men with horses.
+	allow = {}
+
+	estates_that_like = {
+		crown_estate
+	}
+	estates_that_dislike = {
+		peasants_estate
+	}
+
+	neutral_modifier = {
+		global_horses_pop_demand = 0.25
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		flatland_proximity_impact = -0.1
+		hills_proximity_impact = -0.15
+		wetlands_proximity_impact = -0.1
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		food_consumption_modifier = 0.1
+		peasants_estate_satisfaction_decay = 0.01
+	}
+}

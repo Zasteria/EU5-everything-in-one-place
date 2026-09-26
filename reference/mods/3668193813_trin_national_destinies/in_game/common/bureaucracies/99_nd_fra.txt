@@ -1,0 +1,342 @@
+﻿# ==========================================================================
+# France (FRA): bureaucracies
+# ==========================================================================
+# Design: PLAN.md section 10, "the France package" (user-approved 2026-09-10).
+# Game-start France earns these like Byzantium: nd_fra.1 sets nd_fra_formed
+# once the appanages are consolidated (vanilla flavor_fra.1103) or the
+# Hundred Years' War is won (the monthly gate in 99_nd_on_actions.txt), and
+# INJECT:FRA_f sets it for a country that forms France. Every entry stays
+# visible and shows that requirement in its allow, as the vanilla allelengyon
+# does (bureaucracies/byz.txt:595), so the player can see what France is
+# working toward.
+#
+# Overlap audit against vanilla France (1.3.11): the taille is a vanilla law
+# (laws/02_country_specific.txt:139), the gabelle a reform
+# (government_reforms/country_specific.txt:1838), the Pragmatic Sanction a
+# clergy privilege (estate_privileges/clergy_estate.txt:586), and the
+# ordonnance companies a 20-year modifier (flavor_fra.2040: discipline,
+# manpower, heavy infantry cost) beside the fra_gendarmes advance (heavy
+# cavalry power, army maintenance). None of those keys is reused here. The
+# Pragmatic Sanction is not modelled: the privilege above and the heritage
+# Concordat of Bologna (nd_fra.2) already carry the Gallican church.
+#
+# Five institutions, two slots from the auto-modifier plus the capital's one.
+# Values sit at the vanilla advance median for their key (eu5-audit
+# --dump-ranges, 2026-09-10) unless a line says otherwise.
+
+# --------------------------------------------------------------------------
+# Compagnies d'ordonnance (Louppy-le-Chateau, 26 May 1445)
+# --------------------------------------------------------------------------
+# Paid by the permanent taille of 1439, garrisoned in the towns in peace. The
+# Ordinance of Orleans (1439) forbade lords to raise companies, which is the
+# neutral cut to noble levies and why the princes of the Praguerie (1440)
+# dislike it; the peasantry, pillaged by the ecorcheurs, liked it. Unpaid
+# companies went back to living off the country and to serving princes.
+# Not gated on the fra_taille law: vanilla enables it only through a
+# 1420-1460 event that also needs peace, so many campaigns never get it.
+fra_compagnies_d_ordonnance_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.003
+	}
+
+	potential = {
+		has_or_had_tag = FRA
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		custom_tooltip = {
+			text = nd_fra_bureaucracies_unlocked_tt
+			has_variable = nd_fra_formed
+		}
+	}
+
+	estates_that_like = {
+		crown_estate
+		peasants_estate
+	}
+	estates_that_dislike = {
+		nobles_estate
+	}
+
+	neutral_modifier = {
+		nobles_estate_levy_size = -0.1
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		army_heavy_cavalry_maintenance_cost_modifier = -0.1
+		global_devastation_recovery = 0.005
+	}
+
+	# prosperity decay 0.02 is the largest vanilla value (static modifiers).
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		global_prosperity_decay = 0.02
+		global_nobles_estate_power = 0.1
+	}
+}
+
+# --------------------------------------------------------------------------
+# Intendants de justice, police et finances (permanent from 1635)
+# --------------------------------------------------------------------------
+# Revocable commissioners set over the governors and the venal officers, so
+# nobles and the officer class (burghers) dislike them. The allow asks for no
+# appanage subject: a commissioner from Paris had no standing inside a
+# prince's appanage, and vanilla's own centralization arc turns on the same
+# fact (flavor_fra.1103 fires at zero appanages). A France unlocked by the
+# Hundred Years' War can still hold appanages, so this gate is live.
+# Rural control ceiling kept at 0.02, under the project cap of 0.03.
+fra_intendants_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.003
+	}
+
+	potential = {
+		has_or_had_tag = FRA
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		custom_tooltip = {
+			text = nd_fra_bureaucracies_unlocked_tt
+			has_variable = nd_fra_formed
+		}
+		custom_tooltip = {
+			text = nd_fra_no_appanages_tt
+			NOT = {
+				any_subject = {
+					is_subject_type = appanage
+				}
+			}
+		}
+	}
+
+	estates_that_like = {
+		crown_estate
+	}
+	estates_that_dislike = {
+		nobles_estate
+		burghers_estate
+	}
+
+	neutral_modifier = {
+		global_max_rural_control = 0.02
+	}
+
+	# No vanilla value for the rural form; its sibling global_monthly_control
+	# sits at 0.002 in vanilla advances, and a rural-only reach earns a little
+	# more.
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		global_monthly_rural_control = 0.003
+		global_nobles_estate_power = -0.1
+	}
+
+	# The Fronde's answer: the Chambre Saint-Louis abolished them in 1648 and
+	# the governors and provincial courts took the provinces back.
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		global_max_control = -0.05
+		global_separatism = 0.05
+	}
+}
+
+# --------------------------------------------------------------------------
+# Parties casuelles and the paulette (1522; droit annuel 12 December 1604)
+# --------------------------------------------------------------------------
+# Offices sold as property were the crown's largest source of credit (the
+# officers' capital was, in effect, a loan), hence loan capacity; buying an
+# office was the road from trade into the robe nobility, hence promotion.
+# Burghers bought the offices; the nobility asked the Estates-General of 1614
+# to abolish the paulette. Neglected, the system does what it did under
+# Pontchartrain: offices multiply for cash, each carrying a tax exemption,
+# and the officers answer to no one. The older the system, the worse: the
+# negative scales from 1x to 2x with entrenchment, because no minister could
+# find the money to buy the offices back.
+fra_paulette_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.003
+	}
+
+	potential = {
+		has_or_had_tag = FRA
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		custom_tooltip = {
+			text = nd_fra_bureaucracies_unlocked_tt
+			has_variable = nd_fra_formed
+		}
+	}
+
+	estates_that_like = {
+		burghers_estate
+	}
+	estates_that_dislike = {
+		nobles_estate
+	}
+
+	# An office owned is contentment that does not erode.
+	neutral_modifier = {
+		burghers_estate_satisfaction_decay = -0.01
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		total_loan_capacity_modifier = 0.5
+		global_pop_promotion_speed_modifier = 0.1
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			add = { value = scope:entrenchment divide = 100 }
+			multiply = { value = 1 subtract = scope:maintenance }
+		}
+		burghers_estate_max_tax = -0.1
+		global_burghers_estate_power = 0.1
+	}
+}
+
+# --------------------------------------------------------------------------
+# Ferme generale (one lease from 1680; forty farmers general from 1726)
+# --------------------------------------------------------------------------
+# Indirect taxes fell on consumption, so unlike the taille they reached the
+# privileged too: all-estate max tax, not a single estate's. Salt demand is
+# the sel du devoir, the forced yearly purchase the brigades enforced in the
+# lands of the great gabelle. Financiers liked it and grew mighty on it (the
+# neutral estate power); the peasants who bought the salt did not. Starved,
+# the brigades go unpaid, smugglers and the sub-farmers keep the revenue, and
+# the countryside rises as the Nu-pieds did in 1639.
+# No gabelle gate: vanilla unlocks that reform only for a human France under
+# 25 monthly income (flavor_fra.1017), which would lock this forever.
+# Salt demand has no vanilla advance value; 0.25 is the smallest step the
+# vanilla age modifiers use for the pop demand family (age/00_default.txt).
+fra_ferme_generale_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.003
+	}
+
+	potential = {
+		has_or_had_tag = FRA
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		custom_tooltip = {
+			text = nd_fra_bureaucracies_unlocked_tt
+			has_variable = nd_fra_formed
+		}
+	}
+
+	estates_that_like = {
+		burghers_estate
+	}
+	estates_that_dislike = {
+		peasants_estate
+	}
+
+	neutral_modifier = {
+		global_burghers_estate_power = 0.05
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		global_estate_max_tax = 0.1
+		global_salt_pop_demand = 0.25
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		monthly_peasants_estate_rebel_growth = 0.025
+		tax_income_efficiency = -0.05
+	}
+}
+
+# --------------------------------------------------------------------------
+# The parlements (Paris; Toulouse 11 October 1443 and a dozen more)
+# --------------------------------------------------------------------------
+# Every edict had to be registered, and remonstrance delayed it: the neutral
+# legislative cost, and why the crown dislikes them. The robe was noble, and
+# the courts turned noble grievance into law suits rather than revolt, hence
+# the nobles' faster recovery and slower rebels. Through the appel comme
+# d'abus they judged the church courts, and in 1762 the Parlement of Paris
+# ordered the Jesuits dissolved, hence the clergy's dislike and lost power.
+# Starved, they strike and are exiled, and Paris takes to the barricades as it
+# did for Broussel in August 1648.
+fra_parlements_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.003
+	}
+
+	potential = {
+		has_or_had_tag = FRA
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		custom_tooltip = {
+			text = nd_fra_bureaucracies_unlocked_tt
+			has_variable = nd_fra_formed
+		}
+	}
+
+	estates_that_like = {
+		nobles_estate
+	}
+	estates_that_dislike = {
+		crown_estate
+		clergy_estate
+	}
+
+	neutral_modifier = {
+		legislative_efficiency = -0.1
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		nobles_estate_satisfaction_recovery = 0.001
+		monthly_rebel_growth = -0.0005
+		global_clergy_estate_power = -0.1
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		monthly_burghers_estate_rebel_growth = 0.025
+		global_max_urban_control = -0.05
+	}
+}

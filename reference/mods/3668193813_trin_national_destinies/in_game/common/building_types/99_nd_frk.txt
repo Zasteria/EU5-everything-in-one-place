@@ -1,0 +1,677 @@
+﻿# ===== Francia (FRK) Buildings =====
+# Two kinds. The Carolingian institutions (missaticum, fiscal villa,
+# cathedral school, palace school) are buildable across the realm under
+# gates that say where each actually stood. The monuments are bound to the
+# one city that holds them: Aachen, Wetzlar, Frankfurt, Worms, Cologne and
+# Mainz are all inside Francia's own territory, and Aachen and Frankfurt
+# are formation requirements, so the player owns them the day Francia exists.
+
+# Seat of the Missi
+# The missaticum was an inspection circuit of several counties, ridden by a
+# bishop and a count sent from outside it. One seat per province, at the
+# province capital and never at the realm's capital, which the court already
+# watches. Rural seats are allowed because many province capitals are still
+# villages; that is why this uses the rahdar's slow control growth and not a
+# flat control ceiling.
+nd_frk_missaticum = {
+	is_special = yes
+	is_foreign = no
+	pop_type = nobles
+	max_levels = 1
+	employment_size = normal_noble_employment
+	category = government_category
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = no
+	build_time = government_build_time
+
+	country_potential = {
+		has_advance = nd_frk_missi_dominici
+	}
+
+	location_potential = {
+		is_province_capital = yes
+		is_capital = no
+	}
+
+	modifier = {
+		local_monthly_control = 0.001
+		local_unrest = -0.05
+		local_crown_estate_power = 0.25
+	}
+
+	unique_production_methods = {
+		nd_frk_missaticum_maintenance = {
+			paper = 0.2
+			horses = 0.1
+			wine = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = local_governor_construction
+}
+
+# Royal Villa
+# The fiscal estate of the Capitulare de villis: a steward, a demesne, a
+# weaving house of women (the genitium), a brewhouse and a cellar. Arable
+# land only, because the villas were grain and vine estates; the capitulary
+# has nothing to say about forest, marsh or mountain. Every PM turns inputs
+# into a produced good, so no raw good is made from nothing and no raw
+# material gate is needed.
+nd_frk_fiscal_villa = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = rural_building_cap
+	startup_ramp_target = rural_startup_ramp_target
+	employment_size = generic_peasant_building_employment
+	category = consumer_goods_category
+	rural_settlement = yes
+	town = no
+	city = no
+	megalopolis = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_frk_capitulare_de_villis
+	}
+
+	location_potential = {
+		OR = {
+			vegetation = farmland
+			vegetation = grasslands
+		}
+	}
+
+	unique_production_methods = {
+		nd_frk_villa_genitium = {
+			wool = 0.4
+			dyes = 0.05
+			produced = cloth
+			output = 0.48
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+		nd_frk_villa_brewhouse = {
+			wheat = 0.5
+			produced = beer
+			output = 0.3
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+		nd_frk_villa_cellar = {
+			wine = 0.5
+			produced = liquor
+			output = 0.48
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = village_construction
+}
+
+# Cathedral School
+# The Admonitio generalis put a school at every monastery and every bishop's
+# house, so the school stands only where one of those already stands.
+nd_frk_cathedral_school = {
+	is_special = yes
+	is_foreign = no
+	pop_type = clergy
+	max_levels = 1
+	employment_size = religious_building_employment
+	category = cultural_category
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = no
+	build_time = cultural_building_time
+
+	country_potential = {
+		has_advance = nd_frk_admonitio_generalis
+	}
+
+	location_potential = {
+		OR = {
+			has_building = building_type:cathedral
+			has_building = building_type:monastery
+		}
+	}
+
+	modifier = {
+		local_clergy_max_literacy = 2.5
+		local_monthly_literacy = 0.05
+		local_institution_growth_modifier = 0.1
+	}
+
+	unique_production_methods = {
+		nd_frk_cathedral_school_maintenance = {
+			paper = 0.15
+			books = 0.05
+			beeswax = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = school_construction
+}
+
+# Shrine of Charlemagne
+# The golden shrine of 1215 and the bust reliquary in the palatine church at
+# Aachen. Every settlement tier is allowed because this is a single fixed
+# location and a tier gate would only lock out a realm whose Aachen is
+# still small. The realm-wide part applies only while Aachen is the
+# capital: that is the decision this building exists to create, Paris or
+# Charlemagne's own seat.
+nd_frk_shrine_of_charlemagne = {
+	is_special = yes
+	is_foreign = no
+	pop_type = clergy
+	max_levels = 1
+	employment_size = religious_building_employment
+	category = religious_category
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = large_religious_building_time
+
+	country_potential = {
+		has_advance = nd_frk_sanctus_karolus
+	}
+
+	location_potential = {
+		this = location:aachen
+	}
+
+	modifier = {
+		local_monthly_prosperity = 0.001
+		local_migration_attraction = 0.05
+		local_cultural_influence = 0.25
+		local_clergy_estate_power = 0.25
+	}
+
+	capital_country_modifier = {
+		global_crown_estate_power = 0.1
+		diplomatic_reputation = 1
+	}
+
+	unique_production_methods = {
+		nd_frk_shrine_maintenance = {
+			beeswax = 0.1
+			incense = 0.05
+			goods_gold = 0.05
+			fine_cloth = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = cathedral_construction
+}
+
+# Palace School
+# Alcuin's school at the court, which educated the king's children, the
+# sons of the great families and the future abbots of the realm. Capital
+# only, like vanilla's supreme court, and removed if the court moves. No
+# rural tier: a tier 4 realm's capital is not a village.
+nd_frk_palace_school = {
+	is_special = yes
+	is_foreign = no
+	pop_type = clergy
+	max_levels = 1
+	employment_size = cultural_employment
+	category = cultural_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = large_cultural_building_time
+
+	country_potential = {
+		has_advance = nd_frk_littera_antiqua
+	}
+
+	location_potential = {
+		is_capital = yes
+	}
+	remove_if = {
+		is_no_longer_capital = yes
+	}
+
+	modifier = {
+		local_monthly_literacy = 0.1
+		local_cultural_influence = 0.25
+		local_nobles_max_literacy = 10
+	}
+
+	capital_country_modifier = {
+		global_nobles_max_literacy = 5
+	}
+
+	unique_production_methods = {
+		nd_frk_palace_school_maintenance = {
+			books = 0.1
+			paper = 0.2
+			beeswax = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = university_construction
+}
+
+# River Crane
+# A treadwheel crane on the quay. River locations only, because a crane on
+# a dry market square lifts nothing, and towns and cities only, because the
+# crane right was a staple privilege of a chartered town.
+nd_frk_river_crane = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = generic_burgher_employment
+	category = trade_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = no
+	build_time = infrastructure_build_time
+
+	country_potential = {
+		has_advance = nd_frk_crane_rights
+	}
+
+	location_potential = {
+		has_river = yes
+	}
+
+	modifier = {
+		local_market_access = 0.005
+		local_trades_per_burgher = 0.1
+	}
+
+	unique_production_methods = {
+		nd_frk_river_crane_maintenance = {
+			lumber = 0.15
+			tools = 0.05
+			naval_supplies = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = bridge_construction
+}
+
+# Chamber Court
+# The court's last seat, Wetzlar in the Wetterau, from 1689. Fixed
+# location, so every tier is allowed.
+nd_frk_chamber_court = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = generic_burgher_employment
+	category = government_category
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = government_build_time
+
+	country_potential = {
+		has_advance = nd_frk_court_ordinance
+	}
+
+	location_potential = {
+		this = location:wetzlar
+	}
+
+	modifier = {
+		local_monthly_development_modifier = 0.1
+		local_burghers_max_literacy = 10
+		local_burghers_estate_power = 0.5
+	}
+
+	unique_production_methods = {
+		nd_frk_chamber_court_maintenance = {
+			paper = 0.3
+			books = 0.1
+			furniture = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = important_building_construction
+}
+
+# Circle Diet
+# The seats where the circle diets met: Frankfurt and Worms for the Upper
+# Rhenish circle, Cologne for the Lower Rhenish circle. A realm governed
+# from Paris needs a second centre of gravity on the Rhine, and the circle
+# diet is a proximity source at half a governor's strength (vanilla
+# local_governor gives 80), which is the most any of the three can offer.
+nd_frk_circle_diet = {
+	is_special = yes
+	is_foreign = no
+	pop_type = nobles
+	max_levels = 1
+	employment_size = large_noble_employment
+	category = government_category
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = government_build_time
+
+	country_potential = {
+		has_advance = nd_frk_imperial_circles
+	}
+
+	location_potential = {
+		OR = {
+			this = location:frankfurt
+			this = location:worms
+			this = location:cologne
+		}
+	}
+
+	modifier = {
+		local_proximity_source = 40
+		local_nobles_estate_power = 0.25
+	}
+
+	unique_production_methods = {
+		nd_frk_circle_diet_maintenance = {
+			paper = 0.2
+			wine = 0.1
+			furniture = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = important_building_construction
+}
+
+# The Frankfurt Fair
+# The spring and autumn fairs on the Main, and from the 1560s the book fair
+# with its printed catalogue. Frankfurt only; it is a formation requirement.
+nd_frk_frankfurt_fair = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = large_burgher_employment
+	category = trade_category
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = market_build_time
+
+	country_potential = {
+		has_advance = nd_frk_fair_catalogue
+	}
+
+	location_potential = {
+		this = location:frankfurt
+	}
+
+	modifier = {
+		local_market_access = 0.01
+		local_merchant_capacity = 1
+		local_trades_per_burgher = 0.1
+		local_monthly_literacy = 0.05
+	}
+
+	unique_production_methods = {
+		nd_frk_frankfurt_fair_maintenance = {
+			cloth = 0.1
+			paper = 0.1
+			wine = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = market_center_building_construction
+}
+
+# The Imperial Baths
+# The hot springs of Aachen, Charlemagne's reason for choosing the place,
+# rebuilt as the bathhouses of an eighteenth century spa. Aachen only.
+nd_frk_kaiserbad = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = generic_burgher_employment
+	category = cultural_category
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = large_cultural_building_time
+
+	country_potential = {
+		has_advance = nd_frk_waters_of_aachen
+	}
+
+	location_potential = {
+		this = location:aachen
+	}
+
+	modifier = {
+		local_migration_attraction = 0.1
+		local_monthly_prosperity = 0.001
+		local_nobles_desired_pop = 0.01
+		local_life_expectancy = 5
+	}
+
+	unique_production_methods = {
+		nd_frk_kaiserbad_maintenance = {
+			masonry = 0.1
+			fine_cloth = 0.05
+			wine = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = prestige_building_construction
+}
+
+# Rhine Commission
+# The Central Commission for the Navigation of the Rhine, seated at Mainz
+# from 1816. Mainz only.
+nd_frk_rhine_commission = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = generic_burgher_employment
+	category = trade_category
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = government_build_time
+
+	country_potential = {
+		has_advance = nd_frk_free_navigation
+	}
+
+	location_potential = {
+		this = location:mainz
+	}
+
+	modifier = {
+		local_market_access = 0.01
+		local_merchant_capacity = 2
+		local_trades_per_burgher = 0.1
+	}
+
+	unique_production_methods = {
+		nd_frk_rhine_commission_maintenance = {
+			paper = 0.15
+			naval_supplies = 0.1
+			tools = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = important_building_construction
+}
+
+# Cathedral Works of Cologne
+# The masons' lodge that stopped work in 1473 with the crane still standing
+# on the south tower, revived from the rediscovered medieval plans. Cologne
+# only, and the longest build in the realm.
+nd_frk_cathedral_works = {
+	is_special = yes
+	is_foreign = no
+	pop_type = clergy
+	max_levels = 1
+	employment_size = large_religious_building_employment
+	category = religious_category
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = huge_unique_build_time
+
+	country_potential = {
+		has_advance = nd_frk_cathedral_completion
+	}
+
+	location_potential = {
+		this = location:cologne
+	}
+
+	modifier = {
+		local_cultural_tradition = 0.5
+		local_cultural_influence = 0.25
+		local_migration_attraction = 0.05
+		local_monthly_prosperity = 0.001
+	}
+
+	unique_production_methods = {
+		nd_frk_cathedral_works_maintenance = {
+			stone = 0.2
+			masonry = 0.1
+			tools = 0.1
+			glass = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = cathedral_construction
+}
+
+# ===== DESTINY BUILDINGS =====
+
+# Royal Castellum
+# The castella of the Saxon and Sorbian frontiers: the fortress and palace at
+# Paderborn (776), the castles of 806 on the Elbe by Magdeburg and on the
+# Saale at Halle, and the posts of 805 at Erfurt and Regensburg. Bound to
+# those five sites, every one a path A objective and none inside Francia's
+# own territory, so its proximity reaches exactly the lands direct rule has
+# to hold. Half a governor's proximity, the same as the circle diet. Every
+# tier is allowed because each site is a single fixed location.
+nd_frk_castellum = {
+	is_special = yes
+	is_foreign = no
+	pop_type = nobles
+	max_levels = 1
+	employment_size = normal_noble_employment
+	category = government_category
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = government_build_time
+
+	country_potential = {
+		has_advance = nd_frk_dest_thionville
+	}
+
+	location_potential = {
+		OR = {
+			this = location:paderborn
+			this = location:magdeburg
+			this = location:halle_an_der_saale
+			this = location:erfurt
+			this = location:regensburg
+		}
+	}
+
+	modifier = {
+		local_proximity_source = 40
+		local_garrison_size = 0.25
+		local_unrest = -0.1
+	}
+
+	unique_production_methods = {
+		nd_frk_castellum_maintenance = {
+			stone = 0.1
+			weaponry = 0.1
+			tools = 0.1
+			paper = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = castle_construction
+}
+
+# The Mayfield
+# The general assembly of the realm, which Pepin moved from March to May in
+# 755: the magnates of every people came to hear the capitularies, give
+# counsel and bring the yearly gifts. Capital only and removed if the court
+# moves, like the palace school; no rural tier, since a realm with a ring of
+# kingdoms does not govern from a village. The country part is the tribute
+# of the subject princes that the assembly received.
+nd_frk_mayfield = {
+	is_special = yes
+	is_foreign = no
+	pop_type = nobles
+	max_levels = 1
+	employment_size = large_noble_employment
+	category = government_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = government_build_time
+
+	country_potential = {
+		has_advance = nd_frk_dest_divisio_regnorum
+	}
+
+	location_potential = {
+		is_capital = yes
+	}
+	remove_if = {
+		is_no_longer_capital = yes
+	}
+
+	modifier = {
+		local_nobles_estate_power = 0.5
+		local_cultural_influence = 0.25
+		local_monthly_prosperity = 0.001
+	}
+
+	capital_country_modifier = {
+		subject_income_modifier = 0.05
+	}
+
+	unique_production_methods = {
+		nd_frk_mayfield_maintenance = {
+			wine = 0.1
+			fine_cloth = 0.1
+			paper = 0.1
+			horses = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = important_building_construction
+}

@@ -5,6 +5,14 @@
 # No maintenance modifier appears here: maintenance is the reform's domain.
 # Available only to formed countries with bureaucracies allowed; BYZ and TRE
 # excluded (their vanilla advances cover this ground).
+#
+# Every policy carries an explicit ai_will_do (Workshop report 2026-09-13,
+# SpacePoon: the AI never enacted any policy of this law). The engine's
+# default valuation of a policy comes from its modifiers, and the
+# bureaucracy keys are worth nothing to it, so all four scored zero and the
+# law sat empty in every AI realm. Vanilla writes ai_will_do on exactly the
+# policies whose value the AI cannot read from modifiers (laws/01_common.txt,
+# coin_laws: "we always want this because it's better", value 100).
 
 nd_bureaucratic_funding_law = {
 	law_category = administrative
@@ -19,6 +27,21 @@ nd_bureaucratic_funding_law = {
 	}
 	
 	nd_tax_farming_policy = {
+		# The magnates' model: cheap to raise and to strike, and the
+		# default posture for a realm still filling its slots.
+		ai_will_do = {
+			add = {
+				desc = "a funding model is better than none"
+				value = 100
+			}
+			if = {
+				limit = { num_bureaucracies < 2 }
+				add = {
+					desc = "few institutions yet, cheap to raise"
+					value = 50
+				}
+			}
+		}
 		country_modifier = {
 			global_bureaucracy_implementation_efficiency = 0.25
 			global_bureaucracy_removal_efficiency = 0.15
@@ -30,6 +53,21 @@ nd_bureaucratic_funding_law = {
 	}
 	
 	nd_crown_coffers_policy = {
+		# The crown's model: worth more once institutions exist to
+		# entrench, which is what the speed bonus pays for.
+		ai_will_do = {
+			add = {
+				desc = "a funding model is better than none"
+				value = 100
+			}
+			if = {
+				limit = { num_bureaucracies >= 2 }
+				add = {
+					desc = "institutions in place to entrench"
+					value = 50
+				}
+			}
+		}
 		country_modifier = {
 			global_bureaucracy_implementation_efficiency = 0.15
 			global_bureaucracy_entrenchment_speed_modifier = 0.20
@@ -41,6 +79,14 @@ nd_bureaucratic_funding_law = {
 	}
 	
 	nd_estate_subvention_policy = {
+		# Cheap reshaping only matters to a realm that reshapes; the AI
+		# rarely does, so this stays the least-wanted of the three.
+		ai_will_do = {
+			add = {
+				desc = "a funding model is better than none"
+				value = 60
+			}
+		}
 		country_modifier = {
 			reshape_bureaucracy_cost_modifier = -0.25
 		}
@@ -51,6 +97,14 @@ nd_bureaucratic_funding_law = {
 	}
 	
 	nd_treasury_bureau_policy = {
+		# The modernization pick: strictly the broadest package, so an AI
+		# that has reached it wants it, as vanilla's better coin law does.
+		ai_will_do = {
+			add = {
+				desc = "the broadest package once the age allows"
+				value = 200
+			}
+		}
 		allow = {
 			OR = {
 				current_age = age_5_absolutism

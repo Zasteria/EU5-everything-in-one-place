@@ -1,0 +1,418 @@
+﻿bul_bulgaria_mission_pack = {
+	icon = nmt_bulgaria
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = BUL
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = { always = yes }
+
+	on_start = { set_variable = bul_mission_started }
+	on_completion = { remove_variable = bul_mission_started }
+	on_abort = { remove_variable = bul_mission_started }
+
+	# ===== ROOT =====
+
+	bul_second_bulgarian_legacy = {
+		icon = chg_border_wars
+		requires = { }
+		enabled = {
+			OR = {
+				any_active_disaster = {
+					disaster_type = disaster_type:twilight_of_the_tsardom
+				}
+				legitimacy >= 100
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bul_legacy_mod years = 20 mode = add }
+		}
+	}
+
+	# ===== A: 独立の確立 =====
+
+	bul_assert_independence = {
+		icon = crown_rights_laws_advance
+		requires = { bul_second_bulgarian_legacy }
+		enabled = {
+			legitimacy >= 100
+			stability >= 50
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bul_independence_mod years = 20 mode = add }
+		}
+	}
+
+	bul_tarnovo_capital = {
+		icon = byz_crossroads_of_continents
+		requires = { bul_assert_independence }
+		enabled = {
+			location:tarnovo = {
+				owner = root
+				total_building_levels >= 20
+			}
+		}
+		on_completion = {
+			location:tarnovo = {
+				add_location_modifier = { modifier = bul_tarnovo_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	bul_bulgarian_patriarchate = {
+		icon = the_pentarchy
+		requires = { bul_assert_independence }
+		enabled = {
+			religion = religion:orthodox
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bul_patriarchate_mod years = 20 mode = add }
+		}
+	}
+
+	bul_boyar_council = {
+		icon = noble_resilience
+		requires = { bul_assert_independence }
+		enabled = {
+			OR = {
+				estate_satisfaction:nobles_estate >= 0.70
+				"estate_power(estate_type:nobles_estate)" >= 0.40
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bul_boyar_mod years = 20 mode = add }
+		}
+	}
+
+	bul_reunite_bulgaria = {
+		icon = wallachian_heritage
+		requires = { bul_assert_independence }
+		enabled = {
+			any_owned_location = {
+				area = area:bulgaria_area
+				owner = root
+				count >= 48
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bul_reunite_mod years = 20 mode = add }
+		}
+	}
+
+	bul_bulgarian_independence = {
+		icon = chg_glory_of_conquest
+		requires = { bul_tarnovo_capital bul_bulgarian_patriarchate bul_boyar_council bul_reunite_bulgaria }
+		enabled = {
+			prestige >= 50
+		}
+		on_completion = {
+			trigger_event_non_silently = bul_events.1
+		}
+	}
+
+	bul_sofia = {
+		icon = city_building_advance
+		requires = { bul_bulgarian_independence }
+		enabled = {
+			location:sredets = {
+				owner = root
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = bul_events.4
+		}
+	}
+
+	# ===== B: バルカン帝国の再興 =====
+
+	bul_conquer_macedonia = {
+		icon = settle_the_frontier_advance
+		requires = { bul_bulgarian_independence }
+		enabled = {
+			any_owned_location = {
+				area = area:macedonia_area
+				owner = root
+				count >= 10
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bul_macedonia_mod years = 20 mode = add }
+		}
+	}
+
+	bul_conquer_serbia = {
+		icon = balkan_hajduks
+		requires = { bul_bulgarian_independence }
+		enabled = {
+			any_owned_location = {
+				area = area:serbia_area
+				owner = root
+				count >= 16
+			}
+		}
+		on_completion = {
+			culture:serbian = {
+				change_cultural_view = {
+					target = culture:bulgarian
+					change = 1
+				}
+			}
+		}
+	}
+
+	bul_bulgarian_empire = {
+		icon = imperial_creed
+		requires = { bul_conquer_macedonia bul_conquer_serbia }
+		enabled = {
+			country_rank_level >= 3
+			is_great_power = yes
+		}
+		on_completion = {
+			trigger_event_non_silently = bul_events.2
+		}
+	}
+
+	bul_conquer_wallachia = {
+		icon = wallachian_tradition
+		requires = { bul_bulgarian_empire }
+		enabled = {
+			any_owned_location = {
+				area = area:wallachia_area
+				OR = { owner = root owner = { is_subject_of = root } }
+				count >= 40
+			}
+		}
+		on_completion = {
+			culture:wallachian = {
+				change_cultural_view = {
+					target = culture:bulgarian
+					change = 1
+				}
+			}
+		}
+	}
+
+	bul_conquer_moldavia = {
+		icon = tre_terminus_of_the_silk_road
+		requires = { bul_bulgarian_empire }
+		enabled = {
+			any_owned_location = {
+				area = area:moldavia_area
+				OR = { owner = root owner = { is_subject_of = root } }
+				count >= 40
+			}
+		}
+		on_completion = {
+			culture:moldovan = {
+				change_cultural_view = {
+					target = culture:bulgarian
+					change = 1
+				}
+			}
+		}
+	}
+
+	bul_conquer_transylvania = {
+		icon = tra_the_transylvanian_autonomy
+		requires = { bul_bulgarian_empire }
+		enabled = {
+			any_owned_location = {
+				area = area:transylvania_area
+				owner = root
+				count >= 25
+			}
+		}
+		on_completion = {
+			culture:transylvanian = {
+				change_cultural_view = {
+					target = culture:bulgarian
+					change = 1
+				}
+			}
+		}
+	}
+
+	bul_conquer_thrace_greece = {
+		icon = moe_reclaiming_the_peloponnese_advance
+		requires = { bul_bulgarian_empire }
+		enabled = {
+			any_owned_location = {
+				area = area:thrace_area
+				owner = root
+				count >= 40
+			}
+		}
+		on_completion = {
+			culture:greek_culture = {
+				change_cultural_view = {
+					target = culture:bulgarian
+					change = 1
+				}
+			}
+		}
+	}
+
+	bul_extend_the_empire = {
+		icon = imperial_ambitions
+		requires = { bul_conquer_wallachia bul_conquer_moldavia bul_conquer_transylvania bul_conquer_thrace_greece }
+		enabled = {
+			num_locations >= 300
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bul_extend_empire_mod years = -1 mode = add }
+		}
+	}
+
+	bul_chitalishte_movement = {
+		icon = byz_ancient_greek_studies
+		requires = { bul_extend_the_empire }
+		enabled = {
+			any_owned_location = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+				count >= 20
+			}
+		}
+		on_completion = {
+			set_variable = bul_chitalishte_unlocked
+			custom_tooltip = bul_chitalishte_unlock_tt
+		}
+	}
+
+	# ===== C: 対オスマン抵抗 =====
+
+	bul_ottoman_wars = {
+		icon = late_ottoman_bureaucracy
+		requires = { bul_bulgarian_independence }
+		enabled = {
+			any_current_war = {
+				OR = { attacker_leader = root defender_leader = root }
+				any_war_participant = {
+					NOT = { this = root }
+					religion.group = religion_group:muslim
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bul_ottoman_wars_mod years = 20 mode = add }
+		}
+	}
+
+	bul_varna_crusade = {
+		icon = byz_shield_of_the_west
+		requires = { bul_ottoman_wars }
+		enabled = {
+			OR = {
+				is_allied_with = { target = c:HUN }
+				c:HUN = { is_rival_of = root }
+				NOT = { country_exists = c:HUN }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bul_varna_mod years = 20 mode = add }
+		}
+	}
+
+	bul_end_ottoman_threat = {
+		icon = byz_the_new_imperial_army
+		requires = { bul_varna_crusade }
+		enabled = {
+			OR = {
+				NOT = { country_exists = c:TUR }
+				c:TUR = { monthly_income_trade_and_tax <= root.monthly_income_trade_and_tax }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bul_end_ottoman_mod years = 50 mode = add }
+		}
+	}
+
+	# ===== D: 正教の光とコンスタンティノープルの夢 =====
+
+	bul_new_byzantium = {
+		icon = primacy_of_alexandria
+		requires = { bul_extend_the_empire bul_end_ottoman_threat }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:constantinople
+			owns_or_non_sovereign_subject_owns = location:rome
+		}
+		on_completion = {
+			trigger_event_non_silently = bul_events.3
+		}
+	}
+
+	bul_constantinople_ambition = {
+		icon = byz_autokratoria_rhomaion
+		requires = { bul_bulgarian_independence }
+		enabled = {
+			navy_size >= 15
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bul_constantinople_ambition_mod years = 20 mode = add }
+		}
+	}
+
+	# ===== E: 黒海交易 =====
+
+	bul_black_sea_trade = {
+		icon = tre_pontic_mountains
+		requires = { bul_bulgarian_independence }
+		enabled = {
+			location:varna = {
+				owner = root
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:varna = {
+				add_location_modifier = { modifier = bul_varna_port_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	bul_black_sea_dominion = {
+		icon = tre_grand_komnenoi
+		requires = { bul_black_sea_trade }
+		enabled = {
+			OR = {
+				owns_or_non_sovereign_subject_owns = location:theodoro
+				owns_or_non_sovereign_subject_owns = location:kaffa
+				owns_or_non_sovereign_subject_owns = location:constantinople
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bul_black_sea_dominion_mod years = -1 mode = add }
+		}
+	}
+
+	# ===== FINAL =====
+
+	bul_third_bulgarian_empire = {
+		icon = glory_of_rome
+		requires = { bul_new_byzantium bul_black_sea_dominion }
+		final = yes
+		enabled = {
+			any_owned_location = {
+				owner = root
+				count >= 1000
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = bul_events.99
+		}
+	}
+}

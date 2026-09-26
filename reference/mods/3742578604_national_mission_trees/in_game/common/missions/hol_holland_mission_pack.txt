@@ -1,0 +1,525 @@
+﻿hol_holland_mission_pack = {
+	icon = nmt_holland
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = HOL
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = { always = yes }
+
+	on_start = { set_variable = hol_mission_started }
+	on_completion = { remove_variable = hol_mission_started }
+	on_abort = { remove_variable = hol_mission_started }
+
+	# ===== ROOT =====
+
+	hol_county_of_holland = {
+		icon = dan_trading_economy
+		requires = { }
+		enabled = { always = yes }
+		on_completion = {
+			add_country_modifier = { modifier = hol_county_mod years = 20 mode = add }
+		}
+	}
+
+	# ===== A: ホラント伯国の礎 =====
+
+	hol_secure_dordrecht = {
+		icon = extensive_canal_works
+		requires = { hol_county_of_holland }
+		enabled = {
+			location:dordrecht = {
+				owner = root
+				total_building_levels >= 40
+			}
+		}
+		on_completion = {
+			location:dordrecht = {
+				add_location_modifier = { modifier = hol_dordrecht_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	hol_hoekse_kabeljauwse = {
+		icon = chg_border_wars
+		requires = { hol_county_of_holland }
+		enabled = {
+			stability >= 50
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hol_hoekse_mod years = 20 mode = add }
+		}
+	}
+
+	hol_zeeland_unification = {
+		icon = ara_a_maritime_realm
+		requires = { hol_county_of_holland }
+		enabled = {
+			location:middelburg = {
+				owner = root
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hol_zeeland_mod years = 20 mode = add }
+		}
+	}
+
+	hol_frisian_freedom = {
+		icon = settle_the_frontier_advance
+		requires = { hol_county_of_holland }
+		enabled = {
+			province_definition:friesland_province = {
+				any_location_in_province_definition = {
+					count >= 4
+					owner = root
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hol_frisian_mod years = 20 mode = add }
+		}
+	}
+
+	hol_utrecht_relations = {
+		icon = church_councils
+		requires = { hol_county_of_holland }
+		enabled = {
+			OR = {
+				is_allied_with = { target = c:UTR }
+				owns_or_non_sovereign_subject_owns = location:utrecht
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hol_utrecht_mod years = 20 mode = add }
+		}
+	}
+
+	hol_wittelsbach_inheritance = {
+		icon = bavarian_legitimacy
+		requires = { hol_secure_dordrecht hol_hoekse_kabeljauwse hol_zeeland_unification hol_frisian_freedom hol_utrecht_relations }
+		enabled = {
+			OR = {
+				c:HAI = { in_union_with = root }
+				NOT = { country_exists = c:HAI }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hol_wittelsbach_mod years = 30 mode = add }
+		}
+	}
+
+	# ===== B: ニシン漁業とバルト海交易 =====
+
+	hol_herring_industry = {
+		icon = dan_danish_agriculture
+		requires = { hol_wittelsbach_inheritance }
+		enabled = {
+			produced_in_country:fish >= 25
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hol_herring_mod years = -1 mode = add }
+		}
+	}
+
+	hol_hansa_rivalry = {
+		icon = hsa_seal_of_the_hansa
+		requires = { hol_herring_industry }
+		enabled = {
+			OR = {
+				c:HSA = { is_rival_of = root }
+				c:HSA = { monthly_income_trade_and_tax <= root.monthly_income_trade_and_tax }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hol_hansa_rivalry_mod years = 20 mode = add }
+		}
+	}
+
+	hol_amsterdam_rise = {
+		icon = genoese_maritime_diplomacy
+		requires = { hol_herring_industry }
+		enabled = {
+			location:amsterdam = {
+				owner = root
+				total_building_levels >= 60
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:amsterdam = {
+				add_location_modifier = { modifier = hol_amsterdam_rise_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	hol_moedernegotie = {
+		icon = ara_chartered_merchant_companies
+		requires = { hol_hansa_rivalry hol_amsterdam_rise }
+		enabled = {
+			monthly_income_trade_and_tax >= 200
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hol_moedernegotie_mod years = 30 mode = add }
+		}
+	}
+
+	# ===== C: 宗教改革と独立戦争 =====
+
+	hol_contest_brabant = {
+		icon = ara_valencian_golden_age
+		requires = { hol_wittelsbach_inheritance }
+		enabled = {
+			OR = {
+				NOT = { country_exists = c:BRB }
+				c:BRB = { is_rival_of = root }
+				has_royal_marriage_with = c:BRB
+			}
+		}
+		on_completion = {
+			add_casus_belli = {
+				type = casus_belli:cb_conquer_province
+				target = location:brussels.owner
+				province = location:brussels.province
+				years = 30
+			}
+		}
+	}
+
+	hol_absorb_brabant = {
+		icon = imperial_ambitions
+		requires = { hol_contest_brabant }
+		enabled = {
+			OR = {
+				NOT = { country_exists = c:BRB }
+				c:BRB = { is_subject_of = root }
+			}
+			any_owned_location = {
+				area = area:brabant_area
+				owner = root
+				count >= 11
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hol_absorb_brabant_mod years = 20 mode = add }
+		}
+	}
+
+	hol_reformation_choice = {
+		icon = hun_hungarian_reformation
+		requires = { hol_wittelsbach_inheritance }
+		enabled = {
+			OR = {
+				situation:reformation = { situation_is_active = yes }
+				situation:reformation = { situation_has_ended = yes }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hol_reformation_mod years = 20 mode = add }
+		}
+	}
+
+	hol_calvinist_merchants = {
+		icon = reform_the_ecclesiastical_authorities
+		requires = { hol_reformation_choice }
+		enabled = {
+			OR = {
+				religion = religion:calvinist
+				religion = religion:lutheran
+				AND = {
+					situation:reformation = { situation_has_ended = yes }
+					religion = religion:catholic
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hol_calvinist_mod years = -1 mode = add }
+		}
+	}
+
+	hol_union_of_utrecht = {
+		icon = liberty_egalite_fraternity
+		requires = { hol_calvinist_merchants }
+		enabled = {
+			any_owned_location = {
+				area = area:friesland_area
+				owner = root
+				count >= 12
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hol_union_utrecht_mod years = 20 mode = add }
+		}
+	}
+
+	hol_watergeuzen = {
+		icon = ven_naval_conscription
+		requires = { hol_calvinist_merchants }
+		enabled = {
+			OR = {
+				has_unlocked_policy_trigger = { type = sea_beggars_policy }
+				total_sub_unit_count:navy_light_ship >= 100
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hol_watergeuzen_mod years = -1 mode = add }
+		}
+	}
+
+	hol_dutch_republic_proper = {
+		icon = deliberative_council
+		requires = { hol_union_of_utrecht hol_watergeuzen hol_absorb_brabant }
+		enabled = {
+			tag = c:NED
+		}
+		on_completion = {
+			trigger_event_non_silently = hol_events.2
+		}
+	}
+
+	# ===== D: 黄金時代と交易帝国 =====
+
+	hol_east_india_company = {
+		icon = nav_chartered_councils
+		requires = { hol_dutch_republic_proper }
+		enabled = {
+			any_colonial_country = {
+				is_subject_of = root
+				count >= 1
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hol_voc_mod years = 20 mode = add }
+		}
+	}
+
+	hol_amsterdam_bank = {
+		icon = bank_of_the_medici
+		requires = { hol_east_india_company }
+		enabled = {
+			location:amsterdam = {
+				has_building_with_at_least_one_level = wisselbank
+				total_building_levels >= 100
+			}
+		}
+		on_completion = {
+			location:amsterdam = {
+				add_location_modifier = {
+					modifier = hol_wisselbank_mod
+					years = -1
+					mode = add
+				}
+				if = {
+					limit = { is_capital = yes }
+					add_location_modifier = {
+						modifier = hol_wisselbank_capital_mod
+						years = -1
+						mode = add
+					}
+				}
+			}
+		}
+	}
+
+	hol_stock_exchange = {
+		icon = free_merchants
+		requires = { hol_amsterdam_bank }
+		enabled = {
+			any_owned_location = {
+				is_market_center = yes
+				count >= 5
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hol_exchange_mod years = -1 mode = add }
+		}
+	}
+
+	hol_dutch_golden_age = {
+		icon = city_of_artists
+		requires = { hol_amsterdam_bank hol_stock_exchange }
+		enabled = {
+			country_rank_level >= 3
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hol_golden_age_mod years = -1 mode = add }
+		}
+	}
+
+	# ===== E: 州議会と摂政派 =====
+
+	hol_estates_of_holland = {
+		icon = estates_general
+		requires = { hol_dutch_republic_proper }
+		enabled = {
+			OR = {
+				AND = {
+					"estate_power(estate_type:burghers_estate)" >= 0.30
+					societal_value:aristocracy_vs_plutocracy <= -60
+				}
+				AND = {
+					"estate_power(estate_type:nobles_estate)" >= 0.30
+					societal_value:aristocracy_vs_plutocracy >= 60
+				}
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = hol_events.5
+		}
+	}
+
+	hol_regent_oligarchy = {
+		icon = noble_resilience
+		requires = { hol_estates_of_holland }
+		enabled = {
+			OR = {
+				"estate_power(estate_type:burghers_estate)" >= 0.40
+				"estate_power(estate_type:nobles_estate)" >= 0.40
+				"estate_power(estate_type:crown_estate)" >= 0.25
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hol_regent_mod years = 20 mode = add }
+		}
+	}
+
+	hol_stadtholderless_era = {
+		icon = government_reforms
+		requires = { hol_regent_oligarchy }
+		enabled = {
+			OR = {
+				total_building_levels:local_governor >= 2
+				total_building_levels:naval_governor >= 1
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hol_stadtholderless_mod years = 20 mode = add }
+		}
+	}
+
+	hol_states_sovereignty = {
+		icon = the_constitution
+		requires = { hol_stadtholderless_era }
+		enabled = {
+			"estate_power(estate_type:crown_estate)" >= 0.40
+		}
+		on_completion = {
+			unlock_government_reform_effect = { type = hol_republican_reform }
+			add_reform = government_reform:hol_republican_reform
+		}
+	}
+
+	# ===== F: イングランドとフランス =====
+
+	hol_anglo_dutch_rivalry = {
+		icon = ven_mixed_naval_tactics
+		requires = { hol_dutch_republic_proper }
+		enabled = {
+			OR = {
+				c:ENG = { is_rival_of = root }
+				is_allied_with = { target = c:ENG }
+				NOT = { country_exists = c:ENG }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hol_anglo_rivalry_mod years = 20 mode = add }
+		}
+	}
+
+	hol_navigation_act_response = {
+		icon = development_of_maritime_law
+		requires = { hol_anglo_dutch_rivalry }
+		enabled = {
+			OR = {
+				any_current_war = {
+					OR = { attacker_leader = root defender_leader = root }
+					any_war_participant = { NOT = { this = root } this = c:ENG }
+				}
+				NOT = { country_exists = c:ENG }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hol_navigation_act_mod years = 20 mode = add }
+		}
+	}
+
+	hol_channel_trade_dominance = {
+		icon = royal_navy
+		requires = { hol_navigation_act_response }
+		enabled = {
+			total_sub_unit_count:navy_heavy_ship >= 100
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hol_channel_dominance_mod years = -1 mode = add }
+		}
+	}
+
+	hol_french_relations = {
+		icon = austrian_military_flexibility
+		requires = { hol_dutch_republic_proper }
+		enabled = {
+			OR = {
+				c:FRA = { is_rival_of = root }
+				is_allied_with = { target = c:FRA }
+				NOT = { country_exists = c:FRA }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hol_french_relations_mod years = 20 mode = add }
+		}
+	}
+
+	hol_rampjaar_survival = {
+		icon = eternal_crusade
+		requires = { hol_french_relations }
+		enabled = {
+			OR = {
+				any_current_war = {
+					OR = { attacker_leader = root defender_leader = root }
+					any_war_participant = { NOT = { this = root } this = c:FRA }
+				}
+				NOT = { country_exists = c:FRA }
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = hol_events.3
+		}
+	}
+
+	hol_glorious_revolution = {
+		icon = golden_fleece
+		requires = { hol_rampjaar_survival }
+		enabled = {
+			region:france_region = {
+				any_location_in_region = {
+					count >= 50
+					owner = root
+				}
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = hol_events.4
+		}
+	}
+
+	# ===== FINAL =====
+
+	hol_united_provinces = {
+		icon = legacy_of_great_empires
+		requires = { hol_dutch_golden_age hol_states_sovereignty hol_channel_trade_dominance hol_glorious_revolution }
+		final = yes
+		enabled = {
+			num_locations >= 300
+		}
+		on_completion = {
+			trigger_event_non_silently = hol_events.99
+		}
+	}
+}
