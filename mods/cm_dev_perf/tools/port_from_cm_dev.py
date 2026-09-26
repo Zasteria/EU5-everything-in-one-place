@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Rebuilds `cm_dev_perf`: Construction Manager **dev** with the cm_perf edits
-that still apply to it.
+"""Rebuilds `cm_dev_perf`: Construction Manager **dev** with the cm_perf edit
+that still applies to it.
 
 A byte-for-byte copy of `reference/mods/<CM dev>/` plus the edits in `EDITS`.
 Names are left alone (`cm_*`, CMF `mod_id = cm`, file paths): load it
@@ -21,9 +21,10 @@ and the stall rescan (cm_perf edit 3 was taken off dev). What dev still lacks:
    way: the mid-session upgrade-map refresh (`cm_upgrade_type_refresh_state`)
    also lives in this tree, so the gate is either pass, not only the
    classification.
-2. **The auto-expand verdict is recomputed per frame, twice per slot icon.**
-   Same edit as cm_perf's 5, reused from its generator: the monthly pass
-   stamps `cm_ae_ok` on the building, the GUI reads the variable.
+
+cm_perf's edit 5 (auto-expand verdict cached monthly) is left out on purpose:
+the slot circles live only in the district and production windows, which she
+opens on pause, so they cost nothing while the game runs (her call 2026-09-26).
 """
 
 from __future__ import annotations
@@ -41,8 +42,8 @@ import refs  # noqa: E402
 MOD = refs.REPO / "mods/cm_dev_perf"
 SRC = refs.mod("romaimperator.construction_manager.dev", "construction_manager_dev")
 
-# cm_perf's generator holds the verdict edit and the first-pass widening; reuse
-# them rather than keep two copies that drift apart.
+# cm_perf's generator holds the first-pass widening; reuse it rather than keep
+# two copies that drift apart.
 _spec = importlib.util.spec_from_file_location(
     "cm_perf_port", refs.REPO / "mods/cm_perf/tools/port_from_cm.py"
 )
@@ -114,9 +115,6 @@ EDITS = (
     (WINDOW, "gate the building-type tree", _gate_the_tree),
     (WINDOW, "widen the first pass's instantiation window", perf._widen_first_pass),
     (WINDOW, "widen the upgrade refresh's instantiation window", _widen_refresh),
-    (perf.FEATURE, "cache the auto-expand verdict on the building", perf._cache_the_verdict),
-    (perf.AE_BUTTON, "read the cached verdict", perf._read_the_verdict(perf.AE_BUTTON)),
-    (perf.AE_ICONS, "read the cached verdict", perf._read_the_verdict(perf.AE_ICONS)),
 )
 
 
@@ -129,8 +127,7 @@ def metadata() -> str:
     base["version"] = f"{version}+perf1"
     base["short_description"] = (
         f"Construction Manager Dev {version} with its hidden building-type tree "
-        "gated on the passes that need it and the auto-expand verdict cached "
-        "monthly. Load this INSTEAD of Construction Manager Dev, never alongside it."
+        "gated on the passes that need it. Load this INSTEAD of Construction Manager Dev, never alongside it."
     )
     return json.dumps(base, indent=4, ensure_ascii=False) + "\n"
 

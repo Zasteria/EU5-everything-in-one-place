@@ -176,7 +176,7 @@ these are prepared, all are cheap, and the owner has agreed to the hover one.
 
 **`cm_dev_perf` вместо CM Dev, та же партия.**
 Ставится через `mods.bat`, CM Dev в плейсете выключить. Верный ответ: фильтры
-и стройка работают как с CM Dev, кружки авторасширения не все красные, тики на её глаз
+и стройка работают как с CM Dev, тики на её глаз
 быстрее. `widget_probe` она удалила 26.09, зонда нет. Подробно — `mods/cm_dev_perf/CLAUDE.md`.
 
 **`cm_maps`, страница настроек CMF и починка прав — один заход, всё видно
