@@ -68,15 +68,9 @@ a filter that filters: the screenshot already says it.
 на значках отрядов ломает клик
 ([`archive/testlog_marker_throttle_0920.md`](archive/testlog_marker_throttle_0920.md)).
 
-**2026-09-20, debug mode — прогон по кнопкам**: кнопки UI Editor в этой сборке
-нет, `UI Bounds` и `Inspect` работают
-([`archive/testlog_debug_mode_0920.md`](archive/testlog_debug_mode_0920.md)).
-
-**2026-09-20, `gui.clearwidgets` — кандидат выбыл, и это его наблюдение.**
-Команда **сама печатается в консоль время от времени**, и игре это не помогает.
-Сходится с файлами: в `ui_library.gui:18261` это **кнопка закрытия окна UI
-Library**, а не метла по дереву. Прогона на неё не просить.
-
+**2026-09-20, debug mode и `gui.clearwidgets`** — UI Editor нет, UI Bounds и
+Inspect есть; clearwidgets — не метла:
+[`archive/testlog_debug_mode_0920.md`](archive/testlog_debug_mode_0920.md).
 
 **2026-09-20, `cm_perf` с правкой 5 — «субъективно стало лучше».**
 
@@ -184,6 +178,9 @@ Library**, а не метла по дереву. Прогона на неё не
 **Прогоны 2026-09-09 — 2026-09-14** (`where_to_produce`, `glorpui_hints`,
 ванильный костыль автостроя) — вынесены:
 [`archive/testlog_0909_0914.md`](archive/testlog_0909_0914.md).
+
+**2026-09-26, логи партии.** `error.log` — 16:00–16:03, 6 440 строк; главное —
+русская локализация игры и окно Османов. Починка: `ru_loc_fix`, круг четвёртый.
 
 ## Waiting on a run
 

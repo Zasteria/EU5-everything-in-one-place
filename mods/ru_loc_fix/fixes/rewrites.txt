@@ -551,3 +551,37 @@ to: $inka_culture_tt$
 why: `LR_PREP` объявлен `type = location` (`ru_EU5_custom_loc.txt:46422`), а ключ зовёт его с ранга. Движок: «Could not find data system function 'Custom' in 'LOCATION.GetRank.Custom('LR_PREP')'» — 362 раза за 87 секунд в логах 2026-09-20, самый частый источник ошибок этой сессии. Сам помощник уже выбирает слово по рангу локации, так что `GetRank` тут лишний.
 from: LOCATION.GetRank.Custom('LR_PREP')
 to: LOCATION.Custom('LR_PREP')
+
+
+# ---------------------------------------------------------------------------
+# Round four — the run of 2026-09-26, error.log and debug.log together.
+# ---------------------------------------------------------------------------
+
+key: UNIT_TEMPLATE_RECRUIT_LOCATION_ACTION
+why: the recruit button supplies `Location` (a datacontext), not the promote `LOCATION`; the English key says `[Location.GetName]`. The three keys made 1 110 promote failures in eight minutes, the largest source of the run.
+from: [LOCATION.
+to: [Location.
+
+key: UNIT_TEMPLATE_RECRUIT_LOCATION_ACTION_CTRL
+why: the recruit button supplies `Location` (a datacontext), not the promote `LOCATION`; the English key says `[Location.GetName]`. The three keys made 1 110 promote failures in eight minutes, the largest source of the run.
+from: [LOCATION.
+to: [Location.
+
+key: UNIT_TEMPLATE_RECRUIT_LOCATION_ACTION_SHIFT
+why: the recruit button supplies `Location` (a datacontext), not the promote `LOCATION`; the English key says `[Location.GetName]`. The three keys made 1 110 promote failures in eight minutes, the largest source of the run.
+from: [LOCATION.
+to: [Location.
+
+why: the town-rights button in the location window supplies `Location`, not a `TownRightsItem`; the English key says `[Location.GetName]`. 7 hovers, 21 lines.
+key: REVOKE_LOCATION_TOWN_RIGHT
+from: [TownRightsItem.GetFirstLocationName]
+to: [Location.GetName]
+
+key: strongest_beylik_has_over_75_locations
+why: the Rise of the Ottomans end-condition tooltip is shown where there is no `SituationView` ("No context supplied … wanted context of type 'SituationView'"). `GetSituationByKey` is a global promote and needs no context; the English tree uses it the same way for Tordesillas.
+from: SituationView.GetActiveSituation.GetSituation.
+to: GetSituationByKey('rise_of_the_ottomans').
+
+why: the engine builds a location surname in a `Container` context, where there is no `Character` to ask `IsFemale` ("Wrong context supplied … got context 'Container'"). The English key is a bare suffix, "skiy"; so is ours now, in the masculine form a dynasty name takes.
+from: [Select_CString(Character.IsFemale, 'ская', 'ский' )]
+to: ский
