@@ -9,8 +9,32 @@
 # флаг и выходит. Инфляцию он трогает только в те месяцы, когда правка идёт, и
 # засыпает, как только она доведена.
 
+# Месячный такт ведёт правку чеканки и держит живым дневной дозор.
 # Scope: country
 bag_wsl_tick = {
+	if = {
+		limit = { NOT = { has_variable = bag_wsl_watch } }
+		bag_wsl_watch_day = yes
+	}
+	if = {
+		limit = {
+			at_war = no
+			has_variable = bag_wsl_mint_phase
+		}
+		# Идёт правка инфляции — единственная причина, по которой мод не спит.
+		bag_wsl_mint_check = yes
+	}
+}
+
+# **Дневной дозор.** Скрытое событие раз в игровой день читает один флаг и
+# `at_war` — и перезапускает себя на завтра. До 0.4 это делал месячный такт
+# (мир ждал до месяца, короткая война терялась целиком); в 0.4 — виджет каждый
+# кадр, и это ему не понравилось, 2026-09-27: «каждый кадр это дофига». День —
+# и точно, и дёшево. `bag_wsl_watch` живёт три дня: пока дозор жив, он
+# продлевается; умер (старое сохранение, сбой) — месячный такт его поднимет.
+# Scope: country
+bag_wsl_watch_day = {
+	set_variable = { name = bag_wsl_watch value = 1 days = 3 }
 	if = {
 		limit = { at_war = yes }
 		if = {
@@ -22,20 +46,33 @@ bag_wsl_tick = {
 		limit = { var:bag_wsl_at_war ?= 1 }
 		bag_wsl_war_ended = yes
 	}
-	else_if = {
-		limit = { has_variable = bag_wsl_mint_phase }
-		# Идёт правка инфляции — единственная причина, по которой мод не спит.
-		bag_wsl_mint_check = yes
+	trigger_event_silently = { id = bag_wsl.1 days = 1 }
+}
+
+# **Флаг «привод нужен».** Виджет-привод целиком спит, пока его нет: в мирное
+# время интерфейс мода — одно чтение этой переменной за кадр, без привязки к
+# панели экономики (она писала строку в `debug.log` каждый кадр, прогон 09-20).
+# Зовётся после всего, что ставит или гасит работу приводу.
+# Scope: country
+bag_wsl_update_busy = {
+	if = {
+		limit = {
+			OR = {
+				has_variable = bag_wsl_army_go
+				has_variable = bag_wsl_navy_go
+				has_variable = bag_wsl_fort_go
+				has_variable = bag_wsl_mint_phase
+				has_variable = bag_wsl_mint_release
+				has_variable = bag_wsl_mint_repost
+			}
+		}
+		set_variable = { name = bag_wsl_busy value = 1 }
+	}
+	else = {
+		remove_variable = bag_wsl_busy
 	}
 }
 
-# **Переключение ловит привод в тот же день, а такт — только страховка.**
-# Раньше состояние войны писал один месячный такт, и это стоило двух жалоб
-# 2026-09-27: мир ждал до конца месяца, а война, начатая и законченная между
-# двумя тактами, не оставляла следа вовсе — мод не срабатывал. Теперь привод
-# (`bag_wsl_driver.gui`, `GetPlayer.GetDiplomacy.IsAtWar`) зовёт эти два эффекта
-# в кадре, где война началась или кончилась; такт зовёт их же, если привод
-# что-то пропустил (например, на загрузке сохранения).
 # Scope: country
 bag_wsl_war_started = {
 	# Начавшаяся война отменяет мирную правку целиком.
@@ -47,6 +84,7 @@ bag_wsl_war_started = {
 	remove_variable = bag_wsl_army_go
 	remove_variable = bag_wsl_navy_go
 	remove_variable = bag_wsl_fort_go
+	bag_wsl_update_busy = yes
 }
 
 # Scope: country
@@ -100,6 +138,7 @@ bag_wsl_on_peace = {
 		# Привод поставит пол, спросит у игры прогноз на месяц и сразу
 		# пересчитает положение — см. `bag_wsl_mint_measured`.
 	}
+	bag_wsl_update_busy = yes
 }
 
 # Месячный шаг правки. Мод меряет, **на сколько он сам снижает инфляцию**, и
@@ -201,6 +240,7 @@ bag_wsl_mint_stand_down = {
 	remove_variable = bag_wsl_mint_phase
 	remove_variable = bag_wsl_mint_repost
 	set_variable = { name = bag_wsl_mint_release value = 1 }
+	bag_wsl_update_busy = yes
 }
 
 # Счётчик сработавших приводов, его показывает окно диагностики.
