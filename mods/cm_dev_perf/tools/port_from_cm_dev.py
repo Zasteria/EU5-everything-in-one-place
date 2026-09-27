@@ -22,6 +22,11 @@ and the stall rescan (cm_perf edit 3 was taken off dev). What dev still lacks:
    also lives in this tree, so the gate is either pass, not only the
    classification.
 
+2. **A probe window** (`tools/probe/`, 2026-09-27): says whether the
+   classification has closed. Open past the first seconds means the tree
+   stands all session and the classification is incomplete, the suspected
+   cause of perf's slow loads and wrong builds. Closed with its cross.
+
 cm_perf's edit 5 (auto-expand verdict cached monthly) is left out on purpose:
 the slot circles live only in the district and production windows, which she
 opens on pause, so they cost nothing while the game runs (her call 2026-09-26).
@@ -40,6 +45,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "tools"))
 import refs  # noqa: E402
 
 MOD = refs.REPO / "mods/cm_dev_perf"
+PROBE = MOD / "tools/probe"
 SRC = refs.mod("romaimperator.construction_manager.dev", "construction_manager_dev")
 
 # cm_perf's generator holds the first-pass widening; reuse it rather than keep
@@ -121,7 +127,7 @@ EDITS = (
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 2
+PERF_REVISION = 3
 
 
 def metadata() -> str:
@@ -154,6 +160,13 @@ def main() -> int:
         if patched == text:
             raise SystemExit(f"{path}: {label} changed nothing")
         target.write_text("﻿" + patched.lstrip("﻿"), encoding="utf-8")
+    # The probe window (09-27) ships beside CM's files; its sources live in
+    # tools/probe/ so this rebuild does not wipe them.
+    for src in PROBE.rglob("*"):
+        if src.is_file():
+            dst = MOD / src.relative_to(PROBE)
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dst)
     (MOD / ".metadata").mkdir(parents=True, exist_ok=True)
     (MOD / ".metadata/metadata.json").write_text("﻿" + metadata(), encoding="utf-8")
     thumb = SRC / ".metadata/thumbnail.png"
