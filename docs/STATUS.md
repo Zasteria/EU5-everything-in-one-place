@@ -1,4 +1,4 @@
-# Where the thirteen mods stand
+﻿# Where the thirteen mods stand
 
 One line each. **Read only the brief of the mod the task is about** —
 `mods/<mod>/CLAUDE.md`.
@@ -13,7 +13,7 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`cm_perf`](../mods/cm_perf/CLAUDE.md) | **потолок скорости снят 09-18, но 09-19 он снял мод: тормозит тем сильнее, чем больше точек авторасширения.** Копия CM. Месячный пульс трогать нельзя — его слово 09-19. Ставится **вместо** CM | правки 3 и 5 |
 | [`cm_dev_perf`](../mods/cm_dev_perf/CLAUDE.md) | 09-26, не в игре. CM Dev + правка 1 `cm_perf` | всё |
 | [`widget_probe`](../mods/widget_probe/CLAUDE.md) | **отладочный. Прогоны 09-19: `PdxGuiDestroyWidget` работает, перечислить детей нечем.** Теперь меряет сам: сколько реальных секунд занял каждый из шести последних игровых месяцев | секундомер месяца, `gui.clearwidgets` |
-| [`war_sliders`](../mods/war_sliders/CLAUDE.md) | **работает, проверено войной 09-17.** Содержание падает на мирное значение при выходе из всех войн, чеканка гасит инфляцию. Настройки — страница в меню CMF | точный последний месяц правки инфляции (09-17, после его прогона) |
+| [`war_sliders`](../mods/war_sliders/CLAUDE.md) | **0.4 ждёт прогона** (0.3 проверена 09-17). После войны опускает содержание и гасит инфляцию чеканкой | мир в тот же день, короткие войны, первый месяц чеканки по прогнозу (09-27) |
 
 Пять закрытых модов вынесены:
 [`archive/status_closed.md`](archive/status_closed.md).

@@ -13,31 +13,46 @@
 bag_wsl_tick = {
 	if = {
 		limit = { at_war = yes }
-		# Война идёт. Запоминаем состояние и отменяем всё, что не доделали:
-		# начавшаяся война отменяет мирную правку целиком.
-		set_variable = { name = bag_wsl_at_war value = 1 }
 		if = {
-			limit = { has_variable = bag_wsl_mint_phase }
-			bag_wsl_mint_stand_down = yes
+			limit = { NOT = { var:bag_wsl_at_war ?= 1 } }
+			bag_wsl_war_started = yes
 		}
-		remove_variable = bag_wsl_army_go
-		remove_variable = bag_wsl_navy_go
-		remove_variable = bag_wsl_fort_go
 	}
 	else_if = {
-		limit = {
-			has_variable = bag_wsl_at_war
-			var:bag_wsl_at_war = 1
-		}
-		# Переключение «война → мир». Единственный момент, когда мод действует.
-		set_variable = { name = bag_wsl_at_war value = 0 }
-		bag_wsl_on_peace = yes
+		limit = { var:bag_wsl_at_war ?= 1 }
+		bag_wsl_war_ended = yes
 	}
 	else_if = {
 		limit = { has_variable = bag_wsl_mint_phase }
 		# Идёт правка инфляции — единственная причина, по которой мод не спит.
 		bag_wsl_mint_check = yes
 	}
+}
+
+# **Переключение ловит привод в тот же день, а такт — только страховка.**
+# Раньше состояние войны писал один месячный такт, и это стоило двух жалоб
+# 2026-09-27: мир ждал до конца месяца, а война, начатая и законченная между
+# двумя тактами, не оставляла следа вовсе — мод не срабатывал. Теперь привод
+# (`bag_wsl_driver.gui`, `GetPlayer.GetDiplomacy.IsAtWar`) зовёт эти два эффекта
+# в кадре, где война началась или кончилась; такт зовёт их же, если привод
+# что-то пропустил (например, на загрузке сохранения).
+# Scope: country
+bag_wsl_war_started = {
+	# Начавшаяся война отменяет мирную правку целиком.
+	set_variable = { name = bag_wsl_at_war value = 1 }
+	if = {
+		limit = { has_variable = bag_wsl_mint_phase }
+		bag_wsl_mint_stand_down = yes
+	}
+	remove_variable = bag_wsl_army_go
+	remove_variable = bag_wsl_navy_go
+	remove_variable = bag_wsl_fort_go
+}
+
+# Scope: country
+bag_wsl_war_ended = {
+	set_variable = { name = bag_wsl_at_war value = 0 }
+	bag_wsl_on_peace = yes
 }
 
 # **Взводится не целевым числом, а единицей.** Ползунок рождает событие только
@@ -82,6 +97,8 @@ bag_wsl_on_peace = {
 		remove_variable = bag_wsl_drain
 		set_variable = { name = bag_wsl_mint_target value = 1 }
 		set_variable = { name = bag_wsl_mint_phase value = 1 }
+		# Привод поставит пол, спросит у игры прогноз на месяц и сразу
+		# пересчитает положение — см. `bag_wsl_mint_measured`.
 	}
 }
 
@@ -119,45 +136,53 @@ bag_wsl_mint_check = {
 		change_variable = { name = bag_wsl_drain subtract = inflation }
 		set_variable = { name = bag_wsl_infl_prev value = inflation }
 
-		if = {
-			limit = {
-				var:bag_wsl_drain > 0
-				var:bag_wsl_rem < var:bag_wsl_drain
-			}
-			# Остатка меньше, чем снимает полный месяц: последний шаг — частичный.
-			set_local_variable = { name = bag_wsl_span value = var:bag_wsl_m0 }
-			change_local_variable = { name = bag_wsl_span subtract = var:bag_wsl_held }
-			set_local_variable = { name = bag_wsl_step value = var:bag_wsl_rem }
-			change_local_variable = { name = bag_wsl_step multiply = local_var:bag_wsl_span }
-			change_local_variable = { name = bag_wsl_step divide = var:bag_wsl_drain }
-			set_local_variable = { name = bag_wsl_aim value = var:bag_wsl_m0 }
-			change_local_variable = { name = bag_wsl_aim subtract = local_var:bag_wsl_step }
-
-			# Выше точки нулевого прироста нельзя — это уже добавляло бы инфляцию;
-			# ниже пола незачем — там и так полный темп.
-			if = {
-				limit = { local_var:bag_wsl_aim > var:bag_wsl_m0 }
-				set_local_variable = { name = bag_wsl_aim value = var:bag_wsl_m0 }
-			}
-			if = {
-				limit = { local_var:bag_wsl_aim < var:bag_wsl_mint_floor }
-				set_local_variable = { name = bag_wsl_aim value = var:bag_wsl_mint_floor }
-			}
-
-			set_variable = { name = bag_wsl_mint_target value = local_var:bag_wsl_aim }
-			set_variable = { name = bag_wsl_mint_repost value = 1 }
-		}
-		else_if = {
-			limit = { NOT = { var:bag_wsl_mint_target = var:bag_wsl_mint_floor } }
-			# Ещё далеко — держим полный темп. Сюда же попадает первый месяц
-			# после частичного шага, если остаток не дотянули.
-			set_variable = { name = bag_wsl_mint_target value = var:bag_wsl_mint_floor }
-			set_variable = { name = bag_wsl_mint_repost value = 1 }
-		}
-
-		# Чем месяц держался — тем и мерится следующий.
-		set_variable = { name = bag_wsl_held value = var:bag_wsl_mint_target }
+		bag_wsl_mint_aim = yes
 	}
+}
+
+# Положение ползунка по остатку `bag_wsl_rem` и темпу `bag_wsl_drain`, снятому
+# при положении `bag_wsl_held`.
+#
+# **Формула одна на любой остаток.** Раньше она работала, только когда остатка
+# меньше, чем снимает месяц, а иначе мод прыгал на пол — и промах частичного
+# шага тоже кидал его на пол, на полный темп. Его жалоба 2026-09-27: «нужно
+# снизить на 0.05 — он снижает на максималку, 0.15». Теперь пол — только упор
+# снизу: формула сама упирается в него, когда остаток больше полного месяца.
+# Scope: country
+bag_wsl_mint_aim = {
+	if = {
+		limit = {
+			var:bag_wsl_drain > 0
+			var:bag_wsl_m0 > var:bag_wsl_held
+		}
+		set_local_variable = { name = bag_wsl_span value = var:bag_wsl_m0 }
+		change_local_variable = { name = bag_wsl_span subtract = var:bag_wsl_held }
+		set_local_variable = { name = bag_wsl_step value = var:bag_wsl_rem }
+		change_local_variable = { name = bag_wsl_step multiply = local_var:bag_wsl_span }
+		change_local_variable = { name = bag_wsl_step divide = var:bag_wsl_drain }
+		set_local_variable = { name = bag_wsl_aim value = var:bag_wsl_m0 }
+		change_local_variable = { name = bag_wsl_aim subtract = local_var:bag_wsl_step }
+
+		# Выше точки нулевого прироста нельзя — это уже добавляло бы инфляцию;
+		# ниже пола незачем — там и так полный темп.
+		if = {
+			limit = { local_var:bag_wsl_aim > var:bag_wsl_m0 }
+			set_local_variable = { name = bag_wsl_aim value = var:bag_wsl_m0 }
+		}
+		if = {
+			limit = { local_var:bag_wsl_aim < var:bag_wsl_mint_floor }
+			set_local_variable = { name = bag_wsl_aim value = var:bag_wsl_mint_floor }
+		}
+		set_variable = { name = bag_wsl_mint_target value = local_var:bag_wsl_aim }
+	}
+	else = {
+		# Темпа нет (игра не ответила, месяц ничего не снял) — держим пол, как
+		# раньше, и меряем следующий месяц.
+		set_variable = { name = bag_wsl_mint_target value = var:bag_wsl_mint_floor }
+	}
+	set_variable = { name = bag_wsl_mint_repost value = 1 }
+	# Чем месяц держался — тем и мерится следующий.
+	set_variable = { name = bag_wsl_held value = var:bag_wsl_mint_target }
 }
 
 # Снять правку: интерфейс увидит `bag_wsl_mint_release` и вернёт галочку
