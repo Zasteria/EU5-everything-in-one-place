@@ -80,7 +80,7 @@ bag_wsl_on_peace = {
 	if = {
 		limit = {
 			has_variable = bag_wsl_mint_on
-			inflation > bag_wsl_inflation_goal
+			inflation > bag_wsl_inflation_stop
 		}
 		# Точка нулевого прироста — там, где ползунок стоит **сейчас**: пока
 		# работала ванильная автоматика, она держала его ровно в ней
@@ -125,7 +125,7 @@ bag_wsl_on_peace = {
 # Scope: country
 bag_wsl_mint_check = {
 	if = {
-		limit = { NOT = { inflation > bag_wsl_inflation_goal } }
+		limit = { NOT = { inflation > bag_wsl_inflation_stop } }
 		bag_wsl_mint_stand_down = yes
 	}
 	else = {
@@ -136,7 +136,16 @@ bag_wsl_mint_check = {
 		change_variable = { name = bag_wsl_drain subtract = inflation }
 		set_variable = { name = bag_wsl_infl_prev value = inflation }
 
-		bag_wsl_mint_aim = yes
+		if = {
+			limit = { NOT = { var:bag_wsl_drain > 0 } }
+			# Месяц не снял ничего — дальше ждать нечего: ползунок и так на
+			# том, что мод считает лучшим. Отдать чеканку автоматике, иначе мод
+			# висит с выключенной галочкой навсегда (прогон 2026-09-27).
+			bag_wsl_mint_stand_down = yes
+		}
+		else = {
+			bag_wsl_mint_aim = yes
+		}
 	}
 }
 
