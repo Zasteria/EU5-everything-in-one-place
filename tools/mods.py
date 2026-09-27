@@ -1010,6 +1010,41 @@ def installed_state(mod: refs.Mod, target: Path) -> str:
     return "отличается"
 
 
+def installed_version(mod: refs.Mod, target: Path) -> str:
+    """The `version` in the game's copy of this mod, "" when there is none."""
+    meta = target / mod.path.name / ".metadata/metadata.json"
+    try:
+        return str(json.loads(meta.read_text(encoding="utf-8-sig")).get("version") or "")
+    except (OSError, ValueError):
+        return ""
+
+
+def version_key(text: str) -> tuple:
+    """"2.3.0+perf2" -> ((2, 3, 0), (2,)): numbers compared as numbers."""
+    main, _, suffix = text.partition("+")
+    return (tuple(int(n) for n in re.findall(r"\d+", main)),
+            tuple(int(n) for n in re.findall(r"\d+", suffix)))
+
+
+def version_note(here_version: str, game_version: str, state: str) -> str:
+    """What the two versions say together — above all, a branch older than the game.
+
+    **He switches branches often** (2026-09-27), so the branch checked out can
+    carry an older build of a mod than the one already in the game. Installing
+    it then is a silent downgrade; this is the one place that sees both.
+    """
+    if not here_version or not game_version:
+        return ""
+    ours, theirs = version_key(here_version), version_key(game_version)
+    if ours < theirs:
+        return "ТУТ СТАРЕЕ"
+    if ours > theirs:
+        return "тут новее"
+    if state == "отличается":
+        return "версию не подняли"
+    return ""
+
+
 def install(mod: refs.Mod, target: Path) -> tuple[int, int]:
     """Replace the game's copy of this mod with the one here."""
     parts, _ = game_files(mod.path)
@@ -1064,13 +1099,25 @@ def screen_install(configured: dict) -> None:
     # repository's `.metadata`, and the one beside it compares the *files* that
     # would be installed, byte for byte. Saying so in the headings is cheaper
     # than saying it again.
-    say("  %-3s %-22s %-10s %-12s %s"
-        % ("#", "мод", "версия тут", "файлы в игре", "что это"))
+    # «в игре» is the version in the game's own copy of `.metadata`; the note
+    # beside it compares the two, so a branch older than the game says so.
+    say("  %-3s %-18s %-13s %-13s %-12s %s"
+        % ("#", "мод", "версия тут", "версия в игре", "файлы в игре", "заметка"))
+    older: set[str] = set()
     for number, mod in enumerate(mods, 1):
         state = installed_state(mod, target)
-        say("  %-3d %-22s %-10s %-12s %s"
-            % (number, mod.path.name, mod.version or "—", state, (mod.name or "")[:34]))
+        in_game = installed_version(mod, target) if state != "нет в игре" else ""
+        note = version_note(mod.version, in_game, state)
+        if note == "ТУТ СТАРЕЕ":
+            older.add(mod.path.name)
+        say("  %-3d %-18s %-13s %-13s %-12s %s"
+            % (number, mod.path.name[:18], (mod.version or "—")[:13],
+               (in_game or "—")[:13], state, note))
     say()
+    if older:
+        say("ТУТ СТАРЕЕ — в этой ветке версия ниже, чем уже стоит в игре.")
+        say("Поставишь — откатишь мод назад. Сначала переключись на нужную ветку.")
+        say()
     say("Enter — поставить все, номера через запятую — только их,")
     answer = ask("«у» + номера — убрать из игры, 0 — назад: ")
     if answer == "0":
@@ -1088,6 +1135,12 @@ def screen_install(configured: dict) -> None:
                 chosen.append(mods[int(part) - 1])
     if not chosen:
         return
+    downgrade = [mod.path.name for mod in chosen if mod.path.name in older]
+    if not remove and downgrade and not yes(
+            "Откатить к старой версии из этой ветки: %s?" % ", ".join(downgrade), default=False):
+        chosen = [mod for mod in chosen if mod.path.name not in older]
+        if not chosen:
+            return
 
     say()
     trouble = False
