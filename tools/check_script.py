@@ -308,8 +308,49 @@ def metadata_problems(root: Path) -> list[str]:
     return found
 
 
+# **Изменил мод — подними `version`** (его просьба 2026-09-27). Он часто меняет
+# ветки, и `mods.bat` → «поставить в игру» сравнивает версию в ветке с той, что
+# стоит в игре: только так видно, что ветка везёт мод старее установленного.
+# Правка без новой версии эту сверку обманывает — две разные сборки под одним
+# номером. Сравнение с `origin/main`: всё, что ветка меняет в файлах, уходящих в
+# игру, должно идти с новым номером.
+GAME_PARTS = (".metadata", "in_game", "main_menu", "loading_screen", "jomini",
+              "gfx", "sound", "music")
+
+
+def version_not_raised(root: Path) -> list[str]:
+    """Файлы мода, уходящие в игру, отличаются от main, а версия та же."""
+    import subprocess
+
+    def git(*args: str) -> subprocess.CompletedProcess:
+        return subprocess.run(["git", "-C", str(REPO), *args],
+                              capture_output=True, text=True, encoding="utf-8")
+
+    where = root.relative_to(REPO).as_posix()
+    meta = f"{where}/.metadata/metadata.json"
+    base = git("show", f"origin/main:{meta}")
+    path = root / ".metadata/metadata.json"
+    if base.returncode != 0 or not path.is_file():
+        return []                       # нового мода в main нет, или нет origin/main
+    parts = [f"{where}/{part}" for part in GAME_PARTS if (root / part).exists()]
+    changed = git("diff", "--name-only", "origin/main", "--", *parts).stdout.split()
+    changed += git("ls-files", "--others", "--exclude-standard", "--", *parts).stdout.split()
+    if not changed:
+        return []
+    try:
+        was = json.loads(base.stdout.lstrip("\ufeff")).get("version")
+        now = json.loads(path.read_text(encoding="utf-8-sig")).get("version")
+    except ValueError:
+        return []
+    if was != now:
+        return []
+    return [f"{meta}: версия {now} та же, что в main, а файлы мода изменены "
+            f"({len(changed)}, например {changed[0]}) — подними `version`, "
+            f"иначе mods.bat не отличит эту сборку от установленной"]
+
+
 def problems(root: Path) -> list[str]:
-    found: list[str] = metadata_problems(root)
+    found: list[str] = metadata_problems(root) + version_not_raised(root)
     for pattern in PARSED:
         for path in sorted(root.rglob(pattern)):
             if not path.is_file() or not set(path.parts) & set(MOUNTS):
