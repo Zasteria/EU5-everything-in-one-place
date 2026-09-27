@@ -31,6 +31,26 @@ widget = {
 	visible = "[EqualTo_CFixedPoint('(CFixedPoint)0', '(CFixedPoint)0')]"
 	position = { -10000 1 }
 
+	# ---- война и мир ---------------------------------------------------------
+	# Переход ловится здесь, в кадре, где он случился: месячный такт давал мир с
+	# опозданием до месяца и не видел войн, начатых и законченных между двумя
+	# тактами (его жалобы 2026-09-27). Такт остаётся страховкой.
+	widget = {
+		size = { 10 10 }
+
+		state = {
+			name = bag_wsl_war_on
+			trigger_when = "[And(GetPlayer.GetDiplomacy.IsAtWar, Not(EqualTo_CFixedPoint(GetPlayer.MakeScope.GetVariable('bag_wsl_at_war').GetValue, '(CFixedPoint)1')))]"
+			on_start = "[GetScriptedGui('bag_wsl_gui_war_started').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+		}
+
+		state = {
+			name = bag_wsl_war_off
+			trigger_when = "[And(Not(GetPlayer.GetDiplomacy.IsAtWar), EqualTo_CFixedPoint(GetPlayer.MakeScope.GetVariable('bag_wsl_at_war').GetValue, '(CFixedPoint)1'))]"
+			on_start = "[GetScriptedGui('bag_wsl_gui_war_ended').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+		}
+	}
+
 	# ---- чеканка -------------------------------------------------------------
 	widget = {
 		size = { 200 20 }
@@ -87,7 +107,18 @@ widget = {
 			state = {
 				name = bag_wsl_mint_set
 				duration = 0.2
+				next = bag_wsl_mint_probe
 				on_finish = "[EconomyView.PostTaxes]"
+			}
+
+			# Шаг третий: ползунок стоит на полу, игра пересчитала прогноз —
+			# отдать его скрипту, и тот сразу поставит ползунок ровно на остаток,
+			# а не держит пол весь первый месяц. Полсекунды — запас на то, чтобы
+			# игра успела пересчитать прогноз после отправки.
+			state = {
+				name = bag_wsl_mint_probe
+				duration = 0.5
+				on_finish = "[GetScriptedGui('bag_wsl_mint_measured').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('bag_wsl_change', MakeScopeValue(EconomyView.GetInflationChange)).End)]"
 			}
 
 			# Правка идёт месяцами, и цель меняется внутри неё: последний месяц

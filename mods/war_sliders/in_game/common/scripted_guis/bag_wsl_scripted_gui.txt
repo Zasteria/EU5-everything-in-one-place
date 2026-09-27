@@ -131,3 +131,58 @@ bag_wsl_clear_mint_repost = {
 		bag_wsl_count_run = yes
 	}
 }
+
+# Привод увидел, что держава вступила в войну или вышла из всех войн, — в том
+# же кадре, а не на месячном такте. Что делать дальше, решают те же эффекты,
+# что и у такта.
+
+# Scope: country
+bag_wsl_gui_war_started = {
+	scope = country
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+	effect = { bag_wsl_war_started = yes }
+}
+
+# Scope: country
+bag_wsl_gui_war_ended = {
+	scope = country
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+	effect = { bag_wsl_war_ended = yes }
+}
+
+# Первый месяц правки — не вслепую. Ползунок уже стоит на полу, и игра сама
+# говорит, сколько инфляции он снимет за месяц (`EconomyView.GetInflationChange`,
+# то же число, что в скобках рядом с инфляцией на панели). Раньше первый месяц
+# всегда шёл на полу, потому что темп был ещё не измерен, и остаток 0.05 при
+# темпе 0.15 проскакивал на полную (его жалоба 2026-09-27).
+#
+# Прогноз приходит через `AddScope` + `MakeScopeValue` — форма
+# `autonomous_diplomats` (`atd_automation_lateralview.gui:882`); без
+# `saved_scopes` скоуп не доходит.
+# Scope: country
+bag_wsl_mint_measured = {
+	scope = country
+	saved_scopes = { bag_wsl_change }
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+	effect = {
+		if = {
+			limit = { has_variable = bag_wsl_mint_phase }
+			if = {
+				limit = { NOT = { inflation > bag_wsl_inflation_goal } }
+				bag_wsl_mint_stand_down = yes
+			}
+			else = {
+				set_variable = { name = bag_wsl_rem value = inflation }
+				change_variable = { name = bag_wsl_rem subtract = bag_wsl_inflation_goal }
+				# Прогноз со знаком: снятие инфляции — минус.
+				set_variable = { name = bag_wsl_drain value = 0 }
+				change_variable = { name = bag_wsl_drain subtract = scope:bag_wsl_change }
+				set_variable = { name = bag_wsl_held value = var:bag_wsl_mint_floor }
+				bag_wsl_mint_aim = yes
+			}
+		}
+	}
+}
