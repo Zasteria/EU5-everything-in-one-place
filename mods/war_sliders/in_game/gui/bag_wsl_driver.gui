@@ -23,44 +23,50 @@
 # комментарий `economy_lateralview.gui:2059` говорит, что упоры, поставленные
 # первыми, сбивают уже взятое значение.
 #
-# **Виджет живёт вне экрана, а не спрятанный.** `visible` всегда истинно, чтобы
-# вложенные ворота пересчитывались каждый кадр; форма списана с
+# **Корень живёт вне экрана, а не спрятанный.** `visible` всегда истинно, чтобы
+# его ворота (`bag_wsl_arm`) пересчитывались; форма списана с
 # `cm_maps/bcm_pf_map_mode_window.gui`.
 widget = {
 	name = "bag_wsl_driver"
 	visible = "[EqualTo_CFixedPoint('(CFixedPoint)0', '(CFixedPoint)0')]"
 	position = { -10000 1 }
 
-	# ---- война и мир ---------------------------------------------------------
-	# Переход ловится здесь, в кадре, где он случился: месячный такт давал мир с
-	# опозданием до месяца и не видел войн, начатых и законченных между двумя
-	# тактами (его жалобы 2026-09-27). Такт остаётся страховкой.
-	widget = {
-		size = { 10 10 }
+	# ---- ворота -------------------------------------------------------------
+	# **В мирное время привод спит.** Его просьба 2026-09-27: «каждый кадр это
+	# дофига». Коробки ниже видимы только под флагом `bag_wsl_busy`, который
+	# скрипт держит, пока есть работа (`bag_wsl_update_busy`); без него за кадр
+	# читается одна переменная, и привязки к панели экономики нет вовсе — а
+	# именно она писала строку в `debug.log` каждый кадр (прогон 09-20).
+	#
+	# **Взвод — через 0.3 с после пробуждения, а не сразу.** Всё внутри ждёт
+	# `bag_wsl_armed`: так каждое условие сначала успевает быть ложным под уже
+	# видимой коробкой, и `_show` / `trigger_when` ловят настоящий переход.
+	# Виджет, ставший видимым вместе с родителем, переход не ловит
+	# (`docs/pitfalls/windows.md`), а строкам датамодели нужен лишний кадр.
+	state = {
+		name = bag_wsl_arm
+		trigger_when = "[And(GetPlayer.MakeScope.GetVariable('bag_wsl_busy').IsSet, Not(GetVariableSystem.Exists('bag_wsl_armed')))]"
+		duration = 0.3
+		on_finish = "[GetVariableSystem.Set('bag_wsl_armed', '1')]"
+	}
 
-		state = {
-			name = bag_wsl_war_on
-			trigger_when = "[And(GetPlayer.GetDiplomacy.IsAtWar, Not(EqualTo_CFixedPoint(GetPlayer.MakeScope.GetVariable('bag_wsl_at_war').GetValue, '(CFixedPoint)1')))]"
-			on_start = "[GetScriptedGui('bag_wsl_gui_war_started').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-		}
-
-		state = {
-			name = bag_wsl_war_off
-			trigger_when = "[And(Not(GetPlayer.GetDiplomacy.IsAtWar), EqualTo_CFixedPoint(GetPlayer.MakeScope.GetVariable('bag_wsl_at_war').GetValue, '(CFixedPoint)1'))]"
-			on_start = "[GetScriptedGui('bag_wsl_gui_war_ended').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-		}
+	state = {
+		name = bag_wsl_disarm
+		trigger_when = "[And(Not(GetPlayer.MakeScope.GetVariable('bag_wsl_busy').IsSet), GetVariableSystem.Exists('bag_wsl_armed'))]"
+		on_start = "[GetVariableSystem.Clear('bag_wsl_armed')]"
 	}
 
 	# ---- чеканка -------------------------------------------------------------
 	widget = {
 		size = { 200 20 }
+		visible = "[GetPlayer.MakeScope.GetVariable('bag_wsl_busy').IsSet]"
 		datacontext = "[GetEconomyView]"
 
 		# Пока идёт правка, ванильная автоматика должна молчать: она держит
 		# месячный прирост в нуле и вернула бы ползунок обратно.
 		state = {
 			name = bag_wsl_mint_auto_off
-			trigger_when = "[And(GetPlayer.MakeScope.GetVariable('bag_wsl_mint_phase').IsSet, GetPlayer.AutoCoinMinting)]"
+			trigger_when = "[And(GetVariableSystem.Exists('bag_wsl_armed'), And(GetPlayer.MakeScope.GetVariable('bag_wsl_mint_phase').IsSet, GetPlayer.AutoCoinMinting))]"
 			on_start = "[ToggleAutoMinting]"
 		}
 
@@ -68,7 +74,7 @@ widget = {
 		# ползунок в точку нулевого прироста, и мод снова засыпает.
 		state = {
 			name = bag_wsl_mint_auto_on
-			trigger_when = "[And(GetPlayer.MakeScope.GetVariable('bag_wsl_mint_release').IsSet, Not(GetPlayer.AutoCoinMinting))]"
+			trigger_when = "[And(GetVariableSystem.Exists('bag_wsl_armed'), And(GetPlayer.MakeScope.GetVariable('bag_wsl_mint_release').IsSet, Not(GetPlayer.AutoCoinMinting)))]"
 			on_start = "[ToggleAutoMinting]"
 			on_start = "[GetScriptedGui('bag_wsl_clear_mint_release').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
 		}
@@ -77,14 +83,14 @@ widget = {
 		# флаг всё равно надо погасить, иначе он останется висеть навсегда.
 		state = {
 			name = bag_wsl_mint_auto_on_noop
-			trigger_when = "[And(GetPlayer.MakeScope.GetVariable('bag_wsl_mint_release').IsSet, GetPlayer.AutoCoinMinting)]"
+			trigger_when = "[And(GetVariableSystem.Exists('bag_wsl_armed'), And(GetPlayer.MakeScope.GetVariable('bag_wsl_mint_release').IsSet, GetPlayer.AutoCoinMinting))]"
 			on_start = "[GetScriptedGui('bag_wsl_clear_mint_release').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
 		}
 
 		widget = {
 			size = { 160 12 }
 			visible_at_creation = no
-			visible = "[GetPlayer.MakeScope.GetVariable('bag_wsl_mint_phase').IsSet]"
+			visible = "[And(GetVariableSystem.Exists('bag_wsl_armed'), GetPlayer.MakeScope.GetVariable('bag_wsl_mint_phase').IsSet)]"
 
 			economy_slider = {
 				size = { 120 10 }
@@ -126,7 +132,7 @@ widget = {
 			# числом едет сам — отправить движку надо отдельно.
 			state = {
 				name = bag_wsl_mint_repost
-				trigger_when = "[GetPlayer.MakeScope.GetVariable('bag_wsl_mint_repost').IsSet]"
+				trigger_when = "[And(GetVariableSystem.Exists('bag_wsl_armed'), GetPlayer.MakeScope.GetVariable('bag_wsl_mint_repost').IsSet)]"
 				duration = 0.2
 				on_finish = "[EconomyView.PostTaxes]"
 				on_finish = "[GetScriptedGui('bag_wsl_clear_mint_repost').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
@@ -140,6 +146,7 @@ widget = {
 	# роняли или ломали окна здесь раньше (`docs/pitfalls/windows.md`).
 	widget = {
 		size = { 200 20 }
+		visible = "[GetPlayer.MakeScope.GetVariable('bag_wsl_busy').IsSet]"
 		datacontext = "[GetEconomyView]"
 
 		vbox = {
@@ -158,7 +165,7 @@ widget = {
 						widget = {
 							size = { 160 12 }
 							visible_at_creation = no
-							visible = "[And(MaintenanceSetting.IsArmy, GetPlayer.MakeScope.GetVariable('bag_wsl_army_go').IsSet)]"
+							visible = "[And(GetVariableSystem.Exists('bag_wsl_armed'), And(MaintenanceSetting.IsArmy, GetPlayer.MakeScope.GetVariable('bag_wsl_army_go').IsSet))]"
 
 							economy_slider = {
 								size = { 120 10 }
@@ -193,7 +200,7 @@ widget = {
 						widget = {
 							size = { 160 12 }
 							visible_at_creation = no
-							visible = "[And(MaintenanceSetting.IsNavy, GetPlayer.MakeScope.GetVariable('bag_wsl_navy_go').IsSet)]"
+							visible = "[And(GetVariableSystem.Exists('bag_wsl_armed'), And(MaintenanceSetting.IsNavy, GetPlayer.MakeScope.GetVariable('bag_wsl_navy_go').IsSet))]"
 
 							economy_slider = {
 								size = { 120 10 }
@@ -228,7 +235,7 @@ widget = {
 						widget = {
 							size = { 160 12 }
 							visible_at_creation = no
-							visible = "[And(MaintenanceSetting.IsFort, GetPlayer.MakeScope.GetVariable('bag_wsl_fort_go').IsSet)]"
+							visible = "[And(GetVariableSystem.Exists('bag_wsl_armed'), And(MaintenanceSetting.IsFort, GetPlayer.MakeScope.GetVariable('bag_wsl_fort_go').IsSet))]"
 
 							economy_slider = {
 								size = { 120 10 }
