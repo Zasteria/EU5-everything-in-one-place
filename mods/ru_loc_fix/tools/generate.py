@@ -211,7 +211,9 @@ def write_custom_loc() -> str | None:
 
 def main() -> int:
     russian, english = locscan.load()
-    flagged = {f.key: f for f in locscan.scan(russian, english, locscan.HARD)}
+    # `dropped_value` is advisory, but a literal that answers it is licensed by
+    # it: each such fix is read against English and the script that uses the key.
+    flagged = {f.key: f for f in locscan.scan(russian, english, locscan.HARD + ("dropped_value",))}
     observed = read_observed(OBSERVED)
     rewrites = read_rewrites(REWRITES)
     expand = read_expand(EXPAND)
