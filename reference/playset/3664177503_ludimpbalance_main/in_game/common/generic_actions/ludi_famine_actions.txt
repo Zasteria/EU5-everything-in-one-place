@@ -1,0 +1,143 @@
+ludi_famine_relieve_province = {
+	icon = send_food_aid
+	type = situation
+
+	ai_tick = never
+	automation_tick = never
+
+	price = price:ludi_famine_relieve_province_price
+
+	potential = {
+		scope:actor ?= {
+			can_see_situation = situation:famine
+		}
+	}
+
+	select_trigger = {
+		looking_for_a = situation
+		target_flag = recipient
+		name = "choose_situation"
+		column = { data = name }
+		visible = {
+			situation:famine = this
+			situation_is_active = yes
+		}
+	}
+
+	select_trigger = {
+		looking_for_a = province
+		source = actor
+		target_flag = target_province
+		name = "ludi_famine_choose_relief_province"
+		none_available_msg_key = "ludi_famine_no_relief_provinces"
+		column = { data = name }
+		column = { data = province_food_percentage }
+		column = { data = province_food }
+		visible = {
+			any_location_in_province = {
+				owner ?= scope:actor
+				has_location_modifier = ludi_famine_modifier
+				NOT = { has_location_modifier = ludi_famine_relief_modifier }
+			}
+		}
+		map_color = {
+			if = {
+				limit = {
+					any_location_in_province = {
+						owner ?= scope:actor
+						has_location_modifier = ludi_famine_modifier
+						NOT = { has_location_modifier = ludi_famine_relief_modifier }
+					}
+				}
+				value = rgb { 65 130 76 }
+			}
+			else = {
+				value = define:NMapColors|DEFAULT_COLOR
+			}
+		}
+	}
+
+	effect = {
+		custom_tooltip = {
+			text = ludi_famine_relieve_province_effect_tt
+			hidden_effect = {
+				scope:target_province ?= {
+					every_location_in_province = {
+						limit = {
+							owner ?= scope:actor
+							has_location_modifier = ludi_famine_modifier
+							NOT = { has_location_modifier = ludi_famine_relief_modifier }
+						}
+						add_location_modifier = {
+							modifier = ludi_famine_relief_modifier
+							years = -1
+							mode = replace
+						}
+					}
+				}
+			}
+		}
+	}
+
+	ai_will_do = {
+		add = 0
+	}
+}
+
+ludi_famine_goods_drive = {
+	icon = send_food_aid
+	type = situation
+
+	ai_tick = never
+	automation_tick = never
+
+	potential = {
+		scope:actor ?= {
+			can_see_situation = situation:famine
+			NOT = { has_country_modifier = ludi_famine_goods_drive_modifier }
+		}
+	}
+
+	select_trigger = {
+		looking_for_a = situation
+		target_flag = recipient
+		name = "choose_situation"
+		column = { data = name }
+		visible = {
+			situation:famine = this
+			situation_is_active = yes
+		}
+	}
+
+	effect = {
+		custom_tooltip = {
+			text = ludi_famine_goods_drive_effect_tt
+			hidden_effect = {
+				scope:actor ?= {
+					add_country_modifier = {
+						modifier = ludi_famine_goods_drive_modifier
+						years = -1
+						mode = add_and_extend
+					}
+					add_country_modifier = {
+						modifier = ludi_famine_goods_drive_cost_modifier
+						years = -1
+						mode = add_and_extend
+						size = {
+							value = 1
+							multiply = {
+								desc = "[income|e] factor"
+								value = this.monthly_income_total
+							}
+							multiply = 0.2
+						}
+					}
+				}
+			}
+		}
+	}
+
+	ai_will_do = {
+		add = 0
+	}
+}

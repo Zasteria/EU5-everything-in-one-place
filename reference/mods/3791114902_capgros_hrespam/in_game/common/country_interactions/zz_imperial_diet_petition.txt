@@ -1,0 +1,283 @@
+﻿# Overrides petition_imperial_diet from imperial_circles.txt.
+REPLACE:petition_imperial_diet = {
+	type = diplomacy
+	category = CATEGORY_HRE_ACTIONS
+	icon = circle_emperor_action
+
+	cooldown = { type = petition_imperial_diet_recent years = 2 }
+	ai_limit_per_check = 1	#one circle leader asks at a time
+
+	show_message = no
+	show_message_to_target = no
+
+	#weighed once a year per circle leader
+	ai_tick = daily
+	ai_tick_frequency = 360
+
+	potential = {
+		scope:actor = {
+			is_imperial_circle_leader = yes
+			is_emperor = no
+		}
+	}
+
+	allow = {
+		scope:actor = {
+			custom_tooltip = {
+				text = imperial_diet_petition_recent_tt
+				NOT = { has_cooldown = petition_imperial_diet_recent }
+			}
+		}
+		international_organization:hre ?= {
+			has_ongoing_parliament_debate = no
+		}
+		international_organization:hre ?= {
+			NOT = { resolution_is_active = resolution:policy_vote }
+		}
+	}
+
+	select_trigger = {
+		looking_for_a = country
+		interaction_source_list = {
+			international_organization:hre = {
+				leader_country ?= {
+					add_to_list = source
+				}
+			}
+		}
+		ai_interaction_source_list = {
+			international_organization:hre = {
+				leader_country ?= {
+					add_to_list = source
+				}
+			}
+		}
+		target_flag = recipient
+		name = "choose_emperor"
+		column = {
+			data = name
+		}
+		visible = {
+			international_organization:hre = { circles_are_active = yes }
+		}
+		enabled = {
+		}
+	}
+
+	select_trigger = {
+		map_mode = international_organization
+		top_widget = law_card_header_at_io_policy_select
+		looking_for_a = international_organization
+		interaction_source_list = {
+			international_organization:hre = {
+				add_to_list = source
+			}
+		}
+		target_flag = io_recipient
+		name = "choose_international_organization"
+		column = {
+			data = name
+		}
+		visible = {
+			this = international_organization:hre
+		}
+		enabled = {
+		}
+	}
+
+	select_trigger = {
+		map_mode = international_organization
+		top_widget = law_card_header_at_io_policy_select
+		looking_for_a = law
+		target_flag = target
+		name = "enact_policy_select_law"
+		none_available_msg_key = "enact_policy_no_laws"
+		column = {
+			data = name
+		}
+		visible = {
+			scope:io_recipient = {
+				law_visible_to_international_organization = root
+			}
+		}
+		enabled = {
+			scope:io_recipient = {
+				not = {
+					law_is_locked_in_international_organization = root
+				}
+				law_enabled_to_international_organization = root
+				#a law the Emperor has put to the Diet is closed to every circle leader
+				custom_tooltip = {
+					text = imperial_diet_petition_law_locked_tt
+					NOT = {
+						is_target_in_variable_list = {
+							name = imperial_diet_petition_law_lock
+							target = root
+						}
+					}
+				}
+			}
+		}
+	}
+
+	#last target - this is what countries will vote on
+	select_trigger = {
+		map_mode = international_organization
+		top_widget = law_card_header_at_io_policy_select
+		looking_for_a = policy
+		source = target
+		target_flag = vote
+		name = "enact_policy_select_policy"
+		none_available_msg_key = "enact_policy_no_policies"
+		column = {
+			data = policy_enacting
+		}
+		visible = {
+			scope:io_recipient = {
+				policy_visible_to_international_organization = root
+			}
+		}
+		enabled = {
+			scope:io_recipient = {
+				policy_enabled_to_international_organization = root
+				#if we're proposing a policy, make sure we can't propose what's already implemented
+				trigger_if = {
+					limit = {
+						exists = scope:recipient
+					}
+					not = { international_organization_has_policy = root }
+					trigger_if = {
+						limit = { exists = price }
+						scope:recipient = { can_pay_price = root.price }
+					}
+				}
+				custom_tooltip = {
+					text = imperial_diet_petition_policy_locked_tt
+					NOT = {
+						is_target_in_variable_list = {
+							name = imperial_diet_petition_policy_lock
+							target = root
+						}
+					}
+				}
+			}
+		}
+		selected = {
+			scope:io_recipient = {
+				international_organization_has_policy = root
+			}
+		}
+	}
+
+	effect = {
+		if = {
+			limit = {
+				exists = scope:vote
+			}
+			scope:recipient = {
+				propose_resolution = {
+					resolution = resolution:policy_vote
+					actor = this
+					recipient = scope:io_recipient
+					target = scope:target
+					vote = scope:vote
+				}
+				#scaled by the petitioner's weight in the Diet
+				change_imperial_authority = { value = imperial_diet_petition_accept_authority }
+			}
+			scope:actor = {
+				hidden_effect = {
+					add_cooldown = {
+						years = 2
+						type = petition_imperial_diet_recent
+					}
+				}
+			}
+			#granting closes the whole law
+			scope:io_recipient = {
+				add_to_variable_list = {
+					name = imperial_diet_petition_law_lock
+					target = scope:target
+					years = 5
+				}
+			}
+		}
+		else = {
+			custom_tooltip = {
+				text = petition_imperial_diet_tt
+			}
+		}
+	}
+
+	reject_effect = {
+		scope:actor = {
+			add_prestige = prestige_weak_penalty
+			add_opinion = {
+				target = scope:recipient
+				modifier = opinion_emperor_rejected_our_petition
+			}
+			hidden_effect = {
+				add_cooldown = {
+					years = 2
+					type = petition_imperial_diet_recent
+				}
+			}
+		}
+		#refusing closes only the policy that was proposed
+		if = {
+			limit = {
+				exists = scope:vote
+			}
+			scope:io_recipient = {
+				add_to_variable_list = {
+					name = imperial_diet_petition_policy_lock
+					target = scope:vote
+					years = 5
+				}
+			}
+		}
+	}
+
+	accept = {
+		subtract = {
+			desc = "DIPLOREASON_BASE"
+			value = 10
+		}
+		if = {
+			limit = {
+				exists = scope:actor
+			}
+			add = {
+				desc = "DIPLOMATIC_REPUTATION"
+				value = scope:actor.modifier:diplomatic_reputation
+				multiply = 3
+			}
+			add = {
+				desc = "THEIR_OPINION"
+				value = "scope:recipient.opinion(scope:actor)"
+				multiply = 0.2
+			}
+		}
+	}
+
+	ai_will_do = {
+		add = {
+			desc = "TARGET_ACCEPTANCE"
+			value = "scope:actor.country_interaction_acceptance(country_interaction:petition_imperial_diet|scope:recipient)"
+		}
+		if = {
+			limit = { scope:recipient = { is_ai = no } }
+			subtract = {
+				desc = "Player annoyance"
+				value = 50
+			}
+		}
+		if = {
+			limit = { scope:actor = { has_cooldown = petition_imperial_diet_recent } }
+			subtract = {
+				desc = "petitioned the Emperor recently"
+				value = 1000
+			}
+		}
+	}
+}

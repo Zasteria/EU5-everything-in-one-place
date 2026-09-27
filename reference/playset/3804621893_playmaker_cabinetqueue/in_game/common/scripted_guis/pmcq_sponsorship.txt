@@ -1,0 +1,41 @@
+﻿pmcq_sponsorship_available = {
+ scope = country
+ is_shown = { root = { modifier:target_of_military_sponsorships = yes } }
+}
+
+pmcq_sponsorship_rank = {
+ scope = country
+ effect = { root = {
+  save_scope_as = actor
+  clear_variable_list = pmcq_sponsorship_ranked
+  set_variable = { name = pmcq_sponsorship_count value = 0 }
+  clear_variable_list = pmcq_sponsorship_candidates
+  every_country_in_diplomatic_range = {
+   limit = {
+    NOT = { this = scope:actor }
+    religion = scope:actor.religion
+    has_limited_diplomacy = no
+    modifier:target_of_military_sponsorships = no
+   }
+   scope:actor = {
+    add_to_variable_list = { name = pmcq_sponsorship_candidates target = prev }
+    change_variable = { name = pmcq_sponsorship_count add = 1 }
+   }
+  }
+  # ordered iterators default to one result. Explicitly include the whole set.
+  if = {
+   limit = { var:pmcq_sponsorship_count > 0 }
+   ordered_in_list = {
+    variable = pmcq_sponsorship_candidates
+    order_by = pmcq_sponsorship_monthly_gold
+    max = scope:actor.var:pmcq_sponsorship_count
+    check_range_bounds = no
+    scope:actor = { add_to_variable_list = { name = pmcq_sponsorship_ranked target = prev } }
+   }
+  }
+  clear_variable_list = pmcq_sponsorship_candidates
+  debug_log = "PMCQ sponsorship ranking rebuilt"
+  save_scope_value_as = { name = sponsorship_candidate_count value = var:pmcq_sponsorship_count }
+  debug_log_scopes = yes
+ } }
+}

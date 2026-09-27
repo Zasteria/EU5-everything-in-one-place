@@ -1,0 +1,43 @@
+﻿pmcqpm_begin = { scope = country effect = { root = {
+ if = { limit = { has_variable = pmcqpm_resume } remove_variable = pmcqpm_resume }
+ else = { clear_variable_list = pmcqpm_pending }
+} } }
+pmcqpm_cancel = { scope = country effect = { root = {
+ clear_variable_list = pmcqpm_pending remove_variable = pmcqpm_resume remove_variable = pmcqpm_reopen
+} } }
+pmcqpm_toggle = { scope = country effect = { root = {
+ save_scope_as = pmcqpm_owner
+ if = { limit = {
+  NOT = { has_variable = pmcq2_running }
+  exists = scope:pmcqpm_target
+  scope:pmcqpm_target = { owner = scope:pmcqpm_owner }
+  NOT = { is_target_in_variable_list = { name = pmcqpm_pending target = scope:pmcqpm_target } }
+  NOT = { is_target_in_variable_list = { name = pmcq_queue target = scope:pmcqpm_target } }
+ } add_to_variable_list = { name = pmcqpm_pending target = scope:pmcqpm_target } }
+} } }
+pmcqpm_selected = { scope = country is_shown = { is_target_in_variable_list = { name = pmcqpm_pending target = scope:pmcqpm_target } } }
+pmcqpm_has_selection = { scope = country is_shown = { has_variable_list = pmcqpm_pending NOT = { has_variable = pmcq2_running } } }
+pmcqpm_confirm = { scope = country effect = { root = {
+ if = { limit = { NOT = { has_variable = pmcq2_running } }
+  save_scope_as = pmcqpm_owner
+  if = { limit = { NOT = { has_variable = pmcq_serial } } set_variable = { name = pmcq_serial value = 0 } }
+  every_in_list = { variable = pmcqpm_pending limit = { owner = scope:pmcqpm_owner }
+   save_scope_as = pmcqpm_target
+   scope:pmcqpm_owner = {
+    if = { limit = { NOT = { is_target_in_variable_list = { name = pmcq_queue target = scope:pmcqpm_target } } }
+     change_variable = { name = pmcq_serial add = 1 }
+     scope:pmcqpm_target = { set_variable = { name = pmcq_order value = scope:pmcqpm_owner.var:pmcq_serial } }
+     add_to_variable_list = { name = pmcq_queue target = scope:pmcqpm_target }
+    }
+   }
+  }
+  clear_variable_list = pmcqpm_pending
+  remove_variable = pmcqpm_resume
+  remove_variable = pmcqpm_reopen
+  if = { limit = { has_variable_list = pmcq_queue }
+   remove_variable = pmcq2_culture_mode
+   pmcq2_start = yes
+  }
+ }
+} } }
+pmcqpm_reopen_consumed = { scope = country effect = { root = { remove_variable = pmcqpm_reopen } } }

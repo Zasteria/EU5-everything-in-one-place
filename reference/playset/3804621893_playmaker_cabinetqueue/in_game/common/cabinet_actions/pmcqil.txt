@@ -1,0 +1,38 @@
+﻿pmcqil_action = {
+ ability = mil
+ icon = mlo_restore_kingdom_lombardy
+ allow_multiple = yes
+ potential = { is_ai = no num_locations > 0 pmcqil_unlocked = yes }
+ allow = {
+  OR = {
+   scope:is_active ?= yes
+   any_province = { pmcqil_region = yes any_location_in_province = { integration_level = conquered } }
+  }
+ }
+ on_activate = {
+  save_scope_as = pmcqi_slot
+  scope:actor = {
+   # Cancel and clean the previous single-member implementation on upgrade.
+   if = { limit = { has_variable = pmcqi_running } pmcqi_stop = yes }
+   save_scope_as = pmcqi_country
+  }
+  pmcqi_slot_clear = yes
+  set_variable = pmcqi_slot_running
+  scope:actor = {
+   if = {
+    limit = { NOT = { has_variable = pmcqi_multi_running } }
+    set_variable = pmcqi_multi_running
+    if = { limit = { NOT = { has_variable = pmcqi_multi_generation } } set_variable = { name = pmcqi_multi_generation value = 0 } }
+    change_variable = { name = pmcqi_multi_generation add = 1 }
+    save_scope_value_as = { name = pmcqi_multi_generation value = var:pmcqi_multi_generation }
+    trigger_event_silently = { on_action = pmcqi_multi_daily days = 1 }
+   }
+  }
+ }
+ on_deactivate = {
+  save_scope_as = pmcqi_slot
+  scope:actor = { save_scope_as = pmcqi_country }
+  pmcqi_slot_clear = yes
+  remove_variable = pmcqi_slot_running
+ }
+}

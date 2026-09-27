@@ -1,0 +1,22 @@
+﻿# Province scope; pmcqs_country is the releasing player country.
+pmcqs_subject_eligible = {
+ owner = scope:pmcqs_country
+ any_location_in_province = {
+  owner = scope:pmcqs_country
+  NOT = { OR = { integration_level = integrated integration_level = core } }
+ }
+ NOT = { any_location_in_province = { integration_level = colonized } }
+ NOT = { any_location_in_province = { is_capital = yes } }
+ save_temporary_scope_as = pmcqs_available_province
+ subject_type:vassal = {
+  subject_can_be_created_by = { country = scope:pmcqs_country where = scope:pmcqs_available_province }
+ }
+}
+# Extend the new subject at any actual land border, allowing chains of provinces.
+pmcqs_subject_partner = {
+ pmcqs_subject_eligible = yes
+ any_location_in_province = {
+  owner = scope:pmcqs_country
+  any_neighbor_location = { owner = scope:pmcqs_new_subject }
+ }
+}

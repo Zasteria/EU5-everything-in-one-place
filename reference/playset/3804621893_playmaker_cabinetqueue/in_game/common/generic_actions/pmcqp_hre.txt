@@ -1,0 +1,66 @@
+﻿pmcqp_add_hre_locations = {
+ type = owncountry
+ ai_tick = never
+ automation_tick = never
+ show_message = no
+ potential = { scope:actor = { is_ai = no } }
+ allow = {
+  exists = international_organization:hre
+  international_organization:hre = {
+   international_organization_can_own_land = yes
+  }
+  scope:actor = {
+   is_member_of_international_organization = international_organization:hre
+   any_owned_location = { pmcqp_hre_location_eligible = yes }
+  }
+ }
+ effect = {
+  if = {
+   limit = {
+    exists = international_organization:hre
+    scope:actor = { is_member_of_international_organization = international_organization:hre }
+    international_organization:hre = {
+     international_organization_can_own_land = yes
+      }
+   }
+   scope:actor = {
+    # Repeat after expanding the border so iteration order cannot strand
+    # locations that become eligible when their neighbors join.
+    set_variable = pmcqp_hre_added
+    while = {
+     limit = { has_variable = pmcqp_hre_added }
+     remove_variable = pmcqp_hre_added
+     every_owned_location = {
+      if = {
+       limit = { pmcqp_hre_location_eligible = yes }
+       international_organization:hre = { add_location_to_international_organization = prev }
+       # Only repeat if the engine actually added the location.
+       if = {
+        limit = { is_owned_by_international_organization = international_organization:hre }
+        scope:actor = { set_variable = pmcqp_hre_added }
+       }
+      }
+     }
+    }
+    remove_variable = pmcqp_hre_added
+   }
+  }
+ }
+}
+
+pmcqp_dismantle_hre = {
+ type = owncountry
+ ai_tick = never
+ automation_tick = never
+ show_message = no
+ potential = { scope:actor = { is_ai = no } }
+ allow = { exists = international_organization:hre }
+ effect = {
+  scope:actor = {
+   if = {
+    limit = { exists = international_organization:hre }
+    destroy_international_organization = { target = international_organization:hre }
+   }
+  }
+ }
+}

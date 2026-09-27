@@ -1,0 +1,77 @@
+﻿monthly_country_pulse = {
+	on_actions = {
+		imd_cache_monthly_hook
+		imd_circle_aid_fatigue_hook
+	}
+}
+
+imd_circle_aid_fatigue_hook = {
+	trigger = {
+		has_variable = imd_circle_aid_fatigue
+		var:imd_circle_aid_fatigue > 0
+	}
+
+	effect = {
+		change_variable = {
+			name = imd_circle_aid_fatigue
+			subtract = imperial_circle_aid_fatigue_decay_monthly
+		}
+		if = {
+			limit = { var:imd_circle_aid_fatigue < 0 }
+			set_variable = {
+				name = imd_circle_aid_fatigue
+				value = 0
+			}
+		}
+	}
+}
+
+imd_cache_monthly_hook = {
+	#gated to the Emperor so the walk runs once, not once per member
+	trigger = {
+		is_ai = no
+		is_leader_of_international_organization = international_organization:hre
+		international_organization:hre ?= { circles_are_active = yes }
+	}
+
+	effect = {
+		imd_cache_eligible_votes = yes
+		#first run of the campaign fills every group, then falls into the rotation
+		if = {
+			limit = {
+				international_organization:hre ?= { NOT = { has_variable = imd_cache_group } }
+			}
+			imd_cache_group_0 = yes
+			imd_cache_group_1 = yes
+			imd_cache_group_2 = yes
+			imd_cache_group_3 = yes
+			international_organization:hre ?= {
+				set_variable = { name = imd_cache_group value = 0 }
+			}
+		}
+		else = {
+			international_organization:hre ?= {
+				change_variable = { name = imd_cache_group add = 1 }
+				if = {
+					limit = { var:imd_cache_group > 3 }
+					set_variable = { name = imd_cache_group value = 0 }
+				}
+			}
+			if = {
+				limit = { international_organization:hre.var:imd_cache_group = 0 }
+				imd_cache_group_0 = yes
+			}
+			else_if = {
+				limit = { international_organization:hre.var:imd_cache_group = 1 }
+				imd_cache_group_1 = yes
+			}
+			else_if = {
+				limit = { international_organization:hre.var:imd_cache_group = 2 }
+				imd_cache_group_2 = yes
+			}
+			else = {
+				imd_cache_group_3 = yes
+			}
+		}
+	}
+}

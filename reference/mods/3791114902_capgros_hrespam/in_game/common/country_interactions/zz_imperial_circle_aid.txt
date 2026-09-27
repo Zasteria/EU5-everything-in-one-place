@@ -1,0 +1,230 @@
+﻿REPLACE:appeal_to_circle_diet = {
+	type = diplomacy
+	category = CATEGORY_HRE_ACTIONS
+	icon = circle_leader_action
+
+	cooldown = { type = appeal_to_circle_diet_recent years = 5 }
+	ai_limit_per_check = 1
+
+	ai_tick = daily
+	ai_tick_frequency = 360
+
+	ai_prerequisite = {
+		is_member_of_international_organization = international_organization:hre
+		is_imperial_circle_leader = no
+		is_emperor = no
+		NOT = { has_cooldown = appeal_to_circle_diet_recent }
+		gold < imperial_circle_aid_max_reserve
+	}
+
+	potential = {
+		scope:actor = {
+			is_member_of_international_organization = international_organization:hre
+			is_imperial_circle_leader = no
+			is_emperor = no
+			monthly_income_trade_and_tax > 0
+			any_imperial_circle_country_is_member_of = {
+				has_circle_leader = yes
+				circle_leader ?= {
+					custom_tooltip = {
+						text = appeal_to_circle_diet_timeout_tt
+						NOT = {
+							has_variable = appeal_to_circle_diet_timeout
+						}
+					}
+				}
+			}
+		}
+	}
+
+	allow = {
+		scope:actor = {
+			custom_tooltip = {
+				text = imperial_circle_aid_recent_tt
+				NOT = { has_cooldown = appeal_to_circle_diet_recent }
+			}
+			custom_tooltip = {
+				text = imperial_circle_aid_reserves_tt
+				gold < imperial_circle_aid_max_reserve
+			}
+		}
+	}
+
+	select_trigger = {
+		looking_for_a = country
+		interaction_source_list = {
+			international_organization:hre = {
+				every_international_organization_member = {
+					limit = { is_imperial_circle_leader = yes }
+					add_to_list = source
+				}
+			}
+		}
+		ai_interaction_source_list = {
+			international_organization:hre = {
+				every_international_organization_member = {
+					limit = { is_imperial_circle_leader = yes }
+					add_to_list = source
+				}
+			}
+		}
+		target_flag = recipient
+		name = "choose_circle_leader"
+		column = {
+			data = name
+		}
+		visible = {
+			is_imperial_circle_leader = yes
+			in_same_imperial_circle = scope:actor
+		}
+		enabled = {
+			custom_tooltip = {
+				text = imperial_circle_aid_funds_tt
+				gold >= imperial_circle_aid_amount
+			}
+		}
+	}
+
+	effect = {
+		scope:actor = {
+			save_temporary_scope_value_as = {
+				name = imd_aid_sum
+				value = imperial_circle_aid_amount
+			}
+			add_government_power = government_power_mild_bonus
+			hidden_effect = {
+				add_cooldown = {
+					type = appeal_to_circle_diet_recent
+					years = 5
+				}
+			}
+		}
+		scope:recipient = {
+			imd_grant_circle_aid = {
+				target = scope:actor
+				value = scope:imd_aid_sum
+			}
+			set_variable = {
+				name = appeal_to_circle_diet_timeout
+				years = 1
+			}
+			hidden_effect = {
+				if = {
+					limit = { NOT = { has_variable = imd_circle_aid_fatigue } }
+					set_variable = {
+						name = imd_circle_aid_fatigue
+						value = 0
+					}
+				}
+				change_variable = {
+					name = imd_circle_aid_fatigue
+					add = imperial_circle_aid_fatigue_per_grant
+				}
+			}
+		}
+	}
+
+	reject_effect = {
+		scope:actor = {
+			hidden_effect = {
+				add_cooldown = {
+					type = appeal_to_circle_diet_recent
+					years = 5
+				}
+			}
+		}
+		scope:recipient = {
+			every_imperial_circle_country_is_member_of = {
+				add_circle_satisfaction = -1
+			}
+			set_variable = {
+				name = appeal_to_circle_diet_timeout
+				years = 1
+			}
+		}
+	}
+
+	accept = {
+		add = hre_circle_opinion_check
+		if = {
+			limit = {
+				exists = scope:actor
+			}
+			add = {
+				desc = "DIPLOMATIC_REPUTATION"
+				value = scope:actor.modifier:diplomatic_reputation
+				multiply = 2
+			}
+			add = {
+				desc = "THEIR_OPINION"
+				value = "scope:recipient.opinion(scope:actor)"
+				multiply = 0.3
+			}
+		}
+	}
+
+	ai_will_do = {
+		add = {
+			desc = "ACTOR_ACCEPTANCE"
+			value = "scope:actor.country_interaction_acceptance(country_interaction:appeal_to_circle_diet|scope:recipient)"
+		}
+		if = {
+			limit = { scope:recipient = { is_ai = no } }
+			subtract = {
+				desc = "Player annoyance"
+				value = 75
+			}
+		}
+		if = {
+			limit = { scope:actor = { has_cooldown = appeal_to_circle_diet_recent } }
+			subtract = {
+				desc = "appealed to the circle recently"
+				value = 1000
+			}
+		}
+
+		if = {
+			limit = { scope:actor = { monthly_balance < 0 } }
+			add = {
+				desc = "imperial_circle_aid_need_deficit"
+				value = 25
+			}
+		}
+		if = {
+			limit = { scope:actor = { is_during_bankruptcy = yes } }
+			add = {
+				desc = "imperial_circle_aid_need_bankrupt"
+				value = 30
+			}
+		}
+		add = {
+			desc = "imperial_circle_aid_need_loans"
+			value = imperial_circle_aid_need_from_loans
+		}
+		if = {
+			limit = { scope:actor = { at_war = yes } }
+			add = {
+				desc = "imperial_circle_aid_need_war"
+				value = 15
+			}
+		}
+		if = {
+			limit = {
+				scope:actor = {
+					any_imperial_circle_country_is_member_of = {
+						imperial_circle_satisfaction < 40
+					}
+				}
+			}
+			add = {
+				desc = "imperial_circle_aid_need_satisfaction"
+				value = 10
+			}
+		}
+
+		subtract = {
+			desc = "imperial_circle_aid_fatigue"
+			value = imperial_circle_aid_fatigue_penalty
+		}
+	}
+}

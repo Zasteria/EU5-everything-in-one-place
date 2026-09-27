@@ -1,0 +1,40 @@
+monthly_country_pulse = {
+	on_actions = {
+		pm_migration_on_actions
+	}
+}
+
+pm_migration_on_actions = {
+	trigger = {
+		is_ai = no
+		NOT = { has_variable = pm_migrated_1_6_0 }
+	}
+	effect = {
+		set_variable = { name = pm_migrated_1_6_0 value = 1 }
+		save_scope_as = pm_owner
+		clear_variable_list = pm_ab_locations
+		clear_variable_list = pm_ab_trigger
+		every_owned_location = {
+			limit = { has_variable = pm_auto_build }
+			pm_precompute_best_building = yes
+			ROOT = {
+				add_to_variable_list = {
+					name = pm_ab_locations
+					target = prev
+				}
+			}
+		}
+		if = {
+			limit = {
+				any_in_list = {
+					variable = pm_ab_locations
+					always = yes
+				}
+			}
+			add_to_variable_list = {
+				name = pm_ab_trigger
+				target = this
+			}
+		}
+	}
+}

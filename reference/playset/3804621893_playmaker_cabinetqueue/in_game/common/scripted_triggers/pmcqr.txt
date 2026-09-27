@@ -1,0 +1,21 @@
+﻿# Country scope = queue target; pmcqr_owner = sending country.
+# Use engine-calculated completion, which includes bonuses and subject caps.
+pmcqr_finished = {
+ OR = {
+  AND = {
+   scope:pmcqr_owner = { NOT = { has_variable = pmcqr_ignore_total } }
+   opinion = { target = scope:pmcqr_owner value >= define:NDiplomacy|OPINION_MAX }
+  }
+  scope:pmcqr_owner = { is_target_in_variable_list = { name = pmcqr_capped target = prev } }
+  scope:pmcqr_owner = { is_key_in_variable_map = { name = pmcqr_cap_done target = prev } }
+  scope:pmcqr_owner = { is_key_in_variable_map = { name = pmcqr_retired target = prev } }
+ }
+}
+pmcqr_eligible = {
+ exists = this
+ num_locations > 0
+ NOT = { this = scope:pmcqr_owner }
+ is_discovered_by = scope:pmcqr_owner
+ NOT = { is_at_war_with = scope:pmcqr_owner }
+ NOT = { pmcqr_finished = yes }
+}

@@ -1,0 +1,177 @@
+﻿# Overrides request_circle_privilege from imperial_circles.txt.
+REPLACE:request_circle_privilege = {
+	type = diplomacy
+	category = CATEGORY_HRE_ACTIONS
+	icon = circle_emperor_action
+
+	cooldown = { type = request_circle_privilege years = 10 }
+	ai_limit_per_check = 1	#one circle leader asks at a time
+
+	#weighed once a year per circle leader
+	ai_tick = daily
+	ai_tick_frequency = 360
+
+	#actor-side fast exit for the AI; allow is the real gate
+	ai_prerequisite = {
+		is_imperial_circle_leader = yes
+		NOT = { has_cooldown = request_circle_privilege }
+		NOT = { has_country_modifier = granted_circle_privilege }
+	}
+
+	potential = {
+		scope:actor = { is_imperial_circle_leader = yes }
+	}
+
+	allow = {
+		scope:actor = {
+			custom_tooltip = {
+				text = imperial_circle_privilege_recent_tt
+				NOT = { has_cooldown = request_circle_privilege }
+			}
+			#the circle already holds the privilege
+			custom_tooltip = {
+				text = imperial_circle_privilege_active_tt
+				NOT = { has_country_modifier = granted_circle_privilege }
+			}
+		}
+		international_organization:hre ?= {
+			leader_country ?= {
+				#the Emperor's opinion of the petitioner, not the reverse
+				custom_tooltip = {
+					text = imperial_circle_privilege_opinion_tt
+					opinion = {
+						target = scope:actor
+						value >= imperial_circle_privilege_min_opinion
+					}
+				}
+			}
+		}
+	}
+
+	select_trigger = {
+		looking_for_a = country
+		interaction_source_list = {
+			international_organization:hre = {
+				leader_country ?= {
+					add_to_list = source
+				}
+			}
+		}
+		ai_interaction_source_list = {
+			international_organization:hre = {
+				leader_country ?= {
+					add_to_list = source
+				}
+			}
+		}
+		target_flag = recipient
+		name = "choose_emperor"
+		column = {
+			data = name
+		}
+		visible = {
+			international_organization:hre = { circles_are_active = yes }
+		}
+		enabled = {
+			international_organization:hre = { international_organization_has_leader = yes }
+		}
+	}
+
+	effect = {
+		scope:actor = {
+			add_prestige = prestige_mild_bonus
+			every_imperial_circle_country_is_member_of = {
+				add_circle_satisfaction = 2
+				custom_tooltip = {
+					text = request_circle_privilege_members_tt
+					every_circle_member = {
+						add_country_modifier = {
+							modifier = granted_circle_privilege
+							years = 5
+						}
+					}
+				}
+			}
+			hidden_effect = {
+				add_cooldown = {
+					type = request_circle_privilege
+					years = 10
+				}
+			}
+		}
+	}
+
+	reject_effect = {
+		scope:actor = {
+			add_prestige = prestige_mild_penalty
+			every_imperial_circle_country_is_member_of = {
+				add_circle_satisfaction = -1
+			}
+			#refusing costs the same wait as a grant
+			hidden_effect = {
+				add_cooldown = {
+					type = request_circle_privilege
+					years = 10
+				}
+			}
+		}
+	}
+
+	accept = {
+		subtract = {
+			desc = "DIPLOREASON_BASE"
+			value = 10
+		}
+		if = {
+			limit = {
+				exists = scope:actor
+			}
+			add = {
+				desc = "DIPLOMATIC_REPUTATION"
+				value = scope:actor.modifier:diplomatic_reputation
+				multiply = 3
+			}
+			add = {
+				desc = "THEIR_OPINION"
+				value = "scope:recipient.opinion(scope:actor)"
+				multiply = 0.2
+			}
+		}
+		add = hre_circle_opinion_check
+	}
+
+	ai_will_do = {
+		add = {
+			desc = "TARGET_ACCEPTANCE"
+			value = "scope:actor.country_interaction_acceptance(country_interaction:request_circle_privilege|scope:recipient)"
+		}
+		if = {
+			limit = { scope:recipient = { is_ai = no } }
+			subtract = {
+				desc = "Player annoyance"
+				value = 75
+			}
+		}
+		#a discontented circle is a reason to ask
+		add = {
+			desc = "CIRCLE_LOW_SATISFACTION_GRIEVANCE"
+			if = {
+				limit = {
+					scope:actor = {
+						any_imperial_circle_country_is_member_of = {
+							imperial_circle_satisfaction < 40
+						}
+					}
+				}
+				value = 15
+			}
+		}
+		if = {
+			limit = { scope:actor = { has_cooldown = request_circle_privilege } }
+			subtract = {
+				desc = "emperor already answered"
+				value = 1000
+			}
+		}
+	}
+}

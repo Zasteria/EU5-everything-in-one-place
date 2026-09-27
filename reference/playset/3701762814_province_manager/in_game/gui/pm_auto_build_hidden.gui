@@ -1,0 +1,81 @@
+### Hidden widget for monthly auto-build GUI bridge.
+### Monthly script builds from LAST month's pm_best_bt, then precomputes for next month.
+### This widget handles ALL building income comparison via trigger_on_create
+### (income has no script trigger — all sorting done here via GetBuildingTypeIncomeToOwnerInLocation).
+### No timers, no construct step — construction is done in script (on_action).
+
+widget = {
+	name = "pm_auto_build_bg"
+	layer = top
+	visible = "[GetPlayer.Exists]"
+	size = { 1 1 }
+	position = { 0 0 }
+	alwaystransparent = yes
+	alpha = 0
+
+	### Trigger datamodel: 1 entry when monthly tick fires. Cleared next month.
+	fixedgridbox = {
+		addcolumn = 1
+		addrow = 1
+		datamodel = "[GetPlayer.MakeScope.GetList('pm_ab_trigger')]"
+		item = {
+			widget = {
+				size = { 1 1 }
+
+				### Iterate locations → new buildings for GUI bridge comparison.
+				### trigger_on_create fires for each new building item,
+				### calling pm_sgui_compare_new_profit to update pm_best_bt.
+				### No timer needed — results used NEXT month.
+				### Step 1: Compare new buildings profit (and save cost for new winners)
+				fixedgridbox = {
+					addcolumn = 1
+					addrow = 1
+					datamodel = "[GetPlayer.MakeScope.GetList('pm_ab_locations')]"
+					item = {
+						widget = {
+							size = { 1 1 }
+							datacontext = "[Scope.Location]"
+							fixedgridbox = {
+								addcolumn = 1
+								addrow = 1
+								datamodel = "[Location.MakeScope.GetList('pm_new_buildings')]"
+								item = {
+									widget = {
+										size = { 1 1 }
+										### Labor filter: skip buildings where location lacks pops of the required type.
+										### Toggle via pm_ab_labor_check variable (settings dialog).
+										### pm_ab_labor_check EXISTS = filter ON, NOT EXISTS (default) = filter OFF.
+										visible = "[Or(Not(GetVariableSystem.Exists('pm_ab_labor_check')), Not(HasLackingPopsFromBuildingType(Scope.BuildingType, Location.Self)))]"
+										state = {
+											name = pm_ab_compare_new
+											trigger_on_create = yes
+											on_finish = "[GetScriptedGui('pm_sgui_compare_new_profit').Execute(GuiScope.SetRoot(Location.MakeScope).AddScope('bt', Scope.BuildingType.MakeScope).AddScope('profit', MakeScopeValue(GetBuildingTypeIncomeToOwnerInLocation(Scope.BuildingType, Location.Self))).AddScope('cost', MakeScopeValue(GetBuildOrExpandBuildingCost(Scope.BuildingType, Location.Self))).End)]"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+				### Step 2: Sync cost for the final winning pm_best_bt (covers existing buildings too)
+				fixedgridbox = {
+					addcolumn = 1
+					addrow = 1
+					datamodel = "[GetPlayer.MakeScope.GetList('pm_ab_locations')]"
+					item = {
+						widget = {
+							size = { 1 1 }
+							datacontext = "[Scope.Location]"
+							state = {
+								name = pm_ab_sync_cost
+								trigger_on_create = yes
+								on_finish = "[GetScriptedGui('pm_sgui_sync_cost').Execute(GuiScope.SetRoot(Location.MakeScope).AddScope('cost', MakeScopeValue(GetBuildOrExpandBuildingCost(Location.MakeScope.Var('pm_best_bt').BuildingType, Location.Self))).End)]"
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

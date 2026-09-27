@@ -1,0 +1,80 @@
+﻿pmcqrm_begin = { scope = country effect = { root = {
+ if = { limit = { has_variable = pmcqrm_resume }
+  remove_variable = pmcqrm_resume
+  debug_log = "PMCQRM|batch_resumed"
+ }
+ else = { clear_variable_list = pmcqrm_pending }
+ remove_variable = pmcqrm_last_map
+} } }
+
+pmcqrm_toggle = {
+ scope = country
+ effect = { root = {
+  if = { limit = {
+   exists = scope:pmcqrm_target
+   NOT = { is_target_in_variable_list = { name = pmcqrm_pending target = scope:pmcqrm_target } }
+   NOT = { is_target_in_variable_list = { name = pmcqr_queue target = scope:pmcqrm_target } }
+  } add_to_variable_list = { name = pmcqrm_pending target = scope:pmcqrm_target } }
+ } }
+}
+pmcqrm_selected = { scope = country is_shown = { is_target_in_variable_list = { name = pmcqrm_pending target = scope:pmcqrm_target } } }
+pmcqrm_has_selection = { scope = country is_shown = { has_variable_list = pmcqrm_pending } }
+pmcqrm_confirm = {
+ scope = country
+ effect = { root = {
+  pmcqr_init = yes
+  save_scope_as = pmcqrm_owner
+  every_in_list = {
+   variable = pmcqrm_pending
+   limit = { num_locations > 0 NOT = { this = scope:pmcqrm_owner } is_discovered_by = scope:pmcqrm_owner }
+   save_scope_as = pmcqr_target
+   scope:pmcqrm_owner = {
+    if = { limit = {
+     NOT = { is_target_in_variable_list = { name = pmcqr_queue target = scope:pmcqr_target } }
+    }
+     # An explicit confirmed re-add starts a fresh attempt for this nation.
+     remove_from_variable_map = { name = pmcqr_retired key = scope:pmcqr_target }
+     remove_from_variable_map = { name = pmcqr_done key = scope:pmcqr_target }
+     remove_from_variable_map = { name = pmcqr_cap_done key = scope:pmcqr_target }
+     remove_from_variable_map = { name = pmcqr_retry key = scope:pmcqr_target }
+     change_variable = { name = pmcqr_serial add = 1 }
+     add_to_variable_list = { name = pmcqr_queue target = scope:pmcqr_target }
+     add_to_variable_map = { name = pmcqr_order key = scope:pmcqr_target value = var:pmcqr_serial }
+    }
+   }
+  }
+  clear_variable_list = pmcqrm_pending
+  pmcqr_recount = yes
+  if = { limit = { is_ai = no has_variable_list = pmcqr_queue }
+   set_variable = pmcqr_running
+  }
+  pmcqr_wake = yes
+ } }
+}
+
+pmcqrm_map_changed = {
+ scope = country
+ is_shown = {
+  exists = scope:pmcqrm_target
+  OR = { NOT = { has_variable = pmcqrm_last_map } NOT = { var:pmcqrm_last_map = scope:pmcqrm_target } }
+ }
+}
+pmcqrm_capture_map = {
+ scope = country
+ effect = { root = {
+  if = { limit = { exists = scope:pmcqrm_target }
+   set_variable = { name = pmcqrm_last_map value = scope:pmcqrm_target }
+   if = { limit = {
+    NOT = { is_target_in_variable_list = { name = pmcqrm_pending target = scope:pmcqrm_target } }
+    NOT = { is_target_in_variable_list = { name = pmcqr_queue target = scope:pmcqrm_target } }
+   } add_to_variable_list = { name = pmcqrm_pending target = scope:pmcqrm_target }
+    debug_log = "PMCQRM|map_target_staged"
+   }
+  }
+ } }
+}
+
+pmcqrm_reopen_consumed = { scope = country effect = { root = {
+ remove_variable = pmcqrm_reopen
+ debug_log = "PMCQRM|reopening_picker"
+} } }

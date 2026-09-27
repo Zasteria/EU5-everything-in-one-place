@@ -1,0 +1,35 @@
+Diplo Boost - peace footer and cabinet scaling
+
+The peace footer has a separate Diplo boost / Diplo ON button to the right of
+Send Demand (also visible for Send Offer). The original panel shortcut remains.
+The native peace button, its acceptance checks and hold confirmation are intact.
+
+The target is one Diplomatic Endeavors action with the best currently assigned,
+living cabinet member. Active slots use 1 + native effective_skill, replacing
+the current action's ADM or MIL contribution with DIP when necessary, using
+define:NCountry|CABINET_ACTION_SKILL_MODIFIER (0.005 in this installation).
+Idle assigned members use 1 + DIP * that factor + country and character cabinet
+efficiency. Scales are clamped to zero; the highest is selected.
+
+Diplomatic Endeavors has base reputation 2 (diplomatic_reputation_mild_bonus)
+and improve_relation_impact 0.25. Each is scaled by the selected multiplier.
+Existing Diplomatic Endeavors, Bironovshchina and Posolsky reputation is deducted
+using their native effective_skill. Only Diplomatic Endeavors supplies the
+relations bonus, so only that action is deducted from relations impact.
+Each boost component is capped below at zero; stronger existing bonuses remain.
+No assigned members means no cabinet bonus. The spending top-up still applies.
+
+The spending contribution remains 3 * (1 - diplomatic_maintenance), clamped to
+the existing 0-1 range. Refresh happens daily and on re-click. Repeated clicks
+do not stack or start extra timers. Expiry remains the first daily callback of
+the next calendar month. Stop/expiry removes both cabinet modifiers.
+
+Validation: balanced script/GUI blocks, documented scope/operation names,
+installed define and base modifier values, preserved native peace widget,
+and arithmetic cases for no overlap, partial overlap, stronger reputation-only
+variants, and no member. No in-game execution was performed.
+
+Runtime checks needed: compare both bonuses against a real Diplomatic Endeavors
+assignment of the selected member, especially with efficiency traits and idle
+slots; click beside an unacceptable peace offer; verify the acceptance display
+refreshes after boosting; confirm next-month removal of both modifiers.

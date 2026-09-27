@@ -1,0 +1,24 @@
+pm_remaining_build_capacity = {
+	# Building scope: returns max_level - level - under_construction
+	# If <= 0, building is effectively full (no room to expand)
+	value = building_max_level
+	subtract = building_level
+	subtract = building_levels_under_construction
+}
+
+pm_ab_min_gold_with_spent = {
+	# Location scope: minimum gold needed = cost + gold_limit + already_spent_this_tick
+	# gold trigger doesn't update mid-iteration, so we track spending manually
+	value = var:pm_best_cost
+	if = {
+		limit = { owner = { has_variable = pm_gold_limit } }
+		add = owner.var:pm_gold_limit
+	}
+	if = {
+		limit = { owner = { has_variable = pm_ab_spent } }
+		add = owner.var:pm_ab_spent
+	}
+}
+
+# pm_building_profit_value removed — income has no script trigger,
+# all comparison now done via GUI bridge (GetBuildingTypeIncomeToOwnerInLocation)

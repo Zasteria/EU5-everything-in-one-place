@@ -1,0 +1,94 @@
+﻿pmcqd_clear = {
+ remove_country_modifier = pmcqd_cabinet_bonus
+ remove_country_modifier = pmcqd_relations_bonus
+ remove_country_modifier = pmcqd_slider_bonus
+}
+pmcqd_refresh = {
+ pmcqd_clear = yes
+ save_scope_as = pmcqd_owner
+ set_variable = { name = pmcqd_best_scale value = 0 }
+ set_variable = { name = pmcqd_existing_reputation value = 0 }
+ set_variable = { name = pmcqd_existing_relations value = 0 }
+ # Only currently assigned members; no hiring or cabinet reassignment.
+ every_cabinet = {
+  limit = { exists = cabinet_member cabinet_member = { is_alive = yes } }
+  if = { limit = { has_cabinet_action = yes }
+   save_scope_value_as = { name = pmcqd_candidate_scale value = pmcqd_cabinet_diplomatic_scale }
+  }
+  else = {
+   cabinet_member = { save_scope_value_as = { name = pmcqd_candidate_scale value = pmcqd_diplomatic_scale } }
+  }
+  scope:pmcqd_owner = {
+   change_variable = { name = pmcqd_best_scale max = scope:pmcqd_candidate_scale }
+  }
+ }
+ # effective_skill is the native increase, so add 1 for the full scale.
+ every_cabinet = {
+  limit = { has_cabinet_action = yes exists = cabinet_member }
+  if = { limit = { OR = {
+   cabinet_action = cabinet_action:diplomatic_endeavors
+   cabinet_action = cabinet_action:bironovshchina
+   cabinet_action = cabinet_action:posolsky
+  } }
+   save_scope_value_as = { name = pmcqd_native_scale value = { value = 1 add = effective_skill min = 0 } }
+   scope:pmcqd_owner = {
+    change_variable = { name = pmcqd_existing_reputation add = scope:pmcqd_native_scale }
+   }
+   if = { limit = { cabinet_action = cabinet_action:diplomatic_endeavors }
+    scope:pmcqd_owner = {
+     change_variable = { name = pmcqd_existing_relations add = scope:pmcqd_native_scale }
+    }
+   }
+  }
+ }
+ set_variable = { name = pmcqd_reputation_gap value = { value = var:pmcqd_best_scale subtract = var:pmcqd_existing_reputation min = 0 } }
+ set_variable = { name = pmcqd_relations_gap value = { value = var:pmcqd_best_scale subtract = var:pmcqd_existing_relations min = 0 } }
+ if = {
+  limit = { var:pmcqd_reputation_gap > 0 }
+  add_country_modifier = { modifier = pmcqd_cabinet_bonus days = 2 mode = replace size = var:pmcqd_reputation_gap }
+ }
+ if = {
+  limit = { var:pmcqd_relations_gap > 0 }
+  add_country_modifier = { modifier = pmcqd_relations_bonus days = 2 mode = replace size = var:pmcqd_relations_gap }
+ }
+ set_variable = { name = pmcqd_slider_gap value = { value = 1 subtract = diplomatic_maintenance min = 0 max = 1 } }
+ if = {
+  limit = { var:pmcqd_slider_gap > 0 }
+  add_country_modifier = { modifier = pmcqd_slider_bonus days = 2 mode = replace size = var:pmcqd_slider_gap }
+ }
+}
+pmcqd_stop = {
+ pmcqd_clear = yes
+ remove_variable = pmcqd_active
+ remove_variable = pmcqd_month
+ remove_variable = pmcqd_slider_gap
+ remove_variable = pmcqd_best_scale
+ remove_variable = pmcqd_existing_reputation
+ remove_variable = pmcqd_existing_relations
+ remove_variable = pmcqd_reputation_gap
+ remove_variable = pmcqd_relations_gap
+}
+pmcqd_activate = {
+ if = {
+  limit = { NOT = { has_variable = pmcqd_active } }
+  if = { limit = { NOT = { has_variable = pmcqd_generation } } set_variable = { name = pmcqd_generation value = 0 } }
+  change_variable = { name = pmcqd_generation add = 1 }
+  set_variable = pmcqd_active
+  set_variable = { name = pmcqd_month value = current_month }
+  save_scope_value_as = { name = pmcqd_generation value = var:pmcqd_generation }
+  trigger_event_silently = { on_action = pmcqd_daily days = 1 }
+ }
+ # Re-clicking refreshes immediately, without another timer or stacked bonus.
+ pmcqd_refresh = yes
+}
+pmcqd_tick = {
+ if = {
+  limit = { NOT = { current_month = var:pmcqd_month } }
+  pmcqd_stop = yes
+ }
+ else = {
+  pmcqd_refresh = yes
+  save_scope_value_as = { name = pmcqd_generation value = var:pmcqd_generation }
+  trigger_event_silently = { on_action = pmcqd_daily days = 1 }
+ }
+}

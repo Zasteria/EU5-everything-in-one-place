@@ -1,0 +1,17 @@
+# Player-only daily requests; GUI workers use native levy-only dismissal.
+pmcql_tick = {
+ remove_variable = pmcql_open_pending
+ if = { limit = { at_war = no }
+  if = { limit = { has_raised_army_levies = yes } set_variable = pmcql_army_pending }
+  else = { remove_variable = pmcql_army_pending }
+  if = { limit = { has_raised_navy_levies = yes } set_variable = pmcql_navy_pending }
+  else = { remove_variable = pmcql_navy_pending }
+  if = { limit = { has_raised_levies = yes } set_variable = pmcql_open_pending }
+ }
+ else = {
+  remove_variable = pmcql_army_pending
+  remove_variable = pmcql_navy_pending
+ }
+ save_scope_value_as = { name = pmcql_generation value = var:pmcql_generation }
+ trigger_event_silently = { on_action = pmcql_daily days = 1 }
+}

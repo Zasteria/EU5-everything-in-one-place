@@ -1,0 +1,71 @@
+# AI vassals prioritize integrating conquered land.
+INJECT:integrate_province = {
+	ai_will_do = {
+		add = {
+			if = {
+				limit = {
+					scope:actor = {
+						is_ai = yes
+						is_subject_type = vassal
+					}
+				}
+				value = 1000
+			}
+		}
+	}
+}
+
+INJECT:integrate_area = {
+	ai_will_do = {
+		add = {
+			if = {
+				limit = {
+					scope:actor = {
+						is_ai = yes
+						is_subject_type = vassal
+					}
+				}
+				value = 1000
+			}
+		}
+	}
+}
+
+# Do not start cultural assimilation while an AI vassal still has conquered land
+# waiting to be integrated.
+INJECT:assimilate_area = {
+	allow = {
+		trigger_if = {
+			limit = {
+				scope:actor = {
+					is_ai = yes
+					is_subject_type = vassal
+				}
+			}
+			NOT = {
+				scope:actor = {
+					any_owned_location = {
+						integration_level = conquered
+					}
+				}
+			}
+		}
+	}
+}
+
+# Do not start religious conversion for an AI vassal until cultural unity is complete.
+INJECT:promote_religion = {
+	allow = {
+		trigger_if = {
+			limit = {
+				scope:actor = {
+					is_ai = yes
+					is_subject_type = vassal
+				}
+			}
+			scope:actor = {
+				cultural_unity >= 1.0
+			}
+		}
+	}
+}

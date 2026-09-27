@@ -1,0 +1,50 @@
+﻿# Responsive Universalis - Aggressive Ticks (optional tier)
+# Loads after the main mod's zz_ file (last filename wins), overriding only HOUR_TICK.
+#
+# 12 = 2 sim ticks per game-day (vanilla 12/day, main mod 4/day) -> maximum reduction
+# of per-tick overhead. Trade-off: combat phases (5h), hourly morale and event checks
+# resolve in 12-hour chunks - noticeably coarser than vanilla pacing.
+# Works standalone too, but it is meant to be enabled together with Responsive Universalis.
+
+NGame = {
+	HOUR_TICK = 12	# vanilla 2, main mod 6
+}
+
+NUnit = {
+	# 12 hour ticks = 2 ticks/day = 6x fewer than vanilla. Movement is
+	# per tick (see main mod), so compensate 6x to keep vanilla pacing.
+	ARMY_MOVEMENT_SPEED = 0.78	# vanilla 0.13
+	NAVY_MOVEMENT_SPEED = 3.0	# vanilla 0.5
+}
+
+# Combat compensation (added v1.0.3). Combat advances a FIXED 2 hours per
+# tick (vanilla HOUR_TICK hardcoded in CombatHourlyUpdate - proven by dice
+# cadence measurement 2026-08-19 and independently confirmed by Faster
+# Universalis' duration formula). At 2 ticks/day combat gets 4 processing
+# hours per calendar day instead of vanilla 24, so uncompensated battles
+# run ~6x longer in calendar time. Scale the per-processing-hour rates x6
+# so battles pace and bleed at vanilla calendar rates. Every changed value
+# below is live in Faster Universalis (23k subs), so engine acceptance is
+# proven; the arithmetic is ours.
+NCombat = {
+	# Dice phase every 1 processing hour instead of 5: 4 phases/calendar
+	# day vs vanilla 4.8 (closest integer; a float 0.833 would be exact
+	# but float acceptance here is unproven - not worth the risk for 17%)
+	HOURS_PER_PHASE = 1	# vanilla 5
+	# Passive morale drain per processing hour x6 = vanilla drain per day
+	COMBAT_HOURLY_MORALE_TICK = 0.06	# vanilla 0.01
+	# Strength casualties per processing hour x6 = vanilla losses per day
+	# (battles now END at vanilla pace, so without this total casualties
+	# would drop 6x)
+	COMBAT_DAMAGE_MULT = 0.06	# vanilla 0.01
+	# Minimum durations are processing hours: 4/day now, so 4 = 1 day and
+	# 12 = 3 days, same real-time minimums as vanilla (24 and 72 at 24/day)
+	MINIMUM_COMBAT_DURATION = 4	# vanilla 24
+	MINIMUM_NAVAL_COMBAT_DURATION = 12	# vanilla 72
+	# Naval bombard cadence scaled with the phase cadence
+	BOMBARD_HOURS = 1	# vanilla 5
+}
+# NOT compensated (deliberate): the INITIATIVE_* family (reserve armies
+# joining battles) checks per tick, so joins are probabilistically rarer
+# at 2 ticks/day. Semantics unmeasured by us; Faster Universalis ships
+# empirical boosts (0.45/0.09/0.45/0.04) if complaints ever warrant it.

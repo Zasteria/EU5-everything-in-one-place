@@ -1,0 +1,112 @@
+﻿pmcqia_prepare = { scope = country effect = { root = {
+ remove_variable = pmcqia_culture_mode
+ set_variable = { name = pmcqia_kind value = 0 }
+ clear_variable_list = pmcqia_pending
+ remove_variable = pmcqia_slot
+ set_variable = { name = pmcqia_changed value = 0 }
+ set_variable = { name = pmcqia_failed value = 0 }
+ set_variable = { name = pmcqia_skipped value = 0 }
+ save_scope_as = pmcqia_owner
+ every_cabinet = {
+  if = { limit = { has_cabinet_action = yes OR = { cabinet_action = cabinet_action:pmcqi_action cabinet_action = cabinet_action:change_societal_values } }
+   scope:pmcqia_owner = { change_variable = { name = pmcqia_skipped add = 1 } }
+  }
+  else = {
+   save_scope_as = pmcqia_candidate
+   scope:pmcqia_owner = { add_to_variable_list = { name = pmcqia_pending target = scope:pmcqia_candidate } }
+  }
+ }
+ debug_log = "PMCQ56|integrate_all_started"
+} } }
+pmcqia_next = { scope = country effect = { root = {
+ debug_log = "PMCQIA|advance_worker_reached"
+ remove_variable = pmcqia_slot
+ set_variable = { name = pmcqia_kind value = 0 }
+ if = { limit = { has_variable = pmcqia_culture_mode }
+  set_variable = { name = pmcqia_kind value = 3 }
+  if = { limit = { has_variable = pmcqia_need_control }
+   set_variable = { name = pmcqia_kind value = 1 }
+   remove_variable = pmcqia_need_control
+  }
+  else_if = { limit = { has_variable = pmcqia_need_nobles }
+   set_variable = { name = pmcqia_kind value = 2 }
+   remove_variable = pmcqia_need_nobles
+  }
+ }
+ save_scope_as = pmcqia_owner
+ ordered_in_list = { variable = pmcqia_pending max = 1 check_range_bounds = no
+  save_scope_as = pmcqia_candidate
+  scope:pmcqia_owner = { set_variable = { name = pmcqia_slot value = scope:pmcqia_candidate } }
+ }
+ if = { limit = { exists = var:pmcqia_slot }
+  remove_list_variable = { name = pmcqia_pending target = var:pmcqia_slot }
+ }
+} } }
+pmcqia_has_slot = { scope = country is_shown = { root = { exists = var:pmcqia_slot } } }
+pmcqia_assigned = { scope = country is_shown = { root = {
+ exists = var:pmcqia_slot
+ OR = {
+ AND = { var:pmcqia_kind = 0 var:pmcqia_slot = { has_cabinet_action = yes cabinet_action = cabinet_action:pmcqi_action } }
+ AND = { var:pmcqia_kind = 1 var:pmcqia_slot = { has_cabinet_action = yes cabinet_action = cabinet_action:pmcq2_control_action } }
+ AND = { var:pmcqia_kind = 2 var:pmcqia_slot = { has_cabinet_action = yes cabinet_action = cabinet_action:pmcq2_nobles_action } }
+ AND = { var:pmcqia_kind = 3 var:pmcqia_slot = { has_cabinet_action = yes cabinet_action = cabinet_action:pmcqa_action } }
+}
+} } }
+pmcqia_success = { scope = country effect = { root = {
+ pmcqia_recover_assimilation = yes
+ change_variable = { name = pmcqia_changed add = 1 }
+ debug_log = "PMCQ56|slot_success"
+ } } }
+pmcqia_failure = { scope = country effect = { root = {
+ change_variable = { name = pmcqia_failed add = 1 }
+ if = { limit = { has_variable = pmcqia_culture_mode exists = var:pmcqia_slot OR = { var:pmcqia_kind = 1 var:pmcqia_kind = 2 } }
+  add_to_variable_list = { name = pmcqia_pending target = var:pmcqia_slot }
+ }
+ debug_log = "PMCQ56|slot_failure"
+ } } }
+pmcqia_skip = { scope = country effect = { root = {
+ pmcqia_recover_assimilation = yes
+ change_variable = { name = pmcqia_skipped add = 1 }
+ debug_log = "PMCQ56|slot_skip"
+ } } }
+
+pmcqia_culture_prepare = { scope = country effect = { root = {
+ set_variable = pmcqia_culture_mode
+ clear_variable_list = pmcqia_pending
+ remove_variable = pmcqia_slot
+ remove_variable = pmcqia_need_control
+ remove_variable = pmcqia_need_nobles
+ set_variable = { name = pmcqia_kind value = 3 }
+ set_variable = { name = pmcqia_changed value = 0 }
+ set_variable = { name = pmcqia_failed value = 0 }
+ set_variable = { name = pmcqia_skipped value = 0 }
+ if = { limit = {
+  is_ai = no num_locations > 0
+  modifier:can_send_royal_inspectors = no
+  any_province = { province_average_control < define:NCountry|LOW_CONTROL_THRESHOLD_FOR_BEST_TAX }
+ }
+  set_variable = pmcqia_need_control
+  if = { limit = { has_reform = government_reform:noblesse_oblige_reform } set_variable = pmcqia_need_nobles }
+ }
+ save_scope_as = pmcqia_owner
+ every_cabinet = {
+  if = { limit = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
+   scope:pmcqia_owner = { change_variable = { name = pmcqia_skipped add = 1 } }
+  }
+  else_if = { limit = { has_cabinet_action = yes cabinet_action = cabinet_action:pmcq2_control_action }
+   scope:pmcqia_owner = { remove_variable = pmcqia_need_control change_variable = { name = pmcqia_skipped add = 1 } }
+  }
+  else_if = { limit = { has_cabinet_action = yes cabinet_action = cabinet_action:pmcq2_nobles_action }
+   scope:pmcqia_owner = { remove_variable = pmcqia_need_nobles change_variable = { name = pmcqia_skipped add = 1 } }
+  }
+  else = {
+   save_scope_as = pmcqia_candidate
+   scope:pmcqia_owner = { add_to_variable_list = { name = pmcqia_pending target = scope:pmcqia_candidate } }
+  }
+ }
+ debug_log = "PMCQ|culture_convert_all_started"
+} } }
+pmcqia_wants_0 = { scope = country is_shown = { root = { var:pmcqia_kind = 0 } } }
+pmcqia_wants_1 = { scope = country is_shown = { root = { var:pmcqia_kind = 1 } } }
+pmcqia_wants_2 = { scope = country is_shown = { root = { var:pmcqia_kind = 2 } } }
+pmcqia_wants_3 = { scope = country is_shown = { root = { var:pmcqia_kind = 3 } } }

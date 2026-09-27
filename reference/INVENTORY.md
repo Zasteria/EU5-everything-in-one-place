@@ -36,13 +36,19 @@ compiles from them.
 | `3662193478_faster_universalis` | `faster.universalis` | 1.8.2 | in_game, loading_screen, main_menu |
 | `3662933683_fusm_daily_tick` | `fusm.daily.tick` | 1.3.2 | in_game, loading_screen, main_menu |
 | `3662938575_fusm_hourly_tick` | `fusm.hourly.tick` | 1.3.2 | in_game, loading_screen, main_menu |
+| `3664177503_ludimpbalance_main` | `ludimpbalance.main` | 0.1 | in_game, loading_screen, main_menu |
 | `3677315887_fusm_halfday_tick` | `fusm.halfday.tick` | 1.3.2 | in_game, loading_screen, main_menu |
 | `3696243603_autonomous_diplomats` | `autonomous_diplomats` | 1.5.0 | in_game, main_menu |
+| `3701762814_province_manager` | `province_manager` | 1.7.0 | in_game, main_menu |
 | `3721516330_integration_hotfix` | `Integration Hotfix` | 0.7 | in_game, loading_screen, main_menu |
+| `3765240556_responsive_universalis` | `responsive_universalis` | 1.0.4 | docs, loading_screen, publish, tools |
+| `3765240629_responsive_universalis_aggressive_ticks` | `responsive_universalis_aggressive_ticks` | 1.0.3 | loading_screen |
 | `3779064076_rexbert_buymyart` | `rexbert.buymyart` | 1.0 | in_game |
 | `3780623638_nation_destinies_rus` | `nation_destinies_rus` | 1.3 | main_menu |
+| `3791114902_capgros_hrespam` | `capgros.hrespam` | 0.41 | in_game, main_menu |
+| `3804621893_playmaker_cabinetqueue` | `playmaker.cabinetqueue` | 1 | in_game, main_menu |
 
-`reference/game/` holds 2395 files of EU5 itself — `in_game/gui/`, the parts
+`reference/game/` holds 3983 files of EU5 itself — `in_game/gui/`, the parts
 of `in_game/common/` the mods here reason about, and the game's own
 localization, which is how `mods/nd_ru/tools/term.py` answers what the game
 calls a concept.

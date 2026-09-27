@@ -1,0 +1,27 @@
+# Character scope; pmcqd_owner is the country receiving the boost.
+pmcqd_diplomatic_scale = {
+ value = dip
+ multiply = define:NCountry|CABINET_ACTION_SKILL_MODIFIER
+ add = modifier:character_cabinet_efficiency
+ add = scope:pmcqd_owner.modifier:country_cabinet_efficiency
+ add = 1
+ min = 0
+}
+
+# Cabinet scope. Preserve the engine's efficiency calculation for active slots,
+# replacing only the current action's ADM/MIL contribution with DIP.
+pmcqd_cabinet_diplomatic_scale = {
+ value = 1
+ add = effective_skill
+ if = {
+  limit = { cabinet_action = { cabinet_action_type = adm } }
+  subtract = { value = cabinet_member.adm multiply = define:NCountry|CABINET_ACTION_SKILL_MODIFIER }
+  add = { value = cabinet_member.dip multiply = define:NCountry|CABINET_ACTION_SKILL_MODIFIER }
+ }
+ else_if = {
+  limit = { cabinet_action = { cabinet_action_type = mil } }
+  subtract = { value = cabinet_member.mil multiply = define:NCountry|CABINET_ACTION_SKILL_MODIFIER }
+  add = { value = cabinet_member.dip multiply = define:NCountry|CABINET_ACTION_SKILL_MODIFIER }
+ }
+ min = 0
+}

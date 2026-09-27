@@ -1,0 +1,69 @@
+﻿pmcql_toggle = {
+ scope = country
+ effect = { root = {
+  if = { limit = { is_ai = no }
+   if = { limit = { NOT = { has_variable = pmcql_generation } }
+    set_variable = { name = pmcql_generation value = 0 }
+   }
+   change_variable = { name = pmcql_generation add = 1 }
+   remove_variable = pmcql_army_pending
+   remove_variable = pmcql_open_pending
+   remove_variable = pmcql_navy_pending
+   if = { limit = { has_variable = pmcql_enabled }
+    remove_variable = pmcql_enabled
+   }
+   else = {
+    set_variable = pmcql_enabled
+    pmcql_tick = yes
+   }
+  }
+ } }
+}
+pmcql_army_ready = {
+ scope = country
+ is_shown = { is_ai = no has_variable = pmcql_enabled at_war = no has_raised_army_levies = yes has_variable = pmcql_army_pending }
+}
+pmcql_navy_ready = {
+ scope = country
+ is_shown = { is_ai = no has_variable = pmcql_enabled at_war = no has_raised_navy_levies = yes has_variable = pmcql_navy_pending }
+}
+pmcql_army_consumed = {
+ scope = country
+ effect = { root = { remove_variable = pmcql_army_pending debug_log = "PMCQL|army_native_dismiss_requested" } }
+}
+pmcql_navy_consumed = {
+ scope = country
+ effect = { root = { remove_variable = pmcql_navy_pending debug_log = "PMCQL|navy_native_dismiss_requested" } }
+}
+pmcql_open_ready = {
+ scope = country
+ is_shown = {
+  is_ai = no
+  has_variable = pmcql_enabled
+  has_variable = pmcql_open_pending
+  at_war = no
+  has_raised_levies = yes
+ }
+}
+pmcql_open_consumed = {
+ scope = country
+ effect = { root = {
+  remove_variable = pmcql_open_pending
+  debug_log = "PMCQL|opening_military_overview"
+ } }
+}
+
+pmcql_individual_trace = {
+ scope = country
+ effect = { root = { debug_log = "PMCQL|eligible_levy_unit_dismiss_requested" } }
+}
+
+pmcql_dismissal_complete = {
+ scope = country
+ is_shown = {
+  is_ai = no
+  has_variable = pmcql_enabled
+  at_war = no
+  has_raised_levies = no
+ }
+}

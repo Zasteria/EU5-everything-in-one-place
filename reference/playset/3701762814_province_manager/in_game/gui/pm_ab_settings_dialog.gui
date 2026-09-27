@@ -1,0 +1,73 @@
+﻿### Auto-build settings dialog
+
+basic_dialog = {
+	name = "pm_ab_settings_dialog"
+	layer = top
+	visible = "[GetVariableSystem.Exists('pm_ab_settings')]"
+	filter_mouse = all
+
+	blockoverride "header_text" {
+		text = "PM_AB_SETTINGS_TITLE"
+	}
+
+	blockoverride "dialog_size" {
+		minimumsize = { 400 180 }
+		maximumsize = { 400 500 }
+	}
+
+	blockoverride "block_scrollarea" {
+		maximumsize = { -1 400 }
+	}
+
+	blockoverride "content" {
+		vbox = {
+			layoutpolicy_horizontal = expanding
+			spacing = 4
+			margin = { 15 10 }
+
+			# --- Labor Check ---
+			widget = {
+				layoutpolicy_horizontal = expanding
+				size = { -1 28 }
+				using = bg_card_header_01
+				using = bg_cabinet_card_frame
+				hbox = {
+					margin = { 4 0 }
+					spacing = 4
+					text_single = { fontsize = 14 text = "PM_AB_SET_GROUP_LABOR" }
+					expand = {}
+				}
+			}
+			vbox = {
+				layoutpolicy_horizontal = expanding
+				using = bg_paper_card
+				margin = { 5 4 }
+				spacing = 3
+
+				hbox = { spacing = 4 layoutpolicy_horizontal = expanding
+					tooltip = "PM_AB_SET_LABOR_CHECK_TT"
+					# pm_ab_labor_check EXISTS = labor check ENABLED (opt-in)
+					# pm_ab_labor_check NOT EXISTS = labor check DISABLED (default)
+					button_checkbox_auto = { size = { 22 22 } down = "[GetVariableSystem.Exists('pm_ab_labor_check')]" onclick = "[GetVariableSystem.Toggle('pm_ab_labor_check')]" }
+					text_single = { fontsize = 13 text = "PM_AB_SET_LABOR_CHECK" }
+					expand = {}
+				}
+
+			}
+		}
+	}
+
+	blockoverride "bottom_buttons" {
+		expand = {}
+		button_regular_icon = {
+			size = { 120 36 }
+			onclick = "[GetVariableSystem.Clear('pm_ab_settings')]"
+			input_action = "close_window"
+
+			blockoverride "button_text" {
+				text = "PM_AB_SETTINGS_CLOSE"
+			}
+		}
+		expand = {}
+	}
+}

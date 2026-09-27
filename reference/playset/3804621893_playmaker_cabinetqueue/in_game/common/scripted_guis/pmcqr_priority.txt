@@ -1,0 +1,37 @@
+﻿pmcqr_can_prioritize = {
+ scope = country
+ is_shown = {
+  exists = scope:pmcqr_target
+  is_target_in_variable_list = { name = pmcqr_queue target = scope:pmcqr_target }
+  NOT = { is_target_in_variable_list = { name = pmcqr_owned target = scope:pmcqr_target } }
+ }
+}
+pmcqr_prioritize = {
+ scope = country
+ effect = { root = {
+  if = { limit = {
+   exists = scope:pmcqr_target
+   is_target_in_variable_list = { name = pmcqr_queue target = scope:pmcqr_target }
+   NOT = { is_target_in_variable_list = { name = pmcqr_owned target = scope:pmcqr_target } }
+  }
+   save_scope_as = pmcqr_priority_owner
+   if = { limit = { NOT = { has_variable = pmcqr_priority_serial } } set_variable = { name = pmcqr_priority_serial value = 0 } }
+   change_variable = { name = pmcqr_priority_serial subtract = 1 }
+   add_to_variable_map = { name = pmcqr_order key = scope:pmcqr_target value = var:pmcqr_priority_serial }
+   pmcqr_recount = yes
+   clear_variable_list = pmcqr_priority_sorted
+   ordered_in_list = {
+    variable = pmcqr_queue
+    order_by = { value = 0 scope:pmcqr_priority_owner = { subtract = "variable_map(pmcqr_order|prev)" } }
+    max = var:pmcqr_queued
+    check_range_bounds = no
+    scope:pmcqr_priority_owner = { add_to_variable_list = { name = pmcqr_priority_sorted target = prev } }
+   }
+   clear_variable_list = pmcqr_queue
+   every_in_list = { variable = pmcqr_priority_sorted
+    scope:pmcqr_priority_owner = { add_to_variable_list = { name = pmcqr_queue target = prev } }
+   }
+   clear_variable_list = pmcqr_priority_sorted
+  }
+ } }
+}

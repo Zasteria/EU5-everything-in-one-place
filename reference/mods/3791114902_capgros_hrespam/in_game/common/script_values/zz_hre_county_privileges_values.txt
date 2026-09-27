@@ -1,0 +1,65 @@
+﻿hre_county_privileges_gold_weight = 80
+hre_county_privileges_utility_weight = 20
+hre_county_privileges_drift_weight = 40
+
+hre_county_privileges_shortfall_scale = 4
+hre_county_privileges_government_power_standard = 80
+hre_county_privileges_government_power_weight = 1
+hre_county_privileges_stability_standard = 25
+hre_county_privileges_stability_weight = 0.5
+
+hre_county_privileges_price = {
+	value = grant_county_privileges_cost
+	multiply = 4
+	min = 1
+}
+
+hre_county_privileges_gold_score = {
+	save_temporary_value_as = {
+		name = hre_county_privileges_price_value
+		value = hre_county_privileges_price
+	}
+
+	value = scope:actor.gold
+	divide = scope:hre_county_privileges_price_value
+	subtract = 1
+	min = -1
+	max = 1
+	multiply = hre_county_privileges_gold_weight
+}
+
+hre_county_privileges_drift_score = {
+	if = {
+		limit = {
+			exists = scope:target
+			scope:target = { this = government_reform:margraviate }
+		}
+		add = "scope:actor.modifier:monthly_towards_defensive"
+		subtract = "scope:actor.modifier:monthly_towards_offensive"
+	}
+	else_if = {
+		limit = {
+			exists = scope:target
+			scope:target = { this = government_reform:landgraviate }
+		}
+		add = "scope:actor.modifier:monthly_towards_conciliatory"
+		subtract = "scope:actor.modifier:monthly_towards_belligerent"
+	}
+	multiply = hre_county_privileges_drift_weight
+}
+
+hre_county_privileges_government_power_shortfall = {
+	value = hre_county_privileges_government_power_standard
+	subtract = scope:actor.government_power
+	min = 0
+	multiply = hre_county_privileges_shortfall_scale
+	multiply = hre_county_privileges_government_power_weight
+}
+
+hre_county_privileges_stability_shortfall = {
+	value = hre_county_privileges_stability_standard
+	subtract = scope:actor.stability
+	min = 0
+	multiply = hre_county_privileges_shortfall_scale
+	multiply = hre_county_privileges_stability_weight
+}

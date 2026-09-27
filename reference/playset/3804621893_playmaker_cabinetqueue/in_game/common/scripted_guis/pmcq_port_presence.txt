@@ -1,0 +1,42 @@
+﻿# Fleet-header toggle; enforce player ownership in both validation and effect.
+pmcqpp_header_toggle = {
+ scope = unit
+ saved_scopes = { pmcqpp_player }
+ is_valid = {
+  owner = scope:pmcqpp_player
+  is_navy = yes
+  OR = {
+   has_variable = pmcqpp_v3_enabled
+   AND = {
+    is_moving = no in_combat = no is_exiled = no
+    owner = { at_war = no }
+    unit_location = { is_land = yes is_port = yes exists = sea_zone }
+   }
+  }
+ }
+ effect = {
+  if = { limit = { owner = scope:pmcqpp_player is_navy = yes }
+   if = { limit = { has_variable = pmcqpp_v3_enabled }
+    remove_variable = pmcqpp_v3_enabled
+    remove_variable = pmcqpp_credit
+    remove_variable = pmcqpp_home_port
+    clear_variable_list = pmcqpp_seas_served
+    set_variable = { name = pmcqpp_last_power value = 0 }
+    set_variable = { name = pmcqpp_last_added value = 0 }
+    owner = { pmcqpp_rearm = yes }
+   }
+   else_if = { limit = {
+    is_moving = no in_combat = no is_exiled = no
+    owner = { at_war = no }
+    unit_location = { is_land = yes is_port = yes exists = sea_zone }
+   }
+    clear_variable_list = pmcqpp_seas_served
+    remove_variable = pmcqpp_credit
+    set_variable = { name = pmcqpp_home_port value = unit_location }
+    set_variable = pmcqpp_v3_enabled
+    remove_variable = pmcqpp_enabled
+    owner = { pmcqpp_rearm = yes }
+   }
+  }
+ }
+}

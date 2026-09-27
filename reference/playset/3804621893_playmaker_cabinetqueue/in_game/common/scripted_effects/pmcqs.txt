@@ -1,0 +1,81 @@
+﻿pmcqs_remove_forts = {
+ save_scope_as = pmcqs_country
+ every_owned_location = {
+  every_buildings_in_location = {
+   limit = { OR = { building_type = building_type:stockade building_type = building_type:castle building_type = building_type:city_walls } }
+   location = { destroy_building = prev }
+  }
+ }
+}
+pmcqs_subject_size_init = {
+ if = {
+  limit = { NOT = { has_variable = pmcqs_subject_size } }
+  set_variable = { name = pmcqs_subject_size value = 2 }
+ }
+ clamp_variable = { name = pmcqs_subject_size min = 1 max = 4 }
+}
+pmcqs_create_subjects = {
+ save_scope_as = pmcqs_country
+ pmcqs_subject_size_init = yes
+ clear_variable_list = pmcqs_provinces
+ set_variable = { name = pmcqs_vassals value = 0 }
+ # Snapshot eligible provinces before ownership changes.
+ every_province = {
+  limit = { pmcqs_subject_eligible = yes }
+  scope:pmcqs_country = { add_to_variable_list = { name = pmcqs_provinces target = prev } }
+ }
+ every_in_list = {
+  variable = pmcqs_provinces
+  # Check during execution: earlier subjects may already have taken this seed.
+  if = {
+   limit = { pmcqs_subject_eligible = yes }
+   create_location_country_from_province = {
+    subject_type = subject_type:vassal
+    save_scope_as = pmcqs_new_subject
+    scope:pmcqs_country = {
+     change_variable = { name = pmcqs_vassals add = 1 }
+     # Separate fixed slots: size 2 can execute only the first addition.
+     if = {
+      limit = { var:pmcqs_subject_size >= 2 }
+      pmcqs_add_subject_province = yes
+     }
+     if = {
+      limit = { var:pmcqs_subject_size >= 3 }
+      pmcqs_add_subject_province = yes
+     }
+     if = {
+      limit = { var:pmcqs_subject_size >= 4 }
+      pmcqs_add_subject_province = yes
+     }
+    }
+   }
+  }
+ }
+ # Unconnected leftovers naturally start smaller subjects in the same pass.
+ clear_variable_list = pmcqs_provinces
+}
+
+# Releasing-country scope. Enforce the cap using live ownership, not an incremented counter.
+pmcqs_add_subject_province = {
+ if = {
+  limit = {
+   scope:pmcqs_new_subject = {
+    num_provinces < scope:pmcqs_country.var:pmcqs_subject_size
+   }
+  }
+  random_in_list = {
+   variable = pmcqs_provinces
+   limit = { pmcqs_subject_partner = yes }
+   # Recheck immediately before transfer, after candidate selection.
+   if = {
+    limit = {
+     owner = scope:pmcqs_country
+     scope:pmcqs_new_subject = {
+      num_provinces < scope:pmcqs_country.var:pmcqs_subject_size
+     }
+    }
+    change_province_owner = scope:pmcqs_new_subject
+   }
+  }
+ }
+}

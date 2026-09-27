@@ -1,0 +1,27 @@
+# Province scope. Move on once all locations are cores, even if culture remains mixed.
+# Bonus recipients are checked separately and include this province's cored locations.
+pmcqa_needs_assimilation = {
+ any_location_in_province = { integration_level = integrated }
+}
+# Province scope; caller supplies pmcqa_country.
+pmcqa_eligible = {
+ owner = scope:pmcqa_country
+ NOT = { has_variable = promoting_culture }
+ pmcqa_needs_assimilation = yes
+ NOT = {
+  any_location_in_province = {
+   owner = scope:pmcqa_country
+   NOT = { OR = { integration_level = integrated integration_level = core } }
+  }
+ }
+}
+# Country scope.
+pmcqa_ready = {
+ is_ai = no
+ exists = var:pmcqa_cabinet
+ var:pmcqa_cabinet = {
+  has_cabinet_action = yes
+  cabinet_action = cabinet_action:pmcqa_action
+  exists = cabinet_member
+ }
+}

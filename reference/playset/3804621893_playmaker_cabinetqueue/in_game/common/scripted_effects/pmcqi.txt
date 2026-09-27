@@ -1,0 +1,184 @@
+﻿# Entirely independent country state and timers; no control queue calls.
+pmcqi_clear = {
+ if = {
+  limit = { exists = var:pmcqi_target }
+  var:pmcqi_target = { remove_province_modifier = pmcqi_bonus }
+ }
+ remove_variable = pmcqi_target
+}
+pmcqi_stop = {
+ pmcqi_clear = yes
+ if = { limit = { NOT = { has_variable = pmcqi_generation } } set_variable = { name = pmcqi_generation value = 0 } }
+ change_variable = { name = pmcqi_generation add = 1 }
+ remove_variable = pmcqi_running
+ remove_variable = pmcqi_cabinet
+ remove_variable = pmcqi_scale
+}
+pmcqi_choose = {
+ save_scope_as = pmcqi_country
+ ordered_province = {
+  limit = { pmcqi_eligible = yes }
+  order_by = population
+  max = 1 check_range_bounds = no
+  scope:pmcqi_country = { set_variable = { name = pmcqi_target value = prev } }
+ }
+ if = {
+  limit = { exists = var:pmcqi_target }
+  debug_log = "PMCQI: auto integration target selected"
+  debug_log_date = yes
+ }
+}
+pmcqi_apply = {
+ save_scope_as = pmcqi_country
+ # Same scripted scaling convention as the other custom actions.
+ # Exact parity with the native cabinet modifier engine requires game testing.
+ set_variable = { name = pmcqi_scale value = { value = 1 add = var:pmcqi_cabinet.effective_skill min = 0 } }
+ var:pmcqi_target = {
+  add_province_modifier = { modifier = pmcqi_bonus days = 2 mode = replace size = scope:pmcqi_country.var:pmcqi_scale }
+ }
+}
+pmcqi_tick = {
+ save_scope_as = pmcqi_country
+ if = {
+  limit = { NOT = { pmcqi_ready = yes } }
+  pmcqi_stop = yes
+ }
+ else = {
+  if = {
+   limit = { exists = var:pmcqi_target }
+   if = {
+    limit = {
+     var:pmcqi_target = {
+      OR = { NOT = { owner = scope:pmcqi_country } pmcqi_finished = yes }
+     }
+    }
+    debug_log = "PMCQI: integration finished or ownership lost; selecting next"
+    pmcqi_clear = yes
+   }
+  }
+  if = { limit = { NOT = { exists = var:pmcqi_target } } pmcqi_choose = yes }
+  if = { limit = { exists = var:pmcqi_target } pmcqi_apply = yes }
+  save_scope_value_as = { name = pmcqi_generation value = var:pmcqi_generation }
+  trigger_event_silently = { on_action = pmcqi_daily days = 1 }
+ }
+}
+
+# Multi-member implementation. Each cabinet slot owns its target and bonuses.
+pmcqi_slot_clear = {
+ pmcqie_clear = yes
+ every_in_list = { variable = pmcqil_slot_locations remove_location_modifier = pmcqil_location_bonus }
+ clear_variable_list = pmcqil_slot_locations
+ if = {
+  limit = { exists = var:pmcqi_slot_target }
+  var:pmcqi_slot_target = {
+   if = {
+    limit = { exists = var:pmcqi_reservation var:pmcqi_reservation = scope:pmcqi_slot }
+    remove_province_modifier = pmcqi_bonus
+    remove_province_modifier = pmcqil_bonus
+    every_location_in_province = { remove_location_modifier = pmcqil_location_bonus }
+    remove_variable = pmcqi_reservation
+   }
+  }
+ }
+ remove_variable = pmcqi_slot_target
+}
+pmcqi_slot_choose = {
+ scope:pmcqi_country = {
+  ordered_province = {
+   limit = {
+    pmcqi_eligible = yes NOT = { has_variable = pmcqi_reservation }
+    OR = { scope:pmcqi_slot = { NOT = { cabinet_action = cabinet_action:pmcqil_action } } pmcqil_region = yes }
+   }
+   order_by = population
+   max = 1 check_range_bounds = no
+   scope:pmcqi_slot = { set_variable = { name = pmcqi_slot_target value = prev } }
+  }
+ }
+ if = {
+  limit = { exists = var:pmcqi_slot_target }
+  var:pmcqi_slot_target = {
+   set_variable = { name = pmcqi_reservation value = scope:pmcqi_slot }
+  }
+ }
+}
+pmcqi_slot_apply = {
+ every_in_list = { variable = pmcqil_slot_locations remove_location_modifier = pmcqil_location_bonus }
+ clear_variable_list = pmcqil_slot_locations
+ set_variable = { name = pmcqi_slot_scale value = { value = 1 add = effective_skill min = 0 } }
+ var:pmcqi_slot_target = {
+  if = { limit = { scope:pmcqi_slot = { cabinet_action = cabinet_action:pmcqil_action } }
+   add_province_modifier = { modifier = pmcqil_bonus days = 2 mode = replace size = scope:pmcqi_slot.var:pmcqi_slot_scale }
+   every_location_in_province = { limit = { owner = scope:pmcqi_country }
+    add_location_modifier = { modifier = pmcqil_location_bonus days = 2 mode = replace size = scope:pmcqi_slot.var:pmcqi_slot_scale }
+    scope:pmcqi_slot = { add_to_variable_list = { name = pmcqil_slot_locations target = prev } }
+   }
+  }
+  else = { add_province_modifier = { modifier = pmcqi_bonus days = 2 mode = replace size = scope:pmcqi_slot.var:pmcqi_slot_scale } }
+ }
+}
+pmcqi_slot_tick = {
+ save_scope_as = pmcqi_slot
+ if = {
+  limit = { NOT = { pmcqi_supported_action = yes exists = cabinet_member } }
+  pmcqi_slot_clear = yes
+  remove_variable = pmcqi_slot_running
+  if = { limit = { has_cabinet_action = yes OR = { cabinet_action = cabinet_action:pmcqil_action cabinet_action = cabinet_action:pmcqie_action } } stop_cabinet_action = yes }
+ }
+ else_if = { limit = { cabinet_action = cabinet_action:pmcqie_action } pmcqie_tick = yes }
+ else = {
+  if = {
+   limit = { exists = var:pmcqi_slot_target }
+   if = {
+    limit = { var:pmcqi_slot_target = { OR = {
+     NOT = { owner = scope:pmcqi_country }
+     pmcqi_finished = yes
+     pmcqi_native_integration_reserved = yes
+    } } }
+    pmcqi_slot_clear = yes
+   }
+  }
+  if = { limit = { NOT = { exists = var:pmcqi_slot_target } } pmcqi_slot_choose = yes }
+  if = {
+   limit = { exists = var:pmcqi_slot_target }
+   pmcqi_slot_apply = yes
+   scope:pmcqi_country = { change_variable = { name = pmcqi_multi_count add = 1 } }
+  }
+  else = {
+   # No unreserved eligible province: release the task, keep the member.
+   pmcqi_slot_clear = yes
+   remove_variable = pmcqi_slot_running
+   stop_cabinet_action = yes
+  }
+ }
+}
+pmcqi_multi_tick = {
+ save_scope_as = pmcqi_country
+ set_variable = { name = pmcqi_multi_count value = 0 }
+ # Release reservations left by removed cabinet slots before allocating targets.
+ every_province = {
+  limit = { has_variable = pmcqi_reservation }
+  if = {
+   limit = { NOT = {
+    exists = var:pmcqi_reservation
+    var:pmcqi_reservation = { has_variable = pmcqi_slot_running pmcqi_supported_action = yes exists = cabinet_member }
+   } }
+    remove_province_modifier = pmcqi_bonus
+    remove_province_modifier = pmcqil_bonus
+    every_location_in_province = { remove_location_modifier = pmcqil_location_bonus }
+    remove_variable = pmcqi_reservation
+  }
+ }
+ every_cabinet = {
+  limit = { has_variable = pmcqi_slot_running }
+  pmcqi_slot_tick = yes
+ }
+ if = {
+  limit = { var:pmcqi_multi_count > 0 }
+  save_scope_value_as = { name = pmcqi_multi_generation value = var:pmcqi_multi_generation }
+  trigger_event_silently = { on_action = pmcqi_multi_daily days = 1 }
+ }
+ else = {
+  remove_variable = pmcqi_multi_running
+  change_variable = { name = pmcqi_multi_generation add = 1 }
+ }
+}

@@ -1,0 +1,35 @@
+ludi_famine_initialize_location_population_counter_effect = {
+	set_variable = {
+		name = ludi_famine_previous_population
+		value = population
+	}
+}
+
+ludi_famine_count_location_deaths_effect = {
+	if = {
+		limit = {
+			NOT = { has_variable = ludi_famine_previous_population }
+		}
+		ludi_famine_initialize_location_population_counter_effect = yes
+	}
+	if = {
+		limit = {
+			var:ludi_famine_previous_population > population
+		}
+		situation:famine ?= {
+			change_variable = {
+				name = ludi_famine_total_deaths
+				add = {
+					value = prev.var:ludi_famine_previous_population
+					subtract = prev.population
+					min = 0
+				}
+			}
+		}
+	}
+	ludi_famine_initialize_location_population_counter_effect = yes
+}
+
+ludi_famine_clear_location_population_counter_effect = {
+	remove_variable = ludi_famine_previous_population
+}

@@ -1,0 +1,81 @@
+pm_sgui_open_debug_buildings = {
+	scope = location
+	effect = {
+		save_scope_as = pm_loc
+		owner = {
+			save_scope_as = pm_owner
+
+			# Save location ref for the debug window
+			set_variable = {
+				name = pm_debug_location
+				value = scope:pm_loc
+			}
+
+			# Collect existing buildings sorted by profit per level (descending)
+			scope:pm_loc = {
+				clear_variable_list = pm_valid_buildings
+				ordered_buildings_in_location = {
+					limit = {
+						is_special_building = no
+						NOT = { building_category = estate_category }
+					}
+					order_by = {
+						value = building_potential_profit
+						divide = building_level
+					}
+					max = 999
+					scope:pm_loc = {
+						add_to_variable_list = {
+							name = pm_valid_buildings
+							target = prev
+						}
+					}
+				}
+			}
+
+			# Collect NEW (unbuilt) building types + save as numbered vars
+			scope:pm_loc = {
+				clear_variable_list = pm_new_buildings
+			}
+			set_variable = { name = pm_new_count value = 0 }
+			every_buildable_building_type = {
+				limit = {
+					is_special_building = no
+					NOT = {
+						scope:pm_owner = {
+							building_type_is_obsolete = prev
+						}
+					}
+					NOT = { building_category = estate_category }
+					scope:pm_owner = {
+						can_build_building = prev
+					}
+					scope:pm_loc = {
+						can_build_building = prev
+						NOT = { has_building = prev }
+					}
+				}
+				scope:pm_loc = {
+					add_to_variable_list = {
+						name = pm_new_buildings
+						target = prev
+					}
+				}
+				# Save as numbered variable on player country
+				scope:pm_owner = {
+					if = { limit = { check_variable = { name = pm_new_count value = 0 } } set_variable = { name = pm_new_0 value = prev } }
+					if = { limit = { check_variable = { name = pm_new_count value = 1 } } set_variable = { name = pm_new_1 value = prev } }
+					if = { limit = { check_variable = { name = pm_new_count value = 2 } } set_variable = { name = pm_new_2 value = prev } }
+					if = { limit = { check_variable = { name = pm_new_count value = 3 } } set_variable = { name = pm_new_3 value = prev } }
+					if = { limit = { check_variable = { name = pm_new_count value = 4 } } set_variable = { name = pm_new_4 value = prev } }
+					if = { limit = { check_variable = { name = pm_new_count value = 5 } } set_variable = { name = pm_new_5 value = prev } }
+					if = { limit = { check_variable = { name = pm_new_count value = 6 } } set_variable = { name = pm_new_6 value = prev } }
+					if = { limit = { check_variable = { name = pm_new_count value = 7 } } set_variable = { name = pm_new_7 value = prev } }
+					if = { limit = { check_variable = { name = pm_new_count value = 8 } } set_variable = { name = pm_new_8 value = prev } }
+					if = { limit = { check_variable = { name = pm_new_count value = 9 } } set_variable = { name = pm_new_9 value = prev } }
+					change_variable = { name = pm_new_count add = 1 }
+				}
+			}
+		}
+	}
+}

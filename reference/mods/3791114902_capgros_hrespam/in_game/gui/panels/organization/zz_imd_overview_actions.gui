@@ -1,0 +1,229 @@
+﻿types OrganizationPanel
+{
+	type organization_panel_overview_area = vbox {
+
+		block "imd_auto_accept_toggle" {
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				margin = { 10 6 }
+				ignoreinvisible = yes
+				visible = "[EqualTo_string(InternationalOrganizationsView.GetInternationalOrganization.GetType.GetNameKey,'hre')]"
+
+				expand = {}
+
+				action_button_diamond = {
+					datacontext = "[GetGenericAction('imd_auto_accept_is_off')]"
+					size = { 260 30 }
+					visible = "[Not(Player.MakeScope.GetVariable('imd_auto_accept').IsSet)]"
+					text = "[GenericAction.GetNameWithNoTooltip]"
+					title = "[GenericAction.GetNameWithNoTooltip]"
+					actor = "[InternationalOrganizationsView.GetPlayer]"
+					parameter = {
+						parameter_name = "recipient"
+						parameter_value = "[InternationalOrganizationsView.GetInternationalOrganization]"
+					}
+					left_action = { action_name = "imd_auto_accept_is_off" }
+					tooltipwidget = {
+						using = io_generic_action_button_tooltip
+					}
+				}
+
+				action_button_diamond = {
+					datacontext = "[GetGenericAction('imd_auto_accept_is_on')]"
+					size = { 260 30 }
+					visible = "[Player.MakeScope.GetVariable('imd_auto_accept').IsSet]"
+					text = "[GenericAction.GetNameWithNoTooltip]"
+					title = "[GenericAction.GetNameWithNoTooltip]"
+					actor = "[InternationalOrganizationsView.GetPlayer]"
+					parameter = {
+						parameter_name = "recipient"
+						parameter_value = "[InternationalOrganizationsView.GetInternationalOrganization]"
+					}
+					left_action = { action_name = "imd_auto_accept_is_on" }
+					tooltipwidget = {
+						using = io_generic_action_button_tooltip
+					}
+				}
+
+				expand = {}
+			}
+		}
+
+		block "organization_overview_filtered_list"
+		{
+			filtered_sorted_list = {
+				block "organization_overview_filtered_list_type" {
+					datacontext = "[InternationalOrganizationsView.GetSpecialMembersSortSearch]"
+					blockoverride "scroll_list_is_empty" {
+						block "scroll_overview_empty_visible" {
+							visible = "[IsDataModelEmpty(InternationalOrganizationsView.GetSpecialMemberItems)]"
+						}
+					}
+				}
+				blockoverride "scroll_list_is_empty_text" {
+					text = "MEMBERS_SCROLL_LIST_EMPTY"
+				}
+				blockoverride "searchbar_visible" { visible = "[InternationalOrganizationsView.HasSpecialMembers]" }
+				blockoverride "scroll_list_layout" {
+					vbox = {
+						block "organization_overview_list_bg" {
+							using = layoutpolicy_expanding
+							using = bg_secondary_inner_alt
+							margin_bottom = 20
+							spacing = 5
+						}
+						# list of actions
+						vbox = {
+							layoutpolicy_horizontal = expanding
+							margin = { 10 2 }
+							spacing = 10
+
+							block "organization_overview_list_custom_top_extra" {}
+							block "io_overview_actions" {
+								card_actions = {
+									# using = layoutpolicy_expanding
+									block "organization_main_actions_extra_visible" { visible = "[InternationalOrganizationsView.HasActions]" }
+									blockoverride "card_header_text" {
+										text = "MAIN_ACTIONS"
+									}
+									blockoverride "card_header_icon" {
+										block "io_main_actions_icon" {
+											texture = "[InternationalOrganization.GetIcon]"
+										}
+									}
+	
+									blockoverride "actions_override" {
+										vbox = {
+											spacing = 2
+											layoutpolicy_horizontal = expanding
+											scrollarea = {
+												maximumsize = { 470 400 }
+												scrollbarpolicy_horizontal = always_off
+								
+												autoresizescrollarea = yes
+										
+												scrollbar_vertical = {
+													using = Scrollbar_Vertical
+												}
+										
+												scrollwidget = {
+													dynamicgridbox = {
+														datamodel = "[InternationalOrganizationsView.GetActions]"
+														item = {
+															widget = {
+																size = { 470 37 }
+																action_button_diamond = {
+																	parentanchor = center
+																	visible = "[Not(EqualTo_string(GenericAction.GetKey, 'contribute_to_organization_treasury'))]"
+																	size = { 470 30 }
+																	text = "[GenericAction.GetNameWithNoTooltip]"
+																	title = "[GenericAction.GetNameWithNoTooltip]"
+																	actor = "[InternationalOrganizationsView.GetPlayer]"
+																	parameter = {
+																		parameter_name = "recipient"
+																		parameter_value = "[InternationalOrganizationsView.GetInternationalOrganization]"
+																	}
+																	left_action = { action_name = "[GenericAction.GetKey]" }
+																	tooltipwidget = {
+																		using = io_generic_action_button_tooltip
+																	}
+																}
+															}
+														}
+													}
+												}
+											}
+											scrollarea = {
+												block "organization_main_actions_extra_visible" { visible = no }
+												maximumsize = { 470 400 }
+												scrollbarpolicy_horizontal = always_off
+								
+												autoresizescrollarea = yes
+										
+												scrollbar_vertical = {
+													using = Scrollbar_Vertical
+												}
+										
+												scrollwidget = {
+													widget = {
+														vbox = {
+															set_parent_size_to_minimum = yes
+															margin = { 0 5 }
+															ignoreinvisible = yes
+															spacing = 6
+															
+															block "organization_main_actions_extra" {}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+							card_io_payments = {}
+						}
+
+						block "organization_overview_special_members" {
+							vbox = {
+								layoutpolicy_horizontal = expanding
+								visible = "[InternationalOrganizationsView.HasSpecialMembers]"
+								datamodel = "[InternationalOrganizationsView.GetSpecialMemberItems]"
+								item = {
+									block "organization_overview_list_item" {
+										vbox = {
+											layoutpolicy_horizontal = expanding
+											spacing = 10
+											using = members_entry
+											visible = "[Not(IsDataModelEmpty(MemberTypeItem.GetCountries))]"
+										}
+									}
+								}
+							}
+						}
+
+						block "organization_overview_list_custom_bottom" {
+							hbox = {
+								layoutpolicy_horizontal = expanding
+								margin = { 8 0 }
+								button_wax = {
+									size = { -1 50 }
+									layoutpolicy_horizontal = expanding
+					
+									hbox = {
+										spacing = 5
+										expand = {}
+		
+										icon = {
+											size = {25 25}
+											texture = "gfx/interface/icons/flat_icons/declare_war/declare_war_button.dds"
+										}
+					
+										text_single = {
+											text = "WARTITLE"
+											using = Font_Type_Headers
+										}
+					
+										expand = {}
+									}
+					
+									visible = "[InternationalOrganizationsView.GetInternationalOrganization.GetType.HasDeclareWarOnTargetCasusBelli]"
+									enabled = "[InternationalOrganizationsView.CanDeclareWar]"
+									
+									action_tooltip = {
+										title = "WARTITLE"
+										enabled = "[InternationalOrganizationsView.CanDeclareWar]"
+										on_action = "[InternationalOrganizationsView.DeclareWar]"
+									}
+
+									tooltipwidget = { BasicFunctionalTooltip = {} }
+								}
+							}
+						}
+						expand = {}
+					}
+				}
+			}
+		}
+	}
+}

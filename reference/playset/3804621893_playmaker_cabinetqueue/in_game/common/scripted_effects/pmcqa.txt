@@ -1,0 +1,276 @@
+﻿pmcqa_clear = {
+ save_scope_as = pmcqa_country
+ every_in_list = { variable = pmcqa_locations remove_location_modifier = pmcqa_bonus }
+ clear_variable_list = pmcqa_locations
+ if = {
+  limit = { exists = var:pmcqa_target }
+  var:pmcqa_target = {
+   if = {
+    limit = { exists = var:pmcqa_marker var:pmcqa_marker = scope:pmcqa_country }
+    # Preserve another action's culture marker if it changed the destination.
+    if = {
+     limit = { exists = var:promoting_culture var:promoting_culture = scope:pmcqa_country.var:pmcqa_culture }
+     remove_variable = promoting_culture
+    }
+    remove_variable = pmcqa_marker
+   }
+  }
+ }
+ remove_variable = pmcqa_target
+}
+pmcqa_stop = {
+ pmcqa_clear = yes
+ if = { limit = { NOT = { has_variable = pmcqa_generation } } set_variable = { name = pmcqa_generation value = 0 } }
+ change_variable = { name = pmcqa_generation add = 1 }
+ remove_variable = pmcqa_running
+ remove_variable = pmcqa_cabinet
+ remove_variable = pmcqa_culture
+}
+pmcqa_choose = {
+ save_scope_as = pmcqa_country
+ ordered_province = {
+  limit = { pmcqa_eligible = yes }
+  order_by = population
+  max = 1 check_range_bounds = no
+  scope:pmcqa_country = { set_variable = { name = pmcqa_target value = prev } }
+ }
+ if = {
+  limit = { exists = var:pmcqa_target }
+  var:pmcqa_target = {
+   set_variable = { name = promoting_culture value = scope:pmcqa_country.var:pmcqa_culture }
+   set_variable = { name = pmcqa_marker value = scope:pmcqa_country }
+  }
+  debug_log = "PMCQA: selected a province with unfinished primary-culture assimilation for primary-culture assimilation"
+  debug_log_date = yes
+ }
+}
+pmcqa_apply = {
+ save_scope_as = pmcqa_country
+ set_variable = { name = pmcqa_scale value = { value = 1 add = var:pmcqa_cabinet.effective_skill min = 0 } }
+ # Retain eligible bonuses; remove stale ones and update only when skill changes.
+ every_in_list = {
+  variable = pmcqa_locations
+  if = { limit = { NOT = { owner = scope:pmcqa_country OR = { integration_level = integrated integration_level = core } } } remove_location_modifier = pmcqa_bonus }
+ }
+ clear_variable_list = pmcqa_locations
+ var:pmcqa_target = {
+  every_location_in_province = {
+   limit = { owner = scope:pmcqa_country OR = { integration_level = integrated integration_level = core } }
+   if = { limit = { OR = { NOT = { has_location_modifier = pmcqa_bonus } NOT = { exists = scope:pmcqa_country.var:pmcqa_applied_scale } AND = { exists = scope:pmcqa_country.var:pmcqa_applied_scale NOT = { scope:pmcqa_country.var:pmcqa_applied_scale = scope:pmcqa_country.var:pmcqa_scale } } } }
+    add_location_modifier = { modifier = pmcqa_bonus days = -1 mode = replace size = scope:pmcqa_country.var:pmcqa_scale }
+   }
+   scope:pmcqa_country = { add_to_variable_list = { name = pmcqa_locations target = prev } }
+  }
+ }
+ set_variable = { name = pmcqa_applied_scale value = var:pmcqa_scale }
+}
+pmcqa_tick = {
+ save_scope_as = pmcqa_country
+ if = {
+  limit = { NOT = { pmcqa_ready = yes } }
+  pmcqa_stop = yes
+ }
+ else = {
+  # Changing primary culture restarts target selection for the new culture.
+  if = {
+   limit = { NOT = { culture = var:pmcqa_culture } }
+   pmcqa_clear = yes
+   set_variable = { name = pmcqa_culture value = culture }
+  }
+  if = {
+   limit = { exists = var:pmcqa_target }
+   if = {
+    limit = {
+     var:pmcqa_target = {
+      OR = {
+       NOT = { owner = scope:pmcqa_country }
+       NOT = { pmcqa_needs_assimilation = yes }
+       NOT = { exists = var:promoting_culture }
+       AND = { exists = var:promoting_culture NOT = { var:promoting_culture = scope:pmcqa_country.var:pmcqa_culture } }
+       any_location_in_province = {
+        owner = scope:pmcqa_country
+        NOT = { OR = { integration_level = integrated integration_level = core } }
+       }
+      }
+     }
+    }
+    debug_log = "PMCQA: target finished, lost, or no longer eligible; selecting next"
+    pmcqa_clear = yes
+   }
+  }
+  if = {
+   limit = { NOT = { exists = var:pmcqa_target } }
+   pmcqa_choose = yes
+  }
+  if = {
+   limit = { exists = var:pmcqa_target }
+   pmcqa_apply = yes
+  }
+  # Idle if no target; daily scan resumes automatically when one becomes eligible.
+  save_scope_value_as = { name = pmcqa_generation value = var:pmcqa_generation }
+  trigger_event_silently = { on_action = pmcqa_daily days = 1 }
+ }
+}
+
+# Multi-member implementation. Each cabinet slot owns its target and bonuses.
+pmcqa_slot_clear = {
+ pmcqae_clear = yes
+ every_in_list = { variable = pmcqa_slot_locations remove_location_modifier = pmcqa_bonus }
+ clear_variable_list = pmcqa_slot_locations
+ if = {
+  limit = { exists = var:pmcqa_slot_target }
+  var:pmcqa_slot_target = {
+   if = {
+    limit = { exists = var:pmcqa_reservation var:pmcqa_reservation = scope:pmcqa_slot }
+    if = {
+     limit = { exists = var:promoting_culture var:promoting_culture = scope:pmcqa_slot.var:pmcqa_slot_culture }
+     remove_variable = promoting_culture
+    }
+    remove_variable = pmcqa_reserved_culture
+    remove_variable = pmcqa_reservation
+   }
+  }
+ }
+ remove_variable = pmcqa_slot_target
+}
+pmcqa_slot_choose = {
+ scope:pmcqa_country = {
+  ordered_province = {
+   limit = { pmcqa_eligible = yes NOT = { has_variable = pmcqa_reservation } }
+   order_by = population
+   max = 1 check_range_bounds = no
+   scope:pmcqa_slot = { set_variable = { name = pmcqa_slot_target value = prev } }
+  }
+ }
+ if = {
+  limit = { exists = var:pmcqa_slot_target }
+  var:pmcqa_slot_target = {
+   set_variable = { name = pmcqa_reservation value = scope:pmcqa_slot }
+   set_variable = { name = promoting_culture value = scope:pmcqa_slot.var:pmcqa_slot_culture }
+   set_variable = { name = pmcqa_reserved_culture value = scope:pmcqa_slot.var:pmcqa_slot_culture }
+  }
+ }
+}
+pmcqa_slot_apply = {
+ set_variable = { name = pmcqa_slot_scale value = { value = 1 add = effective_skill min = 0 } }
+ every_in_list = {
+  variable = pmcqa_slot_locations
+  if = { limit = { NOT = { owner = scope:pmcqa_country OR = { integration_level = integrated integration_level = core } } } remove_location_modifier = pmcqa_bonus }
+ }
+ clear_variable_list = pmcqa_slot_locations
+ var:pmcqa_slot_target = {
+  every_location_in_province = {
+   limit = { owner = scope:pmcqa_country OR = { integration_level = integrated integration_level = core } }
+   if = { limit = { OR = { NOT = { has_location_modifier = pmcqa_bonus } NOT = { exists = scope:pmcqa_slot.var:pmcqa_slot_applied_scale } AND = { exists = scope:pmcqa_slot.var:pmcqa_slot_applied_scale NOT = { scope:pmcqa_slot.var:pmcqa_slot_applied_scale = scope:pmcqa_slot.var:pmcqa_slot_scale } } } }
+    add_location_modifier = { modifier = pmcqa_bonus days = -1 mode = replace size = scope:pmcqa_slot.var:pmcqa_slot_scale }
+   }
+   scope:pmcqa_slot = { add_to_variable_list = { name = pmcqa_slot_locations target = prev } }
+  }
+ }
+ set_variable = { name = pmcqa_slot_applied_scale value = var:pmcqa_slot_scale }
+}
+pmcqa_slot_tick = {
+ save_scope_as = pmcqa_slot
+ if = {
+  limit = { NOT = { pmcqa_supported_action = yes exists = cabinet_member } }
+  pmcqa_slot_clear = yes
+  remove_variable = pmcqa_slot_running
+  if = { limit = { has_cabinet_action = yes cabinet_action = cabinet_action:pmcqae_action } stop_cabinet_action = yes }
+ }
+ else_if = { limit = { cabinet_action = cabinet_action:pmcqae_action } pmcqae_tick = yes }
+ else = {
+  if = {
+   limit = { NOT = { var:pmcqa_slot_culture = scope:pmcqa_country.culture } }
+   pmcqa_slot_clear = yes
+   set_variable = { name = pmcqa_slot_culture value = scope:pmcqa_country.culture }
+  }
+  if = {
+   limit = { exists = var:pmcqa_slot_target }
+   if = {
+    limit = { var:pmcqa_slot_target = { OR = {
+     NOT = { owner = scope:pmcqa_country }
+     NOT = { pmcqa_needs_assimilation = yes }
+       NOT = { exists = var:promoting_culture }
+       AND = { exists = var:promoting_culture NOT = { var:promoting_culture = scope:pmcqa_slot.var:pmcqa_slot_culture } }
+       any_location_in_province = { owner = scope:pmcqa_country NOT = { OR = { integration_level = integrated integration_level = core } } }
+    } } }
+    pmcqa_slot_clear = yes
+   }
+  }
+  if = { limit = { NOT = { exists = var:pmcqa_slot_target } } pmcqa_slot_choose = yes }
+  if = { limit = { exists = var:pmcqa_slot_target } pmcqa_slot_apply = yes }
+  scope:pmcqa_country = { change_variable = { name = pmcqa_multi_count add = 1 } }
+ }
+}
+pmcqa_multi_tick = {
+ save_scope_as = pmcqa_country
+ set_variable = { name = pmcqa_multi_count value = 0 }
+ # Recover active slots whose worker stopped while the cabinet member was missing.
+ every_cabinet = {
+  limit = { pmcqa_supported_action = yes exists = cabinet_member }
+  set_variable = pmcqa_slot_running
+  if = { limit = { NOT = { has_variable = pmcqa_slot_culture } }
+   set_variable = { name = pmcqa_slot_culture value = scope:pmcqa_country.culture }
+  }
+ }
+ # Release reservations left by removed cabinet slots before allocating targets.
+ every_province = {
+  limit = { has_variable = pmcqa_reservation }
+  save_scope_as = pmcqa_reserved_province
+  if = {
+   limit = { NOT = {
+    exists = var:pmcqa_reservation
+    var:pmcqa_reservation = {
+     has_variable = pmcqa_slot_running pmcqa_supported_action = yes exists = cabinet_member
+     OR = {
+      AND = { exists = var:pmcqa_slot_target var:pmcqa_slot_target = scope:pmcqa_reserved_province }
+      is_target_in_variable_list = { name = pmcqae_provinces target = scope:pmcqa_reserved_province }
+     }
+    }
+   } }
+    if = {
+     limit = { exists = var:promoting_culture exists = var:pmcqa_reserved_culture var:promoting_culture = var:pmcqa_reserved_culture }
+     remove_variable = promoting_culture
+    }
+    every_location_in_province = { remove_location_modifier = pmcqa_bonus remove_location_modifier = pmcqae_bonus }
+    remove_variable = pmcqa_reserved_culture
+    remove_variable = pmcqa_reservation
+  }
+ }
+ every_cabinet = {
+  limit = { has_variable = pmcqa_slot_running }
+  pmcqa_slot_tick = yes
+ }
+ if = {
+  limit = { var:pmcqa_multi_count > 0 }
+  save_scope_value_as = { name = pmcqa_multi_generation value = var:pmcqa_multi_generation }
+  trigger_event_silently = { on_action = pmcqa_multi_daily days = 1 }
+ }
+ else_if = {
+  limit = { any_cabinet = { has_cabinet_action = yes cabinet_action = cabinet_action:pmcqa_action } }
+  save_scope_value_as = { name = pmcqa_multi_generation value = var:pmcqa_multi_generation }
+  trigger_event_silently = { on_action = pmcqa_multi_daily days = 1 }
+ }
+ else = {
+  remove_variable = pmcqa_multi_running
+  change_variable = { name = pmcqa_multi_generation add = 1 }
+ }
+}
+
+# CUL may find an action already selected but with no live worker. Repair it
+# after either a native assignment or a skip; invalidate older delayed callbacks.
+pmcqia_recover_assimilation = {
+ if = {
+  limit = {
+   has_variable = pmcqia_culture_mode
+   exists = var:pmcqia_slot
+   var:pmcqia_slot = { has_cabinet_action = yes cabinet_action = cabinet_action:pmcqa_action }
+  }
+  set_variable = pmcqa_multi_running
+  if = { limit = { NOT = { has_variable = pmcqa_multi_generation } }
+   set_variable = { name = pmcqa_multi_generation value = 0 }
+  }
+  change_variable = { name = pmcqa_multi_generation add = 1 }
+  pmcqa_multi_tick = yes
+ }
+}

@@ -1,0 +1,43 @@
+﻿pmcqa_action = {
+ ability = dip
+ icon = promote_culture
+ allow_multiple = yes
+ potential = { is_ai = no num_locations > 0 }
+ allow = {
+  OR = {
+   scope:is_active ?= yes
+  any_province = {
+   NOT = { has_variable = promoting_culture }
+   pmcqa_needs_assimilation = yes
+   NOT = { any_location_in_province = { NOT = { OR = { integration_level = integrated integration_level = core } } } }
+  }
+ }
+ }
+ on_activate = {
+  save_scope_as = pmcqa_slot
+  scope:actor = {
+   # Cancel and clean the previous single-member implementation on upgrade.
+   if = { limit = { has_variable = pmcqa_running } pmcqa_stop = yes }
+   save_scope_as = pmcqa_country
+  }
+  pmcqa_slot_clear = yes
+  set_variable = pmcqa_slot_running
+  set_variable = { name = pmcqa_slot_culture value = scope:actor.culture }
+  scope:actor = {
+   if = {
+    limit = { NOT = { has_variable = pmcqa_multi_running } }
+    set_variable = pmcqa_multi_running
+    if = { limit = { NOT = { has_variable = pmcqa_multi_generation } } set_variable = { name = pmcqa_multi_generation value = 0 } }
+    change_variable = { name = pmcqa_multi_generation add = 1 }
+    save_scope_value_as = { name = pmcqa_multi_generation value = var:pmcqa_multi_generation }
+    trigger_event_silently = { on_action = pmcqa_multi_daily days = 1 }
+   }
+  }
+ }
+ on_deactivate = {
+  save_scope_as = pmcqa_slot
+  scope:actor = { save_scope_as = pmcqa_country }
+  pmcqa_slot_clear = yes
+  remove_variable = pmcqa_slot_running
+ }
+}

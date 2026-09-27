@@ -1,0 +1,35 @@
+﻿pmcq2_control_valid = {
+ exists = var:pmcq2_control
+ var:pmcq2_control = { has_cabinet_action = yes cabinet_action = cabinet_action:pmcq2_control_action exists = cabinet_member }
+}
+pmcq2_nobles_valid = {
+ has_reform = government_reform:noblesse_oblige_reform
+ exists = var:pmcq2_nobles
+ var:pmcq2_nobles = { has_cabinet_action = yes cabinet_action = cabinet_action:pmcq2_nobles_action exists = cabinet_member }
+}
+pmcq2_can_start = {
+ is_ai = no
+ modifier:can_send_royal_inspectors = no
+ OR = {
+  any_cabinet = { has_cabinet_action = yes cabinet_action = cabinet_action:pmcq2_control_action exists = cabinet_member }
+  AND = {
+   has_reform = government_reform:noblesse_oblige_reform
+   any_cabinet = { has_cabinet_action = yes cabinet_action = cabinet_action:pmcq2_nobles_action exists = cabinet_member }
+  }
+ }
+}
+pmcq2_ready = {
+ is_ai = no
+ modifier:can_send_royal_inspectors = no
+ OR = { pmcq2_control_valid = yes pmcq2_nobles_valid = yes }
+}
+
+pmcq2_has_source = {
+ OR = { has_variable = pmcq2_culture_mode has_variable_list = pmcq_queue }
+}
+# Province scope, owner saved by country selection/daily refresh.
+pmcq2_culture_eligible = {
+ owner = scope:pmcq2_owner
+ has_variable = promoting_culture
+ province_average_control < 0.95
+}

@@ -1,0 +1,33 @@
+﻿# Show shortcuts only for other active non-Crown estates.
+pmcqpriv_estate_shortcut_visible = {
+ scope = country
+ saved_scopes = { pmcqpriv_current pmcqpriv_destination }
+ is_shown = {
+  exists = scope:pmcqpriv_current
+  exists = scope:pmcqpriv_destination
+  country_has_estate = scope:pmcqpriv_destination.estate_type
+  NOT = { scope:pmcqpriv_destination.estate_type = estate_type:crown_estate }
+  NOT = { scope:pmcqpriv_current.estate_type = scope:pmcqpriv_destination.estate_type }
+ }
+}
+
+# Country-scoped request token: absent in a new game, set only by a navigation click.
+pmcqpriv_request_navigation = { scope = country saved_scopes = { pmcqpriv_destination }
+ effect = { root = { if = { limit = {
+  exists = scope:pmcqpriv_destination
+  country_has_estate = scope:pmcqpriv_destination.estate_type
+ } debug_log = "PMCQPRIV_NAV|clicked" set_variable = { name = pmcqpriv_navigation_target value = scope:pmcqpriv_destination } } } }
+}
+pmcqpriv_navigation_requested = { scope = country saved_scopes = { pmcqpriv_destination }
+ is_shown = {
+  has_variable = pmcqpriv_navigation_target
+  exists = scope:pmcqpriv_destination
+  var:pmcqpriv_navigation_target = scope:pmcqpriv_destination
+  country_has_estate = scope:pmcqpriv_destination.estate_type
+ }
+}
+pmcqpriv_navigation_consumed = { scope = country effect = { root = { remove_variable = pmcqpriv_navigation_target } } }
+
+pmcqpriv_navigation_dispatch_trace = { scope = country effect = { root = { debug_log = "PMCQPRIV_NAV|dispatching_native_picker" } } }
+
+pmcqpriv_navigation_created_trace = { scope = country effect = { root = { debug_log = "PMCQPRIV_NAV|request_widget_created" } } }
