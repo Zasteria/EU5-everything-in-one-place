@@ -118,13 +118,19 @@ EDITS = (
 )
 
 
+# **Raise with every change to what this mod ships** (his rule, 2026-09-27):
+# `mods.bat` compares this number with the one installed in the game, and a
+# refresh rewrites `.metadata` from here — a bump made by hand there is lost.
+PERF_REVISION = 2
+
+
 def metadata() -> str:
     """CM dev's own metadata, whole, with this mod's identity."""
     base = json.loads((SRC / ".metadata/metadata.json").read_text(encoding="utf-8-sig"))
     version = base.get("version", "unknown")
     base["name"] = "Construction Manager Dev (perf)"
     base["id"] = "bag.cm_dev_perf"
-    base["version"] = f"{version}+perf1"
+    base["version"] = f"{version}+perf{PERF_REVISION}"
     base["short_description"] = (
         f"Construction Manager Dev {version} with its hidden building-type tree "
         "gated on the passes that need it. Load this INSTEAD of Construction Manager Dev, never alongside it."
