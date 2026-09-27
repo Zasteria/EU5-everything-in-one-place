@@ -237,6 +237,65 @@ def write_fingerprints(recorded: dict[str, str]) -> None:
     FINGERPRINTS.write_text("\n".join(body) + "\n", encoding="utf-8")
 
 
+# The base mod renames a country with ``change_country_name = "<Japanese>"``.
+# The effect takes a localization key, so a quoted literal reaches the player as
+# it stands -- in Japanese, whatever the language.  Those event files are
+# copied with the literal swapped for a key of ours, named here in both
+# languages.  A literal missing from this table stops the run.
+RENAMES = {
+    "西ローマ帝国": ("nmt_ru_western_roman_empire",
+                "Западная Римская империя", "Западноримск",
+                "Western Roman Empire", "Western Roman"),
+    "フランク王国": ("nmt_ru_frankish_kingdom",
+                "Франкское королевство", "Франкск",
+                "Frankish Kingdom", "Frankish"),
+    "スペイン王国": ("nmt_ru_kingdom_of_spain",
+                "Королевство Испания", "Испанск",
+                "Kingdom of Spain", "Spanish"),
+    "ルーシ大公国": ("nmt_ru_grand_principality_of_rus",
+                 "Великое княжество Русь", "Русск",
+                 "Grand Principality of Rus'", "Ruthenian"),
+}
+RENAME_LINE = re.compile(r'(change_country_name\s*=\s*)"([^"]*)"')
+EVENTS = MOD / "in_game" / "events"
+NAMES_FILE = "nmt_ru_country_names_l_{lang}.yml"
+
+
+def patch_renames(base: Path) -> list[str]:
+    """Copy each base event file that renames by literal, the literal made a key."""
+    problems: list[str] = []
+    written: set[Path] = set()
+    for path in sorted((base / "in_game" / "events").rglob("*.txt")):
+        text = path.read_text(encoding="utf-8-sig")
+        if not RENAME_LINE.search(text):
+            continue
+
+        def swap(match: re.Match) -> str:
+            literal = match.group(2)
+            if literal not in RENAMES:
+                problems.append(f"{path.name}: no key for the country name {literal!r}")
+                return match.group(0)
+            return match.group(1) + RENAMES[literal][0]
+
+        target = EVENTS / path.relative_to(base / "in_game" / "events")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(RENAME_LINE.sub(swap, text), encoding="utf-8-sig")
+        written.add(target)
+    # a file the base no longer needs patched must not keep overriding it
+    for stale in EVENTS.rglob("*.txt") if EVENTS.is_dir() else []:
+        if stale not in written:
+            stale.unlink()
+    for lang, name_at, adj_at in (("russian", 1, 2), ("english", 3, 4)):
+        body = [f"l_{lang}:"]
+        for key, *spoken in RENAMES.values():
+            body.append(f' {key}: "{spoken[name_at - 1]}"')
+            body.append(f' {key}_ADJ: "{spoken[adj_at - 1]}"')
+        target = MOD / "main_menu" / "localization" / lang / NAMES_FILE.format(lang=lang)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("\n".join(body) + "\n", encoding="utf-8-sig")
+    return problems
+
+
 def base_files(base: Path) -> dict[str, list[Path]]:
     """Every English file of the base mod, by stem, across both trees."""
     found: dict[str, list[Path]] = {}
@@ -308,6 +367,7 @@ def main(argv: list[str]) -> int:
                     if name in recorded and recorded[name] != digest:
                         moved.append(name)
 
+    problems += patch_renames(base)
     if problems:
         print("\n".join(problems[:40]))
         if len(problems) > 40:
