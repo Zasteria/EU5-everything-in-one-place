@@ -1,0 +1,67 @@
+﻿# cm_dev_perf probe (09-27). Says whether CM's building-type classification has
+# closed. Open means the hidden tree stands for the whole session, as in CM Dev,
+# and the classification is incomplete: the suspected cause of perf's slow loads
+# and of its wrong builds. The cross hides it until the game restarts.
+window = {
+	name = "cm_perf_probe_window"
+	datacontext = "[GetPlayer]"
+	allow_outside = yes
+	alwaystransparent = no
+	parentanchor = top|hcenter
+	widgetanchor = top|hcenter
+	position = { 0 90 }
+	movable = yes
+	size = { 460 120 }
+	using = bg_window_default_alt
+	visible = "[And(GetPlayer.Exists, Not(GetVariableSystem.Exists('cm_probe_hide')))]"
+
+	widget = {
+		parentanchor = right
+		position = { -5 5 }
+		size = { 40 40 }
+		ui_direction_button_holder_right = {}
+		button_close_alt = {
+			blockoverride "close_on_action" {
+				on_action = "[GetVariableSystem.Set('cm_probe_hide', '1')]"
+			}
+		}
+	}
+
+	vbox = {
+		using = window_margin_alt
+
+		window_header_alt = {
+			blockoverride "header_text" { text = "cm_perf_probe_title" }
+		}
+
+		vbox = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+			using = bg_secondary_inner_alt
+			margin = { 12 8 }
+			spacing = 4
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 400 -1 }
+				visible = "[GetGlobalVariable('cm_process_buildings').IsSet]"
+				text = "cm_perf_probe_open"
+			}
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 400 -1 }
+				visible = "[Not(GetGlobalVariable('cm_process_buildings').IsSet)]"
+				text = "cm_perf_probe_closed"
+			}
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 400 -1 }
+				visible = "[GetGlobalVariable('cm_refresh_upgrade_types').IsSet]"
+				text = "cm_perf_probe_refresh"
+			}
+		}
+	}
+}

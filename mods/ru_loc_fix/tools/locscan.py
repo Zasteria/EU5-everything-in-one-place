@@ -557,9 +557,47 @@ def foreign_context_fault(value: str, english: str) -> str | None:
     return "asks %s, English asks %s" % (", ".join(extra), ", ".join(sorted(theirs))) if extra else None
 
 
+def _expressions(value: str) -> list[str]:
+    """Every top-level `[...]` of a value, brackets stripped."""
+    out, depth, start = [], 0, 0
+    for i, c in enumerate(value):
+        if c == "[":
+            if depth == 0:
+                start = i
+            depth += 1
+        elif c == "]" and depth:
+            depth -= 1
+            if depth == 0:
+                out.append(value[start + 1:i])
+    return out
+
+
+NUMBER_FORMAT = re.compile(r"[0-9%=+\-]")
+
+
+def dropped_value_fault(value: str, english: str) -> str | None:
+    """A number English prints that the Russian key does not.
+
+    Any English expression with a numeric format (`|+=2`, `|2%`, `|0W`) whose
+    call does not appear anywhere in the Russian key. It caught
+    `MONTHLY_ARMY_TRADITION_SOURCES` («изменяется на . Причины», 09-27), and
+    with it counts read off the wrong function (`GetTotalLevyCount` for
+    mercenaries), a bonus shown as a penalty and figures typed in by hand.
+    Advisory: a translator may compute the same number another way.
+    """
+    mine = {e.split("|")[0].replace(" ", "") for e in _expressions(value)}
+    for expr in _expressions(english):
+        if "|" not in expr or not NUMBER_FORMAT.search(expr.rsplit("|", 1)[1]):
+            continue
+        call = expr.split("|")[0].replace(" ", "")
+        if call not in mine:
+            return "English prints [%s], this key does not" % call[:80]
+    return None
+
+
 HARD = ("brackets", "custom_on_text", "filter_nested", "unknown_root",
         "unknown_member", "missing_ref", "foreign_context")
-ADVISORY = ("scope", "arguments", "member_on_root", "declension_ref")
+ADVISORY = ("scope", "arguments", "member_on_root", "declension_ref", "dropped_value")
 RULES = HARD + ADVISORY
 
 
@@ -608,6 +646,7 @@ def scan(russian: dict[str, Entry], english: dict[str, Entry],
             ("arguments", lambda: argument_difference(entry.value, pair.value) if pair else None),
             ("member_on_root", lambda: member_on_root_fault(entry.value, en_pairs, en_roots)),
             ("declension_ref", lambda: declension_ref_fault(key, entry.value, russian)),
+            ("dropped_value", lambda: dropped_value_fault(entry.value, pair.value) if pair else None),
         )
         for name, check in checks:
             if name not in rules:
