@@ -42,6 +42,7 @@ lives in prose anywhere in this repository, and none should be added.
 | `game/in_game/common/customizable_localization/` | The declension and gender machinery the Russian localization runs on — `CL_*`, `LR_*`, `rank_ru_*`, and the `country_ru_flavor` parent every suffixed key hangs off |
 | `game/main_menu/localization/` | What the game calls its own concepts — `nd_ru/tools/term.py` reads it |
 | `game/loading_screen/common/defines/` | **The game's defines.** They live under `loading_screen`, not under `in_game` — `00_defines.txt` is the main one, `jomini/00_tooltips.txt` holds the tooltip timings |
+| `game/main_menu/setup/start/` | **The 1337 start**: every country's cores, rank, government and reforms (`10_countries.txt`), characters, pops, buildings, diplomacy, armies. Comes with `mods.bat` → 7 → 1 |
 | `jomini/main_menu/common/defines/` | The Jomini layer's own defines, which the game's files override. Two values, kept for completeness |
 | `game/docs/` | The engine's own API: every effect, trigger, event target, on_action, modifier and GUI function, printed by the game's `script_docs` and `dump_data_types` console commands. Ask it with `tools/api.py` |
 | `mods/` — Community Mod Framework | The CMF and CMM APIs everything here builds on |
