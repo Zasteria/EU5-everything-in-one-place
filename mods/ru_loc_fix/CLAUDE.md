@@ -22,6 +22,8 @@
 (`CONSTRUCTION_AUDIO_MODE = 0`). **`bag_ruloc_other_mods_l_russian.yml`
 — рукописный, ключи чужих модов; работает, только если мод внизу плейсета.**
 
+**Круг 7, 09-28** (не в игре): `cyrillic_code`, 47 ключей, и `loading_screen/`.
+
 **Собирается** `python3 mods/ru_loc_fix/tools/generate.py`, из `tools/refresh.py`.
 `tools/locscan.py` — это набор правил, разделённый на жёсткие (не могут сработать
 на здоровом ключе) и советующие (нужен человек и сверка с английским).

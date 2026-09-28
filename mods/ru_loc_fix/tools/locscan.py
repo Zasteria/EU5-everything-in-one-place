@@ -77,6 +77,7 @@ MEMBER = re.compile(r"\.([A-Za-z_][A-Za-z0-9_]*)")
 # A saved event scope, which is written in snake case and defined by the event
 # script rather than by anything in this tree.
 SAVED_SCOPE = re.compile(r"^[a-z][a-z0-9_]*$")
+CYRILLIC = re.compile(r"[А-Яа-яЁё]")
 
 
 @dataclass
@@ -116,9 +117,20 @@ def read_language(directory: Path) -> dict[str, Entry]:
 
 
 def load(root: Path = None) -> tuple[dict[str, Entry], dict[str, Entry]]:
-    """The game's Russian and English localization, as key -> entry."""
-    base = root or refs.GAME_LOCALIZATION
-    return read_language(base / "russian"), read_language(base / "english")
+    """The game's Russian and English localization, as key -> entry.
+
+    With no `root`, the loading screen's own tree is read too: its tips are
+    shown on every load and exit, and `[латинян]` sat there unseen because
+    only `main_menu` was scanned. Its keys keep their path, so the generator
+    can write a repair beside the tree it came from.
+    """
+    if root:
+        return read_language(root / "russian"), read_language(root / "english")
+    russian, english = {}, {}
+    for base in (refs.GAME_LOCALIZATION, refs.GAME / "loading_screen/localization"):
+        russian.update(read_language(base / "russian"))
+        english.update(read_language(base / "english"))
+    return russian, english
 
 
 # --------------------------------------------------------------------------
@@ -145,6 +157,23 @@ def bracket_fault(value: str) -> str | None:
             if depth < 0:
                 return "a ']' that closes nothing"
     return "a '[' that is never closed" if depth else None
+
+
+def cyrillic_code_fault(value: str) -> str | None:
+    """Russian letters inside a data function, outside any quoted argument.
+
+    No name the engine knows is spelt in Cyrillic, so a Russian letter there is
+    either a letter typed on the wrong layout — `GetАdjective`, `GetRuвler`,
+    `TARGET_HEIRп_SELECTION` — or a translator who used `[...]` as ordinary
+    square brackets: `[латинян]` in a loading tip. The rules below miss both,
+    because every identifier they read is ASCII. The game answers with
+    `Could not find data system function 'латинян'`.
+    """
+    for block in DATA_BLOCK.findall(value):
+        code = re.sub(r"'[^']*'", "''", block)
+        if CYRILLIC.search(code):
+            return "Russian letters in the code of '[%s]'" % block[:60]
+    return None
 
 
 def custom_on_text_fault(value: str) -> str | None:
@@ -595,7 +624,7 @@ def dropped_value_fault(value: str, english: str) -> str | None:
     return None
 
 
-HARD = ("brackets", "custom_on_text", "filter_nested", "unknown_root",
+HARD = ("brackets", "cyrillic_code", "custom_on_text", "filter_nested", "unknown_root",
         "unknown_member", "missing_ref", "foreign_context")
 ADVISORY = ("scope", "arguments", "member_on_root", "declension_ref", "dropped_value")
 RULES = HARD + ADVISORY
@@ -634,6 +663,7 @@ def scan(russian: dict[str, Entry], english: dict[str, Entry],
         pair = english.get(key)
         checks = (
             ("brackets", lambda: bracket_fault(entry.value)),
+            ("cyrillic_code", lambda: cyrillic_code_fault(entry.value)),
             ("custom_on_text", lambda: custom_on_text_fault(entry.value)),
             ("filter_nested", lambda: filter_nested_fault(key, entry.value, russian)),
             ("unknown_root", lambda: unknown_root_fault(
