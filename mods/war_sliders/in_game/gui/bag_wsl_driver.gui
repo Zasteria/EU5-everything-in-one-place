@@ -43,9 +43,21 @@ widget = {
 	# видимой коробкой, и `_show` / `trigger_when` ловят настоящий переход.
 	# Виджет, ставший видимым вместе с родителем, переход не ловит
 	# (`docs/pitfalls/windows.md`), а строкам датамодели нужен лишний кадр.
+	#
+	# **Задержка — отдельным состоянием, а не `duration` на `trigger_when`.** В
+	# 0.5 было `trigger_when` + `duration` + `on_finish` в одном состоянии, и
+	# 2026-09-28 мод «ни разу не отработал». Такой формы нет ни в ванили, ни в
+	# CMF; рабочая форма — `cmm_window_open_gate.gui`: ворота только
+	# `on_start`, выдержку ведёт второе состояние через
+	# `PdxGuiTriggerAllAnimations`.
 	state = {
 		name = bag_wsl_arm
 		trigger_when = "[And(GetPlayer.MakeScope.GetVariable('bag_wsl_busy').IsSet, Not(GetVariableSystem.Exists('bag_wsl_armed')))]"
+		on_start = "[PdxGuiTriggerAllAnimations('bag_wsl_arm_settle')]"
+	}
+
+	state = {
+		name = bag_wsl_arm_settle
 		duration = 0.3
 		on_finish = "[GetVariableSystem.Set('bag_wsl_armed', '1')]"
 	}
@@ -130,9 +142,16 @@ widget = {
 			# Правка идёт месяцами, и цель меняется внутри неё: последний месяц
 			# отрабатывает не на полную, а ровно на остаток. Ползунок за новым
 			# числом едет сам — отправить движку надо отдельно.
+			# Та же форма, что у ворот: `trigger_when` только запускает, выдержку
+			# ведёт отдельное состояние.
 			state = {
 				name = bag_wsl_mint_repost
 				trigger_when = "[And(GetVariableSystem.Exists('bag_wsl_armed'), GetPlayer.MakeScope.GetVariable('bag_wsl_mint_repost').IsSet)]"
+				on_start = "[PdxGuiTriggerAllAnimations('bag_wsl_mint_repost_post')]"
+			}
+
+			state = {
+				name = bag_wsl_mint_repost_post
 				duration = 0.2
 				on_finish = "[EconomyView.PostTaxes]"
 				on_finish = "[GetScriptedGui('bag_wsl_clear_mint_repost').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
