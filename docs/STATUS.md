@@ -5,7 +5,7 @@ One line each. **Read only the brief of the mod the task is about** —
 
 | mod | state | never been in game |
 | --- | --- | --- |
-| [`ru_loc_fix`](../mods/ru_loc_fix/CLAUDE.md) | разметка русского в игре, 266 ключей; **09-26: круг 4 подтверждён** | круг 5–6 |
+| [`ru_loc_fix`](../mods/ru_loc_fix/CLAUDE.md) | разметка русского в игре, 266 ключей; **09-26: круг 4 подтверждён** | круги 5–7 |
 | [`nd_ru`](../mods/nd_ru/CLAUDE.md) | in progress; 4 174 keys, 10.2% | everything except Westphalia and the override itself |
 | [`nmt_ru`](../mods/nmt_ru/CLAUDE.md) | **в игре не был; 09-22 лаунчер его прятал без `relationships` — дописан.** Русский для National Mission Trees: Валахия, Византия, Феодоро, Грузия, Ахен, Брабант, Флоренция, Монферрат, Москва, Савойя, Австрия — 2 282 ключа. База без русского и без отката, дерево пишется целиком | всё |
 | [`where_to_produce`](../mods/where_to_produce/CLAUDE.md) | **Единственная версия, работа идёт в ней.** Заходы — [`investigations/wtp_backlog.md`](investigations/wtp_backlog.md), открыт пункт 9 | [`archive/status_wtp_untested.md`](archive/status_wtp_untested.md) |
