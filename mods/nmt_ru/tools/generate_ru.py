@@ -30,7 +30,8 @@ It refuses to write a file that would show up wrong in game:
 
 * a key the base mod does not define is invented and cannot render;
 * the markup of a value -- ``[data functions]`` and ``[concept|e]`` links,
-  ``$key$`` references, ``@texticons!``, ``#format`` codes, ``\\n`` -- is read by
+  ``$key$`` references, ``@texticons!``, ``#format`` codes, ``\\n``, the ``\\`` of an
+  escaped quote -- is read by
   the engine rather than displayed and has to survive translation unchanged;
 * a stray double quote truncates the line, and a square bracket added to plain
   text renders as ``ERROR:``;
@@ -64,7 +65,7 @@ KEPT = MOD / "translations" / "kept_as_is.txt"
 
 KEY_LINE = re.compile(r'^\s*([\w.\-]+):\s*\d*\s*"(.*)"\s*$')
 OPEN_LINE = re.compile(r'^\s*([\w.\-]+):\s*\d*\s*"(.*)$')
-MARKUP = re.compile(r"\[[^\]]*\]|\$[^$]*\$|§.|@\w+!|#[A-Za-z!]+|\\n")
+MARKUP = re.compile(r"\[[^\]]*\]|\$[^$]*\$|§.|@\w+!|#[A-Za-z!]+|\\n|\\")
 CYRILLIC = re.compile(r"[Ѐ-ӿ]")
 LATIN = re.compile(r"[A-Za-z]")
 ALLOWED = re.compile(
