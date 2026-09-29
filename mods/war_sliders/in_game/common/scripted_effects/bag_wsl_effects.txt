@@ -36,6 +36,17 @@ bag_wsl_tick = {
 		# ли, решает он (`bag_wsl_*_hit` / `_miss`). В 0.5.2 мод двигал вслепую
 		# и мигал максимумом каждый месяц.
 		bag_wsl_maint_check = yes
+		# И инфляция: остаток выше цели, оставшийся после правки или набежавший
+		# потом, гасится в любой мирный месяц, а не только в день мира.
+		# Не в тот же такт, когда правку только что сняли: интерфейс ещё должен
+		# вернуть галочку, и точка нулевого прироста берётся из-под автоматики.
+		if = {
+			limit = {
+				NOT = { has_variable = bag_wsl_mint_phase }
+				NOT = { has_variable = bag_wsl_mint_release }
+			}
+			bag_wsl_mint_arm = yes
+		}
 		bag_wsl_update_busy = yes
 	}
 }
@@ -249,11 +260,16 @@ bag_wsl_mint_aim = {
 		set_local_variable = { name = bag_wsl_aim value = var:bag_wsl_m0 }
 		change_local_variable = { name = bag_wsl_aim subtract = local_var:bag_wsl_step }
 
-		# Выше точки нулевого прироста нельзя — это уже добавляло бы инфляцию;
-		# ниже пола незачем — там и так полный темп.
+		# Не ближе сотой к точке нулевого прироста: крошечный остаток давал
+		# положение почти в ней, месяц почти ничего не снимал, и правка
+		# сдавалась с остатком 0.01% (его жалоба 2026-09-29). Перебор не страшен:
+		# ниже нуля инфляция не опускается. Ниже пола незачем — там и так
+		# полный темп.
+		set_local_variable = { name = bag_wsl_near value = var:bag_wsl_m0 }
+		change_local_variable = { name = bag_wsl_near subtract = 0.01 }
 		if = {
-			limit = { local_var:bag_wsl_aim > var:bag_wsl_m0 }
-			set_local_variable = { name = bag_wsl_aim value = var:bag_wsl_m0 }
+			limit = { local_var:bag_wsl_aim > local_var:bag_wsl_near }
+			set_local_variable = { name = bag_wsl_aim value = local_var:bag_wsl_near }
 		}
 		if = {
 			limit = { local_var:bag_wsl_aim < var:bag_wsl_mint_floor }
