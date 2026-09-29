@@ -38,6 +38,9 @@ a filter that filters: the screenshot already says it.
 
 ## Runs
 
+**2026-09-29, NMT, Болгария — вассал не засчитывается.** «Завоевать Валахию»:
+вся область (44 района) у вассала, «Отвечающих: 0». Чинит `nmt_fix` 0.1.0.
+
 **2026-09-28, логи 12:23–12:40 (`eu5-logs-0928-1242`).** error.log 4 483 записи;
 4 400 из них — события `flavor_mos.16` и `flavor_mos.23`, вызванные им из консоли
 на державе, где триггер не проходит (`dynasty ?= root.ruler.dynasty`, 4 240 раз
@@ -122,19 +125,8 @@ Inspect есть; clearwidgets — не метла:
 строки `debug.log` про `EconomyView` — от `war_sliders`. Вынесено:
 [`archive/testlog_cm_perf_0920.md`](archive/testlog_cm_perf_0920.md).
 
-**2026-09-20, CM и карта — его три наблюдения, и они об одном.** Не замер, а
-то, что видно само: карта рекомендованных городских прав открыта и игра снята с
-паузы — тики «супер медленно и подгружаются», закрыл карту — ускорились. То же
-при множестве значков отрядов и при множестве значков строительства. Играет на
-плоской карте, без 3D.
-
-**Форма одна: счёт на объект, повторяемый на такте** — не пиксели. Разбор и
-связь с панелями CM —
-[`investigations/cm_performance.md`](investigations/cm_performance.md).
-
-**И его претензия по делу**: предыдущий заход ушёл в ошибки локализации, которые
-его сейчас не волнуют.
-
+**2026-09-20, CM и карта — три его наблюдения об одном** (счёт на объект на такте). Вынесено:
+[`archive/testlog_cm_map_0920.md`](archive/testlog_cm_map_0920.md).
 
 **2026-09-20, зонд и логи** (секундомер месяца жив; 5 310 строк `error.log` за 87 с) —
 вынесено: [`archive/testlog_0920_probe_logs.md`](archive/testlog_0920_probe_logs.md).
@@ -175,6 +167,9 @@ Inspect есть; clearwidgets — не метла:
 
 The next session should start here rather than designing anything new. All of
 these are prepared, all are cheap, and the owner has agreed to the hover one.
+
+**`nmt_fix` 0.1.0, та же болгарская партия**, мод после NMT. Верно:
+«Завоевать Валахию» считает районы вассала, error.log молчит о `nmt_fix`.
 
 **`cm_dev_perf` вместо CM Dev, та же партия.**
 Ставится через `mods.bat`, CM Dev в плейсете выключить. Верный ответ: фильтры

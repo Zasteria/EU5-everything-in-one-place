@@ -1,0 +1,1211 @@
+﻿cas_castile_mission_pack = {
+	icon = nmt_iberia
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		OR = {
+			has_or_had_tag = CAS
+			is_castilian_spain = yes
+		}
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = { always = yes }
+
+	on_start = { set_variable = cas_mission_started }
+	on_completion = { remove_variable = cas_mission_started }
+	on_abort = { remove_variable = cas_mission_started }
+
+	cas_sword_of_castile = {
+		icon = crusader_tradition
+		requires = { }
+		enabled = { always = yes }
+		on_completion = {
+			add_country_modifier = { modifier = cas_reconquista_spirit_mod years = 30 mode = add }
+			area:castile_area = {
+				every_location_in_area = {
+					limit = { owner ?= { NOT = { this = root } } }
+					owner ?= {
+						add_casus_belli = {
+							target = root
+							type = casus_belli:cb_conquer_province
+							province = prev.province
+							years = 50
+						}
+					}
+				}
+			}
+			area:leon_area = {
+				every_location_in_area = {
+					limit = { owner ?= { NOT = { this = root } } }
+					owner ?= {
+						add_casus_belli = {
+							target = root
+							type = casus_belli:cb_conquer_province
+							province = prev.province
+							years = 50
+						}
+					}
+				}
+			}
+		}
+	}
+
+	cas_tercio = {
+		icon = fra_gendarmes
+		requires = { cas_sword_of_castile }
+		enabled = {
+			army_tradition >= 50
+			army_size >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_tercio_mod years = -1 mode = add }
+		}
+	}
+
+	cas_garrison_system = {
+		icon = feudalism_advance
+		requires = { cas_tercio }
+		enabled = {
+			any_owned_location = {
+				OR = {
+					has_building = building_type:castle
+					has_building = building_type:bastion
+					has_building = building_type:star_fort
+				}
+				count >= 15
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_garrison_mod years = -1 mode = add }
+		}
+	}
+
+	cas_military_orders = {
+		icon = eternal_crusade
+		requires = { cas_tercio }
+		enabled = {
+			army_tradition >= 60
+			dominant_religion = religion:catholic
+			has_chivalric_order = yes
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_military_orders_mod years = -1 mode = add }
+		}
+	}
+
+	cas_canary_islands = {
+		icon = hsa_mastery_of_the_sea
+		requires = { cas_sword_of_castile }
+		enabled = {
+			area:canary_islands_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 5
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_canary_mod years = 70 mode = add }
+		}
+	}
+
+	cas_west_africa_trade = {
+		icon = hsa_global_reach
+		requires = { cas_canary_islands }
+		enabled = {
+			region:guinea_region = {
+				any_location_in_region = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 10
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_west_africa_mod years = -1 mode = add }
+		}
+	}
+
+	cas_atlantic_exploration = {
+		icon = hsa_global_reach
+		requires = { cas_canary_islands }
+		enabled = {
+			navy_tradition >= 20
+			monthly_income_trade_and_tax >= 150
+			current_date > 1450.1.1
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_atlantic_mod years = -1 mode = add }
+		}
+	}
+
+	cas_columbus_voyage = {
+		icon = hsa_global_reach
+		requires = { cas_atlantic_exploration }
+		enabled = {
+			current_date > 1490.1.1
+			any_owned_location = {
+				region = region:caribbean_region
+				count >= 1
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = cas_events.50
+		}
+	}
+
+	cas_conquistadors = {
+		icon = fra_gendarmes
+		requires = { cas_columbus_voyage }
+		enabled = {
+			army_tradition >= 55
+			any_colonial_country = {
+				is_subject_of = root
+				count >= 2
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_conquistadors_mod years = -1 mode = add }
+		}
+	}
+
+	cas_casa_de_contratacion = {
+		icon = a_magnanimous_empire
+		requires = { cas_columbus_voyage }
+		enabled = {
+			location:sevilla = {
+				has_building = building_type:port_authority
+				development >= 40
+			}
+			monthly_income_trade_and_tax >= 200
+		}
+		on_completion = {
+			location:sevilla = {
+				add_location_modifier = { modifier = cas_casa_contratacion_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	cas_trade_network = {
+		icon = a_magnanimous_empire
+		requires = { cas_casa_de_contratacion }
+		enabled = {
+			monthly_income_trade_and_tax >= 600
+			any_owned_location = {
+				is_market_center = yes
+				count >= 5
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_trade_network_mod years = -1 mode = add }
+		}
+	}
+
+	cas_conquer_cuba = {
+		icon = hsa_global_reach
+		requires = { cas_columbus_voyage }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:habana
+			area:cuba_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 40
+				}
+			}
+		}
+		on_completion = {
+			location:habana = {
+				add_location_modifier = { modifier = cas_havana_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	cas_conquer_caribbean = {
+		icon = hsa_global_reach
+		requires = { cas_columbus_voyage }
+		enabled = {
+			region:caribbean_region = {
+				any_location_in_region = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 60
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_caribbean_mod years = -1 mode = add }
+		}
+	}
+
+	cas_conquer_peru = {
+		icon = fra_gendarmes
+		requires = { cas_conquer_caribbean }
+		enabled = {
+			region:andes_region = {
+				any_location_in_region = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 60
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_peru_mod years = -1 mode = add }
+		}
+	}
+
+	cas_silver_of_potosi = {
+		icon = crossroads_of_commerce
+		requires = { cas_conquer_peru }
+		enabled = {
+			produced_in_country:silver > 50
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_potosi_mod years = -1 mode = add }
+		}
+	}
+
+	cas_gold_fleets = {
+		icon = crossroads_of_commerce
+		requires = { cas_silver_of_potosi cas_conquer_mexico }
+		enabled = {
+			produced_in_country:goods_gold > 50
+			produced_in_country:silver > 80
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_gold_fleet_mod years = -1 mode = add }
+		}
+	}
+
+	cas_colonial_empire = {
+		icon = legacy_of_great_empires
+		requires = { cas_conquer_mexico cas_conquer_peru }
+		enabled = {
+			any_colonial_country = {
+				is_subject_of = root
+				count >= 5
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_colonial_empire_mod years = -1 mode = add }
+		}
+	}
+
+	cas_grande_armada = {
+		icon = hsa_mastery_of_the_sea
+		requires = { cas_colonial_empire }
+		enabled = {
+			total_sub_unit_count:navy_heavy_ship >= 100
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_armada_mod years = -1 mode = add }
+		}
+	}
+
+	cas_empire_of_the_sun = {
+		icon = legacy_of_great_empires
+		requires = { cas_greatest_power cas_iberian_union cas_north_africa_dominion cas_grande_armada }
+		final = yes
+		enabled = {
+			any_colonial_country = {
+				is_subject_of = root
+				count >= 8
+			}
+			num_locations >= 1000
+			owns_or_non_sovereign_subject_owns = location:naples
+			owns_or_non_sovereign_subject_owns = location:madrid
+			owns_or_non_sovereign_subject_owns = location:sevilla
+			prestige >= 90
+		}
+		on_completion = {
+			trigger_event_non_silently = cas_events.99
+		}
+	}
+
+	cas_conquer_philippines = {
+		icon = hsa_global_reach
+		requires = { cas_colonial_empire }
+		enabled = {
+			region:indonesia_region = {
+				any_location_in_region = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 20
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_philippines_mod years = -1 mode = add }
+		}
+	}
+
+	cas_manila_galleon = {
+		icon = hsa_mastery_of_the_sea
+		requires = { cas_conquer_philippines }
+		enabled = {
+			monthly_income_trade_and_tax >= 800
+			region:indonesia_region = {
+				any_location_in_region = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 100
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_manila_galleon_mod years = -1 mode = add }
+		}
+	}
+
+	cas_greatest_power = {
+		icon = legacy_of_great_empires
+		requires = { cas_form_spain cas_colonial_empire }
+		enabled = {
+			num_locations >= 600
+			monthly_income_trade_and_tax >= 600
+			prestige >= 80
+		}
+		on_completion = {
+			remove_country_modifier = cas_form_spain_mod
+			add_country_modifier = { modifier = cas_greatest_power_mod years = -1 mode = add }
+		}
+	}
+
+	cas_conquer_mexico = {
+		icon = fra_gendarmes
+		requires = { cas_conquer_caribbean }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:tenochtitlan
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_mexico_mod years = -1 mode = add }
+		}
+	}
+
+	cas_conquer_florida = {
+		icon = hsa_global_reach
+		requires = { cas_conquer_caribbean }
+		enabled = {
+			region:east_coast_region = {
+				any_location_in_region = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 100
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_florida_mod years = -1 mode = add }
+		}
+	}
+
+	cas_holy_brotherhood = {
+		icon = dan_danish_legislation
+		requires = { cas_sword_of_castile }
+		enabled = {
+			legitimacy >= 80
+			"estate_power(estate_type:crown_estate)" >= 0.20
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_hermandad_mod years = -1 mode = add }
+		}
+	}
+
+	cas_salamanca_university = {
+		icon = encouragement_of_philosophers
+		requires = { cas_holy_brotherhood }
+		enabled = {
+			location:salamanca = {
+				has_building = building_type:university
+				development >= 25
+			}
+		}
+		on_completion = {
+			location:salamanca = {
+				add_location_modifier = { modifier = cas_salamanca_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	cas_siglo_de_oro = {
+		icon = encouragement_of_philosophers
+		requires = { cas_salamanca_university }
+		enabled = {
+			any_owned_location = {
+				has_building = building_type:university
+				count >= 5
+			}
+			prestige >= 80
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_siglo_de_oro_mod years = -1 mode = add }
+		}
+	}
+
+	cas_cortes = {
+		icon = dan_danish_legislation
+		requires = { cas_holy_brotherhood }
+		enabled = {
+			"estate_power(estate_type:crown_estate)" >= 0.25
+			legitimacy >= 85
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_cortes_mod years = -1 mode = add }
+		}
+	}
+
+	cas_absolute_crown = {
+		icon = crown_power_advance_renaissance
+		requires = { cas_holy_brotherhood }
+		enabled = {
+			has_variable = had_court_and_country_disaster_variable
+			"estate_power(estate_type:crown_estate)" >= 0.40
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_absolutism_mod years = -1 mode = add }
+		}
+	}
+
+	cas_leyes_de_indias = {
+		icon = fra_code_civil
+		requires = { cas_absolute_crown }
+		enabled = {
+			has_unlocked_policy_trigger = { type = new_laws_indies }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_colonial_law_mod years = -1 mode = add }
+		}
+	}
+
+	cas_fall_of_granada = {
+		icon = eternal_crusade
+		requires = { cas_sword_of_castile }
+		enabled = {
+			area:granada_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 18
+				}
+			}
+			OR = {
+				location:granada = { owner = root }
+				owns_or_non_sovereign_subject_owns = location:granada
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = cas_events.20
+		}
+	}
+
+	cas_granada_dev_hub = {
+		icon = city_building_advance
+		requires = { cas_fall_of_granada }
+		enabled = {
+			NOT = {
+				area:granada_area = {
+					any_location_in_area = {
+						owner = root
+						local_control < 0.50
+					}
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_granada_dev_mod years = 20 mode = add }
+		}
+	}
+
+	cas_dev_malaga = {
+		icon = city_building_advance
+		requires = { cas_granada_dev_hub }
+		enabled = {
+			location:malaga = {
+				total_building_levels >= 80
+			}
+		}
+		on_completion = {
+			location:malaga = {
+				change_raw_material = goods:silk
+				add_location_modifier = { modifier = cas_malaga_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	cas_dev_granada_city = {
+		icon = city_building_advance
+		requires = { cas_granada_dev_hub }
+		enabled = {
+			location:granada = {
+				development >= 35
+			}
+		}
+		on_completion = {
+			location:granada = {
+				add_location_modifier = { modifier = cas_granada_city_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	cas_conquer_sicily = {
+		icon = fra_gendarmes
+		requires = { cas_fall_of_granada }
+		enabled = {
+			OR = {
+				owns_or_non_sovereign_subject_owns = location:palermo
+				c:SIC = { in_union_with = root }
+				c:SIC = { is_subject_of = root }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_sicily_mod years = -1 mode = add }
+		}
+	}
+
+	cas_sardinia = {
+		icon = fra_gendarmes
+		requires = { cas_conquer_sicily }
+		enabled = {
+			area:sardinia_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 20
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_sardinia_mod years = -1 mode = add }
+		}
+	}
+
+	cas_mediterranean_mastery = {
+		icon = hsa_mastery_of_the_sea
+		requires = { cas_conquer_naples cas_conquer_sicily }
+		enabled = {
+			navy_size >= 60
+			navy_tradition >= 60
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_mediterranean_mod years = -1 mode = add }
+		}
+	}
+
+	cas_battle_of_lepanto = {
+		icon = eternal_crusade
+		requires = { cas_mediterranean_mastery }
+		enabled = {
+			any_current_war = {
+				OR = {
+					attacker_leader = root
+					defender_leader = root
+				}
+				any_war_participant = {
+					NOT = { this = root }
+					religion.group = religion_group:muslim
+				}
+			}
+			navy_tradition >= 70
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_lepanto_mod years = 20 mode = add }
+		}
+	}
+
+	cas_conquer_naples = {
+		icon = fra_gendarmes
+		requires = { cas_fall_of_granada }
+		enabled = {
+			OR = {
+				owns_or_non_sovereign_subject_owns = location:naples
+				c:NAP = { in_union_with = root }
+				c:NAP = { is_subject_of = root }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_naples_mod years = -1 mode = add }
+		}
+	}
+
+	cas_conquer_tunis_italy = {
+		icon = legacy_of_great_empires
+		requires = { cas_conquer_milan }
+		enabled = {
+			any_owned_location = {
+				region = region:italy_region
+				count >= 100
+			}
+			situation:italian_wars = {
+				situation_has_ended = yes
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_italy_dominion_mod years = -1 mode = add }
+		}
+	}
+
+	cas_conquer_milan = {
+		icon = fra_gendarmes
+		requires = { cas_conquer_naples }
+		enabled = {
+			OR = {
+				owns_or_non_sovereign_subject_owns = location:milano
+				c:MLO = { in_union_with = root }
+				c:MLO = { is_subject_of = root }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_milan_mod years = -1 mode = add }
+		}
+	}
+
+	cas_catholic_monarchs = {
+		icon = ties_with_the_holy_see
+		requires = { cas_fall_of_granada }
+		enabled = {
+			c:PAP = { opinion = { target = root value >= 150 } }
+			religion = religion:catholic
+			religion_percentage_in_country = {
+				religion = religion:catholic
+				value >= 0.90
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_catholic_monarchs_mod years = -1 mode = add }
+		}
+	}
+
+	cas_church_reform = {
+		icon = church_guidance
+		requires = { cas_catholic_monarchs }
+		enabled = {
+			c:PAP = { opinion = { target = root value >= 180 } }
+			estate_satisfaction:clergy_estate >= 0.70
+		}
+		on_completion = {
+			remove_country_modifier = cas_catholic_monarchs_mod
+			add_country_modifier = { modifier = cas_church_reform_mod years = -1 mode = add }
+		}
+	}
+
+	cas_counter_reformation = {
+		icon = church_guidance
+		requires = { cas_church_reform }
+		enabled = {
+			OR = {
+				is_situation_active = situation:reformation
+				situation:reformation = { situation_has_ended = yes }
+			}
+			dominant_religion = religion:catholic
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_counter_ref_mod years = 50 mode = add }
+		}
+	}
+
+	cas_council_of_trent = {
+		icon = church_councils
+		requires = { cas_counter_reformation }
+		enabled = {
+			c:PAP = { opinion = { target = root value >= 200 } }
+			current_date > 1600.1.1
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_trent_mod years = -1 mode = add }
+		}
+	}
+
+	cas_inquisition = {
+		icon = roman_catechism
+		requires = { cas_council_of_trent }
+		enabled = {
+			dominant_religion = religion:catholic
+			situation:reformation = {
+				situation_has_ended = yes
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_inquisition_mod years = -1 mode = add }
+		}
+	}
+
+	cas_expulsion_of_jews = {
+		icon = roman_catechism
+		requires = { cas_fall_of_granada }
+		enabled = {
+			dominant_religion = religion:catholic
+			total_population >= 10000
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_pure_faith_mod years = -1 mode = add }
+		}
+	}
+
+	cas_subdue_aragon = {
+		icon = crown_power_advance_renaissance
+		requires = { cas_fall_of_granada }
+		enabled = {
+			OR = {
+				c:ARA = { in_union_with = root }
+				c:ARA = { is_subject_of = root }
+				NOT = { country_exists = c:ARA }
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = cas_events.30
+		}
+	}
+
+	cas_dev_barcelona = {
+		icon = city_building_advance
+		requires = { cas_dev_valencia }
+		enabled = {
+			location:barcelona = {
+				total_building_levels >= 80
+			}
+		}
+		on_completion = {
+			location:barcelona = {
+				add_location_modifier = { modifier = cas_barcelona_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	cas_dev_zaragoza = {
+		icon = city_building_advance
+		requires = { cas_subdue_aragon }
+		enabled = {
+			location:zaragoza = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:zaragoza = {
+				add_location_modifier = { modifier = cas_zaragoza_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	cas_dev_valencia = {
+		icon = city_building_advance
+		requires = { cas_dev_zaragoza }
+		enabled = {
+			location:valencia = {
+				total_building_levels >= 50
+			}
+		}
+		on_completion = {
+			location:valencia = {
+				add_location_modifier = { modifier = cas_valencia_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	cas_form_spain = {
+		icon = legacy_of_great_empires
+		requires = { cas_subdue_aragon cas_conquer_navarre }
+		enabled = {
+			OR = {
+				has_or_had_tag = c:SPA
+				is_castilian_spain = yes
+			}
+		}
+		on_completion = {
+			add_prestige = 20
+			add_country_modifier = { modifier = cas_form_spain_mod years = -1 mode = add }
+		}
+	}
+
+	cas_inherit_flanders = {
+		icon = crown_power_advance_renaissance
+		requires = { cas_form_spain }
+		enabled = {
+			always = yes
+		}
+		on_completion = {
+			if = {
+				limit = { country_exists = c:FLA }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:FLA
+					target_character = root.ruler
+					years = 100
+				}
+			}
+			else = {
+				area:flanders_area = {
+					every_location_in_area = {
+						limit = {
+							this = location:bruges
+							owner ?= { NOT = { this = root } }
+						}
+						save_scope_as = target_location
+						root = {
+							add_casus_belli = {
+								target = scope:target_location.owner
+								type = casus_belli:cb_conquer_province
+								province = scope:target_location.province
+								years = 50
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	cas_revolt_of_flanders = {
+		icon = fra_gendarmes
+		requires = { cas_inherit_flanders }
+		enabled = {
+			OR = {
+				c:FLA = { in_union_with = root }
+				c:FLA = { is_subject_of = root }
+				owns_or_non_sovereign_subject_owns = location:bruges
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_flanders_pacified_mod years = -1 mode = add }
+		}
+	}
+
+	cas_conquer_portugal = {
+		icon = crusader_tradition
+		requires = { cas_form_spain }
+		enabled = {
+			OR = {
+				c:POR = { in_union_with = root }
+				c:POR = { is_subject_of = root }
+				NOT = { country_exists = c:POR }
+			}
+			any_owned_location = {
+				area = area:north_portugal_area
+				count >= 8
+			}
+			any_owned_location = {
+				area = area:south_portugal_area
+				count >= 6
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_portugal_mod years = -1 mode = add }
+		}
+	}
+
+	cas_iberian_union = {
+		icon = legacy_of_great_empires
+		requires = { cas_conquer_portugal }
+		enabled = {
+			any_owned_location = {
+				region = region:iberia_region
+				count >= 400
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_iberian_union_mod years = -1 mode = add }
+			set_country_rank_effect = { rank = country_rank:rank_empire }
+		}
+	}
+
+	cas_conquer_navarre = {
+		icon = crusader_tradition
+		requires = { cas_fall_of_granada }
+		enabled = {
+			OR = {
+				owns_or_non_sovereign_subject_owns = location:pamplona
+				c:NAV = { in_union_with = root }
+				c:NAV = { is_subject_of = root }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_navarre_mod years = -1 mode = add }
+		}
+	}
+
+	cas_battle_rio_salado = {
+		icon = crusader_tradition
+		requires = { cas_sword_of_castile }
+		enabled = {
+			any_current_war = {
+				OR = {
+					attacker_leader = root
+					defender_leader = root
+				}
+				any_war_participant = {
+					NOT = { this = root }
+					religion.group = religion_group:muslim
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_rio_salado_mod years = 50 mode = add }
+			add_prestige = 20
+		}
+	}
+
+	cas_secure_castile = {
+		icon = crusader_tradition
+		requires = { cas_sword_of_castile }
+		enabled = {
+			location:valladolid = {
+				development >= 25
+				rgo_level >= 5
+			}
+		}
+		on_completion = {
+			location:valladolid = {
+				add_location_modifier = { modifier = cas_valladolid_dev_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	cas_castile_dev_hub = {
+		icon = city_building_advance
+		requires = { cas_secure_castile }
+		enabled = {
+			any_owned_location = {
+				is_city = yes
+				count >= 40
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_crown_domains_mod years = 20 mode = add }
+		}
+	}
+
+	cas_dev_cadiz = {
+		icon = city_building_advance
+		requires = { cas_dev_sevilla }
+		enabled = {
+			location:cadiz = {
+				development >= 28
+			}
+		}
+		on_completion = {
+			location:cadiz = {
+				add_location_modifier = { modifier = cas_cadiz_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	cas_dev_sevilla = {
+		icon = city_building_advance
+		requires = { cas_castile_dev_hub }
+		enabled = {
+			location:sevilla = {
+				development >= 35
+				total_building_levels >= 80
+			}
+		}
+		on_completion = {
+			location:sevilla = {
+				add_location_modifier = { modifier = cas_sevilla_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	cas_dev_leon_city = {
+		icon = city_building_advance
+		requires = { cas_dev_burgos }
+		enabled = {
+			location:leon = {
+				development >= 28
+			}
+		}
+		on_completion = {
+			location:leon = {
+				add_location_modifier = { modifier = cas_leon_city_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	cas_dev_cordoba = {
+		icon = city_building_advance
+		requires = { cas_dev_leon_city }
+		enabled = {
+			location:cordoba = {
+				development >= 35
+			}
+		}
+		on_completion = {
+			location:cordoba = {
+				add_location_modifier = { modifier = cas_cordoba_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	cas_dev_burgos = {
+		icon = city_building_advance
+		requires = { cas_castile_dev_hub }
+		enabled = {
+			location:burgos = {
+				rgo_level >= 5
+				total_building_levels >= 50
+			}
+		}
+		on_completion = {
+			location:burgos = {
+				add_location_modifier = { modifier = cas_burgos_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	cas_dev_segovia = {
+		icon = city_building_advance
+		requires = { cas_dev_burgos }
+		enabled = {
+			location:segovia = {
+				development >= 25
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_segovia_mod years = -1 mode = add }
+		}
+	}
+
+	cas_dev_toledo = {
+		icon = crossroads_of_commerce
+		requires = { cas_castile_dev_hub }
+		enabled = {
+			produced_in_country:weaponry > 50
+			owns_or_non_sovereign_subject_owns = location:toledo
+		}
+		on_completion = {
+			location:toledo = {
+				add_location_modifier = { modifier = cas_toledo_dev_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	cas_dev_madrid = {
+		icon = city_building_advance
+		requires = { cas_dev_toledo }
+		enabled = {
+			location:madrid = {
+				development >= 40
+				total_building_levels >= 100
+			}
+		}
+		on_completion = {
+			location:madrid = {
+				add_location_modifier = { modifier = cas_madrid_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	cas_escorial = {
+		icon = city_building_advance
+		requires = { cas_dev_madrid }
+		enabled = {
+			location:madrid = {
+				development >= 50
+				total_building_levels >= 150
+				population >= 200
+			}
+		}
+		on_completion = {
+			location:madrid = {
+				change_location_rank = location_rank:megalopolis
+				add_location_modifier = { modifier = cas_escorial_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	cas_secure_ceuta = {
+		icon = crusader_tradition
+		requires = { cas_secure_castile }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:ceuta
+		}
+		on_completion = {
+			location:ceuta = {
+				add_location_modifier = { modifier = cas_ceuta_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	cas_conquer_tunis = {
+		icon = eternal_crusade
+		requires = { cas_secure_ceuta }
+		enabled = {
+			OR = {
+				owns_or_non_sovereign_subject_owns = location:tunis
+				area:tunis_area = {
+					any_location_in_area = {
+						OR = {
+							owner ?= root
+							owner ?= { is_subject_of = root }
+						}
+						count >= 40
+					}
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_tunis_mod years = 30 mode = add }
+		}
+	}
+
+	cas_north_africa_dominion = {
+		icon = legacy_of_great_empires
+		requires = { cas_conquer_oran cas_conquer_tunis }
+		enabled = {
+			any_owned_location = {
+				region = region:maghreb_region
+				count >= 50
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_north_africa_mod years = -1 mode = add }
+		}
+	}
+
+	cas_conquer_oran = {
+		icon = eternal_crusade
+		requires = { cas_secure_ceuta }
+		enabled = {
+			area:algiers_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 5
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = cas_oran_mod years = 20 mode = add }
+		}
+	}
+
+}

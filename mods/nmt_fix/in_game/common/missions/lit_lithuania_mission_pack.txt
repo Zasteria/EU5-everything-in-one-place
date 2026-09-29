@@ -1,0 +1,796 @@
+﻿lit_lithuania_mission_pack = {
+	icon = nmt_lithuania
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = LIT
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = { always = yes }
+
+	on_start = { set_variable = lit_mission_started }
+	on_completion = { remove_variable = lit_mission_started }
+	on_abort = { remove_variable = lit_mission_started }
+
+	# ===== ROOT =====
+
+	lit_gediminas_legacy = {
+		icon = legacy_of_great_empires
+		requires = { }
+		enabled = {
+			NOT = {
+				is_at_war_with = c:TEU
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_dynasty_mod years = 30 mode = add }
+		}
+	}
+
+	# ===== A: 征服・拡張 =====
+
+	lit_teutonic_threat = {
+		icon = crusader_tradition
+		requires = { lit_gediminas_legacy }
+		enabled = {
+			OR = {
+				c:TEU = { is_rival_of = root }
+				has_won_war_against = { target = c:TEU years = 20 }
+				NOT = { country_exists = c:TEU }
+				is_at_war_with = c:TEU
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_teutonic_mod years = 30 mode = add }
+		}
+	}
+
+	lit_black_ruthenia_integration = {
+		icon = expansionism
+		requires = { lit_gediminas_legacy }
+		enabled = {
+			any_owned_location = {
+				area = area:black_ruthenia_area
+				owner = root
+				count >= 24
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_ruthenia_mod years = -1 mode = add }
+		}
+	}
+
+	lit_samogitia = {
+		icon = expansionism
+		requires = { lit_teutonic_threat }
+		enabled = {
+			any_owned_location = {
+				area = area:samogitia_area
+				owner = root
+				count >= 14
+			}
+		}
+		on_completion = {
+			add_prestige = 10
+			add_legitimacy = legitimacy_mild_bonus
+		}
+	}
+
+	lit_teutonic_defeat = {
+		icon = glorious_arms
+		requires = { lit_samogitia }
+		enabled = {
+			NOT = { country_exists = c:TEU }
+		}
+		on_completion = {
+			trigger_event_non_silently = lit_events.20
+		}
+	}
+
+	lit_memel = {
+		icon = hsa_mastery_of_the_sea
+		requires = { lit_teutonic_defeat }
+		enabled = {
+			location:memel = {
+				owner = root
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:memel = {
+				add_location_modifier = { modifier = lit_memel_mod years = -1 mode = add }
+			}
+		}
+	}
+
+
+	lit_livonia = {
+		icon = expansionism
+		requires = { lit_teutonic_defeat }
+		enabled = {
+			area:baltic_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 50
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_livonia_mod years = -1 mode = add }
+		}
+	}
+
+	lit_volhynia_podolia = {
+		icon = expansionism
+		requires = { lit_black_ruthenia_integration }
+		enabled = {
+			area:volhynia_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 15
+				}
+			}
+			area:podolia_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 15
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_volhynia_mod years = -1 mode = add }
+		}
+	}
+
+	lit_smolensk = {
+		icon = glorious_arms
+		requires = { lit_black_ruthenia_integration }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:smolensk
+			any_owned_location = {
+				area = area:smolensk_area
+				owner = root
+				count >= 20
+			}
+		}
+		on_completion = {
+			location:smolensk = {
+				add_location_modifier = { modifier = lit_smolensk_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	lit_red_ruthenia = {
+		icon = expansionism
+		requires = { lit_volhynia_podolia }
+		enabled = {
+			any_owned_location = {
+				area = area:red_ruthenia_area
+				owner = root
+				count >= 8
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_red_ruthenia_mod years = -1 mode = add }
+		}
+	}
+
+	lit_kyiv = {
+		icon = legacy_of_great_empires
+		requires = { lit_volhynia_podolia lit_smolensk }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:kyiv
+			region:ruthenia_region = {
+				any_location_in_region = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 100
+				}
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = lit_events.10
+		}
+	}
+
+	lit_dominant_in_rus = {
+		icon = legacy_of_great_empires
+		requires = { lit_kyiv }
+		enabled = {
+			region:russian_region = {
+				any_location_in_region = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 120
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_rus_mod years = -1 mode = add }
+		}
+	}
+
+	lit_steppe_frontier = {
+		icon = crusader_tradition
+		requires = { lit_kyiv }
+		enabled = {
+			region:steppes_region = {
+				any_location_in_region = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 20
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_steppe_mod years = -1 mode = add }
+		}
+	}
+
+	lit_moldavia = {
+		icon = crusader_tradition
+		requires = { lit_steppe_frontier }
+		enabled = {
+			OR = {
+				c:MOL = { is_subject_of = root }
+				area:moldavia_area = {
+					any_location_in_area = {
+						OR = {
+							owner ?= root
+							owner ?= { is_subject_of = root }
+						}
+						count >= 22
+					}
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_moldavia_mod years = -1 mode = add }
+		}
+	}
+
+	lit_crimea = {
+		icon = glorious_arms
+		requires = { lit_steppe_frontier }
+		enabled = {
+			OR = {
+				c:CRI = { is_subject_of = root }
+				area:crimea_area = {
+					any_location_in_area = {
+						OR = {
+							owner ?= root
+							owner ?= { is_subject_of = root }
+						}
+						count >= 8
+					}
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_crimea_mod years = -1 mode = add }
+		}
+	}
+
+	lit_black_sea = {
+		icon = hsa_mastery_of_the_sea
+		requires = { lit_crimea }
+		enabled = {
+			navy_tradition >= 25
+			region:steppes_region = {
+				any_location_in_region = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 50
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_black_sea_mod years = -1 mode = add }
+		}
+	}
+
+	# ===== B: コモンウェルス =====
+
+	lit_jogaila_union = {
+		icon = lat_emperor_latins_advance
+		requires = { lit_gediminas_legacy }
+		enabled = {
+			OR = {
+				c:POL = { in_union_with = root }
+				c:POL = { is_subject_of = root }
+				is_allied_with = { target = c:POL }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_jogaila_mod years = 40 mode = add }
+			if = {
+				limit = { country_exists = c:POL }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:POL
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+
+	lit_jagiellonian_dynasty = {
+		icon = crown_power_advance_renaissance
+		requires = { lit_jogaila_union }
+		enabled = {
+			OR = {
+				c:POL = { in_union_with = root }
+				c:POL = { is_subject_of = root }
+			}
+			num_locations >= 150
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_jagiellonian_mod years = -1 mode = add }
+		}
+	}
+
+	lit_lublin_union = {
+		icon = legacy_of_great_empires
+		requires = { lit_jagiellonian_dynasty }
+		enabled = {
+			OR = {
+				c:POL = { in_union_with = root }
+				c:POL = { is_subject_of = root }
+			}
+			country_rank_level >= 3
+			prestige >= 50
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_lublin_union_mod years = -1 mode = add }
+		}
+	}
+
+	lit_polish_sejm = {
+		icon = administrative_icon
+		requires = { lit_lublin_union }
+		enabled = {
+			legislative_efficiency >= 0.60
+			num_locations >= 200
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_sejm_mod years = -1 mode = add }
+		}
+	}
+
+	lit_commonwealth = {
+		icon = legacy_of_great_empires
+		requires = { lit_lublin_union lit_dominant_in_rus }
+		enabled = {
+			OR = {
+				tag = PLC
+				has_or_had_tag = PLC
+				NOT = { country_exists = c:POL }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_commonwealth_final_mod years = -1 mode = add }
+		}
+	}
+
+	# ===== C: 内政・文化 =====
+
+	lit_vilnius_capital = {
+		icon = city_building_advance
+		requires = { lit_gediminas_legacy }
+		enabled = {
+			location:vilnius = {
+				owner = root
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:vilnius = {
+				add_location_modifier = { modifier = lit_vilnius_capital_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	lit_lublin_dev = {
+		icon = city_building_advance
+		requires = { lit_krakow }
+		enabled = {
+			location:lublin = {
+				owner = root
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:lublin = {
+				add_location_modifier = { modifier = lit_lublin_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	lit_lviv_dev = {
+		icon = city_building_advance
+		requires = { lit_krakow }
+		enabled = {
+			location:lviv = {
+				owner = root
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:lviv = {
+				add_location_modifier = { modifier = lit_lviv_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	lit_kaunas_dev = {
+		icon = city_building_advance
+		requires = { lit_vilnius_capital }
+		enabled = {
+			location:kaunas = {
+				owner = root
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:kaunas = {
+				add_location_modifier = { modifier = lit_kaunas_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	lit_hrodna_dev = {
+		icon = city_building_advance
+		requires = { lit_vilnius_capital }
+		enabled = {
+			location:grodno = {
+				owner = root
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:grodno = {
+				add_location_modifier = { modifier = lit_hrodna_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	lit_minsk_dev = {
+		icon = city_building_advance
+		requires = { lit_vilnius_capital }
+		enabled = {
+			location:minsk = {
+				owner = root
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:minsk = {
+				add_location_modifier = { modifier = lit_minsk_mod years = -1 mode = add }
+			}
+		}
+	}
+
+
+	lit_vilnius_jerusalem = {
+		icon = encouragement_of_philosophers
+		requires = { lit_vilnius_capital }
+		enabled = {
+			num_works_of_art >= 10
+			location:vilnius = {
+				owner = root
+				total_population >= 60000
+			}
+		}
+		on_completion = {
+			location:vilnius = {
+				add_location_modifier = { modifier = lit_vilnius_jerusalem_mod years = -1 mode = add }
+			}
+		}
+	}
+
+
+	lit_amber_road = {
+		icon = crossroads_of_commerce
+		requires = { lit_livonia }
+		enabled = {
+			monthly_income_trade_and_tax >= 80
+			any_owned_location = {
+				is_market_center = yes
+				count >= 2
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_amber_mod years = -1 mode = add }
+		}
+	}
+
+	lit_grand_duchy_law = {
+		icon = administrative_icon
+		requires = { lit_vilnius_capital }
+		enabled = {
+			has_advance = statutes_of_lithuania
+		}
+		on_completion = {
+			add_prestige = 20
+			add_legitimacy = legitimacy_strong_bonus
+		}
+	}
+
+
+
+
+	lit_krakow = {
+		icon = city_building_advance
+		requires = { lit_jogaila_union }
+		enabled = {
+			location:krakow = {
+				owner = root
+				development >= 20
+			}
+		}
+		on_completion = {
+			location:krakow = {
+				add_location_modifier = { modifier = lit_krakow_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	# ===== D: 宗教ミニツリー（独立ROOT） =====
+
+	lit_faith_choice = {
+		icon = ties_with_the_holy_see
+		requires = { }
+		enabled = {
+			current_year >= 1400
+		}
+		on_completion = {
+			trigger_event_non_silently = lit_events.5
+		}
+	}
+
+	# -- カトリック --
+	lit_catholic_baptism = {
+		icon = ties_with_the_holy_see
+		requires = { lit_faith_choice }
+		enabled = {
+			has_variable = lit_faith_catholic
+			dominant_religion = religion:catholic
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_catholic_mod years = -1 mode = add }
+		}
+	}
+
+	lit_catholic_crusade = {
+		icon = crusader_tradition
+		requires = { lit_catholic_baptism }
+		enabled = {
+			has_variable = lit_faith_catholic
+			any_current_war = {
+				OR = {
+					attacker_leader = root
+					defender_leader = root
+				}
+				any_war_participant = {
+					NOT = { this = root }
+					OR = {
+						dominant_religion = religion:orthodox
+						religion.group = religion_group:muslim
+					}
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_crusade_mod years = -1 mode = add }
+		}
+	}
+
+	lit_catholic_bishoprics = {
+		icon = ties_with_the_holy_see
+		requires = { lit_catholic_baptism }
+		enabled = {
+			has_variable = lit_faith_catholic
+			any_owned_location = {
+				has_building = building_type:seat_of_cardinal
+				count >= 1
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_bishopric_mod years = -1 mode = add }
+		}
+	}
+
+	lit_catholic_king = {
+		icon = crown_power_advance_renaissance
+		requires = { lit_catholic_crusade lit_catholic_bishoprics }
+		enabled = {
+			has_variable = lit_faith_catholic
+			country_rank_level >= 3
+			religion_percentage_in_country = {
+				religion = religion:catholic
+				value >= 0.80
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = lit_events.15
+		}
+	}
+
+	# -- 正教会 --
+
+	# -- 正教会改宗 --
+
+	lit_orthodox_metropolis = {
+		icon = ties_with_the_holy_see
+		requires = { lit_faith_choice }
+		enabled = {
+			has_variable = lit_faith_orthodox
+			dominant_religion = religion:orthodox
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_orthodox_mod years = -1 mode = add }
+		}
+	}
+
+	lit_orthodox_third_rome = {
+		icon = legacy_of_great_empires
+		requires = { lit_orthodox_metropolis }
+		enabled = {
+			has_variable = lit_faith_orthodox
+			owns_or_non_sovereign_subject_owns = location:kyiv
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_third_rome_mod years = -1 mode = add }
+		}
+	}
+
+	lit_orthodox_unity = {
+		icon = ties_with_the_holy_see
+		requires = { lit_orthodox_metropolis }
+		enabled = {
+			has_variable = lit_faith_orthodox
+			religion_percentage_in_country = {
+				religion = religion:orthodox
+				value >= 0.60
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_orthodox_unity_mod years = 100 mode = add }
+		}
+	}
+
+	lit_orthodox_tsar = {
+		icon = crown_power_advance_renaissance
+		requires = { lit_orthodox_third_rome lit_orthodox_unity }
+		enabled = {
+			has_variable = lit_faith_orthodox
+			country_rank_level >= 4
+		}
+		on_completion = {
+			trigger_event_non_silently = lit_events.16
+		}
+	}
+
+	# -- ロムヴァ --
+	lit_romuva_maintained = {
+		icon = encouragement_of_philosophers
+		requires = { lit_faith_choice }
+		enabled = {
+			has_variable = lit_faith_romuva
+			dominant_religion = religion:romuva
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_romuva_mod years = -1 mode = add }
+		}
+	}
+
+	lit_romuva_sanctuary = {
+		icon = encouragement_of_philosophers
+		requires = { lit_romuva_maintained }
+		enabled = {
+			has_variable = lit_faith_romuva
+			any_owned_location = {
+				area = area:lithuania_area
+				owner = root
+				count >= 42
+			}
+			religion_percentage_in_country = {
+				religion = religion:romuva
+				value >= 0.30
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_sanctuary_mod years = -1 mode = add }
+		}
+	}
+
+	lit_romuva_expansion = {
+		icon = expansionism
+		requires = { lit_romuva_maintained }
+		enabled = {
+			has_variable = lit_faith_romuva
+			religion_percentage_in_country = {
+				religion = religion:romuva
+				value >= 0.60
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = lit_pagan_expansion_mod years = -1 mode = add }
+		}
+	}
+
+	lit_romuva_pagan_king = {
+		icon = legacy_of_great_empires
+		requires = { lit_romuva_sanctuary lit_romuva_expansion }
+		enabled = {
+			has_variable = lit_faith_romuva
+			country_rank_level >= 3
+			religion_percentage_in_country = {
+				religion = religion:romuva
+				value >= 0.80
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = lit_events.17
+		}
+	}
+
+	# ===== FINAL =====
+
+	lit_grand_empire = {
+		icon = legacy_of_great_empires
+		requires = { lit_commonwealth lit_black_sea lit_livonia }
+		final = yes
+		enabled = {
+			num_locations >= 500
+			prestige >= 80
+		}
+		on_completion = {
+			trigger_event_non_silently = lit_events.99
+		}
+	}
+}

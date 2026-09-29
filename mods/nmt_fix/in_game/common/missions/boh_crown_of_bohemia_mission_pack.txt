@@ -1,0 +1,1203 @@
+﻿boh_crown_of_bohemia_mission_pack = {
+	icon = nmt_bohemia
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = BOH
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = { always = yes }
+
+	on_start = { set_variable = boh_mission_started }
+	on_completion = { remove_variable = boh_mission_started }
+	on_abort = { remove_variable = boh_mission_started }
+
+	# ==================== ROOT ====================
+
+	boh_crown_of_jan = {
+		icon = dan_rulers_of_the_north
+		requires = { }
+		enabled = {
+			always = yes
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_blind_king_mod years = 30 mode = add }
+		}
+	}
+
+	# ==================== BRANCH A: 帝国・ドイツ拡大 ====================
+
+	boh_lion_of_empire = {
+		icon = legacy_of_great_empires
+		requires = { boh_crown_of_jan }
+		enabled = {
+			prestige >= 40
+			army_size >= 25
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_imperial_power_mod years = 30 mode = add }
+		}
+	}
+
+	boh_challenge_habsburg = {
+		icon = a_neverending_crusade
+		requires = { boh_lion_of_empire }
+		enabled = {
+			OR = {
+				c:HAB = { is_rival_of = root }
+				c:HAB = { opinion = { target = root value < 0 } }
+				NOT = { country_exists = c:HAB }
+			}
+			prestige >= 60
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_habsburg_rival_mod years = 30 mode = add }
+			if = {
+				limit = { country_exists = c:HAB }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:HAB
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	boh_conquer_silesia = {
+		icon = arduous_terrain
+		requires = { boh_crown_of_jan }
+		enabled = {
+			any_owned_location = {
+				area = area:silesia_area
+				count >= 10
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_silesia_mod years = -1 mode = add }
+		}
+	}
+
+	boh_saxony_ambitions = {
+		icon = dan_scanian_regiment
+		requires = { boh_lion_of_empire }
+		enabled = {
+			OR = {
+				AND = {
+					NOT = { country_exists = c:MEI }
+					NOT = { country_exists = c:SAX }
+				}
+				c:MEI = { opinion = { target = root value <= 0 } }
+				c:MEI = { is_rival_of = root }
+			}
+		}
+		on_completion = {
+			if = {
+				limit = { country_exists = c:MEI }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:MEI
+					target_character = root.ruler
+					years = 100
+				}
+			}
+			if = {
+				limit = { country_exists = c:SAX }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:SAX
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	boh_conquer_austria = {
+		icon = legacy_of_great_empires
+		requires = { boh_challenge_habsburg boh_saxony_ambitions }
+		enabled = {
+			OR = {
+				c:HAB = { in_union_with = root }
+				owns_or_non_sovereign_subject_owns = location:vienna
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = boh_events.20
+		}
+	}
+
+	boh_dominate_hre = {
+		icon = legacy_of_great_empires
+		requires = { boh_conquer_austria }
+		enabled = {
+			OR = {
+				is_leader_of_international_organization = international_organization:hre
+				custom_tooltip = {
+					text = nmt_fix_locations_460_tt
+					nmt_fix_locations_with_subjects >= 460
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_hre_master_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH B: カレル4世の遺産・文化・内政 ====================
+
+	boh_develop_prague = {
+		icon = city_building_advance
+		requires = { boh_crown_of_jan }
+		enabled = {
+			location:prague = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+				development >= 40
+			}
+		}
+		on_completion = {
+			location:prague = {
+				add_building_level = building_type:local_governor
+				add_location_modifier = { modifier = boh_prague_capital_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	boh_charles_university = {
+		icon = encouragement_of_philosophers
+		requires = { boh_develop_prague }
+		enabled = {
+			location:prague = {
+				has_building = building_type:university
+			}
+		}
+		on_completion = {
+			location:prague = {
+				add_location_modifier = { modifier = boh_charles_university_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	boh_golden_bull = {
+		icon = dan_danish_legislation
+		requires = { boh_develop_prague }
+		enabled = {
+			OR = {
+				is_leader_of_international_organization = international_organization:hre
+				current_date > 1360.1.1
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_golden_bull_mod years = 50 mode = add }
+		}
+	}
+
+	boh_bohemian_glass = {
+		icon = crossroads_of_commerce
+		requires = { boh_develop_prague }
+		enabled = {
+			produced_in_country:glass > 10
+			monthly_income_trade_and_tax >= 80
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_glass_industry_mod years = -1 mode = add }
+		}
+	}
+
+	boh_silver_mines = {
+		icon = nor_bounties_of_the_sea
+		requires = { boh_crown_of_jan }
+		enabled = {
+			produced_in_country:silver > 15
+			any_owned_location = {
+				area = area:bohemia_area
+				rgo_level >= 6
+				count >= 3
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_kutna_hora_mod years = -1 mode = add }
+		}
+	}
+
+	boh_develop_moravia = {
+		icon = city_building_advance
+		requires = { boh_crown_of_jan }
+		enabled = {
+			owns = location:brno
+			owns = location:olomouc
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_moravia_mod years = -1 mode = add }
+		}
+	}
+
+	boh_internal_prosperity = {
+		icon = crossroads_of_commerce
+		requires = { boh_great_moravia_restored }
+		enabled = {
+			monthly_income_trade_and_tax >= 200
+			any_owned_location = {
+				is_market_center = yes
+				count >= 3
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_prosperity_mod years = -1 mode = add }
+		}
+	}
+
+
+	boh_urban_privileges = {
+		icon = dan_danish_legislation
+		requires = { boh_develop_moravia }
+		enabled = {
+			treasury >= 1000
+			"estate_power(estate_type:crown_estate)" >= 0.20
+		}
+		on_completion = {
+			set_variable = boh_urban_privileges_unlocked
+			custom_tooltip = boh_urban_privileges_unlock_tt
+		}
+	}
+
+	# ==================== BRANCH C: フス戦争・宗教分岐（択一）====================
+
+	boh_jan_hus_question = {
+		icon = legalism_advance
+		requires = { boh_crown_of_jan }
+		enabled = {
+			OR = {
+				is_situation_active = situation:hussite_wars
+				is_situation_active = situation:reformation
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_jan_hus_mod years = 50 mode = add }
+		}
+	}
+
+	# C1: カトリック路線
+	boh_suppress_heresy = {
+		icon = a_neverending_crusade
+		requires = { boh_jan_hus_question }
+		enabled = {
+			dominant_religion = religion:catholic
+			c:PAP = { opinion = { target = root value >= 120 } }
+			NOT = { has_country_modifier = boh_hussite_church_mod }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_catholic_reform_mod years = -1 mode = add }
+		}
+	}
+
+	boh_crusade_against_hussites = {
+		icon = a_neverending_crusade
+		requires = { boh_suppress_heresy }
+		enabled = {
+			any_current_war = {
+				OR = {
+					attacker_leader = root
+					defender_leader = root
+				}
+				any_war_participant = {
+					NOT = { this = root }
+					OR = {
+						religion.group = religion_group:muslim
+						religion.group = religion_group:pagan
+						NOT = { dominant_religion = religion:catholic }
+					}
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_crusader_glory_mod years = 50 mode = add }
+			add_prestige = 20
+		}
+	}
+
+	boh_papal_champion = {
+		icon = a_neverending_crusade
+		requires = { boh_crusade_against_hussites }
+		enabled = {
+			dominant_religion = religion:catholic
+			OR = {
+				is_allied_with = { target = c:PAP }
+				owns_or_non_sovereign_subject_owns = location:rome
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_papal_ally_mod years = -1 mode = add }
+		}
+	}
+
+	# C2: フス派路線
+	boh_hussite_reformation = {
+		icon = legalism_advance
+		requires = { boh_jan_hus_question }
+		enabled = {
+			OR = {
+				dominant_religion = religion:hussite
+				dominant_religion = religion:lutheran
+			}
+			NOT = { has_country_modifier = boh_catholic_reform_mod }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_hussite_church_mod years = -1 mode = add }
+		}
+	}
+
+	boh_wagenburg = {
+		icon = glorious_arms
+		requires = { boh_hussite_reformation }
+		enabled = {
+			army_tradition >= 50
+			army_size >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_wagenburg_mod years = -1 mode = add }
+		}
+	}
+
+	boh_king_of_heretics = {
+		icon = balkan_hajduks
+		requires = { boh_wagenburg }
+		enabled = {
+			OR = {
+				dominant_religion = religion:hussite
+				dominant_religion = religion:lutheran
+				dominant_religion = religion:calvinist
+			}
+			current_date > 1637.1.1
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_king_heretic_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH D: 南方・ハンガリー・バルカン ====================
+
+	boh_hungarian_succession = {
+		icon = crown_power_advance_renaissance
+		requires = { boh_crown_of_jan }
+		enabled = {
+			OR = {
+				c:HUN = { in_union_with = root }
+				c:HUN = { is_subject_of = root }
+				c:HUN = { is_rival_of = root }
+				NOT = { country_exists = c:HUN }
+			}
+		}
+		on_completion = {
+			if = {
+				limit = { country_exists = c:HUN }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:HUN
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	boh_control_slovakia = {
+		icon = arduous_terrain
+		requires = { boh_hungarian_succession }
+		enabled = {
+			any_owned_location = {
+				area = area:slovakia_area
+				count >= 8
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_slovakia_mod years = -1 mode = add }
+		}
+	}
+
+	boh_conquer_transylvania = {
+		icon = arduous_terrain
+		requires = { boh_control_slovakia }
+		enabled = {
+			any_owned_location = {
+				area = area:transylvania_area
+				count >= 15
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_transylvania_mod years = -1 mode = add }
+		}
+	}
+
+	boh_nicopolis_revenge = {
+		icon = a_neverending_crusade
+		requires = { boh_conquer_transylvania }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:nikopol
+			any_current_war = {
+				OR = {
+					attacker_leader = root
+					defender_leader = root
+				}
+				any_war_participant = {
+					religion.group = religion_group:muslim
+					NOT = { this = root }
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_nicopolis_glory_mod years = 50 mode = add }
+			add_prestige = 25
+		}
+	}
+
+	boh_defend_against_turks = {
+		icon = a_fortified_border
+		requires = { boh_conquer_transylvania }
+		enabled = {
+			army_size >= 40
+			any_neighbor_country = {
+				religion.group = religion_group:muslim
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_antemurale_mod years = -1 mode = add }
+		}
+	}
+
+	boh_push_into_balkans = {
+		icon = glorious_arms
+		requires = { boh_nicopolis_revenge boh_defend_against_turks }
+		enabled = {
+			any_owned_location = {
+				region = region:balkan_region
+				count >= 100
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_balkan_conqueror_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH E: 北方・ポーランド・バルト海 ====================
+
+	boh_secure_silesia = {
+		icon = arduous_terrain
+		requires = { boh_conquer_silesia }
+		enabled = {
+			any_owned_location = {
+				area = area:silesia_area
+				owner = root
+				count >= 48
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_silesia_secured_mod years = -1 mode = add }
+		}
+	}
+
+	boh_polish_ambitions = {
+		icon = dan_levy_recruitment
+		requires = { boh_secure_silesia }
+		enabled = {
+			OR = {
+				c:POL = { opinion = { target = root value >= 150 } }
+				is_allied_with = { target = c:POL }
+				c:POL = { is_rival_of = root }
+				NOT = { country_exists = c:POL }
+			}
+		}
+		on_completion = {
+			if = {
+				limit = { country_exists = c:POL }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:POL
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	boh_conquer_poland = {
+		icon = glorious_arms
+		requires = { boh_polish_ambitions }
+		enabled = {
+			OR = {
+				c:POL = { in_union_with = root }
+				c:POL = { is_subject_of = root }
+				NOT = { country_exists = c:POL }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_poland_subjugated_mod years = -1 mode = add }
+		}
+	}
+
+	boh_baltic_access = {
+		icon = hsa_mastery_of_the_sea
+		requires = { boh_conquer_poland }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:gdansk
+			navy_size >= 20
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_baltic_access_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH F: 内政・絶対王政 ====================
+
+	boh_bohemian_diet = {
+		icon = dan_danish_legislation
+		requires = { boh_golden_bull }
+		enabled = {
+			"estate_power(estate_type:crown_estate)" >= 0.25
+			legitimacy >= 95
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_diet_mod years = -1 mode = add }
+		}
+	}
+
+	boh_absolute_monarchy = {
+		icon = legalism_advance
+		requires = { boh_bohemian_diet }
+		enabled = {
+			"estate_power(estate_type:crown_estate)" >= 0.40
+			legitimacy >= 95
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_absolutism_mod years = -1 mode = add }
+		}
+	}
+
+	boh_great_power_army = {
+		icon = glorious_arms
+		requires = { boh_absolute_monarchy }
+		enabled = {
+			army_tradition >= 60
+			army_size >= 50
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_military_power_mod years = -1 mode = add }
+		}
+	}
+
+	boh_dev_brno = {
+		icon = city_building_advance
+		requires = { boh_develop_moravia }
+		enabled = {
+			location:brno = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+				development >= 30
+			}
+		}
+		on_completion = {
+			location:brno = {
+				add_location_modifier = { modifier = boh_brno_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	boh_dev_wroclaw = {
+		icon = city_building_advance
+		requires = { boh_conquer_silesia }
+		enabled = {
+			location:wroclaw = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+				development >= 25
+			}
+		}
+		on_completion = {
+			location:wroclaw = {
+				add_location_modifier = { modifier = boh_wroclaw_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	boh_amber_road = {
+		icon = crossroads_of_commerce
+		requires = { boh_internal_prosperity }
+		enabled = {
+			produced_in_country:amber > 5
+			monthly_income_trade_and_tax >= 150
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_amber_road_mod years = -1 mode = add }
+		}
+	}
+
+	boh_dev_pest = {
+		icon = city_building_advance
+		requires = { boh_hungarian_succession }
+		enabled = {
+			location:pest = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+				development >= 25
+			}
+		}
+		on_completion = {
+			location:pest = {
+				add_location_modifier = { modifier = boh_pest_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	boh_renaissance_court = {
+		icon = encouragement_of_philosophers
+		requires = { boh_charles_university boh_bohemian_glass }
+		enabled = {
+			any_owned_location = {
+				has_building = building_type:university
+				count >= 3
+			}
+			monthly_income_trade_and_tax >= 200
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_renaissance_mod years = -1 mode = add }
+		}
+	}
+
+
+	# ==================== BRANCH A延伸 ====================
+
+	boh_krecy_legacy = {
+		icon = glorious_arms
+		requires = { boh_lion_of_empire }
+		enabled = {
+			current_date > 1346.1.1
+			army_tradition >= 40
+			prestige >= 50
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_krecy_glory_mod years = 50 mode = add }
+		}
+	}
+
+
+	boh_styria_carinthia = {
+		icon = arduous_terrain
+		requires = { boh_conquer_austria }
+		enabled = {
+			any_owned_location = {
+				area = area:styria_area
+				count >= 6
+			}
+			any_owned_location = {
+				area = area:carinthia_area
+				count >= 4
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_alpine_lands_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH B延伸 ====================
+
+	boh_kutna_hora_mint = {
+		icon = nor_bounties_of_the_sea
+		requires = { boh_silver_mines }
+		enabled = {
+			produced_in_country:silver > 40
+			any_owned_location = {
+				area = area:bohemia_area
+				rgo_level >= 10
+				count >= 10
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_silver_currency_mod years = -1 mode = add }
+		}
+	}
+
+	boh_gothic_architecture = {
+		icon = city_of_artists
+		requires = { boh_charles_university }
+		enabled = {
+			location:prague = {
+				development >= 60
+				total_building_levels >= 180
+			}
+		}
+		on_completion = {
+			location:prague = {
+				add_location_modifier = { modifier = boh_golden_prague_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	boh_bohemian_trade_network = {
+		icon = crossroads_of_commerce
+		requires = { boh_internal_prosperity boh_amber_road }
+		enabled = {
+			monthly_income_trade_and_tax >= 300
+			any_owned_location = {
+				is_market_center = yes
+				count >= 5
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_trade_network_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH C延伸 ====================
+
+	boh_compactata = {
+		icon = legalism_advance
+		requires = { boh_hussite_reformation }
+		enabled = {
+			situation:hussite_wars = { situation_has_ended = yes }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_compactata_mod years = -1 mode = add }
+		}
+	}
+
+	boh_utraquist_church = {
+		icon = legalism_advance
+		requires = { boh_compactata }
+		enabled = {
+			dominant_religion = religion:hussite
+			estate_satisfaction:clergy_estate >= 0.70
+			any_owned_location = {
+				has_building = building_type:university
+				count >= 20
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_utraquist_mod years = -1 mode = add }
+		}
+	}
+
+	boh_protestant_alliance = {
+		icon = dan_danish_legislation
+		requires = { boh_hussite_reformation }
+		enabled = {
+			is_situation_active = situation:reformation
+			num_of_allies >= 3
+			any_ally = {
+				OR = {
+					dominant_religion = religion:lutheran
+					dominant_religion = religion:calvinist
+					dominant_religion = religion:hussite
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_protestant_alliance_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH D延伸 ====================
+
+	boh_black_army = {
+		icon = glorious_arms
+		requires = { boh_conquer_transylvania }
+		enabled = {
+			army_tradition >= 60
+			army_size >= 40
+			current_date > 1600.1.1
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_black_army_mod years = -1 mode = add }
+		}
+	}
+
+
+	# ==================== BRANCH E延伸 ====================
+
+	boh_dev_berlin = {
+		icon = city_building_advance
+		requires = { boh_saxony_ambitions }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:berlin
+			location:berlin = {
+				development >= 25
+			}
+		}
+		on_completion = {
+			location:berlin = {
+				add_location_modifier = { modifier = boh_berlin_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	boh_dev_konigsberg = {
+		icon = city_building_advance
+		requires = { boh_baltic_access }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:konigsberg
+			location:konigsberg = {
+				development >= 25
+			}
+		}
+		on_completion = {
+			location:konigsberg = {
+				add_location_modifier = { modifier = boh_konigsberg_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	# ==================== 大合流延伸 ====================
+
+	boh_great_king = {
+		icon = legacy_of_great_empires
+		requires = { boh_great_moravia_restored }
+		enabled = {
+			prestige >= 90
+			legitimacy >= 90
+			monthly_income_trade_and_tax >= 400
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_great_king_mod years = -1 mode = add }
+		}
+	}
+
+	boh_fortress_of_europe = {
+		icon = a_fortified_border
+		requires = { boh_defend_against_turks }
+		enabled = {
+			any_owned_location = {
+				OR = {
+					has_building = building_type:castle
+					has_building = building_type:bastion
+					has_building = building_type:star_fort
+					has_building = building_type:fortress
+				}
+				count >= 20
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_fortress_europe_mod years = -1 mode = add }
+		}
+	}
+
+
+	boh_dev_olomouc = {
+		icon = encouragement_of_philosophers
+		requires = { boh_develop_moravia }
+		enabled = {
+			location:olomouc = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+				development >= 25
+				has_building = building_type:university
+			}
+		}
+		on_completion = {
+			location:olomouc = {
+				add_location_modifier = { modifier = boh_olomouc_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	boh_upper_austria = {
+		icon = arduous_terrain
+		requires = { boh_conquer_austria }
+		enabled = {
+			any_owned_location = {
+				area = area:upper_austria_area
+				count >= 6
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_upper_austria_mod years = -1 mode = add }
+		}
+	}
+
+	boh_carpathian_defense = {
+		icon = a_fortified_border
+		requires = { boh_control_slovakia }
+		enabled = {
+			any_owned_location = {
+				region = region:carpathia_region
+				has_building = building_type:castle
+				count >= 3
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_carpathian_mod years = -1 mode = add }
+		}
+	}
+
+
+	# ==================== 国内開発追加 ====================
+
+	boh_dev_plzen = {
+		icon = city_building_advance
+		requires = { boh_develop_prague }
+		enabled = {
+			location:plzen = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+				development >= 30
+			}
+		}
+		on_completion = {
+			location:plzen = {
+				add_location_modifier = { modifier = boh_plzen_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	boh_dev_cheb = {
+		icon = city_building_advance
+		requires = { boh_develop_prague }
+		enabled = {
+			location:cheb = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+				development >= 20
+			}
+		}
+		on_completion = {
+			location:cheb = {
+				add_location_modifier = { modifier = boh_cheb_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	boh_dev_kutna_hora_city = {
+		icon = city_building_advance
+		requires = { boh_silver_mines }
+		enabled = {
+			location:kutna_hora = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+				development >= 30
+			}
+		}
+		on_completion = {
+			location:kutna_hora = {
+				add_location_modifier = { modifier = boh_kutna_hora_city_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	boh_bohemian_agriculture = {
+		icon = nor_bounties_of_the_sea
+		requires = { boh_develop_prague }
+		enabled = {
+			produced_in_country:wheat > 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_agriculture_mod years = -1 mode = add }
+		}
+	}
+
+	boh_moravian_wine = {
+		icon = crossroads_of_commerce
+		requires = { boh_develop_moravia }
+		enabled = {
+			location:znojmo = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+			produced_in_country:wine > 20
+		}
+		on_completion = {
+			location:znojmo = {
+				add_location_modifier = { modifier = boh_znojmo_mod years = -1 mode = add }
+			}
+			add_country_modifier = { modifier = boh_moravian_wine_mod years = -1 mode = add }
+		}
+	}
+
+	boh_jihlava_silver = {
+		icon = nor_bounties_of_the_sea
+		requires = { boh_develop_moravia }
+		enabled = {
+			location:jihlava = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+			produced_in_country:silver > 20
+		}
+		on_completion = {
+			location:jihlava = {
+				add_location_modifier = { modifier = boh_jihlava_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	boh_opava_iron = {
+		icon = arduous_terrain
+		requires = { boh_conquer_silesia }
+		enabled = {
+			location:opava = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+				development >= 20
+			}
+			produced_in_country:iron > 10
+		}
+		on_completion = {
+			location:opava = {
+				add_location_modifier = { modifier = boh_opava_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	boh_dev_litomerice = {
+		icon = crossroads_of_commerce
+		requires = { boh_develop_prague }
+		enabled = {
+			location:litomerice = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+				development >= 28
+			}
+		}
+		on_completion = {
+			location:litomerice = {
+				add_location_modifier = { modifier = boh_litomerice_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	boh_silesian_mines = {
+		icon = nor_bounties_of_the_sea
+		requires = { boh_conquer_silesia }
+		enabled = {
+			produced_in_country:iron > 20
+			produced_in_country:coal > 10
+			any_owned_location = {
+				area = area:silesia_area
+				rgo_level >= 8
+				count >= 5
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_silesian_mines_mod years = -1 mode = add }
+		}
+	}
+
+	boh_bohemian_cloth = {
+		icon = crossroads_of_commerce
+		requires = { boh_bohemian_glass }
+		enabled = {
+			produced_in_country:cloth > 30
+			any_owned_location = {
+				area = area:bohemia_area
+				rgo_level >= 5
+				count >= 8
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_cloth_industry_mod years = -1 mode = add }
+		}
+	}
+
+
+	boh_sugar_beet = {
+		icon = nor_bounties_of_the_sea
+		requires = { boh_bohemian_agriculture }
+		enabled = {
+			current_date > 1737.1.1
+			produced_in_country:wheat > 50
+		}
+		on_completion = {
+			trigger_event_non_silently = boh_events.60
+		}
+	}
+
+	boh_porcelain_industry = {
+		icon = crossroads_of_commerce
+		requires = { boh_bohemian_glass }
+		enabled = {
+			current_date > 1737.1.1
+			produced_in_country:porcelain > 10
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_porcelain_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== 大合流: ボヘミア・コモンウェルス ====================
+
+	boh_great_moravia_restored = {
+		icon = legacy_of_great_empires
+		requires = { boh_conquer_silesia boh_control_slovakia }
+		enabled = {
+			any_owned_location = {
+				area = area:bohemia_area
+				count >= 40
+			}
+			any_owned_location = {
+				area = area:moravia_area
+				count >= 15
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = boh_events.50
+		}
+	}
+
+	boh_central_european_power = {
+		icon = legacy_of_great_empires
+		requires = { boh_great_moravia_restored boh_absolute_monarchy }
+		enabled = {
+			num_locations >= 500
+			monthly_income_trade_and_tax >= 500
+			prestige >= 80
+		}
+		on_completion = {
+			add_country_modifier = { modifier = boh_central_power_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== FINAL ====================
+
+	boh_bohemian_commonwealth = {
+		icon = legacy_of_great_empires
+		requires = { boh_central_european_power boh_dominate_hre boh_push_into_balkans }
+		final = yes
+		enabled = {
+			num_locations >= 800
+			owns_or_non_sovereign_subject_owns = location:vienna
+			owns_or_non_sovereign_subject_owns = location:krakow
+			owns_or_non_sovereign_subject_owns = location:berlin
+			owns_or_non_sovereign_subject_owns = location:buda
+			prestige >= 80
+		}
+		on_completion = {
+			trigger_event_non_silently = boh_events.99
+		}
+	}
+}

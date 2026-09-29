@@ -52,6 +52,7 @@ GENERATORS = (
     ("marker_throttle", "mods/marker_throttle/tools/port_from_fum.py"),
     ("nd_ru", "mods/nd_ru/tools/generate_ru.py"),
     ("nmt_ru", "mods/nmt_ru/tools/generate_ru.py"),
+    ("nmt_fix", "mods/nmt_fix/tools/generate.py"),
     ("ru_loc_fix", "mods/ru_loc_fix/tools/generate.py"),
 )
 

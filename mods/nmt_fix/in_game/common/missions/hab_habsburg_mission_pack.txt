@@ -1,0 +1,1020 @@
+﻿hab_habsburg_mission_pack = {
+	icon = nmt_austria
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = HAB
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = { always = yes }
+
+	on_start = { set_variable = hab_mission_started }
+	on_completion = { remove_variable = hab_mission_started }
+	on_abort = { remove_variable = hab_mission_started }
+
+	# ==================== ROOT ====================
+
+	hab_habsburg_ascendancy = {
+		icon = legacy_of_great_empires
+		requires = { }
+		enabled = { always = yes }
+		on_completion = {
+			add_country_modifier = { modifier = hab_dynasty_mod years = 30 mode = add }
+		}
+	}
+
+	# ==================== A: HRE 帝国統治 ====================
+
+	hab_secure_electors = {
+		icon = lat_emperor_latins_advance
+		requires = { hab_habsburg_ascendancy }
+		enabled = {
+			OR = {
+				is_leader_of_international_organization = international_organization:hre
+				country_rank_level >= 3
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = hab_events.1
+		}
+	}
+
+	hab_imperial_authority = {
+		icon = lat_emperor_latins_advance
+		requires = { hab_secure_electors }
+		enabled = {
+			is_leader_of_international_organization = international_organization:hre
+			prestige >= 40
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_imperial_mod years = -1 mode = add }
+		}
+	}
+
+	hab_counter_reformation = {
+		icon = ties_with_the_holy_see
+		requires = { hab_imperial_authority }
+		enabled = {
+			dominant_religion = religion:catholic
+			OR = {
+				is_situation_active = situation:war_of_religions
+				situation:war_of_religions = { situation_has_ended = yes }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_catholic_mod years = -1 mode = add }
+		}
+	}
+
+	hab_charlemagne_legacy = {
+		icon = legacy_of_great_empires
+		requires = { hab_imperial_authority }
+		enabled = {
+			region:south_german_region = {
+				any_location_in_region = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 140
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_charlemagne_mod years = -1 mode = add }
+		}
+	}
+
+	hab_imperial_reform = {
+		icon = administrative_icon
+		requires = { hab_charlemagne_legacy }
+		enabled = {
+			OR = {
+				AND = {
+					is_leader_of_international_organization = international_organization:hre
+					num_locations >= 200
+				}
+				custom_tooltip = {
+					text = nmt_fix_locations_500_tt
+					nmt_fix_locations_with_subjects >= 500
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_reform_mod years = -1 mode = add }
+		}
+	}
+
+	hab_emperors_of_rome = {
+		icon = legacy_of_great_empires
+		requires = { hab_imperial_reform hab_king_of_italy }
+		enabled = {
+			is_leader_of_international_organization = international_organization:hre
+			owns_or_non_sovereign_subject_owns = location:rome
+			prestige >= 70
+		}
+		on_completion = {
+			trigger_event_non_silently = hab_events.10
+		}
+	}
+
+	# ==================== B: 西方 ====================
+
+	hab_reclaim_burgundy = {
+		icon = expansionism
+		requires = { hab_habsburg_ascendancy }
+		enabled = {
+			OR = {
+				c:FRA = { is_rival_of = root }
+				is_allied_with = { target = c:FRA }
+				c:BUR = { is_rival_of = root }
+				is_allied_with = { target = c:BUR }
+			}
+		}
+		on_completion = {
+			if = {
+				limit = { country_exists = c:BUR }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:BUR
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	hab_austrian_netherlands = {
+		icon = a_magnanimous_empire
+		requires = { hab_reclaim_burgundy }
+		enabled = {
+			OR = {
+				is_leader_of_international_organization = international_organization:hre
+				country_exists = c:NED
+				AND = {
+					owns_or_non_sovereign_subject_owns = location:bruges
+					owns_or_non_sovereign_subject_owns = location:brussels
+					owns_or_non_sovereign_subject_owns = location:the_hague
+				}
+			}
+		}
+		on_completion = {
+			if = {
+				limit = { country_exists = c:NED }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:NED
+					target_character = root.ruler
+					years = 100
+				}
+			}
+			if = {
+				limit = { country_exists = c:BRB }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:BRB
+					target_character = root.ruler
+					years = 100
+				}
+			}
+			if = {
+				limit = { country_exists = c:FLA }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:FLA
+					target_character = root.ruler
+					years = 100
+				}
+			}
+			if = {
+				limit = { country_exists = c:HOL }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:HOL
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	hab_weaken_france = {
+		icon = offensive_army
+		requires = { hab_reclaim_burgundy }
+		enabled = {
+			OR = {
+				has_truce_with = c:FRA
+				is_at_war_with = c:FRA
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_france_mod years = 30 mode = add }
+		}
+	}
+
+	hab_defeat_france = {
+		icon = glorious_arms
+		requires = { hab_weaken_france }
+		enabled = {
+			OR = {
+				NOT = { country_exists = c:FRA }
+				c:FRA = { is_subject_of = root }
+				AND = {
+					country_exists = c:FRA
+					c:FRA = {
+						total_population < {
+							value = root.total_population
+							multiply = 0.5
+						}
+					}
+				}
+				AND = {
+					country_exists = c:FRA
+					c:FRA = {
+						monthly_income_trade_and_tax < {
+							value = root.monthly_income_trade_and_tax
+							multiply = 0.5
+						}
+					}
+				}
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = hab_events.20
+		}
+	}
+
+	hab_iberian_marriage = {
+		icon = lat_emperor_latins_advance
+		requires = { hab_reclaim_burgundy }
+		enabled = {
+			OR = {
+				is_allied_with = { target = c:CAS }
+				c:CAS = { has_royal_marriage_with = root }
+				c:CAS = { is_rival_of = root }
+			}
+		}
+		on_completion = {
+			if = {
+				limit = { country_exists = c:CAS }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:CAS
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	hab_crown_of_spain = {
+		icon = crown_power_advance_renaissance
+		requires = { hab_iberian_marriage }
+		enabled = {
+			OR = {
+				c:CAS = { in_union_with = root }
+				c:CAS = { is_subject_of = root }
+				NOT = { country_exists = c:CAS }
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = hab_events.25
+		}
+	}
+
+	# ==================== C: イタリア ====================
+
+	hab_italian_ambition = {
+		icon = expansionism
+		requires = { hab_habsburg_ascendancy }
+		enabled = {
+			region:italy_region = {
+				any_location_in_region = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 4
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_italian_mod years = 30 mode = add }
+		}
+	}
+
+	hab_duchy_of_milan = {
+		icon = city_building_advance
+		requires = { hab_italian_ambition }
+		enabled = {
+			OR = {
+				NOT = { country_exists = c:MLO }
+				c:MLO = { is_rival_of = root }
+				is_allied_with = { target = c:MLO }
+				c:MLO = { has_royal_marriage_with = root }
+			}
+		}
+		on_completion = {
+			if = {
+				limit = { country_exists = c:MLO }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:MLO
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	hab_papal_alliance = {
+		icon = ties_with_the_holy_see
+		requires = { hab_italian_ambition }
+		enabled = {
+			OR = {
+				is_allied_with = { target = c:PAP }
+				owns_or_non_sovereign_subject_owns = location:rome
+				opinion = { target = c:PAP value >= 120 }
+			}
+			dominant_religion = religion:catholic
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_papal_mod years = -1 mode = add }
+		}
+	}
+
+	hab_venetian_ports = {
+		icon = hsa_mastery_of_the_sea
+		requires = { hab_duchy_of_milan }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:venice
+			navy_tradition >= 25
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_venetia_mod years = -1 mode = add }
+		}
+	}
+
+	hab_king_of_naples = {
+		icon = crown_power_advance_renaissance
+		requires = { hab_papal_alliance }
+		enabled = {
+			OR = {
+				is_allied_with = { target = c:NAP }
+				c:NAP = { is_rival_of = root }
+				c:NAP = { has_royal_marriage_with = root }
+				c:NAP = { is_subject_of = root }
+				NOT = { country_exists = c:NAP }
+			}
+		}
+		on_completion = {
+			if = {
+				limit = { country_exists = c:NAP }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:NAP
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	hab_king_of_italy = {
+		icon = legacy_of_great_empires
+		requires = { hab_venetian_ports hab_king_of_naples }
+		enabled = {
+			any_owned_location = {
+				region = region:italy_region
+				owner = root
+				count >= 200
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = hab_events.30
+		}
+	}
+
+	# ==================== D: 東方 ====================
+
+	hab_eastern_ambitions = {
+		icon = expansionism
+		requires = { hab_habsburg_ascendancy }
+		enabled = {
+			OR = {
+				is_allied_with = { target = c:BOH }
+				c:BOH = { is_rival_of = root }
+				NOT = { country_exists = c:BOH }
+			}
+			OR = {
+				is_allied_with = { target = c:HUN }
+				c:HUN = { is_rival_of = root }
+				NOT = { country_exists = c:HUN }
+			}
+		}
+		on_completion = {
+			if = {
+				limit = { country_exists = c:BOH }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:BOH
+					target_character = root.ruler
+					years = 100
+				}
+			}
+			if = {
+				limit = { country_exists = c:HUN }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:HUN
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	hab_crown_of_bohemia = {
+		icon = crown_power_advance_renaissance
+		requires = { hab_eastern_ambitions }
+		enabled = {
+			OR = {
+				c:BOH = { in_union_with = root }
+				c:BOH = { is_subject_of = root }
+				location:prague = { owner = root }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_bohemia_mod years = -1 mode = add }
+		}
+	}
+
+	hab_royal_hungary = {
+		icon = crown_power_advance_renaissance
+		requires = { hab_eastern_ambitions }
+		enabled = {
+			OR = {
+				c:HUN = { in_union_with = root }
+				c:HUN = { is_subject_of = root }
+				NOT = { country_exists = c:HUN }
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = hab_events.40
+		}
+	}
+
+	hab_bohemian_union = {
+		icon = lat_emperor_latins_advance
+		requires = { hab_crown_of_bohemia }
+		enabled = {
+			OR = {
+				AND = {
+					c:BOH = { in_union_with = root }
+					any_international_organization = {
+						is_union = yes
+						international_organization_member_of = root
+						international_organization_member_of = c:BOH
+						modifier:union_integration_level >= 5
+					}
+				}
+				NOT = { country_exists = c:BOH }
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = hab_events.65
+		}
+	}
+
+	hab_secure_croatia = {
+		icon = crusader_tradition
+		requires = { hab_royal_hungary }
+		enabled = {
+			area:croatia_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 10
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_croatia_mod years = -1 mode = add }
+		}
+	}
+
+	hab_ottoman_menace = {
+		icon = crusader_tradition
+		requires = { hab_secure_croatia }
+		enabled = {
+			region:balkan_region = {
+				any_location_in_region = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 30
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_ottoman_mod years = -1 mode = add }
+		}
+	}
+
+	hab_liberate_balkans = {
+		icon = glorious_arms
+		requires = { hab_ottoman_menace }
+		enabled = {
+			region:balkan_region = {
+				any_location_in_region = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 280
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_balkans_mod years = -1 mode = add }
+		}
+	}
+
+
+	hab_emperors_of_east = {
+		icon = legacy_of_great_empires
+		requires = { hab_liberate_balkans }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:constantinople
+		}
+		on_completion = {
+			trigger_event_non_silently = hab_events.50
+		}
+	}
+
+	# ==================== E: 内政・経済 ====================
+
+	hab_austrian_heartland = {
+		icon = city_building_advance
+		requires = { hab_habsburg_ascendancy }
+		enabled = {
+			any_owned_location = {
+				OR = {
+					area = area:austria_area
+					area = area:upper_austria_area
+				}
+				owner = root
+				count >= 30
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_heartland_mod years = -1 mode = add }
+		}
+	}
+
+	hab_stadtrechtsbriefe = {
+		icon = city_building_advance
+		requires = { hab_austrian_heartland }
+		enabled = {
+			"estate_power(estate_type:crown_estate)" >= 0.25
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_stadtrecht_mod years = -1 mode = add }
+			set_variable = { name = hab_wiener_stadtrecht_unlocked value = 1 }
+			set_variable = { name = hab_landstadt_unlocked value = 1 }
+		}
+	}
+
+
+	hab_tyrol_styria = {
+		icon = food_advance_renaissance
+		requires = { hab_austrian_heartland }
+		enabled = {
+			any_owned_location = {
+				area = area:tirol_area
+				owner = root
+				count >= 15
+			}
+			any_owned_location = {
+				area = area:styria_area
+				owner = root
+				count >= 12
+			}
+		}
+		on_completion = {
+			location:schwaz = {
+				add_location_modifier = { modifier = hab_tyrol_silver_mod years = -1 mode = add }
+			}
+			location:leoben = {
+				add_location_modifier = { modifier = hab_styria_iron_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	hab_dev_vienna = {
+		icon = city_building_advance
+		requires = { hab_austrian_heartland }
+		enabled = {
+			location:vienna = {
+				owner = root
+				development >= 35
+				total_building_levels >= 70
+			}
+		}
+		on_completion = {
+			location:vienna = {
+				add_location_modifier = { modifier = hab_vienna_mod years = -1 mode = add }
+			}
+		}
+	}
+
+
+	hab_graz_fortress = {
+		icon = crusader_tradition
+		requires = { hab_tyrol_styria }
+		enabled = {
+			location:graz = {
+				owner = root
+				OR = {
+					has_building = building_type:castle
+					has_building = building_type:bastion
+				}
+			}
+		}
+		on_completion = {
+			location:graz = {
+				add_location_modifier = { modifier = hab_graz_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	hab_swarovski_crystal = {
+		icon = food_advance_renaissance
+		requires = { hab_innsbruck_court }
+		enabled = {
+			current_year >= 1737
+			location:innsbruck = { owner = root }
+		}
+		on_completion = {
+			location:innsbruck = {
+				add_location_modifier = { modifier = hab_swarovski_mod years = -1 mode = add }
+			}
+		}
+	}
+
+
+	hab_baroque_vienna = {
+		icon = library_advance
+		requires = { hab_dev_vienna }
+		enabled = {
+			location:vienna = {
+				owner = root
+				development >= 40
+				total_building_levels >= 100
+			}
+		}
+		on_completion = {
+			location:vienna = {
+				add_location_modifier = { modifier = hab_baroque_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	hab_great_vienna = {
+		icon = city_building_advance
+		requires = { hab_baroque_vienna }
+		enabled = {
+			location:vienna = {
+				owner = root
+				development >= 50
+				total_building_levels >= 120
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = hab_events.55
+		}
+	}
+
+
+
+
+	# A追加ミッション
+	hab_swiss_lands = {
+		icon = crusader_tradition
+		requires = { hab_imperial_authority }
+		enabled = {
+			area:central_switzerland_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 8
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_swiss_mod years = -1 mode = add }
+		}
+	}
+
+	hab_south_german_cities = {
+		icon = city_building_advance
+		requires = { hab_charlemagne_legacy }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:augsburg
+			owns_or_non_sovereign_subject_owns = location:frankfurt
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_south_german_mod years = -1 mode = add }
+		}
+	}
+
+	hab_unify_germany = {
+		icon = legacy_of_great_empires
+		requires = { hab_south_german_cities hab_swiss_lands }
+		enabled = {
+			OR = {
+				has_or_had_tag = HRE
+				tag = HRE
+				has_or_had_tag = GER
+				tag = GER
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = hab_events.15
+		}
+	}
+
+	# B追加ミッション
+	hab_north_sea_trade = {
+		icon = hsa_mastery_of_the_sea
+		requires = { hab_austrian_netherlands }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:hamburg
+			owns_or_non_sovereign_subject_owns = location:lubeck
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_north_sea_mod years = -1 mode = add }
+		}
+	}
+
+	hab_hegemon_of_west = {
+		icon = legacy_of_great_empires
+		requires = { hab_defeat_france hab_crown_of_spain }
+		enabled = {
+			prestige >= 70
+			num_locations >= 400
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_hegemon_mod years = -1 mode = add }
+		}
+	}
+
+	# C追加ミッション
+	hab_tuscany = {
+		icon = encouragement_of_philosophers
+		requires = { hab_duchy_of_milan }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:florence
+			area:tuscany_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 8
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_tuscany_mod years = -1 mode = add }
+		}
+	}
+
+
+
+	# D追加ミッション
+	hab_surpass_poland = {
+		icon = offensive_army
+		requires = { hab_crown_of_bohemia }
+		enabled = {
+			OR = {
+				c:POL = { is_rival_of = root }
+				is_allied_with = { target = c:POL }
+				NOT = { country_exists = c:POL }
+			}
+		}
+		on_completion = {
+			if = {
+				limit = { country_exists = c:POL }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:POL
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+
+
+	hab_wallachia_moldavia = {
+		icon = crusader_tradition
+		requires = { hab_liberate_balkans }
+		enabled = {
+			area:wallachia_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 20
+				}
+			}
+			area:moldavia_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 20
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_danubian_mod years = -1 mode = add }
+		}
+	}
+
+	# E追加ミッション
+	hab_austrian_army = {
+		icon = medieval_military
+		requires = { hab_austrian_heartland }
+		enabled = {
+			army_tradition >= 40
+			regular_army_size >= 20
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_army_mod years = -1 mode = add }
+		}
+	}
+
+	hab_spanish_tercios = {
+		icon = medieval_military
+		requires = { hab_austrian_army hab_crown_of_spain }
+		enabled = {
+			army_tradition >= 55
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_tercios_mod years = -1 mode = add }
+		}
+	}
+
+	hab_multicultural = {
+		icon = encouragement_of_philosophers
+		requires = { hab_crown_of_bohemia hab_royal_hungary }
+		enabled = {
+			num_locations >= 300
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_multiethnic_mod years = -1 mode = add }
+		}
+	}
+
+
+
+	hab_alsace_lorraine = {
+		icon = expansionism
+		requires = { hab_weaken_france }
+		enabled = {
+			any_owned_location = {
+				area = area:alsace_area
+				owner = root
+				count >= 5
+			}
+			any_owned_location = {
+				area = area:lorraine_area
+				owner = root
+				count >= 5
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_alsace_mod years = 80 mode = add }
+		}
+	}
+
+
+	hab_renaissance_court = {
+		icon = library_advance
+		requires = { hab_baroque_vienna hab_tuscany }
+		enabled = {
+			num_works_of_art >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_renaissance_mod years = -1 mode = add }
+		}
+	}
+
+	hab_carinthia = {
+		icon = expansionism
+		requires = { hab_austrian_heartland }
+		enabled = {
+			any_owned_location = {
+				area = area:carinthia_area
+				owner = root
+				count >= 8
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hab_carinthia_mod years = -1 mode = add }
+		}
+	}
+
+	hab_innsbruck_court = {
+		icon = food_advance_renaissance
+		requires = { hab_tyrol_styria }
+		enabled = {
+			location:innsbruck = {
+				owner = root
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:innsbruck = {
+				add_location_modifier = { modifier = hab_innsbruck_loc_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	hab_colonialism = {
+		icon = hsa_mastery_of_the_sea
+		requires = { hab_north_sea_trade hab_crown_of_spain }
+		enabled = {
+			OR = {
+				c:SPA = { in_union_with = root }
+				c:CAS = { in_union_with = root }
+				c:SPA = { is_subject_of = root }
+				c:CAS = { is_subject_of = root }
+			}
+			navy_size >= 100
+		}
+		on_completion = {
+			if = {
+				limit = { country_exists = c:SPA }
+				c:SPA = {
+					every_subject = {
+						limit = { country_type = country_type:colonial }
+						make_subject_of = {
+							target = root
+							type = subject_type:colonial_nation
+						}
+					}
+				}
+			}
+			if = {
+				limit = {
+					country_exists = c:CAS
+					NOT = { country_exists = c:SPA }
+				}
+				c:CAS = {
+					every_subject = {
+						limit = { country_type = country_type:colonial }
+						make_subject_of = {
+							target = root
+							type = subject_type:colonial_nation
+						}
+					}
+				}
+			}
+			add_prestige = 20
+		}
+	}
+
+	# ==================== 大合流 FINAL ====================
+
+	hab_universal_empire = {
+		icon = legacy_of_great_empires
+		requires = { hab_emperors_of_rome hab_hegemon_of_west hab_emperors_of_east hab_great_vienna }
+		final = yes
+		enabled = {
+			prestige >= 85
+			num_locations >= 600
+			monthly_income_trade_and_tax >= 500
+		}
+		on_completion = {
+			trigger_event_non_silently = hab_events.99
+		}
+	}
+}
