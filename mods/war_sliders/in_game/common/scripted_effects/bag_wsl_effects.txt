@@ -24,6 +24,20 @@ bag_wsl_tick = {
 		# Идёт правка инфляции — единственная причина, по которой мод не спит.
 		bag_wsl_mint_check = yes
 	}
+	if = {
+		limit = {
+			at_war = no
+			NOT = { var:bag_wsl_at_war ?= 1 }
+		}
+		# **Мир держится каждый месяц, а не только в день мира.** Прогон
+		# 2026-09-29: мод опустил ползунки в день мира (счётчик 5 → 16), а через
+		# пару месяцев все три стояли на 100% — поднял их кто-то другой,
+		# вероятно ванильная автоматика «в начале конфликта» (восстание войной
+		# для `at_war` не считается). Цена — привод просыпается раз в месяц на
+		# долю секунды, и счётчик приводов растёт на 3 каждый мирный месяц.
+		bag_wsl_maint_arm = yes
+		bag_wsl_update_busy = yes
+	}
 }
 
 # **Дневной дозор.** Скрытое событие раз в игровой день читает один флаг и
@@ -77,6 +91,7 @@ bag_wsl_update_busy = {
 bag_wsl_war_started = {
 	# Начавшаяся война отменяет мирную правку целиком.
 	set_variable = { name = bag_wsl_at_war value = 1 }
+	bag_wsl_count_war = yes
 	if = {
 		limit = { has_variable = bag_wsl_mint_phase }
 		bag_wsl_mint_stand_down = yes
@@ -90,6 +105,7 @@ bag_wsl_war_started = {
 # Scope: country
 bag_wsl_war_ended = {
 	set_variable = { name = bag_wsl_at_war value = 0 }
+	bag_wsl_count_peace = yes
 	bag_wsl_on_peace = yes
 }
 
@@ -100,6 +116,13 @@ bag_wsl_war_ended = {
 # приходит вторым шагом, когда ползунок уже показан и уже его читает.
 # Scope: country
 bag_wsl_on_peace = {
+	bag_wsl_maint_arm = yes
+	bag_wsl_mint_arm = yes
+	bag_wsl_update_busy = yes
+}
+
+# Scope: country
+bag_wsl_maint_arm = {
 	if = {
 		limit = { has_variable = bag_wsl_army_on }
 		set_variable = { name = bag_wsl_army_target value = 1 }
@@ -115,6 +138,10 @@ bag_wsl_on_peace = {
 		set_variable = { name = bag_wsl_fort_target value = 1 }
 		set_variable = { name = bag_wsl_fort_go value = 1 }
 	}
+}
+
+# Scope: country
+bag_wsl_mint_arm = {
 	if = {
 		limit = {
 			has_variable = bag_wsl_mint_on
@@ -138,7 +165,6 @@ bag_wsl_on_peace = {
 		# Привод поставит пол, спросит у игры прогноз на месяц и сразу
 		# пересчитает положение — см. `bag_wsl_mint_measured`.
 	}
-	bag_wsl_update_busy = yes
 }
 
 # Месячный шаг правки. Мод меряет, **на сколько он сам снижает инфляцию**, и
@@ -252,4 +278,24 @@ bag_wsl_count_run = {
 		set_variable = { name = bag_wsl_runs value = 0 }
 	}
 	change_variable = { name = bag_wsl_runs add = 1 }
+}
+
+# Счётчики переходов для окна диагностики: сколько войн и миров мод заметил.
+# `change_variable` на переменной, которой нет, не пишет — заводим нулём.
+# Scope: country
+bag_wsl_count_war = {
+	if = {
+		limit = { NOT = { has_variable = bag_wsl_wars } }
+		set_variable = { name = bag_wsl_wars value = 0 }
+	}
+	change_variable = { name = bag_wsl_wars add = 1 }
+}
+
+# Scope: country
+bag_wsl_count_peace = {
+	if = {
+		limit = { NOT = { has_variable = bag_wsl_peaces } }
+		set_variable = { name = bag_wsl_peaces value = 0 }
+	}
+	change_variable = { name = bag_wsl_peaces add = 1 }
 }
