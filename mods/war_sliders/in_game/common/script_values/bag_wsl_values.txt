@@ -41,12 +41,43 @@ bag_wsl_inflation_goal = {
 	divide = 10000
 }
 
-# Порог, ниже которого правка считается доведённой: цель плюс полсотой
-# процента. Панель показывает инфляцию до сотых, и остаток меньше 0.005% она
-# рисует как 0.00% — прогон 2026-09-27 (скриншот): инфляция «0.00%», прирост
-# «0.00%», авто-чеканка выключена, и мод месяцами дожидался невидимого остатка.
+# Порог, ниже которого правка считается доведённой: сама цель. В 0.4.1 к ней
+# добавлялась полсотая процента, чтобы правка не висела на невидимом остатке
+# (прогон 2026-09-27); от зависания теперь спасает минимальный шаг
+# (`bag_wsl_mint_aim`), а остаток он хочет гасить любой, 2026-09-29: «он всё
+# ещё не исправляет 0.0001 инфляцию… инфляция ниже нуля стать не может».
 # Scope: country
 bag_wsl_inflation_stop = {
 	value = bag_wsl_inflation_goal
-	add = 0.00005
+}
+
+# Число, которым взводится привод: цель плюс сотая, у верха шкалы — минус.
+# Смена числа под показанным ползунком и рождает событие; см. `bag_wsl_on_peace`.
+
+# Scope: country
+bag_wsl_army_arm = {
+	value = bag_wsl_army_fraction
+	if = { limit = { bag_wsl_army_fraction > 0.98 } subtract = 0.01 }
+	else = { add = 0.01 }
+}
+
+# Scope: country
+bag_wsl_navy_arm = {
+	value = bag_wsl_navy_fraction
+	if = { limit = { bag_wsl_navy_fraction > 0.98 } subtract = 0.01 }
+	else = { add = 0.01 }
+}
+
+# Scope: country
+bag_wsl_fort_arm = {
+	value = bag_wsl_fort_fraction
+	if = { limit = { bag_wsl_fort_fraction > 0.98 } subtract = 0.01 }
+	else = { add = 0.01 }
+}
+
+# Scope: country
+bag_wsl_mint_arm = {
+	value = bag_wsl_mint_fraction
+	if = { limit = { bag_wsl_mint_fraction > 0.98 } subtract = 0.01 }
+	else = { add = 0.01 }
 }
