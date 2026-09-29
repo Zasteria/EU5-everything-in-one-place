@@ -1,0 +1,468 @@
+﻿tre_trebizond_mission_pack = {
+	icon = nmt_theodoro
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = TRE
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = { always = yes }
+
+	on_start = { set_variable = tre_mission_started }
+	on_completion = { remove_variable = tre_mission_started }
+	on_abort = { remove_variable = tre_mission_started }
+
+	# ==================== ROOT ====================
+
+	tre_komnenian_legacy = {
+		icon = legacy_of_great_empires
+		requires = { }
+		enabled = { always = yes }
+		on_completion = {
+			add_country_modifier = { modifier = tre_komnenian_mod years = 30 mode = add }
+		}
+	}
+
+	# ==================== A: ポントス・黒海 ====================
+
+	tre_pontus_coast = {
+		icon = maritime_advance_age_2
+		requires = { tre_komnenian_legacy }
+		enabled = {
+			any_owned_location = {
+				area = area:pontus_area
+				count >= 15
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = tre_pontus_mod years = -1 mode = add }
+		}
+	}
+
+	tre_black_sea_trade = {
+		icon = continental_trade
+		requires = { tre_pontus_coast }
+		enabled = {
+			navy_tradition >= 10
+			navy_size >= 5
+		}
+		on_completion = {
+			add_country_modifier = { modifier = tre_black_sea_mod years = -1 mode = add }
+		}
+	}
+
+	tre_dev_trebizond = {
+		icon = city_building_advance
+		requires = { tre_komnenian_legacy }
+		enabled = {
+			location:trebizond = {
+				rgo_level >= 6
+			}
+		}
+		on_completion = {
+			location:trebizond = {
+				add_development = 3
+				add_location_modifier = { modifier = tre_trebizond_city_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	tre_orthodox_stronghold = {
+		icon = exsurge_domine
+		requires = { tre_dev_trebizond }
+		enabled = {
+			dominant_religion = religion:orthodox
+			estate_satisfaction:clergy_estate >= 0.65
+			any_owned_location = {
+				has_building = building_type:orthodox_monastery
+				count >= 5
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = tre_orthodox_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== B: アナトリア再征服 ====================
+
+	tre_rize_tea = {
+		icon = food_advance_renaissance
+		requires = { tre_georgia_campaign }
+		enabled = {
+			current_year >= 1737
+			location:rize = {
+				owner = root
+			}
+		}
+		on_completion = {
+			location:rize = {
+				change_raw_material = goods:tea
+				add_location_modifier = { modifier = tre_rize_tea_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	tre_armenia_campaign = {
+		icon = glorious_arms
+		requires = { tre_georgia_campaign }
+		enabled = {
+			area:armenia_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 10
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = tre_armenia_mod years = -1 mode = add }
+		}
+	}
+
+	tre_cappadocia = {
+		icon = expansionism
+		requires = { tre_pontus_coast }
+		enabled = {
+			any_owned_location = {
+				area = area:cappadocia_area
+				count >= 10
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = tre_cappadocia_mod years = -1 mode = add }
+		}
+	}
+
+	tre_central_anatolia = {
+		icon = offensive_army
+		requires = { tre_cappadocia }
+		enabled = {
+			any_owned_location = {
+				area = area:central_anatolia_area
+				count >= 15
+			}
+			owns_or_non_sovereign_subject_owns = location:ankara
+		}
+		on_completion = {
+			add_country_modifier = { modifier = tre_anatolia_mod years = -1 mode = add }
+		}
+	}
+
+	tre_west_anatolia = {
+		icon = glorious_arms
+		requires = { tre_central_anatolia }
+		enabled = {
+			any_owned_location = {
+				area = area:west_anatolia_area
+				count >= 15
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = tre_west_anatolia_mod years = -1 mode = add }
+		}
+	}
+
+	tre_reclaim_nicaea = {
+		icon = crown_power_advance_renaissance
+		requires = { tre_west_anatolia }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:bursa
+			any_owned_location = {
+				area = area:west_anatolia_area
+				count >= 20
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = tre_nicaea_mod years = -1 mode = add }
+			add_prestige = 20
+		}
+	}
+
+	tre_anatolian_emperor = {
+		icon = crown_power_advance_renaissance
+		requires = { tre_reclaim_nicaea tre_georgia_campaign }
+		enabled = {
+			any_owned_location = {
+				region = region:anatolia_region
+				count >= 180
+			}
+			prestige >= 50
+		}
+		on_completion = {
+			add_prestige = 25
+		}
+	}
+
+	# ==================== C: バルカン・コンスタンティノープル ====================
+
+	tre_thrace_campaign = {
+		icon = offensive_army
+		requires = { tre_reclaim_nicaea }
+		enabled = {
+			any_owned_location = {
+				area = area:thrace_area
+				count >= 15
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = tre_thrace_mod years = -1 mode = add }
+		}
+	}
+
+	tre_reclaim_constantinople = {
+		icon = legacy_of_great_empires
+		requires = { tre_thrace_campaign }
+		enabled = {
+			location:constantinople = {
+				owner = root
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = tre_events.20
+		}
+	}
+
+	tre_northern_greece = {
+		icon = glorious_arms
+		requires = { tre_thrace_campaign }
+		enabled = {
+			any_owned_location = {
+				area = area:northern_greece_area
+				count >= 15
+			}
+			owns_or_non_sovereign_subject_owns = location:thessaloniki
+		}
+		on_completion = {
+			add_country_modifier = { modifier = tre_greece_mod years = -1 mode = add }
+		}
+	}
+
+	tre_bulgaria = {
+		icon = glorious_arms
+		requires = { tre_northern_greece }
+		enabled = {
+			any_owned_location = {
+				area = area:bulgaria_area
+				count >= 15
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = tre_bulgaria_mod years = -1 mode = add }
+		}
+	}
+
+	tre_morea = {
+		icon = cultural_ties
+		requires = { tre_northern_greece }
+		enabled = {
+			any_owned_location = {
+				area = area:morea_area
+				count >= 10
+			}
+			owns_or_non_sovereign_subject_owns = location:athens
+		}
+		on_completion = {
+			add_country_modifier = { modifier = tre_morea_mod years = -1 mode = add }
+		}
+	}
+
+	tre_aegean_islands = {
+		icon = royal_navy
+		requires = { tre_reclaim_constantinople }
+		enabled = {
+			any_owned_location = {
+				area = area:aegean_archipelago_area
+				count >= 10
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = tre_aegean_mod years = -1 mode = add }
+		}
+	}
+
+	tre_macedonian_campaign = {
+		icon = offensive_army
+		requires = { tre_northern_greece }
+		enabled = {
+			any_owned_location = {
+				area = area:macedonia_area
+				count >= 15
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = tre_macedonia_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== D: 内政・経済 ====================
+
+	tre_silk_trade = {
+		icon = generic_trade
+		requires = { tre_black_sea_trade }
+		enabled = {
+			produced_in_country:silk > 12
+			monthly_income_trade_and_tax >= 120
+		}
+		on_completion = {
+			add_country_modifier = { modifier = tre_silk_mod years = -1 mode = add }
+		}
+	}
+
+	tre_komnenian_army = {
+		icon = medieval_military
+		requires = { tre_komnenian_legacy }
+		enabled = {
+			regular_army_size >= 5
+		}
+		on_completion = {
+			add_country_modifier = { modifier = tre_army_mod years = -1 mode = add }
+		}
+	}
+
+	tre_greek_culture = {
+		icon = library_advance
+		requires = { tre_orthodox_stronghold }
+		enabled = {
+			any_owned_location = {
+				has_building = building_type:university
+				count >= 3
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = tre_culture_mod years = -1 mode = add }
+		}
+	}
+
+	tre_cilicia_campaign = {
+		icon = glorious_arms
+		requires = { tre_central_anatolia }
+		enabled = {
+			any_owned_location = {
+				area = area:cilicia_area
+				count >= 10
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = tre_cilicia_mod years = -1 mode = add }
+		}
+	}
+
+	tre_dev_constantinople = {
+		icon = city_building_advance
+		requires = { tre_reclaim_constantinople }
+		enabled = {
+			location:constantinople = {
+				development >= 40
+				total_building_levels >= 120
+			}
+		}
+		on_completion = {
+			location:constantinople = {
+				add_location_modifier = { modifier = tre_cpole_city_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	tre_orthodox_patriarch = {
+		icon = exsurge_domine
+		requires = { tre_dev_constantinople tre_orthodox_stronghold }
+		enabled = {
+			dominant_religion = religion:orthodox
+			estate_satisfaction:clergy_estate >= 0.80
+			location:constantinople = { owner = root }
+			location:antioch = { owner = root }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = tre_patriarch_mod years = -1 mode = add }
+		}
+	}
+
+
+	tre_georgia_campaign = {
+		icon = expansionism
+		requires = { tre_komnenian_legacy }
+		enabled = {
+			any_owned_location = {
+				area = area:georgia_area
+				count >= 10
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = tre_georgia_mod years = -1 mode = add }
+		}
+	}
+
+	tre_komnenian_navy = {
+		icon = ship_building_advance
+		requires = { tre_black_sea_trade }
+		enabled = {
+			navy_size >= 30
+			navy_tradition >= 35
+		}
+		on_completion = {
+			add_country_modifier = { modifier = tre_navy_mod years = -1 mode = add }
+		}
+	}
+
+	tre_antioch_crusade = {
+		icon = glorious_arms
+		requires = { tre_cilicia_campaign }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:antioch
+		}
+		on_completion = {
+			add_country_modifier = { modifier = tre_antioch_mod years = -1 mode = add }
+			add_prestige = 15
+		}
+	}
+
+	tre_greek_population = {
+		icon = artists_advance
+		requires = { tre_greek_culture }
+		enabled = {
+			total_primary_culture_population >= 2000
+		}
+		on_completion = {
+			add_country_modifier = { modifier = tre_greek_pop_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== 大合流 ====================
+
+	tre_restore_byzantium = {
+		icon = legacy_of_great_empires
+		requires = { tre_anatolian_emperor tre_reclaim_constantinople tre_morea tre_bulgaria tre_greek_culture }
+		enabled = {
+			OR = {
+				has_or_had_tag = BYZ
+				tag = BYZ
+			}
+			prestige >= 70
+		}
+		on_completion = {
+			trigger_event_non_silently = tre_events.60
+		}
+	}
+
+	# ==================== FINAL ====================
+
+	tre_komnenos_dynasty = {
+		icon = legacy_of_great_empires
+		requires = { tre_restore_byzantium tre_orthodox_patriarch tre_aegean_islands tre_silk_trade }
+		final = yes
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:rome
+			num_locations >= 600
+			monthly_income_trade_and_tax >= 1000
+		}
+		on_completion = {
+			trigger_event_non_silently = tre_events.99
+		}
+	}
+}

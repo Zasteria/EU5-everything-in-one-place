@@ -1,0 +1,589 @@
+﻿ayy_ayyubid_mission_pack = {
+	icon = nmt_ayyubid
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = HSN
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = { always = yes }
+
+	on_start = { set_variable = ayy_mission_started }
+	on_completion = { remove_variable = ayy_mission_started }
+	on_abort = { remove_variable = ayy_mission_started }
+
+	# ==================== ROOT ====================
+
+	ayy_rise_of_ayyubids = {
+		icon = legacy_of_great_empires
+		requires = { }
+		enabled = { always = yes }
+		on_completion = {
+			trigger_event_non_silently = ayy_events.1
+		}
+	}
+
+	# ==================== A: エジプト ====================
+
+	ayy_mamluk_rivalry = {
+		icon = crusader_tradition
+		requires = { ayy_rise_of_ayyubids }
+		enabled = {
+			OR = {
+				NOT = { country_exists = c:MAM }
+				c:MAM = { is_rival_of = root }
+				opinion = { target = c:MAM value <= 0 }
+			}
+		}
+		on_completion = {
+			if = {
+				limit = {
+					country_exists = c:MAM
+					c:MAM = { has_owner = location:aleppo }
+				}
+				add_casus_belli = {
+					type = casus_belli:cb_conquer_province
+					target = location:aleppo.top_owner
+					years = 60
+				}
+			}
+			if = {
+				limit = { location:aleppo = { has_owner = yes } }
+				add_casus_belli = {
+					type = casus_belli:cb_conquer_province
+					target = location:aleppo.top_owner
+					years = 60
+				}
+			}
+		}
+	}
+
+	ayy_secure_sinai = {
+		icon = expansionism
+		requires = { ayy_mamluk_rivalry }
+		enabled = {
+			any_owned_location = {
+				area = area:sinai_area
+				count >= 5
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = ayy_sinai_mod years = -1 mode = add }
+		}
+	}
+
+	ayy_conquer_lower_egypt = {
+		icon = glorious_arms
+		requires = { ayy_secure_sinai }
+		enabled = {
+			any_owned_location = {
+				area = area:lower_egypt_area
+				count >= 15
+			}
+			owns_or_non_sovereign_subject_owns = location:alexandria
+		}
+		on_completion = {
+			add_country_modifier = { modifier = ayy_lower_egypt_mod years = -1 mode = add }
+		}
+	}
+
+	ayy_seize_cairo = {
+		icon = city_building_advance
+		requires = { ayy_conquer_lower_egypt }
+		enabled = {
+			location:cairo = {
+				owner = root
+			}
+		}
+		on_completion = {
+			location:cairo = {
+				add_location_modifier = { modifier = ayy_cairo_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	ayy_upper_egypt = {
+		icon = crusader_tradition
+		requires = { ayy_conquer_lower_egypt }
+		enabled = {
+			any_owned_location = {
+				area = area:upper_egypt_area
+				count >= 10
+			}
+			owns_or_non_sovereign_subject_owns = location:aswan
+		}
+		on_completion = {
+			add_country_modifier = { modifier = ayy_upper_egypt_mod years = -1 mode = add }
+		}
+	}
+
+	ayy_nile_breadbasket = {
+		icon = food_advance_renaissance
+		requires = { ayy_upper_egypt }
+		enabled = {
+			total_population >= 10000
+		}
+		on_completion = {
+			add_country_modifier = { modifier = ayy_nile_mod years = -1 mode = add }
+		}
+	}
+
+	ayy_dev_cairo = {
+		icon = city_building_advance
+		requires = { ayy_seize_cairo }
+		enabled = {
+			location:cairo = {
+				development >= 35
+				total_building_levels >= 80
+			}
+		}
+		on_completion = {
+			location:cairo = {
+				add_location_modifier = { modifier = ayy_cairo_great_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	# ==================== B: レヴァント ====================
+
+	ayy_secure_levant = {
+		icon = expansionism
+		requires = { ayy_mamluk_rivalry }
+		enabled = {
+			area:levant_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 20
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = ayy_levant_control_mod years = -1 mode = add }
+		}
+	}
+
+	ayy_seize_aleppo = {
+		icon = glorious_arms
+		requires = { ayy_secure_levant }
+		enabled = {
+			location:aleppo = {
+				owner = root
+			}
+		}
+		on_completion = {
+			location:aleppo = {
+				add_location_modifier = { modifier = ayy_aleppo_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	ayy_reclaim_jerusalem = {
+		icon = ties_with_the_holy_see
+		requires = { ayy_secure_levant ayy_secure_sinai }
+		enabled = {
+			location:jerusalem = {
+				owner = root
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = ayy_events.10
+		}
+	}
+
+	ayy_coastal_levant = {
+		icon = hsa_mastery_of_the_sea
+		requires = { ayy_secure_levant }
+		enabled = {
+			any_owned_location = {
+				area = area:levant_area
+				count >= 50
+			}
+			owns_or_non_sovereign_subject_owns = location:acre
+		}
+		on_completion = {
+			add_country_modifier = { modifier = ayy_coastal_mod years = -1 mode = add }
+		}
+	}
+
+	ayy_antioch = {
+		icon = glorious_arms
+		requires = { ayy_seize_aleppo }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:antioch
+		}
+		on_completion = {
+			add_country_modifier = { modifier = ayy_antioch_mod years = -1 mode = add }
+		}
+	}
+
+
+	# ==================== C: メソポタミア ====================
+
+	ayy_jazira = {
+		icon = expansionism
+		requires = { ayy_rise_of_ayyubids }
+		enabled = {
+			area:jazira_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 10
+				}
+			}
+		}
+		on_completion = {
+			set_country_rank_effect = { rank = country_rank:rank_duchy }
+			add_country_modifier = { modifier = ayy_jazira_mod years = -1 mode = add }
+		}
+	}
+
+	ayy_kurdish_highlands = {
+		icon = crusader_tradition
+		requires = { ayy_jazira }
+		enabled = {
+			any_owned_location = {
+				area = area:armenian_highlands_area
+				count >= 10
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = ayy_kurdish_mod years = -1 mode = add }
+		}
+	}
+
+	ayy_iraq_arabi = {
+		icon = glorious_arms
+		requires = { ayy_jazira }
+		enabled = {
+			area:iraq_arabi_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 30
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = ayy_iraq_mod years = -1 mode = add }
+		}
+	}
+
+	ayy_seize_baghdad = {
+		icon = legacy_of_great_empires
+		requires = { ayy_iraq_arabi }
+		enabled = {
+			location:baghdad = {
+				owner = root
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = ayy_events.20
+		}
+	}
+
+	ayy_mesopotamia_trade = {
+		icon = a_magnanimous_empire
+		requires = { ayy_seize_baghdad }
+		enabled = {
+			monthly_income_trade_and_tax >= 150
+			any_owned_location = {
+				is_market_center = yes
+				count >= 4
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = ayy_mesopotamia_trade_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== D: アラビア半島 ====================
+
+	ayy_hejaz = {
+		icon = ties_with_the_holy_see
+		requires = { ayy_reclaim_jerusalem }
+		enabled = {
+			any_owned_location = {
+				area = area:hedjaz_area
+				count >= 10
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = ayy_hejaz_mod years = -1 mode = add }
+		}
+	}
+
+	ayy_holy_cities = {
+		icon = exsurge_domine
+		requires = { ayy_hejaz }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:mecca
+			owns_or_non_sovereign_subject_owns = location:medina
+		}
+		on_completion = {
+			trigger_event_non_silently = ayy_events.30
+		}
+	}
+
+	ayy_north_yemen = {
+		icon = expansionism
+		requires = { ayy_hejaz }
+		enabled = {
+			any_owned_location = {
+				area = area:north_yemen_area
+				count >= 10
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = ayy_yemen_mod years = -1 mode = add }
+		}
+	}
+
+	ayy_south_yemen = {
+		icon = glorious_arms
+		requires = { ayy_north_yemen }
+		enabled = {
+			any_owned_location = {
+				area = area:south_yemen_area
+				count >= 8
+			}
+			location:adan = {
+				owner = root
+			}
+		}
+		on_completion = {
+			location:adan = {
+				add_location_modifier = { modifier = ayy_aden_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	ayy_arabian_trade = {
+		icon = crossroads_of_commerce
+		requires = { ayy_south_yemen }
+		enabled = {
+			navy_size >= 10
+			monthly_income_trade_and_tax >= 100
+		}
+		on_completion = {
+			add_country_modifier = { modifier = ayy_arabian_trade_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== E: 内政・宗教 ====================
+
+
+	ayy_madrasa = {
+		icon = library_advance
+		requires = { ayy_rise_of_ayyubids }
+		enabled = {
+			any_owned_location = {
+				has_building = building_type:madrasa
+				count >= 10
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = ayy_madrasa_mod years = -1 mode = add }
+		}
+	}
+
+	ayy_crusader_wars = {
+		icon = medieval_military
+		requires = { ayy_madrasa }
+		enabled = {
+			any_current_war = {
+				OR = {
+					attacker_leader = root
+					defender_leader = root
+				}
+				any_war_participant = {
+					NOT = { this = root }
+					NOT = { religion.group = root.religion.group }
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = ayy_jihad_mod years = 50 mode = add }
+		}
+	}
+
+
+	ayy_dev_damascus = {
+		icon = city_building_advance
+		requires = { ayy_secure_levant }
+		enabled = {
+			location:damascus = {
+				owner = root
+			}
+		}
+		on_completion = {
+			location:damascus = {
+				add_development = 3
+				add_location_modifier = { modifier = ayy_damascus_dev_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	ayy_spice_trade = {
+		icon = crossroads_of_commerce
+		requires = { ayy_coastal_levant }
+		enabled = {
+			monthly_income_trade_and_tax >= 500
+			produced_in_country:saffron > 10
+		}
+		on_completion = {
+			add_country_modifier = { modifier = ayy_spice_mod years = -1 mode = add }
+		}
+	}
+
+	ayy_silk_road_control = {
+		icon = a_magnanimous_empire
+		requires = { ayy_mesopotamia_trade }
+		enabled = {
+			monthly_income_trade_and_tax >= 400
+			produced_in_country:silk > 15
+		}
+		on_completion = {
+			add_country_modifier = { modifier = ayy_silk_mod years = -1 mode = add }
+		}
+	}
+
+	ayy_kurdish_cavalry = {
+		icon = offensive_army
+		requires = { ayy_kurdish_highlands }
+		enabled = {
+			OR = {
+				total_sub_unit_count:army_light_cavalry >= 8
+				total_sub_unit_count:army_heavy_cavalry >= 8
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = ayy_cavalry_mod years = -1 mode = add }
+		}
+	}
+
+	ayy_nile_fleet = {
+		icon = ship_building_advance
+		requires = { ayy_seize_cairo }
+		enabled = {
+			navy_size >= 15
+			navy_tradition >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = ayy_fleet_mod years = -1 mode = add }
+		}
+	}
+
+
+
+	ayy_defeat_crusaders = {
+		icon = crusader_tradition
+		requires = { ayy_crusader_wars }
+		enabled = {
+			army_tradition >= 55
+			prestige >= 45
+		}
+		on_completion = {
+			add_country_modifier = { modifier = ayy_crusader_mod years = -1 mode = add }
+		}
+	}
+
+	ayy_egypt_navy = {
+		icon = hsa_mastery_of_the_sea
+		requires = { ayy_nile_fleet }
+		enabled = {
+			navy_tradition >= 40
+			trade_sea_efficiency >= 0.05
+			total_sub_unit_count:navy_heavy_ship >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = ayy_navy_mod years = -1 mode = add }
+		}
+	}
+
+	ayy_sugar_egypt = {
+		icon = food_advance_renaissance
+		requires = { ayy_upper_egypt }
+		enabled = {
+			produced_in_country:sugar > 50
+		}
+		on_completion = {
+			add_country_modifier = { modifier = ayy_sugar_mod years = -1 mode = add }
+		}
+	}
+
+	ayy_iraq_ajam = {
+		icon = expansionism
+		requires = { ayy_seize_baghdad }
+		enabled = {
+			area:iraq_ajam_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 10
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = ayy_iraq_ajam_mod years = -1 mode = add }
+		}
+	}
+
+	ayy_build_mosques = {
+		icon = exsurge_domine
+		requires = { ayy_madrasa }
+		enabled = {
+			dominant_religion = religion:sunni
+			any_owned_location = {
+				has_building = building_type:temple
+				count >= 30
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = ayy_mosque_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== 大合流 ====================
+
+	ayy_sultan_of_egypt_syria = {
+		icon = crown_power_advance_renaissance
+		requires = { ayy_coastal_levant ayy_seize_cairo ayy_seize_baghdad ayy_holy_cities }
+		enabled = {
+			prestige >= 65
+			monthly_income_trade_and_tax >= 300
+			num_locations >= 200
+		}
+		on_completion = {
+			trigger_event_non_silently = ayy_events.60
+		}
+	}
+
+	# ==================== FINAL ====================
+
+	ayy_new_saladin = {
+		icon = legacy_of_great_empires
+		requires = { ayy_sultan_of_egypt_syria ayy_arabian_trade ayy_silk_road_control ayy_kurdish_cavalry }
+		final = yes
+		enabled = {
+			num_locations >= 600
+			monthly_income_trade_and_tax >= 800
+			prestige >= 85
+		}
+		on_completion = {
+			trigger_event_non_silently = ayy_events.99
+		}
+	}
+}

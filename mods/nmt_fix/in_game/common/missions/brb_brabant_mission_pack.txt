@@ -1,0 +1,598 @@
+﻿brb_brabant_mission_pack = {
+	icon = nmt_brabant
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = BRB
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = { always = yes }
+
+	on_start = { set_variable = brb_mission_started }
+	on_completion = { remove_variable = brb_mission_started }
+	on_abort = { remove_variable = brb_mission_started }
+
+	# ===== ROOT =====
+
+	# ===== A: 公国の礎 =====
+
+	brb_ducal_authority = {
+		icon = noble_resilience
+		requires = { }
+		enabled = { legitimacy >= 80 }
+		on_completion = {
+			add_country_modifier = { modifier = brb_ducal_mod years = 20 mode = add }
+		}
+	}
+
+	brb_joyous_entry = {
+		icon = liberty_egalite_fraternity
+		requires = { brb_ducal_authority }
+		enabled = {
+			any_owned_location = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+				count >= 10
+			}
+		}
+		on_completion = {
+			set_variable = brb_joyous_entry_unlocked
+			custom_tooltip = brb_joyous_entry_unlock_tt
+		}
+	}
+
+	brb_develop_antwerp = {
+		icon = crossroads_of_commerce
+		requires = { brb_ducal_authority }
+		enabled = {
+			location:antwerp = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:antwerp = {
+				add_location_modifier = { modifier = brb_antwerp_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	brb_unify_brabant = {
+		icon = expansionism
+		requires = { brb_ducal_authority }
+		enabled = {
+			any_owned_location = {
+				area = area:brabant_area
+				owner = root
+				count >= 18
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_unify_brabant_mod years = 20 mode = add }
+		}
+	}
+
+	brb_flemish_rivalry = {
+		icon = flemish_cloth_making
+		requires = { brb_ducal_authority }
+		enabled = {
+			any_owned_location = {
+				area = area:flanders_area
+				owner = root
+				count >= 8
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_flemish_mod years = 20 mode = add }
+		}
+	}
+
+	brb_hainaut_marriage = {
+		icon = bavarian_legitimacy
+		requires = { brb_ducal_authority }
+		enabled = {
+			OR = {
+				is_allied_with = { target = c:HAI }
+				has_royal_marriage_with = c:HAI
+				c:HAI = { is_rival_of = root }
+			}
+		}
+		on_completion = {
+			add_casus_belli = {
+				type = casus_belli:cb_claim_throne
+				target = c:HAI
+				target_character = root.ruler
+				years = 100
+			}
+		}
+	}
+
+	brb_liege_relations = {
+		icon = noble_society_cologne
+		requires = { brb_ducal_authority }
+		enabled = {
+			OR = {
+				c:LIE = { is_rival_of = root }
+				has_insulted = c:LIE
+				is_allied_with = { target = c:LIE }
+			}
+		}
+		on_completion = {
+			add_casus_belli = {
+				type = casus_belli:cb_conquer_province
+				target = location:liege.owner
+				province = location:liege.province
+				years = 30
+			}
+		}
+	}
+
+	brb_utrecht_bishopric = {
+		icon = church_councils
+		requires = { brb_ducal_authority }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:utrecht
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_utrecht_mod years = 20 mode = add }
+		}
+	}
+
+	# ===== B: ブルゴーニュの併合 =====
+
+	brb_burgundian_ambition = {
+		icon = golden_fleece
+		requires = { brb_unify_brabant brb_flemish_rivalry brb_hainaut_marriage brb_utrecht_bishopric }
+		enabled = {
+			OR = {
+				c:BUR = { monthly_income_trade_and_tax <= root.monthly_income_trade_and_tax }
+				c:BUR = { is_rival_of = root }
+				has_royal_marriage_with = c:BUR
+				NOT = { country_exists = c:BUR }
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = brb_events.2
+		}
+	}
+
+	brb_contest_flanders_inheritance = {
+		icon = ara_valencian_golden_age
+		requires = { brb_burgundian_ambition }
+		enabled = {
+			OR = {
+				c:FLA = { monthly_income_trade_and_tax <= root.monthly_income_trade_and_tax }
+				c:FLA = { is_rival_of = root }
+				has_royal_marriage_with = c:FLA
+				NOT = { country_exists = c:FLA }
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = brb_events.3
+		}
+	}
+
+	brb_absorb_burgundy = {
+		icon = imperial_ambitions
+		requires = { brb_contest_flanders_inheritance }
+		enabled = {
+			OR = {
+				AND = {
+					NOT = { country_exists = c:BUR }
+					any_owned_location = {
+						area = area:burgundy_area
+						owner = root
+						count >= 18
+					}
+				}
+				c:BUR = { is_subject_of = root }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_absorb_burgundy_mod years = 20 mode = add }
+		}
+	}
+
+	brb_valois_brabant = {
+		icon = monarchy_reform_traditions_advance
+		requires = { brb_absorb_burgundy }
+		enabled = {
+			country_rank_level >= 3
+		}
+		on_completion = {
+			unlock_government_reform_effect = { type = brb_estates_balance_reform }
+			add_reform = government_reform:brb_estates_balance_reform
+		}
+	}
+
+	brb_je_maintiendrai = {
+		icon = government_reforms
+		requires = { brb_valois_brabant }
+		enabled = {
+			any_owned_location = {
+				owner = root
+				count >= 70
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_maintiendrai_mod years = 30 mode = add }
+		}
+	}
+
+	# ===== C: バルト海交易 =====
+
+	brb_hansa_relations = {
+		icon = hsa_hanseatic_ties
+		requires = { brb_je_maintiendrai }
+		enabled = {
+			location:lubeck.market = {
+				merchant_power_in_market = {
+					country = root
+					value >= 2
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_hansa_mod years = 20 mode = add }
+		}
+	}
+
+	brb_bulk_trade = {
+		icon = merchants_and_trade
+		requires = { brb_hansa_relations }
+		enabled = {
+			produced_in_country:lumber >= 8
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_bulk_trade_mod years = 20 mode = add }
+		}
+	}
+
+	brb_baltic_supremacy = {
+		icon = ara_chartered_merchant_companies
+		requires = { brb_bulk_trade }
+		enabled = {
+			monthly_income_trade_and_tax >= 100
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_baltic_supremacy_mod years = 20 mode = add }
+		}
+	}
+
+	brb_land_commercial_empire = {
+		icon = crossroads_of_commerce
+		requires = { brb_baltic_supremacy }
+		enabled = {
+			any_owned_location = {
+				is_market_center = yes
+				count >= 3
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_land_commercial_empire_mod years = -1 mode = add }
+		}
+	}
+
+	brb_secure_grain = {
+		icon = guilds
+		requires = { brb_bulk_trade }
+		enabled = {
+			produced_in_country:wheat >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_grain_mod years = -1 mode = add }
+		}
+	}
+
+	# ===== D: 宗教改革 =====
+
+	brb_reformation_choice = {
+		icon = hun_hungarian_reformation
+		requires = { brb_je_maintiendrai }
+		enabled = {
+			OR = {
+				situation:reformation = { situation_is_active = yes }
+				situation:reformation = { situation_has_ended = yes }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_reformation_mod years = 20 mode = add }
+		}
+	}
+
+	brb_religious_settlement = {
+		icon = a_tolerant_society
+		requires = { brb_reformation_choice }
+		enabled = {
+			current_year >= 1600
+			OR = {
+				AND = {
+					religion = religion:catholic
+					religion_percentage_in_country = { religion = religion:catholic value >= 0.80 }
+				}
+				AND = {
+					religion = religion:lutheran
+					religion_percentage_in_country = { religion = religion:lutheran value >= 0.80 }
+				}
+				AND = {
+					religion = religion:reformed
+					religion_percentage_in_country = { religion = religion:reformed value >= 0.80 }
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_settlement_mod years = -1 mode = add }
+		}
+	}
+
+	# ===== E: ハプスブルクへの反乱 =====
+
+	brb_spanish_fury = {
+		icon = independence_from_mali
+		requires = { brb_reformation_choice }
+		enabled = {
+			OR = {
+				c:HAB = { is_rival_of = root }
+				c:SPA = { is_rival_of = root }
+				is_allied_with = { target = c:HAB }
+				is_allied_with = { target = c:SPA }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_spanish_fury_mod years = 20 mode = add }
+		}
+	}
+
+	brb_sea_beggars = {
+		icon = ven_naval_conscription
+		requires = { brb_spanish_fury }
+		enabled = {
+			total_sub_unit_count:navy_light_ship >= 20
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_sea_beggars_mod years = -1 mode = add }
+		}
+	}
+
+	brb_eighty_years_war = {
+		icon = a_fortified_border
+		requires = { brb_sea_beggars }
+		enabled = {
+			OR = {
+				is_great_power = yes
+				any_current_war = {
+					OR = { attacker_leader = root defender_leader = root }
+					any_war_participant = { NOT = { this = root } this = c:SPA }
+				}
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = brb_events.1
+		}
+	}
+
+	brb_united_netherlands = {
+		icon = noble_officers
+		requires = { brb_eighty_years_war }
+		enabled = {
+			any_owned_location = {
+				area = area:flanders_area
+				owner = root
+				count >= 15
+			}
+			any_owned_location = {
+				area = area:brabant_area
+				owner = root
+				count >= 19
+			}
+			any_owned_location = {
+				area = area:holland_area
+				owner = root
+				count >= 18
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_united_netherlands_mod years = -1 mode = add }
+		}
+	}
+
+	# ===== F: 黄金時代 =====
+
+	brb_east_india_charter = {
+		icon = nav_chartered_councils
+		requires = { brb_united_netherlands }
+		enabled = {
+			any_colonial_country = {
+				is_subject_of = root
+				count >= 1
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_east_india_mod years = 20 mode = add }
+		}
+	}
+
+	brb_voc_trade_empire = {
+		icon = free_merchants
+		requires = { brb_east_india_charter }
+		enabled = {
+			any_colonial_country = {
+				is_subject_of = root
+				count >= 3
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_voc_mod years = -1 mode = add }
+		}
+	}
+
+	brb_west_india_company = {
+		icon = colonies
+		requires = { brb_east_india_charter }
+		enabled = {
+			monthly_income_trade_and_tax >= 300
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_wic_mod years = 20 mode = add }
+		}
+	}
+
+	brb_golden_age = {
+		icon = city_of_artists
+		requires = { brb_voc_trade_empire brb_west_india_company }
+		enabled = {
+			country_rank_level >= 3
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_golden_age_mod years = -1 mode = add }
+		}
+	}
+
+	brb_amsterdam_exchange = {
+		icon = bank_of_the_medici
+		requires = { brb_united_netherlands }
+		enabled = {
+			location:amsterdam = {
+				development >= 40
+				total_building_levels >= 100
+			}
+		}
+		on_completion = {
+			location:amsterdam = {
+				add_location_modifier = { modifier = brb_amsterdam_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	# ===== G: イングランドとの関係 =====
+
+	brb_wool_staple_calais = {
+		icon = merchants_and_trade
+		requires = { brb_je_maintiendrai }
+		enabled = {
+			OR = {
+				c:ENG = { opinion = { target = root value >= 100 } }
+				monthly_income_trade_and_tax >= 80
+				c:ENG = { is_rival_of = root }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_wool_staple_mod years = 20 mode = add }
+		}
+	}
+
+	brb_anglo_dutch_alliance = {
+		icon = liberty_egalite_fraternity
+		requires = { brb_wool_staple_calais }
+		enabled = {
+			OR = {
+				is_allied_with = { target = c:ENG }
+				c:ENG = { is_rival_of = root }
+				NOT = { country_exists = c:ENG }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_anglo_treaty_mod years = 20 mode = add }
+		}
+	}
+
+	brb_english_channel_trade = {
+		icon = crossroads_of_commerce
+		requires = { brb_anglo_dutch_alliance }
+		enabled = {
+			total_sub_unit_count:navy_light_ship >= 60
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_channel_trade_mod years = -1 mode = add }
+		}
+	}
+
+	# ===== H: フランスとの対決 =====
+
+	brb_valois_suzerainty_dispute = {
+		icon = austrian_military_flexibility
+		requires = { brb_je_maintiendrai }
+		enabled = {
+			OR = {
+				c:FRA = { is_rival_of = root }
+				is_allied_with = { target = c:FRA }
+				c:FRA = { monthly_income_trade_and_tax <= root.monthly_income_trade_and_tax }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_suzerainty_dispute_mod years = 20 mode = add }
+		}
+	}
+
+	brb_hundred_years_war_intervention = {
+		icon = a_neverending_crusade
+		requires = { brb_valois_suzerainty_dispute }
+		enabled = {
+			any_current_war = {
+				OR = { attacker_leader = root defender_leader = root }
+				any_war_participant = {
+					NOT = { this = root }
+					OR = { this = c:FRA this = c:ENG }
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_intervention_mod years = 20 mode = add }
+		}
+	}
+
+	brb_somme_towns = {
+		icon = a_fortified_border
+		requires = { brb_hundred_years_war_intervention }
+		enabled = {
+			area:picardy_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 6
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_somme_mod years = 20 mode = add }
+		}
+	}
+
+	brb_end_french_vassalage = {
+		icon = crown_power_advance_renaissance
+		requires = { brb_somme_towns }
+		enabled = {
+			OR = {
+				c:FRA = { monthly_income_trade_and_tax <= root.monthly_income_trade_and_tax }
+				NOT = { country_exists = c:FRA }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = brb_end_vassalage_mod years = -1 mode = add }
+		}
+	}
+
+	# ===== FINAL =====
+
+	brb_form_netherlands = {
+		icon = colonial_heritage
+		requires = { brb_golden_age brb_land_commercial_empire brb_secure_grain brb_religious_settlement brb_english_channel_trade brb_end_french_vassalage }
+		final = yes
+		enabled = {
+			num_locations >= 50
+		}
+		on_completion = {
+			trigger_event_non_silently = brb_events.99
+		}
+	}
+}
