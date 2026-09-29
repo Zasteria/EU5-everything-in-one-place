@@ -30,12 +30,12 @@ bag_wsl_tick = {
 			NOT = { var:bag_wsl_at_war ?= 1 }
 		}
 		# **Мир держится каждый месяц, а не только в день мира.** Прогон
-		# 2026-09-29: мод опустил ползунки в день мира (счётчик 5 → 16), а через
-		# пару месяцев все три стояли на 100% — поднял их кто-то другой,
-		# вероятно ванильная автоматика «в начале конфликта» (восстание войной
-		# для `at_war` не считается). Цена — привод просыпается раз в месяц на
-		# долю секунды, и счётчик приводов растёт на 3 каждый мирный месяц.
-		bag_wsl_maint_arm = yes
+		# 2026-09-29: мир мод заметил и ползунки опустил, а через пару месяцев
+		# все три стояли на 100% — поднял их кто-то другой. Скрипт не видит,
+		# где стоит ползунок, поэтому только просит интерфейс сверить: двигать
+		# ли, решает он (`bag_wsl_*_hit` / `_miss`). В 0.5.2 мод двигал вслепую
+		# и мигал максимумом каждый месяц.
+		bag_wsl_maint_check = yes
 		bag_wsl_update_busy = yes
 	}
 }
@@ -78,6 +78,9 @@ bag_wsl_update_busy = {
 				has_variable = bag_wsl_mint_phase
 				has_variable = bag_wsl_mint_release
 				has_variable = bag_wsl_mint_repost
+				has_variable = bag_wsl_army_check
+				has_variable = bag_wsl_navy_check
+				has_variable = bag_wsl_fort_check
 			}
 		}
 		set_variable = { name = bag_wsl_busy value = 1 }
@@ -99,6 +102,9 @@ bag_wsl_war_started = {
 	remove_variable = bag_wsl_army_go
 	remove_variable = bag_wsl_navy_go
 	remove_variable = bag_wsl_fort_go
+	remove_variable = bag_wsl_army_check
+	remove_variable = bag_wsl_navy_check
+	remove_variable = bag_wsl_fort_check
 	bag_wsl_update_busy = yes
 }
 
@@ -304,4 +310,26 @@ bag_wsl_count_peace = {
 		set_variable = { name = bag_wsl_peaces value = 0 }
 	}
 	change_variable = { name = bag_wsl_peaces add = 1 }
+}
+
+# Scope: country
+bag_wsl_maint_check = {
+	if = {
+		limit = { has_variable = bag_wsl_army_on }
+		set_variable = { name = bag_wsl_army_cap value = bag_wsl_army_fraction }
+		change_variable = { name = bag_wsl_army_cap add = 0.005 }
+		set_variable = { name = bag_wsl_army_check value = 1 }
+	}
+	if = {
+		limit = { has_variable = bag_wsl_navy_on }
+		set_variable = { name = bag_wsl_navy_cap value = bag_wsl_navy_fraction }
+		change_variable = { name = bag_wsl_navy_cap add = 0.005 }
+		set_variable = { name = bag_wsl_navy_check value = 1 }
+	}
+	if = {
+		limit = { has_variable = bag_wsl_fort_on }
+		set_variable = { name = bag_wsl_fort_cap value = bag_wsl_fort_fraction }
+		change_variable = { name = bag_wsl_fort_cap add = 0.005 }
+		set_variable = { name = bag_wsl_fort_check value = 1 }
+	}
 }

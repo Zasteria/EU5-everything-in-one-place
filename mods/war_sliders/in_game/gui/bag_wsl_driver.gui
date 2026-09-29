@@ -180,6 +180,75 @@ widget = {
 					widget = {
 						size = { 160 40 }
 
+						# ---- месячная сверка (0.5.4) ----------------------------------
+						# Раз в мирный месяц скрипт ставит `bag_wsl_*_check` и порог
+						# `bag_wsl_*_cap` (цель плюс полсотой). Здесь интерфейс смотрит
+						# на ползунок игры: выше порога — взвести привод, нет — снять
+						# флаг и не трогать. До 0.5.4 мод дёргал ползунки каждый месяц
+						# вслепую, его слова 2026-09-29: «нахуя это?».
+						widget = {
+							size = { 10 10 }
+							visible_at_creation = no
+							visible = "[And(GetVariableSystem.Exists('bag_wsl_armed'), And(MaintenanceSetting.IsArmy, And(GetPlayer.MakeScope.GetVariable('bag_wsl_army_check').IsSet, GreaterThan_CFixedPoint(MaintenanceSetting.GetSliderValue, GetPlayer.MakeScope.GetVariable('bag_wsl_army_cap').GetValue))))]"
+							state = {
+								name = _show
+								duration = 0.1
+								on_finish = "[GetScriptedGui('bag_wsl_army_hit').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+							}
+						}
+						widget = {
+							size = { 10 10 }
+							visible_at_creation = no
+							visible = "[And(GetVariableSystem.Exists('bag_wsl_armed'), And(MaintenanceSetting.IsArmy, And(GetPlayer.MakeScope.GetVariable('bag_wsl_army_check').IsSet, Not(GreaterThan_CFixedPoint(MaintenanceSetting.GetSliderValue, GetPlayer.MakeScope.GetVariable('bag_wsl_army_cap').GetValue)))))]"
+							state = {
+								name = _show
+								duration = 0.1
+								on_finish = "[GetScriptedGui('bag_wsl_army_miss').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+							}
+						}
+
+						widget = {
+							size = { 10 10 }
+							visible_at_creation = no
+							visible = "[And(GetVariableSystem.Exists('bag_wsl_armed'), And(MaintenanceSetting.IsNavy, And(GetPlayer.MakeScope.GetVariable('bag_wsl_navy_check').IsSet, GreaterThan_CFixedPoint(MaintenanceSetting.GetSliderValue, GetPlayer.MakeScope.GetVariable('bag_wsl_navy_cap').GetValue))))]"
+							state = {
+								name = _show
+								duration = 0.1
+								on_finish = "[GetScriptedGui('bag_wsl_navy_hit').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+							}
+						}
+						widget = {
+							size = { 10 10 }
+							visible_at_creation = no
+							visible = "[And(GetVariableSystem.Exists('bag_wsl_armed'), And(MaintenanceSetting.IsNavy, And(GetPlayer.MakeScope.GetVariable('bag_wsl_navy_check').IsSet, Not(GreaterThan_CFixedPoint(MaintenanceSetting.GetSliderValue, GetPlayer.MakeScope.GetVariable('bag_wsl_navy_cap').GetValue)))))]"
+							state = {
+								name = _show
+								duration = 0.1
+								on_finish = "[GetScriptedGui('bag_wsl_navy_miss').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+							}
+						}
+
+						widget = {
+							size = { 10 10 }
+							visible_at_creation = no
+							visible = "[And(GetVariableSystem.Exists('bag_wsl_armed'), And(MaintenanceSetting.IsFort, And(GetPlayer.MakeScope.GetVariable('bag_wsl_fort_check').IsSet, GreaterThan_CFixedPoint(MaintenanceSetting.GetSliderValue, GetPlayer.MakeScope.GetVariable('bag_wsl_fort_cap').GetValue))))]"
+							state = {
+								name = _show
+								duration = 0.1
+								on_finish = "[GetScriptedGui('bag_wsl_fort_hit').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+							}
+						}
+						widget = {
+							size = { 10 10 }
+							visible_at_creation = no
+							visible = "[And(GetVariableSystem.Exists('bag_wsl_armed'), And(MaintenanceSetting.IsFort, And(GetPlayer.MakeScope.GetVariable('bag_wsl_fort_check').IsSet, Not(GreaterThan_CFixedPoint(MaintenanceSetting.GetSliderValue, GetPlayer.MakeScope.GetVariable('bag_wsl_fort_cap').GetValue)))))]"
+							state = {
+								name = _show
+								duration = 0.1
+								on_finish = "[GetScriptedGui('bag_wsl_fort_miss').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+							}
+						}
+
 						# Армия
 						widget = {
 							size = { 160 12 }
