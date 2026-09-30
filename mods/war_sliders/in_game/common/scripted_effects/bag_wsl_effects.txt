@@ -7,12 +7,13 @@
 # которого `bag_wsl_busy` гаснет и интерфейс мода снова читает одну переменную
 # за кадр.
 
-# **Кнопка «Выправить сейчас».** Содержание — на цель со страницы, без сверки:
-# нажал — значит, надо. Чеканка: инфляция выше цели — автоматика выключается,
-# ползунок встаёт туда, где за месяц снимется ровно лишнее (прогноз берётся у
-# игры, `bag_wsl_mint_measured`), и остаётся там; следить за этим месяцем мод не
-# будет. Инфляция уже не выше цели — чеканка отдаётся обратно автоматике. То
-# есть второе нажатие через месяц вернёт автоматику или доведёт остаток.
+# **Кнопка «Выправить».** Его условие 2026-09-30: «снизить инфляцию до 0,
+# включить автоматику, выправить ползунки содержания военные и уснуть только
+# после этого до следующего нажатия». Содержание — на цель сразу, без сверки.
+# Чеканка: инфляция выше цели — автоматика выключается и начинается правка,
+# которую ведёт месячное событие `bag_wsl.2`, пока инфляция не сойдёт к цели;
+# тогда чеканка отдаётся автоматике, и мод спит. Не выше цели — автоматика
+# возвращается сразу.
 # Scope: country
 bag_wsl_manual_run = {
 	# Хвосты автоматики до 0.6 в старом сохранении: сверки, дозор, память о войне.
@@ -24,17 +25,68 @@ bag_wsl_manual_run = {
 	bag_wsl_maint_arm = yes
 	if = {
 		limit = { has_variable = bag_wsl_mint_on }
-		# Незаконченная прошлая правка не мешает: всё начинается заново.
-		remove_variable = bag_wsl_mint_phase
-		remove_variable = bag_wsl_mint_repost
 		if = {
 			limit = { inflation > bag_wsl_inflation_stop }
-			bag_wsl_mint_arm = yes
+			if = {
+				limit = { has_variable = bag_wsl_mint_phase }
+				# Правка уже идёт — её месячное событие стоит в очереди;
+				# пересчитать положение сейчас, вторую цепочку не заводить.
+				bag_wsl_mint_rearm = yes
+			}
+			else = {
+				bag_wsl_mint_arm = yes
+				bag_wsl_mint_schedule = yes
+			}
+		}
+		else_if = {
+			limit = { has_variable = bag_wsl_mint_phase }
+			bag_wsl_mint_stand_down = yes
 		}
 		else = {
 			set_variable = { name = bag_wsl_mint_release value = 1 }
 		}
 	}
+	bag_wsl_update_busy = yes
+}
+
+# **Правка живёт только пока идёт.** Одно скрытое событие через месяц; оно
+# либо заканчивает правку, либо ставит себя ещё на месяц. Пока правки нет, в
+# очереди ничего не стоит.
+#
+# `bag_wsl_mint_wait` отсекает событие старой цепочки: нажали, правка
+# кончилась, нажали снова в том же месяце — первое событие ещё в очереди и
+# придёт раньше, пока `wait` новой цепочки жив, и ничего не сделает.
+# Scope: country
+bag_wsl_mint_schedule = {
+	set_variable = { name = bag_wsl_mint_wait value = 1 days = 29 }
+	trigger_event_silently = { id = bag_wsl.2 days = 30 }
+}
+
+# Месяц правки прошёл. Scope: country
+bag_wsl_mint_month = {
+	if = {
+		limit = {
+			has_variable = bag_wsl_mint_phase
+			NOT = { has_variable = bag_wsl_mint_wait }
+		}
+		if = {
+			limit = { inflation > bag_wsl_inflation_stop }
+			bag_wsl_mint_rearm = yes
+			bag_wsl_mint_schedule = yes
+		}
+		else = {
+			bag_wsl_mint_stand_down = yes
+		}
+	}
+}
+
+# Следующий месяц правки: привод снова ставит пол, спрашивает у игры прогноз и
+# встаёт ровно на остаток (`bag_wsl_mint_measured`). Точка нуля `m0` остаётся
+# от первого нажатия: автоматика с тех пор выключена, и ползунок стоит не в ней.
+# Scope: country
+bag_wsl_mint_rearm = {
+	set_variable = { name = bag_wsl_mint_target value = bag_wsl_mint_arm }
+	set_variable = { name = bag_wsl_mint_go value = 1 }
 	bag_wsl_update_busy = yes
 }
 
@@ -49,7 +101,7 @@ bag_wsl_update_busy = {
 				has_variable = bag_wsl_army_go
 				has_variable = bag_wsl_navy_go
 				has_variable = bag_wsl_fort_go
-				has_variable = bag_wsl_mint_phase
+				has_variable = bag_wsl_mint_go
 				has_variable = bag_wsl_mint_release
 				has_variable = bag_wsl_mint_repost
 			}
@@ -104,6 +156,7 @@ bag_wsl_mint_arm = {
 		remove_variable = bag_wsl_drain
 		set_variable = { name = bag_wsl_mint_target value = bag_wsl_mint_arm }
 		set_variable = { name = bag_wsl_mint_phase value = 1 }
+		set_variable = { name = bag_wsl_mint_go value = 1 }
 		# Привод поставит пол, спросит у игры прогноз на месяц и сразу
 		# пересчитает положение — см. `bag_wsl_mint_measured`.
 	}
@@ -159,6 +212,7 @@ bag_wsl_mint_aim = {
 # Scope: country
 bag_wsl_mint_stand_down = {
 	remove_variable = bag_wsl_mint_phase
+	remove_variable = bag_wsl_mint_go
 	remove_variable = bag_wsl_mint_repost
 	set_variable = { name = bag_wsl_mint_release value = 1 }
 	bag_wsl_update_busy = yes
