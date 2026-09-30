@@ -95,13 +95,17 @@ def read_rewrites(path: Path) -> list[tuple[str | None, str, str, str]]:
             key = rest or None
         elif label == "from":
             pending = rest
+        elif label == "regex":
+            # A pattern, for one repair that has to follow a chain whatever it
+            # starts from: `X.Custom('CL_tt')` for every X that is not a country.
+            pending = re.compile(rest)
         elif label == "to":
             if pending is None:
                 raise SystemExit("%s:%d: 'to:' with no 'from:' before it" % (path.name, number))
             pairs.append((key, pending, rest, why))
             pending, key = None, None
         else:
-            raise SystemExit("%s:%d: expected key:/why:/from:/to:, got %r"
+            raise SystemExit("%s:%d: expected key:/why:/from:/regex:/to:, got %r"
                              % (path.name, number, label))
     if pending is not None:
         raise SystemExit("%s: a 'from:' at the end with no 'to:'" % path.name)
@@ -243,7 +247,10 @@ def main() -> int:
             only, pattern, replacement, _ = pair
             if only is not None and only != key:
                 continue
-            if pattern in value:
+            if isinstance(pattern, re.Pattern):
+                value, count = pattern.subn(replacement, value)
+                used[pair] += count
+            elif pattern in value:
                 value = value.replace(pattern, replacement)
                 used[pair] += 1
         if key in expand:
@@ -260,7 +267,8 @@ def main() -> int:
                               "rule — either a patch fixed it, or the rule stopped seeing it"
                               % only)
         else:
-            complaints.append("rewrite %r matched nothing — %s" % (pattern, why))
+            complaints.append("rewrite %r matched nothing — %s"
+                              % (getattr(pattern, "pattern", pattern), why))
 
     # Literals override rewrites: they were written because the rewrite could
     # not express the repair.

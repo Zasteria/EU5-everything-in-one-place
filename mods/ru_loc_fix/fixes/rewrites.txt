@@ -816,3 +816,120 @@ to: Concept('adult', Select_CString(CHARACTER.IsFemale,'взрослая', 'вз
 why: `Select_CString` quoted inside Concept's second argument; apostrophes do not nest.
 from: Concept('ruler', 'Select_CString(TARGET_CHARACTER.IsFemale,'правительницей', 'правителем')')
 to: Concept('ruler', Select_CString(TARGET_CHARACTER.IsFemale,'правительницей', 'правителем'))
+
+
+# ---------------------------------------------------------------------------
+# Members asked of a type that does not have them — `wrong_type` in locscan,
+# which walks each chain through the return types `dump_data_types` prints.
+# 2026-09-30: `[ROOT.GetCountry.GetCulture.GetAdjective|l]ую` in the Lithuanian
+# events, «Процент групп населения ой культуры» on his screen.
+# ---------------------------------------------------------------------------
+
+why: a Culture has `GetName`, not `GetAdjective`. Russian culture names are stems («Литовск»), so the endings already written after the bracket still agree. Logged 09-30: `Could not find data system function 'GetAdjective' in 'ROOT.GetCountry.GetCulture.GetAdjective'`.
+regex: (GetCulture|CULTURE)\.GetAdjectiveWithNoTooltip\b
+to: \1.GetNameWithNoTooltip
+
+why: the same, without the tooltip suffix.
+regex: (GetCulture|CULTURE)\.GetAdjective\b
+to: \1.GetName
+
+why: a Language has only `GetName`; Russian language names are stems too («Латинск»).
+regex: (LANGUAGE|GetLanguage)\.GetAdjective\b
+to: \1.GetName
+
+why: a Government has no gender; its ruler does. `COUNTRY.GetGovernment.IsFemale` was logged 524 times (observed.txt).
+regex: \.GetGovernment\.IsFemale\b
+to: .GetGovernment.GetRuler.IsFemale
+
+why: `IsFemale.IsFemale` — asked of a yes/no.
+from: .IsFemale.IsFemale
+to: .IsFemale
+
+why: a Government has `GetAdjective` but no `GetAdjectiveWithNoTooltip`.
+from: .GetGovernment.GetAdjectiveWithNoTooltip
+to: .GetGovernment.GetAdjective
+
+why: the country's custom localizations (`rank_ru_*`, `parliament_ru_*`) are `type = country`; asked of its Government they do not exist.
+regex: \.GetGovernment\.Custom\(
+to: .Custom(
+
+why: a Country has no `GetParliament`, and `parliament_ru_*` is asked of the country itself (`ru_EU5_custom_suffix.txt`).
+regex: \.GetParliament\.Custom\('parliament_(io_)?ru_
+to: .Custom('parliament_\1ru_
+
+why: a SubUnit has no location; its unit does — the English key says `SUBUNIT.GetUnit.GetLocation`.
+from: SUBUNIT.GetLocation.
+to: SUBUNIT.GetUnit.GetLocation.
+
+why: a ScriptedRelationType has `GetName` only; English says `$RELATION$`-style plain name.
+regex: RELATION_TYPE\.GetNameWithContext\([^()]*\)
+to: RELATION_TYPE.GetName
+
+why: the consort belongs to the government, as English writes it.
+from: TARGET_COUNTRY.GetConsort.
+to: TARGET_COUNTRY.GetGovernment.GetConsort.
+
+why: an InstitutionItem has its own `GetDescription`, as English uses it.
+from: InstitutionItem.GetUIAction.GetDescription
+to: InstitutionItem.GetDescription
+
+why: government type and reform are reached as English reaches them.
+from: ROOT.GetCountry.GetGovernmentType.
+to: ROOT.GetCountry.GetGovernment.GetGovernmentType.
+
+why: the same.
+from: ROOT.GetCountry.GetGovernmentReform.
+to: ROOT.GetGovernmentReform.
+
+why: a Country's union is under its diplomacy, as English writes it.
+from: COUNTRY.GetUnion.
+to: COUNTRY.GetDiplomacy.GetUnion.
+
+why: a Character has no `GetTitle`; English asks the government for the ruler's title.
+from: .GetGovernment.GetRuler.GetTitle]
+to: .GetGovernment.GetRulerTitle]
+
+why: an international organization has no single leader character; the Pope is male in every start.
+regex: \[Select_CString\(GetInternationalOrganization\('catholic_church'\)\.GetLeader\.IsFemale,'Её', 'Его'\)\]
+to: Его
+
+why: a GovernmentType has no adjective and its name is a noun («Монархия»); the Danish guard serves a king.
+key: flavor_dan.46.desc
+from: [ROOT.GetCountry.GetGovernment.GetGovernmentType.GetAdjective]ой власти
+to: королевской власти
+
+why: `LR_PREP` is a location's, not a cardinal's; English says only that the cardinal held two councils.
+regex: В\s\[(ROOT\.GetVariable\('\w+'\)\.GetCardinal)\.Custom\('LR_PREP'\)\|l\] \[\1\.GetName\] совет созывался два раза
+to: [\1.GetName] созывал совет два раза
+
+why: `CF_tt` and `rank_ru_*` are a country's; the location's own rank has `LR_tt` and the case forms (`ru_EU5_custom_loc.txt`). English prints `target_location.GetRank.GetName`.
+regex: #TOOLTIP:COUNTRY_RANK,\[(\w+)\.GetRank\.Custom\('CF_tt'\)\],X \[\1\.GetRank\.Custom\('rank_ru_(\w+)'\)\|l\]#!
+to: #TOOLTIP:LOCATIONRANK,[\1.Custom('LR_tt')],X [\1.Custom('LR_\2')|l]#!
+
+why: `predlog_vvo` («в»/«во») is a country's; before a rank name it is always «в».
+regex: \[\w+\.GetRank\.Custom\('predlog_vvo'\)\]
+to: в
+
+why: a location rank has no custom localizations; English prints its name. The case is lost — «Может стать город», not «городом» — which beats an empty line.
+regex: #TOOLTIP:LOCATIONRANK,\[(TARGET_LOCATION_RANK)\.Custom\('LR_tt'\)\],X \[\1\.Custom\('LR_\w+'\)\|l\]#!
+to: [\1.GetName|l]
+
+why: a formable country and a rebel are not countries, and every `CL_*` is `type = country`. English prints `.GetName`, which carries its own tooltip; the case ending is lost.
+regex: #ONCLICK:COUNTRY,\[((?:TARGET_)?FORMABLE_COUNTRY|GetFormableCountry\('\w+'\)|NewCountryCandidate\.GetFormableCountry|SCOPE\.sRebel\('\w+'\))\.Custom\('CL_tt'\)\] #TOOLTIP:COUNTRY,\[\1\.Custom\('CL_tt'\)\],X \[\1\.Custom\('CL_\w+'\)\|L\]#!#!
+to: [\1.GetName]
+
+why: the verb endings for the same, where the sentence is about whether it exists: «Россия существует или уже создавалась».
+regex: \[(?:TARGET_)?FORMABLE_COUNTRY\.Custom\('etyut'\)\]
+to: ет
+
+why: the same.
+regex: \[(?:TARGET_)?FORMABLE_COUNTRY\.Custom\('assya'\)\]
+to: ась
+
+why: a rebel's preposition before its name — «переговоры с».
+regex: \[SCOPE\.sRebel\('\w+'\)\.Custom\('endlong_predlog_sso'\)\]
+to: с
+
+why: whatever `Custom` is still asked of a formable country, bare: its name.
+regex: ((?:TARGET_)?FORMABLE_COUNTRY|GetFormableCountry\('\w+'\)|NewCountryCandidate\.GetFormableCountry)\.Custom\('CL_\w+'\)
+to: \1.GetName
