@@ -624,8 +624,138 @@ def dropped_value_fault(value: str, english: str) -> str | None:
     return None
 
 
+# --------------------------------------------------------------------------
+# Typed promote chains. `dump_data_types` gives every member's return type, so a
+# chain can be walked type by type: `ROOT.GetCountry` is a Country,
+# `.GetCulture` a Culture, and a Culture has no `GetAdjective`. `unknown_member`
+# only asks whether a name exists *somewhere*, and `GetAdjective` does, on
+# Country — which is how `[ROOT.GetCountry.GetCulture.GetAdjective|l]ую` left
+# the Lithuanian events with holes where the culture goes. Proven by the game
+# three ways before it became a rule: `Could not find data system function
+# 'GetAdjective' in 'ROOT.GetCountry.GetCulture.GetAdjective'` (log 09-30),
+# `... 'IsFemale' in 'COUNTRY.GetGovernment.IsFemale'` and `... 'Custom' in
+# 'LOCATION.GetRank.Custom('LR_PREP')'` (observed.txt).
+# --------------------------------------------------------------------------
+
+# A saved event scope or a Scope-typed return: the engine decides its type at
+# run time, so any member some type has is accepted and the chain continues.
+ANY_SCOPE = "*"
+# Return types that say nothing about what comes next.
+VAGUE_RETURN = {"[unregistered]", "void", ""}
+# `TARGET_CULTURE`, `FIRST_COUNTRY`: a context name is its type with a role
+# prefix and the words run together.
+CONTEXT_PREFIX = re.compile(r"^(TARGET|OTHER|FIRST|SECOND|THIRD|ACTOR|RECIPIENT|OWNER)_")
+
+_TYPES: tuple[dict[str, dict[str, set[str]]], dict[str, set[str]]] | None = None
+
+
+def dumped_types() -> tuple[dict[str, dict[str, set[str]]], dict[str, set[str]]]:
+    """`{type: {member: return types}}` and `{global: return types}`, from the dump."""
+    global _TYPES
+    if _TYPES is not None:
+        return _TYPES
+    types: dict[str, dict[str, set[str]]] = {}
+    globals_: dict[str, set[str]] = {}
+    for path in sorted((refs.GAME / "docs/data_types").glob("*.txt")):
+        for record in path.read_text(encoding="utf-8", errors="replace").split("-----------------------"):
+            lines = [l.strip() for l in record.strip().splitlines() if l.strip()]
+            if not lines:
+                continue
+            name = re.sub(r"\(.*", "", lines[0]).strip()
+            kind = next((l.split(": ", 1)[1] for l in lines if l.startswith("Definition type:")), "")
+            ret = next((l.split(": ", 1)[1] for l in lines if l.startswith("Return type:")), "")
+            if kind == "Type":
+                types.setdefault(name, {})
+            elif "." in name:
+                owner, member = name.split(".", 1)
+                types.setdefault(owner, {}).setdefault(member, set()).add(ret)
+            else:
+                globals_.setdefault(name, set()).add(ret)
+    _TYPES = (types, globals_)
+    return _TYPES
+
+
+def _returns(found: set[str]) -> set[str]:
+    return {ANY_SCOPE if t in ("Scope", "TopScope") else t for t in found if t not in VAGUE_RETURN}
+
+
+def _root_type(root: str, types, globals_) -> set[str]:
+    if root in globals_:
+        return _returns(globals_[root])
+    if root in types:
+        return {root}
+    if SAVED_SCOPE.match(root):
+        return {ANY_SCOPE}
+    if re.fullmatch(r"[A-Z][A-Z0-9_]*", root):
+        name = "".join(p.capitalize() for p in CONTEXT_PREFIX.sub("", root).lower().split("_"))
+        if name in types:
+            return {name}
+    return set()
+
+
+def _chains(text: str) -> list[list[str]]:
+    """Every `A.B(...).C` in an expression, as `[A, B, C]`, arguments' own included."""
+    text = re.sub(r"'[^']*'", "''", text)
+    found: list[list[str]] = []
+    while True:
+        inner = re.search(r"\(([^()]*)\)", text)
+        if not inner:
+            break
+        found += _flat_chains(inner.group(1))
+        text = text[:inner.start()] + "\x00" + text[inner.end():]
+    return found + _flat_chains(text)
+
+
+def _flat_chains(text: str) -> list[list[str]]:
+    return [[s.replace("\x00", "") for s in m.group(1).split(".")]
+            for m in re.finditer(r"(?<![\w.'])([A-Za-z_]\w*\x00?(?:\.[A-Za-z_]\w*\x00?)*)", text)]
+
+
+def wrong_type_faults(value: str) -> list[str]:
+    """Each promote chain that asks a type for a member that type does not have."""
+    types, globals_ = dumped_types()
+    faults: list[str] = []
+    for block in _expressions(value):
+        depth, cut = 0, len(block)
+        for i, c in enumerate(block):
+            depth += (c == "(") - (c == ")")
+            if c == "|" and depth == 0:
+                cut = i
+                break
+        for chain in _chains(block[:cut]):
+            current, walked = _root_type(chain[0], types, globals_), chain[0]
+            for member in chain[1:]:
+                if not current or any(t != ANY_SCOPE and t not in types for t in current):
+                    break
+                following: set[str] = set()
+                if ANY_SCOPE in current:
+                    for members in types.values():
+                        following |= _returns(members.get(member, set()))
+                else:
+                    if not any(member in types[t] for t in current):
+                        faults.append("%s has no .%s (it is %s)"
+                                      % (walked, member, "/".join(sorted(current))))
+                        break
+                    for t in current:
+                        following |= _returns(types[t].get(member, set()))
+                current, walked = following, walked + "." + member
+    return faults
+
+
+def wrong_type_fault(value: str, english: str | None) -> str | None:
+    """A member asked of a type that lacks it — and English does not do the same.
+
+    Where the English key of the same name trips the identical chain, the dump
+    and the engine may disagree (`TARGET_PRICE.GetName`), or Paradox broke both
+    languages; neither is this mod's to repair by name alone.
+    """
+    theirs = set(wrong_type_faults(english)) if english else set()
+    mine = [f for f in wrong_type_faults(value) if f not in theirs]
+    return mine[0] if mine else None
+
+
 HARD = ("brackets", "cyrillic_code", "custom_on_text", "filter_nested", "unknown_root",
-        "unknown_member", "missing_ref", "foreign_context")
+        "unknown_member", "missing_ref", "foreign_context", "wrong_type")
 ADVISORY = ("scope", "arguments", "member_on_root", "declension_ref", "dropped_value")
 RULES = HARD + ADVISORY
 
@@ -672,6 +802,7 @@ def scan(russian: dict[str, Entry], english: dict[str, Entry],
             ("missing_ref", lambda: missing_ref_fault(
                 key, entry.value, repairs, russian, english)),
             ("foreign_context", lambda: foreign_context_fault(entry.value, pair.value) if pair else None),
+            ("wrong_type", lambda: wrong_type_fault(entry.value, pair.value if pair else None)),
             ("scope", lambda: scope_difference(entry.value, pair.value) if pair else None),
             ("arguments", lambda: argument_difference(entry.value, pair.value) if pair else None),
             ("member_on_root", lambda: member_on_root_fault(entry.value, en_pairs, en_roots)),
