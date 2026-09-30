@@ -38,6 +38,12 @@ a filter that filters: the screenshot already says it.
 
 ## Runs
 
+**2026-10-01, `ru_loc_fix` 0.3.5 (`eu5-logs-1001-0128`).** Строк
+`culture_percentage_in_country` в логе больше нет, но в условии «Процент групп
+населения указанной культуры» — названия нет совсем, ему хуже, чем «ой». 0.3.6 —
+зонд `$NAME$` в том же ключе. В error.log 4 360 строк другого: `#l` Glorp
+(1 603), ванильные окна кабинета и отношений, `CL_tt`/`predlog_vvo` у района.
+
 **2026-09-30, логи 22:42–22:47 (`eu5-logs-0930-2247`), Литва.** error.log
 1 626 строк — все от одного: условие события `flavor_lit.43`
 (`"culture_percentage_in_country(culture:crimean)" >= 0.05`) выводится ключом, которому
