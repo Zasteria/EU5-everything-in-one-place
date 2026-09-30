@@ -1,8 +1,8 @@
 ﻿# Обратная дорога: интерфейс сделал своё — скрипт гасит флаг.
 #
-# **Гасит именно интерфейс, а не такт.** Флаг живёт ровно от месячного такта до
+# **Гасит именно интерфейс, а не скрипт.** Флаг живёт ровно от нажатия кнопки до
 # того кадра, в котором ползунок встал и `Post` ушёл движку; иначе наш ползунок
-# держал бы содержание постоянно, а мод должен просыпаться на переключении и
+# держал бы содержание постоянно, а мод должен просыпаться на нажатии и
 # засыпать обратно.
 #
 # `bag_wsl_runs` — счётчик сработавших приводов, его показывает окно
@@ -57,15 +57,14 @@ bag_wsl_clear_mint_release = {
 	}
 }
 
-# Окно диагностики: «сработать сейчас» — тот же эффект, что и переключение
-# «война → мир», но без войны. Одна кнопка вместо микровойны ради проверки.
+# Окно диагностики: «сработать сейчас» — то же, что кнопка на странице CMF.
 # Scope: country
 bag_wsl_force_run = {
 	scope = country
 	is_shown = { always = yes }
 	is_valid = { always = yes }
 	effect = {
-		bag_wsl_on_peace = yes
+		bag_wsl_manual_run = yes
 	}
 }
 
@@ -79,9 +78,6 @@ bag_wsl_reset = {
 		remove_variable = bag_wsl_army_go
 		remove_variable = bag_wsl_navy_go
 		remove_variable = bag_wsl_fort_go
-		remove_variable = bag_wsl_army_check
-		remove_variable = bag_wsl_navy_check
-		remove_variable = bag_wsl_fort_check
 		remove_variable = bag_wsl_runs
 		if = {
 			limit = { has_variable = bag_wsl_mint_phase }
@@ -127,8 +123,9 @@ bag_wsl_set_mint_target = {
 	effect = { set_variable = { name = bag_wsl_mint_target value = bag_wsl_mint_fraction } }
 }
 
-# Правка сменила цель чеканки посреди месяца — ползунок уже поехал за числом,
-# осталось отправить движку и погасить флаг.
+# Прогноз сменил цель чеканки — ползунок уже поехал за числом, осталось
+# отправить движку и погасить флаг. На этом правка закончена: ползунок остаётся
+# где стоит, автоматика выключена до следующего нажатия (0.6.0).
 # Scope: country
 bag_wsl_clear_mint_repost = {
 	scope = country
@@ -136,12 +133,13 @@ bag_wsl_clear_mint_repost = {
 	is_valid = { always = yes }
 	effect = {
 		remove_variable = bag_wsl_mint_repost
+		remove_variable = bag_wsl_mint_phase
 		bag_wsl_count_run = yes
 		bag_wsl_update_busy = yes
 	}
 }
 
-# Первый месяц правки — не вслепую. Ползунок уже стоит на полу, и игра сама
+# Правка не вслепую. Ползунок уже стоит на полу, и игра сама
 # говорит, сколько инфляции он снимет за месяц (`EconomyView.GetInflationChange`,
 # то же число, что в скобках рядом с инфляцией на панели). Раньше первый месяц
 # всегда шёл на полу, потому что темп был ещё не измерен, и остаток 0.05 при
@@ -176,77 +174,11 @@ bag_wsl_mint_measured = {
 	}
 }
 
-# Месячная сверка: интерфейс увидел, что ползунок игры выше цели, — взвести
-# привод; не выше — снять флаг и ничего не двигать.
-
-# Scope: country
-bag_wsl_army_hit = {
+# Кнопке CMF нужен свой `_on_changed`, иначе она не рисуется: строка настройки
+# спрашивает `CMMHasScriptedGui`. Работа — в обратном звонке
+# (`bag_wsl_handle_callback`), поэтому эффект пустой; так же у `cm_maps`.
+bag_wsl__run_now_on_changed = {
 	scope = country
 	is_shown = { always = yes }
-	is_valid = { always = yes }
-	effect = {
-		remove_variable = bag_wsl_army_check
-		set_variable = { name = bag_wsl_army_target value = bag_wsl_army_arm }
-		set_variable = { name = bag_wsl_army_go value = 1 }
-		bag_wsl_update_busy = yes
-	}
-}
-
-# Scope: country
-bag_wsl_army_miss = {
-	scope = country
-	is_shown = { always = yes }
-	is_valid = { always = yes }
-	effect = {
-		remove_variable = bag_wsl_army_check
-		bag_wsl_update_busy = yes
-	}
-}
-
-# Scope: country
-bag_wsl_navy_hit = {
-	scope = country
-	is_shown = { always = yes }
-	is_valid = { always = yes }
-	effect = {
-		remove_variable = bag_wsl_navy_check
-		set_variable = { name = bag_wsl_navy_target value = bag_wsl_navy_arm }
-		set_variable = { name = bag_wsl_navy_go value = 1 }
-		bag_wsl_update_busy = yes
-	}
-}
-
-# Scope: country
-bag_wsl_navy_miss = {
-	scope = country
-	is_shown = { always = yes }
-	is_valid = { always = yes }
-	effect = {
-		remove_variable = bag_wsl_navy_check
-		bag_wsl_update_busy = yes
-	}
-}
-
-# Scope: country
-bag_wsl_fort_hit = {
-	scope = country
-	is_shown = { always = yes }
-	is_valid = { always = yes }
-	effect = {
-		remove_variable = bag_wsl_fort_check
-		set_variable = { name = bag_wsl_fort_target value = bag_wsl_fort_arm }
-		set_variable = { name = bag_wsl_fort_go value = 1 }
-		bag_wsl_update_busy = yes
-	}
-}
-
-# Scope: country
-bag_wsl_fort_miss = {
-	scope = country
-	is_shown = { always = yes }
-	is_valid = { always = yes }
-	effect = {
-		remove_variable = bag_wsl_fort_check
-		bag_wsl_update_busy = yes
-	}
+	effect = { }
 }

@@ -1,83 +1,46 @@
-﻿# Состояние державы и всё, что из него следует.
+﻿# Всё, что мод делает, делается по одной кнопке на его странице CMF.
 #
-# **Триггером служит переключение, а не конец войны.** `at_war` истинно, пока
-# идёт хоть одна война, поэтому при двух войнах сразу мод молчит до конца
-# последней — его условие, 2026-09-17: «может случиться так, что идёт несколько
-# войн одновременно и ползунки упадут после завершения первой».
-#
-# **Мод спит, пока не поймает переключение.** В мирный месяц такт читает один
-# флаг и выходит. Инфляцию он трогает только в те месяцы, когда правка идёт, и
-# засыпает, как только она доведена.
+# **Своего такта у мода нет** (0.6.0). До 0.6 он сам следил за войной и миром:
+# скрытое событие каждый день, месячная сверка ползунков, правка инфляции
+# месяцами. Его слово 2026-09-30: «вар слайдерс 100% сильно жрёт тики… просто
+# вызывается только кнопкой». Теперь нажатие — один проход привода, после
+# которого `bag_wsl_busy` гаснет и интерфейс мода снова читает одну переменную
+# за кадр.
 
-# Месячный такт ведёт правку чеканки и держит живым дневной дозор.
+# **Кнопка «Выправить сейчас».** Содержание — на цель со страницы, без сверки:
+# нажал — значит, надо. Чеканка: инфляция выше цели — автоматика выключается,
+# ползунок встаёт туда, где за месяц снимется ровно лишнее (прогноз берётся у
+# игры, `bag_wsl_mint_measured`), и остаётся там; следить за этим месяцем мод не
+# будет. Инфляция уже не выше цели — чеканка отдаётся обратно автоматике. То
+# есть второе нажатие через месяц вернёт автоматику или доведёт остаток.
 # Scope: country
-bag_wsl_tick = {
+bag_wsl_manual_run = {
+	# Хвосты автоматики до 0.6 в старом сохранении: сверки, дозор, память о войне.
+	remove_variable = bag_wsl_army_check
+	remove_variable = bag_wsl_navy_check
+	remove_variable = bag_wsl_fort_check
+	remove_variable = bag_wsl_watch
+	remove_variable = bag_wsl_at_war
+	bag_wsl_maint_arm = yes
 	if = {
-		limit = { NOT = { has_variable = bag_wsl_watch } }
-		bag_wsl_watch_day = yes
-	}
-	if = {
-		limit = {
-			at_war = no
-			has_variable = bag_wsl_mint_phase
-		}
-		# Идёт правка инфляции — единственная причина, по которой мод не спит.
-		bag_wsl_mint_check = yes
-	}
-	if = {
-		limit = {
-			at_war = no
-			NOT = { var:bag_wsl_at_war ?= 1 }
-		}
-		# **Мир держится каждый месяц, а не только в день мира.** Прогон
-		# 2026-09-29: мир мод заметил и ползунки опустил, а через пару месяцев
-		# все три стояли на 100% — поднял их кто-то другой. Скрипт не видит,
-		# где стоит ползунок, поэтому только просит интерфейс сверить: двигать
-		# ли, решает он (`bag_wsl_*_hit` / `_miss`). В 0.5.2 мод двигал вслепую
-		# и мигал максимумом каждый месяц.
-		bag_wsl_maint_check = yes
-		# И инфляция: остаток выше цели, оставшийся после правки или набежавший
-		# потом, гасится в любой мирный месяц, а не только в день мира.
-		# Не в тот же такт, когда правку только что сняли: интерфейс ещё должен
-		# вернуть галочку, и точка нулевого прироста берётся из-под автоматики.
+		limit = { has_variable = bag_wsl_mint_on }
+		# Незаконченная прошлая правка не мешает: всё начинается заново.
+		remove_variable = bag_wsl_mint_phase
+		remove_variable = bag_wsl_mint_repost
 		if = {
-			limit = {
-				NOT = { has_variable = bag_wsl_mint_phase }
-				NOT = { has_variable = bag_wsl_mint_release }
-			}
+			limit = { inflation > bag_wsl_inflation_stop }
 			bag_wsl_mint_arm = yes
 		}
-		bag_wsl_update_busy = yes
-	}
-}
-
-# **Дневной дозор.** Скрытое событие раз в игровой день читает один флаг и
-# `at_war` — и перезапускает себя на завтра. До 0.4 это делал месячный такт
-# (мир ждал до месяца, короткая война терялась целиком); в 0.4 — виджет каждый
-# кадр, и это ему не понравилось, 2026-09-27: «каждый кадр это дофига». День —
-# и точно, и дёшево. `bag_wsl_watch` живёт три дня: пока дозор жив, он
-# продлевается; умер (старое сохранение, сбой) — месячный такт его поднимет.
-# Scope: country
-bag_wsl_watch_day = {
-	set_variable = { name = bag_wsl_watch value = 1 days = 3 }
-	if = {
-		limit = { at_war = yes }
-		if = {
-			limit = { NOT = { var:bag_wsl_at_war ?= 1 } }
-			bag_wsl_war_started = yes
+		else = {
+			set_variable = { name = bag_wsl_mint_release value = 1 }
 		}
 	}
-	else_if = {
-		limit = { var:bag_wsl_at_war ?= 1 }
-		bag_wsl_war_ended = yes
-	}
-	trigger_event_silently = { id = bag_wsl.1 days = 1 }
+	bag_wsl_update_busy = yes
 }
 
-# **Флаг «привод нужен».** Виджет-привод целиком спит, пока его нет: в мирное
-# время интерфейс мода — одно чтение этой переменной за кадр, без привязки к
+# **Флаг «привод нужен».** Виджет-привод целиком спит, пока его нет: без
+# работы интерфейс мода — одно чтение этой переменной за кадр, без привязки к
 # панели экономики (она писала строку в `debug.log` каждый кадр, прогон 09-20).
-# Зовётся после всего, что ставит или гасит работу приводу.
 # Scope: country
 bag_wsl_update_busy = {
 	if = {
@@ -89,9 +52,6 @@ bag_wsl_update_busy = {
 				has_variable = bag_wsl_mint_phase
 				has_variable = bag_wsl_mint_release
 				has_variable = bag_wsl_mint_repost
-				has_variable = bag_wsl_army_check
-				has_variable = bag_wsl_navy_check
-				has_variable = bag_wsl_fort_check
 			}
 		}
 		set_variable = { name = bag_wsl_busy value = 1 }
@@ -101,49 +61,8 @@ bag_wsl_update_busy = {
 	}
 }
 
-# Scope: country
-bag_wsl_war_started = {
-	# Начавшаяся война отменяет мирную правку целиком.
-	set_variable = { name = bag_wsl_at_war value = 1 }
-	bag_wsl_count_war = yes
-	if = {
-		limit = { has_variable = bag_wsl_mint_phase }
-		bag_wsl_mint_stand_down = yes
-	}
-	remove_variable = bag_wsl_army_go
-	remove_variable = bag_wsl_navy_go
-	remove_variable = bag_wsl_fort_go
-	remove_variable = bag_wsl_army_check
-	remove_variable = bag_wsl_navy_check
-	remove_variable = bag_wsl_fort_check
-	bag_wsl_update_busy = yes
-}
-
-# Scope: country
-bag_wsl_war_ended = {
-	set_variable = { name = bag_wsl_at_war value = 0 }
-	bag_wsl_count_peace = yes
-	bag_wsl_on_peace = yes
-}
-
-# **Взводится не целевым числом, а единицей.** Ползунок рождает событие только
-# когда значение под ним **меняется** — прогон 09-16 стоил ровно этой ошибки:
-# упор стоял в нуле с рождения, значение ни разу не двинулось, и обработчику
-# нечего было ловить. Поэтому привод взводится другим числом, а настоящее число
-# приходит вторым шагом, когда ползунок уже показан и уже его читает.
-# **Взводится не верхом шкалы, а на сотую выше цели** (0.5.3). До этого привод
-# ставил 1 и следом цель: каждый месяц на долю секунды все три содержания и
-# чеканка вставали на максимум, инфляция дёргалась, а если второй шаг терялся —
-# максимум держался до следующего месяца (его слова, 2026-09-29). Событию
-# нужна только смена числа, не её размер; потерянный шаг теперь оставляет
-# ползунок на сотую выше цели. Значения — `bag_wsl_*_arm`.
-# Scope: country
-bag_wsl_on_peace = {
-	bag_wsl_maint_arm = yes
-	bag_wsl_mint_arm = yes
-	bag_wsl_update_busy = yes
-}
-
+# **Взводится на сотую выше цели, а не целью** (0.5.3): ползунок рождает
+# событие, только когда число под ним меняется. Значения — `bag_wsl_*_arm`.
 # Scope: country
 bag_wsl_maint_arm = {
 	if = {
@@ -190,61 +109,9 @@ bag_wsl_mint_arm = {
 	}
 }
 
-# Месячный шаг правки. Мод меряет, **на сколько он сам снижает инфляцию**, и
-# последний месяц отрабатывает ровно на остаток, а не на полную.
-#
-# **Зачем.** Его слово 2026-09-17: при темпе −0.10%/мес и остатке 0.05% мод
-# добирал бы всё те же 0.10% — «эти 0.04% инфляции… значительная сумма». И темп
-# не константа: он зависит от страны, привилегий, чего угодно. Поэтому темп не
-# задаётся, а **измеряется**: сколько инфляции ушло за прошлый месяц при том
-# положении ползунка, которое мод держал.
-#
-# **Арифметика.** Прирост инфляции линеен по положению ползунка между точкой
-# нулевого прироста `m0` и полом `floor`, на котором мод держит чеканку. Измерив
-# `D` — сколько ушло за месяц на полу, — и зная остаток `R`, нужное положение
-# последнего месяца:
-#
-#     m = m0 − R × (m0 − held) / D
-#
-# где `held` — положение, на котором мод держал ползунок измеренный месяц. При
-# `held = 0` это `m0 × (1 − R/D)`: полпути к нулю снимает половину темпа.
-# Если промахнёмся — следующий месяц просто сделает ещё один маленький шаг,
-# цикл сам себя дотягивает.
-# Scope: country
-bag_wsl_mint_check = {
-	if = {
-		limit = { NOT = { inflation > bag_wsl_inflation_stop } }
-		bag_wsl_mint_stand_down = yes
-	}
-	else = {
-		# Остаток и измеренный темп.
-		set_variable = { name = bag_wsl_rem value = inflation }
-		change_variable = { name = bag_wsl_rem subtract = bag_wsl_inflation_goal }
-		set_variable = { name = bag_wsl_drain value = var:bag_wsl_infl_prev }
-		change_variable = { name = bag_wsl_drain subtract = inflation }
-		set_variable = { name = bag_wsl_infl_prev value = inflation }
-
-		if = {
-			limit = { NOT = { var:bag_wsl_drain > 0 } }
-			# Месяц не снял ничего — дальше ждать нечего: ползунок и так на
-			# том, что мод считает лучшим. Отдать чеканку автоматике, иначе мод
-			# висит с выключенной галочкой навсегда (прогон 2026-09-27).
-			bag_wsl_mint_stand_down = yes
-		}
-		else = {
-			bag_wsl_mint_aim = yes
-		}
-	}
-}
-
-# Положение ползунка по остатку `bag_wsl_rem` и темпу `bag_wsl_drain`, снятому
-# при положении `bag_wsl_held`.
-#
-# **Формула одна на любой остаток.** Раньше она работала, только когда остатка
-# меньше, чем снимает месяц, а иначе мод прыгал на пол — и промах частичного
-# шага тоже кидал его на пол, на полный темп. Его жалоба 2026-09-27: «нужно
-# снизить на 0.05 — он снижает на максималку, 0.15». Теперь пол — только упор
-# снизу: формула сама упирается в него, когда остаток больше полного месяца.
+# Положение ползунка по остатку `bag_wsl_rem` и прогнозу `bag_wsl_drain`,
+# снятому при положении `bag_wsl_held`: m = m0 − R × (m0 − held) / D.
+# Прирост инфляции линеен по положению между точкой нуля `m0` и полом.
 # Scope: country
 bag_wsl_mint_aim = {
 	if = {
@@ -287,8 +154,8 @@ bag_wsl_mint_aim = {
 	set_variable = { name = bag_wsl_held value = var:bag_wsl_mint_target }
 }
 
-# Снять правку: интерфейс увидит `bag_wsl_mint_release` и вернёт галочку
-# авто-чеканки, а `bag_wsl_mint_phase` без неё отпускает наш ползунок.
+# Вернуть чеканку автоматике: интерфейс увидит `bag_wsl_mint_release` и
+# включит галочку обратно.
 # Scope: country
 bag_wsl_mint_stand_down = {
 	remove_variable = bag_wsl_mint_phase
@@ -297,8 +164,8 @@ bag_wsl_mint_stand_down = {
 	bag_wsl_update_busy = yes
 }
 
-# Счётчик сработавших приводов, его показывает окно диагностики.
-# `change_variable` поднимает то, что уже есть, поэтому первый раз — заводим.
+# Счётчик сработавших приводов для окна диагностики. `change_variable` на
+# переменной, которой нет, не пишет — заводим нулём.
 # Scope: country
 bag_wsl_count_run = {
 	if = {
@@ -306,46 +173,4 @@ bag_wsl_count_run = {
 		set_variable = { name = bag_wsl_runs value = 0 }
 	}
 	change_variable = { name = bag_wsl_runs add = 1 }
-}
-
-# Счётчики переходов для окна диагностики: сколько войн и миров мод заметил.
-# `change_variable` на переменной, которой нет, не пишет — заводим нулём.
-# Scope: country
-bag_wsl_count_war = {
-	if = {
-		limit = { NOT = { has_variable = bag_wsl_wars } }
-		set_variable = { name = bag_wsl_wars value = 0 }
-	}
-	change_variable = { name = bag_wsl_wars add = 1 }
-}
-
-# Scope: country
-bag_wsl_count_peace = {
-	if = {
-		limit = { NOT = { has_variable = bag_wsl_peaces } }
-		set_variable = { name = bag_wsl_peaces value = 0 }
-	}
-	change_variable = { name = bag_wsl_peaces add = 1 }
-}
-
-# Scope: country
-bag_wsl_maint_check = {
-	if = {
-		limit = { has_variable = bag_wsl_army_on }
-		set_variable = { name = bag_wsl_army_cap value = bag_wsl_army_fraction }
-		change_variable = { name = bag_wsl_army_cap add = 0.005 }
-		set_variable = { name = bag_wsl_army_check value = 1 }
-	}
-	if = {
-		limit = { has_variable = bag_wsl_navy_on }
-		set_variable = { name = bag_wsl_navy_cap value = bag_wsl_navy_fraction }
-		change_variable = { name = bag_wsl_navy_cap add = 0.005 }
-		set_variable = { name = bag_wsl_navy_check value = 1 }
-	}
-	if = {
-		limit = { has_variable = bag_wsl_fort_on }
-		set_variable = { name = bag_wsl_fort_cap value = bag_wsl_fort_fraction }
-		change_variable = { name = bag_wsl_fort_cap add = 0.005 }
-		set_variable = { name = bag_wsl_fort_check value = 1 }
-	}
 }
