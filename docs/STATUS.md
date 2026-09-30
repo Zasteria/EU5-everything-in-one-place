@@ -6,8 +6,8 @@ One line each. **Read only the brief of the mod the task is about** —
 | mod | state | never been in game |
 | --- | --- | --- |
 | [`ru_loc_fix`](../mods/ru_loc_fix/CLAUDE.md) | разметка русского в игре, 266 ключей; **09-26: круг 4 подтверждён** | круги 5–7 |
-| [`nd_ru`](../mods/nd_ru/CLAUDE.md) | in progress; 4 174 keys, 10.2% | everything except Westphalia and the override itself |
-| [`nmt_ru`](../mods/nmt_ru/CLAUDE.md) | **в игре не был; 09-22 лаунчер его прятал без `relationships` — дописан.** Русский для National Mission Trees: 15 стран, 2 888 ключей. База без русского и без отката, дерево пишется целиком | всё |
+| [`nd_ru`](../mods/nd_ru/CLAUDE.md) | in progress; 4 395 keys, 10.6% (0.2.0: + Речь Посполитая) | everything except Westphalia and the override itself |
+| [`nmt_ru`](../mods/nmt_ru/CLAUDE.md) | **в игре не был; 09-22 лаунчер его прятал без `relationships` — дописан.** Русский для National Mission Trees: 17 стран (0.4.0: + Литва, Польша), 3 555 ключей. База без русского и без отката, дерево пишется целиком | всё |
 | [`nmt_fix`](../mods/nmt_fix/CLAUDE.md) | 09-29. NMT засчитывает земли подданных, 111 условий | всё |
 | [`where_to_produce`](../mods/where_to_produce/CLAUDE.md) | **Единственная версия, работа идёт в ней.** Заходы — [`investigations/wtp_backlog.md`](investigations/wtp_backlog.md), открыт пункт 9 | [`archive/status_wtp_untested.md`](archive/status_wtp_untested.md) |
 | [`cm_maps`](../mods/cm_maps/CLAUDE.md) | **загружен 09-19, рисует**; губернатор починен и подтверждён, права починены. Три карты CM dev без CM и CMF | починка прав, карта еды |
