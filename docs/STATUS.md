@@ -5,7 +5,7 @@ One line each. **Read only the brief of the mod the task is about** —
 
 | mod | state | never been in game |
 | --- | --- | --- |
-| [`ru_loc_fix`](../mods/ru_loc_fix/CLAUDE.md) | разметка русского в игре, 459 ключей; **09-26: круг 4 подтверждён** | круги 5–8 |
+| [`ru_loc_fix`](../mods/ru_loc_fix/CLAUDE.md) | разметка русского и перевод брошенного бетой 10-01 (0.4.0, 2 090 ключей); **09-26: круг 4 подтверждён** | круги 5–8 |
 | [`nd_ru`](../mods/nd_ru/CLAUDE.md) | in progress; 4 395 keys, 10.6% (0.2.0: + Речь Посполитая) | everything except Westphalia and the override itself |
 | [`nmt_ru`](../mods/nmt_ru/CLAUDE.md) | **в игре не был; 09-22 лаунчер его прятал без `relationships` — дописан.** Русский для National Mission Trees: 17 стран (0.4.0: + Литва, Польша), 3 555 ключей. База без русского и без отката, дерево пишется целиком | всё |
 | [`nmt_fix`](../mods/nmt_fix/CLAUDE.md) | 09-29. NMT засчитывает земли подданных, 111 условий | всё |

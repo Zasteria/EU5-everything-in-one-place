@@ -88,9 +88,11 @@ def prose(value: str) -> str:
 
 
 def has_prose(value: str) -> bool:
-    """Words a player reads, not an identifier: two words with a lowercase letter."""
+    """Words a player reads, not an identifier: a word with a lowercase letter.
+
+    One is enough — «Cancel», «Bankrupt», «Ambitions» are labels on buttons."""
     return len(re.findall(r"\b[A-Za-z\u0400-\u04FF]*[a-z\u0430-\u044f][A-Za-z\u0400-\u04FF]+\b",
-                          prose(value))) >= 2
+                          prose(value))) >= 1
 
 
 # Files whose Latin is a proper name rather than English left untranslated: a
@@ -104,14 +106,20 @@ def hard_flagged(russian: dict, english: dict) -> set[str]:
     return {f.key for f in locscan.scan(russian, english, locscan.HARD)}
 
 
-def reason(key: str, russian: dict, english: dict, flagged: set[str]) -> str | None:
+def reason(key: str, russian: dict, english: dict, flagged: set[str],
+           to_do: bool = False) -> str | None:
     """Why the game's Russian for `key` needs ours, or None once it does not."""
     if key not in russian:
         return "missing"
     theirs = russian[key].value
     stem = english[key].path.name
+    # English left standing: no Russian letter where English has words. For the
+    # to-do list a value that is all markup («[X] — $Y$») does not count — it is
+    # the game's own Russian; a translation already made of one still ships,
+    # since it says in words what the markup only implied.
     if (has_prose(english[key].value) and not CYRILLIC.search(theirs)
-            and not NAMES.match(stem)):
+            and not NAMES.match(stem)
+            and (not to_do or re.search(r"[A-Za-z]{2}", prose(theirs)))):
         return "english"
     if key in flagged:
         return "stale"
@@ -157,13 +165,19 @@ def read_sources() -> dict[str, tuple[str, Path, int]]:
     return values
 
 
-def check(key: str, value: str, english: str) -> list[str]:
+def check(key: str, value: str, english: str, known: dict | None = None) -> list[str]:
+    """What is wrong with one translation. `known` — the game's English keys:
+    a `$ref$` naming none of them prints its own name, so dropping it for
+    words is a repair, not a loss."""
     problems: list[str] = []
     roots = set(re.findall(r"\[([A-Za-z_0-9]+)[.(]", english))
     value_bare = SELECT.sub(lambda m: "" if m.group(1) in roots else m.group(0), value)
     want, got = markup(english), markup(value_bare)
     for token in sorted((want - got).keys()):
-        problems.append("markup %r lost" % token)
+        dead = (known is not None and token.startswith("$") and "|" not in token
+                and token.strip("$") not in known and not token.strip("$").isupper())
+        if not dead:
+            problems.append("markup %r lost" % token)
     for token in sorted((got - want).keys()):
         problems.append("markup %r invented" % token)
     if re.search(r'(?<!\\)"', value):
@@ -210,7 +224,7 @@ def build(russian: dict, english: dict, accept: bool = False, flagged: set[str] 
             complaints.append("%s: the game's own Russian for %s is fine now — drop ours"
                               % (where, key))
             continue
-        problems = check(key, value, english[key].value)
+        problems = check(key, value, english[key].value, english)
         complaints += ["%s: %s" % (where, p) for p in problems]
         if problems:
             continue
@@ -248,7 +262,7 @@ def todo(russian: dict, english: dict, repaired: set[str] = frozenset(),
     for key, entry in english.items():
         if key in done:
             continue
-        why = reason(key, russian, english, flagged)
+        why = reason(key, russian, english, flagged, to_do=True)
         if why is None:
             continue
         stem = entry.path.name[: -len("_l_english.yml")]
@@ -279,7 +293,7 @@ def check_files(paths: list[str]) -> int:
                 print("%s:%d: the game's English does not define %s" % (path.name, number, key))
                 bad += 1
                 continue
-            for problem in check(key, value, english[key].value):
+            for problem in check(key, value, english[key].value, english):
                 print("%s:%d: %s" % (path.name, number, problem))
                 bad += 1
     print("problems: %d" % bad)
