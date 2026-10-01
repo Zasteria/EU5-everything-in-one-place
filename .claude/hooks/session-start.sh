@@ -38,6 +38,7 @@ briefing=$(
             printf "%s %s · ", id, version
         }' | sed 's/ · $//'
     echo
+    python3 tools/refs.py --game
 
     # Generators: silent while every one is `ok` and nothing was rewritten.
     if echo "$refresh" | grep -qE '^(FAIL|note)'; then

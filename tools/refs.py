@@ -22,6 +22,7 @@ Run it for what is currently in the tree:
 
     python3 tools/refs.py            # the inventory, as a table
     python3 tools/refs.py --write    # the same, into reference/INVENTORY.md
+    python3 tools/refs.py --game     # which game build reference/game/ is from
     python3 tools/refs.py --path community_mod_framework
 """
 
@@ -275,7 +276,29 @@ def table() -> str:
     return "\n".join(lines)
 
 
+def game_build() -> str:
+    """Which build of the game `reference/game/` was taken from, in one line."""
+    record = GAME / "version.json"
+    if not record.is_file():
+        return ("game: build not recorded — the files predate mods.bat → 9, "
+                "which writes reference/game/version.json")
+    try:
+        data = json.loads(record.read_text(encoding="utf-8"))
+    except ValueError:
+        return "game: reference/game/version.json does not parse"
+    parts = [data.get("game_rawversion") or data.get("game_version") or "version unknown"]
+    if data.get("steam_build"):
+        parts.append("Steam build %s of %s" % (data["steam_build"], data.get("steam_updated", "?")))
+    parts.append("files taken %s" % data.get("files_taken", "?"))
+    parts.append("API dumps %s" % data.get("api_dumps", "not recorded"))
+    return "game: " + " · ".join(parts)
+
+
 def main(argv: list[str]) -> int:
+    if "--game" in argv:
+        print(game_build())
+        return 0
+
     if "--path" in argv:
         index = argv.index("--path")
         if index + 1 >= len(argv):

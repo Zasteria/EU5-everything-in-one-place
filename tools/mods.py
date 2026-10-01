@@ -1467,6 +1467,170 @@ def screen_from_game() -> None:
             return
 
 
+# --------------------------------------------------- после обновления игры
+
+# Где игра держит свои папки в «Документах»: логи, дампы API, моды.
+GAME_DOCUMENTS = "Paradox Interactive/Europa Universalis V"
+
+
+def game_install(configured: dict, content: Path | None) -> tuple[Path | None, int]:
+    """Папка игры и когда Steam её последний раз обновил — по записи самого Steam.
+
+    `appmanifest_<app>.acf` лежит в той библиотеке Steam, куда поставлена игра,
+    и это не обязательно та же, где мастерская, — поэтому смотрятся все.
+    """
+    given = configured.get("game")
+    libraries = steam_roots()
+    if content is not None and len(content.parents) > 3:
+        libraries.insert(0, content.parents[3])
+    for library in libraries:
+        acf = library / "steamapps" / ("appmanifest_%s.acf" % APP_ID)
+        if not acf.is_file():
+            continue
+        data = parse_vdf(acf.read_text(encoding="utf-8", errors="replace")).get("AppState", {})
+        folder = library / "steamapps/common" / str(data.get("installdir") or "")
+        try:
+            updated = int(data.get("LastUpdated") or 0)
+        except (TypeError, ValueError):
+            updated = 0
+        if data.get("installdir") and folder.is_dir():
+            return (Path(given) if given else folder), updated
+    return (Path(given) if given else None), 0
+
+
+def api_dumps() -> tuple[Path | None, list[tuple[Path, str]]]:
+    """Дампы `script_docs` и `dump_data_types`: (папка игры в «Документах»,
+    [(файл, его путь в reference/game/docs)])."""
+    for documents in documents_dir():
+        base = documents / GAME_DOCUMENTS
+        if not base.is_dir():
+            continue
+        found = [(p, p.name) for p in sorted((base / "docs").glob("*.log"))]
+        found += [(p, "data_types/" + p.name)
+                  for p in sorted((base / "logs/data_types").glob("*.txt"))]
+        return base, found
+    return None, []
+
+
+def update_api_dumps(updated: int) -> bool:
+    """Скопировать дампы API, если они сняты после обновления игры. True — свежие."""
+    base, found = api_dumps()
+    target = refs.GAME / "docs"
+    if not found:
+        say("Дампов API в «Документах» нет%s." % (" (%s)" % base if base else ""))
+        return False
+    taken = min(int(path.stat().st_mtime) for path, _ in found)
+    say("Дампы API сняты %s, игра обновлена %s."
+        % (when(taken), when(updated) if updated else "— Steam не сказал когда"))
+    if updated and taken < updated:
+        return False
+    changed = 0
+    for path, name in found:
+        destination = target / name
+        before = destination.read_bytes() if destination.is_file() else None
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, destination)
+        changed += before != path.read_bytes()
+    record = refs.GAME / "version.json"
+    data = {}
+    if record.is_file():
+        try:
+            data = json.loads(record.read_text(encoding="utf-8"))
+        except ValueError:
+            data = {}
+    data["api_dumps"] = time.strftime("%Y-%m-%d %H:%M", time.localtime(taken))
+    record.write_text(json.dumps(data, indent=1, ensure_ascii=False, sort_keys=True) + "\n",
+                      encoding="utf-8")
+    say("Скопировал %d файлов в reference/game/docs, изменилось %d." % (len(found), changed))
+    return True
+
+
+def screen_full_update(world: World, configured: dict) -> World:
+    """Всё, что в reference пришло извне, — заново, после обновления игры.
+
+    Один проход вместо четырёх пунктов, которые надо помнить: файлы игры (с
+    локализацией, окнами и слоями движка), дампы API, моды из мастерской —
+    и пересборка того, что из них компилируется. Удаляет то, что игра убрала:
+    без этого файл, которого в игре больше нет, лежал бы здесь как живой.
+    """
+    say()
+    say("Полное обновление reference после обновления игры. Четыре шага:")
+    say("  1  файлы игры: скрипты, события, окна, локализация, слои движка,")
+    say("     и каждый файл игры, который какой-нибудь мод заменяет целиком;")
+    say("     то, что игра убрала, удаляется и отсюда")
+    say("  2  дампы API движка (script_docs, dump_data_types)")
+    say("  3  моды из мастерской: скачать отстающие, обновить reference и playset")
+    say("  4  пересобрать файлы *_generated_* в наших модах")
+    if not yes("Начать?"):
+        return world
+
+    say()
+    say("--- 1. Файлы игры ---")
+    game, updated = game_install(configured, world.content)
+    if game is None:
+        say("Steam не сказал, где стоит игра.")
+        given = ask("Путь к папке Europa Universalis V (Enter — искать самому): ").strip().strip('"')
+        if given:
+            configured["game"] = given
+            settings_write(configured)
+            game = Path(given)
+    args = ["--prune"]
+    if game is not None:
+        args += ["--game", str(game)]
+    if world.content is not None:
+        args += ["--mods-from", str(world.content)]
+    taken = run_python("tools/extract_game_files.py", *args) == 0
+
+    say()
+    say("--- 2. Дампы API движка ---")
+    fresh = update_api_dumps(updated)
+    if not fresh:
+        say("Их снимает только сама игра. Один раз:")
+        say("  Steam → EU5 → Свойства → Параметры запуска: -debug_mode")
+        say("  в игре открой консоль (~) и введи  script_docs  затем  dump_data_types")
+        say("  выйди из игры и снова выбери этот пункт: остальное повторится")
+        say("  быстро и без изменений, а дампы лягут в reference/game/docs.")
+
+    say()
+    say("--- 3. Моды из мастерской ---")
+    copied: list[str] = []
+    if world.content is None:
+        say("Папка мастерской не найдена — моды пропускаю.")
+    else:
+        outdated = show_updates(world)
+        if outdated and yes("Скачать свежие (%d) через steamcmd?" % len(outdated)):
+            if download(configured, outdated, world.content):
+                world = gather(configured)
+        tracked = {item.id for item in workshop.tracked()}
+        mine = [m for m in world.mods if m.id in tracked]
+        # Без ответа Steam не видно, кто отстал, — тогда копируются все.
+        behind = ([m for m in mine if not reference_is_current(m)]
+                  if world.asked_steam else mine)
+        say()
+        if behind:
+            copied = update_reference(world, behind)
+        else:
+            say("Копии в reference/mods те же, что в мастерской.")
+        update_playset(world)
+
+    say()
+    say("--- 4. Пересборка ---")
+    rebuild()
+
+    say()
+    say("=" * 62)
+    say("Готово. Что дальше:")
+    say("  GitHub Desktop → закоммить всё одним коммитом и запушь,")
+    say("  потом напиши в тред — сессия сравнит новую версию со старой.")
+    if not taken:
+        say("  !! Файлы игры не скопировались — ошибка выше.")
+    if not fresh:
+        say("  !! Дампы API старые — шаг 2 выше говорит, как снять новые.")
+    say()
+    ask("Enter — назад ")
+    return gather(configured)
+
+
 # Что кладётся в архив логов, и почему именно это. `game.log` и `data_types/`
 # намеренно не берутся: вместе они мегабайт шесть, а отвечают на вопросы,
 # которые и так закрыты дампами в `reference/`. Хвост `debug.log` берётся
@@ -1552,6 +1716,8 @@ def menu(configured: dict) -> int:
         say("  6  Забрать диагностику из игры")
         say("  7  Забрать из игры файлы или логи")
         say("  8  Перечитать всё заново")
+        say("  9  После обновления игры: обновить в репозитории всё — игру,")
+        say("     локализацию, дампы API, моды, — и пересобрать")
         say("  0  Выход")
         say()
         say("  Коммит и пуш — в GitHub Desktop; отсюда репозиторий не пишется.")
@@ -1575,6 +1741,8 @@ def menu(configured: dict) -> int:
             screen_from_game()
         elif choice == "8":
             world = gather(configured)
+        elif choice == "9":
+            world = screen_full_update(world, configured)
         elif choice in {"0", "q", "в", "выход"}:
             return 0
 
@@ -1587,22 +1755,25 @@ def main(argv: list[str]) -> int:
         prog="mods.py",
         description="Обновление модов EU5: мастерская, папка игры и этот репозиторий.")
     parser.add_argument("command", nargs="?", default="menu",
-                        choices=["menu", "check"],
-                        help="menu — меню (по умолчанию); check — только отчёт")
+                        choices=["menu", "check", "full"],
+                        help="menu — меню (по умолчанию); check — только отчёт; "
+                             "full — пункт 9, полное обновление после патча")
     parser.add_argument("--workshop", metavar="DIR",
                         help="папка steamapps/workshop/content, если она не там, где обычно")
     parser.add_argument("--steamcmd", metavar="PATH", help="путь к steamcmd")
     parser.add_argument("--login", metavar="USER", help="аккаунт Steam")
     parser.add_argument("--game-mods", metavar="DIR", dest="game_mods",
                         help="папка модов игры (Documents/Paradox Interactive/...)")
+    parser.add_argument("--game", metavar="DIR",
+                        help="папка самой игры, если Steam её не называет")
     parsed = parser.parse_args(argv[1:])
 
     configured = settings_read()
-    for name in ("workshop", "steamcmd", "login", "game_mods"):
+    for name in ("workshop", "steamcmd", "login", "game_mods", "game"):
         given = getattr(parsed, name)
         if given:
             configured[name] = given
-    if any(getattr(parsed, n) for n in ("workshop", "steamcmd", "login", "game_mods")):
+    if any(getattr(parsed, n) for n in ("workshop", "steamcmd", "login", "game_mods", "game")):
         settings_write(configured)
 
     if parsed.command == "check":
@@ -1628,6 +1799,10 @@ def main(argv: list[str]) -> int:
             say("Игра грузит не то, что лежит здесь. Пока это так, проверять по")
             say("ней нечего: mods.bat → 4 ставит заново.")
         return 1 if (behind or wrong) else 0
+
+    if parsed.command == "full":
+        screen_full_update(gather(configured), configured)
+        return 0
 
     try:
         return menu(configured)

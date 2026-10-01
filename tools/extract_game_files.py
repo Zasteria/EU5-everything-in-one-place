@@ -19,7 +19,26 @@ Without `--game` it looks in the usual Steam locations for this platform.
 Without `--out` it writes straight into this repository's `reference/game/`,
 which is where the files are wanted — so the next step is `git status`, not a
 copy. Existing files are overwritten with the newer copy from the install, which
-is the point of a refresh; nothing is deleted, and `git` is the undo.
+is the point of a refresh, and `git` is the undo.
+
+**After a patch, `--prune`.** Without it nothing is deleted, so a file the game
+dropped stays here looking alive. With it, `reference/game/` (and the Jomini and
+Clausewitz layers next to it) becomes a mirror of what it holds from the
+install: a file whose original is gone from the install goes too. `docs/` and
+`version.json` are not from the install and are never touched. `mods.bat` → 9
+runs it this way.
+
+Two more things come along on every run, because a patch is when they matter:
+
+- **every game file a mod replaces whole.** A mod that ships a file at the same
+  path as the game's replaces all of it, so when the game changes that file the
+  mod brings the old one back without a word — the commonest way a mod breaks
+  on an update. Every such file, in any folder, is copied, and the ones that
+  moved are listed with the mods that carry them. The mods looked at are
+  `reference/mods/`, `reference/playset/`, `mods/` and any `--mods-from`.
+- **the build it was taken from**, into `reference/game/version.json`: the
+  Steam build and its date, and the game's own version where the install
+  states one. `python3 tools/refs.py --game` reads it back.
 
 What it takes, and why, is the manifest below. Every entry names the tool that
 wants it, so an entry with no reason left can be dropped. On top of the
@@ -31,9 +50,12 @@ along — the sweep does not care what the folder is called.
 from __future__ import annotations
 
 import argparse
+import json
 import os
+import re
 import shutil
 import sys
+import time
 from pathlib import Path
 
 # The list of directories lives in a file both this and the PowerShell twin
@@ -157,8 +179,11 @@ def find_game(given: str | None) -> Path:
     raise SystemExit(2)
 
 
-def copy_tree(source: Path, target: Path) -> tuple[int, int, int]:
-    """Copy source over target, keeping layout. Returns (files, bytes, changed).
+def copy_tree(source: Path, target: Path,
+              states: dict[Path, str] | None = None) -> tuple[int, int, int, int]:
+    """Copy source over target, keeping layout. Returns (files, bytes, new, changed).
+
+    `states`, when given, gets each destination's "new", "changed" or "same".
 
     **`changed` is the number that matters and it was not reported.** On
     2026-09-03 the extraction said «1098 files, 13.2 MB» and GitHub Desktop then
@@ -167,19 +192,29 @@ def copy_tree(source: Path, target: Path) -> tuple[int, int, int]:
     A copy is not a change, and a tool that counts copies cannot tell the two
     apart for him.
     """
-    files = size = changed = 0
+    files = size = new = changed = 0
     for path in sorted(source.rglob("*")):
         if not path.is_file():
             continue
         destination = target / path.relative_to(source)
-        before = destination.read_bytes() if destination.is_file() else None
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(path, destination)
+        state = copy_file(path, destination)
+        if states is not None:
+            states[destination] = state
         files += 1
         size += path.stat().st_size
-        if before != path.read_bytes():
-            changed += 1
-    return files, size, changed
+        new += state == "new"
+        changed += state == "changed"
+    return files, size, new, changed
+
+
+def copy_file(path: Path, destination: Path) -> str:
+    """Copy one file; say whether it was "new", "changed" or "same"."""
+    before = destination.read_bytes() if destination.is_file() else None
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(path, destination)
+    if before is None:
+        return "new"
+    return "same" if before == path.read_bytes() else "changed"
 
 
 def elsewhere(game: Path, relative: str) -> Path | None:
@@ -189,9 +224,11 @@ def elsewhere(game: Path, relative: str) -> Path | None:
     `in_game/` at all — so a manifest entry that misses at its written path gets
     one search by name before it is called missing.
     """
-    name = relative.rsplit("/", 1)[-1]
-    for candidate in sorted(game.rglob(name)):
-        if candidate.is_dir():
+    # The last two names, not one: `main_menu/gui` searched for as `gui` alone
+    # would land on `in_game/gui`, a folder that is already copied.
+    tail = relative.split("/")[-2:]
+    for candidate in sorted(game.rglob(tail[-1])):
+        if candidate.is_dir() and list(candidate.parts[-len(tail):]) == tail:
             return candidate
     return None
 
@@ -226,6 +263,173 @@ def human(size: int) -> str:
     return "%d B" % size
 
 
+# ------------------------------------------------- what a patch needs on top
+
+REPO = Path(__file__).resolve().parent.parent
+APP_ID = "3450310"                    # EU5 on Steam; tools/workshop.py has the same
+
+# Not copies of anything in the install, so a prune leaves them alone: the
+# engine's own API dumps come from the game's Documents folder, and the build
+# record is written here.
+NOT_FROM_INSTALL = {"docs", "version.json"}
+
+# A prune that would take more than this share of a tree is refused: that is
+# not a patch, that is the wrong folder passed as the game.
+PRUNE_LIMIT = 0.3
+
+# Text a mod can replace a game file with. Shaders and `.settings` are here on
+# purpose: the performance mods replace exactly those.
+TEXT_SUFFIXES = {".txt", ".gui", ".yml", ".settings", ".shader", ".fxh",
+                 ".csv", ".asset", ".lua"}
+
+# The engine layers under the game's own files. `reference/jomini/` held two
+# defines files taken by hand; the base GUI types live here too, which is why
+# `button_regular` read as declared nowhere. Text only, and only these folders.
+LAYERS = ("jomini", "clausewitz")
+LAYER_PARTS = {"gui", "common", "data_binding", "localization"}
+LAYER_SUFFIXES = {".gui", ".txt", ".yml", ".settings"}
+LANGUAGES = {"english", "russian"}
+
+
+def layer_dir(game: Path, name: str) -> Path | None:
+    """`jomini/` or `clausewitz/`, beside the game's mounts or one level up."""
+    for base in (game, game.parent, game.parent.parent):
+        candidate = base / name
+        if candidate.is_dir():
+            return candidate
+    return None
+
+
+def layer_files(layer: Path) -> list[Path]:
+    wanted = []
+    for path in sorted(layer.rglob("*")):
+        if not path.is_file() or path.suffix.lower() not in LAYER_SUFFIXES:
+            continue
+        parts = [part.lower() for part in path.relative_to(layer).parts[:-1]]
+        if not LAYER_PARTS.intersection(parts):
+            continue
+        if "localization" in parts:
+            index = parts.index("localization")
+            if index + 1 < len(parts) and parts[index + 1] not in LANGUAGES:
+                continue
+        wanted.append(path)
+    return wanted
+
+
+def mod_roots(extra: list[Path]) -> list[tuple[str, Path]]:
+    """(name, folder) of every mod to look at, each mod once.
+
+    A workshop folder is named by its number alone, the copies here by number
+    and name, so the number is what says two are the same mod; the copies here
+    come first and give the readable name.
+    """
+    seen: dict[str, tuple[str, Path]] = {}
+    for base in [REPO / "reference/mods", REPO / "reference/playset", REPO / "mods", *extra]:
+        if not base.is_dir():
+            continue
+        for folder in sorted(base.iterdir()):
+            if not folder.is_dir():
+                continue
+            head = folder.name.split("_", 1)[0]
+            key = head if head.isdigit() else folder.name
+            seen.setdefault(key, (folder.name, folder))
+    return list(seen.values())
+
+
+def replaced_by_mods(game: Path, extra: list[Path]) -> dict[str, list[str]]:
+    """Game file (relative path) -> the mods that ship a file at that path."""
+    found: dict[str, list[str]] = {}
+    for name, root in mod_roots(extra):
+        for path in root.rglob("*"):
+            if not path.is_file() or path.suffix.lower() not in TEXT_SUFFIXES:
+                continue
+            relative = path.relative_to(root)
+            if relative.parts[0].startswith("."):
+                continue
+            if (game / relative).is_file():
+                mods = found.setdefault(relative.as_posix(), [])
+                if name not in mods:
+                    mods.append(name)
+    return found
+
+
+def prune(out: Path, source: Path) -> tuple[list[str], bool]:
+    """Delete what under `out` is gone from `source`. Returns (gone, done)."""
+    total = 0
+    gone: list[Path] = []
+    for path in sorted(out.rglob("*")):
+        if not path.is_file():
+            continue
+        relative = path.relative_to(out)
+        if relative.parts[0] in NOT_FROM_INSTALL:
+            continue
+        total += 1
+        if not (source / relative).exists():
+            gone.append(path)
+    names = [str(p.relative_to(out)).replace(os.sep, "/") for p in gone]
+    if len(gone) > max(50, total * PRUNE_LIMIT):
+        return names, False
+    for path in gone:
+        path.unlink()
+    for folder in sorted((p for p in out.rglob("*") if p.is_dir()), reverse=True):
+        if not any(folder.iterdir()):
+            folder.rmdir()
+    return names, True
+
+
+def build_of(game: Path) -> dict:
+    """What Steam and the install say about the build: `version.json`'s content."""
+    found: dict = {}
+    install = None
+    for parent in [game, *game.parents]:
+        if (parent.parent.name.lower() == "common"
+                and parent.parent.parent.name.lower() == "steamapps"):
+            install = parent
+            acf = parent.parent.parent / ("appmanifest_%s.acf" % APP_ID)
+            if acf.is_file():
+                text = acf.read_text(encoding="utf-8", errors="replace")
+                for key, name in (("buildid", "steam_build"), ("LastUpdated", "steam_updated")):
+                    match = re.search(r'"%s"\s+"([^"]*)"' % key, text)
+                    if match:
+                        found[name] = match.group(1)
+            break
+    if "steam_updated" in found and found["steam_updated"].isdigit():
+        found["steam_updated"] = time.strftime(
+            "%Y-%m-%d %H:%M", time.localtime(int(found["steam_updated"])))
+    for root in [p for p in (install, game, game.parent) if p is not None]:
+        for name in ("launcher/launcher-settings.json", "launcher-settings.json"):
+            settings = root / name
+            if settings.is_file():
+                try:
+                    data = json.loads(settings.read_text(encoding="utf-8-sig"))
+                except (OSError, ValueError):
+                    continue
+                for key in ("version", "rawVersion"):
+                    if data.get(key):
+                        found["game_" + key.lower()] = str(data[key])
+                break
+        if any(k.startswith("game_") for k in found):
+            break
+    return found
+
+
+def write_build(out: Path, build: dict) -> None:
+    """Merge into `version.json`, keeping what other steps wrote there."""
+    target = out / "version.json"
+    data: dict = {}
+    if target.is_file():
+        try:
+            data = json.loads(target.read_text(encoding="utf-8"))
+        except ValueError:
+            data = {}
+    for key in ("steam_build", "steam_updated", "game_version", "game_rawversion"):
+        data.pop(key, None)
+    data.update(build)
+    data["files_taken"] = time.strftime("%Y-%m-%d %H:%M")
+    target.write_text(json.dumps(data, indent=1, ensure_ascii=False, sort_keys=True) + "\n",
+                      encoding="utf-8")
+
+
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(
         description="Copy the game directories this repository needs into one "
@@ -236,18 +440,31 @@ def main(argv: list[str]) -> int:
                              "reference/game/)")
     parser.add_argument("--no-sweep", action="store_true",
                         help="skip the content sweep for renamed folders")
+    parser.add_argument("--prune", action="store_true",
+                        help="after a patch: delete what the install no longer has")
+    parser.add_argument("--mods-from", action="append", type=Path, default=[],
+                        metavar="DIR",
+                        help="one more folder of mods to check for replaced game "
+                             "files, such as the Steam workshop folder")
     args = parser.parse_args(argv[1:])
 
     game = find_game(args.game)
-    out = (args.out.expanduser() if args.out
-           else Path(__file__).resolve().parent.parent / "reference/game").resolve()
-    print("game:   %s" % game)
-    print("out:    %s" % out)
+    out = (args.out.expanduser() if args.out else REPO / "reference/game").resolve()
+    build = build_of(game)
+    print("игра:   %s" % game)
+    if build:
+        print("сборка: %s" % ", ".join(
+            "%s %s" % (label, build[key]) for key, label in (
+                ("game_version", "версия"), ("game_rawversion", "полная"),
+                ("steam_build", "Steam build"), ("steam_updated", "обновлена"))
+            if key in build))
+    print("куда:   %s" % out)
     print()
 
-    total_files = total_size = total_changed = 0
+    total_files = total_size = total_new = total_changed = 0
     missing: list[str] = []
     copied: set[Path] = set()
+    states: dict[Path, str] = {}
     for relative, reason in manifest().items():
         source = game / relative
         found_at = relative
@@ -258,44 +475,107 @@ def main(argv: list[str]) -> int:
                 continue
             source = moved
             found_at = str(moved.relative_to(game)).replace(os.sep, "/")
-        files, size, changed = copy_tree(source, out / found_at)
+        files, size, new, changed = copy_tree(source, out / found_at, states)
         copied.update(p for p in source.rglob("*") if p.is_file())
         total_files += files
         total_size += size
+        total_new += new
         total_changed += changed
-        note = "" if found_at == relative else "   <- found at %s" % found_at
-        if changed:
-            note = ("   %d new or changed" % changed) + note
-        print("  %-46s %4d file%s %9s%s"
-              % (relative, files, " " if files == 1 else "s", human(size), note))
+        note = "" if found_at == relative else "   <- нашлось в %s" % found_at
+        if new or changed:
+            note = ("   новых %d, изменённых %d" % (new, changed)) + note
+        print("  %-46s %5d файлов %9s%s" % (relative, files, human(size), note))
 
     if not args.no_sweep:
         extra = sweep(game, out, copied)
         if extra:
-            print("\nalso, by content — files mentioning %r outside the list above:"
-                  % SWEEP_MARKER)
+            print("\nещё, по содержимому — файлы с %r вне списка выше:" % SWEEP_MARKER)
             for folder, count in extra:
-                print("  %-46s %4d file%s" % (folder, count, "" if count == 1 else "s"))
+                print("  %-46s %5d" % (folder, count))
                 total_files += count
 
+    # Every game file a mod replaces whole, wherever it lives.
+    replaced = replaced_by_mods(game, args.mods_from)
+    moved: list[tuple[str, str]] = []
+    extra_new = extra_changed = 0
+    for relative in sorted(replaced):
+        destination = out / relative
+        state = states.get(destination)
+        if state is None:
+            # Outside the folders above: copied here and nowhere else.
+            state = copy_file(game / relative, destination)
+            extra_new += state == "new"
+            extra_changed += state == "changed"
+        if state in ("new", "changed"):
+            moved.append((relative, state))
+    print("\nфайлы игры, которые моды заменяют целиком: %d" % len(replaced))
+
+    layers: list[tuple[str, Path]] = []
+    for name in LAYERS:
+        layer = layer_dir(game, name)
+        if layer is None:
+            print("  слой %-10s в установке не найден" % name)
+            continue
+        layers.append((name, layer))
+        target = REPO / "reference" / name if not args.out else out.parent / name
+        new = changed = 0
+        files = layer_files(layer)
+        for path in files:
+            state = copy_file(path, target / path.relative_to(layer))
+            new += state == "new"
+            changed += state == "changed"
+        total_new += new
+        total_changed += changed
+        print("  слой %-10s %5d файлов%s" % (name, len(files),
+              "   новых %d, изменённых %d" % (new, changed) if new or changed else ""))
+
+    removed: list[str] = []
+    if args.prune:
+        trees = [(out, game)] + [((REPO / "reference" / n) if not args.out
+                                  else out.parent / n, layer) for n, layer in layers]
+        for target, source in trees:
+            if not target.is_dir():
+                continue
+            gone, done = prune(target, source)
+            if not done:
+                print("\n!! %s: в установке нет %d файлов отсюда — это больше трети."
+                      % (target.name, len(gone)))
+                print("   Похоже, указана не та папка игры. Ничего не удалено.")
+                continue
+            removed += ["%s/%s" % (target.name, g) for g in gone]
+        if removed:
+            print("\nудалено, потому что из игры их убрали: %d" % len(removed))
+            for line in removed[:40]:
+                print("  " + line)
+            if len(removed) > 40:
+                print("  … и ещё %d" % (len(removed) - 40))
+
     if missing:
-        print("\nnot in this install, and skipped:")
+        print("\nв этой установке нет, пропущено:")
         for line in missing:
             print("  %s" % line)
-        print("\nA folder Paradox renamed is not a problem by itself — the "
-              "content sweep above catches the ones that matter. A folder that "
-              "matters and is missing from both is worth saying so.")
+        print("\nПапка, которую Paradox переименовали, сама по себе не беда — поиск по "
+              "содержимому выше ловит нужные файлы.")
 
-    print("\n%d files, %s — %d of them new or changed."
-          % (total_files, human(total_size), total_changed))
+    if moved:
+        print("\nМоды заменяют эти файлы игры целиком, а файлы новые или изменились:")
+        for relative, state in moved:
+            print("  %-8s %s" % ("новый" if state == "new" else "изменён", relative))
+            print("           %s" % ", ".join(replaced[relative]))
+
+    total_new += extra_new
+    total_changed += extra_changed
+    write_build(out, build)
+    print("\n%d файлов, %s: новых %d, изменённых %d, удалённых %d."
+          % (total_files, human(total_size), total_new, total_changed, len(removed)))
     # **No git here.** He commits through GitHub Desktop and asked that nothing
     # in this repository's tooling write the working tree behind him.
-    if total_changed:
-        print("\nIn %s now. Commit it in GitHub Desktop — until it is committed "
-              "and pushed, a session cannot see any of it." % out.name)
+    if total_new or total_changed or removed:
+        print("\nЭто в reference/. Закоммить в GitHub Desktop — пока не закоммичено и "
+              "не запушено, сессия ничего из этого не видит.")
     else:
-        print("\nNothing differs from what the repository already has, so there "
-              "is nothing to commit. That is the answer, not a failure.")
+        print("\nНичего не отличается от того, что уже в репозитории, коммитить нечего. "
+              "Это ответ, а не сбой.")
     return 0
 
 
