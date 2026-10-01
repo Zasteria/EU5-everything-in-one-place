@@ -1,0 +1,188 @@
+﻿# Auto child education - assignment effects.
+# Adapted from the "Auto Child Education" workshop mod (original by
+# victoriaposting, 1.3 fix by justinrudisal) into Calidad de vida EU5.
+# Scope: character
+
+# Assign the education matching the child's highest base aptitude, after
+# removing the bonuses granted by the current education (if any). Never
+# overrides an expensive or orthodox education already assigned.
+# Scope: character
+qol_ace_assign_best_education = {
+	if = {
+		limit = { has_child_education = expensive_in_depth_education }
+	}
+	else_if = {
+		limit = { has_child_education = orthodox_education }
+	}
+	else_if = {
+		limit = {
+			OR = {
+				AND = {
+					is_heir = yes
+					owner = { has_variable = qol_ace_exp_heirs }
+				}
+				AND = {
+					is_heir = yes
+					owner = { has_variable = qol_ace_exp_heirs_crown }
+				}
+				AND = {
+					has_estate = estate_type:crown_estate
+					owner = { has_variable = qol_ace_exp_heirs_crown }
+				}
+				owner = { has_variable = qol_ace_exp_all }
+			}
+		}
+		set_child_education = child_education:expensive_in_depth_education
+	}
+	else = {
+		save_temporary_scope_value_as = {
+			name = curr_adm
+			value = modifier:character_adm_child_education
+		}
+		save_temporary_scope_value_as = {
+			name = curr_dip
+			value = modifier:character_dip_child_education
+		}
+		save_temporary_scope_value_as = {
+			name = curr_mil
+			value = modifier:character_mil_child_education
+		}
+
+		# Compute base aptitude by removing the current education bonuses.
+		if = {
+			limit = { has_child_education = administrative_education }
+			save_temporary_scope_value_as = { name = base_adm value = { value = scope:curr_adm subtract = 0.75 } }
+			save_temporary_scope_value_as = { name = base_dip value = { value = scope:curr_dip subtract = 0.25 } }
+			save_temporary_scope_value_as = { name = base_mil value = { value = scope:curr_mil subtract = 0.25 } }
+		}
+		else_if = {
+			limit = { has_child_education = diplomatic_education }
+			save_temporary_scope_value_as = { name = base_adm value = { value = scope:curr_adm subtract = 0.25 } }
+			save_temporary_scope_value_as = { name = base_dip value = { value = scope:curr_dip subtract = 0.75 } }
+			save_temporary_scope_value_as = { name = base_mil value = { value = scope:curr_mil subtract = 0.25 } }
+		}
+		else_if = {
+			limit = { has_child_education = military_education }
+			save_temporary_scope_value_as = { name = base_adm value = { value = scope:curr_adm subtract = 0.25 } }
+			save_temporary_scope_value_as = { name = base_dip value = { value = scope:curr_dip subtract = 0.25 } }
+			save_temporary_scope_value_as = { name = base_mil value = { value = scope:curr_mil subtract = 0.75 } }
+		}
+		else_if = {
+			limit = { has_child_education = balanced_education }
+			save_temporary_scope_value_as = { name = base_adm value = { value = scope:curr_adm subtract = 0.5 } }
+			save_temporary_scope_value_as = { name = base_dip value = { value = scope:curr_dip subtract = 0.5 } }
+			save_temporary_scope_value_as = { name = base_mil value = { value = scope:curr_mil subtract = 0.5 } }
+		}
+		else_if = {
+			limit = { has_child_education = orthodox_education }
+			save_temporary_scope_value_as = { name = base_adm value = { value = scope:curr_adm subtract = 0.8 } }
+			save_temporary_scope_value_as = { name = base_dip value = { value = scope:curr_dip subtract = 0.8 } }
+			save_temporary_scope_value_as = { name = base_mil value = { value = scope:curr_mil subtract = 0.8 } }
+		}
+		else = {
+			# No education yet: use the raw modifiers.
+			save_temporary_scope_value_as = { name = base_adm value = scope:curr_adm }
+			save_temporary_scope_value_as = { name = base_dip value = scope:curr_dip }
+			save_temporary_scope_value_as = { name = base_mil value = scope:curr_mil }
+		}
+
+		# Highest base aptitude wins; ties favour ADM > DIP > MIL.
+		if = {
+			limit = {
+				scope:base_adm > scope:base_dip
+				scope:base_adm > scope:base_mil
+			}
+			set_child_education = child_education:administrative_education
+		}
+		else_if = {
+			limit = {
+				scope:base_dip > scope:base_adm
+				scope:base_dip > scope:base_mil
+			}
+			set_child_education = child_education:diplomatic_education
+		}
+		else_if = {
+			limit = {
+				scope:base_mil > scope:base_adm
+				scope:base_mil > scope:base_dip
+			}
+			set_child_education = child_education:military_education
+		}
+		else_if = {
+			limit = {
+				scope:base_adm >= scope:base_dip
+				scope:base_adm > scope:base_mil
+			}
+			set_child_education = child_education:administrative_education
+		}
+		else_if = {
+			limit = {
+				scope:base_adm >= scope:base_mil
+				scope:base_adm > scope:base_dip
+			}
+			set_child_education = child_education:administrative_education
+		}
+		else_if = {
+			limit = {
+				scope:base_dip >= scope:base_mil
+				scope:base_dip > scope:base_adm
+			}
+			set_child_education = child_education:diplomatic_education
+		}
+		else = {
+			# No clear aptitude (prodigy, gifted, slow, idiot or none): rotate
+			# ADM -> DIP -> MIL with a country counter.
+			owner = {
+				if = {
+					limit = { NOT = { has_variable = qol_ace_generalist_counter } }
+					set_variable = { name = qol_ace_generalist_counter value = 0 }
+				}
+			}
+			if = {
+				limit = { owner = { var:qol_ace_generalist_counter < 1 } }
+				set_child_education = child_education:administrative_education
+			}
+			else_if = {
+				limit = {
+					owner = {
+						var:qol_ace_generalist_counter >= 1
+						var:qol_ace_generalist_counter < 2
+					}
+				}
+				set_child_education = child_education:diplomatic_education
+			}
+			else = {
+				set_child_education = child_education:military_education
+			}
+			owner = {
+				change_variable = { name = qol_ace_generalist_counter add = 1 }
+				if = {
+					limit = { var:qol_ace_generalist_counter >= 3 }
+					set_variable = { name = qol_ace_generalist_counter value = 0 }
+				}
+			}
+		}
+	}
+}
+
+# Monthly processing: assign every eligible, not-yet-processed child and mark
+# it, so manual changes afterwards are never overridden.
+# Scope: country
+qol_ace_process_children = {
+	every_character = {
+		limit = { qol_ace_should_auto_educate_child = yes }
+		qol_ace_assign_best_education = yes
+		set_variable = qol_ace_processed
+	}
+}
+
+# "Run Now": re-evaluate every eligible child, including already processed
+# ones. Respects the CMF exclusions and never touches expensive/orthodox.
+# Scope: country
+qol_ace_run_now = {
+	every_character = {
+		limit = { qol_ace_eligible_child = yes }
+		qol_ace_assign_best_education = yes
+		set_variable = qol_ace_processed
+	}
+}

@@ -1,0 +1,40 @@
+﻿# Calidad de vida EU5 - cabinet action "at max" alerts - CMM settings + callback.
+# Scope: country (matches cmf_on_mod_registration / cmf_on_callback).
+#
+# Registers the "Enable Cabinet Action Alerts" master toggle (default ON) in the
+# "Cooldowns" tab / "Alerts" group, next to the cooldown alert toggle. Mirrors
+# the cmm_sync_bool_alias pattern: keep a plain country variable
+# (qol__cab_enable_alerts) in sync with the CMM-stored value. The monthly checks
+# (qol_cabinet_effects.txt) read that variable; left-clicking one of the raised
+# alerts dismisses it here so it does not re-fire while the value stays at max.
+
+qol_cab_register_settings = {
+	cmm_register_bool_setting = {
+		mod_id = qol
+		setting_id = cab_enable_alerts
+		tab_id = cooldowns
+		group_id = alerts
+		default_value = 1
+	}
+	cmm_sync_bool_alias = {
+		setting = qol__cab_enable_alerts
+		alias = qol__cab_enable_alerts
+	}
+}
+
+# Callback handler for cmf_on_callback. Re-syncs the toggle alias when it changes
+# and dismisses the cabinet alerts on left-click. no-ops for unrecognized flags.
+qol_cab_handle_cmf_callback = {
+	switch = {
+		trigger = var:cmf_callback
+		flag:qol__cab_enable_alerts = {
+			cmm_sync_bool_alias = {
+				setting = qol__cab_enable_alerts
+				alias = qol__cab_enable_alerts
+			}
+		}
+		# Cabinet "at max" alert left-click: dismiss the alert from the bar.
+		flag:qol_cab_ready_stabilize = { cmf_remove_alert = { alert = qol_cab_ready_stabilize } }
+		flag:qol_cab_ready_strengthen = { cmf_remove_alert = { alert = qol_cab_ready_strengthen } }
+	}
+}

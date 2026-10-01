@@ -77,6 +77,12 @@ SELECT = re.compile(r"\[Select_CString\(\s*([A-Za-z_0-9]+)[A-Za-z_.()']*\.IsFema
                     r"\s*'[^'\[\]]*'\s*,\s*'[^'\[\]]*'\s*\)\]")
 
 
+# The game's own Russian endings and prepositions: `поддержива[X.Custom('endlong_etyut')]`,
+# `в [X.Custom('LR_PREP')|l]`. Allowed on an object the English already reaches
+# by the same chain.
+CUSTOM = re.compile(r"\[([A-Za-z_0-9.()']*?)\.Custom\('[A-Za-z_]+'\)(?:\|[a-z]+)?\]")
+
+
 def markup(value: str) -> Counter:
     """What the engine reads in a value, with a declined concept counted as the plain one."""
     value = CONCEPT.sub(lambda m: "[%s%s]" % (m.group(1), m.group(2) or ""), value)
@@ -172,6 +178,9 @@ def check(key: str, value: str, english: str, known: dict | None = None) -> list
     problems: list[str] = []
     roots = set(re.findall(r"\[([A-Za-z_0-9]+)[.(]", english))
     value_bare = SELECT.sub(lambda m: "" if m.group(1) in roots else m.group(0), value)
+    value_bare = CUSTOM.sub(lambda m: "" if "[%s." % m.group(1) in english
+                            and m.group(0) not in english else m.group(0),
+                            value_bare)
     want, got = markup(english), markup(value_bare)
     for token in sorted((want - got).keys()):
         dead = (known is not None and token.startswith("$") and "|" not in token

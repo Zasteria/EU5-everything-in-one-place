@@ -1,0 +1,258 @@
+﻿# Calidad de vida EU5 - cooldown alerts - CMM settings registration + callback handling.
+# Scope: country (matches cmf_on_mod_registration / cmf_on_callback).
+
+# Registers the cooldown settings: a master "Enable Cooldown Alerts" toggle (default on),
+# a per-action watch list (one row per entry in qol_cd_watched_actions), and the
+# Order of Chivalry toggle (its mechanic has no has_cooldown token, so it is its own
+# bool setting rather than a watchlist row). Mirrors the cmm_sync_bool_alias pattern:
+# keep a plain country variable (qol__cd_enable_alerts) in sync with the CMM-stored value.
+qol_cd_register_settings = {
+	# Master toggle.
+	cmm_register_bool_setting = {
+		mod_id = qol
+		setting_id = cd_enable_alerts
+		tab_id = cooldowns
+		group_id = alerts
+		default_value = 1
+	}
+	cmm_sync_bool_alias = {
+		setting = qol__cd_enable_alerts
+		alias = qol__cd_enable_alerts
+	}
+
+	# Order of Chivalry watch toggle (default ON - alerts are on at game start; users can
+	# turn it off). Same shape as a bool setting: order_of_chivalry_country_cooldown
+	# is a plain set_variable duration with no cooldown = {} block / has_cooldown token
+	# (qol_cooldown_effects.txt).
+	cmm_register_bool_setting = {
+		mod_id = qol
+		setting_id = cd_watch_order_of_chivalry
+		tab_id = cooldowns
+		group_id = alerts
+		default_value = 1
+	}
+	cmm_sync_bool_alias = {
+		setting = qol__cd_watch_order_of_chivalry
+		alias = qol__cd_watch_order_of_chivalry
+	}
+
+	# Per-action toggles: one settings list PER CATEGORY (general / HRE / situational /
+	# country-specific), each with one bool field ("Watch"). Each list auto-creates its own
+	# CMM group (group_id = setting_id), so the menu groups the rows by category. Keep each
+	# list's item_count in sync with the row count of its sid in qol_cd_watched_actions
+	# (qol_cooldown_effects.txt). Toggle-all is a free built-in on bool list fields.
+	#
+	# REQUIRED: registering a list auto-marks cmm_has_sgui = 1, and CMMSettingRowVisible
+	# then hides the whole list widget unless a scripted GUI named
+	# qol__<setting_id>_on_changed exists and is_shown. We define those in
+	# scripted_guis/qol_cmm_scripted_gui.txt (calls cmm_apply_list_change). Without
+	# them each category's list group header renders but the list stays invisible.
+	#
+	# List-row edits do NOT fire cmf_on_callback, so there is no alias to sync here -
+	# qol_cd_check_one reads each row's value straight from the cmm variable map every
+	# monthly pulse instead.
+	cmm_register_global_settings_list = {
+		mod_id = qol
+		setting_id = cd_watchlist_general
+		tab_id = cooldowns
+		item_count = 7
+		is_ordered = 0
+	}
+	cmm_register_global_settings_list = {
+		mod_id = qol
+		setting_id = cd_watchlist_hre
+		tab_id = cooldowns
+		item_count = 7
+		is_ordered = 0
+	}
+	cmm_register_global_settings_list = {
+		mod_id = qol
+		setting_id = cd_watchlist_situational
+		tab_id = cooldowns
+		item_count = 2
+		is_ordered = 0
+	}
+	cmm_register_global_settings_list = {
+		mod_id = qol
+		setting_id = cd_watchlist_country
+		tab_id = cooldowns
+		item_count = 2
+		is_ordered = 0
+	}
+	cmm_register_global_settings_list = {
+		mod_id = qol
+		setting_id = cd_watchlist_estate
+		tab_id = cooldowns
+		item_count = 8
+		is_ordered = 0
+	}
+
+	# Per-row defaults (all country_interactions ON). CMM's bool field default is uniform
+	# and it has no public per-item setter, so apply each row's own `def` from the
+	# qol_cd_watched_actions table directly to the cmm global map (key
+	# qol__<sid>_i<i>_f1 - the same storage CMM's own list toggle uses).
+	# Run this BEFORE registering the bool fields: qol_cd_seed_one only writes a key
+	# that is ABSENT, and cmm_register_list_bool_field's own value-init likewise only
+	# fills absent keys - so our seed wins on a fresh save while already-saved player
+	# toggles (key present) are preserved on reload, and rows added in a later version
+	# seed themselves. The table is the single source of truth for defaults.
+	qol_cd_watched_actions = { each = qol_cd_seed_one }
+
+	# Register the bool field (slot/metadata + per-item is_global) for each category list.
+	# default_value = 0 is a fail-safe only (OFF = no spam): every key is seeded above,
+	# so this rarely applies.
+	cmm_register_list_bool_field = {
+		mod_id = qol
+		setting_id = cd_watchlist_general
+		field_id = enabled
+		default_value = 0
+	}
+	cmm_register_list_bool_field = {
+		mod_id = qol
+		setting_id = cd_watchlist_hre
+		field_id = enabled
+		default_value = 0
+	}
+	cmm_register_list_bool_field = {
+		mod_id = qol
+		setting_id = cd_watchlist_situational
+		field_id = enabled
+		default_value = 0
+	}
+	cmm_register_list_bool_field = {
+		mod_id = qol
+		setting_id = cd_watchlist_country
+		field_id = enabled
+		default_value = 0
+	}
+	cmm_register_list_bool_field = {
+		mod_id = qol
+		setting_id = cd_watchlist_estate
+		field_id = enabled
+		default_value = 0
+	}
+
+	# Relevance filter: disable the toggle of rows whose mechanic isn't applicable to this
+	# country (e.g. Catholic actions for non-Catholics, HRE actions outside the HRE) while
+	# keeping every row VISIBLE, so the player sees the full list and knows what's available.
+	# This whole registration effect re-runs every time the CMM menu is OPENED, plus on game
+	# start / load / yearly - so the row states are current whenever the player looks at it.
+	# The monthly check applies the same `rel` gate independently (qol_cd_check_one).
+	qol_cd_watched_actions = { each = qol_cd_relevance_one }
+}
+
+# Enable or disable one row's toggle based on its relevance trigger (called via the watch
+# table). Rows are ALWAYS visible; an irrelevant row keeps its place but its "Watch" toggle
+# is disabled (cmm_disable_list_field_for_item), so the player sees what exists and why it
+# isn't available, while still reading the column alignment. If the country later becomes
+# relevant (e.g. joins the HRE), re-enabling the toggle restores the saved on/off state.
+# Args: i / sid / rel used; type / years / def consumed below. Scope: country (relevance is
+# per-player, which is correct - it depends on each country's own religion/government).
+qol_cd_relevance_one = {
+	if = {
+		limit = { $rel$ = yes }
+		cmm_enable_list_field_for_item = {
+			mod_id = qol
+			setting_id = $sid$
+			field_id = enabled
+			item = $i$
+		}
+	}
+	else = {
+		cmm_disable_list_field_for_item = {
+			mod_id = qol
+			setting_id = $sid$
+			field_id = enabled
+			item = $i$
+		}
+	}
+
+	# Consume table params unused here ($type$ / $years$ / $def$); never-run reads, no log
+	# noise (gold is a plain numeric trigger, not a variable - nothing to "set").
+	if = {
+		limit = {
+			always = no
+			has_cooldown = $type$
+			gold >= $years$
+			gold >= $def$
+		}
+	}
+}
+
+# Apply one row's default watch state (called via the watch table). Writes this
+# row's `def` to the cmm global map ONLY if the key is absent - so it seeds a fresh save
+# (and any row added in a later version) once, and never clobbers a toggle the player
+# already saved. Writes the map the same way CMM's own list toggle does (key
+# qol__<sid>_i<i>_f1; assumes "enabled" is slot 1 - the only/first field).
+# Args: i / sid / def used. type / years / rel are consumed below: a shared $each$ callback MUST
+# reference every arg the table passes or the engine fails to compile it ("unknown arguments").
+# Scope: country.
+qol_cd_seed_one = {
+	if = {
+		limit = { NOT = { is_key_in_global_variable_map = { name = cmm target = flag:qol__$sid$_i$i$_f1 } } }
+		add_to_global_variable_map = { name = cmm key = flag:qol__$sid$_i$i$_f1 value = $def$ }
+	}
+
+	# Consume the table params unused here ($type$ / $years$ / $rel$): a shared $each$
+	# callback must reference every arg the table passes or it fails to compile. Never-run
+	# trigger reads (not variable sets) - so they add no "set but never used" log noise.
+	if = {
+		limit = {
+			always = no
+			has_cooldown = $type$
+			gold >= $years$
+			$rel$ = yes
+		}
+	}
+}
+
+# Callback handler for cmf_on_callback. var:cmf_callback holds the flag of whatever was
+# interacted with - a changed setting (re-sync its alias) or an alert click (dismiss it).
+# We handle cooldown alert left-clicks ourselves rather than using CMF's
+# cmf_set_alert_remove_on_click, giving the mod full control over dismissal logic.
+qol_cd_handle_cmf_callback = {
+	switch = {
+		trigger = var:cmf_callback
+		# Settings sync (unchanged)
+		flag:qol__cd_enable_alerts = {
+			cmm_sync_bool_alias = {
+				setting = qol__cd_enable_alerts
+				alias = qol__cd_enable_alerts
+			}
+		}
+		flag:qol__cd_watch_order_of_chivalry = {
+			cmm_sync_bool_alias = {
+				setting = qol__cd_watch_order_of_chivalry
+				alias = qol__cd_watch_order_of_chivalry
+			}
+		}
+		# Cooldown alert left-click: dismiss the alert from the bar.
+		flag:qol_cd_ready_request_divorce = { cmf_remove_alert = { alert = qol_cd_ready_request_divorce } }
+		flag:qol_cd_ready_enforce_culture = { cmf_remove_alert = { alert = qol_cd_ready_enforce_culture } }
+		flag:qol_cd_ready_enforce_religion = { cmf_remove_alert = { alert = qol_cd_ready_enforce_religion } }
+		flag:qol_cd_ready_invite_settlers = { cmf_remove_alert = { alert = qol_cd_ready_invite_settlers } }
+		flag:qol_cd_ready_force_change_court_language = { cmf_remove_alert = { alert = qol_cd_ready_force_change_court_language } }
+		flag:qol_cd_ready_mil_order_request_funds = { cmf_remove_alert = { alert = qol_cd_ready_mil_order_request_funds } }
+		flag:qol_cd_ready_take_over_seniority = { cmf_remove_alert = { alert = qol_cd_ready_take_over_seniority } }
+		flag:qol_cd_ready_ask_to_vote_for_me_as_emperor = { cmf_remove_alert = { alert = qol_cd_ready_ask_to_vote_for_me_as_emperor } }
+		flag:qol_cd_ready_petition_imperial_diet = { cmf_remove_alert = { alert = qol_cd_ready_petition_imperial_diet } }
+		flag:qol_cd_ready_request_circle_privilege = { cmf_remove_alert = { alert = qol_cd_ready_request_circle_privilege } }
+		flag:qol_cd_ready_challenge_circle_leadership = { cmf_remove_alert = { alert = qol_cd_ready_challenge_circle_leadership } }
+		flag:qol_cd_ready_appeal_to_circle_diet = { cmf_remove_alert = { alert = qol_cd_ready_appeal_to_circle_diet } }
+		flag:qol_cd_ready_request_circle_infrastructure_expansion = { cmf_remove_alert = { alert = qol_cd_ready_request_circle_infrastructure_expansion } }
+		flag:qol_cd_ready_request_new_circle_titles = { cmf_remove_alert = { alert = qol_cd_ready_request_new_circle_titles } }
+		flag:qol_cd_ready_violate_italian_sovereignty = { cmf_remove_alert = { alert = qol_cd_ready_violate_italian_sovereignty } }
+		flag:qol_cd_ready_italian_wars_bribe_country = { cmf_remove_alert = { alert = qol_cd_ready_italian_wars_bribe_country } }
+		flag:qol_cd_ready_scout_enemy_holdings = { cmf_remove_alert = { alert = qol_cd_ready_scout_enemy_holdings } }
+		flag:qol_cd_ready_rtr_demand_annexation = { cmf_remove_alert = { alert = qol_cd_ready_rtr_demand_annexation } }
+		flag:qol_cd_ready_order_of_chivalry = { cmf_remove_alert = { alert = qol_cd_ready_order_of_chivalry } }
+		flag:qol_cd_ready_ask_for_extra_levies_cooldown = { cmf_remove_alert = { alert = qol_cd_ready_ask_for_extra_levies_cooldown } }
+		flag:qol_cd_ready_extraordinary_taxes_cooldown = { cmf_remove_alert = { alert = qol_cd_ready_extraordinary_taxes_cooldown } }
+		flag:qol_cd_ready_ask_clergy_for_legitimacy_cooldown = { cmf_remove_alert = { alert = qol_cd_ready_ask_clergy_for_legitimacy_cooldown } }
+		flag:qol_cd_ready_ask_nobility_for_diplomats_cooldown = { cmf_remove_alert = { alert = qol_cd_ready_ask_nobility_for_diplomats_cooldown } }
+		flag:qol_cd_ready_ask_burghers_for_loan_cooldown = { cmf_remove_alert = { alert = qol_cd_ready_ask_burghers_for_loan_cooldown } }
+		flag:qol_cd_ready_ask_commoners_for_stability_cooldown = { cmf_remove_alert = { alert = qol_cd_ready_ask_commoners_for_stability_cooldown } }
+		flag:qol_cd_ready_ask_tribes_for_manpower_cooldown = { cmf_remove_alert = { alert = qol_cd_ready_ask_tribes_for_manpower_cooldown } }
+		flag:qol_cd_ready_call_emergency_parliament_cooldown = { cmf_remove_alert = { alert = qol_cd_ready_call_emergency_parliament_cooldown } }
+	}
+}

@@ -1,0 +1,28 @@
+﻿# Opens the government lateral view on the parliament tab a beat after a
+# QoL event option requests it via the qol_open_parliament country variable.
+widget = {
+	name = "qol_open_parliament_gate"
+	size = { 0 0 }
+	datacontext = "[GetPlayer]"
+	visible = "[Country.IsValid]"
+
+	# The popup that set the gate variable pauses the game with a system pause,
+	# which is released when the popup closes. Convert that into a user pause
+	# (like the topbar's "keep paused" button) so the game does not resume while
+	# the player looks at the parliament. If the player already paused manually,
+	# just open the view and leave their pause untouched.
+	state = {
+		name = qol_open_parliament_arm
+		trigger_when = "[And(Player.MakeScope.GetVariable('qol_open_parliament').IsSet, Not(IsGameUserPaused))]"
+		on_start = "[OnPause]"
+		on_start = "[OpenLateralViewWithParams('government', 'tabcontent = parliament')]"
+		on_start = "[GetScriptedGui('qol_clear_open_parliament').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+	}
+
+	state = {
+		name = qol_open_parliament_arm_paused
+		trigger_when = "[And(Player.MakeScope.GetVariable('qol_open_parliament').IsSet, IsGameUserPaused)]"
+		on_start = "[OpenLateralViewWithParams('government', 'tabcontent = parliament')]"
+		on_start = "[GetScriptedGui('qol_clear_open_parliament').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+	}
+}

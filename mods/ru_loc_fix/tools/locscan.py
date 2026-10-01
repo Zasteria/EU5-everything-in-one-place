@@ -130,6 +130,16 @@ def load(root: Path = None) -> tuple[dict[str, Entry], dict[str, Entry]]:
     for base in (refs.GAME_LOCALIZATION, refs.GAME / "loading_screen/localization"):
         russian.update(read_language(base / "russian"))
         english.update(read_language(base / "english"))
+    # Files the game and its engine layers ship in English only — the playset
+    # screen's `MOD_PLAYSET_IS_AUTOMATICALLY_SORTED_*` (10-01) showed as a raw key.
+    for base in (refs.GAME / "loading_screen/localization/jomini",
+                 refs.REFERENCE / "clausewitz", refs.REFERENCE / "jomini"):
+        for path in sorted(base.rglob("*_l_english.yml")):
+            stem = path.name[: -len("_l_english.yml")]
+            if not any(base.rglob(stem + "_l_russian.yml")):
+                for key, entry in read_language(path.parent).items():
+                    if entry.path == path:
+                        english.setdefault(key, entry)
     return russian, english
 
 

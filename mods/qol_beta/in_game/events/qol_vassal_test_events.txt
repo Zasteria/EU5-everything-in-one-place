@@ -1,0 +1,37 @@
+﻿namespace = qol_vassal_test
+
+# Debug event fired from the console with:  event qol_vassal_test.1
+# Purpose: empirically verify whether country_interaction_acceptance accepts
+# the engine-generated "offer_vassal" interaction and returns a value.
+# The desc shows the numeric acceptance value via the script value; the option
+# tooltip renders the native trigger tooltip (green check / red X + number).
+qol_vassal_test.1 = {
+	type = country_event
+	title = qol_vassal_test.1.t
+	desc = qol_vassal_test.1.d
+	outcome = neutral
+	orphan = yes
+	trigger = {
+		always = no
+	}
+	immediate = {
+		random_known_country = {
+			limit = {
+				NOT = { is_subject = yes }
+				within_diplomatic_range = root
+				is_human = no
+			}
+			save_scope_as = recipient
+		}
+	}
+	option = {
+		name = qol_vassal_test.1.a
+		custom_tooltip = {
+			country_interaction_acceptance = {
+				type = country_interaction:offer_vassal
+				target = scope:recipient
+				value > 0
+			}
+		}
+	}
+}
