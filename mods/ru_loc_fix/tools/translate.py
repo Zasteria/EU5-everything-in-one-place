@@ -171,7 +171,7 @@ def check(key: str, value: str, english: str) -> list[str]:
     text = prose(value_bare)
     if "[" in text or "]" in text:
         problems.append("a square bracket in plain text renders as ERROR:")
-    if not value.strip():
+    if not value.strip() and english.strip():
         problems.append("empty value")
     mixed = MIXED_SCRIPT.search(text)
     if mixed:
