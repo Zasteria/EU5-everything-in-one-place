@@ -73,7 +73,7 @@ ALLOWED = "«»—–…‘’“„ʿʽ́·•"
 # The game's own way to agree a Russian verb with a character's sex. English
 # has no need of it, so a translation may add one — on a scope the English
 # value already names.
-SELECT = re.compile(r"\[Select_CString\(\s*([A-Za-z_]+)[A-Za-z_.()']*\.IsFemale\s*,"
+SELECT = re.compile(r"\[Select_CString\(\s*([A-Za-z_0-9]+)[A-Za-z_.()']*\.IsFemale\s*,"
                     r"\s*'[^'\[\]]*'\s*,\s*'[^'\[\]]*'\s*\)\]")
 
 
@@ -159,7 +159,7 @@ def read_sources() -> dict[str, tuple[str, Path, int]]:
 
 def check(key: str, value: str, english: str) -> list[str]:
     problems: list[str] = []
-    roots = set(re.findall(r"\[([A-Za-z_]+)[.(]", english))
+    roots = set(re.findall(r"\[([A-Za-z_0-9]+)[.(]", english))
     value_bare = SELECT.sub(lambda m: "" if m.group(1) in roots else m.group(0), value)
     want, got = markup(english), markup(value_bare)
     for token in sorted((want - got).keys()):
@@ -185,7 +185,7 @@ def check(key: str, value: str, english: str) -> list[str]:
     for char in set(value):
         point = ord(char)
         if not (0x0400 <= point <= 0x04FF or 0x20 <= point <= 0x7E
-                or 0x00C0 <= point <= 0x024F or char in ALLOWED):
+                or 0x00C0 <= point <= 0x024F or char in ALLOWED or char in english):
             problems.append("stray character %r (U+%04X)" % (char, point))
     return ["%s: %s" % (key, p) for p in problems]
 
