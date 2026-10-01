@@ -1,0 +1,169 @@
+
+types JominiNotificationOverlay
+{
+	type JominiNotificationItem = window {
+		shaderfile = "gfx/FX/pdxgui_default.shader"
+		texture = "gfx/editor_gui/editor_window.dds"
+		spriteType = CorneredStretched
+		spriteborder = { 6 6 }
+		spriteborder_top = 30
+		gfxtype = windowgfx
+		alwaystransparent = no
+		resizable = no
+		size = { 350 80 }
+		movable = no
+		
+		datacontext = "[JominiNotification.SetupDataContexts(PdxGuiWidget.AccessSelf)]"
+		
+		button = {
+			size = { 100% 100% }
+			onclick = "[JominiNotification.OnNotificationClick]"
+		}
+		
+		editor_textbox = {
+			position = { 10 4 }
+			size = { 20 20 }
+			autoresize = yes
+			text = "[JominiNotification.GetTitle]"
+		}
+		
+		editor_textbox = {
+			position = { 10 35 }
+			maximumsize = { 230 20 }
+			minimumsize = { 230 20 }
+			fontsize = 12
+			autoresize = yes
+			elide = right
+			text = "[JominiNotification.GetText]"
+		}
+		
+		editor_textbox = {
+			position = { 10 55 }
+			maximumsize = { 230 20 }
+			minimumsize = { 230 20 }
+			fontsize = 10
+			autoresize = yes
+			elide = right
+			text = "[JominiNotification.GetDateOrTimestamp]"
+		}
+		
+		widget = {
+			parentanchor = "top|right"
+			position = { -5 0 }
+			size = { 100 100% }
+			
+			vbox = {
+				editor_button = {
+					size = { 100 25 }
+					text = "[JominiNotification.GetAcceptButtonText]"
+					onclick = "[JominiNotification.OnAccept]"
+					shortcut = "close_window" # Escape closes OK when there is only that
+					visible = "[Not(Or(JominiNotification.HasOnAccept, JominiNotification.HasOnDecline))]"
+				}
+
+				editor_button = {
+					size = { 100 25 }
+					text = "[JominiNotification.GetAcceptButtonText]"
+					onclick = "[JominiNotification.OnAccept]"
+					visible = "[Or(JominiNotification.HasOnAccept, JominiNotification.HasOnDecline)]"
+				}
+
+				widget = {
+					layoutpolicy_horizontal = expanding
+					visible = "[Or(JominiNotification.HasOnAccept, JominiNotification.HasOnDecline)]"
+				}
+				
+				editor_button = {
+					size = { 100 25 }
+					text = "[JominiNotification.GetDeclineButtonText]"
+					onclick = "[JominiNotification.OnDecline]"
+					shortcut = "close_window"
+					visible = "[Or(JominiNotification.HasOnAccept, JominiNotification.HasOnDecline)]"
+				}
+			}
+		}
+	}
+}
+
+widget = {
+	name = "jomini_notification_overlay"
+	parentanchor = "top|right"
+	widgetanchor = "top|right"
+	size = { 370 100% }
+	
+	fixedgridbox = {
+		size = { 100% 100% }
+		
+		addcolumn = 350
+		addrow = 90
+		
+		datamodel = "[JominiNotificationOverlay.GetAlerts]"
+					
+		item = {
+			container = {
+				JominiNotificationItem = {
+					position = { 10 10 }
+				}
+			}
+		}
+	}
+	
+	window = {
+		name = "jomini_notification_sidebar"
+		parentanchor = "top|right"
+		widgetanchor = "top|right"
+		
+		size = { 100% 100% }
+		
+		shaderfile = "gfx/FX/pdxgui_default.shader"
+		texture = "gfx/editor_gui/editor_window.dds"
+		spriteType = CorneredStretched
+		spriteborder = { 6 6 }
+		
+		resizable = no
+		movable = no
+		
+		visible = no
+		
+		state = {
+			name = _show
+			
+			animation = {
+				position = { 0 0 }
+			}
+			bezier = { 0.44 1.11 0.74 0.91 }
+			
+			duration = 0.2
+			
+		}
+		
+		state = {
+			name = _hide
+			
+			animation = {
+				position = { 700 0 }
+			}
+			bezier = { 0.44 0.2 0.74 0.91 }
+			
+			duration = 0.2
+			
+		}
+		
+		fixedgridbox = {
+			size = { 100% 100% }
+			
+			addcolumn = 350
+			addrow = 90
+			
+			datamodel = "[JominiNotificationOverlay.GetNotifications]"
+						
+			item = {
+				container = {
+					JominiNotificationItem = {
+						position = { 10 10}
+					}
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,557 @@
+template SDKTextStyle
+{
+	block "sdk_text_style"
+	{
+		font = "standard_cw_font"
+		align = left
+		fontcolor = { 1 1 1 1 }
+		fontsize = 12
+	}
+}
+
+template SDKEditboxStyle
+{
+	block "sdk_editbox_style"
+	{
+		layoutpolicy_horizontal = expanding
+		minimumsize = { 100 30 }
+		size = { 252 24 }
+		alwaystransparent = no
+		focuspolicy = all
+		cursorcolor = { 1 1 0.5 1 }
+		selectioncolor = { 0.45 0.45 0.45 0.7 }
+		maxcharacters = 255
+		using = SDKTextStyle
+	}
+}
+
+template SDKButtonTextStyle
+{
+	block "sdk_button_text_style"
+	{
+		name = "sdk_button_text"
+		parentanchor = vcenter|hcenter
+		font = "standard_cw_font"
+		fontsize = 15
+		fontcolor = { 0.86 0.86 0.73 1 }
+		autoresize = yes
+		position = { 0 0 }
+		align = center
+	}
+}
+
+template SDKErrorTextStyle
+{
+	block "sdk_error_text_style"
+	{
+		font = "standard_cw_font"
+		align = left
+		fontcolor = { 1.0 0.3 0.3 1 }
+		fontsize = 13
+	}
+}
+
+template SDKButtonStyle
+{
+	block "sdk_button_style"
+	{
+		texture = "gfx/editor_gui/editor_button.dds"
+		gfxtype = framedbuttongfx
+		spriteType = CorneredStretched
+		spriteborder = { 4 4 }
+		effectname = "NoHighlight"
+		framesize = { 16 16 }
+		upframe = 1
+		downframe = 2
+		overframe = 3
+		disableframe = 4
+		intersectionmask = yes
+
+		buttonText = {
+			textbox = {
+				using = SDKButtonTextStyle
+			}
+		}
+	}
+}
+
+template SDKDropdownButtonStyle
+{
+	block "sdk_dropdown_button_style"
+	{
+		texture = "gfx/editor_gui/editor_dropdown.dds"
+		spriteType = CorneredStretched
+		gfxtype = framedbuttongfx
+		effectname = "NoHighlight"
+		spriteborder = { 4 4 }
+		spriteborder_right = 24
+		button_trigger = none
+		framesize = { 32 16 }
+		upframe = 1
+		downframe = 2
+		overframe = 3
+		disableframe = 4
+	}
+}
+
+template sdk_dropdown_enum
+{
+	block "sdk_dropdown_enum"
+	{
+		alwaystransparent = no
+		active_item = {
+			widget = {
+				block "active_item_size"
+				{
+					size = { 250 30 }
+				}
+
+				block "active_item" {}
+
+				button = {
+					size = { 100% 100% }
+					using = SDKDropdownButtonStyle
+				}
+				
+				editor_textbox = {
+					block "item_text"
+					{
+						text = ""
+					}
+					position = { 10 0 }
+					parentanchor = vcenter|left
+					fontsize = 12
+				}
+			}
+		}
+		
+		item = {
+			widget = {
+				block "item_size"
+				{
+					size = { 250 20 }
+				}
+
+				block "item" {}
+
+				button = {
+					size = { 100% 100% }
+					texture = "gfx/editor_gui/editor_dropdown_item_norm_over_active.png"
+					spriteType = CorneredTiled
+					spriteborder = { 1 1 }
+					gfxtype = framedbuttongfx
+					framesize = { 8 8 }
+					upframe = 1
+					downframe = 3
+					overframe = 2
+					activeframe = 3
+					disableframe = 1
+					button_trigger = none
+				}
+				
+				editor_textbox = {
+					block "item_text"
+					{
+						text = ""
+					}
+					position = { 10 8 }
+					fontsize = 12
+				}
+			}
+		}
+		
+		list = {
+			scrollarea = {
+				position = { 2 30 }
+				autoresizescrollarea = yes
+				alwaystransparent = yes
+
+				block "scrollarea_size"
+				{
+					maximumsize = { 250 210 }
+				}
+
+				block "scrollarea" {}
+
+				background = {
+					margin = { 2 2 }
+					margin_bottom = 6
+					margin_right = 6
+					texture = "gfx/editor_gui/editor_dropdown_list.dds"
+					spriteType = CorneredStretched
+					spriteborder = { 6 6 }
+					spriteborder_right = 8
+					spriteborder_bottom = 8
+					shaderfile = "gfx/FX/pdxgui_default.shader"
+				}
+				
+				scrollwidget = {
+					dynamicgridbox = {
+						alwaystransparent = no
+					}
+				}
+				
+				scrollbar_vertical = {
+					using = editor_vertical_scrollbar
+				}
+				
+				scrollbar_horizontal = {
+					using = editor_horizontal_scrollbar
+				}
+			}
+		}
+	}
+}
+
+template sdk_vertical_scrollbar
+{
+	block "sdk_vertical_scrollbar"
+	{
+		using = editor_vertical_scrollbar
+	}
+}
+
+template sdk_horizontal_scrollbar
+{
+	block "sdk_horizontal_scrollbar"
+	{
+		using = editor_horizontal_scrollbar
+	}
+}
+
+types SDK
+{
+	type sdk_vertical_spacer = widget {
+		block "sdk_vertical_spacer"
+		{
+			size = { 0 5 }
+		}
+	}
+
+	type sdk_horizontal_spacer = widget {
+		block "sdk_horizontal_spacer"
+		{
+			size = { 5 0 }
+		}
+	}
+	
+	type sdk_window = window {
+		block "sdk_window"
+		{
+			shaderfile = "gfx/FX/pdxgui_default.shader"
+			texture = "gfx/editor_gui/editor_window.dds"
+			spriteType = CorneredStretched
+			spriteborder = { 6 6 }
+			spriteborder_top = 30
+			gfxtype = windowgfx
+			alwaystransparent = no
+			resizable = yes
+			scissor = yes
+			size = { 128 64 }
+			movable = yes
+			filter_mouse = none
+			
+			editor_textbox = {
+				position = { 10 4 }
+				size = { 20 20 }
+				autoresize = yes
+
+				block "title_properties" {}
+				block "title"
+				{
+					raw_text = "#BOLD;COLOR:{1.0,1.0,1.0} Untitled #!"
+				}
+			}
+
+			vbox = {
+				block "vbox_properties"
+				{
+					margin = { 4 4 }
+					alwaystransparent = yes
+					restrictparent_min = yes
+				}
+				
+				widget = {
+					size = { 0 29 }
+					layoutpolicy_horizontal = Fixed
+				}
+
+				block "before_content"
+				{
+				}
+				
+				hbox = {
+					block "hbox_properties"
+					{
+						layoutpolicy_horizontal = expanding
+						layoutpolicy_vertical = Preferred
+					}
+
+					widget = {
+						size = { 5 0 }
+						layoutpolicy_horizontal = Fixed
+					}
+
+					block "content_layout"
+					{
+						vbox = {
+							scissor = yes
+							
+							layoutpolicy_horizontal = expanding
+							layoutpolicy_vertical = preferred
+						
+							block "content" 
+							{
+							}
+							
+							widget = {
+								layoutpolicy_vertical = preferred
+							}
+						}
+					}
+					
+					widget = {
+						size = { 5 0 }
+						layoutpolicy_horizontal = Fixed
+					}
+				}
+				
+				widget = {
+					size = { 0 5 }
+					layoutpolicy_vertical = Fixed
+				}
+			}
+		}
+	}
+
+	type sdk_button = button {
+		block "sdk_button_size"
+		{
+			size = { 150 50 }
+			minimumsize = { 150 50 }
+		}
+
+		using = SDKButtonStyle
+	}
+	type sdk_button_wide = sdk_button {
+		block "sdk_button_size"
+		{
+			size = { 200 50 }
+			minimumsize = { 150 50 }
+		}
+	}
+
+	type sdk_load_indicator = progressbar
+	{
+		block "sdk_load_indicator" {
+			parentanchor = vcenter|hcenter
+			size = { 44 44 }
+			gfxtype = framedprogressbargfx
+			texture = "gfx/interface/loading_progress.dds"
+			framesize = { 44 44 }
+			loopinterval = 1.5
+			max = 0
+			block "load_indicator"
+			{
+				visible = no
+			}
+		}
+	}
+
+	type sdk_button_load_indicator = sdk_button {
+		sdk_load_indicator = {}
+	}
+
+	type sdk_textbox = textbox {
+		text = ""
+		block "textbox_size"
+		{
+			size = { 200 30 }
+		}
+		using = SDKTextStyle
+		block "textboxstyle"
+		{
+		}
+	}
+	type sdk_error_textbox = textbox {
+		text = ""
+		# size = { 200 150 }
+		multiline = yes
+		layoutpolicy_vertical = expanding
+		using = SDKErrorTextStyle
+		block "textboxstyle"
+		{
+		}
+	}
+	type sdk_required_textbox = textbox {
+		block "required_field"
+		{
+			raw_text = "*"
+		}
+		minimumsize = { 10 -1 }
+		using = SDKTextStyle
+		autoresize = yes
+		block "textboxstyle"
+		{
+		}
+		fontcolor = { 1 0 0 1 }
+	}
+	
+	type sdk_editbox = editbox {
+		using = SDKEditboxStyle
+		
+		background = {
+			block "sdk_editbox_background"
+			{
+				margin_left = 5
+				margin_top = 0
+				texture = "gfx/editor_gui/editor_field.dds"
+				spriteType = CorneredStretched
+				spriteborder = { 4 4 }
+				shaderfile = "gfx/FX/pdxgui_default.shader"
+			}
+		}
+
+		block "sdk_editbox" {}
+
+		block "password"
+		{
+			password = no
+		}
+	}
+	
+	type sdk_dropdown = dropDown {
+		layoutpolicy_horizontal = expanding
+		block "sdk_dropdown_name"
+		{
+			name = "sdk_dropdown"
+		}
+		block "sdk_dropdown"
+		{
+		}
+		using = sdk_dropdown_enum
+	}
+
+	type sdk_generic_entry = hbox {
+		block "sdk_generic_entry"
+		{
+			block "sdk_generic_entry_properties"
+			{
+				layoutpolicy_horizontal = expanding
+				restrictparent_min = yes
+				layoutpolicy_vertical = fixed
+			}
+
+			sdk_required_textbox={}
+			sdk_vertical_spacer={}
+			sdk_textbox = {
+				block "title"
+				{
+					raw_text = "#D Title:#!"
+				}
+			}
+
+			block "sdk_generic_entry_field"
+			{
+			}
+		}
+	}
+
+	type sdk_textbox_entry = sdk_generic_entry {
+		blockoverride "sdk_generic_entry_field"
+		{
+			block "sdk_textbox_entry"
+			{
+				sdk_editbox = {
+					name = "sdk_editbox"
+					block "editbox_text"
+					{
+						raw_text = "#D Enter something#!"
+					}
+				}
+			}
+		}
+	}
+
+	type sdk_dropdown_entry = sdk_generic_entry {
+		blockoverride "sdk_generic_entry_field"
+		{
+			block "sdk_dropdown_entry"
+			{
+				sdk_dropdown = {}
+			}
+		}
+	}
+
+	type sdk_checkbutton = hbox {
+		block "sdk_checkbutton" {
+			checkbutton = {
+				gfxtype = checkbuttongfx
+				shaderfile = "gfx/FX/pdxgui_pushbutton.shader"
+				texture = "gfx/editor_gui/editor_checkbox.dds"
+				framesize = { 16 16 }
+				size = { 32 32 }
+
+				block "checkbutton"
+				{
+				}
+			}
+
+			sdk_horizontal_spacer={}
+
+			sdk_textbox = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+
+				minimumsize = { -1 100 }
+
+				multiline = yes
+
+				block "label"
+				{
+					raw_text = "#D Label#!"
+				}
+			}
+		}
+	}
+
+	type sdk_prototype_inventory_button = button {
+		gfxtype = framedbuttongfx
+		effectname = "NoHighlight"
+		upframe = 1
+		overframe = 2
+		downframe = 3
+		texture = "gfx/interface/frontend/settings_button.dds"
+		framesize = { 130 130 }
+
+		buttonText = {
+			textbox = {
+				parentanchor = bottom|hcenter
+				using = FontHeading3
+				autoresize = yes
+				position = { 0 -16 }
+			}
+		}
+	}
+
+	type sdk_prototype_inventory = container {
+		# Called by Engine for SDK test code, in CW for compatibility reasons
+		sdk_prototype_inventory_button = {
+			name = "inventory_nologin"
+			raw_text = "Client has not retrieved inventory data."
+			visible = "[Not(PdxAccount.GetInventory.HasRetrievedInventory)]"
+		}
+
+		sdk_prototype_inventory_button = {
+			name = "inventory_miss"
+			raw_text = "You do not have The Item."
+			visible = "[And(PdxAccount.GetInventory.HasRetrievedInventory, Not(PdxAccount.GetInventory.HasItem( 'in_game_item' )))]"
+		}
+
+		sdk_prototype_inventory_button = {
+			name = "inventory_hit"
+			raw_text = "Thank you for signing up!"
+			visible = "[And(PdxAccount.GetInventory.HasRetrievedInventory, PdxAccount.GetInventory.HasItem( 'in_game_item' ))]"
+		}
+	}
+}

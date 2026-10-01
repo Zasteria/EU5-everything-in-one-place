@@ -1,0 +1,249 @@
+types "MapContentTypes" {
+
+	type map_content_entry_widget = widget {
+		name = "map_content_entry"
+		layoutpolicy_horizontal = preferred
+		layoutpolicy_vertical = fixed
+		size = { 100% 24 }
+		toolbox_checkbutton = {
+			margin = { 8 4 }
+			size = { 100% 24 }
+			fontsize = 12
+			align = left|nobaseline
+			layoutpolicy_horizontal = preferred
+			layoutpolicy_vertical = fixed
+			text = "[MapContentEntryDesc.GetName]"
+			checked = "[MapContentEntryDesc.IsSelected]"
+			onclick = "[MapContentSelectorGui.OnEntrySelected(MapContentEntryDesc.Self)]"
+			ondoubleclick = "[MapContentSelectorGui.OnEntryDoubleClicked(MapContentEntryDesc.Self)]"
+			toolbox_icon = {
+				parentanchor = right|top
+				texture = "gfx/editor_terrain/progress_error.dds"
+				size = { 24 24 }
+				visible = "[MapContentEntryDesc.ContainsErrors]"
+				tooltip = "[MapContentEntryDesc.GetErrorMessage]"
+				tooltipwidget = { using = dockable_tooltip }
+			}
+			block "checkbutton" {}
+		}
+		block "entry" {}
+	}
+
+	type map_content_list = vbox {
+		name = "map_content_list"
+		layoutpolicy_horizontal = preferred
+		layoutpolicy_vertical = expanding
+
+		margin = { 2 2 }
+		spacing = 4
+
+		editor_frame = {
+			layoutpolicy_horizontal = expanding
+			blockoverride "label" { raw_text = "Layer:" }
+			blockoverride "content" {
+				hbox = {
+					layoutpolicy_horizontal = expanding
+					dropDown = {
+						name = "layers_dropdown"
+						using = EditorTextDropdown
+						layoutpolicy_horizontal = preferred
+						size = { 0 32 }
+						blockoverride "dropdown_list_position" {
+							position = { 2 100% }
+						}
+						blockoverride "dropdown_item_size" {
+							size = { 100% 32 }
+							#align = center|nobaseline
+						}
+						blockoverride "dropdown_item_text" {
+							text = "[MapContentLayerDesc.GetName]"
+						}
+						blockoverride "dropdown_gridbox_size" {
+							addcolumn = 256
+							addrow = 32
+						}
+						onselectionchanged = "[MapContentSelectorGui.SetCurrentLayerIndex]"
+						selectedindex = "[MapContentSelectorGui.GetCurrentLayerIndex]"
+						focuspolicy = all
+					}
+				}
+			}
+		}
+
+		editor_frame = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+			blockoverride "label" { raw_text = "All Territory entries:" }
+			blockoverride "content" {
+				margin = { 4 4 }
+				hbox = {
+					layoutpolicy_horizontal = expanding
+					margin = { 0 2 }
+					
+					editbox = {
+						margin = { 4 2 }
+						using = terraineditor_label
+						size = { 60 24 }
+						raw_text = "Filters:"
+						fontsize = 12
+						align = right|nobaseline
+						layoutpolicy_horizontal = fixed
+						layoutpolicy_vertical = fixed
+						tooltipwidget = { using = dockable_tooltip }
+					}
+					editor_textinput = {
+						size = { 0 24 }
+						layoutpolicy_horizontal = preferred
+						layoutpolicy_vertical = fixed
+						fontsize = 12
+						text = "[MapContentSelectorGui.GetEntriesFilter]"
+						oneditingfinished = "[MapContentSelectorGui.SetEntriesFilter]"
+						align = left|nobaseline
+						raw_tooltip = "Search filter. Use | sign to separate multiple search keys."
+						tooltipwidget = { using = dockable_tooltip }
+					}
+					tooloptions_button = {
+						raw_text = "X"
+						fontsize = 18
+						size = { 24 24 }
+						raw_tooltip = "Clear filter."
+						tooltipwidget = { using = dockable_tooltip }
+						onclick = "[MapContentSelectorGui.ClearEntriesFilter]"
+					}
+
+				}
+				hbox = {
+					layoutpolicy_horizontal = expanding
+					margin = { 0 2 }
+
+					editbox = {
+						margin = { 4 2 }
+						using = terraineditor_label
+						size = { 60 24 }
+						raw_text = "Tools:"
+						fontsize = 12
+						align = right|nobaseline
+						layoutpolicy_horizontal = fixed
+						layoutpolicy_vertical = fixed
+						tooltipwidget = { using = dockable_tooltip }
+					}
+					toolbox_checkbutton = {
+						raw_tooltip = "Mark all selected territory entries as #COLOR:{1.0,1.0,0.6} complete#!."
+						input_action = "mapobjects_tool_toggle_progress"
+						enabled = yes
+						checked = "[MapContentSelectorGui.IsAllSelectedDone]"
+						onclick = "[MapContentSelectorGui.SetSelectedDone(Not(MapContentSelectorGui.IsAllSelectedDone))]"
+						toolbox_icon = {
+							texture = "gfx/editor_terrain/progress_done.dds"
+							size = { 24 24 }
+						}
+					}
+
+					toolbox_checkbutton = {
+						raw_tooltip = "Highlight on the map territories marked as #COLOR:{1.0,1.0,0.6} complete#!."
+						input_action = "mapobjects_tool_show_progress"
+						checked = "[MapContentSelectorGui.IsShowProgress]"
+						onclick = "[MapContentSelectorGui.SetShowProgress(Not(MapContentSelectorGui.IsShowProgress))]"
+						toolbox_icon = {
+							texture = "gfx/editor_terrain/show_progress.dds"
+							size = { 24 24 }
+						}
+					}
+
+					tooloptions_divider = { }
+		
+					toolbox_checkbutton = {
+						margin = { 2 2 }
+						raw_text = "#COLOR:{1.0,0.5,0.5} [MapContentSelectorGui.GetEntriesWithErrorsCount]#!"
+						fontsize = 10
+						align = right|bottom
+						layoutpolicy_horizontal = fixed
+						layoutpolicy_vertical = fixed
+						raw_tooltip = "Filter all entries that contains errors."
+						tooltipwidget = { using = dockable_tooltip }
+						checked = "[MapContentSelectorGui.IsFilterErrors]"
+						onclick = "[MapContentSelectorGui.SetFilterErrors(Not(MapContentSelectorGui.IsFilterErrors))]"
+						toolbox_icon = {
+							texture = "gfx/editor_terrain/show_errors.dds"
+							size = { 24 24 }
+						}
+					}
+
+					tooloptions_divider = { }
+
+					block "toolbar" {}
+					
+					dummy_fill_up = {}
+
+				}
+				scrollarea = {
+					name = "scrollarea_entries"
+					scrollbarpolicy_vertical = always_on
+					scrollbarpolicy_horizontal = always_off
+
+					block "scrollarea_size_and_layout" {
+						# Y size of 60, to show around 3 items
+						size = { 0 60 }
+						layoutpolicy_vertical = expanding
+						layoutpolicy_horizontal = preferred
+					}
+
+					autoresizeviewport = yes
+
+					viewportwidget = {
+						widget = {
+							scissor = yes
+						}
+					}
+					
+					scrollbar_vertical = {
+						using = editor_vertical_scrollbar
+					}
+					
+					scrollbar_horizontal = {
+						using = editor_horizontal_scrollbar
+					}
+					
+					scrollwidget = {
+						fixedgridbox = {
+							name = "layer_entries_gridbox"
+							alwaystransparent = no
+							addcolumn = 100%
+							addrow = 25
+						}
+					}
+				}
+			}
+		}
+
+		block "list_extension" {}
+	}
+
+
+	type map_content_borders_settings = vbox {
+		
+		editor_frame = {
+			layoutpolicy_horizontal = expanding
+			blockoverride "label" { raw_text = "Force Showing Borders:" }
+			blockoverride "content" {
+				vbox = {
+					datamodel = "[AccessMapEditorLayerBorders]"
+					item = {
+						map_editor_text_checkbox = {
+							blockoverride "checkbutton" {
+								checked = "[MapEditorLayerBorder.IsForceShown]"
+								onclick = "[MapEditorLayerBorder.SetForceShown(Not(MapEditorLayerBorder.IsForceShown))]"
+							}
+							blockoverride "textbox" {
+								raw_text = "[MapEditorLayerBorderDockable.GetLayerName(MapEditorLayerBorder.AccessSelf)]"
+							}
+							blockoverride "tooltip" {
+								raw_tooltip =  "If enabled, borders of this layer will remain always visible. Otherwise they become visible when current sub-tool demands it."
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

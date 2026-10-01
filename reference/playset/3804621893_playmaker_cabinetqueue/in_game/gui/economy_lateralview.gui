@@ -286,15 +286,7 @@ lateralview = {
 	widgetid = "economy_lateralview"
 
 	blockoverride "lateralview_topbuttons_extra" {
-button = { name = "pmcqp_economy_launcher" parentanchor = vcenter position = { 76 0 } size = { 110 26 }
- using = button_regular_texture text = "pmcqp_economy" fontsize = 12
- tooltip = "pmcqp_economy_desc"
- onclick = "[GetScriptedGui('pmcqp_economy').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-onclick = "[GetVariableSystem.Set('pmcqp_economy', 'waiting')]"
 
- onclick = "[PdxGuiTriggerAllAnimations('pmcqp_arm_economy')]"
-
-}
 
 		widget = {
 			parentanchor = vcenter
@@ -333,6 +325,14 @@ onclick = "[GetVariableSystem.Set('pmcqp_economy', 'waiting')]"
 
 widget = { name = "pmcqp_economy_worker" size = { 8 16 }
  alwaystransparent = yes allow_outside = yes 
+widget = { name = "pmcqp_raise_army_levies" size = { 1 1 } alwaystransparent = yes
+ visible = "[And(GetVariableSystem.HasValue('pmcqp_economy', 'apply'), Not(GetPlayer.AutoRaiseArmyLeviesAtWar))]"
+ state = { name = _show alpha = 0.99 duration = 0.1 on_start = "[ToggleAutoRaiseArmyLeviesAtWar]" }
+}
+widget = { name = "pmcqp_raise_navy_levies" size = { 1 1 } alwaystransparent = yes
+ visible = "[And(GetVariableSystem.HasValue('pmcqp_economy', 'apply'), Not(GetPlayer.AutoRaiseNavyLeviesAtWar))]"
+ state = { name = _show alpha = 0.99 duration = 0.1 on_start = "[ToggleAutoRaiseNavyLeviesAtWar]" }
+}
 widget = { name = "pmcqp_mint" size = { 1 1 } alwaystransparent = yes
  visible = "[And(GetVariableSystem.HasValue('pmcqp_economy', 'apply'), Not(GetPlayer.AutoCoinMinting))]"
  state = {
@@ -368,8 +368,12 @@ widget = { name = "pmcqp_economy_done" size = { 1 1 } alwaystransparent = yes
  state = {
  on_start = "[GetScriptedGui('pmcqp_trace_pmcqp_economy_done_entered').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
  on_finish = "[GetScriptedGui('pmcqp_trace_pmcqp_economy_done_finished').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]" name = _show alpha = 0.99 duration = 3 on_finish = "[GetVariableSystem.Set('pmcqp_economy', 'idle')]"
- on_finish = "[GetVariableSystem.Clear('pmcq_setup_window')]"
- on_finish = "[GetVariableSystem.Set('pmcq_economy_close', 'requested')]" }
+ on_finish = "[GetVariableSystem.Clear('cmm_mod_search_text')]"
+ on_finish = "[GetVariableSystem.Set('cmm_selected_mod', 'pmcq')]"
+ on_finish = "[GetVariableSystem.Set('cmm_selected_tab', 'pmcq__general')]"
+ on_finish = "[GetVariableSystem.Set('cmm_window_open', 'yes')]"
+ on_finish = "[LateralView.Close]"
+ }
 }
 }
 # Opening Setup native actions
@@ -2328,8 +2332,7 @@ widget = { name = "pmcqp_economy_done" size = { 1 1 } alwaystransparent = yes
   state = { name = _show alpha = 0.99 duration = 0.3
    on_finish = "[EconomyView.PostStability]"
    on_finish = "[GetVariableSystem.Clear('pmcq_stability_spending')]"
-   on_finish = "[GetVariableSystem.Clear('pmcq_setup_window')]"
-   on_finish = "[GetVariableSystem.Set('pmcq_economy_close', 'requested')]"
+     on_finish = "[GetVariableSystem.Set('pmcq_economy_close', 'requested')]"
   }
  }
 

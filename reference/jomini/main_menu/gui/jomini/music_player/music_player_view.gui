@@ -1,0 +1,282 @@
+window = {
+	name = "JominiMusicPlayerView"
+	input_context = "generic_window"
+	size = { 900 500 }
+	visible = no
+	parentanchor = center|hcenter
+	background = {
+		using = "JominiBackground"
+	}
+
+	widget = {
+		name = "playback_controller"
+		size = { 100% 75 }
+		layoutpolicy_horizontal = expanding
+		scissor = yes
+
+		background = {
+			using = "JominiBackground"
+		}
+
+		widget = {
+			size = { 100% 20 }
+			hbox = {
+				textbox = {
+					name = "track_name"
+					size = { 0 20 }
+					layoutpolicy_horizontal = expanding
+					text = "[MusicPlayer.GetPlayingTrackName]"
+					align = center|nobaseline
+					elide = right
+				}
+			}
+		}
+
+		widget = {
+			position = { 0 20 }
+			size = { 100% 50 }
+
+			hbox = {
+				widget = {
+					size = { 80 50 }
+				}
+
+				container = {
+					name = "music_player_volume_slider"
+
+					textbox = {
+						name = "music_player_volume_textbox"
+						align = left|nobaseline
+						parentanchor = left
+						position = { -70 8 }
+						text = "MUSIC_PLAYER_VOLUME_LABEL"
+					}
+
+					scrollbar = {
+						name = "music_player_volume_slider_scrollbar"
+						direction = horizontal
+						parentanchor = left|vcenter
+						size = { 100 14 }
+						value = "[MusicPlayer.GetVolume]"
+
+						min = 0.0
+						max = 1.0
+						step = 0.1
+						wheelstep = 0.1
+
+						onvaluechanged = "[MusicPlayer.SetVolume]"
+
+						track = {
+							using = SettingsValueTrack
+						}
+
+						slider = {
+							using = SettingsValueSlider
+						}
+
+						dec_button = {
+							using = SettingsValueDecButton
+						}
+
+						inc_button = {
+							using = SettingsValueIncButton
+						}
+					}
+
+					textbox = {
+						name = "music_player_volume_value"
+						align = left|nobaseline
+						parentanchor = right
+						position = { 10 8 }
+						text = "[MusicPlayer.GetVolumeString]"
+					}
+				}
+
+				widget = {
+					size = { 80 50 }
+				}
+
+				button = {
+					using = "JominiButton"
+					name = "toggle_play_pause_button"
+					size = { 30 30 }
+					text = "[MusicPlayer.GetPlaybackStatusFrameIndex]"
+					tooltip = "MUSIC_PLAYER_PLAY_PAUSE"
+					onclick = "[MusicPlayer.OnTogglePlayPause]"
+				}
+
+				button = {
+					using = "JominiButton"
+					name = "next_track_button"
+					size = { 30 30 }
+					raw_text = ">>"
+					tooltip = "MUSIC_PLAYER_NEXT_TRACK"
+					onclick = "[MusicPlayer.OnNextTrack]"
+				}
+
+				widget = {
+					size = { 50 50 }
+				}
+
+				container = {
+					name = "music_player_density"
+
+					textbox = {
+						name = "music_player_density_textbox"
+						align = left|nobaseline
+						parentanchor = left
+						position = { -110 18 }
+						text = "SETTING_MUSIC_DENSITY"
+					}
+
+					scrollbar = {
+						name = "music_player_density_slider_scrollbar"
+						direction = horizontal
+						parentanchor = right|vcenter
+						size = { 100 14 }
+						value = "[MusicPlayer.GetMusicDensity]"
+
+						min = 0.0
+						max = 1.0
+						step = 0.5
+						wheelstep = 0.5
+
+						onvaluechanged = "[MusicPlayer.SetMusicDensity]"
+
+						track = {
+							using = SettingsValueTrack
+						}
+
+						slider = {
+							using = SettingsValueSlider
+						}
+
+						dec_button = {
+							using = SettingsValueDecButton
+						}
+
+						inc_button = {
+							using = SettingsValueIncButton
+						}
+					}
+					
+					textbox = {
+						name = "music_player_density_value"
+						align = left|nobaseline
+						parentanchor = right
+						position = { 10 18 }
+						text = "[MusicPlayer.GetMusicDensityString]"
+					}
+
+					#textbox = {
+					#	name = "elapsed_time"
+					#	position = { 20 35 }
+					#	text = "[MusicPlayer.GetPlayingTrackElapsedTime]"
+					#	align = center|nobaseline
+					#}
+				}
+
+				widget = {
+					size = { 30 50 }
+				}
+			}
+		}
+	}
+
+	scrollarea = {
+		layoutpolicy_horizontal = preferred
+		layoutpolicy_vertical = preferred
+		scrollbaralign_vertical = left
+		position = { 10 85 }
+		size = { 200 400 }
+
+		scrollwidget = {
+			fixedgridbox = {
+				datamodel = "[MusicPlayer.AccessCategories]"
+				addcolumn = 200
+				addrow = 125
+
+				item = {
+					button = {
+						size = { 200 125 }
+						text = "[MusicPlayer.GetCategoryName( MusicPlayerCategory.Self )]"
+						onclick = "[MusicPlayer.OnSelectCategory( MusicPlayerCategory.AccessSelf )]"
+						fontcolor = "[Select_CVector4f( MusicPlayer.IsSelectedCategory( MusicPlayerCategory.Self ), '(CVector4f)1.0,1.0,1.0,1.0', '(CVector4f)0.5,0.5,0.5,1.0' )]"
+
+						button = {
+							parentanchor = bottom
+							size = { 100% 30 }
+							text = "[MusicPlayer.GetCategoryEnabledText( MusicPlayerCategory.Self )]"
+							onclick = "[MusicPlayer.OnToggleCategoryEnabled( MusicPlayerCategory.AccessSelf )]"
+							fontcolor = "[Select_CVector4f( MusicPlayer.IsSelectedCategory( MusicPlayerCategory.Self ), '(CVector4f)1.0,1.0,1.0,1.0', '(CVector4f)0.5,0.5,0.5,1.0' )]"
+						}
+					}
+				}
+			}
+		}
+
+		scrollbar_vertical = {
+			using = editor_vertical_scrollbar
+		}
+
+		scrollbar_horizontal = {
+			using = editor_horizontal_scrollbar
+		}
+	}
+
+	scrollarea = {
+		layoutpolicy_horizontal = preferred
+		layoutpolicy_vertical = preferred
+		scrollbaralign_vertical = right
+		position = { 250 85 }
+		size = { 635 400 }
+
+		scrollwidget = {
+			fixedgridbox = {
+				datamodel = "[MusicPlayer.AccessTracksFromSelectedCategory]"
+				addcolumn = 635
+				addrow = 50
+
+				item = {
+						button = {
+							align = left
+							size = { 635 40 }
+							text = "[MusicPlayer.GetTrackName( MusicTrack.Self )]"
+							onclick = "[MusicPlayer.OnSelectTrack( MusicTrack.Self )]"
+							ondoubleclick = "[MusicPlayer.OnSelectAndPlayTrack( MusicTrack.Self )]"
+							fontcolor = "[MusicPlayer.GetTrackTextColor( MusicTrack.Self )]"
+
+							button = {
+								align = left
+								size = { 100 100% }
+								position = { 80% 0 }
+								text = "[MusicPlayer.GetTrackEnabledText( MusicTrack.Self )]"
+								onclick = "[MusicPlayer.OnToggleTrackEnabled( MusicTrack.AccessSelf )]"
+							}
+						}
+				}
+			}
+		}
+
+		scrollbar_vertical = {
+			using = editor_vertical_scrollbar
+		}
+
+		scrollbar_horizontal = {
+			using = editor_horizontal_scrollbar
+		}
+	}
+
+	button = {
+		using = button_sort
+		name = "close_button"
+		position = { -4 5 }
+		size = { 20 23 }
+		parentanchor = top|right
+		raw_text = "x"
+		align = center|nobaseline
+		onclick = "[OnToggleMusicPlayer]"
+		input_action = "close_window"
+		shortcut = "close_window"
+	}
+}

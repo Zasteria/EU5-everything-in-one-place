@@ -22,6 +22,7 @@ python3 tools/refresh.py
 | `3789103426_community_mod_framework_dev` | `community_mod_framework.dev` | 2.4.1 | 1.3.* |
 | `3789151637_romaimperator_construction_manager_dev` | `romaimperator.construction_manager.dev` | 2.3.0 | 1.3.* |
 | `3790151926_bag_glorpui_hints` | `bag.glorpui_hints` | 1.1.0 | 1.3.* |
+| `3791114902_capgros_hrespam` | `capgros.hrespam` | 0.41 | 1.3.11 |
 
 ## The rest of the playset
 
@@ -45,10 +46,9 @@ compiles from them.
 | `3765240629_responsive_universalis_aggressive_ticks` | `responsive_universalis_aggressive_ticks` | 1.0.3 | loading_screen |
 | `3779064076_rexbert_buymyart` | `rexbert.buymyart` | 1.0 | in_game |
 | `3780623638_nation_destinies_rus` | `nation_destinies_rus` | 1.3 | main_menu |
-| `3791114902_capgros_hrespam` | `capgros.hrespam` | 0.41 | in_game, main_menu |
-| `3804621893_playmaker_cabinetqueue` | `playmaker.cabinetqueue` | 1 | in_game, main_menu |
+| `3804621893_playmaker_cabinetqueue` | `playmaker.cabinetqueue` | 1 | in_game, main_menu, tools |
 
-`reference/game/` holds 3983 files of EU5 itself — `in_game/gui/`, the parts
+`reference/game/` holds 4772 files of EU5 itself — `in_game/gui/`, the parts
 of `in_game/common/` the mods here reason about, and the game's own
 localization, which is how `mods/nd_ru/tools/term.py` answers what the game
 calls a concept.

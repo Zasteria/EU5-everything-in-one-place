@@ -1,0 +1,644 @@
+
+template config_editbox {
+	name = config
+	position = { 20 5 }
+	fontsize = 12
+	size = { 100 20 }
+	alwaystransparent = no
+	focuspolicy = all
+	cursorcolor = { 1 1 0.5 1 }
+	selectioncolor = { 0.45 0.45 0.45 0.7 }
+	maxcharacters = 255
+	
+	background = {
+		margin_left = 5
+		margin_top = 0
+		texture = "gfx/editor_gui/node_editor/node_editor_field.dds"
+		spriteType = CorneredStretched
+		spriteborder = { 4 4 }
+		shaderfile = "gfx/FX/pdxgui_default.shader"
+	}
+}
+
+template ping_animation {
+	duration = 0.4
+	bezier = { 0.420 0.000 1.000 1.000 }
+}
+
+types NodeEditor
+{
+	type node_window_button = widget {
+		size = { 16 16 }
+
+		editor_button = {
+			size = { 16 16 }
+			parentanchor = hcenter|vcenter
+
+			intersectionmask = no
+			texture = "gfx/editor_gui/node_editor/node_editor_layout_window_button.dds"
+
+			focuspolicy = click
+
+			block "button"
+			{
+				#onclick = [Callback]
+			}
+
+			icon = {
+				size = { 16 16 }
+
+				block "icon"
+				{
+					#texture = "icon.png"
+				}
+			}
+		}
+	}
+
+	type node_window_selected_frame = icon {
+		alpha = "[Select_float(Node.IsSelected, '(float)1.0', '(float)0.0')]"
+		color = "[Node.GetSelectedColor]"
+		texture = "gfx/editor_gui/editor_white_pixel.png"
+		alwaystransparent = yes
+	}
+
+	type node_window_selected_frame_horizontal = node_window_selected_frame {
+		size = { 0 4 } 
+		layoutpolicy_vertical = fixed
+		layoutpolicy_horizontal = expanding
+	}
+
+	type node_window_selected_frame_vertical = node_window_selected_frame {
+		size = { 4 0 } 
+		layoutpolicy_vertical = expanding
+		layoutpolicy_horizontal = fixed
+	}
+
+	type node_window_type = window {
+		name = "node_window"
+		shaderfile = "gfx/FX/pdxgui_default.shader"
+		texture = "gfx/editor_gui/node_editor/node_editor_frame_filled.dds"
+		spriteType = CorneredTiled
+		spriteborder = { 5 5 }
+		framesize = { 64 64 }
+		frame = 1
+		gfxtype = windowgfx
+		tooltipwidget = { using = editor_tooltip }
+		tooltip = [Node.Tooltip]
+		filter_mouse = left
+		alwaystransparent = no
+        color = "[Node.GetBackgroundColor]"
+
+		#scissor = yes
+		resizable = no
+		movable = no
+
+		state = {
+			name = "default"
+			frame = 1
+			alpha = 1.0
+			duration = 0.0
+		}
+
+		state = {
+			name = "selected"
+			frame = 2
+			duration = 0.00
+			alpha = 0.8
+			next = selected_end
+		}
+		
+		state = {
+			name = "selected_end"
+			duration = 0.0
+			alpha = 1.0
+		}
+
+		state = {
+			name = "highlighted_1"
+			frame = 2
+			duration = 0.4
+			alpha = 0.4
+			next = highlighted_2
+		}
+
+		state = {
+			name = "highlighted_2"
+			frame = 3
+			duration = 0.8
+			alpha = 0.8
+			next = highlighted_1
+		}
+
+		state = {
+			name = "ping"
+			frame = 3
+			next = "ping_end"
+		}
+
+		state = {
+			name = "ping_end"
+			frame = 1
+			using = ping_animation
+		}
+
+		state = {
+			name = "ping_selected"
+			frame = 3
+			next = "ping_selected_end"
+		}
+
+		state = {
+			name = "ping_selected_end"
+			frame = 2
+			using = ping_animation
+		}
+
+		vbox = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+
+			restrictparent_min = yes
+			set_parent_size_to_minimum = yes
+
+			node_window_selected_frame_horizontal = {}
+
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+
+				node_window_selected_frame_vertical = {}
+
+				vbox = {
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = expanding
+					margin_left = 6
+					margin_right = 6
+					margin_top = 6
+					margin_bottom = 8
+					# Titlebar
+					hbox = {
+						margin_left = 4
+						margin_right = 4
+						margin_bottom = 4
+						block "title_background"
+						{
+							background = { 
+								texture = "gfx/editor_gui/node_editor/node_editor_title_background.dds" 
+								margin_top = 4
+								color = [Node.ContextColor]
+							}
+						}
+
+						spacing = 4
+
+						layoutpolicy_horizontal = expanding
+						block "node_icon"
+						{
+							widget = { 
+								size = { 8 8 }
+								icon = {
+									position = { 0 0 }
+									size = { 8 8 }
+									texture = "[Node.Texture]"
+									tooltip = [Node.Tooltip]
+									tooltipwidget = { 
+										using = editor_tooltip 
+									}
+								}
+							}
+						}
+						
+						editor_textbox = {
+							name = "node_name_textbox"
+							autoresize = yes
+							fontsize = 12
+							fontweight = bold
+							fontcolor = [Node.TextColor]
+							text = [Node.Name]
+							align = left|vcenter|nobaseline
+							elide = right
+							using = editor_toolbar_font
+							tooltip = [Node.Tooltip]
+							tooltipwidget = { using = editor_tooltip }
+						}
+
+						widget = {
+							layoutpolicy_horizontal = expanding
+						}
+
+						icon = {
+							visible = [Node.HasError]
+							size = { 16 16 }
+							color = [Node.TextColor]
+							tooltip = [Node.ErrorTooltip]
+							tooltipwidget = { 
+								using = editor_tooltip 
+							}
+							texture = "gfx/tools/material/circle.dds"
+
+							vbox = {
+								icon = {
+									size = { 14 14 }
+									color = { 1 0 0 1}
+									texture = "gfx/tools/material/info_icon.png"
+								}
+							}
+						}
+
+						flowcontainer = {
+							spacing = 2
+							margin_right = 4
+							
+							node_window_button = {
+
+								blockoverride "button"
+								{
+									onclick = [NodeWindow.NameDialog]
+								}
+
+								blockoverride "icon"
+								{
+									texture = "gfx/editor_gui/16px/node_editor_icon_edit_name.png"
+									color = [Node.TextColor]
+								}
+							}
+
+							node_window_button = {
+
+								blockoverride "button"
+								{
+									onclick = [NodeWindow.EnterDescriptionEditingMode]
+								}
+
+								blockoverride "icon"
+								{
+									texture = "gfx/editor_gui/16px/node_editor_icon_edit_description.png"
+									color = [Node.TextColor]
+								}
+							}
+
+							node_window_button = {
+								blockoverride "button"
+								{
+									onclick = [NodeWindow.Close]
+								}
+
+								blockoverride "icon"
+								{
+									texture = "gfx/editor_gui/16px/node_editor_icon_close.png"
+									color = [Node.TextColor]
+								}
+							}
+						}
+					}
+
+					hbox = {
+						layoutpolicy_horizontal = expanding
+						margin_left = 0
+						margin_top = 10
+						spacing = 4
+										
+						vbox = {
+							layoutpolicy_vertical = expanding
+							spacing = 4
+
+							vbox = {
+								name = "input_pins"
+								spacing = 2
+
+								block "before_input_pins"
+								{
+								}
+
+								# List for dynamic properties
+								vbox = {
+									margin_left = 8
+									name = "list"
+
+									block "config_block"
+									{
+									}
+								}
+							}
+							
+							block "after_input_pins"
+							{
+							}
+
+							widget = {
+								layoutpolicy_vertical = expanding
+							}
+						}
+
+						widget = {
+							layoutpolicy_horizontal = expanding
+						}
+
+						vbox = {
+							layoutpolicy_vertical = expanding
+
+							vbox = {
+								name = "output_pins"
+								spacing = 2
+							}
+
+							block "after_output_pins"
+							{
+							}
+
+							widget = {
+								layoutpolicy_vertical = expanding
+							}
+						}
+					}
+
+					editor_editbox = {
+						name = "comment_desc" # Do not rename. Expected by application.
+						background = {
+							visible = "[NodeWindow.IsDescriptionEditingMode]"
+							texture = "gfx/interface/white.dds"
+							tintcolor = { 0.3 0.3 0.15 0.5 }
+						}
+						text = "[Node.Description]"
+						raw_tooltip = "Comment section"
+						oneditingfinished = "[NodeWindow.ExitDescriptionEditingMode]"
+						autoresize = yes
+						alwaystransparent = yes # prevent entering focus mode when clicking on the description
+						font = "standard_cw_font"
+						fontsize = 12
+						align = top|left
+						tooltipwidget = { using = editor_tooltip }
+						multiline = yes
+						layoutpolicy_vertical = expanding
+						layoutpolicy_horizontal = preferred
+						min_height = "[Select_int32(Or(Node.HasDescription, NodeWindow.IsDescriptionEditingMode), '(int32)30', '(int32)0')]"
+						margin_top = "[Select_int32(Or(Node.HasDescription, NodeWindow.IsDescriptionEditingMode), '(int32)10', '(int32)0')]"
+						margin_left = 4
+						margin_right = 4
+					}
+					
+					block "after_desc"
+					{
+					}
+				}
+				node_window_selected_frame_vertical = {}
+			}
+
+			node_window_selected_frame_horizontal = {}
+		}
+	}
+	
+	type node_pin = hbox {
+
+		layoutpolicy_horizontal = expanding
+
+		margin_left = -1
+		margin_right = 1
+
+		widget = {
+			block "BeforeSpacer"
+			{
+			}
+		}
+
+		editor_button = {
+			name = "PinButton"
+
+			tooltipwidget = {
+				using = dockable_tooltip
+			}
+
+			texture = "gfx/editor_gui/node_editor/node_editor_node_input.dds"
+
+			spriteType = CorneredStretched
+			spriteborder = { 4 4 }
+			intersectionmask = no
+			
+			fontcolor = { 1.0 1.0 1.0 1.0 }
+		
+			fontsize = 11
+
+			color = [NodePin.Color]
+			tooltip = [NodePin.Tooltip]
+
+			focuspolicy = click
+
+			state = {
+				name = "fade"
+				alpha = 0.1
+				next = "fade_end"
+			}
+
+			state = {
+				name = "fade_end"
+				alpha = 1.0
+				using = ping_animation
+				duration = 0.0
+			}
+
+			widget = {
+				size = { 0 0 }
+				allow_outside = yes
+
+				name = "Connection"
+				widgetanchor = vcenter|hcenter
+
+				block "ConnectionProperties"
+				{
+					parentanchor = vcenter|left
+				}
+
+				icon = {
+					name = "pin_icon_round"
+					block "PinProperties"
+					{
+						position = { 0 0 }
+					}
+					size = { 16 16 }
+					parentanchor = hcenter|vcenter
+					widgetanchor = hcenter|vcenter
+					allow_outside = yes
+					color = [NodePin.Color]
+					framesize = { 64 64 }
+					texture = "gfx/editor_gui/node_editor/node_editor_pin_diamond.dds"
+					frame = "[Select_int32(NodePin.DrawAsConnected, '(int32)2', '(int32)1')]"
+					
+					state = {
+						name = "empty"
+						frame = 1
+						duration = 0.0
+					}
+				
+					state = {
+						name = "filled"
+						frame = 2
+						duration = 0.0
+					}
+				}
+			}
+				
+			flowcontainer = {
+				resizeparent = yes
+				ignoreinvisible = yes
+				position = { 0 0 }
+				widget = {
+					size = { 16 24 }
+				}
+				
+				editor_textbox = {
+					size = { 64 32 }
+					autoresize = yes
+					text = [NodePin.Name]
+					align = hcenter|vcenter|nobaseline
+					
+					fontsize = 11
+					parentanchor = vcenter|left
+					widgetanchor = vcenter|hcenter
+					elide = right
+				}
+				
+				widget = {
+					visible = "[Not(NodePin.IsNodePinDisplayNameEmpty)]"
+					size = { 16 0 }
+				}
+				
+				flowcontainer = {
+					name = "list"
+					direction = vertical
+					parentanchor = vcenter|left
+					widgetanchor = vcenter|hcenter
+					visible = [NodePin.IsInlinedNodeConnected]
+				}
+				
+				widget = {
+					visible = "[Not(NodePin.IsNodePinDisplayNameEmpty)]"
+					size = { 8 0 }
+				}
+			}
+		}
+
+		widget = {
+			block "AfterSpacer"
+			{
+				layoutpolicy_horizontal = expanding
+			}
+		}
+	}
+}
+
+node_window_type = {}
+
+node_window_type = {
+	name = "property_node_window"
+}
+
+node_window_type = {
+	 name = compound_node_window
+
+	 blockoverride "config_block" {
+	 }
+}
+
+types NodeEditor
+{
+	type add_pin_button = node_window_button {
+		raw_tooltip = "Add an input pin at the end of the list of dynamic pins"
+		tooltipwidget = { using = dockable_tooltip }
+		blockoverride "icon"
+		{
+			texture = "gfx/editor_gui/add.dds"
+		}
+	}
+
+	type remove_pin_button = node_window_button {
+		raw_tooltip = "Remove the last input pin from the list of dynamic pins"
+		tooltipwidget = { using = dockable_tooltip }
+		blockoverride "icon"
+		{
+			texture = "gfx/editor_gui/remove.dds"
+		}
+	}
+}
+
+node_window_type = {
+	name = "graphinterface_node_window"
+
+	color = { 0.3 0.8 0.2 1.0 }
+	
+	blockoverride "after_input_pins" {
+		hbox = {
+			layoutpolicy_horizontal = preferred
+			add_pin_button = { blockoverride "button" { onclick = "[GraphInterfaceNodeWindow.AddPin('(bool)yes')]" } }
+			widget = { layoutpolicy_horizontal = preferred }
+		}
+	}
+	
+	blockoverride "after_output_pins" {
+		hbox = {
+			layoutpolicy_horizontal = preferred
+			widget = { layoutpolicy_horizontal = preferred }
+			add_pin_button = { blockoverride "button" { onclick = "[GraphInterfaceNodeWindow.AddPin('(bool)no')]" } }
+		}
+	}
+}
+
+node_window_type = {
+	name = curvesampler_node_window
+}
+
+node_window_type = {
+	name = reroute_node_window
+}
+
+node_pin = {
+	name = "input_pin_item"
+
+	blockoverride "BeforeSpacer"
+	{
+	}
+
+	blockoverride "AfterSpacer"
+	{
+		layoutpolicy_horizontal = expanding
+	}
+
+	blockoverride "ConnectionProperties"
+	{
+		parentanchor = vcenter|left
+		position = { 0 0 }
+	}
+}
+
+node_pin = {
+	name = "output_pin_item"
+
+
+	blockoverride "BeforeSpacer"
+	{
+		layoutpolicy_horizontal = expanding
+	}
+
+	blockoverride "AfterSpacer"
+	{
+	}
+	
+	blockoverride "ConnectionProperties"
+	{
+		parentanchor = vcenter|right
+		position = { 0 0 }
+	}
+}
+
+icon = {
+	name = dragbox
+	color = { 1.0 1.0 1.0 1.0 }
+	size = { 8 8 }
+	position = { -4 -4 }
+	#color = [NodePin.Color]
+	texture = "gfx/editor_gui/editor_pin.dds"
+	tooltipwidget = {
+		using = dockable_tooltip
+	}
+}
+

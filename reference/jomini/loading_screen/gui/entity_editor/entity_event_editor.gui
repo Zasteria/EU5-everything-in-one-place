@@ -1,0 +1,129 @@
+template entity_event_debug_info
+{
+	hbox = {
+		layoutpolicy_horizontal = expanding
+		editor_textbox = {
+			raw_text = "Debug Id: [KeyframeEventEditor.KeyframeId]"
+			autoresize = yes
+			align = left|nobaseline
+		}
+
+		widget = {
+			layoutpolicy_horizontal = expanding
+		}
+	}
+
+	hbox = {
+		layoutpolicy_horizontal = expanding
+		editor_textbox = {
+			raw_text = "Editor Id: [KeyframeEventEditor.KeyframeEditorId]"
+			autoresize = yes
+			align = left|nobaseline
+		}
+
+		widget = {
+			layoutpolicy_horizontal = expanding
+		}
+	}
+}
+
+template audio_event_button
+{
+	fontsize = 12
+	align = center|nobaseline
+	tooltipwidget = {
+		using = dockable_tooltip
+	}
+}
+
+template audio_event_specific_fields
+{
+	tools_properties_dialog = {
+		margin = { 15 5 }
+		spacing = 5
+		name = "sound_parameter_properties"
+	}
+
+	hbox = {
+		margin = { 15 5 }
+		spacing = 8
+		layoutpolicy_horizontal = expanding
+
+		widget = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+		}
+	}
+}
+
+widget = {
+	name = "keyframe_event_editor"
+	layoutpolicy_horizontal = expanding
+	layoutpolicy_vertical = expanding
+	widgetanchor = vcenter|hcenter
+	parentanchor = vcenter|hcenter
+	minimumsize = { 450 450 }
+
+	#For if someone opens this window outside the keyframe
+	editor_textbox = {
+		raw_text = "No valid Event Datacontext is set"
+		visible = "[Not( KeyframeEventEditor.HasKeyframe )]"
+		fontcolor = { 0.5 0.5 0.5 1 }
+		autoresize = yes
+	}
+
+	#for when there is no event
+	vbox = { 
+		visible = "[And( KeyframeEventEditor.HasKeyframe, Not( KeyframeEventEditor.HasEvent ) )]"
+		margin_left = 15
+		editor_textbox = {
+			layoutpolicy_horizontal = expanding
+			raw_text = "No Event is set for this keyframe"
+			align = left
+			autoresize = yes
+		}
+
+		widget = {
+			name = "spacer"
+		}
+	}
+
+	editor_frame = {
+		visible = "[And( KeyframeEventEditor.HasKeyframe, KeyframeEventEditor.HasEvent )]"
+		name = "event_editor_properties"
+		
+		blockoverride "label" { raw_text = "[KeyframeEventEditor.EventDescription] Event" }
+		blockoverride "content"  {
+			#This property list is populated through code. Don't change the name
+			tools_properties_dialog = {
+				margin = { 5 5 }
+				name = "properties" 
+				using = entity_event_debug_info
+			}
+		
+			hbox = {
+				visible = "[KeyframeEventEditor.IsAudioHandler]"
+				layoutpolicy_horizontal = expanding
+				entity_editor_textbox = {
+					raw_text = "Sound Parameters:"
+				}
+
+				widget = {
+					layoutpolicy_horizontal = expanding
+				}
+			}
+
+			entity_editor_scrollarea = {
+				visible = "[KeyframeEventEditor.IsAudioHandler]"
+				blockoverride "content"  {
+					vbox = {
+						margin = { 5 5 }
+						layoutpolicy_horizontal = expanding
+						using = audio_event_specific_fields
+					}
+				}
+			}
+		}
+	}
+}
+

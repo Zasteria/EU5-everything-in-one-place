@@ -1,0 +1,381 @@
+@gui_data_profiler_column_width_factor_1 = 50
+@gui_data_profiler_column_width_factor_2 = 50
+@gui_data_profiler_value_column_width = 100
+@gui_data_profiler_num_calls_column_width = 70 # Header/body mismatch fix is header is still using 100, but cell should be smaller.
+
+types GuiDataProfilerTypes
+{
+	type gui_data_profiler_collapse_location_column_button = dockable_button {
+		size = { 20 20 }
+		icon = {
+			size = { 100% 100% }
+			block "texture" {
+				texture = "gfx/tools/collapse_right.png"
+			}
+		}
+		onclick = "[GuiDataProfiler.ToggleLocationColumnShown]"
+		raw_tooltip = "Toggle visibility of Locations column."
+	}
+}
+
+template gui_data_profiler_header_bg
+{
+	background = {
+		texture = "gfx/editor_gui/editor_layout_window_content.dds"
+		spriteType = CorneredStretched
+		spriteborder = { 5 5 }
+		shaderfile = "gfx/FX/pdxgui_default.shader"
+	}
+}
+
+template gui_data_profiler_dropdown
+{
+	using = EditorTextDropdown
+	layoutpolicy_horizontal = preferred
+	size = { 140 24 }
+	blockoverride "dropdown_list_position" { position = { 2 100% } }
+	blockoverride "dropdown_item_size" { size = { 100% 24 } }
+	blockoverride "dropdown_item_text" { text = "[CString.GetString]" }
+	blockoverride "dropdown_gridbox_size" {
+		addcolumn = 140
+		addrow = 30
+	}
+	focuspolicy = all
+}
+
+template gui_data_profiler_scrollbar_compensation
+{
+	widget = { size = { 20 20 } } # make sure last column doesn't go under the scrollbar
+}
+
+vbox = {
+	name = "gui_data_profiler"
+
+	layoutpolicy_vertical = expanding
+	layoutpolicy_horizontal = expanding
+	spacing = 8
+
+	# Topbar - 1st row
+	hbox = {
+		layoutpolicy_horizontal = expanding
+		spacing = 2
+
+		# Record button
+		dockable_button = {
+			size = { 30 30 }
+			enabled = "[GuiDataProfiler.CanBeginRecording]"
+			onclick = "[GuiDataProfiler.BeginRecording]"
+			raw_tooltip = "Begins a process of recording a given number of frames. Tool window will disappear for the capturing duration so that the window itself does not contribute to the collected widgets data."
+			icon = {
+				size = { 80% 80% }
+				parentanchor = center
+				widgetanchor = center
+				texture = "gfx/tools/record.png"
+			}
+		}
+
+		editor_textbox = {
+			margin_left = 4
+			raw_text = "Frames to capture:"
+			size = { 125 20 }
+		}
+
+		editor_editbox = {
+			using = property_editbox
+			raw_text = "[GuiDataProfiler.GetNumFramesToCapture]"
+			ontextchanged = "[GuiDataProfiler.SetNumFramesToCapture]"
+			alwaystransparent = no
+			size = { 50 30 }
+			align = hcenter
+			margin_right = 4
+		}
+
+		editor_toolbar_divider = {}
+
+		editor_textbox = {
+			margin_left = 4
+			raw_text = "Current frame:"
+			size = { 125 20 }
+		}
+
+		dockable_button = {
+			size = { 30 30 }
+			raw_text = "<"
+			onclick = "[GuiDataProfiler.NextFrame('(int32)-1')]"
+			raw_tooltip = "Jumps to previous frame."
+		}
+
+		widget = { size = { 4 0 } } # No idea why the editbox below, overlaps the above button ? :(
+
+		editor_editbox = {
+			using = property_editbox
+			raw_text = "[GuiDataProfiler.GetCurrentFrame]"
+			ontextchanged = "[GuiDataProfiler.SetCurrentFrame]"
+			alwaystransparent = no
+			size = { 50 30 }
+			align = hcenter
+			margin_right = 4
+		}
+
+		dockable_button = {
+			size = { 30 30 }
+			raw_text = ">"
+			onclick = "[GuiDataProfiler.NextFrame('(int32)1')]"
+			raw_tooltip = "Jumps to next frame."
+		}
+
+		widget = { layoutpolicy_horizontal = expanding }
+
+		# Info: number of captured widgets
+		editor_textbox = {
+			raw_text = "Captured widgets: [GuiDataProfiler.GetTotalCapturedWidgets]"
+			autoresize = yes
+			margin_right = 8
+		}
+	}
+
+	# Top bar - 2nd row
+	hbox = {
+		layoutpolicy_horizontal = expanding
+		spacing = 2
+
+		editor_textbox = {
+			size = { 50 30 }
+			raw_text = "View: "
+			align = right
+			margin_right = 4
+		}
+
+		vbox = {
+			layoutpolicy_horizontal = preferred
+			margin_top = 3
+			dropDown = {
+				using = gui_data_profiler_dropdown
+				datamodel = "[GuiDataProfiler.GetViewTypeNames]"
+				onselectionchanged = "[GuiDataProfiler.SetViewTypeIndex]"
+				selectedindex = "[GuiDataProfiler.GetViewTypeIndex]"
+			}
+		}
+
+		widget = { layoutpolicy_horizontal = expanding }
+
+		editor_textbox = {
+			visible = "[Not(GuiDataProfiler.IsCallsListView)]"
+			size = { 50 30 }
+			raw_text = "Sort by: "
+			align = right
+			margin_right = 4
+		}
+
+		vbox = {
+			visible = "[Not(GuiDataProfiler.IsCallsListView)]"
+			layoutpolicy_horizontal = preferred
+			margin_top = 3
+			dropDown = {
+				using = gui_data_profiler_dropdown
+				datamodel = "[GuiDataProfiler.GetSortingMethodNames]"
+				onselectionchanged = "[GuiDataProfiler.SetSortingMethodIndex]"
+				selectedindex = "[GuiDataProfiler.GetSortingMethodIndex]"
+			}
+		}
+
+		editor_toolbar_divider = {}
+
+		editor_textbox = {
+			autoresize = yes
+			raw_text = "Duration:"
+			align = right
+			margin_right = 4
+			raw_tooltip = "[GuiDataProfiler.GetCurrentDurationTypeDescription]"
+			tooltipwidget = { using = dockable_tooltip }
+		}
+
+		vbox = {
+			visible = "[Not(GuiDataProfiler.IsCallsListView)]"
+			layoutpolicy_horizontal = preferred
+			margin_top = 3
+			dropDown = {
+				using = gui_data_profiler_dropdown
+				datamodel = "[GuiDataProfiler.GetDurationTypeNames]"
+				onselectionchanged = "[GuiDataProfiler.SetDurationTypeIndex]"
+				selectedindex = "[GuiDataProfiler.GetDurationTypeIndex]"
+			}
+		}
+
+		vbox = {
+			layoutpolicy_horizontal = preferred
+			margin_top = 3
+			dropDown = {
+				using = gui_data_profiler_dropdown
+				datamodel = "[GuiDataProfiler.GetDurationValueTypeNames]"
+				onselectionchanged = "[GuiDataProfiler.SetDurationValueTypeIndex]"
+				selectedindex = "[GuiDataProfiler.GetDurationValueTypeIndex]"
+			}
+		}
+	}
+
+	# Column headers
+	hbox = {
+		layoutpolicy_horizontal = expanding
+		spacing = 2
+		margin = { 4 0 }
+		editor_textbox = {
+			layoutpolicy_horizontal = expanding
+			layoutstretchfactor_horizontal = @gui_data_profiler_column_width_factor_1
+			size = { 0 20 }
+            using = gui_data_profiler_header_bg
+			margin = { 4 2 }
+			raw_text = "Widget Name"
+		}
+		gui_data_profiler_collapse_location_column_button = {
+			visible = "[And(Not(GuiDataProfiler.IsLocationColumnShown), Not(GuiDataProfiler.IsCallsListView))]"
+			blockoverride "texture" {
+				texture = "gfx/tools/collapse_left.png"
+			}
+		}
+		editor_textbox = {
+			visible = "[And(GuiDataProfiler.IsLocationColumnShown, Not(GuiDataProfiler.IsCallsListView))]"
+			layoutpolicy_horizontal = expanding
+			layoutstretchfactor_horizontal = @gui_data_profiler_column_width_factor_2
+			size = { 0 20 }
+            using = gui_data_profiler_header_bg
+			margin = { 4 2 }
+			raw_text = "Location"
+		}
+		gui_data_profiler_collapse_location_column_button = { 
+			visible = "[And(GuiDataProfiler.IsLocationColumnShown, Not(GuiDataProfiler.IsCallsListView))]"
+		}
+		editor_textbox = {
+			visible = "[GuiDataProfiler.IsCallsListView]"
+			size = { @gui_data_profiler_value_column_width 20 }
+            using = gui_data_profiler_header_bg
+			margin = { 4 2 }
+			raw_text = "Number of calls"
+			raw_tooltip = "Tells how many times a given promote or function was called by various widgets within a single frame."
+			tooltipwidget = { using = dockable_tooltip }
+		}
+		editor_textbox = {
+			size = { @gui_data_profiler_value_column_width 20 }
+            using = gui_data_profiler_header_bg
+			margin = { 4 2 }
+			raw_text = "Duration"
+			raw_tooltip = "[GuiDataProfiler.GetCurrentDurationTypeDescription]"
+			tooltipwidget = { using = dockable_tooltip }
+		}
+		using = gui_data_profiler_scrollbar_compensation
+	}
+
+	# Content
+	scrollarea = {
+		name = "content_scroll_area" # Don't rename! Gui profiler dockable refers to it to auto-scroll to a given entry.
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = expanding
+		autoresizeviewport = yes
+		scrollbarpolicy_vertical = always_on
+		scrollwidget = {
+			fixedgridbox = {
+				addcolumn = 100%
+				addrow = 20
+				setitemsizefromcell = yes
+				datamodel = "[GuiDataProfiler.GetNodeTree]"
+				item = {
+					widget = {
+						# highlight the background for evey odd line
+						background = {
+							visible = "[IsOdd_int32(PdxGuiWidget.GetIndexInDataModel)]"
+							texture = "gfx/editor_gui/editor_toolbar_background.dds"
+							spriteType = CorneredStretched
+							spriteborder = { 5 5 }
+							margin = { -1 0 }
+							shaderfile = "gfx/FX/pdxgui_default.shader"
+							alpha = 0.25
+						}
+						layoutpolicy_horizontal = expanding
+						size = { 0 20 }
+						hbox = {
+							layoutpolicy_horizontal = expanding
+
+							hbox = {
+								layoutpolicy_horizontal = expanding
+								layoutstretchfactor_horizontal = @gui_data_profiler_column_width_factor_1
+								spacing = 2
+
+								widget = {
+									size = "[GuiDataProfilerEntryNode.GetBranchDepth('(int32)10', '(int32)20')]"
+								}
+
+								dockable_button = {
+									visible = "[GuiDataProfilerEntryNode.HasChildren]"
+									raw_text = "[Select_CString(GuiDataProfiler.IsNodeExpanded(GuiDataProfilerEntryNode.Self), 'v', '>')]"
+									size = { 20 20 }
+									onclick = "[GuiDataProfiler.ToggleNodeExpanded(GuiDataProfilerEntryNode.Self)]"
+									raw_tooltip = "Click + Ctrl = Expand every first in hierarchy."
+								}
+
+								widget =  {
+									visible = "[Not(GuiDataProfilerEntryNode.HasChildren)]"
+									size = { 20 20 }
+								}
+
+								editor_textbox = {
+									margin_left = 4
+									layoutpolicy_horizontal = expanding
+									size = { 0 20 }
+									elide = right
+									raw_text = "[GuiDataProfilerEntryNode.GetName]"
+								}
+
+								dockable_button = {
+									visible = "[GuiDataProfilerEntryNode.CanOpenFileLocation]"
+									size = { 20 20 }
+									onclick = "[GuiDataProfilerEntryNode.OpenFileLocation]"
+									icon = {
+										size = { 100% 100% }
+										texture = "gfx/editor_gui/folder.png"
+									}
+									raw_tooltip = "Open file location."
+								}
+							}
+
+							editor_toolbar_divider = {}
+
+							editor_textbox = {
+								visible = "[And(GuiDataProfiler.IsLocationColumnShown, Not(GuiDataProfiler.IsCallsListView))]"
+								layoutpolicy_horizontal = expanding
+								layoutstretchfactor_horizontal = @gui_data_profiler_column_width_factor_2
+								size = { 0 20 }
+								elide = right
+								raw_text = "[GuiDataProfilerEntryNode.GetLocation]"
+							}
+
+							editor_toolbar_divider = {
+								visible = "[And(GuiDataProfiler.IsLocationColumnShown, Not(GuiDataProfiler.IsCallsListView))]"
+							}
+
+							editor_textbox = {
+								visible = "[GuiDataProfiler.IsCallsListView]"
+								size = { @gui_data_profiler_num_calls_column_width 20 }
+								align = right
+								raw_text = "[GuiDataProfilerEntryNode.GetNumCalls]"
+							}
+
+							editor_toolbar_divider = {
+								visible = "[GuiDataProfiler.IsCallsListView]"
+							}
+
+							editor_textbox = {
+								size = { @gui_data_profiler_value_column_width 20 }
+								elide = right
+								raw_text = "[GuiDataProfiler.GetNodeDuration(GuiDataProfilerEntryNode.Self)]"
+							}
+
+							using = gui_data_profiler_scrollbar_compensation
+						}
+					}
+				}
+			}
+		}
+		scrollbar_vertical = { using = editor_vertical_scrollbar }
+		scrollbar_horizontal = { using = editor_horizontal_scrollbar }
+	}
+}

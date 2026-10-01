@@ -1,0 +1,401 @@
+types ToolsProperyTypes
+{
+	type gui_editor_button = editor_toolbar_button {
+		tooltipwidget = { using = dockable_tooltip }
+		tooltip_widgetanchor = bottom|left
+	}
+
+	type gui_editor_property_outline = button {
+		filter_mouse = all
+		size = { 100% 100% }
+		texture = "gfx/editor_gui/editor_tree_item.dds"
+		spriteType = CorneredTiled
+		spriteborder = { 1 1 }
+		gfxtype = framedbuttongfx
+		framesize = { 4 4 }
+		disableframe = 1
+
+		tooltipwidget = {
+			using = editor_tooltip
+		}
+		using = editor_tooltip_properties
+	}
+
+	type property_dragdrop_widget = tools_dragdrop_widget {
+		name = "property_dragdrop"
+		filter_mouse = all
+		layoutpolicy_horizontal = growing
+		layoutpolicy_vertical = preferred
+		droptarget = yes
+		alwaystransparent = no
+	}
+
+	type label_text_box = editor_textbox {
+		size = { 130 24 }
+		elide = right
+		margin_left = 4
+		margin_right = 8
+		margin_top = 0
+		minimumsize = { 20 -1 }
+		align = right|vcenter|nobaseline
+	}
+
+	type gui_editor_property = vbox {
+		layoutpolicy_horizontal = preferred
+		layoutpolicy_vertical = preferred
+		#alwaystransparent = no
+
+		state = {
+			name = _mouse_hierarchy_enter
+			on_start = "[GuiEditorProperties.SetHovering(GuiEditorProperty.Self)]"
+		}
+		state = {
+			name = _mouse_hierarchy_leave
+			on_start = "[GuiEditorProperties.SetHovering('(null)')]"
+		}
+
+		property_dragdrop_widget = {
+			drag_drop_data = "[GuiEditorProperty]"
+			background = {
+				texture = "gfx/editor_gui/editor_white_pixel.png"
+				spriteType = Stretched
+				shaderfile = "gfx/FX/pdxgui_default.shader"
+				color = { 0.3 0.3 0.3 1.0 }	
+				visible = "[GuiEditorProperties.IsHovering(GuiEditorProperty.Self)]"		
+			}
+		
+			tooltipwidget = {
+				using = dockable_tooltip
+			}
+			
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = preferred
+		
+			tooltip = "[GuiEditorProperty.ToolProperty.GetTooltip]"
+			tooltip_widgetanchor = bottom|left
+
+			vbox = {
+				layoutpolicy_vertical = expanding
+
+				hbox = {
+					margin_widget = {
+						size = { 16 16 }
+						gui_editor_button = {
+							onclick = "[GuiEditorProperty.RemoveProperty]"
+							size = { 16 16 }
+							texture = "gfx/editor_gui/editor_layout_window_close2.dds"
+							intersectionmask = no
+							raw_tooltip = "Remove property"
+							#color = { 0.569 0.294 0.294 1.0 }
+							position = { 0 0 }
+							visible = "[GuiEditorProperties.IsHovering(GuiEditorProperty.Self)]"
+						}
+					}
+
+					label_text_box = {
+						text = "[GuiEditorProperty.ToolProperty.GetLabel]"
+						fontcolor = "[GuiEditorProperty.ToolProperty.GetColor]"
+						layoutpolicy_horizontal = shrinking
+					}
+					margin_widget = {
+						size = { 16 16 }
+						visible = "[GuiEditorProperty.IsProperty]"
+						dataproperty_selector = {
+							visible = "[GuiEditorProperty.IsProperty]"
+							raw_tooltip = "Select data property"
+							tooltipwidget = { using = dockable_tooltip }
+							tooltip_widgetanchor = bottom|left
+							onclick = "[GuiEditorProperty.OpenDataPropertySelector]"
+							size = { 16 16 }
+							position = { -2 1 }
+						}
+					}
+				}
+
+				widget = { layoutpolicy_vertical = expanding }
+			}
+
+			# TODO: Make this a dynamic widget
+			vbox = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = preferred
+				name = "tools_property"
+			}
+		}
+
+		# Comment lines
+		hbox = {
+			tooltipwidget = {
+				using = dockable_tooltip
+			}
+			
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = preferred
+			tooltip_widgetanchor = bottom|left
+			visible = "[GuiEditorProperty.HasComments]"
+
+			vbox = {
+				layoutpolicy_vertical = expanding
+
+				hbox = {
+					margin_widget = {
+						size = { 16 16 }
+					}
+
+					label_text_box = {
+						raw_text = "Comments"
+					}
+					margin_widget = {
+						size = { 16 16 }
+					}
+				}
+
+				widget = { layoutpolicy_vertical = expanding }
+			}
+
+			vbox = {
+				layoutpolicy_horizontal = preferred
+				layoutpolicy_vertical = preferred
+				editor_textbox = {
+					text = "[GuiEditorProperty.GetComments]"
+					layoutpolicy_horizontal = growing
+					autoresize = yes
+					align = top
+					margin_top = 4
+				}
+			}
+		}
+	}
+
+	type gui_editor_property_category = vbox {
+		layoutpolicy_horizontal = preferred
+		layoutpolicy_vertical = preferred
+		
+		checkbutton = {
+			checked = "[ToolPropertyList.IsExpanded]"
+			onclick = "[ToolPropertyList.SetExpanded(Not(ToolPropertyList.IsExpanded))]"
+			texture = "gfx/editor_gui/editor_entry_header.dds"
+			layoutpolicy_horizontal = preferred
+			
+			size = { 0 22 }
+
+			spriteborder = { 5 5 }
+			spriteType = CorneredStretched
+			framesize = { 16 16 }
+			
+			hbox = {
+				margin_left = 8
+				margin_bottom = 0
+				margin_right = 8
+
+				vbox = {
+					checkbutton = {
+						gfxtype = checkbuttongfx
+						shaderfile = "gfx/FX/pdxgui_pushbutton.shader"
+						texture = "gfx/editor_gui/editor_expand_checkbox.dds"
+						framesize = { 16 16 }
+						size = { 8 8 }
+						checked = "[ToolPropertyList.IsExpanded]"
+						onclick = "[ToolPropertyList.SetExpanded(Not(ToolPropertyList.IsExpanded))]"
+					}
+				}
+
+				editor_textbox = {
+					raw_text = "#BOLD; [ToolPropertyList.GetLabel] #!"
+					fontcolor = "[ToolPropertyList.GetColor]"
+					margin_left = 4
+					autoresize = yes
+					align = vcenter|nobaseline
+					elide = right
+					layoutpolicy_horizontal = shrinking
+				}
+				
+				widget = {
+					layoutpolicy_horizontal = preferred
+				}
+
+				vbox = {
+					hbox = {
+						spacing = 4
+
+						gui_editor_button = {
+							onclick = "[GuiEditorCategory.AddProperty]"
+							size = { 16 16 }
+							texture = "gfx/editor_gui/editor_icon_addproperty.dds"
+							gfxtype = framedbuttongfx
+							framesize = { 16 16 }
+							intersectionmask = no
+							inherit_visual_state = no
+							raw_tooltip = "Add property"
+						}
+
+						gui_editor_button = {
+							onclick = "[GuiEditorCategory.OpenFile]"
+							size = { 16 16 }
+							texture = "gfx/editor_gui/editor_file.dds"
+							intersectionmask = no
+							raw_tooltip = "Go to file"
+							color = { 1 1 1 0.5 }
+							inherit_visual_state = no
+						}
+
+						gui_editor_button = {
+							onclick = "[GuiEditorCategory.SelectDescription]"
+							size = { 16 16 }
+							texture = "gfx/editor_gui/editor_arrow_right.dds"
+							intersectionmask = no
+							raw_tooltip = "Go to description"
+							color = { 1 1 1 0.5 }
+							inherit_visual_state = no
+						}
+					}
+				}
+			}
+		}
+		
+		vbox = {
+			name = "list"
+			margin_top = 2
+			spacing = 1
+			layoutpolicy_horizontal = preferred
+			layoutpolicy_vertical = preferred
+			visible = "[ToolPropertyList.IsExpanded]"
+		}
+	}
+}
+
+vbox = {
+	name = "properties"
+
+	layoutpolicy_horizontal = expanding
+	layoutpolicy_vertical = expanding
+
+	editor_toolbar = {
+		margin_left = 10
+		margin_right = 2
+
+		blockoverride "left"
+		{
+			editor_textbox = {
+				raw_text = "Filter: "
+				size = { 40 24 }
+			}
+			
+			editor_textinput = {
+				ontextedited = "[GuiEditorProperties.SetPropertyFilter]"
+				layoutpolicy_horizontal = expanding
+				size = { 24 24 }
+			}
+
+			gui_editor_button = {
+				onclick = "[GuiEditorProperties.GuiEditor.SelectPrevious]"
+				enabled = "[GuiEditorProperties.GuiEditor.SelectionHistory.HasPrevious]"
+				size = { 24 24 }
+
+				icon = {
+					texture = "gfx/editor_gui/editor_arrow_left.dds"
+					framesize = { 16 16 }
+					parentanchor = vcenter|hcenter
+				}
+
+				raw_tooltip = "Navigate back"
+			}
+
+			gui_editor_button = {
+				onclick = "[GuiEditorProperties.GuiEditor.SelectNext]"
+				enabled = "[GuiEditorProperties.GuiEditor.SelectionHistory.HasNext]"
+				size = { 24 24 }
+
+				icon = {
+					texture = "gfx/editor_gui/editor_arrow_right.dds"
+					framesize = { 16 16 }
+					parentanchor = vcenter|hcenter
+				}
+
+				raw_tooltip = "Navigate forward"
+			}
+
+			gui_editor_button = {
+				size = { 24 24 }
+				
+				icon = {
+					texture = "gfx/editor_gui/editor_icon_collapse.dds"
+					parentanchor = vcenter|hcenter
+				}
+
+				raw_tooltip = "Collapse/Expand all categories"
+				onclick = "[GuiEditorProperties.CollapseCategories]"
+			}
+
+			gui_editor_button = {
+				size = { 24 24 }
+				
+				icon = {
+					texture = "gfx/tools/material/settings.png"
+					parentanchor = vcenter|hcenter
+				}
+
+				raw_tooltip = "Configure"
+				onclick = "[GuiEditorProperties.ShowPropertiesSettingsMenu]"
+			}
+		}
+	}
+
+	editor_toolbar = {
+		blockoverride "left"
+		{
+			editor_toolbar_button = {
+				raw_text = "Add..."
+				onclick = "[GuiEditorProperties.Add]"
+				size = { 48 24 }
+
+				editor_contextmenu = {
+					name = "add_property_context_menu"
+					parentanchor = top|right
+				}
+			}
+		}
+
+		blockoverride "right"
+		{
+			editor_checkbutton = {
+				blockoverride "checkbutton"
+				{
+					name = "show_all_properties"
+					shortcut = "editor_show_all_properties"
+					checked = "[GuiEditorProperties.IsShowAll]"
+					onclick = "[GuiEditorProperties.SetShowAll(Not(GuiEditorProperties.IsShowAll))]"
+				}
+				
+				blockoverride "label"
+				{
+					raw_text = "Show all"
+				}
+			}
+		}
+	}
+
+	editor_scrollarea = {
+		blockoverride "Properties"
+		{
+			scrollbarpolicy_vertical = always_on
+		}
+
+		blockoverride "content"
+		{
+			vbox = {
+				alwaystransparent = no
+
+				tools_properties_dialog = {
+					name = "propertylist_categories"
+					margin_right = 18
+					margin_top = 4
+				}
+
+				widget = {
+					layoutpolicy_vertical = expanding
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,284 @@
+types Social
+{
+	type message_entry = flowcontainer {
+		maximumsize = { 380 -1 }
+		minimumsize = { 380 -1 }
+		direction = vertical
+
+		social_textbox = {
+			text = "SOCIAL_MESSAGE"
+			multiline = yes
+			autoresize = yes
+			maximumsize = { 380 -1 }
+			block "chat_message"
+			{}
+		}
+
+		social_vertical_spacer = {}
+	}
+	
+	type chat_tab = widget {
+		size = { 200 32 }
+		block "chat_tab"
+		{}
+
+		hbox = {
+
+			block "background_chat_tab"
+			{
+				background = {
+					margin = { 2 2 }
+					margin_bottom = 6
+					margin_right = 6
+					texture = "gfx/editor_gui/editor_dropdown_list.dds"
+					spriteType = CorneredStretched
+					spriteborder = { 6 6 }
+					spriteborder_right = 8
+					spriteborder_bottom = 8
+					shaderfile = "gfx/FX/pdxgui_default.shader"
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = expanding
+				}
+			}
+			
+			social_button = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+				text = "[ChatTab.GetChatTitle]"
+				onclick = "[ChatTab.Activate]"
+				visible = "[Not(ChatTab.IsActive)]"
+				minimumsize = { -1 -1 }
+				size = { 0 0 }
+				block "chat_tab_button"
+				{}
+				
+				social_textbox = {
+					datacontext = "[ChatTab.GetChat]"
+					parentanchor = top|right
+					raw_text = "([Chat.GetUnreadMessageCount])"
+					minimumsize = { 10 -1 }
+					size = { 0 0 }
+					autoresize = yes
+					align = center
+					visible = "[Chat.HasUnreadMessages]"
+					block "chat_tab_unread_messages"
+					{}
+				}
+			}
+			
+			social_textbox = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+				text = "[ChatTab.GetChatTitle]"
+				visible = "[ChatTab.IsActive]"
+				align = center
+				minimumsize = { -1 -1 }
+				size = { 0 0 }
+				block "chat_tab_title"
+				{}
+			}
+
+			button = {
+				onclick = "[ChatTab.Close]"
+				size = { 16 16 }
+				texture = "gfx/social/remove.dds"
+				block "chat_tab_button_remove"
+				{}
+			}
+
+			social_horizontal_spacer = {}
+		}
+	}
+
+	type social_chat_window = social_window {
+		name = "chat_window"
+		parentanchor = vcenter|hcenter
+		size = { 400 400 }
+		visible = "[ChatWindow.ShouldBeShown]"
+
+		blockoverride "title"
+		{
+			text = "CHAT"
+		}
+		blockoverride "close_button"
+		{
+			onclick = "[ChatWindow.Hide]"
+		}
+		blockoverride "hbox_properties"
+		{
+			layoutpolicy_horizontal = Preferred
+			layoutpolicy_vertical = Preferred
+		}
+		block "chat_window"
+		{}
+		blockoverride "content_layout"
+		{
+			vbox = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+
+				vbox = {
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = fixed
+
+					scrollarea = {
+						# autoresizescrollarea = yes
+						alwaystransparent = yes
+						layoutpolicy_horizontal = expanding
+						layoutpolicy_vertical = fixed
+						focuspolicy = all
+						minimumsize = { 400 50 }
+						scrollbaralign_horizontal = top
+						scrollbarpolicy_vertical = always_off
+						autoresizeviewport = yes
+						block "scrollarea_chat_tabs"
+						{}
+						
+						viewportwidget = {
+							widget = {
+								scissor = no
+							}
+						}
+						
+						scrollwidget = {
+							dynamicgridbox = {
+								flipdirection = yes
+								alwaystransparent = no
+								parentanchor = bottom|left
+								datamodel = "[ChatWindow.AccessChatTabs]"
+								maxverticalslots = 1
+								block "gridbox_chat_tabs"
+								{}
+								item = {
+									chat_tab = {}
+								}
+							}
+						}
+						
+						scrollbar_vertical = {
+							using = SocialVerticalScrollbar
+						}
+						
+						scrollbar_horizontal = {
+							using = SocialHorizontalScrollbar
+						}
+					}
+				}
+
+				vbox = {
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = expanding
+					name = "jomini_chat_content" # Used in code
+
+					hbox = {
+						visible = "[Not(Chat.IsRoomChat)]"
+						datacontext = "[Chat.GetReceiver]"
+
+						layoutpolicy_horizontal = expanding
+						layoutpolicy_vertical = fixed
+
+						icon = {
+							texture = "gfx/interface/paradox_logo.dds"
+							size = { 48 48 }
+							block "friend_profile_icon"
+							{}
+						}
+
+						social_horizontal_spacer = {}
+
+						vbox = {
+							layoutpolicy_horizontal = expanding
+							layoutpolicy_vertical = expanding
+
+							social_textbox = {
+								layoutpolicy_horizontal = expanding
+								text = "[Friend.GetName]"
+								block "friend_name"
+								{}
+							}
+
+							social_textbox = {
+								layoutpolicy_horizontal = expanding
+								text = "[Friend.GetAvailabilityString]"
+								block "friend_availability"
+								{}
+							}
+						}
+					}
+
+					social_vertical_spacer = {}
+
+					scrollarea = {
+						name = "jomini_messages_scroll_area" # Used in code
+						alwaystransparent = yes
+						layoutpolicy_horizontal = expanding
+						layoutpolicy_vertical = expanding
+						focuspolicy = all
+
+						block "background_chat_messages"
+						{
+							background = {
+								margin = { 2 2 }
+								margin_bottom = 6
+								margin_right = 6
+								texture = "gfx/editor_gui/editor_dropdown_list.dds"
+								spriteType = CorneredStretched
+								spriteborder = { 6 6 }
+								spriteborder_right = 8
+								spriteborder_bottom = 8
+								shaderfile = "gfx/FX/pdxgui_default.shader"
+							}
+						}
+						
+						scrollwidget = {
+							dynamicgridbox = {
+								alwaystransparent = no
+								datamodel = "[Chat.AccessChatMessages]"
+								block "chat_messages"
+								{}
+								item = {
+									message_entry = {
+									}
+								}
+							}
+						}
+						
+						scrollbar_vertical = {
+							using = SocialVerticalScrollbar
+						}
+						
+						scrollbar_horizontal = {
+							using = SocialHorizontalScrollbar
+						}
+					}
+
+					social_vertical_spacer = {}
+
+					hbox = {
+						layoutpolicy_horizontal = expanding
+
+						social_editbox = {
+							name = "chat_editbox"
+							layoutpolicy_horizontal = expanding
+							onreturnpressed = "[ChatWindow.SendMessage]";
+							maxcharacters = 65536
+							block "editbox_chat_message"
+							{}
+						}
+
+						social_horizontal_spacer = {}
+
+						button = {
+							onclick = "[ChatWindow.SendMessage]"
+							enabled = "[ChatWindow.CanSendMessage]"
+							texture = "gfx/social/send.dds"
+							size = { 24 24 }
+							block "button_send_message"
+							{}
+						}
+					}
+				}
+			}
+		}
+	}
+}

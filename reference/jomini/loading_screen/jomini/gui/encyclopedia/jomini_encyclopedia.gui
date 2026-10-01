@@ -1,0 +1,205 @@
+window = {
+	name = "jomini_encyclopedia"
+	using = editor_window
+	size = { 100% 100% }
+	resizable = yes
+	layer = top
+
+	using = dockable_background
+
+	editor_button = {
+		name = "close"
+		position = { -5 5 }
+		size = { 20 20 }
+		fontcolor = { 1 1 1 1 }
+		parentanchor = top|right
+		text = "x"
+		tooltip = "Close the Encyclopedia"
+		align = center|nobaseline
+		onclick = "[Encyclopedia.Hide]"
+	}
+
+	hbox = {
+		name = "main"
+		vbox = {
+			name = "contents"
+
+			textbox = {
+				name = "title"
+				size = { 200 32 }
+				text = "Contents"
+			}
+
+			scrollbox = {
+				name = "page_list"
+				size = { 390 650 }
+
+				blockoverride "scrollbox_content" {
+					fixedgridbox = {
+						parentanchor = top|hcenter
+						addcolumn = 200
+						addrow = 32
+
+						name = "entries"
+						datamodel = "[Encyclopedia.AccessPages]"
+
+						item = {
+							container = {
+								button = {
+									name = "select_page"
+									size = { 200 32 }
+									using = editor_button
+									using = editor_text
+									layoutpolicy_horizontal = expanding
+									text = [EncyclopediaPage.GetTitle]
+									tooltip = "Click to select [EncyclopediaPage.GetTitle] as the current page"
+									onclick = "[Encyclopedia.SetCurrentPage( EncyclopediaPage.AccessSelf )]"
+									clicksound = "event:/SFX/UI/Generic/sfx_ui_generic_pointer_press"
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		vbox = {
+			name = "current"
+			datacontext = "[Encyclopedia.AccessCurrentPage]"
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+
+			textbox = {
+				name = "page_title"
+				size = { 200 32 }
+				text = "[EncyclopediaPage.GetTitle]"
+			}
+
+			hbox = {
+				editbox = {
+					name = "input"
+					size = { 320 36 }
+					margin = { 5 0 }
+					alwaystransparent = no
+					focuspolicy = all
+					ontextedited = "[EncyclopediaPage.FilterFromText]"
+					tooltip = "Search"
+
+					icon = {
+						name = "temp_bg"
+						texture = "gfx/interface/prototype/white.png"
+						tintcolor = { 0 0 0 0.3 }
+						size = { 100% 100% }
+					}
+				}
+
+				widget = {
+					name = "spacer"
+					size = { 20 -1 }
+				}
+
+				button = {
+					name = "reset_input"
+					size = { 56 36 }
+					using = editor_button
+					using = editor_text
+					layoutpolicy_horizontal = expanding
+					text = "Reset"
+					tooltip = "Reset the search filter"
+					onclick = "[EncyclopediaPage.ResetFilter]"
+					clicksound = "event:/SFX/UI/Generic/sfx_ui_generic_pointer_press"
+				}
+			}
+
+			scrollbox = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+
+				blockoverride "scrollbox_content" {
+					dynamicgridbox = {
+						parentanchor = top|hcenter
+
+						name = "entries"
+						datacontext = "[Encyclopedia.GetCurrentPage]"
+						datamodel = "[EncyclopediaPage.GetEntries]"
+
+						item = {
+							flowcontainer = {
+								name = "entry"
+								datacontext = "[EncyclopediaEntryView.Get]"
+								parentanchor = top|hcenter
+
+								using = dockable_background
+
+								direction = vertical
+								container = {
+									parentanchor = top|hcenter
+									minimumsize = { 200% 50 }
+				
+									textbox = {
+										parentanchor = top|hcenter
+										name = "title"
+										autoresize = yes
+										align = center
+										text = "[EncyclopediaEntry.GetTitle]"
+									}
+									icon = {
+										name = "image"
+										parentanchor = top|right
+										texture = "[EncyclopediaEntry.GetImage]"
+		   			  					size = { 52 52 }
+		   			  					framesize = "[EncyclopediaEntry.GetFrameSize]"
+		   			  					frame = "[EncyclopediaEntry.GetFrame]"
+									}
+								}
+								textbox = {
+									name = "body"
+									autoresize = yes
+									maximumsize = { 700 700 }
+									multiline = yes
+									align = left
+									text = "[EncyclopediaEntry.GetBody]"
+								}
+								widget = {
+									name = "spacer"
+									size = { 1 50 }
+								}
+							}
+						}
+					}
+				}
+			}
+
+			hbox = {
+				name = "buttons"
+				layoutpolicy_horizontal = expanding
+
+				button = {
+					using = editor_button
+					using = editor_text
+					layoutpolicy_horizontal = expanding
+					text = "Previous Page"
+					enabled = "[Not( Encyclopedia.IsStartPage )]"
+					onclick = "[Encyclopedia.AdvancePage( '(int32)-1' )]"
+					clicksound = "event:/SFX/UI/Generic/sfx_ui_generic_pointer_press"
+				}
+
+				widget = {
+					name = "expander"
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = expanding
+				}
+
+				button = {
+					using = editor_button
+					using = editor_text
+					layoutpolicy_horizontal = expanding
+					text = "Next Page"
+					enabled = "[Not( Encyclopedia.IsLastPage )]"
+					onclick = "[Encyclopedia.AdvancePage( '(int32)1' )]"
+					clicksound = "event:/SFX/UI/Generic/sfx_ui_generic_pointer_press"
+				}
+			}
+		}
+	}
+}

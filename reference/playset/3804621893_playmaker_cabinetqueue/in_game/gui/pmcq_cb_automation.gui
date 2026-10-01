@@ -386,6 +386,26 @@ dynamicgridbox = { datamodel = "[DataModelRepeatedItem(Select_int32(GetVariableS
   }
  } }
 }
+widget = { name = "pmcqcb_recover_saved_dispatcher" size = { 1 1 } alwaystransparent = yes
+ dynamicgridbox = { datamodel = "[DataModelRepeatedItem(Select_int32(And(GetPlayer.MakeScope.GetVariable('pmcqcb_parallel_version').IsSet, Not(GetPlayer.MakeScope.GetVariable('pmcqcb_recovery_v2').IsSet)), '(int32)1', '(int32)0'))]"
+  item = { widget = { size = { 1 1 }
+   state = { name = pmcqcb_recover_saved trigger_on_create = yes
+    on_start = "[GetVariableSystem.Clear('pmcqcb_native')]"
+    on_start = "[GetVariableSystem.Clear('pmcqcb_close_completed')]"
+    on_start = "[GetVariableSystem.Clear('pmcqcb_picker_kind')]"
+    on_start = "[GetScriptedGui('pmcqcb_recover_dispatcher').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+   }
+  } }
+ }
+}
+widget = { name = "pmcqcb_clear_orphan_ui_lock" size = { 1 1 } alwaystransparent = yes
+ visible_at_creation = no
+ visible = "[And(Not(GetPlayer.MakeScope.GetVariable('pmcqcb_running').IsSet), GetVariableSystem.Exists('pmcqcb_native'))]"
+ state = { name = _show alpha = 0.99 duration = 1
+  on_finish = "[GetVariableSystem.Clear('pmcqcb_native')]"
+  on_finish = "[GetVariableSystem.Clear('pmcqcb_picker_kind')]"
+ }
+}
 widget = { name = "pmcqcb_job_scheduler" size = { 1 1 } alwaystransparent = yes
  dynamicgridbox = { datamodel = "[GetPlayer.MakeScope.GetList('pmcqcb_jobs')]"
   item = { widget = { size = { 1 1 } datacontext = "[Scope.GetCountry]"
@@ -405,7 +425,7 @@ widget = { size = { 1 1 } datacontext = "[Country.GetQuickDiplomaticActions]"
 widget = { size = { 1 1 } datacontext = "[GetPlayer.MakeScope.GetVariableFromVariableMap('pmcqcb_spy_targets', Country.MakeScope).GetCountry.GetQuickDiplomaticActions]"
 dynamicgridbox = { datamodel = "[DataModelRepeatedItem(Select_int32(QuickDiplomaticActions.HasSpecificAction('building_spy_network'), '(int32)1', '(int32)0'))]"
  item = { widget = { size = { 1 1 } datacontext = "[QuickDiplomaticActions.GetSpecificAction('building_spy_network')]"
-dynamicgridbox = { datamodel = "[DataModelRepeatedItem(Select_int32(And(EqualTo_string(DiplomaticActionItem.GetTitle, Localize('BUILD_SPYNETWORKTITLE')), And(DiplomaticActionItem.IsEnabled, And3(Not(IsShowingDialog), And(Not(GetVariableSystem.Exists('pmcqcb_native')), Not(GetVariableSystem.Exists('pmcqcb_close_completed'))), GetScriptedGui('pmcqcb_elect_1').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('target', Country.MakeScope).End)))), '(int32)1', '(int32)0'))]"
+dynamicgridbox = { datamodel = "[DataModelRepeatedItem(Select_int32(And(EqualTo_string(DiplomaticActionItem.GetTitle, Localize('BUILD_SPYNETWORKTITLE')), And(DiplomaticActionItem.IsEnabled, And3(Not(IsShowingDialog), And(Not(GetVariableSystem.Exists('pmcqcb_native')), And(Not(GetVariableSystem.Exists('pmcqcb_close_completed')), GetPlayer.MakeScope.GetVariable('pmcqcb_recovery_v2').IsSet)), GetScriptedGui('pmcqcb_elect_1').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('target', Country.MakeScope).End)))), '(int32)1', '(int32)0'))]"
  item = { widget = { size = { 1 1 } state = { name = pmcqcb_elect_1 trigger_on_create = yes alpha = 0.99 duration = 0.1
   on_start = "[GetScriptedGui('pmcqcb_elect_1').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('target', Country.MakeScope).End)]"
  } } }
@@ -416,7 +436,7 @@ dynamicgridbox = { datamodel = "[DataModelRepeatedItem(Select_int32(And(EqualTo_
 
 dynamicgridbox = { datamodel = "[DataModelRepeatedItem(Select_int32(QuickDiplomaticActions.HasSpecificAction('create_casus_belli'), '(int32)1', '(int32)0'))]"
  item = { widget = { size = { 1 1 } datacontext = "[QuickDiplomaticActions.GetSpecificAction('create_casus_belli')]"
-dynamicgridbox = { datamodel = "[DataModelRepeatedItem(Select_int32(And(DiplomaticActionItem.IsEnabled, And3(Not(IsShowingDialog), And(Not(GetVariableSystem.Exists('pmcqcb_native')), Not(GetVariableSystem.Exists('pmcqcb_close_completed'))), GetScriptedGui('pmcqcb_elect_2').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('target', Country.MakeScope).End))), '(int32)1', '(int32)0'))]"
+dynamicgridbox = { datamodel = "[DataModelRepeatedItem(Select_int32(And(DiplomaticActionItem.IsEnabled, And3(Not(IsShowingDialog), And(Not(GetVariableSystem.Exists('pmcqcb_native')), And(Not(GetVariableSystem.Exists('pmcqcb_close_completed')), GetPlayer.MakeScope.GetVariable('pmcqcb_recovery_v2').IsSet)), GetScriptedGui('pmcqcb_elect_2').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('target', Country.MakeScope).End))), '(int32)1', '(int32)0'))]"
  item = { widget = { size = { 1 1 } state = { name = pmcqcb_elect_2 trigger_on_create = yes alpha = 0.99 duration = 0.1
   on_start = "[GetScriptedGui('pmcqcb_elect_2').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('target', Country.MakeScope).End)]"
  } } }
@@ -426,7 +446,7 @@ dynamicgridbox = { datamodel = "[DataModelRepeatedItem(Select_int32(And(Diplomat
 widget = { size = { 1 1 } datacontext = "[GetPlayer.MakeScope.GetVariableFromVariableMap('pmcqcb_spy_targets', Country.MakeScope).GetCountry.GetQuickDiplomaticActions]"
 dynamicgridbox = { datamodel = "[DataModelRepeatedItem(Select_int32(QuickDiplomaticActions.HasSpecificAction('building_spy_network'), '(int32)1', '(int32)0'))]"
  item = { widget = { size = { 1 1 } datacontext = "[QuickDiplomaticActions.GetSpecificAction('building_spy_network')]"
-dynamicgridbox = { datamodel = "[DataModelRepeatedItem(Select_int32(And3(Not(IsShowingDialog), And(Not(GetVariableSystem.Exists('pmcqcb_native')), Not(GetVariableSystem.Exists('pmcqcb_close_completed'))), GetScriptedGui('pmcqcb_elect_4').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('target', Country.MakeScope).End)), '(int32)1', '(int32)0'))]"
+dynamicgridbox = { datamodel = "[DataModelRepeatedItem(Select_int32(And3(Not(IsShowingDialog), And(Not(GetVariableSystem.Exists('pmcqcb_native')), And(Not(GetVariableSystem.Exists('pmcqcb_close_completed')), GetPlayer.MakeScope.GetVariable('pmcqcb_recovery_v2').IsSet)), GetScriptedGui('pmcqcb_elect_4').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('target', Country.MakeScope).End)), '(int32)1', '(int32)0'))]"
  item = { widget = { size = { 1 1 } state = { name = pmcqcb_elect_4 trigger_on_create = yes alpha = 0.99 duration = 0.1
   on_start = "[GetScriptedGui('pmcqcb_elect_4').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('target', Country.MakeScope).End)]"
  } } }

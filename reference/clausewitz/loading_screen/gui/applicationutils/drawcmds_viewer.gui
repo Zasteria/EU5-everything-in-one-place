@@ -1,0 +1,264 @@
+types Types
+{
+	type drawcmds_viewer_editbox = editbox{
+		layoutpolicy_horizontal = growing
+		layoutpolicy_vertical = fixed
+		font = "tools_font"
+		fontcolor = { 1 1 1 1 }
+		fontsize = 11
+		align = left|vcenter|nobaseline
+		scissor = yes
+		margin = { 2 0 }		
+		alwaystransparent = no
+		
+		background = {
+			texture = "gfx/editor_gui/editor_field.dds"
+			spriteType = CorneredStretched
+			spriteborder = { 4 4 }
+			shaderfile = "gfx/FX/pdxgui_default.shader"		
+			
+		}
+	}
+	type drawcmds_viewer_textbox = textbox {		
+		layoutpolicy_horizontal = growing
+		layoutpolicy_vertical = fixed
+		font = "tools_font"
+		fontcolor = { 1 1 1 1 }
+		fontsize = 11
+		align = left|vcenter|nobaseline
+		scissor = yes
+		margin = { 2 0 }
+		
+		background = {
+			texture = "gfx/editor_gui/editor_field.dds"
+			spriteType = CorneredStretched
+			spriteborder = { 4 4 }
+			shaderfile = "gfx/FX/pdxgui_default.shader"		
+			
+		}
+	}
+	
+	type drawcmds_viewer_buttton = editor_button {		
+		font = "tools_font"
+		fontcolor = { 1 1 1 1 }
+		fontsize = 11
+		align = center|nobaseline
+		margin = { 2 0 }
+	}
+	
+	type drawcmds_label = textbox{
+		layoutpolicy_horizontal = growing
+		layoutpolicy_vertical = fixed
+		font = "tools_font"
+		fontcolor = { 1 1 1 1 }
+		fontsize = 11
+		align = left|vcenter|nobaseline
+		scissor = yes
+		margin = { 2 0 }
+	}
+
+}
+
+widget = {
+	name = "drawcmds_viewer"
+	size = { 640 480 }
+
+	layoutpolicy_horizontal = Expanding
+	layoutpolicy_vertical = Expanding
+	
+	vbox = {
+		
+		hbox = {
+			
+			layoutpolicy_horizontal = preferred
+			layoutpolicy_vertical = preferred							
+		
+			
+			widget = { size = { 10 0 } }			
+			
+			drawcmds_viewer_buttton = {
+				size = { 40 20 }
+				raw_text = "Capture"
+				onclick = "[DrawCmdsViewer.CaptureFrame]"
+			}		
+			
+			drawcmds_viewer_buttton = {
+				size = { 40 20 }
+				raw_text = "Clear"
+				onclick = "[DrawCmdsViewer.ClearCapture]"
+			}	
+			
+			hbox = {
+				drawcmds_label = {
+					raw_text = "Captured Frame: "						
+					autoresize = yes
+				}
+				drawcmds_viewer_textbox = {
+					text = "[DrawCmdsViewer.GetCapturedFrameNumber]"						
+					minimumsize = {45 20}				
+				}
+			}				
+			hbox = {
+				drawcmds_label = {
+					raw_text = "Draw Count: "
+					autoresize = yes
+				}
+				drawcmds_viewer_editbox = {
+					text = "[DrawCmdsViewer.GetCapturedDrawCount]"							
+					ontextedited = "[DrawCmdsViewer.SetDrawCount]"
+					minimumsize = {25 20}
+				}
+				drawcmds_viewer_buttton = {
+					size = { 25 25 }
+					raw_text = "+"
+					onclick = "[DrawCmdsViewer.IncrementCapturedDrawCount]"					
+				}		
+				drawcmds_viewer_buttton = {
+					size = { 25 25 }
+					raw_text = "-"
+					onclick = "[DrawCmdsViewer.DecrementCapturedDrawCount]"					
+				}		
+			}
+			hbox = {
+				drawcmds_label = {
+					raw_text = "Draw Offset: "						
+					autoresize = yes
+				}
+				drawcmds_viewer_editbox = {
+					text = "[DrawCmdsViewer.GetCapturedDrawNumberOffset]"						
+					ontextedited = "[DrawCmdsViewer.SetDrawOffset]"
+					minimumsize = {25 20}				
+				}
+				drawcmds_viewer_buttton = {
+					size = { 25 25 }
+					raw_text = "+"
+					onclick = "[DrawCmdsViewer.IncrementCapturedDrawNumberOffset]"					
+				}		
+				drawcmds_viewer_buttton = {
+					size = { 25 25 }
+					raw_text = "-"
+					onclick = "[DrawCmdsViewer.DecrementCapturedDrawNumberOffset]"					
+				}	
+			}
+		}
+		
+		hbox = {
+			layoutpolicy_horizontal = preferred
+			spacing = 3
+			
+			texture_list_button = 
+			{				
+				size = {60 20}
+				raw_text = "Draw Order"				
+				layoutpolicy_horizontal = fixed
+			}
+			
+			texture_list_button = 
+			{
+				size = {280 20}
+				raw_text = "Zone Name"				
+				layoutpolicy_horizontal = fixed
+			}
+			
+			texture_list_button = 
+			{
+				size = {80 20}
+				raw_text = "Attachment"				
+				layoutpolicy_horizontal = fixed
+			}
+			
+			texture_list_button = 
+			{
+				size = {120 20}
+				raw_text = "Format"				
+				layoutpolicy_horizontal = fixed
+			}
+			
+			texture_list_button = 
+			{				
+				raw_text = "Resolution"
+				layoutpolicy_horizontal = expanding
+			}			
+			
+		}
+		
+		hbox = {
+		
+			layoutpolicy_horizontal = preferred
+			layoutpolicy_vertical = expanding
+	
+			
+
+			scrollarea = {
+				layoutpolicy_horizontal = preferred
+				layoutpolicy_vertical = preferred
+				scrollbarpolicy_vertical = as_needed
+				scrollbarpolicy_horizontal = as_needed
+				scrollbaralign_vertical = right
+				scrollbaralign_horizontal = bottom
+				
+			
+				scrollwidget = {
+					vbox = {
+						fixedgridbox = {						
+							name = "list"
+							layoutpolicy_horizontal = preferred
+							layoutpolicy_vertical = growing
+							alwaystransparent = no
+							addcolumn = 100%
+							addrow =  20
+							setitemsizefromcell = yes
+							datamodel = "[DrawCmdsViewer.GetDrawCommandData]"
+							
+							item = {
+								hbox = {
+									spacing = 3
+									raw_tooltip = "Click to view texture"
+									
+										
+									drawcmds_viewer_textbox = {											
+										text = "[DrawCmdsList.GetDrawNumber]"										
+										size = {60 20}																			
+										layoutpolicy_horizontal = fixed
+									}	
+									
+									drawcmds_viewer_textbox = {
+										text = "[DrawCmdsList.GetZoneName]"
+										size = {280 20}																			
+										layoutpolicy_horizontal = fixed
+									}	
+									
+									drawcmds_viewer_textbox = {
+										text = "[DrawCmdsList.GetAttachmentInfo]"
+										size = {80 20}																			
+										layoutpolicy_horizontal = fixed
+									}	
+									
+									drawcmds_viewer_textbox = {
+										text = "[DrawCmdsList.GetFormat]"
+										size = {120 20}																			
+										layoutpolicy_horizontal = fixed
+									}	
+									
+									drawcmds_viewer_textbox = {
+										text = "[DrawCmdsList.GetResolution]"										
+										layoutpolicy_horizontal = expanding										
+									}								
+												
+								}
+							}
+						}
+					}
+				}
+			
+				scrollbar_vertical = {
+					using = editor_vertical_scrollbar
+				}
+			
+				scrollbar_horizontal = {
+					using = editor_horizontal_scrollbar
+				}
+			}
+		}
+	}
+}

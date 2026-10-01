@@ -1,0 +1,464 @@
+types ObjectBrowserTypes {
+
+	type object_browser_table_header = table_header
+	{
+		blockoverride "label"
+		{
+			name = "HeaderText"
+		}
+		disableframe = 0
+	}
+
+	type object_browser_table_text_cell = editor_textbox
+	{
+		scissor = yes
+		align = left|nobaseline
+		margin_left = 5
+		margin_right = 5
+	}
+
+	type object_browser_table_button_cell = editor_button
+	{
+		editor_textbox = {
+			name = "CellText"
+			size = { 100% 100% }
+			align = hcenter|vcenter|nobaseline
+		}
+		inherit_visual_state = no
+	}
+
+	type tree_table_unfold_icon = icon {
+		texture = "gfx/tools/expand_icon.dds"
+		size = { 10 10 }
+		shaderfile = "gfx/FX/pdxgui_default.shader"
+		framesize = { 16 16 }
+		frame = "[Select_int32(PdxGuiTreeTable.IsExpanded(PdxGuiTableRow.GetIndex), '(int32)2', '(int32)1')]"
+	}
+
+	type object_browser_table_tree_cell = widget {
+		scissor = yes
+		widget = {
+			size = { 100% 100% }
+			position = "[PdxGuiTreeTable.GetIndent(PdxGuiTableRow.GetIndex, '(float)15')]"
+			button = {
+				parentanchor = left|vcenter
+				visible = "[PdxGuiTreeTable.CanExpand(PdxGuiTableRow.GetIndex)]"
+				onclick = "[PdxGuiTreeTable.ToggleExpand(PdxGuiTableRow.GetIndex)]"
+				size = { 20 20 }
+				tree_table_unfold_icon = {
+					parentanchor = center|vcenter
+					size = { 8 8 }
+				}
+			}
+			
+			editor_textbox = {
+				name = "CellText"
+				position = { 20 0 }
+				size = { 100% 100% }
+				align = left|nobaseline
+			}
+		}
+	}
+
+	type object_browser_table_entry = button
+	{
+		gfxtype = framedbuttongfx
+		texture = "gfx/editor_gui/editor_tree_item.dds"
+		spriteType = Corneredtiled
+		spriteborder = { 1 1 }
+		framesize = { 4 4 }
+
+		upframe = "[Select_int32( ObjectBrowser.IsObjectSelected(PdxGuiTableRow.GetIndex), '(int32)3', '(int32)1' )]"
+		downframe = "[Select_int32( ObjectBrowser.IsObjectSelected(PdxGuiTableRow.GetIndex), '(int32)4', '(int32)2' )]"
+		overframe = "[Select_int32( ObjectBrowser.IsObjectSelected(PdxGuiTableRow.GetIndex), '(int32)4', '(int32)2' )]"
+		disableframe = 1
+		focuspolicy = click
+		onclick = "[ObjectBrowser.ToggleObjectSelected(PdxGuiTableRow.GetIndex)]"
+	}
+}
+
+template object_browser
+{
+	hbox = {
+		layoutpolicy_horizontal = preferred
+		Vbox = {
+			layoutstretchfactor_horizontal = 2
+			margin = { 5 }
+			layoutpolicy_horizontal = preferred
+			layoutpolicy_vertical = preferred
+			hbox = {
+				layoutpolicy_horizontal = preferred
+
+				editor_textbox = {
+					margin = { 5 0 }
+					raw_text = "View: "
+					align = left|nobaseline
+					autoresize = yes
+					layoutpolicy_horizontal = fixed
+				}
+
+				dropDown = {
+					using = EditorTextDropdown
+					layoutpolicy_horizontal = growing
+					size = { 0 24 }
+
+					blockoverride "dropdown_list_position"
+					{
+						position = { 2 100% }
+					}
+
+					blockoverride "dropdown_item_size"
+					{
+						size = { 100% 20 }
+					}
+
+					blockoverride "dropdown_item_text"
+					{
+						text = "[ObjectBrowserView.Name]"
+						fontsize = 12
+					}
+					blockoverride "dropdown_gridbox_size"
+					{
+						addcolumn = 256
+						addrow = 18
+					}
+
+					datamodel = "[ObjectBrowser.GetViews]"
+					onselectionchanged = "[ObjectBrowser.SelectView]"
+					selectedindex = "[ObjectBrowser.GetSelectedView]"
+					focuspolicy = all
+				}
+			}
+
+			hbox = {
+				layoutpolicy_horizontal = growing
+
+				editor_textbox = {
+					margin = { 5 0 }
+					raw_text = "Provider: "
+					align = left|nobaseline
+					autoresize = yes
+					layoutpolicy_horizontal = fixed
+				}
+
+				dropDown = {
+					using = EditorTextDropdown
+					layoutpolicy_horizontal = growing
+					size = { 0 24 }
+
+					blockoverride "dropdown_list_position"
+					{
+						position = { 2 100% }
+					}
+
+					blockoverride "dropdown_item_size"
+					{
+						size = { 100% 20 }
+					}
+
+					blockoverride "dropdown_item_text"
+					{
+						text = "[ObjectProvider.Name]"
+						fontsize = 12
+					}
+					blockoverride "dropdown_gridbox_size"
+					{
+						addcolumn = 256
+						addrow = 18
+					}
+
+					datamodel = "[ObjectBrowser.GetProviders]"
+					onselectionchanged = "[ObjectBrowser.SelectProvider]"
+					selectedindex = "[ObjectBrowser.GetSelectedProvider]"
+					focuspolicy = all
+				}
+			}
+
+			vbox = {
+				layoutpolicy_horizontal = growing
+				layoutpolicy_vertical = preferred
+				visible = "[ObjectBrowser.HasConfig]"
+
+				vbox = {
+					name = "objectbrowser_config"
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = preferred
+					background = { using = EditorGreyOutBackground }
+					margin = { 5 3 }
+				}
+			}
+
+			#spacer
+			widget = {
+				layoutpolicy_vertical = expanding
+			}
+		}
+
+		editor_frame = {
+			layoutpolicy_horizontal = preferred
+			layoutpolicy_vertical = preferred
+			layoutstretchfactor_horizontal = 1
+			blockoverride "label" { 
+				raw_text = "Presets:" 
+			}
+			blockoverride "content" {
+				vbox = {
+					layoutpolicy_horizontal = preferred
+					layoutpolicy_vertical = preferred
+					hbox = {
+						layoutpolicy_horizontal = preferred
+						layoutpolicy_vertical = fixed
+						toolbox_button = {
+							layoutpolicy_horizontal = fixed
+							layoutpolicy_vertical = fixed
+							raw_tooltip = "Create new preset. It will save the current settings."
+							onclick = "[ObjectBrowser.CreateNewPreset]"
+							size = { 75 20 }
+							raw_text = "Create new"
+							using = editor_font
+						}
+						#spacer
+						widget = {
+							layoutpolicy_horizontal = expanding
+							layoutpolicy_vertical = expanding
+						}
+						toolbox_button = {
+							layoutpolicy_horizontal = fixed
+							layoutpolicy_vertical = fixed
+							size = { 20 20 }
+							icon = {
+								texture = "gfx/tools/save_icon.dds"
+								size = { 16 16 }
+								shaderfile = "gfx/FX/pdxgui_default.shader"
+								parentanchor = center|vcenter
+							}
+							raw_tooltip = "Save current changes to the selected preset."
+							onclick = "[ObjectBrowser.SaveCurrentChanges]"
+							using = editor_font
+						}
+						toolbox_button = {
+							layoutpolicy_horizontal = fixed
+							layoutpolicy_vertical = fixed
+							size = { 20 20 }
+							icon = {
+								texture = "gfx/tools/rename_icon.dds"
+								size = { 16 16 }
+								shaderfile = "gfx/FX/pdxgui_default.shader"
+								parentanchor = center|vcenter
+							}
+							raw_tooltip = "Rename selected preset."
+							onclick = "[ObjectBrowser.RenameSelectedPreset]"
+							using = editor_font
+						}
+						toolbox_button = {
+							layoutpolicy_horizontal = fixed
+							layoutpolicy_vertical = fixed
+							size = { 20 20 }
+							icon = {
+								texture = "gfx/tools/delete_icon.dds"
+								size = { 16 16 }
+								shaderfile = "gfx/FX/pdxgui_default.shader"
+								parentanchor = center|vcenter
+							}
+							raw_tooltip = "Remove selected preset."
+							onclick = "[ObjectBrowser.DeleteSelectedPreset]"
+							using = editor_font
+						}
+					}
+					scrollarea = {
+						name = "presets_scroll_area"
+						layoutpolicy_horizontal = preferred
+						layoutpolicy_vertical = preferred
+						scrollbarpolicy_horizontal = always_off
+						scrollbarpolicy_vertical = always_on
+						size = { 0 100 }
+						
+						scrollbar_vertical = {
+							using = editor_vertical_scrollbar
+						}
+						
+						scrollwidget = {
+							fixedgridbox = {
+								datamodel = "[ObjectBrowser.GetPresets]"
+								name = "presets_grid"
+								addcolumn = 100%
+								addrow = 24
+								item = {
+									tools_checkbutton = {
+										gfxtype = checkbuttongfx
+										shaderfile = "gfx/FX/pdxgui_pushbutton.shader"
+										texture = "gfx/editor_gui/editor_selectable_line.png"
+										tooltipwidget = {
+											widget = {} # No tooltip
+										}
+										spriteType = CorneredStretched
+										size = { 100% 24 }
+										align = left
+										checked = "[ObjectPreset.IsSelected]"
+										onclick = "[ObjectBrowser.SetSelectedPreset(ObjectPreset.AccessSelf)]"
+										editor_textbox = {
+											layoutpolicy_vertical = fixed
+											layoutpolicy_horizontal = growing
+											raw_text = "#color:{1,1,1,1} [ObjectPreset.PresetName]"
+											align = left|vcenter
+											size = { 100% 18 }
+											multiline = yes
+											margin = { 5 0 }
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	hbox = {
+		layoutpolicy_horizontal = growing
+		spacing = 5
+		editor_textbox = {
+			margin = { 5 0 }
+			raw_text = "Search key: "
+			align = left|nobaseline
+			autoresize = yes
+
+			layoutpolicy_horizontal = fixed
+		}
+		
+		editor_textinput = {
+			name = "objectbrowser_filter"
+			layoutpolicy_horizontal = growing
+			size = { 0 24 }
+
+			text = "[ObjectBrowser.GetFilterString]"
+			oneditingfinished = "[ObjectBrowser.SetFilterString]"
+		}
+	}
+
+	editor_textbox = {
+		visible = "[Not(ObjectBrowser.IsWaitingForProvider)]"
+		layoutpolicy_horizontal = growing
+		margin = { 5 0 }
+		raw_text = "[ObjectBrowser.GetNumObjectsFiltered] of [ObjectBrowser.GetNumObjectsTotal] results match search filter"
+		align = left
+		size = { 0 25 }
+	}
+
+	editor_textbox = {
+		visible = "[ObjectBrowser.IsWaitingForProvider]"
+		layoutpolicy_horizontal = growing
+		margin = { 5 0 }
+		raw_text = "Waiting for provider results..."
+		using = GruvboxDarkYellowFont
+		align = left
+		size = { 0 25 }
+	}
+
+	editor_textbox = {
+		layoutpolicy_horizontal = growing
+		margin = { 5 0 }
+		size = { 0 20 }
+		align = left|vcenter
+		raw_text = "Flatten output:"
+		raw_tooltip = "When checked, the output is flattened to a list."
+
+		checkbutton = {
+			parentanchor = right|vcenter
+			position = { 0 0 }
+			gfxtype = checkbuttongfx
+			shaderfile = "gfx/FX/pdxgui_pushbutton.shader"
+			texture = "gfx/editor_gui/editor_checkbox.dds"
+			framesize = { 16 16 }
+			size = { 16 16 }
+			checked = "[ObjectBrowser.IsOutputFlattened]"
+			onclick = "[ObjectBrowser.ToggleOutputFlattened]"
+		}
+	}
+
+	tools_table = {
+		name = "objectbrowser_table"
+		layoutpolicy_vertical = expanding
+		layoutpolicy_horizontal = growing
+
+		header_height = 24
+		row_height = 24
+		scissor = yes
+
+		# data model is set from code
+
+		scrollbar_vertical = { using = editor_vertical_scrollbar }
+		scrollbar_horizontal = { using = editor_horizontal_scrollbar }
+
+		scale_mode = fixedwidth
+
+		even_row_widget = {
+			object_browser_table_entry = {	}
+		}
+		odd_row_widget = {
+			object_browser_table_entry = {
+				background = {
+					using = EditorWhiteBackground
+					color = { 1 1 1 .025 }
+				}
+			}
+		}
+	}
+
+	hbox = {
+		layoutpolicy_horizontal = growing
+		size = { 0 20 }
+		spacing = 5
+
+		widget = {
+			layoutpolicy_horizontal = expanding
+		}
+
+		editor_button = {
+            layoutpolicy_horizontal = fixed
+            layoutpolicy_vertical = fixed
+            size = { 120 20 }
+            raw_text = "Save as Default"
+            onclick = "[ObjectBrowser.SaveDefaults]"
+            using = editor_font
+        }
+
+		editor_button = {
+			layoutpolicy_horizontal = fixed
+			layoutpolicy_vertical = fixed
+			size = { 120 20 }
+			raw_text = "Update Table"
+			onclick = "[ObjectBrowser.ForceUpdate]"
+			using = editor_font
+		}
+
+		editor_button = {
+			layoutpolicy_horizontal = fixed
+			layoutpolicy_vertical = fixed
+			size = { 120 20 }
+			raw_text = "Copy As CSV"
+			onclick = "[ObjectBrowser.CopyAsCSV]"
+			using = editor_font
+		}
+	}
+}
+
+# Object Browser Window
+vbox = {
+	name = "object_browser_dockable"
+	layoutpolicy_horizontal = preferred
+	layoutpolicy_vertical = expanding
+	size = { 300 600 }
+	minimumsize = { 0 0 }
+
+	vbox = {
+		name = "object_browser"
+		scissor = yes
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = expanding
+		spacing = 3
+
+		using = object_browser
+	}
+}

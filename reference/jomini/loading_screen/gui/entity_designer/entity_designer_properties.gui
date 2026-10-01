@@ -1,0 +1,248 @@
+types EntityDesigner
+{	
+	type entity_designer_tab_button = toolbox_checkbutton 
+	{
+		block "tooltip"
+		{
+		}
+		checked = "[EntityDesigner.IsTabSelected( EntityDesignerTab.GetTabId )]"
+		onclick = "[EntityDesigner.SelectTab( EntityDesignerTab.GetTabId )]"	# Select the correct "dynamic" tab
+		onclick = "[EntityDesignerProperties.ClearSelection]"		# Deselect any hard-coded tab
+		
+		toolbox_icon = {
+			block "icon_properties"
+			{
+			}
+		}
+	}
+	
+	type entity_designer_tab_button_spacer = hbox
+	{
+		layoutpolicy_horizontal = expanding
+	}
+
+    type entity_designer_properties = editor_frame
+	{
+		layoutpolicy_horizontal = shrinking
+		layoutpolicy_vertical = expanding
+		minimumsize = { 558 -1 } #to avoid adjusting when panels are different sizes
+
+		blockoverride "label" { raw_text = "Properties" }
+		blockoverride "content" {
+			margin = { 0 0 }
+			margin_bottom = 0
+
+			hbox = {
+				margin_left = 8
+				margin_top = 8
+				spacing = 8
+
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = shrinking
+
+				toolbox_checkbutton = {
+					raw_tooltip = "Open Mesh Settings"
+					checked = "[EntityDesignerProperties.IsMeshSelected]"
+					onclick = "[EntityDesignerProperties.SelectMeshWindow]"
+					onclick = "[EntityDesigner.OnHardcodedTabSelect]"
+					toolbox_icon = {
+						texture = "gfx/editor_gui/3D_cube.dds"
+					}
+				}
+
+				toolbox_checkbutton = {
+					raw_tooltip = "Open Environment Settings"
+					checked = "[EntityDesignerProperties.IsEnvSelected]"
+					onclick = "[EntityDesignerProperties.SelectEnvWindow]"
+					onclick = "[EntityDesigner.OnHardcodedTabSelect]"
+					toolbox_icon = {
+						texture = "gfx/editor_gui/light.dds"
+					}
+				}
+				
+				hbox = {
+					name = "dynamic_tab_buttons"
+					spacing = 8
+					layoutpolicy_horizontal = expanding
+
+					# Dynamic tab buttons will be spwaned as children to this hbox
+					# a single 'entity_designer_tab_button_spacer' will be spawned as the last child
+				}
+			}
+
+			editor_frame = {
+				visible = "[EntityDesignerProperties.IsEnvSelected]"
+				using = tools_spacing
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+				
+				blockoverride "label" { raw_text = "Environment" }
+
+				blockoverride "content" {
+					spacing = 8
+					hbox = {
+						margin = { 5 5 }
+						layoutpolicy_horizontal = expanding
+						hbox = {
+							name = "environments_list"
+						}
+
+						widget = {
+							layoutpolicy_horizontal = expanding
+						}			
+					}
+					vbox = {
+						layoutpolicy_horizontal = expanding
+						layoutpolicy_vertical = expanding
+						tools_properties_dialog = {
+							name = "generic_environment_properties" 
+						}
+
+						side_panel_section =
+						{
+							layoutpolicy_vertical = fixed		
+							blockoverride "side_panel_header_textbox_properties"
+							{
+								raw_text = "Light"
+							}		
+							blockoverride "side_panel_header_properties"
+							{
+								checked = "[EntityDesignerProperties.IsLightEnvPropertiesVisible]"
+								onclick = "[EntityDesignerProperties.ToggleIsLightEnvPropertiesVisible]"
+							}		
+							blockoverride "side_panel_header_icon_properties"
+							{
+								frame = "[Select_int32(EntityDesignerProperties.IsLightEnvPropertiesVisible, '(int32)2', '(int32)1')]"
+							}		
+							blockoverride "side_panel_section_properties"
+							{
+								visible = "[EntityDesignerProperties.IsLightEnvPropertiesVisible]"
+							}							
+							blockoverride "side_panel_section_content" {
+								tools_properties_dialog = {
+									using = EnvPropertyListProperties
+									name = "light_properties" 
+								}
+							}
+						}
+						side_panel_section =
+						{
+							layoutpolicy_vertical = fixed		
+							blockoverride "side_panel_header_textbox_properties"
+							{
+								raw_text = "Cubemap"
+							}		
+							blockoverride "side_panel_header_properties"
+							{
+								checked = "[EntityDesignerProperties.IsCubemapEvPropertiesVisible]"
+								onclick = "[EntityDesignerProperties.ToggleIsCubemapEvPropertiesVisible]"
+							}		
+							blockoverride "side_panel_header_icon_properties"
+							{
+								frame = "[Select_int32(EntityDesignerProperties.IsCubemapEvPropertiesVisible, '(int32)2', '(int32)1')]"
+							}		
+							blockoverride "side_panel_section_properties"
+							{
+								visible = "[EntityDesignerProperties.IsCubemapEvPropertiesVisible]"
+							}							
+							blockoverride "side_panel_section_content" {
+								tools_properties_dialog = {
+									using = EnvPropertyListProperties
+									name = "cubemap_properties" 
+								}
+							}
+						}
+						side_panel_section =
+						{
+							layoutpolicy_vertical = fixed		
+							blockoverride "side_panel_header_textbox_properties"
+							{
+								raw_text = "Fog"
+							}		
+							blockoverride "side_panel_header_properties"
+							{
+								checked = "[EntityDesignerProperties.IsFogEvPropertiesVisible]"
+								onclick = "[EntityDesignerProperties.ToggleIsFogEvPropertiesVisible]"
+							}		
+							blockoverride "side_panel_header_icon_properties"
+							{
+								frame = "[Select_int32(EntityDesignerProperties.IsFogEvPropertiesVisible, '(int32)2', '(int32)1')]"
+							}		
+							blockoverride "side_panel_section_properties"
+							{
+								visible = "[EntityDesignerProperties.IsFogEvPropertiesVisible]"
+							}							
+							blockoverride "side_panel_section_content" {
+								tools_properties_dialog = {
+									using = EnvPropertyListProperties
+									name = "fog_properties" 
+								}
+							}
+						}
+
+						side_panel_section =
+						{
+							layoutpolicy_vertical = fixed		
+							blockoverride "side_panel_header_textbox_properties"
+							{
+								raw_text = "Bloom"
+							}		
+							blockoverride "side_panel_header_properties"
+							{
+								checked = "[EntityDesignerProperties.IsBloomEvPropertiesVisible]"
+								onclick = "[EntityDesignerProperties.ToggleIsBloomEvPropertiesVisible]"
+							}		
+							blockoverride "side_panel_header_icon_properties"
+							{
+								frame = "[Select_int32(EntityDesignerProperties.IsBloomEvPropertiesVisible, '(int32)2', '(int32)1')]"
+							}		
+							blockoverride "side_panel_section_properties"
+							{
+								visible = "[EntityDesignerProperties.IsBloomEvPropertiesVisible]"
+							}							
+							blockoverride "side_panel_section_content" {
+								tools_properties_dialog = {
+									using = EnvPropertyListProperties
+									name = "bloom_properties" 
+								}
+							}
+						}
+						widget = {
+							#spacer
+							layoutpolicy_vertical = expanding
+							layoutpolicy_horizontal = expanding
+						}
+					}
+				}
+			}
+
+            editor_frame = {
+				visible = "[EntityDesignerProperties.IsMeshSelected]"
+				using = tools_spacing
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+				
+				blockoverride "label" { raw_text = "Mesh" }
+				blockoverride "content" {
+					spacing = 8
+                    editor_textbox = {
+                        margin = { 4 4 }
+                        autoresize = yes
+                        align = left|vcenter
+                        raw_text = "#BOLD Mesh Data is not yet implemented"
+                    }
+                }
+			}
+			
+			hbox = {
+				name = "dynamic_tab_anchor"
+				ignoreinvisible = yes
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+
+				# dynamic tab content widgets will be spawned as children to this hbox
+				# children are currently responsible for showing and hiding them selves when appropriate
+			}
+		}
+	}
+}

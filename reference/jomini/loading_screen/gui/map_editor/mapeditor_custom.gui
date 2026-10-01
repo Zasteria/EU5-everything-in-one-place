@@ -1,0 +1,67 @@
+# Palette of ui elements used for the map editor by projects that customizes the tool, in a consistent look.
+types "MapEditorCustomTypes" {
+
+	type custom_ui_toolbox_button = editor_toolbar_button {
+        visible = "[InjectedButton.IsVisible]"
+        enabled = "[InjectedButton.IsEnabled]"
+        layoutpolicy_horizontal = expanding
+        size = { 0 32 }
+
+		raw_tooltip = "[InjectedButton.GetTooltip]"
+
+        # Cheap workaround to reduce the complexity of scripts, that can dynamically treat this button either as a checkbutton or a regular button.
+        # Checked state with mouse over events, gives different look than normal button, so draw one on top.
+        tooloptions_checkbutton = {
+            size = { 100% 100% }
+            visible = "[InjectedButton.IsCheckbutton]"
+            checked = "[InjectedButton.IsChecked]"
+            #filter_mouse = none
+		    onclick = "[InjectedButton.OnClick]"
+        }
+
+		onclick = "[InjectedButton.OnClick]"
+       
+        # Custom overlay with icon and/or label.
+        flowcontainer = {
+            resizeparent = yes
+            spacing = "[Select_int32(InjectedButton.HasLabel, '(int32)2', '(int32)0')]"
+            margin_left = "[Select_int32(And( InjectedButton.HasLabel, Not(InjectedButton.HasIcon) ), '(int32)5', '(int32)0')]"
+            margin_right = "[Select_int32(InjectedButton.HasLabel, '(int32)6', '(int32)0')]"
+            widget = {
+                layoutpolicy_horizontal = expanding
+                size = "[Select_CVector2f( InjectedButton.HasIcon, '(CVector2f)32,32', '(CVector2f)0,32' )]"
+                toolbox_icon = {
+                    visible = "[InjectedButton.HasIcon]"
+                    texture = "[MapEditorGui.GetCustomGui.GetButtonIcon(InjectedButton.Self)]"
+                    size = { 28 28 }
+                }
+            }
+            editor_toolbar_textbox = {
+                text = "[InjectedButton.GetLabel]"
+                autoresize = yes
+                parentanchor = left|vcenter
+                widgetanchor = left|vcenter
+            }
+        }
+	}
+
+    type custom_ui_toolbox_buttons_hbox = hbox {
+        layoutpolicy_horizontal = preferred
+        block "datacontext" {}
+        spacing = 4
+        datamodel = "[InjectedButtonsRegistry.GetButtons]"
+        item = {
+            custom_ui_toolbox_button = {}
+        }
+    }
+
+    type custom_ui_toolbox_buttons_vbox = vbox {
+        layoutpolicy_vertical = preferred
+        block "datacontext" {}
+        spacing = 4
+        datamodel = "[InjectedButtonsRegistry.GetButtons]"
+        item = {
+            custom_ui_toolbox_button = {}
+        }
+    }
+}

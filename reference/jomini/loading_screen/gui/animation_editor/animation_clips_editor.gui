@@ -1,0 +1,395 @@
+@viewer_control_button_dimension = 24
+@viewer_control_button_icon_dimension = 16
+@viewer_control_large_button_dimension = 32
+
+types AnimationEditor
+{
+    type animation_editor_viewer_next_frame_button = gui_editor_button {
+        icon = {
+            parentanchor = vcenter|hcenter
+            texture = "gfx/editor_gui/step_forward.dds"
+            size = { @viewer_control_button_icon_dimension @viewer_control_button_icon_dimension }
+        }
+        size = { @viewer_control_button_dimension @viewer_control_button_dimension }
+        onclick = "[AnimationEditorViewer.StepForwardOneFrame(AnimationEditorViewer.GetSingleActiveClip)]"
+        enabled = "[AnimationEditorViewer.CanStepForwardOneFrame(AnimationEditorViewer.GetSingleActiveClip)]"
+        raw_tooltip = "Go to the next animation frame."
+        input_action = "animation_editor_next_frame"
+    }
+
+    type animation_editor_viewer_prev_frame_button = gui_editor_button {
+        icon = {
+            parentanchor = vcenter|hcenter
+            texture = "gfx/editor_gui/step_backwards.dds"
+            size = { @viewer_control_button_icon_dimension @viewer_control_button_icon_dimension }
+        }
+        size = { @viewer_control_button_dimension @viewer_control_button_dimension }
+        onclick = "[AnimationEditorViewer.StepBackwardsOneFrame(AnimationEditorViewer.GetSingleActiveClip)]"
+        enabled = "[AnimationEditorViewer.CanStepBackwardsOneFrame(AnimationEditorViewer.GetSingleActiveClip)]"
+        raw_tooltip = "Go to the previous animation frame."
+        input_action = "animation_editor_prev_frame"
+    }
+
+    type animation_editor_viewer = cameracontrolwidget_entity_view {
+
+        gfxtype = scene_gfx_type
+		shaderfile = "gfx/FX/pdxgui_default.shader"
+		effectname = "PdxGuiDefaultNoAlpha"
+        clear_color = { 0.2 0.2 0.2 1.0 }
+
+        # Set the focus policy so that each mouse click in the viewport will gain focus
+        # so that "player_controls" will work after user edited some properties in the textboxes.
+        focuspolicy = all
+
+        layoutpolicy_vertical = expanding
+		layoutpolicy_horizontal = expanding
+		minimumsize = { 740 500 }
+
+		background = {
+			gfxtype = icongfx
+			texture = "gfx/editor_gui/editor_transparent.dds"
+			shaderfile = "gfx/FX/pdxgui_default.shader"
+			spriteType = CorneredTiled
+			tintcolor = { 0.3 0.3 0.3 1 }
+		}
+
+		camera_fov_y_degrees = 60
+		camera_zoom_limits = { 0.1 2000 }
+		camera_near_far = { 0.1 2200 }
+		camera_look_at = { 0.0 0.0 0.0 }
+		camera_position = { -1.5 2.0 -2 }
+
+        vbox = {
+            layoutpolicy_horizontal = expanding
+            layoutpolicy_vertical = expanding
+
+            hbox = {
+                name = "viewport_controls"
+                layoutpolicy_horizontal = expanding
+                margin_right = 4
+                margin_top = 4
+
+                widget = { layoutpolicy_horizontal = expanding }
+                
+                animation_editor_viewer_fit_button = {
+                    size = { @viewer_control_large_button_dimension @viewer_control_large_button_dimension }
+                }
+            }
+
+            widget = {
+                layoutpolicy_horizontal = expanding
+                layoutpolicy_vertical = expanding
+                alwaystransparent = yes
+            }
+
+            hbox = {
+                name = "player_controls"
+                layoutpolicy_horizontal = expanding
+                margin_right = 4
+                margin_bottom = 4
+                spacing = 3
+
+                widget = { layoutpolicy_horizontal = expanding }
+
+                animation_editor_viewer_prev_frame_button = {}
+
+                animation_editor_viewer_play_button = {
+                    size = { @viewer_control_large_button_dimension @viewer_control_large_button_dimension }
+                }
+
+                animation_editor_viewer_next_frame_button = {}
+            }
+        }
+    }
+
+    # The widget type name is used in code.
+    type animation_clip_item_header = hbox {
+        layoutpolicy_horizontal = expanding
+        spacing = 2
+
+        icon = {
+            visible = "[Not(AnimationClip.IsValid)]"
+            size = { 18 18 }
+            texture = "gfx/tools/material/error_icon.png"
+        }
+
+        editor_textbox = {
+            raw_text = "[AnimationClip.Name]"
+            layoutpolicy_horizontal = expanding
+            elide = right
+            align = left|nobaseline
+            raw_tooltip = "[AnimationClip.Name]"
+            tooltipwidget = {
+                using = dockable_tooltip
+            }
+            fontsize = 20
+            fontweight = extrabold
+        }
+        
+        gui_editor_button = {
+            raw_text = "Rename..."
+            size = {70 20}
+            fontsize = 12
+            
+            raw_tooltip = "Rename this clip"
+            tooltipwidget = {
+                using = dockable_tooltip
+            }
+            
+            onclick = "[AnimationClipsEditor.RenameClip( AnimationClip.AccessSelf )]"
+        }
+
+        gui_editor_button = {
+            raw_text = "Remove"
+            size = {70 20}
+            fontsize = 12
+            
+            raw_tooltip = "Remove this clip"
+            tooltipwidget = {
+                using = dockable_tooltip
+            }
+            
+            onclick = "[AnimationClipsEditor.RemoveClip( AnimationClip.AccessSelf )]"
+        }
+    }
+
+    # The widget type name is used in code.
+    type clip_item = window {
+		shaderfile = "gfx/FX/pdxgui_default.shader"
+		texture = "gfx/editor_gui/node_editor/node_editor_frame_filled.dds"
+		spriteType = CorneredTiled
+		spriteborder = { 5 5 }
+		framesize = { 64 64 }
+		frame = 1
+		gfxtype = windowgfx
+        
+        alwaystransparent = no
+        layoutpolicy_horizontal = expanding
+		resizable = no
+		movable = no
+        filter_mouse = none
+
+        state = {
+            name = "selected"
+			frame = 2
+        }
+
+        state = {
+            name = "default"
+			frame = 1
+        }
+
+        editor_frame = {
+			resizeparent = yes
+            alwaystransparent = no
+            layoutpolicy_horizontal = expanding
+            layoutpolicy_vertical = expanding
+            margin_bottom = -2
+
+            blockoverride "label" { raw_text = "" }
+            
+            blockoverride "content"
+            {
+                vbox = {
+                    layoutpolicy_horizontal = expanding
+                    spacing = 2
+                    raw_tooltip = "[AnimationClip.Tooltip]"
+                    tooltipwidget = { using = dockable_tooltip }
+                    animation_clip_item_header = {}
+                    vbox = {
+                        name = "animation_clip_item_properties" # Datamodel is set through code.
+                        layoutpolicy_horizontal = expanding
+                        spacing = 2
+                    }
+                }
+            }
+        }
+    }
+}
+
+vbox = {
+	name = "animation_clips_editor"
+	layoutpolicy_horizontal = expanding
+	layoutpolicy_vertical = expanding
+
+	input_context = "animation_clips_editor"
+
+    hbox = {
+        layoutpolicy_horizontal = expanding
+        layoutpolicy_vertical = expanding
+        visible = "[AnimationClipsEditor.IsLinkedToAnimationEditor]"
+
+        vbox = {
+            layoutpolicy_horizontal = expanding
+            layoutpolicy_vertical = expanding
+            using = tools_spacing
+    
+            hbox = {
+                layoutpolicy_horizontal = expanding
+                spacing = 4
+    
+                editor_textbox = {
+                    raw_text = "Schematic/Mesh: "
+                    raw_tooltip = "The schematic or mesh used to view the selected state. It is not saved in the state machine."
+                    tooltipwidget = { using = dockable_tooltip }
+                    autoresize = yes
+                    align = left|nobaseline
+                }
+    
+                editor_toolbar_button = {
+                    size = { 192 24 }
+                    raw_text = "[AnimationEditorViewer.SelectedSchematic]"
+                    raw_tooltip = "[AnimationEditorViewer.SelectedSchematic]"
+                    onclick = "[AnimationEditorViewer.OpenSchematicList( PdxGuiWidget.AccessSelf )]"
+                    elide = middle
+                    align = left|nobaseline
+                }
+                
+                animation_editor_viewer_refresh_button = { size = { @viewer_control_button_dimension @viewer_control_button_dimension } }
+                
+                widget = {
+                    layoutpolicy_horizontal = expanding
+                }
+            }
+    
+            vbox = {
+                layoutpolicy_horizontal = expanding
+                layoutpolicy_vertical = expanding
+                margin_top = 10
+                
+                animation_editor_viewer = {
+                    name = "viewer_viewport"
+                    minimumsize = { 0 100% }
+                    blockoverride "time_control_play_button_enabled" {
+                        enabled = "[And(AnimationEditorViewer.HasActiveClips, AnimationClipsEditor.IsClipSelected)]"
+                    }
+                }
+
+                animation_editor_viewer_timeline = {
+                    visible = "[And(AnimationEditorViewer.HasActiveClips, AnimationClipsEditor.IsClipSelected)]"
+                }
+
+                editor_contextmenu = {
+                    name = "timeline_contextmenu"
+
+                    blockoverride "size_properties"
+                    {
+                        min_width = 210
+                    }
+                }
+            }
+        }
+
+        vbox = {
+            layoutpolicy_vertical = expanding
+            using = tools_spacing
+            min_width = 450
+            
+            vbox = {
+                layoutpolicy_horizontal = expanding
+
+                hbox = {
+                    layoutpolicy_horizontal = expanding
+
+                    history_toolbar = {
+                        datacontext = "[AnimationClipsEditor.AccessUndoer]"
+                    }
+            
+                    widget = {
+                        layoutpolicy_horizontal = expanding
+                    }
+                }
+
+                hbox = {
+                    layoutpolicy_horizontal = expanding
+                    margin_top = 10
+                    margin_bottom = 10
+
+                    gui_editor_button = {
+                        raw_text = "New Clip"
+                        raw_tooltip = "Create a new animation clip"
+                        tooltipwidget = {
+                            using = dockable_tooltip
+                        }
+                        size = { 90 30 }
+                        fontsize = 20
+                        onclick = "[AnimationClipsEditor.CreateClip]"
+                    }
+
+                    widget = {
+                        layoutpolicy_horizontal = expanding
+                    }
+                }
+
+                hbox = {
+                    layoutpolicy_horizontal = expanding
+                    margin_bottom = 10
+                    spacing = 4
+    
+                    editor_textbox = {
+                        raw_text = "Skeleton (editor-only): "
+                        raw_tooltip = "The skeleton used to populate the animation name search list"
+                        tooltipwidget = { using = dockable_tooltip }
+                        autoresize = yes
+                        align = left|nobaseline
+                    }
+
+                    editor_toolbar_button = {
+                        size = { 192 24 }
+                        raw_text = "[AnimationClipsEditor.SelectedSkeleton]"
+                        raw_tooltip = "[AnimationClipsEditor.SelectedSkeleton]"
+                        onclick = "[AnimationClipsEditor.OpenSkeletonList( PdxGuiWidget.AccessSelf )]"
+                        elide = middle
+                        align = left|nobaseline
+                    }
+
+                    widget = {
+                        layoutpolicy_horizontal = expanding
+                    }
+                }
+            
+            }
+
+            editor_scrollarea = {
+                name = "clips_scrollarea"
+                alwaystransparent = no
+                scrollbarpolicy_vertical = always_on
+                layoutpolicy_horizontal = expanding
+                layoutpolicy_vertical = expanding
+
+                blockoverride "Properties"
+                {
+                    viewportwidget = {
+                        widget = {
+                            scissor = yes
+                        }
+                    }
+                }
+
+                blockoverride "content"
+                {
+                    vbox = {
+                        layoutpolicy_vertical= expanding
+                        vbox = {
+                            name = "clips_container" # Datamodel is set through code.
+                            layoutpolicy_horizontal = expanding
+                        }
+                        
+                        widget = {
+                            layoutpolicy_vertical = expanding
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    editor_textbox = {
+        visible = "[Not(AnimationClipsEditor.IsLinkedToAnimationEditor)]"
+        raw_text = "#BOLD This dockable must be opened through the Animation Editor.#!"
+        autoresize = yes
+        align = hcenter|nobaseline
+        alpha = 0.7
+        fontsize = 14
+    }
+}

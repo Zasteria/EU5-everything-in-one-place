@@ -1,0 +1,137 @@
+node_window_type = {
+	name = "emitter_node_window"
+
+	blockoverride "title_background"
+	{
+		background = { 
+			texture = "gfx/editor_gui/node_editor/node_editor_title_background.dds" 
+			margin_top = 4
+			color = "[EmitterNodeWindow.GetNodeTitleColor]"
+		}
+	}
+
+	color = { 0.4 0.4 0.4 1.0 }
+
+	blockoverride "node_icon"
+	{
+		widget = { 
+			size = { 16 16 }
+			checkbutton = {
+				size = { 16 16 }
+				gfxtype = checkbuttongfx
+				shaderfile = "gfx/FX/pdxgui_pushbutton.shader"
+				texture = "gfx/editor_gui/node_editor/isolate_emitter_checkbutton.dds"
+				framesize = { 64 64 }
+				parentanchor = vcenter
+				checked = "[EmitterNodeWindow.IsIsolated]"
+				click_modifiers = {
+					ondefault = "[EmitterNodeWindow.ToggleSetEmitterIsolatedExclusive]"
+					onshift = "[EmitterNodeWindow.ToggleSetEmitterIsolatedIncremental]"
+				}
+
+				raw_tooltip = "Toggle this emitter to be isolated. Shift+click to add it or remove it from the already isolated emitters."
+
+				tooltipwidget = {
+					using = dockable_tooltip
+				}
+			}
+		}
+	}
+
+	blockoverride "before_input_pins"
+	{
+		hbox = {
+			margin_left = 5
+			layoutpolicy_horizontal = expanding
+			spacing = 8
+			editor_checkbutton = {
+				blockoverride "label"
+				{
+					raw_text = "Enabled"
+				}
+
+				blockoverride "checkbutton"
+				{
+					onclick = "[EmitterNodeWindow.ToggleSetVisuallyEnabled]"
+					checked = "[EmitterNodeWindow.IsVisuallyEnabled]"
+				}
+
+				raw_tooltip = "Toggle this emitter on or off."
+
+				tooltipwidget = {
+					using = dockable_tooltip
+				}
+			}
+
+			widget = {
+				layoutpolicy_horizontal = expanding
+			}
+		}
+	}
+	
+	blockoverride "after_input_pins" {
+		hbox = {
+			layoutpolicy_horizontal = preferred
+
+			add_pin_button = {
+				blockoverride "button" {
+					onclick = "[EmitterNodeWindow.AddUserData( PdxGuiWidget.AccessSelf )]"
+				}
+			}
+
+			widget = {
+				layoutpolicy_horizontal = preferred
+			}
+		}
+	}
+}
+
+node_window_type = {
+	name = "userdata_node_input_window"
+
+	# TODO(TS): custom color
+	color = { 0.6 0.6 0.6 1.0 }
+	
+	blockoverride "after_input_pins" {
+		hbox = {
+			margin_left = 8
+			layoutpolicy_horizontal = expanding
+
+			dockable_button = {
+				size = { 64 22 }
+				fontsize = 10
+				text = "[UserDataNode.Label]"
+				onclick = "[UserDataNode.Configure]"
+			}
+
+			widget = {
+				layoutpolicy_horizontal = expanding
+			}
+		}
+	}
+}
+
+node_window_type = {
+	name = "userdata_node_output_window"
+
+	# TODO(TS): custom color
+	color = { 0.6 0.6 0.6 1.0 }
+	
+	blockoverride "after_output_pins" {
+		hbox = {
+			margin_right = 8
+			layoutpolicy_horizontal = expanding
+
+			dockable_button = {
+				size = { 64 22 }
+				fontsize = 10
+				text = "[UserDataNode.Label]"
+				onclick = "[UserDataNode.Configure]"
+			}
+
+			widget = {
+				layoutpolicy_horizontal = expanding
+			}
+		}
+	}
+}

@@ -1,0 +1,281 @@
+editor_contextmenu = {
+	name = "dataproperty_contextmenu"
+}
+
+editor_contextmenu = {
+	name = "blockoverride_contextmenu"
+}
+
+editor_contextmenu = {
+	name = "widget_state_contextmenu"
+}
+
+container = {
+	name = "editor_dragdrop_widget"
+
+	editor_icon = {
+		name = "editor_dragdrop_icon"
+		texture = "gfx/editor_gui/editor_dragdrop_icon.dds"
+		size = { 16 16 }
+		position = { 0 8 }
+	}
+}
+
+widget = {
+	name = "dragged_widget"
+	size = { 80 28 }
+	
+	textbox = {
+		fontsize = 10
+		name = "text"
+		size = { 80 28 }
+		raw_text = "Drop to create widget"
+		align = center|nobaseline
+	}
+}
+
+editor_contextmenu = {
+	parentanchor = bottom|left
+	name = "widget_selection_contextmenu"
+
+	item = {
+		using = WidgetSelectionEditorContextMenuItem
+	}
+
+	expand_item = {
+		using = WidgetSelectionEditorContextMenuItem
+		blockoverride TextColor
+		{
+			fontcolor = { 0.4 0.65 1 1 }
+		}
+	}
+}
+
+types "GuiEditor"
+{
+	type selection_line = line_deprecated {
+        gfxtype = linegfx_deprecated
+		from = "[SelectionLine.From]"
+		to = "[SelectionLine.To]"
+		color = "[SelectionLine.Color]"
+		position = "[SelectionLine.Position]"
+		size = "[SelectionLine.Size]"
+	}
+
+	type gui_editor_dockable_widget = vbox {
+		layoutpolicy_horizontal = preferred
+		layoutpolicy_vertical = preferred
+		
+		alwaystransparent = no
+		filter_mouse = none
+		focuspolicy = click
+		tabfocusroot = yes
+		
+		background = {
+			texture = "gfx/editor_gui/editor_layout_window.dds"
+			spriteType = CorneredStretched
+			spriteborder = { 5 5 }
+			shaderfile = "gfx/FX/pdxgui_default.shader"
+			framesize = { 16 16 }
+			frame = 1
+		}
+		
+		editor_toolbar_layout = {
+			margin_left = 7
+			margin_right = 4
+			spacing = 5
+			alwaystransparent = yes
+			
+			blockoverride "left"
+			{
+				layoutpolicy_horizontal = expanding
+
+				editor_textbox = {
+					name = "title"
+					text = "[GuiEditorDockable.Title]"
+					elide = right
+					fontsize = 12
+					autoresize = yes
+					layoutpolicy_horizontal = preferred
+					parentanchor = top|left
+					widgetanchor = top|left
+					alwaystransparent = yes
+				}
+				
+				widget = {
+					alwaystransparent = yes
+					layoutpolicy_horizontal = expanding
+					size = { 0 5 }
+					
+					background = {
+						texture = "gfx/editor_gui/editor_layout_window_title.dds"
+						spriteType = CorneredTiled
+						shaderfile = "gfx/FX/pdxgui_default.shader"
+					}
+				}
+				
+				widget = {
+					alwaystransparent = yes
+					layoutpolicy_horizontal = fixed
+					size = { 0 22 }
+				}
+			}
+			
+			blockoverride "right"
+			{
+				editor_button = {
+					name = "close"
+					layoutpolicy_horizontal = fixed
+					size = { 16 16 }
+					visible = yes
+					texture = "gfx/editor_gui/editor_layout_window_close.dds"
+					onclick = [GuiEditorDockable.OnClose]
+					intersectionmask = no
+				}
+			}
+		}
+
+		hbox = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+			
+			vbox = {
+				name = "content_vbox"
+				
+				margin = { 5 5 }
+
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+				
+				background = {
+					texture = "gfx/editor_gui/editor_layout_window_content.png"
+					spriteType = CorneredStretched
+					spriteborder = { 5 5 }
+					shaderfile = "gfx/FX/pdxgui_default.shader"
+				}
+			}
+		}
+	}
+
+	type gui_editor_dockable_window = window {
+		movable = yes
+		resizable = yes
+		scissor = yes
+		focuspolicy = all
+	}
+
+	type gui_editor_outliner_window = gui_editor_dockable_window {
+		parentanchor = top|right
+		widgetanchor = top|right
+		size = { 20% 100% }
+	}
+
+	type gui_editor_properties_window = gui_editor_dockable_window {
+		parentanchor = top|right
+		widgetanchor = top|right
+		position = { -20% 0% }
+		size = { 20% 50% }
+	}
+
+	type gui_editor_viewport_tooltip = widget {
+		size = { 100% 100% }
+		tooltip_enabled = "[GuiEditorTooltip.IsVisible]"
+		tooltip_type = mouse
+		tooltip_widgetanchor = bottom|left
+		tooltipwidget = {
+			flowcontainer = {
+				direction = vertical
+				spacing = 4
+				margin = { 4 4 }
+				background = {
+					texture = "gfx/editor_gui/editor_layout_window.png"
+					spriteType = CorneredStretched
+					spriteborder = { 5 5 }
+					shaderfile = "gfx/FX/pdxgui_default.shader"
+					framesize = { 16 16 }
+				}
+				tooloptions_textbox = {
+					visible = "[GuiEditorTooltip.HasDescription]"
+					text = "[GuiEditorTooltip.GetDescription]"
+				}
+			}
+		}
+ 	}
+}
+
+hbox = {
+	name = "gui_editor"
+	alwaystransparent = yes
+	droptarget = yes
+	tabfocusroot = yes
+	
+	widget = {
+		name = "layout"
+		layoutpolicy_horizontal = Expanding
+		layoutpolicy_vertical = Expanding
+		alwaystransparent = yes
+		
+		widget = {
+			name = "lines"
+			size = { 100% 100% }
+		}
+
+		icon = {
+			texture = "gfx/editor_gui/editor_anchor_parent.dds"
+			position = "[GuiEditor.GetSelectedParentAnchor]"
+			visible = "[GuiEditor.HasWidgetSelectedParent]"
+			widgetanchor = vcenter|hcenter
+		}
+
+		icon = {
+			texture = "gfx/editor_gui/editor_anchor_object.dds"
+			position = "[GuiEditor.GetSelectedAnchor]"
+			visible = "[GuiEditor.HasWidgetSelected]"
+			widgetanchor = vcenter|hcenter
+		}
+
+		widget = {
+			alwaystransparent = yes
+			size = { 100% 100% }
+			name = "gui_editor_tooltip_container"
+		
+			gui_editor_viewport_tooltip = {
+				datacontext = "[GuiEditor.GetTooltip]"
+			}
+		}
+
+		editor_window = {
+			name = "typewindow"
+			size = { 420 300 }
+			
+			blockoverride "title"
+			{
+				raw_text = "#BOLD;COLOR:{1.0,1.0,1.0} UI Components #!"
+			}
+			
+			blockoverride "hbox_properties"
+			{
+				layoutpolicy_horizontal = Preferred
+				layoutpolicy_vertical = Preferred
+			}
+			
+			blockoverride "content_layout"
+			{
+				editor_scrollarea = {
+					blockoverride "content"
+					{
+						vbox = {
+							alwaystransparent = no
+							editor_tree = {
+								layoutpolicy_horizontal = Preferred
+								layoutpolicy_vertical = Preferred
+								name = "typetree"
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+

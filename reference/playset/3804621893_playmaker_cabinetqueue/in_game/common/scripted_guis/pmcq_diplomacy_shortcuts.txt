@@ -1,0 +1,52 @@
+﻿# The same directional access check used by the native military-access request.
+# Root is the player; target is the country whose land the player may enter.
+pmcq_shortcut_has_military_access = {
+    scope = country
+    is_shown = {
+        receives_military_access_from = scope:target
+    }
+}
+
+# End the player's access in the selected country's land, not their access in ours.
+pmcq_shortcut_has_food_access = {
+    scope = country
+    is_shown = {
+        receives_food_access_from = scope:target
+    }
+}
+
+pmcq_shortcut_allied = {
+    scope = country
+    is_shown = {
+        has_scripted_relation = { target = scope:target type = relation_type:alliance }
+    }
+}
+
+# Availability before the native Influence category has loaded. The native
+# action still checks favors, acceptance and all other requirements afterward.
+pmcq_shortcut_can_call_ally = {
+    scope = country
+    is_shown = {
+        has_scripted_relation = { target = scope:target type = relation_type:alliance }
+        at_war = yes
+        any_current_war = {
+            NOT = { is_in_war = scope:target }
+            OR = {
+                AND = {
+                    attacker_leader = root
+                    scope:target = { can_join_offensive_war_with = root }
+                }
+                AND = {
+                    defender_leader = root
+                    scope:target = { can_join_defensive_war_with = root }
+                }
+            }
+        }
+    }
+}
+
+# Insults spend one available diplomat; check before leaving war preparation.
+pmcq_shortcut_has_diplomat = {
+    scope = country
+    is_shown = { num_of_diplomats >= 1 }
+}

@@ -1,0 +1,216 @@
+types ToolsPathProperyTypes
+{
+	type property_path_content = hbox {
+		layoutpolicy_horizontal = expanding
+				editor_textinput = {
+					text = "[ToolsPropertyPath.GetPathValue]"
+					fontcolor = "[ToolsPropertyPath.GetPathFontColor]"
+					oneditingfinished_with_changes = "[ToolsPropertyPath.SetPathFromText]"
+				}
+				editor_toolbar_button = {
+					size = { 20 22 }
+					raw_text = "..."
+					onclick = "[ToolsPropertyPath.OpenFileDialog]"
+				}
+				tooltipwidget = {
+							using = editor_tooltip
+						}
+				using = editor_tooltip_properties
+				tooltip = "[ToolsPropertyPath.GetTooltipText]"
+	}
+
+	type tools_property_path = tools_property {
+		blockoverride "content"
+		{
+			property_path_content ={}
+		}
+	}
+
+	type dialog_property_path = dialog_property {
+		blockoverride "content"
+		{
+			property_path_content ={}
+		}
+	}
+
+	type dialog_grid_property_path = dialog_grid_property {
+		blockoverride "content"
+		{
+			property_path_content ={}
+		}
+	}
+
+	type vfs_mount_path_content = hbox {
+		layoutpolicy_horizontal = expanding
+
+		dockable_togglebutton = {
+			onclick = "[ToolsPropertyVfsMountPath.ToggleDisplayMode]"
+			checked = "[ToolsPropertyVfsMountPath.IsDisplayModeFullPath]"
+			raw_tooltip = "Toggle Display Mode between (Full Path) and (Vfs Mount Path)."
+			enabled = "[Not(ToolsPropertyVfsMountPath.AreBundleValuesMixed)]"
+			size = { 24 24 }
+			icon = {
+				size = { 24 24 }
+				texture = "gfx/tools/visibility_icon.dds"
+				framesize = { 32 32 }
+				frame = "[Select_int32(ToolsPropertyVfsMountPath.IsDisplayModeFullPath, '(int32)2', '(int32)1')]"
+				parentanchor = hcenter|vcenter
+			}
+		}
+
+		dropDown = {
+			visible = "[Not(ToolsPropertyVfsMountPath.IsDisplayModeFullPath)]"
+			alwaystransparent = no
+			layoutpolicy_horizontal = expanding
+			minimumsize = { 130 20 }
+			datamodel = "[ToolsPropertyVfsMountPath.GetTags]"
+			selectedindex = "[ToolsPropertyVfsMountPath.GetMountTagIndex]"
+			onselectionchanged = "[ToolsPropertyVfsMountPath.SetMountTagIndex]"
+			active_item = {
+				widget = {
+					position = { 0 2 }
+					size = { 100% 20 }
+					button = {
+						size = { 100% 20 }
+						texture = "gfx/editor_gui/editor_dropdown.dds"
+						spriteType = CorneredStretched
+						gfxtype = framedbuttongfx
+						effectname = "NoHighlight"
+						spriteborder = { 4 4 }
+						spriteborder_right = 24
+						button_trigger = none
+						framesize = { 32 16 }
+						upframe = 1
+						downframe = 2
+						overframe = 3
+						activeframe = 2
+						disableframe = 4
+					}
+					editor_textbox = {
+						text = "[CString.GetString]"
+						position = { 5 0 }
+						parentanchor = left|vcenter
+						widgetanchor = left|vcenter
+						fontsize = 12
+						align = nobaseline
+					}
+					tooltipwidget = { using = editor_tooltip }
+					raw_tooltip = "Click to select Mount Point location."
+				}
+			}
+			item = {
+				widget = {
+					size = { 100% 20 }
+					button = {
+						size = { 100% 100% }
+						texture = "gfx/editor_gui/editor_dropdown_item_norm_over_active.png"
+						spriteType = CorneredTiled
+						spriteborder = { 1 1 }
+						gfxtype = framedbuttongfx
+						framesize = { 8 8 }
+						upframe = 1
+						downframe = 3
+						overframe = 2
+						activeframe = 3
+						disableframe = 1
+						button_trigger = none
+					}
+					editor_textbox = {
+						text = "[CString.GetString]"
+						fontsize = 12
+						position = { 5 0 }
+						parentanchor = left|vcenter
+						widgetanchor = left|vcenter
+					}
+					tooltip = "[ToolsPropertyVfsMountPath.GetFullPathFromMountTag(CString.GetString)]"
+					using = editor_tooltip_properties
+					tooltipwidget = { using = dockable_tooltip }
+				}
+			}
+			list = {
+				scrollarea = {
+					position = { 2 20 }
+					maximumsize =  { 300 -1 }
+					autoresizescrollarea = yes
+					alwaystransparent = yes
+					background = {
+						margin = { 2 2 }
+						margin_bottom = 6
+						margin_right = 6
+						texture = "gfx/editor_gui/editor_dropdown_list.dds"
+						spriteType = CorneredStretched
+						spriteborder = { 6 6 }
+						spriteborder_right = 8
+						spriteborder_bottom = 8
+						shaderfile = "gfx/FX/pdxgui_default.shader"
+					}
+					scrollwidget = {
+						fixedgridbox = {
+							alwaystransparent = no
+							addcolumn = 300
+							addrow = 18
+						}
+					}
+					scrollbar_vertical = { using = editor_vertical_scrollbar }
+					scrollbar_horizontal = { using = editor_horizontal_scrollbar }
+				}
+			}
+		}
+
+		editor_textinput = {
+			visible = "[Not(ToolsPropertyVfsMountPath.IsDisplayModeFullPath)]"
+			layoutpolicy_horizontal = expanding
+			size = { 0 24 }
+			minimumsize = { 130 24 }
+			text = "[ToolsPropertyVfsMountPath.GetVfsPath]"
+			fontcolor = "[ToolsPropertyVfsMountPath.GetPathFontColor]"
+			oneditingfinished_with_changes = "[ToolsPropertyVfsMountPath.SetVfsPathFromText]"
+			tooltipwidget = { using = editor_tooltip }
+			tooltip = "[ToolsPropertyVfsMountPath.GetFullPath]"
+			bundle_standard_multiple_values_overlay = {
+					visible = "[ToolsPropertyVfsMountPath.AreBundleValuesMixed]"
+			}
+		}
+
+		editor_textinput = {
+			visible = "[ToolsPropertyVfsMountPath.IsDisplayModeFullPath]"
+			enabled = no
+			layoutpolicy_horizontal = expanding
+			size = { 0 24 }
+			minimumsize = { 260 24 }
+			text = "[ToolsPropertyVfsMountPath.GetFullPath]"
+			fontcolor = "[ToolsPropertyVfsMountPath.GetPathFontColor]"
+			bundle_standard_multiple_values_overlay = {
+					visible = "[ToolsPropertyVfsMountPath.AreBundleValuesMixed]"
+			}
+		}
+
+		editor_toolbar_checkbutton = {
+			size = { 24 24 }
+			raw_text = "..."
+			onclick = "[ToolsPropertyVfsMountPath.ToggleBrowser]"
+			checked = "[ToolsPropertyVfsMountPath.IsBrowserOpen]"
+		}
+	}
+
+	type tools_property_vfs_mount_path = tools_property {
+		blockoverride "content"
+		{
+			vfs_mount_path_content = {}
+		}
+	}
+
+	type dialog_property_vfs_mount_path = dialog_property {
+		blockoverride "content"
+		{
+			vfs_mount_path_content = {}
+		}
+	}
+
+	type dialog_grid_property_vfs_mount_path = dialog_grid_property {
+		blockoverride "content"
+		{
+			vfs_mount_path_content = {}
+		}
+	}
+}

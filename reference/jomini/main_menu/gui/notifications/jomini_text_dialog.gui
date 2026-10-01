@@ -1,0 +1,62 @@
+editor_window = {
+	name = "jomini_text_dialog"
+	parentanchor = center
+	resizable = no
+	modal = yes
+	modality = all
+
+	blockoverride "title" {
+		text = "[JominiNotification.GetTitle]"
+	}
+	
+	blockoverride "content" {
+		hbox = {
+			spacing = 10
+			layoutpolicy_horizontal = expanding
+
+			JominiMultiplayerTextbox = {
+				text = "[JominiNotification.GetText]"
+				autoresize = yes
+			}
+
+			JominiMultiplayerEditbox = {
+				name = "password"
+				password = "[JominiNotification.IsPassword]"
+				onreturnpressed = "[JominiNotification.OnAccept]"
+				layoutpolicy_horizontal = expanding
+			}
+		}
+
+		hbox = {
+			layoutpolicy_horizontal = expanding
+
+			editor_button = {
+				size = { 100 25 }
+				text = "[JominiNotification.GetAcceptButtonText]"
+				onclick = "[JominiNotification.OnAccept]"
+				shortcut = "close_window" # Escape closes OK when there is only that
+				visible = "[Not(Or(JominiNotification.HasOnAccept, JominiNotification.HasOnDecline))]"
+			}
+
+			editor_button = {
+				size = { 100 25 }
+				text = "[JominiNotification.GetAcceptButtonText]"
+				onclick = "[JominiNotification.OnAccept]"
+				visible = "[Or(JominiNotification.HasOnAccept, JominiNotification.HasOnDecline)]"
+			}
+
+			widget = {
+				layoutpolicy_horizontal = expanding
+				visible = "[Or(JominiNotification.HasOnAccept, JominiNotification.HasOnDecline)]"
+			}
+			
+			editor_button = {
+				size = { 100 25 }
+				text = "[JominiNotification.GetDeclineButtonText]"
+				onclick = "[JominiNotification.OnDecline]"
+				shortcut = "close_window"
+				visible = "[Or(JominiNotification.HasOnAccept, JominiNotification.HasOnDecline)]"
+			}
+		}
+	}
+}

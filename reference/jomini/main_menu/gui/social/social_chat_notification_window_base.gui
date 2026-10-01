@@ -1,0 +1,96 @@
+types Social
+{
+	type social_message_notification = button {
+		size = { 200 45 }
+		maximumsize = { 200 45 }
+		onclick = "[ChatNotificationMessage.StartChat]"
+		visible = yes
+		block "social_message_notification"
+		{}
+		vbox = {
+			state = {
+				name = on_create
+				duration = 0.5
+				trigger_on_create = yes
+				alpha = 0.0
+				delay = 4.0
+				on_finish = "[ChatNotificationMessage.Kill]"
+				block "notification_on_create_state" {}
+			}
+
+			background = {
+				texture = "gfx/social/social_notification_background.dds"
+				spriteType = CorneredStretched
+				spriteborder = { 6 6 }
+				shaderfile = "gfx/FX/pdxgui_default.shader"
+				block "notification_background"
+				{}
+			}
+
+			widget = {
+				size = { 0 3 }
+			}
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+				social_horizontal_spacer = {}
+				social_textbox = {
+					align = top|left
+					text = "[ChatNotificationMessage.ChatMessage.GetName]"
+					autoresize = yes
+					layoutpolicy_horizontal = expanding
+					block "notification_name"
+					{}
+				}
+			}
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+				social_horizontal_spacer = {}
+				social_textbox = {
+					align = top|left
+					minimumsize = { 0 0 }
+					size = { 0 0 }
+					text = "[ChatNotificationMessage.ChatMessage.GetMessage]"
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = expanding
+					multiline = yes
+					block "notification_message"
+					{}
+				}
+			}
+		}
+	}
+
+	type social_chat_notification_window = window
+	{
+		name = "social_chat_notification_window"
+		alwaystransparent = yes
+		scissor = no
+		movable = no
+		filter_mouse = none
+		size = { 200 300 }
+		widgetanchor = bottom|right
+		block "notification_window"
+		{}
+
+		vbox = {
+			restrictparent_min = yes
+			block "notification_window_layout"
+			{}
+
+			dynamicgridbox = {
+				alwaystransparent = yes
+				datamodel = "[SocialNotificationWindow.AccessChatMessages]"
+				layoutanchor = "[SocialNotificationWindow.GetNotificationsLayoutAnchor]"
+				layoutpolicy_vertical = expanding
+				block "notifications_gridbox"
+				{}
+
+				item = {
+					social_message_notification = {}
+				}
+			}
+		}
+	}
+}

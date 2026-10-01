@@ -1,0 +1,475 @@
+
+types "MapContentEditorTypes" {
+
+	type map_content_entry = map_content_entry_widget {
+		name = "map_content_entry"
+		blockoverride "checkbutton" { 
+		}
+	}
+
+	type map_content_list_extension = vbox {
+		name = "map_content_list_extension"
+		layoutpolicy_horizontal = preferred
+		block "content" {}
+	}
+
+	type map_content_property_group = editor_frame {
+		name = "map_content_property_group" 
+
+		blockoverride "title"
+		{
+			editor_toolbar_layout = {
+				margin_left = 5
+				
+				blockoverride "left"
+				{
+					button = {
+						onclick = "[MapContentPropertyGroup.ToggleExpanded]"
+
+						hbox = {
+							spacing = 3
+							resizeparent = yes
+
+							checkbutton = {
+								texture = "gfx/tools/expand_icon.dds"
+								framesize = { 16 16 }
+								size = { 10 10 }
+								checked = "[MapContentPropertyGroup.IsExpanded]"
+								alwaystransparent = yes
+								color = { 0.8 0.8 0.8 1.0 }
+							}
+
+							editor_textbox = {
+								text = "[MapContentPropertyGroup.GetName]"
+								fontcolor = { 0.8 0.8 0.8 1.0 }
+								fontsize = 10
+								autoresize = yes
+								align = top|left
+							}
+						}
+					}
+				}
+			}
+		}
+
+		blockoverride "content" {
+			visible = "[MapContentPropertyGroup.IsExpanded]"
+			vbox = {
+				name = "properties" 
+				spacing = 5
+				layoutpolicy_horizontal = preferred
+				layoutpolicy_vertical = expanding
+			}
+		}
+		
+		layoutpolicy_horizontal = preferred
+	}
+
+	type map_content_editor_property_paint_checkbutton = toolbox_checkbutton {
+		size = { 18 18 }
+		tooltip = "map_content_editor_property_paint_tooltip"
+		toolbox_icon = {
+			texture = "gfx/editor_terrain/property_paint.png"
+		}
+		enabled = "[MapContentPropertyGroupsGui.CanActivatePropertyPaintingMode]"
+	}
+
+	# Extensions to bundle-properties defined in tools_gui_bundle_properties.gui
+	type map_content_bundle_property_bool = bundle_property_bool {
+		blockoverride "extension" {
+			map_content_editor_property_paint_checkbutton = {
+				checked = "[MapContentPropertyGroupsGui.IsInPropertyPaintingModeForBool( ToolsUndoableValueBundleBool.Self )]"
+				onclick = "[MapContentPropertyGroupsGui.TogglePropertyPaintingModeBool( ToolsUndoableValueBundleBool.AccessSelf )]"
+			}
+		}
+	}
+
+	type map_content_bundle_property_string = bundle_property_string {
+		blockoverride "extension" {
+			map_content_editor_property_paint_checkbutton = {
+				checked = "[MapContentPropertyGroupsGui.IsInPropertyPaintingModeForString( ToolsUndoableValueBundleString.Self )]"
+				onclick = "[MapContentPropertyGroupsGui.TogglePropertyPaintingModeString( ToolsUndoableValueBundleString.AccessSelf )]"
+			}
+		}
+	}
+	type map_content_bundle_property_cstring = bundle_property_cstring {
+		blockoverride "extension" {
+			map_content_editor_property_paint_checkbutton = {
+				checked = "[MapContentPropertyGroupsGui.IsInPropertyPaintingModeForCString( ToolsUndoableValueBundleCString.Self )]"
+				onclick = "[MapContentPropertyGroupsGui.TogglePropertyPaintingModeCString( ToolsUndoableValueBundleCString.AccessSelf )]"
+			}
+		}
+	}
+	type map_content_bundle_property_float = bundle_property_float {
+		blockoverride "extension" {
+			map_content_editor_property_paint_checkbutton = {
+				checked = "[MapContentPropertyGroupsGui.IsInPropertyPaintingModeForFloat( ToolsUndoableValueBundleFloat.Self )]"
+				onclick = "[MapContentPropertyGroupsGui.TogglePropertyPaintingModeFloat( ToolsUndoableValueBundleFloat.AccessSelf )]"
+			}
+		}
+	}
+	type map_content_bundle_property_fixed = bundle_property_fixed {
+		blockoverride "extension" {
+			map_content_editor_property_paint_checkbutton = {
+				checked = "[MapContentPropertyGroupsGui.IsInPropertyPaintingModeForFloat( ToolsUndoableValueBundleFixed.Self )]"
+				onclick = "[MapContentPropertyGroupsGui.TogglePropertyPaintingModeFloat( ToolsUndoableValueBundleFixed.AccessSelf )]"
+			}
+		}
+	}
+	type map_content_bundle_property_int = bundle_property_int {
+		blockoverride "extension" {
+			map_content_editor_property_paint_checkbutton = {
+				checked = "[MapContentPropertyGroupsGui.IsInPropertyPaintingModeForInt( ToolsUndoableValueBundleInt.Self )]"
+				onclick = "[MapContentPropertyGroupsGui.TogglePropertyPaintingModeInt( ToolsUndoableValueBundleInt.AccessSelf )]"
+			}
+		}
+	}
+	type map_content_bundle_property_uint = bundle_property_uint {
+		blockoverride "extension" {
+			map_content_editor_property_paint_checkbutton = {
+				checked = "[MapContentPropertyGroupsGui.IsInPropertyPaintingModeForUint( ToolsUndoableValueBundleUint.Self )]"
+				onclick = "[MapContentPropertyGroupsGui.TogglePropertyPaintingModeUint( ToolsUndoableValueBundleUint.AccessSelf )]"
+			}
+		}
+	}
+	type map_content_bundle_property_enum = bundle_property_enum {
+		blockoverride "extension" {
+			map_content_editor_property_paint_checkbutton = {
+				checked = "[MapContentPropertyGroupsGui.IsInPropertyPaintingModeForEnum( CPdxEnumValue.Self )]"
+				onclick = "[MapContentPropertyGroupsGui.TogglePropertyPaintingModeEnum( CPdxEnumValue.AccessSelf )]"
+			}
+		}
+	}
+	type map_content_bundle_property_color = bundle_property_color {
+		blockoverride "extension" {
+			map_content_editor_property_paint_checkbutton = {
+				checked = "[MapContentPropertyGroupsGui.IsInPropertyPaintingModeForColor( ToolsUndoableValueBundleColor.Self )]"
+				onclick = "[MapContentPropertyGroupsGui.TogglePropertyPaintingModeColor( ToolsUndoableValueBundleColor.AccessSelf )]"
+			}
+		}
+	}
+	type map_content_bundle_property_ccolor = bundle_property_ccolor {
+		blockoverride "extension" {
+			map_content_editor_property_paint_checkbutton = {
+				checked = "[MapContentPropertyGroupsGui.IsInPropertyPaintingModeForCColor( ToolsUndoableValueBundleCColor.Self )]"
+				onclick = "[MapContentPropertyGroupsGui.TogglePropertyPaintingModeCColor( ToolsUndoableValueBundleCColor.AccessSelf )]"
+			}
+		}
+	}
+
+	type map_content_bundle_property_vec4i = bundle_property_vec4i {
+		blockoverride "extension" {
+			map_content_editor_property_paint_checkbutton = {
+				checked = "[MapContentPropertyGroupsGui.IsInPropertyPaintingModeForVec4i( ToolsUndoableValueBundleVec4i.Self )]"
+				onclick = "[MapContentPropertyGroupsGui.TogglePropertyPaintingModeVec4i( ToolsUndoableValueBundleVec4i.AccessSelf )]"
+			}
+		}
+	}
+
+	type map_content_bundle_property_vec4Fixed = bundle_property_vec4Fixed {
+		blockoverride "extension" {
+			map_content_editor_property_paint_checkbutton = {
+				checked = "[MapContentPropertyGroupsGui.IsInPropertyPaintingModeForVec4F( ToolsUndoableValueBundleVec4F.Self )]"
+				onclick = "[MapContentPropertyGroupsGui.TogglePropertyPaintingModeVec4F( ToolsUndoableValueBundleVec4F.AccessSelf )]"
+			}
+		}
+	}
+
+	type map_content_bundle_property_vec3f = bundle_property_vec3f {
+		blockoverride "extension" {
+			map_content_editor_property_paint_checkbutton = {
+				checked = "[MapContentPropertyGroupsGui.IsInPropertyPaintingModeForVec3f( ToolsUndoableValueBundleVec3f.Self )]"
+				onclick = "[MapContentPropertyGroupsGui.TogglePropertyPaintingModeVec3f( ToolsUndoableValueBundleVec3f.AccessSelf )]"
+			}
+		}
+	}
+
+	type map_content_bundle_property_vec3Fixed = bundle_property_vec3Fixed {
+		blockoverride "extension" {
+			map_content_editor_property_paint_checkbutton = {
+				checked = "[MapContentPropertyGroupsGui.IsInPropertyPaintingModeForVec3F( ToolsUndoableValueBundleVec3F.Self )]"
+				onclick = "[MapContentPropertyGroupsGui.TogglePropertyPaintingModeVec3F( ToolsUndoableValueBundleVec3F.AccessSelf )]"
+			}
+		}
+	}
+
+	type map_content_bundle_property_vec3i = bundle_property_vec3i {
+		blockoverride "extension" {
+			map_content_editor_property_paint_checkbutton = {
+				checked = "[MapContentPropertyGroupsGui.IsInPropertyPaintingModeForVec3i( ToolsUndoableValueBundleVec3i.Self )]"
+				onclick = "[MapContentPropertyGroupsGui.TogglePropertyPaintingModeVec3i( ToolsUndoableValueBundleVec3i.AccessSelf )]"
+			}
+		}
+	}
+
+	type map_content_bundle_property_vec2f = bundle_property_vec2f {
+		blockoverride "extension" {
+			map_content_editor_property_paint_checkbutton = {
+				checked = "[MapContentPropertyGroupsGui.IsInPropertyPaintingModeForVec2f( ToolsUndoableValueBundleVec2f.Self )]"
+				onclick = "[MapContentPropertyGroupsGui.TogglePropertyPaintingModeVec2f( ToolsUndoableValueBundleVec2f.AccessSelf )]"
+			}
+		}
+	}
+
+	type map_content_bundle_property_vec2Fixed = bundle_property_vec2Fixed {
+		blockoverride "extension" {
+			map_content_editor_property_paint_checkbutton = {
+				checked = "[MapContentPropertyGroupsGui.IsInPropertyPaintingModeForVec2F( ToolsUndoableValueBundleVec2F.Self )]"
+				onclick = "[MapContentPropertyGroupsGui.TogglePropertyPaintingModeVec2F( ToolsUndoableValueBundleVec2F.AccessSelf )]"
+			}
+		}
+	}
+	type map_content_bundle_property_vec2i = bundle_property_vec2i {
+		blockoverride "extension" {
+			map_content_editor_property_paint_checkbutton = {
+				checked = "[MapContentPropertyGroupsGui.IsInPropertyPaintingModeForVec2i( ToolsUndoableValueBundleVec2i.Self )]"
+				onclick = "[MapContentPropertyGroupsGui.TogglePropertyPaintingModeVec2i( ToolsUndoableValueBundleVec2i.AccessSelf )]"
+			}
+		}
+	}
+}
+
+vbox = {
+	name = "map_content"
+	layoutpolicy_horizontal = preferred
+	layoutpolicy_vertical = expanding
+	map_content_list = {
+		blockoverride "toolbar" { 
+
+			tooloptions_button = {
+				raw_text = "Create"
+				size = { 48 32 }
+				tooltip = "[MapContentPanel.GetCreateNewEntryTooltip]"
+				tooltipwidget = { using = dockable_tooltip }
+				onclick = "[MapContentPanel.CreateNewEntry]"
+				enabled = "[MapContentPanel.CanCreateNewEntry]"
+			}
+			tooloptions_button = {
+				raw_text = "Delete"
+				size = { 48 32 }
+				tooltip = "[MapContentPanel.GetDeleteSelectedEntriesTooltip]"
+				tooltipwidget = { using = dockable_tooltip }
+				onclick = "[MapContentPanel.DeleteSelectedEntries]"
+				enabled = "[MapContentPanel.CanDeleteAnySelectedEntry]"
+			}
+			tooloptions_button = {
+				raw_text = "Rename"
+				size = { 48 32 }
+				tooltip = "[MapContentPanel.GetRenameSelectedEntryTooltip]"
+				tooltipwidget = { using = dockable_tooltip }
+				onclick = "[MapContentPanel.RenameSelectedEntry]"
+				enabled = "[MapContentPanel.CanRenameSelectedEntry]"
+			}
+		}
+		blockoverride "list_extension" { }
+	}
+}
+
+map_content_list_extension = {
+	name = "map_content_list_extension"
+	vbox = { 
+		name = "property_groups_container"
+		layoutpolicy_horizontal = expanding
+		spacing = 9
+		visible = "[GreaterThan_int32( MapContentSelector.GetSelectedCount, '(int32)0' )]"
+	}
+}
+
+hbox = {
+	name = "map_content_editor_options"
+
+	margin = { 2 2 }
+	spacing = 4
+
+	layoutpolicy_horizontal = expanding
+	layoutpolicy_vertical = expanding
+
+	toolbox_checkbutton = {
+		input_action = "map_content_editor_select_mode"
+		tooltip = "[MapContentEditorOptions.GetMapContentSelectionModeDescription]"
+		enabled = "[MapContentEditorOptions.IsMapContentSelectionModeAllowed]"
+		checked = "[MapContentEditorOptions.IsMapContentSelectionMode]"
+		onclick = "[MapContentEditorOptions.SetMapContentSelectionMode( '(bool)yes' )]"
+		toolbox_icon = {
+			texture = "gfx/editor_terrain/select_map_content.dds"
+			size = { 24 24 }
+		}
+	}
+
+	# Tools for Pixel-based layers
+	hbox = {
+		margin = { 0 2 }
+		spacing = 4
+
+		visible = "[MapContentEditorOptions.IsCurrentLayerPixelBased]"
+
+		toolbox_checkbutton = {
+			input_action = "map_content_editor_brush_tool"
+			tooltip = "[MapContentEditorOptions.GetPaintModeDescription]"
+			enabled = "[And( MapContentEditorOptions.IsPaintModeAllowed, MapContentEditorOptions.IsPaintingAllowed )]"
+			checked = "[MapContentEditorOptions.IsPaintMode]"
+			onclick = "[MapContentEditorOptions.SetPaintMode]"
+			toolbox_icon = {
+				texture = "gfx/tools/material/brush.png"
+			}
+		}
+
+		toolbox_checkbutton = {
+			input_action = "mask_painter_eraser_tool"
+			tooltip = "[MapContentEditorOptions.GetEraserDescription]"
+			enabled = "[And( MapContentEditorOptions.IsEraserModeAllowed, MapContentEditorOptions.CanErase )]"
+			checked = "[MapContentEditorOptions.IsEraserMode]"
+			onclick = "[MapContentEditorOptions.SetEraserMode]"
+			toolbox_icon = {
+				texture = "gfx/editor_terrain/eraser.png"
+			}
+		}
+
+		brush_widget = {
+			widgetid = "map_content_editor_brush_settings"
+			onclick = "[BrushSettingsDropdown.Toggle]"
+			visible = "[Or(MapContentEditorOptions.IsPaintMode, MapContentEditorOptions.IsEraserMode)]"
+			input_action = "brush_settings_tooloption_1"
+			raw_tooltip = "Brush Settings"
+			toolbox_icon = {
+				texture = "[BrushSettingsDropdown.Thumbnail]"
+			}
+		}
+
+		pixelsnap_checkbutton = { 
+			visible = "[Or(MapContentEditorOptions.IsPaintMode, MapContentEditorOptions.IsEraserMode)]"
+		}
+
+		toolbox_checkbutton = {
+			input_action = "map_content_editor_auto_select"
+			raw_tooltip = "When enabled, every brush or eraser stroke will paint with an entry that is under the brush."
+			checked = "[MapContentEditorOptions.IsAutoEntrySelectOnPaint]"
+			onclick = "[MapContentEditorOptions.ToggleAutoEntrySelectOnPaint]"
+			toolbox_icon = {
+				texture = "gfx/editor_terrain/brush_auto.png"
+				size = { 30 30 }
+			}
+		}
+	}
+
+	# Tools for Group-based layers
+	hbox = {
+		margin = { 0 2 }
+		spacing = 4
+
+		visible = "[Not(MapContentEditorOptions.IsCurrentLayerPixelBased)]"
+
+		toolbox_checkbutton = {
+			input_action = "map_content_editor_add_to_group_tool"
+			tooltip = "[MapContentEditorOptions.GetAddToGroupModeDescription]"
+			enabled = "[MapContentEditorOptions.IsAddToGroupModeAllowed]"
+			checked = "[MapContentEditorOptions.IsAddToGroupMode]"
+			onclick = "[MapContentEditorOptions.SetAddToGroupMode]"
+			toolbox_icon = {
+				texture = "gfx/editor_terrain/brush_plus.png"
+			}
+		}
+
+		toolbox_checkbutton = {
+			input_action = "map_content_editor_remove_from_group_tool"
+			tooltip = "[MapContentEditorOptions.GetRemoveFromGroupModeDescription]"
+			enabled = "[MapContentEditorOptions.IsRemoveFromGroupModeAllowed]"
+			checked = "[MapContentEditorOptions.IsRemoveFromGroupMode]"
+			onclick = "[MapContentEditorOptions.SetRemoveFromGroupMode]"
+			toolbox_icon = {
+				texture = "gfx/editor_terrain/brush_minus.png"
+			}
+		}
+	}
+
+	tooloptions_divider = {}
+
+	preview_mask_opacity_slider = { 
+	}
+
+
+	dummy_fill_up = {}
+
+
+	editor_button = {
+		size = { 128 32 }
+		raw_text = "Apply Changes"
+		fontsize = 12
+		onclick = "[MapContentEditorOptions.ApplyChanges]"
+		input_action = "map_content_editor_apply_changes"
+		enabled = "[And(MapContentEditorOptions.CurrentLayerHasChanges, MapContentEditorOptions.CanApplyChanges)]"
+		tooltip = "[MapContentEditorOptions.GetApplyButtonDescription]"
+		tooltipwidget = { using = dockable_tooltip }
+	}
+
+	editor_button = {
+		size = { 128 32 }
+		raw_text = "Discard Changes"
+		fontsize = 12
+		onclick = "[MapContentEditorOptions.DiscardChanges]"
+		input_action = "map_content_editor_discard_changes"
+		enabled = "[MapContentEditorOptions.CurrentLayerHasChanges]"
+		raw_tooltip = "Discard changes"
+		tooltipwidget = { using = dockable_tooltip }
+	}
+}
+
+toolbox_checkbutton = {
+	name = "map_content_editor_toolbox_button"
+	raw_tooltip = "Map Content Editor"
+	checked = "[MapContentEditorMode.IsSelected]"
+	toolbox_icon = {
+		texture = "gfx/editor_terrain/map_content_tool.png"
+		size = { 26 26 }
+	}
+}
+
+
+widget = {
+	alwaystransparent = no
+	size = { 100% 100% }
+	name = "map_content_editor_viewport"
+ 
+	map_editor_viewport_tooltip = {
+		datacontext = "[MapContentEditorViewport.GetTooltip]"
+	}
+
+	widget = {
+		size = { 100% 100% }
+		widget = {
+			alpha = 0.75
+			visible = "[MapContentEditorViewport.IsInPropertyPaintingMode]"
+			size = { 0 0 }
+			parentanchor = right|top
+			vbox = {
+				size = { 0 0 }
+				spacing = 4
+				margin = { 4 8 }
+				parentanchor = right|top
+
+				background = {
+					texture = "gfx/editor_gui/editor_layout_window.png"
+					spriteType = CorneredStretched
+					spriteborder = { 5 5 }
+					shaderfile = "gfx/FX/pdxgui_default.shader"
+					framesize = { 16 16 }
+				}
+				hbox = {
+					spacing = 16
+					tooloptions_textbox = {
+						raw_text = "[MapContentEditorViewport.GetPropertyPaintingModeDesc]"
+						fontsize = 20
+					}
+					tooloptions_button = {
+						raw_text = "Cancel (Esc)"
+						fontsize = 20
+						size = { 120 32 }
+						input_action = "map_content_editor_property_paint_cancel"
+						onclick = "[MapContentEditorViewport.CancelPropertyPainting]"
+					}
+				}
+			}
+			
+		}
+ 	}
+}

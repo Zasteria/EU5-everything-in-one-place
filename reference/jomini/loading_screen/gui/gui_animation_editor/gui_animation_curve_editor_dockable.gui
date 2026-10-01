@@ -1,0 +1,148 @@
+
+@gui_animation_curve_editor_common_btn_size = 26
+
+types GuiAnimationCurveEditorTypes
+{
+	type gui_animation_curve_editor_line = line {
+		gfxtype = linegfx
+		effectname = "PdxGuiLineOnlyColor"
+		width = 2
+	}
+}
+
+vbox = {
+	name = "gui_animation_curve_editor"
+	layoutpolicy_horizontal = expanding
+	layoutpolicy_vertical = expanding
+
+	# Window top bar
+	editor_toolbar = {
+		name = "topbar"
+		spacing = 1
+		margin_left = 10
+		margin_right = 2
+
+		blockoverride "left"
+		{
+			# TODO: button to open gui animation editor
+
+			history_toolbar = {}
+			
+			editor_toolbar_divider = {}
+
+			gui_animation_editor_toggle_button = {
+				checked = "[GuiAnimationEditorPlayer.ShouldMoveNeedleWithKeyframe]"
+				onclick = "[GuiAnimationEditorPlayer.ToggleMoveNeedleWithKeyframe]"
+				shortcut = "entity_viewer_keyframe_needle_lock_toggle"
+				raw_tooltip = "Toggle the moving of the needle when moving keyframes"
+				toolbox_icon = {
+					texture = "gfx/editor_gui/editor_keyframe_player_lock.dds"
+				}
+			}
+		}
+
+		blockoverride "right"
+		{
+			gui_animation_editor_toggle_button = {
+				name = "open_editor_btn"
+				size = { 126 @gui_animation_curve_editor_common_btn_size }
+				checked = "[GuiAnimationCurveEditor.IsAnyEditorOpen]"
+				onclick = "[ExecuteConsoleCommand('gui_animation_editor')]"
+				raw_tooltip = "Open gui animation editor."
+				toolbox_icon = {
+					texture = "gfx/gui_animation_editor/timeline_editor.png"
+					parentanchor = left|vcenter
+					position = { 4 0 }
+				}
+				editor_textbox = {
+					raw_text = "Timeline Editor"
+					align = right|nobaseline
+					autoresize = yes
+					margin_right = 6
+					parentanchor = right|vcenter
+				}
+			}
+		}
+	}
+
+	widget = {
+		name = "window_content"
+		layoutpolicy_horizontal = preferred
+		layoutpolicy_vertical = preferred
+		size = { 0 0 }
+
+		vbox = {
+			name = "vbox_content"
+			layoutpolicy_horizontal = preferred
+			layoutpolicy_vertical = preferred
+
+			margin = { 5 0 }
+	
+			gui_animation_editor_time_ruler = {}
+
+			# Window content
+			widget = {
+				name = "curves_viewport"
+				layoutpolicy_horizontal = preferred
+				layoutpolicy_vertical = preferred
+				size = { 0 0 }
+				scissor = yes
+				alwaystransparent = no
+
+				datamodel = "[GuiAnimationCurveEditor.GetGraphLines]"
+				item = {
+					widget = {
+						position = { 0 0 }
+						size = { 100% 100% }
+
+						gui_animation_curve_editor_line = {
+							name = "line"
+							color = "[GuiAnimationCurveEditorLine.GetColor]"
+							position = { 0 0 }
+							size = { 100% 100% }
+							points = "[GuiAnimationCurveEditorLine.GetLineVertices]"
+						}
+
+						datamodel = "[GuiAnimationCurveEditorLine.GetControlPoints]"
+						item = {
+							button = {
+								position = "[GuiAnimationCurveEditorControlPoint.GetCoords]"
+								size = { 16 16 }
+								layoutpolicy_horizontal = fixed
+								layoutpolicy_vertical = fixed
+								widgetanchor = vcenter|hcenter
+								alwaystransparent = no
+								texture = "gfx/gui_animation_editor/graph_editor_keyframe.png"
+								framesize = { 64 64 }
+								frame = "[Select_int32(GuiAnimationCurveEditorControlPoint.IsUnderMousePointer, '(int32)3', Select_int32(GuiAnimationCurveEditorControlPoint.IsSelected( GuiAnimationEditorMetadataCtx.Self ), '(int32)2', '(int32)1'))]"
+							}
+						}
+					}
+				}
+			}
+			# [TK]: For mysterious reasons, lines in the above scope blinks and disappears when resizing the dockable.
+			# Presence of below widget solves the problem, which might be related to the layout failing to compute the
+			# right size if there are lines down in the widget hierarchy.
+			widget = {
+				name = "bugfix"
+				size = { 0 1 }
+				layoutpolicy_horizontal = fixed
+				layoutpolicy_vertical = fixed
+			}
+		}
+	
+
+		icon = {
+			name = "drag_rect_overlay"
+			visible = "[GuiAnimationEditorViewportUserInput.IsDraggingSelectionRect]"
+			size = "[GuiAnimationEditorViewportUserInput.GetSelectionDragRectSize]"
+			position = "[GuiAnimationEditorViewportUserInput.GetSelectionDragRectPosition( PdxGuiWidget.AccessParent.Self )]"
+			texture = "gfx/editor_gui/editor_frame_striped.dds"
+			spriteType = CorneredTiled
+			spriteborder = { 5 5 }
+			framesize = { 64 64 }
+			frame = 1
+			alpha = 0.5
+		}
+	}
+}

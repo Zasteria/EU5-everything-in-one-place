@@ -1,0 +1,131 @@
+﻿template pmcq_cmf_ui_bridge {
+ widget = { name = "pmcq_cmf_bridge_shortcut_picker" size = { 1 1 } ignore_layout = yes alwaystransparent = yes visible_at_creation = no
+ visible = "[GetPlayer.MakeScope.GetVariable('pmcq_cmf_request_shortcut_picker').IsSet]"
+ state = { name = _show alpha = 0.99 duration = 0.1
+  on_start = "[GetVariableSystem.Clear('cmm_window_open')]"
+ on_start = "[GetVariableSystem.Clear('pmcq_shortcut_picker_search')]"
+ on_start = "[OpenLateralView('diplomacy_macrobuilder')]"
+ on_finish = "[GetVariableSystem.Set('pmcq_shortcut_picker_open', 'yes')]"
+ on_finish = "[GetScriptedGui('pmcq_cmf_consume_shortcut_picker').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+ }
+ }
+
+ widget = { name = "pmcq_cmf_bridge_recommended_setup" size = { 1 1 } ignore_layout = yes alwaystransparent = yes visible_at_creation = no
+ visible = "[GetPlayer.MakeScope.GetVariable('pmcq_cmf_request_recommended_setup').IsSet]"
+ state = { name = _show alpha = 0.99 duration = 0.01
+ on_start = "[GetScriptedGui('pmcq_cmf_consume_recommended_setup').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+ on_start = "[GetVariableSystem.Clear('cmm_window_open')]"
+ on_start = "[GetVariableSystem.Clear('pmcq_economy_close')]"
+ on_start = "[OpenLateralView('economy')]"
+ on_start = "[GetScriptedGui('pmcqp_economy').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+ on_start = "[GetVariableSystem.Set('pmcqp_economy', 'waiting')]"
+ on_start = "[PdxGuiTriggerAllAnimations('pmcqp_arm_economy')]"
+ }
+ }
+ widget = { name = "pmcq_cmf_bridge_event_catalog" size = { 1 1 } ignore_layout = yes alwaystransparent = yes visible_at_creation = no
+ visible = "[GetPlayer.MakeScope.GetVariable('pmcq_cmf_request_event_catalog').IsSet]"
+ state = { name = _show alpha = 0.99 duration = 0.01
+ on_start = "[GetScriptedGui('pmcq_cmf_consume_event_catalog').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+ on_start = "[GetVariableSystem.Clear('cmm_window_open')]"
+ on_start = "[GetVariableSystem.Set('pmcq_event_catalog_open', 'yes')]"
+ }
+ }
+ widget = { name = "pmcq_cmf_bridge_load_preset" size = { 1 1 } ignore_layout = yes alwaystransparent = yes visible_at_creation = no
+ visible = "[GetPlayer.MakeScope.GetVariable('pmcq_cmf_request_load_preset').IsSet]"
+ state = { name = _show alpha = 0.99 duration = 0.01
+ on_start = "[GetScriptedGui('pmcq_cmf_consume_load_preset').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+ on_start = "[GetVariableSystem.Clear('cmm_window_open')]"
+ on_start = "[GetVariableSystem.Set('pmcq_cmf_preset_open', 'yes')]"
+ }
+ }
+ widget = { name = "pmcq_cmf_bridge_dismantle_hre" size = { 1 1 } ignore_layout = yes alwaystransparent = yes visible_at_creation = no
+ visible = "[GetPlayer.MakeScope.GetVariable('pmcq_cmf_request_dismantle_hre').IsSet]"
+ state = { name = _show alpha = 0.99 duration = 0.01
+ on_start = "[GetScriptedGui('pmcq_cmf_consume_dismantle_hre').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+ on_start = "[GetVariableSystem.Clear('cmm_window_open')]"
+ on_start = "[GetVariableSystem.Set('pmcq_cmf_hre_open', 'yes')]"
+ }
+ }
+ window = {
+ name = "pmcq_cmf_preset_window" layer = top movable = yes
+ parentanchor = center widgetanchor = center size = { 430 165 } using = bg_main_inner_alt
+ visible = "[GetVariableSystem.HasValue('pmcq_cmf_preset_open', 'yes')]"
+ text_single = { position = { 14 10 } size = { 370 30 } text = "pmcq__load_preset_name" fontsize = 18 }
+ button = { position = { 394 10 } size = { 24 24 } using = button_regular_texture raw_text = "X" onclick = "[GetVariableSystem.Clear('pmcq_cmf_preset_open')]" }
+ text_multi = { position = { 14 47 } size = { 402 62 } text = "pmcq_cmf_preset_help" fontsize = 13 }
+ button = { position = { 14 118 } size = { 212 32 } using = button_regular_texture using = pmcq_event_preset_load_button }
+ button = { position = { 234 118 } size = { 182 32 } using = button_regular_texture text = "pmcq_catalog_preset_help_button" fontsize = 12
+  onclick = "[GetVariableSystem.Clear('pmcq_cmf_preset_open')]"
+  onclick = "[GetVariableSystem.Set('pmcq_cmf_preset_instructions_open', 'yes')]"
+ }
+ }
+ window = {
+ name = "pmcq_cmf_hre_window" layer = top movable = yes
+ parentanchor = center widgetanchor = center size = { 430 165 } using = bg_main_inner_alt
+ visible = "[GetVariableSystem.HasValue('pmcq_cmf_hre_open', 'yes')]"
+ text_single = { position = { 14 10 } size = { 370 30 } text = "pmcqp_dismantle_hre" fontsize = 18 }
+ button = { position = { 394 10 } size = { 24 24 } using = button_regular_texture raw_text = "X" onclick = "[GetVariableSystem.Clear('pmcq_cmf_hre_open')]" }
+ text_multi = { position = { 14 47 } size = { 402 62 } text = "pmcq_cmf_dismantle_help" fontsize = 13 }
+ action_button_regular = { position = { 14 118 } size = { 402 32 }
+ actor = "[GetPlayer]" title = "pmcqp_dismantle_hre"
+ left_click_and_hold_action = { action_name = "pmcqp_dismantle_hre" }
+ enabled = "[UIAction.IsEnabled]" text = "pmcqp_dismantle_hre"
+ }
+ }
+ window = { name = "pmcq_cmf_preset_instructions" layer = top
+  parentanchor = center widgetanchor = center size = { 716 488 } using = bg_main_inner_alt
+  visible = "[GetVariableSystem.HasValue('pmcq_cmf_preset_instructions_open', 'yes')]"
+  text_single = { position = { 18 12 } size = { 642 30 } text = "pmcq_catalog_preset_help_title" fontsize = 18 }
+  button = { position = { 672 12 } size = { 26 26 } using = button_regular_texture raw_text = "X"
+   onclick = "[GetVariableSystem.Clear('pmcq_cmf_preset_instructions_open')]"
+   onclick = "[GetVariableSystem.Set('pmcq_cmf_preset_open', 'yes')]"
+  }
+  scrollarea = { position = { 18 54 } size = { 680 374 } scrollbarpolicy_horizontal = always_off scrollbarpolicy_vertical = as_needed
+   scrollbar_vertical = { using = Scrollbar_Vertical }
+   scrollwidget = {
+    text_multi = { size = { 652 20 } maximumsize = { 652 -1 } autoresize = yes fontsize = 13 text = "pmcq_catalog_preset_help_body" }
+   }
+  }
+  button = { position = { 18 444 } size = { 680 30 } using = button_regular_texture text = "pmcq_cmf_preset_help_back" fontsize = 12
+   onclick = "[GetVariableSystem.Clear('pmcq_cmf_preset_instructions_open')]"
+   onclick = "[GetVariableSystem.Set('pmcq_cmf_preset_open', 'yes')]"
+  }
+ }
+ widget = { name = "pmcq_cmf_bridge_remove_forts" size = { 1 1 } ignore_layout = yes alwaystransparent = yes visible_at_creation = no
+  visible = "[GetPlayer.MakeScope.GetVariable('pmcq_cmf_request_remove_forts').IsSet]"
+  state = { name = _show alpha = 0.99 duration = 0.01
+   on_start = "[GetScriptedGui('pmcq_cmf_consume_remove_forts').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+   on_start = "[GetVariableSystem.Clear('cmm_window_open')]"
+   on_start = "[GetVariableSystem.Set('pmcq_cmf_remove_forts_open', 'yes')]"
+  }
+ }
+ window = { name = "pmcq_cmf_remove_forts_confirmation" layer = top
+  parentanchor = center widgetanchor = center size = { 480 220 } using = bg_main_inner_alt
+  visible = "[GetVariableSystem.HasValue('pmcq_cmf_remove_forts_open', 'yes')]"
+  text_single = { position = { 16 12 } size = { 416 30 } text = "pmcq_cmf_remove_forts_title" fontsize = 18 }
+  button = { position = { 438 12 } size = { 26 26 } using = button_regular_texture raw_text = "X"
+   onclick = "[GetVariableSystem.Clear('pmcq_cmf_remove_forts_open')]"
+   onclick = "[GetVariableSystem.Clear('cmm_mod_search_text')]"
+   onclick = "[GetVariableSystem.Set('cmm_selected_mod', 'pmcq')]"
+   onclick = "[GetVariableSystem.Set('cmm_selected_tab', 'pmcq__general')]"
+   onclick = "[GetVariableSystem.Set('cmm_window_open', 'yes')]"
+  }
+  text_multi = { position = { 16 56 } size = { 448 100 } text = "pmcq_cmf_remove_forts_help" fontsize = 14 autoresize = no }
+  button = { position = { 16 172 } size = { 218 32 } using = button_regular_texture text = "pmcq_cmf_remove_forts_cancel" fontsize = 13
+   onclick = "[GetVariableSystem.Clear('pmcq_cmf_remove_forts_open')]"
+   onclick = "[GetVariableSystem.Clear('cmm_mod_search_text')]"
+   onclick = "[GetVariableSystem.Set('cmm_selected_mod', 'pmcq')]"
+   onclick = "[GetVariableSystem.Set('cmm_selected_tab', 'pmcq__general')]"
+   onclick = "[GetVariableSystem.Set('cmm_window_open', 'yes')]"
+  }
+  button = { position = { 246 172 } size = { 218 32 } using = button_regular_texture text = "pmcq_cmf_remove_forts_confirm" fontsize = 13
+   enabled = "[GetScriptedGui('pmcqs_forts_shortcut').IsValid(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+   onclick = "[GetScriptedGui('pmcqs_forts_shortcut').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+   onclick = "[GetVariableSystem.Clear('pmcq_cmf_remove_forts_open')]"
+   onclick = "[GetVariableSystem.Clear('cmm_mod_search_text')]"
+   onclick = "[GetVariableSystem.Set('cmm_selected_mod', 'pmcq')]"
+   onclick = "[GetVariableSystem.Set('cmm_selected_tab', 'pmcq__general')]"
+   onclick = "[GetVariableSystem.Set('cmm_window_open', 'yes')]"
+  }
+ }
+}

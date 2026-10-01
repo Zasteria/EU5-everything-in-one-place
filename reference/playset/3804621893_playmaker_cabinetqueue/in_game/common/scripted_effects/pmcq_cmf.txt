@@ -1,0 +1,109 @@
+﻿pmcq_register_cmf = {
+ # Default ON preserves the existing reversed war-badge clicks.
+ cmm_register_bool_setting = { mod_id = pmcq setting_id = swap_war_clicks tab_id = general group_id = controls default_value = 1 }
+ cmm_sync_bool_alias_inverted = { setting = pmcq__swap_war_clicks alias = pmcq_native_war_clicks }
+ cmm_register_button_setting = { mod_id = pmcq setting_id = recommended_setup tab_id = general group_id = setup }
+ cmm_set_no_reset = { mod_id = pmcq setting_id = recommended_setup }
+ cmm_register_button_setting = { mod_id = pmcq setting_id = remove_forts tab_id = general group_id = setup }
+ cmm_set_no_reset = { mod_id = pmcq setting_id = remove_forts }
+ if = { limit = { NOT = { is_key_in_variable_map = { name = cmm target = flag:pmcq__block_circles } } NOT = { has_variable = pmcq_circle_requests_allowed } }
+  add_to_variable_map = { name = cmm key = flag:pmcq__block_circles value = 1 }
+ }
+ if = { limit = { NOT = { is_key_in_variable_map = { name = cmm target = flag:pmcq__block_circles } } has_variable = pmcq_circle_requests_allowed }
+  add_to_variable_map = { name = cmm key = flag:pmcq__block_circles value = 0 }
+ }
+ cmm_register_bool_setting = { mod_id = pmcq setting_id = block_circles tab_id = general group_id = notifications default_value = 1 }
+ cmm_sync_bool_alias_inverted = { setting = pmcq__block_circles alias = pmcq_circle_requests_allowed }
+ if = { limit = { NOT = { is_key_in_variable_map = { name = cmm target = flag:pmcq__mute_notifications } } has_variable = pmcq_mute_notifications }
+  add_to_variable_map = { name = cmm key = flag:pmcq__mute_notifications value = 1 }
+ }
+ cmm_register_bool_setting = { mod_id = pmcq setting_id = mute_notifications tab_id = general group_id = notifications default_value = 0 }
+ cmm_sync_bool_alias = { setting = pmcq__mute_notifications alias = pmcq_mute_notifications }
+ cmm_register_button_setting = { mod_id = pmcq setting_id = add_hre tab_id = general group_id = hre }
+ cmm_set_no_reset = { mod_id = pmcq setting_id = add_hre }
+ cmm_add_scripted_gui = { mod_id = pmcq setting_id = add_hre }
+ cmm_register_button_setting = { mod_id = pmcq setting_id = dismantle_hre tab_id = general group_id = hre }
+ cmm_set_no_reset = { mod_id = pmcq setting_id = dismantle_hre }
+ cmm_add_scripted_gui = { mod_id = pmcq setting_id = dismantle_hre }
+ cmm_register_button_setting = { mod_id = pmcq setting_id = scripted_gifts tab_id = diplomacy group_id = gifts }
+ cmm_set_no_reset = { mod_id = pmcq setting_id = scripted_gifts }
+ cmm_register_button_setting = { mod_id = pmcq setting_id = diplo_slot_1 tab_id = diplomacy group_id = shortcuts }
+ cmm_set_no_reset = { mod_id = pmcq setting_id = diplo_slot_1 }
+ cmm_register_button_setting = { mod_id = pmcq setting_id = diplo_slot_2 tab_id = diplomacy group_id = shortcuts }
+ cmm_set_no_reset = { mod_id = pmcq setting_id = diplo_slot_2 }
+ cmm_register_button_setting = { mod_id = pmcq setting_id = diplo_slot_3 tab_id = diplomacy group_id = shortcuts }
+ cmm_set_no_reset = { mod_id = pmcq setting_id = diplo_slot_3 }
+ cmm_register_button_setting = { mod_id = pmcq setting_id = diplo_slot_4 tab_id = diplomacy group_id = shortcuts }
+ cmm_set_no_reset = { mod_id = pmcq setting_id = diplo_slot_4 }
+ cmm_register_button_setting = { mod_id = pmcq setting_id = diplo_slot_5 tab_id = diplomacy group_id = shortcuts }
+ cmm_set_no_reset = { mod_id = pmcq setting_id = diplo_slot_5 }
+ cmm_register_button_setting = { mod_id = pmcq setting_id = diplo_slot_6 tab_id = diplomacy group_id = shortcuts }
+ cmm_set_no_reset = { mod_id = pmcq setting_id = diplo_slot_6 }
+ cmm_register_button_setting = { mod_id = pmcq setting_id = reset_shortcuts tab_id = diplomacy group_id = shortcuts }
+ cmm_set_no_reset = { mod_id = pmcq setting_id = reset_shortcuts }
+ # Experimental message memory is opt-in; saved explicit choices are preserved.
+ cmm_register_bool_setting = { mod_id = pmcq setting_id = favorites_system tab_id = memory group_id = events default_value = 0 }
+ cmm_sync_bool_alias = { setting = pmcq__favorites_system alias = pmcq_favorites_system_enabled }
+ cmm_register_bool_setting = { mod_id = pmcq setting_id = remember_events tab_id = memory group_id = events default_value = 0 }
+ cmm_sync_bool_alias = { setting = pmcq__remember_events alias = pmcq_event_memory_enabled }
+ cmm_sync_bool_alias_inverted = { setting = pmcq__remember_events alias = pmcq_event_memory_disabled }
+ cmm_register_button_setting = { mod_id = pmcq setting_id = event_catalog tab_id = memory group_id = events }
+ cmm_set_no_reset = { mod_id = pmcq setting_id = event_catalog }
+ cmm_register_button_setting = { mod_id = pmcq setting_id = load_preset tab_id = memory group_id = events }
+ cmm_set_no_reset = { mod_id = pmcq setting_id = load_preset }
+}
+
+pmcq_handle_cmf_callback = {
+ switch = { trigger = var:cmf_callback
+  flag:pmcq__scripted_gifts = { set_variable = pmcqsg_open_requested }
+  flag:pmcq__favorites_system = { cmm_sync_bool_alias = { setting = pmcq__favorites_system alias = pmcq_favorites_system_enabled } }
+  flag:pmcq__swap_war_clicks = { cmm_sync_bool_alias_inverted = { setting = pmcq__swap_war_clicks alias = pmcq_native_war_clicks } }
+  flag:pmcq__reset_shortcuts = { pmcq_reset_diplo_shortcuts = yes }
+  flag:pmcq__recommended_setup = { set_variable = pmcq_cmf_request_recommended_setup }
+  flag:pmcq__remove_forts = { set_variable = pmcq_cmf_request_remove_forts }
+  flag:pmcq__block_circles = { cmm_sync_bool_alias_inverted = { setting = pmcq__block_circles alias = pmcq_circle_requests_allowed } }
+  flag:pmcq__mute_notifications = { cmm_sync_bool_alias = { setting = pmcq__mute_notifications alias = pmcq_mute_notifications } }
+  flag:pmcq__remember_events = { cmm_sync_bool_alias = { setting = pmcq__remember_events alias = pmcq_event_memory_enabled }
+ cmm_sync_bool_alias_inverted = { setting = pmcq__remember_events alias = pmcq_event_memory_disabled } }
+  flag:pmcq__event_catalog = { set_variable = pmcq_cmf_request_event_catalog }
+  flag:pmcq__load_preset = { set_variable = pmcq_cmf_request_load_preset }
+  flag:pmcq__add_hre = { save_scope_as = pmcq_cmf_actor
+   if = { limit = { can_do_generic_action = { generic_action = generic_action:pmcqp_add_hre_locations recipient = scope:pmcq_cmf_actor } }
+    fire_generic_action = { type = pmcqp_add_hre_locations actor = scope:pmcq_cmf_actor recipient = scope:pmcq_cmf_actor }
+   } }
+  flag:pmcq__dismantle_hre = { set_variable = pmcq_cmf_request_dismantle_hre }
+  flag:pmcq__diplo_slot_1 = { set_variable = { name = pmcq_diplo_edit_slot value = 1 } set_variable = pmcq_cmf_request_shortcut_picker }
+  flag:pmcq__diplo_slot_2 = { set_variable = { name = pmcq_diplo_edit_slot value = 2 } set_variable = pmcq_cmf_request_shortcut_picker }
+  flag:pmcq__diplo_slot_3 = { set_variable = { name = pmcq_diplo_edit_slot value = 3 } set_variable = pmcq_cmf_request_shortcut_picker }
+  flag:pmcq__diplo_slot_4 = { set_variable = { name = pmcq_diplo_edit_slot value = 4 } set_variable = pmcq_cmf_request_shortcut_picker }
+  flag:pmcq__diplo_slot_5 = { set_variable = { name = pmcq_diplo_edit_slot value = 5 } set_variable = pmcq_cmf_request_shortcut_picker }
+  flag:pmcq__diplo_slot_6 = { set_variable = { name = pmcq_diplo_edit_slot value = 6 } set_variable = pmcq_cmf_request_shortcut_picker }
+ }
+}
+
+pmcq_reset_diplo_shortcuts = {
+ set_variable = { name = pmcq_diplo_slot_1 value = 1 }
+ remove_variable = pmcq_diplo_tag_1
+ remove_variable = pmcq_diplo_title_1
+ remove_variable = pmcq_diplo_category_1
+ set_variable = { name = pmcq_diplo_slot_2 value = 2 }
+ remove_variable = pmcq_diplo_tag_2
+ remove_variable = pmcq_diplo_title_2
+ remove_variable = pmcq_diplo_category_2
+ set_variable = { name = pmcq_diplo_slot_3 value = 3 }
+ remove_variable = pmcq_diplo_tag_3
+ remove_variable = pmcq_diplo_title_3
+ remove_variable = pmcq_diplo_category_3
+ set_variable = { name = pmcq_diplo_slot_4 value = 4 }
+ remove_variable = pmcq_diplo_tag_4
+ remove_variable = pmcq_diplo_title_4
+ remove_variable = pmcq_diplo_category_4
+ set_variable = { name = pmcq_diplo_slot_5 value = 5 }
+ remove_variable = pmcq_diplo_tag_5
+ remove_variable = pmcq_diplo_title_5
+ remove_variable = pmcq_diplo_category_5
+ set_variable = { name = pmcq_diplo_slot_6 value = 6 }
+ remove_variable = pmcq_diplo_tag_6
+ remove_variable = pmcq_diplo_title_6
+ remove_variable = pmcq_diplo_category_6
+}

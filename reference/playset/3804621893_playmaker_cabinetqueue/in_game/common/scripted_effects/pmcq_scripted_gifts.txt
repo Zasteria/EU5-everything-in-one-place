@@ -1,0 +1,78 @@
+﻿# Independent namespace: old pmcqgift_daily callbacks only retire the old UI worker.
+pmcqsg_init = {
+ if = { limit = { NOT = { has_variable = pmcqsg_reserve } }
+  set_variable = { name = pmcqsg_reserve value = 100 }
+ }
+ if = { limit = { NOT = { has_variable = pmcqsg_sent } }
+  set_variable = { name = pmcqsg_sent value = 0 }
+ }
+}
+# Sender scope. One target is classified, then priced, immediately before payment.
+pmcqsg_evaluate = {
+ set_variable = { name = pmcqsg_status value = 0 }
+ set_variable = { name = pmcqsg_price value = 0 }
+ if = { limit = { OR = { this = scope:pmcqsg_target scope:pmcqsg_target = { num_locations <= 0 } } }
+  set_variable = { name = pmcqsg_status value = 6 }
+ }
+ else = {
+  set_variable = { name = pmcqsg_price value = pmcqsg_cost }
+  if = { limit = { OR = {
+    has_gifted_gold_to = scope:pmcqsg_target
+    is_key_in_variable_map = { name = pmcqsg_cooldowns target = scope:pmcqsg_target }
+   } }
+   set_variable = { name = pmcqsg_status value = 1 }
+  }
+  else_if = { limit = { is_at_war_with = scope:pmcqsg_target }
+   set_variable = { name = pmcqsg_status value = 2 }
+  }
+  else_if = { limit = { OR = {
+    NOT = { within_diplomatic_range = scope:pmcqsg_target }
+    scope:pmcqsg_target = { NOT = { is_discovered_by = scope:pmcqsg_sender } }
+   } }
+   set_variable = { name = pmcqsg_status value = 3 }
+  }
+  # Same direction as vanilla influence_nation: recipient adds favors to sender.
+  else_if = { limit = { scope:pmcqsg_target = { favors = { target = scope:pmcqsg_sender value > 90 } } }
+   set_variable = { name = pmcqsg_status value = 5 }
+  }
+  else_if = { limit = { gold < { value = var:pmcqsg_price add = var:pmcqsg_reserve } }
+   set_variable = { name = pmcqsg_status value = 4 }
+  }
+ }
+ add_to_variable_map = { name = pmcqsg_prices key = scope:pmcqsg_target value = var:pmcqsg_price }
+ add_to_variable_map = { name = pmcqsg_statuses key = scope:pmcqsg_target value = var:pmcqsg_status }
+}
+pmcqsg_refresh = {
+ pmcqsg_init = yes
+ save_scope_as = pmcqsg_sender
+ every_in_list = { variable = pmcqsg_targets
+  save_scope_as = pmcqsg_target
+  scope:pmcqsg_sender = { pmcqsg_evaluate = yes }
+ }
+}
+pmcqsg_process = {
+ if = { limit = { is_ai = no has_variable = pmcqsg_enabled }
+  pmcqsg_init = yes
+  save_scope_as = pmcqsg_sender
+  every_in_list = { variable = pmcqsg_targets
+   save_scope_as = pmcqsg_target
+   scope:pmcqsg_sender = {
+    pmcqsg_evaluate = yes
+    if = { limit = { var:pmcqsg_status = 0 }
+     # Commit cooldown first. Removing/re-adding targets or toggling cannot reset it.
+     add_to_variable_map = { name = pmcqsg_cooldowns key = scope:pmcqsg_target value = 1 months = 120 }
+     add_gold = { value = var:pmcqsg_price multiply = -1 }
+     scope:pmcqsg_target = {
+      add_gold = scope:pmcqsg_sender.var:pmcqsg_price
+      add_favors = { target = scope:pmcqsg_sender value = 10 }
+      add_opinion = { target = scope:pmcqsg_sender modifier = opinion_gift scale = 2 }
+     }
+     change_variable = { name = pmcqsg_sent add = 1 }
+     set_variable = { name = pmcqsg_last_cost value = var:pmcqsg_price }
+     set_variable = { name = pmcqsg_last_target value = scope:pmcqsg_target }
+     add_to_variable_map = { name = pmcqsg_statuses key = scope:pmcqsg_target value = 1 }
+    }
+   }
+  }
+ }
+}

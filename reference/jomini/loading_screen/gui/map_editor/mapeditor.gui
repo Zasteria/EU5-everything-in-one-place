@@ -1,0 +1,368 @@
+template terraineditor_base
+{
+	tooltipwidget = {
+		using = editor_tooltip
+	}
+}
+
+template terraineditor_font
+{
+	font = "standard_cw_font"
+	fontsize = 12
+	fontcolor = { 1 1 1 1 }
+}
+
+template terraineditor_button
+{
+	using = editor_button
+	using = terraineditor_font
+	size = { 0 30 }
+}
+
+template terraineditor_label
+{
+	using = terraineditor_font
+	align = left
+	size = { 0 30 }
+}
+
+template terraineditor_windowtitle
+{
+	using = terraineditor_label
+	autoresize = no
+	size = { 0 30 }
+	align = left|nobaseline
+	fontsize = 12
+}
+
+template terraineditor_checkbutton
+{
+	using = terraineditor_font
+	gfxtype = checkbuttongfx
+	shaderfile = "gfx/FX/pdxgui_pushbutton.shader"
+	texture = "gfx/editor_gui/editor_button.dds"
+	framesize = { 16 16 }
+	spriteType = CorneredStretched
+	spriteborder = { 4 4 }
+}
+
+template terraineditor_listitem
+{
+	using = terraineditor_checkbutton
+	using = terraineditor_base
+}
+
+template terraineditor_toolbutton
+{
+	using = terraineditor_base
+	size = { 32 32 }
+	layoutpolicy_horizontal = fixed
+}
+
+template menu_icon
+{
+	size = { 18 18 }
+	parentanchor = vcenter|hcenter
+}
+
+template terraineditor_eb
+{
+	using = terraineditor_font
+	alwaystransparent = no
+	align = right|nobaseline
+	margin = { 0 4 }
+
+	background = {
+		margin = { 0 0 }
+		texture = "gfx/editor_gui/editor_field.dds"
+		spriteType = CorneredStretched
+		spriteborder = { 4 4 }
+		shaderfile = "gfx/FX/pdxgui_default.shader"
+	}
+}
+
+# All rectangle buttons should follow this standard
+
+types "MapEditorStandardTypes" {
+
+	type map_editor_viewport_tooltip = widget {
+		size = { 100% 100% }
+		tooltip_enabled = "[GuiEditorTooltip.IsVisible]"
+		tooltip_type = mouse
+		tooltip_widgetanchor = bottom|left
+		tooltipwidget = {
+			flowcontainer = {
+				direction = vertical
+				spacing = 4
+				margin = { 4 4 }
+				background = {
+					texture = "gfx/editor_gui/editor_layout_window.png"
+					spriteType = CorneredStretched
+					spriteborder = { 5 5 }
+					shaderfile = "gfx/FX/pdxgui_default.shader"
+					framesize = { 16 16 }
+				}
+				tooloptions_textbox = {
+					visible = "[GuiEditorTooltip.HasTitle]"
+					raw_text = "#BOLD;COLOR:{1.0,1.0,0.6} [GuiEditorTooltip.GetTitle]#!"
+				}
+				tooloptions_textbox = {
+					visible = "[GuiEditorTooltip.HasDescription]"
+					text = "[GuiEditorTooltip.GetDescription]"
+				}
+			}
+		}
+ 	}
+
+ 	type terrain_options_toolbar = widget {
+
+		layoutpolicy_vertical = expanding
+		layoutpolicy_horizontal = expanding
+
+		hbox = {
+			spacing = 4
+
+	        toolbox_checkbutton = {
+	            raw_tooltip = "Toggle camera limits."
+	            input_action = "map_editor_camera_toggle_limits"
+	            checked = "[IsCameraRestrictionsEnabled]"
+	            onclick = "[SetCameraRestrictionsEnabled(Not(IsCameraRestrictionsEnabled))]"
+	            toolbox_icon = {
+	                texture = "gfx/tools/camera_limits_icon.dds"
+	                size = { 32 32 }
+	            }
+	        }
+
+            toolbox_checkbutton = {
+                raw_tooltip = "Toggle reference texture overlay."
+                input_action = "terrain_toggle_reference_overlay"
+                checked = "[MapEditor.GetReferenceOverlayVisibility]"
+                onclick = "[MapEditor.SetReferenceOverlayVisibility(Not(MapEditor.GetReferenceOverlayVisibility))]"
+                toolbox_icon = {
+                    texture = "gfx/editor_terrain/terrain_toggle_reference_overlay.png"
+                    size = { 32 32 }
+                }
+            }
+
+            toolbox_button = {
+                raw_tooltip = "Toggle reference texture options."
+                #input_action = "terrain_show_reference_overlay_options" #TODO [PG]: uncomment after fixing jira PSGE-8829
+                onclick = "[MapEditorGui.ToggleReferenceOverlayOptions]"
+                toolbox_icon = {
+                    texture = "gfx/editor_terrain/terrain_show_reference_overlay_options.png"
+                    size = { 32 32 }
+                }
+            }
+
+            toolbox_button = {
+                raw_tooltip = "Toggle borders options."
+                #shortcut = ""
+                onclick = "[MapEditorGui.ToggleBordersSettingsOptions]"
+                toolbox_icon = {
+                    texture = "gfx/editor_terrain/terrain_show_borders_options.png"
+                    size = { 32 32 }
+                }
+            }
+
+            vbox = {
+                visible = "[MapEditor.GetReferenceOverlayVisibility]"
+                editbox = {
+                    using = terraineditor_label
+                    size = { 130 16 }
+                    raw_text = "Overlay Opacity"
+                    align = hcenter|nobaseline
+                    layoutpolicy_horizontal = fixed
+					layoutpolicy_vertical = fixed
+                }
+                hbox = {
+                    layoutpolicy_vertical = fixed
+                    layoutpolicy_horizontal = preferred
+
+                    scrollbar = {
+                        using = editor_scrollbar
+                        direction = horizontal
+                        size = { 100 14 }
+                        layoutpolicy_vertical = fixed
+                        layoutpolicy_horizontal = fixed
+                        min = 0.0
+                        max = 1.0
+                        step = 0.01
+                        wheelstep = -0.05
+                        value = "[MapEditorGui.GetReferenceOverlayOpacity]"
+                        onvaluechanged = "[MapEditorGui.SetReferenceOverlayOpacity]"
+                    }
+                    editor_editbox = {
+                        using = terraineditor_eb
+                        size = { 40 20 }
+                        text = "[MapEditorGui.GetReferenceOverlayOpacity]"
+                        oneditingfinished = "[MapEditorGui.SetReferenceOverlayOpacity]"
+                        layoutpolicy_vertical = fixed
+                        layoutpolicy_horizontal = fixed
+                    }
+                    widget = {
+                        layoutpolicy_horizontal = growing
+                    }
+                }
+            }
+
+			tooloptions_divider = {}
+
+			custom_ui_toolbox_buttons_hbox = {
+				blockoverride "datacontext" {
+					datacontext = "[MapEditorCustomGui.GetCustomizationRegistry.GetCommon.GetOptionsTopbarButtonsRegistry]"
+				}
+			}
+
+			block "tools" {}
+
+			widget = {
+				name = "spacer"
+
+				layoutpolicy_vertical = expanding
+				layoutpolicy_horizontal = expanding
+			}
+		}
+	}
+}
+
+hbox = {
+	name = "editor_inputthief"
+}
+
+widget = {
+	name = "menu_widget"
+
+	layoutpolicy_vertical = expanding
+	layoutpolicy_horizontal = expanding
+
+	hbox = {
+		spacing = 4
+
+		toolbox_button = {
+			name = "save_btn"
+			input_action = "tools_save"
+			enabled = "[MapEditor.IsSavable]"
+			onclick = "[MapEditor.Save]"
+			raw_tooltip = "Save"
+
+			toolbox_icon = {
+				texture = "gfx/tools/material/save.png"
+			}
+		}
+
+		toolbox_button = {
+			input_action = "tools_save_as"
+			onclick = "[MapEditor.SaveAs]"
+			raw_tooltip = "Save as"
+
+			toolbox_icon = {
+				texture = "gfx/tools/material/save_as.png"
+			}
+		}
+
+		toolbox_button = {
+            input_action = "map_editor_save_all"
+            onclick = "[MapEditor.SaveAll]"
+            raw_tooltip = "Save all"
+
+            toolbox_icon = {
+                texture = "gfx/tools/material/save_all.png"
+            }
+        }
+
+		toolbox_button = {
+			input_action = "map_editor_export_workspace"
+			onclick = "[MapEditor.ExportTool]"
+			raw_tooltip = "Open the Export Tool"
+
+			toolbox_icon = {
+				texture = "gfx/tools/material/export_btn.dds"
+			}
+		}
+
+		toolbox_button = {
+			input_action = "map_editor_import_workspace"
+			onclick = "[MapEditor.ImportTool]"
+			raw_tooltip = "Open the Import Tool"
+
+			toolbox_icon = {
+				texture = "gfx/tools/material/import_btn.dds"
+			}
+		}
+
+        toolbox_button = {
+            #input_action = "map_editor_settings"    #TODO [PG]: uncomment after fixing jira PSGE-8829
+            onclick = "[MapEditorGui.ShowSettingsWindow]"
+            raw_tooltip = "Open settings"
+
+            toolbox_icon = {
+                texture = "gfx/tools/material/settings.png"
+            }
+        }
+
+        history_toolbar = {
+        	datacontext = "[MapEditor.AccessUndoHistoryViewerClient]"
+        }
+
+		toolbox_button = {
+			name = "exit_btn"
+			input_action = "map_editor_exit"
+			onclick = "[MapEditor.Exit]"
+			raw_tooltip = "Exit map editor"
+
+			toolbox_icon = {
+				texture = "gfx/tools/exit_icon.dds"
+			}
+		}
+
+		tooloptions_divider = {}
+
+		custom_ui_toolbox_buttons_hbox = {
+			blockoverride "datacontext" {
+				datacontext = "[MapEditorCustomGui.GetCustomizationRegistry.GetCommon.GetMenuButtonsRegistry]"
+			}
+		}
+
+		widget = { layoutpolicy_horizontal = expanding }
+	}
+}
+
+
+terrain_options_toolbar = {
+	name = "terrain_options_widget"
+}
+
+vbox = {
+	name = "brush_settings_widget"
+}
+
+widget = {
+	name = "terrain_editor_gui"
+	size = { 0 0 }
+}
+
+vbox = {
+	name = "map_editor_toolbox_widget"
+    layoutpolicy_vertical = expanding
+	spacing = 4
+
+	vbox = {
+	    layoutpolicy_vertical = preferred
+		name = "toolbox"
+		spacing = 4
+
+		# Registered tools will be added here
+	}
+
+	editor_toolbox_divider = {}
+
+	custom_ui_toolbox_buttons_vbox = {
+		blockoverride "datacontext" {
+			datacontext = "[MapEditorCustomGui.GetCustomizationRegistry.GetCommon.GetToolboxButtonsRegistry]"
+		}
+	}
+
+    widget = {
+        layoutpolicy_vertical = expanding
+    }
+}

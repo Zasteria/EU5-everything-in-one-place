@@ -1,0 +1,126 @@
+types ObjectInspector
+{
+	type object_inspector_plugin = vbox {
+		margin = { 0 2 }
+		name = "plugin_entry"
+		layoutpolicy_horizontal = preferred
+		layoutpolicy_vertical = expanding
+
+		oncreate = "[BindFoldOutContext]"
+		
+		inspector_header = {
+			blockoverride "textbox" {
+				fontcolor = { 1 1 1 1 }
+				text = "[ObjectInspectorPlugin.GetTitle]"
+			}
+		}
+		
+		vbox = {
+			visible = "[And(PdxGuiFoldOut.IsUnfolded,Not(ObjectInspectorPlugin.HasError))]"
+			name = "plugin_content"
+			layoutpolicy_horizontal = preferred
+			layoutpolicy_vertical = expanding
+			background = {
+				using = EditorFoldoutBackground
+			}
+			margin_right = 10
+			using = InspectorSubIndentBig
+		}
+
+		hbox = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = preferred
+
+			visible = "[And(PdxGuiFoldOut.IsUnfolded,ObjectInspectorPlugin.HasError)]"
+
+			icon = {
+				layoutpolicy_horizontal = fixed
+				size = { 32 32 }
+				block "icon" {}
+			}
+
+			tools_text_multi = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = fixed
+				size = { 0 50 }
+				align = left|top
+				margin = { 5 5 }
+				text = "[ObjectInspectorPlugin.GetErrorMessage]"
+			}
+		}
+	}
+}
+
+# Object Inspector GUI
+template object_inspector
+{
+	editor_textbox = {
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = fixed
+		margin = { 5 0 }
+		raw_text = "[ObjectInspector.GetObjectName] ([ObjectInspector.GetTypeName])"
+		align = left
+		size = { 0 25 }
+	}
+	
+	inspector_scrollarea = {
+		layoutpolicy_vertical = expanding
+		layoutpolicy_horizontal = preferred
+		scrollbarpolicy_vertical = always_on
+
+		blockoverride "area_widget"
+		{
+			vbox = {
+				vbox = {
+					layoutpolicy_horizontal = preferred
+					layoutpolicy_vertical = shrinking
+					margin_right = 2
+					name = "plugins"
+				}
+				widget = {
+					layoutpolicy_vertical = expanding
+				}
+			}
+		}
+	}
+}
+
+# Object Inspector Dockable
+widget = {
+	name = "object_inspector_dockable"
+	layoutpolicy_horizontal = preferred
+	layoutpolicy_vertical = expanding
+	size = { 500 900 }
+
+	vbox = {
+		size = { 100% 100% }
+		
+		widget = {
+			layoutpolicy_vertical = shrinking
+			layoutpolicy_horizontal = preferred
+			size = { 0 20 }
+			
+			editor_button = {
+				name = "object_inspector_detach"
+				position = { 0 0 }
+				size = { 50 20 }
+				parentanchor = top|right
+				fontcolor = { 1 1 1 1 }
+				raw_text = "Detach"
+				align = center|nobaseline
+				using = editor_font
+				
+				onclick = "[ObjectInspectorDockable.Detach]"
+				visible = "[ObjectInspectorDockable.IsAttached]"
+			}
+		}
+		
+		vbox = {
+			layoutpolicy_vertical = expanding
+			layoutpolicy_horizontal = preferred
+			
+			name = "object_inspector"
+			using = object_inspector
+		}
+	}
+}

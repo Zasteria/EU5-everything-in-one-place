@@ -1,0 +1,144 @@
+types Social
+{
+	type friend_search_result_entry = widget {
+		minimumsize = { 100 20 }
+		hbox = {
+			restrictparent_min = yes
+
+			social_textbox = {
+				layoutpolicy_horizontal = expanding
+				text = "[FriendSearchResult.GetName]"
+				block "textbox_add_friend_entry_name"
+				{}
+			}
+			social_horizontal_spacer = {}
+			button = {
+				layoutpolicy_horizontal = fixed
+				onclick = "[FriendSearchResult.AddFriend]"
+				texture = "gfx/social/plus.dds"
+				size = { 32 32 }
+				block "button_add_friend_entry"
+				{}
+			}
+			social_horizontal_spacer = {}
+			block "friend_search_result_entry_background"
+			{
+				background = {
+					margin = { 2 2 }
+					margin_bottom = 6
+					margin_right = 6
+					texture = "gfx/editor_gui/editor_dropdown_list.dds"
+					spriteType = CorneredStretched
+					spriteborder = { 6 6 }
+					spriteborder_right = 8
+					spriteborder_bottom = 8
+					shaderfile = "gfx/FX/pdxgui_default.shader"
+				}
+			}
+		}
+	}
+
+	type add_friend_window = social_window {
+		name = "add_friend_window"
+		visible = "[AddFriendWindow.ShouldBeShown]"
+		parentanchor = vcenter|right
+		size = { 320 200 }
+
+		blockoverride "title"
+		{
+			text = "ADD_FRIEND_WINDOW_TITLE"
+		}
+		blockoverride "close_button"
+		{
+			onclick = "[AddFriendWindow.Hide]"
+		}
+		blockoverride "hbox_properties"
+		{
+			layoutpolicy_horizontal = Preferred
+			layoutpolicy_vertical = Preferred
+		}
+		blockoverride "content_layout"
+		{
+			vbox = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+				hbox = {
+					layoutpolicy_horizontal = expanding
+					social_horizontal_spacer = {}
+					social_textbox = {
+						text = "SOCIAL_ADD_FRIEND_LABEL_USERNAME"
+						autoresize = yes
+					}
+					social_horizontal_spacer = {}
+					social_horizontal_spacer = {}
+					social_editbox = {
+						layoutpolicy_horizontal = expanding
+						ontextchanged = "[Friends.SetSearchString]";
+						raw_text = "booooo"
+						onreturnpressed = "[Friends.Search]";
+						minimumsize = { 30 30 }
+						block "editbox_search_string"
+						{}
+					}
+					social_horizontal_spacer = {}
+					button = {
+						texture = "gfx/social/magnifier.dds"
+						size = { 32 32 }
+						onclick = "[Friends.Search]"
+						block "button_search"
+						{}
+					}
+				}
+				social_vertical_spacer = {}
+				scrollarea = {
+					# autoresizescrollarea = yes
+					alwaystransparent = yes
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = expanding
+					focuspolicy = all
+					
+					block "background_add_friend_results"
+					{
+						background = {
+							margin = { 2 2 }
+							margin_bottom = 6
+							margin_right = 6
+							texture = "gfx/editor_gui/editor_dropdown_list.dds"
+							spriteType = CorneredStretched
+							spriteborder = { 6 6 }
+							spriteborder_right = 8
+							spriteborder_bottom = 8
+							shaderfile = "gfx/FX/pdxgui_default.shader"
+						}
+					}
+					
+					scrollwidget = {
+						dynamicgridbox = {
+							alwaystransparent = no
+							datamodel = "[Friends.AccessFriendSearchResults]"
+							block "add_friend_results"
+							{}
+							item = {
+								friend_search_result_entry = {
+								}
+							}
+						}
+					}
+
+					scrollbar_vertical = {
+
+						using = SocialVerticalScrollbar
+						block "add_friend_results_vertical_scrollbar"
+						{}
+					}
+					
+					scrollbar_horizontal = {
+						using = SocialHorizontalScrollbar
+						block "add_friend_results_horizontal_scrollbar"
+						{}
+					}
+				}
+			}
+		}
+	}
+}

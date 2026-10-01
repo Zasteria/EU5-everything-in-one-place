@@ -1,0 +1,142 @@
+template SDKStatusWidgetWindowStyle
+{
+	block "status_widget_background_style"
+	{
+		shaderfile = "gfx/FX/pdxgui_default.shader"
+		texture = "gfx/account/status_widget_background.dds"
+		spriteType = CorneredStretched
+		spriteborder = { 6 6 }
+		gfxtype = windowgfx
+	}
+}
+types SDK 
+{
+	type status_widget = window
+	{
+		name = "status_widget"
+		using = SDKStatusWidgetWindowStyle
+		alwaystransparent = no
+		resizable = no
+		movable = no
+		filter_mouse = none
+
+		flowcontainer = {
+			block "status_widget_inner_margin"
+			{
+				margin = { 10 10 }
+			}
+
+			resizeparent = yes
+			ignoreinvisible = yes
+
+			block "paradox_icon" 
+			{
+				icon = {
+					parentanchor = left|vcenter
+					texture = "gfx/interface/paradox_logo.dds"
+					size = { 48 48 }
+				}
+			}
+
+			container = {
+				parentanchor = left|vcenter
+				block "load_indicator_container" {}
+				sdk_load_indicator = {
+					blockoverride "load_indicator"
+					{
+						visible = "[StatusIsLoggingIn]"
+					}
+				}
+			}
+
+			sdk_horizontal_spacer={}
+
+			sdk_textbox = {
+				name = "login_status"
+				text = "[StatusGetLoginStatus]"
+				parentanchor = left|vcenter
+				block "login_status_text_size"
+				{
+					minimumsize = {150 -1}
+					autoresize = yes
+				}
+			}
+
+			sdk_horizontal_spacer={}
+
+			sdk_button = {
+				text = "CREATE_ACCOUNT"
+				visible = "[Not(StatusIsLoggedIn)]"
+				enabled = "[StatusCanLogin]"
+				parentanchor = left|vcenter
+				onclick = "[StatusWidget.ToggleCreateAccountWindow]"
+				block "create_account_button_size"
+				{
+					size = { 250 50 }
+				}
+			}
+
+			sdk_button = {
+				text = "SOCIAL_PROFILE"
+				tooltip = "SOCIAL_PROFILE_DESC"
+				visible = "[StatusIsLoggedIn]"
+				parentanchor = left|vcenter
+				onclick = "[StatusWidget.ToggleCreateProfileWindow]"
+				block "social_profile_button_size"
+				{
+					size = { 160 50 }
+				}
+			}
+
+			sdk_horizontal_spacer={}
+
+			sdk_button_load_indicator = {
+				block "account_link_button_size"
+				{
+					size = { 200 50 }
+				}
+				text = ACCOUNT_LINK
+				parentanchor = left|vcenter
+				onclick = "[StatusWidget.ConnectAccount]"
+				visible = "[And(And(StatusIsLoggedIn,Not(StatusWidget.IsAccountConnected)),StatusWidget.SupportsConnectAccount)]"
+				enabled = "[And(Not(StatusWidget.IsBusy),And(And(StatusIsLoggedIn,Not(StatusWidget.IsAccountConnected)),StatusWidget.SupportsConnectAccount))]"
+
+				blockoverride "load_indicator"
+				{
+					visible = "[Not(And(Not(StatusWidget.IsBusy),And(And(StatusIsLoggedIn,Not(StatusWidget.IsAccountConnected)),StatusWidget.SupportsConnectAccount)))]"
+				}
+			}
+			sdk_button_load_indicator = {
+				block "account_unlink_button_size"
+				{
+					size = { 200 50 }
+				}
+				text = ACCOUNT_UNLINK
+				parentanchor = left|vcenter
+				onclick = "[StatusWidget.DisconnectAccount]"
+				visible = "[And(And(StatusIsLoggedIn,StatusWidget.IsAccountConnected),StatusWidget.SupportsConnectAccount)]"
+				enabled = "[And(Not(StatusWidget.IsBusy),And(And(StatusIsLoggedIn,StatusWidget.IsAccountConnected),StatusWidget.SupportsConnectAccount))]"
+
+				blockoverride "load_indicator"
+				{
+					visible = "[Not(And(Not(StatusWidget.IsBusy),And(And(StatusIsLoggedIn,StatusWidget.IsAccountConnected),StatusWidget.SupportsConnectAccount)))]"
+				}
+			}
+			sdk_horizontal_spacer={}
+			sdk_button = {
+				text = "LOGIN"
+				parentanchor = left|vcenter
+				onclick = "[StatusWidget.ToggleLoginWindow]"
+				visible = "[Not(StatusIsLoggedIn)]"
+				enabled = "[StatusCanLogin]"
+			}
+			sdk_button = {
+				text = "LOGOUT"
+				parentanchor = left|vcenter
+				onclick = "[StatusWidget.Logout]"
+				visible = "[StatusIsLoggedIn]"
+				enabled = "[Not(StatusIsLoggingIn)]"
+			}
+		}
+	}
+}

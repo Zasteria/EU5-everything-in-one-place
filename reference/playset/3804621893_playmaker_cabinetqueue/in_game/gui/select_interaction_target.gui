@@ -38,6 +38,16 @@ types SelectInteractionTargetTypes
  
 
 
+ button = { name = "pmcqsg_multiselect_row" size = { 100% 100% } ignore_layout = yes
+  visible = "[And(SelectInteractionTargetView.IsCountry, EqualTo_string(SelectInteractionTargetView.GetTitle, Localize('pmcqsg_pick')))]"
+  using = button_regular_texture
+  down = "[GetScriptedGui('pmcqsg_selected').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('pmcqsg_target', SelectInteractionTargetGlue.GetObject.GetCountry.MakeScope).End)]"
+  tooltip = "pmcqsg_selection_toggle"
+  onclick = "[GetScriptedGui('pmcqsg_select').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('pmcqsg_target', SelectInteractionTargetGlue.GetObject.GetCountry.MakeScope).End)]"
+  text_single = { size = { 90 24 } parentanchor = right|vcenter widgetanchor = right|vcenter position = { -8 0 } alwaystransparent = yes align = right
+   visible = "[GetScriptedGui('pmcqsg_selected').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('pmcqsg_target', SelectInteractionTargetGlue.GetObject.GetCountry.MakeScope).End)]" raw_text = "#G Selected#!" fontsize = 13
+  }
+ }
  button = { name = "pmcqrm_row" size = { 100% 100% } ignore_layout = yes
   visible = "[And(SelectInteractionTargetView.IsCountry, EqualTo_string(SelectInteractionTargetView.GetTitle, Localize('pmcqr_pick')))]"
   using = button_regular_texture
@@ -196,7 +206,7 @@ on_start = "[SelectInteractionTargetGlue.OnLeftClick]" }
 		card_list_button = {
 			ignore_layout = yes
 			size = { 100% 100% }
-			visible = "[And(And(Not(SelectInteractionTargetView.HasSelectTarget), Not(Or(And(SelectInteractionTargetView.IsCountry, EqualTo_string(SelectInteractionTargetView.GetTitle, Localize('pmcqr_pick'))), And(SelectInteractionTargetView.IsProvince, EqualTo_string(SelectInteractionTargetView.GetTitle, Localize('pmcqpm_pick')))))), Not(And(SelectInteractionTargetView.IsEstatePrivilege, GetScriptedGui('pmcqpriv_multi_enabled').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End))))]"
+			visible = "[And(And(Not(SelectInteractionTargetView.HasSelectTarget), Not(Or(Or(And(SelectInteractionTargetView.IsCountry, EqualTo_string(SelectInteractionTargetView.GetTitle, Localize('pmcqr_pick'))), And(SelectInteractionTargetView.IsCountry, EqualTo_string(SelectInteractionTargetView.GetTitle, Localize('pmcqsg_pick')))), And(SelectInteractionTargetView.IsProvince, EqualTo_string(SelectInteractionTargetView.GetTitle, Localize('pmcqpm_pick')))))), Not(And(SelectInteractionTargetView.IsEstatePrivilege, GetScriptedGui('pmcqpriv_multi_enabled').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End))))]"
 			using = select_interaction_target_action_provider
 			using = snd_UI_confirm
 
@@ -247,6 +257,17 @@ template select_interaction_target_header {
 }
 
 template select_interaction_target {
+ widget = { name = "pmcqrm_map_selection" size = { 1 1 } ignore_layout = yes alwaystransparent = yes
+  visible = "[And(SelectInteractionTargetView.IsCountry, EqualTo_string(SelectInteractionTargetView.GetTitle, Localize('pmcqr_pick')))]"
+  dynamicgridbox = {
+   datamodel = "[DataModelRepeatedItem(Select_int32(And(And(SelectInteractionTargetView.IsCountry, EqualTo_string(SelectInteractionTargetView.GetTitle, Localize('pmcqr_pick'))), And(SelectInteractionTargetView.GetCurrentParams.GetTargetObjectFromFlag('pmcqr_target').IsCountry, GetScriptedGui('pmcqrm_map_changed').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('pmcqrm_target', SelectInteractionTargetView.GetCurrentParams.GetTargetObjectFromFlag('pmcqr_target').GetCountry.MakeScope).End))), '(int32)1', '(int32)0'))]"
+   item = { widget = { size = { 1 1 }
+    state = { name = pmcqrm_stage_map_target trigger_on_create = yes
+     on_start = "[GetScriptedGui('pmcqrm_capture_map').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('pmcqrm_target', SelectInteractionTargetView.GetCurrentParams.GetTargetObjectFromFlag('pmcqr_target').GetCountry.MakeScope).End)]"
+    }
+   } }
+  }
+ }
  widget = { name = "pmcqcs_close_completed_action_list" size = { 1 1 } ignore_layout = yes alwaystransparent = yes
   dynamicgridbox = {
    datamodel = "[DataModelRepeatedItem(Select_int32(And(SelectInteractionTargetView.IsCabinetAction, And(GetVariableSystem.HasValue('pmcqcs_cleanup', 'yes'), GetScriptedGui('pmcqcs_assignment_complete').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End))), '(int32)1', '(int32)0'))]"
@@ -302,6 +323,32 @@ template select_interaction_target {
  }
 
 
+ vbox = { name = "pmcqsg_selection_controls" layoutpolicy_horizontal = expanding layoutpolicy_vertical = fixed spacing = 5
+  maximumsize = { 540 -1 } margin = { 10 5 }
+  visible = "[And(SelectInteractionTargetView.IsCountry, EqualTo_string(SelectInteractionTargetView.GetTitle, Localize('pmcqsg_pick')))]"
+  textbox = { size = { 520 42 } minimumsize = { 520 42 } maximumsize = { 520 42 }
+   layoutpolicy_horizontal = fixed layoutpolicy_vertical = fixed
+   multiline = yes autoresize = no align = left|vcenter fontsize = 12
+   text = "pmcqsg_selection_help"
+  }
+  hbox = { spacing = 8
+   button = { size = { 145 30 } using = button_regular_texture raw_text = "Confirm"
+    enabled = "[GetScriptedGui('pmcqsg_has_selection').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+    onclick = "[GetScriptedGui('pmcqsg_confirm_selection').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+    onclick = "[SelectInteractionTargetView.Manager.Close]"
+    onclick = "[GetVariableSystem.Set('pmcqsg_window', 'yes')]"
+   }
+   button = { size = { 145 30 } using = button_regular_texture raw_text = "Clear"
+    enabled = "[GetScriptedGui('pmcqsg_has_selection').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+    onclick = "[GetScriptedGui('pmcqsg_clear_selection').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+   }
+   button = { size = { 145 30 } using = button_regular_texture raw_text = "Cancel"
+    onclick = "[GetScriptedGui('pmcqsg_begin_selection').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+    onclick = "[SelectInteractionTargetView.Manager.Close]"
+    onclick = "[GetVariableSystem.Set('pmcqsg_window', 'yes')]"
+   }
+  }
+ }
  vbox = { name = "pmcqrm_controls" layoutpolicy_horizontal = expanding layoutpolicy_vertical = fixed spacing = 5
   maximumsize = { 540 -1 } margin = { 10 5 }
   visible = "[And(SelectInteractionTargetView.IsCountry, EqualTo_string(SelectInteractionTargetView.GetTitle, Localize('pmcqr_pick')))]"
@@ -331,12 +378,18 @@ template select_interaction_target {
   }
  }
  vbox = { name = "pmcqpm_controls" layoutpolicy_horizontal = expanding layoutpolicy_vertical = fixed spacing = 5
+  maximumsize = { 540 -1 } margin = { 10 5 }
   visible = "[And(SelectInteractionTargetView.IsProvince, EqualTo_string(SelectInteractionTargetView.GetTitle, Localize('pmcqpm_pick')))]"
   state = { name = _show on_start = "[GetScriptedGui('pmcqpm_begin').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]" }
 
  
 
-  text_single = { raw_text = "Selected provinces are marked and locked. Confirm to add them and start the queue, or Cancel to start over." fontsize = 14 }
+  textbox = {
+   size = { 100% 36 } maximumsize = { 520 36 }
+   layoutpolicy_horizontal = expanding layoutpolicy_vertical = fixed
+   multiline = yes autoresize = no align = left|vcenter fontsize = 12
+   raw_text = "Select provinces, then Confirm to add them and start.\nCancel discards this selection."
+  }
   hbox = { spacing = 8
    button = { size = { 145 30 } using = button_regular_texture raw_text = "Confirm"
     enabled = "[GetScriptedGui('pmcqpm_has_selection').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"

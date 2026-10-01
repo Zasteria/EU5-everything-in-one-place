@@ -1,0 +1,48 @@
+﻿# GetActions is empty for collapsed categories. A click first expands only the
+# requested category, then dispatches its real enabled action exactly once.
+template pmcq_native_shortcut_dispatcher {
+    widget = {
+        size = { 1 1 }
+        ignore_layout = yes
+        alwaystransparent = yes
+        vbox = {
+            datamodel = "[ForeignCountryView.GetCategoryItems]"
+            item = {
+                widget = {
+                    size = { 1 1 }
+                    alwaystransparent = yes
+                    dynamicgridbox = {
+                        datamodel = "[DataModelRepeatedItem(Select_int32(And(And(And(Or(GetVariableSystem.HasValue('pmcq_shortcut_pending', 'yes'), GetVariableSystem.HasValue('pmcq_shortcut_pending', 'inspect')), GetVariableSystem.HasValue('pmcq_shortcut_target', ForeignCountryView.GetCountry.GetTag)), GetVariableSystem.HasValue('pmcq_shortcut_category', DiplomaticActionCategory.GetNameKey)), Not(DiplomaticActionCategory.IsExpanded)), '(int32)1', '(int32)0'))]"
+                        item = { widget = { size = { 1 1 }
+                            state = {
+                                name = pmcq_expand_shortcut_category
+                                trigger_on_create = yes
+                                alpha = 0.99
+                                duration = 0.01
+                                on_finish = "[DiplomaticActionCategory.OnClick]"
+                            }
+                        } }
+                    }
+                    vbox = {
+                        datamodel = "[DiplomaticActionCategory.GetActions]"
+                        item = { widget = { size = { 1 1 } alwaystransparent = yes
+                            dynamicgridbox = {
+                                datamodel = "[DataModelRepeatedItem(Select_int32(And3(And(And(GetVariableSystem.HasValue('pmcq_shortcut_pending', 'yes'), GetVariableSystem.HasValue('pmcq_shortcut_target', ForeignCountryView.GetCountry.GetTag)), GetVariableSystem.HasValue('pmcq_shortcut_category', DiplomaticActionCategory.GetNameKey)), Or3(And(DiplomaticActionItem.IsEnabled, Not(And3(DiplomaticActionItem.IsType('giftaction'), DiplomaticActionItem.HasTarget, GetScriptedGui('pmcqsg_manual_cooldown').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('pmcqsg_target', DiplomaticActionItem.GetRecipient.MakeScope).End)))), GetVariableSystem.HasValue('pmcq_shortcut_key', 'alliance'), GetVariableSystem.HasValue('pmcq_shortcut_key', 'return_declare_war')), Or(Or(Or(Or(Or(Or(Or(Or(Or(And(GetVariableSystem.HasValue('pmcq_shortcut_key', 'gift'), DiplomaticActionItem.IsType('giftaction')), And(GetVariableSystem.HasValue('pmcq_shortcut_key', 'fleet'), Or(EqualTo_string(DiplomaticActionItem.GetTag, 'buy_request_fleet_basing_rights'), EqualTo_string(DiplomaticActionItem.GetTitle, Localize('buy_request_fleet_basing_rights'))))), And(GetVariableSystem.HasValue('pmcq_shortcut_key', 'offer_access'), Or(EqualTo_string(DiplomaticActionItem.GetTag, 'offer_military_access'), EqualTo_string(DiplomaticActionItem.GetTitle, Localize('offer_military_access'))))), And(GetVariableSystem.HasValue('pmcq_shortcut_key', 'offer_food'), Or(EqualTo_string(DiplomaticActionItem.GetTag, 'offer_food_access'), EqualTo_string(DiplomaticActionItem.GetTitle, Localize('offer_food_access'))))), Or(And(GetVariableSystem.HasValue('pmcq_shortcut_key', 'access'), Or(EqualTo_string(DiplomaticActionItem.GetTag, 'buy_request_military_access'), EqualTo_string(DiplomaticActionItem.GetTitle, Localize('buy_request_military_access')))), And(And(GetVariableSystem.HasValue('pmcq_shortcut_key', 'end_access'), Not(GetScriptedGui('pmcq_shortcut_allied').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('target', ForeignCountryView.GetCountry.MakeScope).End))), Or(EqualTo_string(DiplomaticActionItem.GetTag, 'break_military_access'), EqualTo_string(DiplomaticActionItem.GetTitle, Localize('break_military_access')))))), Or(And(GetVariableSystem.HasValue('pmcq_shortcut_key', 'food'), Or(EqualTo_string(DiplomaticActionItem.GetTag, 'request_food_access'), EqualTo_string(DiplomaticActionItem.GetTitle, Localize('request_food_access')))), And(GetVariableSystem.HasValue('pmcq_shortcut_key', 'end_food'), Or(EqualTo_string(DiplomaticActionItem.GetTag, 'break_food_access'), EqualTo_string(DiplomaticActionItem.GetTitle, Localize('break_food_access')))))), And(And(GetVariableSystem.HasValue('pmcq_shortcut_key', 'call_favors'), GetScriptedGui('pmcq_shortcut_can_call_ally').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('target', ForeignCountryView.GetCountry.MakeScope).End)), Or(Or(EqualTo_string(DiplomaticActionItem.GetTag, 'dip_ask_join_war_for_favors'), EqualTo_string(DiplomaticActionItem.GetTag, 'ask_join_war_for_favors')), EqualTo_string(DiplomaticActionItem.GetTitle, Localize('ask_join_war_for_favors'))))), Or(And(GetVariableSystem.HasValue('pmcq_shortcut_key', 'alliance'), Or(EqualTo_string(DiplomaticActionItem.GetTag, 'offer_alliance'), EqualTo_string(DiplomaticActionItem.GetTitle, Localize('offer_alliance')))), And(GetVariableSystem.HasValue('pmcq_shortcut_key', 'break_alliance'), Or(EqualTo_string(DiplomaticActionItem.GetTag, 'cancel_alliance'), EqualTo_string(DiplomaticActionItem.GetTitle, Localize('cancel_alliance')))))), And(GetVariableSystem.HasValue('pmcq_shortcut_key', 'threaten'), DiplomaticActionItem.IsType('threaten_war'))), Or(And(GetVariableSystem.HasValue('pmcq_shortcut_key', 'insult'), DiplomaticActionItem.IsType('insultaction')), And(GetVariableSystem.HasValue('pmcq_shortcut_key', 'return_declare_war'), DiplomaticActionItem.IsType('declarewar'))))), '(int32)1', '(int32)0'))]"
+                                item = { widget = { size = { 1 1 }
+                                    state = {
+                                        name = pmcq_dispatch_native_shortcut
+                                        trigger_on_create = yes
+                                        alpha = 0.99
+                                        duration = 0.01
+                                        on_finish = "[GetVariableSystem.Set('pmcq_shortcut_pending', 'no')]"
+                                        on_finish = "[DiplomaticActionItem.OnClick]"
+                                    }
+                                } }
+                            }
+                        } }
+                    }
+                }
+            }
+        }
+    }
+}

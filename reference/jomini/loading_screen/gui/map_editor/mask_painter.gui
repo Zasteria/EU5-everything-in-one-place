@@ -1,0 +1,319 @@
+
+types "MaskPainterTypes" {
+
+	type mask_painter_entry = widget {
+		name = "mask_painter_entry"
+		size = { 100% 32 }
+
+		hbox = {
+			layoutpolicy_horizontal = preferred
+			layoutpolicy_vertical = fixed
+
+			tools_checkbutton = {
+				blockoverride "button" {
+					texture = "gfx/tools/lock_checkbox.dds"
+					framesize = { 64 64 }
+					raw_tooltip = "Locking this mask will forbid doing any changes on the map to this layer."
+					checked = "[MaskManagerEntry.IsLocked]"
+					onclick = "[MaskManagerEntry.SetLocked( Not( MaskManagerEntry.IsLocked ) )]"
+				}
+			}
+
+			toolbox_checkbutton = {
+				margin = { 8 4 }
+				size = { 0 32 }
+				fontsize = 12
+				align = left|nobaseline
+				layoutpolicy_horizontal = preferred
+				layoutpolicy_vertical = fixed
+				text = "[MaskManagerEntry.GetKey]"
+				checked = "[MaskManagerEntry.IsSelected]"
+				onclick = "[MaskManagerEntry.SetSelected( Not( MaskManagerEntry.IsSelected ) )]"
+			}
+		}
+	}
+
+}
+
+hbox = {
+	name = "mask_painter_options"
+
+	margin = { 2 2 }
+	spacing = 4
+
+	layoutpolicy_horizontal = expanding
+	layoutpolicy_vertical = expanding
+
+	toolbox_checkbutton = {
+		input_action = "mask_painter_select_map_content"
+		raw_tooltip = "Territory selection mode."
+		checked = "[MaskPainterTool.IsMapContentSelectionMode]"
+		onclick = "[MaskPainterTool.SetMapContentSelectionMode( '(bool)yes' )]"
+		toolbox_icon = {
+			texture = "gfx/editor_terrain/select_map_content.dds"
+			size = { 24 24 }
+		}
+	}
+
+	toolbox_checkbutton = {
+		input_action = "mask_painter_brush_tool"
+		raw_tooltip = "Mask painting mode."
+		checked = "[MaskPainterTool.IsPaintMode]"
+		onclick = "[MaskPainterTool.SetPaintMode]"
+		toolbox_icon = {
+			texture = "gfx/tools/material/brush.png"
+		}
+	}
+
+	toolbox_checkbutton = {
+		name = "mask_painter_eraser_toolbox_button"
+		input_action = "mask_painter_eraser_tool"
+		raw_tooltip = "Mask erasing mode."
+		checked = "[MaskPainterTool.IsEraserMode]"
+		onclick = "[MaskPainterTool.SetEraserMode]"
+		toolbox_icon = {
+			texture = "gfx/editor_terrain/eraser.png"
+		}
+	}
+
+	tooloptions_divider = {}
+
+	brush_settings_button = {
+		widgetid = "mask_painter_brush_settings"
+		visible = "[Not(MaskPainterTool.IsMapContentSelectionMode)]"
+		input_action = "brush_settings_tooloption_1"
+	}
+
+	pixelsnap_checkbutton = {
+		visible = "[Not(MaskPainterTool.IsMapContentSelectionMode)]"
+	}
+
+	tooloptions_divider = {
+		visible = "[Not(MaskPainterTool.IsMapContentSelectionMode)]"
+	}
+
+	preview_mask_opacity_slider = {}
+
+	tooloptions_divider = { }
+
+	widget = {
+		name = "spacer"
+		layoutpolicy_horizontal = expanding
+	}
+}
+
+toolbox_checkbutton = {
+	name = "mask_painter_toolbox_button"
+	input_action = "mask_painter_tool"
+	raw_tooltip = "Mask Painter Tool"
+	checked = "[MaskPainterMode.IsSelected]"
+	toolbox_icon = {
+		texture = "gfx/editor_terrain/mask_painting_tool_icon.dds"
+		size = { 26 26 }
+	}
+}
+
+
+widget = {
+	alwaystransparent = no
+	size = { 100% 100% }
+	name = "mask_painter_viewport"
+
+	map_editor_viewport_tooltip = {
+		datacontext = "[MaskPainterViewport.GetTooltip]"
+	}
+}
+
+vbox = {
+	name = "mask_painter_manager"
+
+	using = tools_spacing
+
+	layoutpolicy_horizontal = preferred
+	layoutpolicy_vertical = expanding
+
+	editor_frame = {
+		layoutpolicy_horizontal = expanding
+		blockoverride "label" { raw_text = "Actions:" }
+		blockoverride "content" {
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				using = tools_spacing
+
+				tools_button = {
+					blockoverride "button" {
+						raw_tooltip = "Add new mask."
+						onclick = "[MaskPainterManager.OnNew]"
+						input_action = "mask_painter_new"
+					}
+					blockoverride "icon" { texture = "gfx/editor_terrain/mask_add_icon.dds" }
+				}
+				tools_button = {
+					blockoverride "button" {
+						raw_tooltip = "Clone selected mask."
+						enabled = "[MaskPainterManager.IsAnyMaskSelected]"
+						onclick = "[MaskPainterManager.OnClone]"
+						input_action = "mask_painter_clone"
+					}
+					blockoverride "icon" { texture = "gfx/editor_terrain/mask_clone_icon.dds" }
+				}
+				tools_button = {
+					blockoverride "button" {
+						raw_tooltip = "Rename selected mask."
+						enabled = "[MaskPainterManager.CanModify]"
+						onclick = "[MaskPainterManager.OnRename]"
+						input_action = "mask_painter_rename"
+					}
+					blockoverride "icon" { texture = "gfx/editor_terrain/mask_rename_icon.dds" }
+				}
+				tools_button = {
+					blockoverride "button" {
+						raw_tooltip = "Clear the selected mask."
+						enabled = "[MaskPainterManager.CanModify]"
+						onclick = "[MaskPainterManager.OnClear]"
+						input_action = "mask_painter_clear"
+					}
+					blockoverride "icon" { texture = "gfx/editor_terrain/mask_clear_icon.dds" }
+				}
+				tools_button = {
+					blockoverride "button" {
+						raw_tooltip = "Delete selected mask."
+						enabled = "[MaskPainterManager.IsAnyMaskSelected]"
+						onclick = "[MaskPainterManager.OnDelete]"
+						input_action = "mask_painter_delete"
+					}
+					blockoverride "icon" { texture = "gfx/editor_terrain/mask_delete_icon.dds" }
+				}
+				editbox = {
+					margin = { 4 2 }
+					using = terraineditor_label
+					size = { 60 24 }
+					raw_text = "Filters:"
+					fontsize = 12
+					align = right|nobaseline
+					layoutpolicy_horizontal = fixed
+					layoutpolicy_vertical = fixed
+					tooltipwidget = { using = dockable_tooltip }
+				}
+				editor_textinput = {
+					size = { 0 24 }
+					layoutpolicy_horizontal = preferred
+					layoutpolicy_vertical = fixed
+					fontsize = 12
+					text = "[MaskPainterManager.GetFilter]"
+					oneditingfinished = "[MaskPainterManager.SetFilter]"
+					align = left|nobaseline
+					raw_tooltip = "Search filter. Use | sign to separate multiple search keys."
+					tooltipwidget = { using = dockable_tooltip }
+				}
+				tooloptions_button = {
+					raw_text = "X"
+					fontsize = 18
+					size = { 24 24 }
+					raw_tooltip = "Clear filter."
+					tooltipwidget = { using = dockable_tooltip }
+					onclick = "[MaskPainterManager.ClearFilter]"
+				}
+			}
+
+			#hbox = {
+			#	layoutpolicy_horizontal = expanding
+			#	tooloptions_button = {
+			#		raw_text = "Rename"
+			#		size = { 32 32 }
+			#		raw_tooltip = "Rename currently selected mask."
+			#		tooltipwidget = { using = dockable_tooltip }
+			#		enabled = "[MaskPainterManager.IsAnyMaskSelected]"
+			#		onclick = "[MaskPainterManager.OnRename]"
+			#	}
+			#	dummy_fill_up = {}
+			#}
+		}
+	}
+
+	scrollarea = {
+		name = "scrollarea_entries"
+		scrollbarpolicy_vertical = always_on
+		scrollbarpolicy_horizontal = always_off
+
+		size = { 0 200 }
+		layoutpolicy_vertical = expanding
+		layoutpolicy_horizontal = preferred
+
+		autoresizeviewport = yes
+
+		viewportwidget = {
+			widget = {
+				scissor = yes
+			}
+		}
+
+		scrollbar_vertical = {
+			using = editor_vertical_scrollbar
+		}
+
+		scrollbar_horizontal = {
+			using = editor_horizontal_scrollbar
+		}
+
+		scrollwidget = {
+			fixedgridbox = {
+				name = "mask_entries_gridbox"
+				alwaystransparent = no
+				addcolumn = 100%
+				addrow = 34
+			}
+		}
+	}
+
+	vbox = {
+		visible = "[MaskPainterManager.IsAnyMaskSelected]"
+		layoutpolicy_horizontal = expanding
+		editor_frame = {
+			layoutpolicy_horizontal = expanding
+			blockoverride "label" { raw_text = "Mask Settings:" }
+			blockoverride "content" {
+				using = tools_spacing
+
+				editor_checkbutton = {
+					blockoverride "label" { raw_text = "Local Mask" }
+					blockoverride "checkbutton" {
+						checked = "[MaskPainterManager.IsSelectedMaskTypeLocal]"
+						onclick = "[MaskPainterManager.ToggleMaskTypeLocal]"
+					}
+					raw_tooltip = "Local Masks are saved only on this local machine in the User Folder. They're not pushed to the repository."
+					tooltipwidget = { using = dockable_tooltip }
+				}
+
+				editor_checkbutton = {
+					blockoverride "label" { raw_text = "Developer Mask" }
+					blockoverride "checkbutton" {
+						checked = "[MaskPainterManager.IsSelectedMaskTypeDeveloper]"
+						onclick = "[MaskPainterManager.ToggleMaskTypeDeveloper]"
+					}
+					raw_tooltip = "Developer masks are saved and pushed to the repository, but are not exported to the game folder. Chose this option if this mask is not going to be used by the game, but you wish to share it with collaborators."
+					tooltipwidget = { using = dockable_tooltip }
+				}
+			}
+		}
+
+		editor_frame = {
+			layoutpolicy_horizontal = expanding
+			blockoverride "label" { raw_text = "Notes:" }
+			blockoverride "content" {
+				using = tools_spacing
+				editor_editbox = {
+					margin_left = 8
+					using = terraineditor_eb
+					align = left|top
+					size = { 0 120 }
+					multiline = yes
+					layoutpolicy_vertical = fixed
+					layoutpolicy_horizontal = preferred
+					text = "[MaskPainterManager.GetSelectedMaskDesc]"
+					oneditingfinished = "[MaskPainterManager.SetSelectedMaskDesc]"
+				}
+			}
+		}
+	}
+}

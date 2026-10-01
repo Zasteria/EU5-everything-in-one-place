@@ -1,0 +1,802 @@
+template property_grid_label_column_size {
+	size = { 140 20 }
+}
+
+template property_grid_value_column_size {
+	size = { 191 20 }
+}
+
+types ToolsProperyTypes
+{
+	type dialog_grid_property = hbox {
+		tooltipwidget = {
+			using = dockable_tooltip
+		}
+		
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = preferred
+
+		tooltip = "[ToolProperty.GetTooltipWithLabel]"
+		tooltip_widgetanchor = bottom|left
+
+		spacing = 16
+		visible = "[ToolProperty.IsVisible]"
+
+		checkbutton = {
+			gfxtype = checkbuttongfx
+			shaderfile = "gfx/FX/pdxgui_pushbutton.shader"
+			texture = "gfx/editor_gui/editor_checkbox.dds"
+			framesize = { 16 16 }
+			visible = "[ToolProperty.HasCheckbox]"
+			checked = "[ToolProperty.IsSelected]"
+			onclick = "[ToolProperty.SetSelected(Not(ToolProperty.IsSelected))]"
+		}
+		
+		editor_textbox = {
+			using = property_grid_label_column_size
+			text = "[ToolProperty.GetLabel]"
+			elide = right
+			fontcolor = "[ToolProperty.GetColor]"
+			margin_bottom = 5
+		}
+
+		hbox = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = preferred
+			spacing = 4
+
+			block "content"
+			{
+			}
+
+			widget = {
+				size = { 20 20 }	
+				visible = "[ToolProperty.HasDefaultValue]"
+					
+				editor_button = {
+					enabled = "[Not(ToolProperty.IsValueDefault)]"
+					onclick = "[ToolProperty.SetValueToDefault]"
+					size = { 100% 100% }
+					icon = {
+						size = { 100% 100% }
+						texture = "gfx/tools/reset_property_icon.dds"
+					}
+					raw_tooltip = "Set to default."
+					tooltipwidget = { using = dockable_tooltip }
+				}
+			}
+			
+			using = ToolsPropertyActions
+		}
+		
+		# Extra spacing to not overlap with the possible scrollbar
+		widget = {
+			size = { 1 0 }
+		}
+	}
+	
+	type dialog_grid_property_bool = dialog_grid_property {
+		blockoverride "content"
+		{
+			checkbutton = {
+				gfxtype = checkbuttongfx
+				shaderfile = "gfx/FX/pdxgui_pushbutton.shader"
+				texture = "gfx/editor_gui/editor_checkbox.dds"
+				framesize = { 16 16 }
+				enabled = "[ToolProperty.IsActive]"
+				checked = "[ToolPropertyBool.IsEnabled]"
+				onclick = "[ToolPropertyBool.SetEnabled(Not(ToolPropertyBool.IsEnabled))]"
+			}
+		}
+	}
+
+	type dialog_grid_property_string = dialog_grid_property {
+		blockoverride "content"
+		{
+			editor_textinput = {
+				layoutpolicy_horizontal = expanding
+				text = "[ToolPropertyString.GetString]"
+				oneditingfinished_with_changes = "[ToolPropertyString.SetString]"
+				#onreturnpressed = "[ToolInputDialog.Confirm]"
+			}
+		}
+	}
+
+	type dialog_grid_property_cstring = dialog_grid_property {
+		blockoverride "content"
+		{
+			editor_textinput = {
+				layoutpolicy_horizontal = expanding
+				text = "[ToolPropertyCString.GetString]"
+				oneditingfinished_with_changes = "[ToolPropertyCString.SetString]"
+			}
+		}
+	}
+	
+	type dialog_grid_property_float = dialog_grid_property {
+		blockoverride "content"
+		{
+			editor_textinput = {
+				using = property_grid_value_column_size
+				text = "[ToolPropertyFloat.GetFloat]"
+				oneditingfinished_with_changes = "[ToolPropertyFloat.SetFloat]"
+				#onreturnpressed = "[ToolInputDialog.Confirm]"
+			}
+		}
+	}
+	
+	type dialog_grid_property_fixed = dialog_grid_property {
+		blockoverride "content"
+		{
+			editor_textinput = {
+				using = property_grid_value_column_size
+				text = "[ToolPropertyFixed.GetFixed]"
+				oneditingfinished_with_changes = "[ToolPropertyFixed.SetFixed]"
+				#onreturnpressed = "[ToolInputDialog.Confirm]"
+			}
+		}
+	}
+
+	type dialog_grid_property_int8 = dialog_grid_property {
+		blockoverride "content"
+		{
+			editor_textinput = {
+				using = property_grid_value_column_size
+				text = "[ToolPropertyInt8.GetInt8]"
+				oneditingfinished_with_changes = "[ToolPropertyInt8.SetInt8]"
+			}
+		}
+	}
+	
+	type dialog_grid_property_uint8 = dialog_grid_property {
+		blockoverride "content"
+		{
+			editor_textinput = {
+				using = property_grid_value_column_size
+				text = "[ToolPropertyUint8.GetUint8]"
+				oneditingfinished_with_changes = "[ToolPropertyUint8.SetUint8]"
+			}
+		}
+	}
+	
+	type dialog_grid_property_int16 = dialog_grid_property {
+		blockoverride "content"
+		{
+			editor_textinput = {
+				using = property_grid_value_column_size
+				text = "[ToolPropertyInt16.GetInt16]"
+				oneditingfinished_with_changes = "[ToolPropertyInt16.SetInt16]"
+			}
+		}
+	}
+	
+	type dialog_grid_property_uint16 = dialog_grid_property {
+		blockoverride "content"
+		{
+			editor_textinput = {
+				using = property_grid_value_column_size
+				text = "[ToolPropertyUint16.GetUint16]"
+				oneditingfinished_with_changes = "[ToolPropertyUint16.SetUint16]"
+			}
+		}
+	}
+	
+	type dialog_grid_property_int = dialog_grid_property {
+		blockoverride "content"
+		{
+			editor_textinput = {
+				using = property_grid_value_column_size
+				text = "[ToolPropertyInt.GetInt]"
+				oneditingfinished_with_changes = "[ToolPropertyInt.SetInt]"
+				#onreturnpressed = "[ToolInputDialog.Confirm]"
+			}
+		}
+	}
+	
+	type dialog_grid_property_uint = dialog_grid_property {
+		blockoverride "content"
+		{
+			editor_textinput = {
+				using = property_grid_value_column_size
+				text = "[ToolPropertyUint.GetUint]"
+				oneditingfinished_with_changes = "[ToolPropertyUint.SetUint]"
+				#onreturnpressed = "[ToolInputDialog.Confirm]"
+			}
+		}
+	}
+
+	type dialog_grid_property_enum = dialog_grid_property {
+		blockoverride "content"
+		{
+			dropdown = {
+				name = "tools_property_enum_dropdown"
+			    layoutpolicy_horizontal = expanding
+				using = settings_dropdown
+				datamodel = "[CPdxEnumValue.GetDropdownEntries]"
+				onselectionchanged = "[CPdxEnumValue.SetDropdownValueIndex]"
+				selectedindex = "[CPdxEnumValue.GetDropdownValueIndex]"
+				blockoverride "dropdown_item_size" { size = { 220 20 } }
+				blockoverride "dropdown_list_position" { position = { 0 20 } }
+				blockoverride "dropdown_gridbox_size" { addcolumn = 220  addrow = 20 }
+				blockoverride "dropdown_item_text" { text = "[CString.GetString]" }
+			}
+		}
+	}
+	
+	type dialog_grid_property_color = dialog_grid_property {
+		blockoverride "content"
+		{
+			tools_colorpicker = {
+				color = "[ToolPropertyColor.GetColor]"
+				#oncoloredited = "[ToolPropertyColor.SetColor]"
+				oneditingfinished_with_changes = "[ToolPropertyColor.SetColor]"
+			}
+		}
+	}
+	
+	type dialog_grid_property_ccolor = dialog_grid_property {
+		blockoverride "content"
+		{
+			tools_colorpicker = {
+				color = "[ToolPropertyCColor.GetCColor]"
+				#oncoloredited = "[ToolPropertyCColor.SetColor]"
+				oneditingfinished_with_changes = "[ToolPropertyCColor.SetCColor]"
+			}
+		}
+	}
+	
+	type dialog_grid_property_vec4i_as_color = dialog_grid_property {
+		blockoverride "content"
+		{
+			tools_colorpicker = {
+				color = "[Vector4iToColor( ToolPropertyVec4i.GetValue )]"
+				oneditingfinished_with_changes = "[ToolPropertyVec4i.SetValueFromColor]"
+			}
+		}
+	}
+
+	type dialog_grid_property_vec4i = dialog_grid_property {
+		blockoverride "content"
+		{
+			flowcontainer = {
+				spacing = 8
+
+				editor_textinput = {
+					size = { 58 24 }
+					text = "[ToolPropertyVec4i.GetX]"
+					oneditingfinished_with_changes = "[ToolPropertyVec4i.SetX]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					size = { 58 24 }
+					text = "[ToolPropertyVec4i.GetY]"
+					oneditingfinished_with_changes = "[ToolPropertyVec4i.SetY]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					size = { 58 24 }
+					text = "[ToolPropertyVec4i.GetZ]"
+					oneditingfinished_with_changes = "[ToolPropertyVec4i.SetZ]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					size = { 58 24 }
+					text = "[ToolPropertyVec4i.GetW]"
+					oneditingfinished_with_changes = "[ToolPropertyVec4i.SetW]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+			}
+		}
+	}
+	
+	type dialog_grid_property_vec4Fixed = dialog_grid_property {
+		blockoverride "content"
+		{
+			flowcontainer = {
+				spacing = 8
+
+				editor_textinput = {
+					size = { 58 24 }
+					text = "[ToolPropertyVec4F.GetX]"
+					oneditingfinished_with_changes = "[ToolPropertyVec4F.SetX]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					size = { 58 24 }
+					text = "[ToolPropertyVec4F.GetY]"
+					oneditingfinished_with_changes = "[ToolPropertyVec4F.SetY]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					size = { 58 24 }
+					text = "[ToolPropertyVec4F.GetZ]"
+					oneditingfinished_with_changes = "[ToolPropertyVec4F.SetZ]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					size = { 58 24 }
+					text = "[ToolPropertyVec4F.GetW]"
+					oneditingfinished_with_changes = "[ToolPropertyVec4F.SetW]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+			}
+		}
+	}
+
+	type dialog_grid_property_vec3f_as_color = dialog_grid_property {
+		blockoverride "content"
+		{
+			widget = { layoutpolicy_horizontal = expanding }
+			tools_colorpicker = {
+				color = "[Vector3fToColor( ToolPropertyVec3f.GetValue )]"
+				oneditingfinished_with_changes = "[ToolPropertyVec3f.SetValueFromColor]"
+				# remove alpha components
+				blockoverride "alpha_checkbutton"
+				{
+					visible = no
+				}
+				blockoverride "alpha_editbox"
+				{
+					visible = no
+				}
+				blockoverride "alpha_slider"
+				{
+					visible = no
+				}
+			}
+		}
+	}
+
+	type dialog_grid_property_vec3f = dialog_grid_property {
+		blockoverride "content"
+		{
+			flowcontainer = {
+				spacing = 8
+
+				editor_textinput = {
+					size = { 58 24 }
+					text = "[ToolPropertyVec3f.GetX]"
+					oneditingfinished_with_changes = "[ToolPropertyVec3f.SetX]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					size = { 58 24 }
+					text = "[ToolPropertyVec3f.GetY]"
+					oneditingfinished_with_changes = "[ToolPropertyVec3f.SetY]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					size = { 58 24 }
+					text = "[ToolPropertyVec3f.GetZ]"
+					oneditingfinished_with_changes = "[ToolPropertyVec3f.SetZ]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+			}
+		}
+	}
+
+	type dialog_grid_property_vec3Fixed = dialog_grid_property {
+		blockoverride "content"
+		{
+			flowcontainer = {
+				spacing = 8
+
+				editor_textinput = {
+					size = { 58 24 }
+					text = "[ToolPropertyVec3F.GetX]"
+					oneditingfinished_with_changes = "[ToolPropertyVec3F.SetX]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					size = { 58 24 }
+					text = "[ToolPropertyVec3F.GetY]"
+					oneditingfinished_with_changes = "[ToolPropertyVec3F.SetY]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					size = { 58 24 }
+					text = "[ToolPropertyVec3F.GetZ]"
+					oneditingfinished_with_changes = "[ToolPropertyVec3F.SetZ]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+			}
+		}
+	}
+		
+	type dialog_grid_property_vec3i_as_color = dialog_grid_property {
+		blockoverride "content"
+		{
+			tools_colorpicker = {
+				color = "[Vector3iToColor( ToolPropertyVec3i.GetValue )]"
+				oneditingfinished_with_changes = "[ToolPropertyVec3i.SetValueFromColor]"
+				# remove alpha components
+				blockoverride "alpha_checkbutton"
+				{
+					visible = no
+				}
+				blockoverride "alpha_editbox"
+				{
+					visible = no
+				}
+				blockoverride "alpha_slider"
+				{
+					visible = no
+				}
+			}
+		}
+	}
+
+	type dialog_grid_property_vec3i = dialog_grid_property {
+		blockoverride "content"
+		{
+			flowcontainer = {
+				spacing = 8
+
+				editor_textinput = {
+					size = { 58 24 }
+					text = "[ToolPropertyVec3i.GetX]"
+					oneditingfinished_with_changes = "[ToolPropertyVec3i.SetX]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					size = { 58 24 }
+					text = "[ToolPropertyVec3i.GetY]"
+					oneditingfinished_with_changes = "[ToolPropertyVec3i.SetY]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					size = { 58 24 }
+					text = "[ToolPropertyVec3i.GetZ]"
+					oneditingfinished_with_changes = "[ToolPropertyVec3i.SetZ]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+			}
+		}
+	}
+	
+	type dialog_grid_property_vec2f = dialog_grid_property {
+		blockoverride "content"
+		{
+			flowcontainer = {
+				spacing = 8
+
+				editor_textinput = {
+					size = { 92 24 }
+					text = "[ToolPropertyVec2f.GetX]"
+					oneditingfinished_with_changes = "[ToolPropertyVec2f.SetX]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					size = { 92 24 }
+					text = "[ToolPropertyVec2f.GetY]"
+					oneditingfinished_with_changes = "[ToolPropertyVec2f.SetY]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+			}
+		}
+	}
+
+	type dialog_grid_property_vec2Fixed = dialog_grid_property {
+		blockoverride "content"
+		{
+			flowcontainer = {
+				spacing = 8
+
+				editor_textinput = {
+					size = { 92 24 }
+					text = "[ToolPropertyVec2F.GetX]"
+					oneditingfinished_with_changes = "[ToolPropertyVec2F.SetX]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					size = { 92 24 }
+					text = "[ToolPropertyVec2F.GetY]"
+					oneditingfinished_with_changes = "[ToolPropertyVec2F.SetY]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+			}
+		}
+	}
+
+	type dialog_grid_property_texture_string_selector = dialog_grid_property {
+		blockoverride "content"
+		{
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				spacing = 8
+
+				editor_textinput = {
+					layoutpolicy_horizontal = expanding
+					size = { 0 24 }
+					raw_text = "[ToolsPropertyTextureStringValue.GetTexturePath]"
+					tooltip = "[ToolsPropertyTextureStringValue.GetTexturePath]"
+					tooltipwidget = { using = dockable_tooltip }
+					oneditingfinished_with_changes ="[ToolsPropertyTextureStringValue.SetValueFromText]"
+					align = left
+				}
+
+				tooloptions_button = {
+					raw_tooltip = "Click to select texture"
+					onclick = "[ToolsPropertyTextureStringValue.SelectTexture]"
+					size = { 24 24 }
+					toolbox_icon = {
+						texture = "[ToolsPropertyTextureStringValue.GetTexture]"
+						size = { 24 24 }
+					}
+					tooltip_widgetanchor = bottom|hcenter
+					tooltipwidget = {
+						using = dockable_tooltip
+						blockoverride "above_tooltip" {
+							editor_icon = {
+								size = { 256 256 }
+								texture = "[ToolsPropertyTextureStringValue.GetTexture]"
+								parentanchor = vcenter|hcenter
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	type dialog_grid_property_texture_selector = dialog_grid_property {
+		blockoverride "content"
+		{
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				spacing = 8
+
+				editor_textinput = {
+					layoutpolicy_horizontal = expanding
+					size = { 0 24 }
+					raw_text = "[ToolsPropertyTextureValue.GetTexturePath]"
+					tooltip = "[ToolsPropertyTextureValue.GetTexturePath]"
+					tooltipwidget = { using = dockable_tooltip }
+					oneditingfinished_with_changes ="[ToolsPropertyTextureValue.SetValueFromText]"
+					align = left
+				}
+
+				tooloptions_button = {
+					raw_tooltip = "Click to select texture"
+					onclick = "[ToolsPropertyTextureValue.SelectTexture]"
+					size = { 24 24 }
+					toolbox_icon = {
+						texture = "[ToolsPropertyTextureValue.GetTexture]"
+						size = { 24 24 }
+					}
+					tooltip_widgetanchor = bottom|hcenter
+					tooltipwidget = {
+						using = dockable_tooltip
+						blockoverride "above_tooltip" {
+							editor_icon = {
+								size = { 256 256 }
+								texture = "[ToolsPropertyTextureValue.GetTexture]"
+								parentanchor = vcenter|hcenter
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	type dialog_grid_property_vec2i = dialog_grid_property {
+		blockoverride "content"
+		{
+			flowcontainer = {
+				spacing = 8
+
+				editor_textinput = {
+					size = { 92 24 }
+					text = "[ToolPropertyVec2i.GetX]"
+					oneditingfinished_with_changes = "[ToolPropertyVec2i.SetX]"
+				}
+				
+				editor_textinput = {
+					size = { 92 24 }
+					text = "[ToolPropertyVec2i.GetY]"
+					oneditingfinished_with_changes = "[ToolPropertyVec2i.SetY]"
+				}
+			}
+		}
+	}
+
+	type dialog_grid_property_percentvalue = dialog_grid_property {
+		blockoverride "content"
+		{
+			flowcontainer = {
+				spacing = 8
+
+				editor_textinput = {
+					size = { 92 24 }
+					text = "[ToolPropertyVec2fPercent.GetX]"
+					oneditingfinished_with_changes = "[ToolPropertyVec2fPercent.SetX]"
+				}
+				
+				editor_textinput = {
+					size = { 92 24 }
+					text = "[ToolPropertyVec2fPercent.GetY]"
+					oneditingfinished_with_changes = "[ToolPropertyVec2fPercent.SetY]"
+				}
+			}
+		}
+	}
+
+	type prev_button = button {
+		using = editor_scrollbar_button
+		size = { 16 20 }
+		upframe = 9
+		downframe = 10
+		overframe = 11
+		disableframe = 12
+		tooltipwidget = { using = dockable_tooltip }
+	}
+	
+	type next_button = button {
+		using = editor_scrollbar_button
+		size = { 16 20 }
+		upframe = 13
+		downframe = 14
+		overframe = 15
+		disableframe = 16
+		tooltipwidget = { using = dockable_tooltip }
+	}
+
+	type dialog_grid_property_searchlist = dialog_grid_property {
+		blockoverride "content"
+		{
+			editor_toolbar_button = {
+				using = property_grid_value_column_size
+				layoutpolicy_horizontal = expanding
+				text = "[ToolPropertySearchList.GetSelectedText]"
+				onclick = "[ToolPropertySearchList.OpenSearchList]"
+				elide = middle
+			}
+		}
+	}
+
+	type dialog_grid_property_undoable_searchlist = dialog_grid_property {
+		blockoverride "content"
+		{
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = preferred
+				spacing = 1
+
+				prev_button = {
+					visible = "[ToolPropertyUndoableSearchList.AreSelectButtonsVisible]"
+					enabled = "[ToolPropertyUndoableSearchList.HasPrev]"
+					onclick = "[ToolPropertyUndoableSearchList.SelectPrev]"
+					tooltip = "[ToolPropertyUndoableSearchList.PrevEntryTooltip]"
+				}
+
+				editor_toolbar_button = {
+					using = property_grid_value_column_size
+					layoutpolicy_horizontal = expanding
+					text = "[ToolPropertyUndoableSearchList.GetSelectedText]"
+					onclick = "[ToolPropertyUndoableSearchList.OpenSearchList]"
+					elide = middle
+					tooltip = "[ToolProperty.GetTooltip]"
+				}
+
+				next_button = {
+					visible = "[ToolPropertyUndoableSearchList.AreSelectButtonsVisible]"
+					enabled = "[ToolPropertyUndoableSearchList.HasNext]"
+					onclick = "[ToolPropertyUndoableSearchList.SelectNext]"
+					tooltip = "[ToolPropertyUndoableSearchList.NextEntryTooltip]"
+				}
+			}
+		}
+	}
+
+	type dialog_grid_property_searchlist_2 = dialog_grid_property {
+		blockoverride "content"
+		{
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = preferred
+				spacing = 1
+
+				prev_button = {
+					visible = "[ToolProperty2SearchList.AreSelectButtonsVisible]"
+					enabled = "[ToolProperty2SearchList.HasPrev]"
+					onclick = "[ToolProperty2SearchList.SelectPrev]"
+					tooltip = "[ToolProperty2SearchList.PrevEntryTooltip]"
+				}
+
+				editor_toolbar_button = {
+					using = property_grid_value_column_size
+					layoutpolicy_horizontal = expanding
+					text = "[ToolProperty2SearchList.GetSelectedLabel]"
+					onclick = "[ToolProperty2SearchList.OpenSearchList]"
+					elide = middle
+					tooltip = "[ToolProperty.GetTooltip]"
+				}
+
+				next_button = {
+					visible = "[ToolProperty2SearchList.AreSelectButtonsVisible]"
+					enabled = "[ToolProperty2SearchList.HasNext]"
+					onclick = "[ToolProperty2SearchList.SelectNext]"
+					tooltip = "[ToolProperty2SearchList.NextEntryTooltip]"
+				}
+			}
+		}
+	}
+
+	type dialog_grid_property_curve = dialog_grid_property {
+		blockoverride "content"
+		{
+			widget = {
+				using = tools_property_curve
+			}
+		}
+	}
+	
+	type dialog_grid_property_categories = vbox {
+		layoutpolicy_horizontal = preferred
+		layoutpolicy_vertical = preferred
+		
+		checkbutton = {
+			checked = "[ToolPropertyList.IsExpanded]"
+			onclick = "[ToolPropertyList.SetExpanded(Not(ToolPropertyList.IsExpanded))]"
+			texture = "gfx/editor_gui/editor_entry_header.dds"
+			layoutpolicy_horizontal = preferred
+			
+			size = { 0 24 }
+
+			spriteborder = { 5 5 }
+			spriteType = CorneredStretched
+			framesize = { 16 16 }
+			
+			hbox = {
+				margin_left = 8
+				margin_bottom = 4
+				margin_right = 8
+				
+				editor_textbox = {
+					#raw_text = "#BOLD;COLOR:{0.72,0.72,0.15} [ToolPropertyList.GetLabel] #!"
+					raw_text = "#BOLD; [ToolPropertyList.GetLabel] #!"
+					fontcolor = "[ToolPropertyList.GetColor]"
+					autoresize = yes
+				}
+				
+				widget = {
+					layoutpolicy_horizontal = preferred
+				}
+				
+				checkbutton = {
+					gfxtype = checkbuttongfx
+					shaderfile = "gfx/FX/pdxgui_pushbutton.shader"
+					texture = "gfx/editor_gui/editor_expand_checkbox.dds"
+					framesize = { 16 16 }
+					size = { 8 8 }
+					checked = "[ToolPropertyList.IsExpanded]"
+					onclick = "[ToolPropertyList.SetExpanded(Not(ToolPropertyList.IsExpanded))]"
+				}
+			}
+		}
+		
+		vbox = {
+			name = "list"
+			margin_top = 2
+			spacing = 4
+			layoutpolicy_horizontal = preferred
+			layoutpolicy_vertical = preferred
+			visible = "[ToolPropertyList.IsExpanded]"
+		}
+	}
+}

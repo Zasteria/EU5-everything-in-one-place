@@ -1,0 +1,236 @@
+@map_editor_viewport_button_transparency = 0.75
+
+template map_editor_viewport_bg {
+	background = {
+		texture = "gfx/editor_gui/editor_layout_window.dds"
+		spriteType = CorneredStretched
+		spriteborder = { 5 5 }
+		shaderfile = "gfx/FX/pdxgui_default.shader"
+		framesize = { 16 16 }
+		alpha = 0.5
+	}
+}
+
+types "MapEditorDefaultTypes" {
+
+	type map_editor_text_checkbox = hbox {
+		layoutpolicy_horizontal = shrinking
+		layoutpolicy_vertical = preferred
+		checkbutton = {
+			size = { 16 16 }
+			gfxtype = checkbuttongfx
+			shaderfile = "gfx/FX/pdxgui_pushbutton.shader"
+			texture = "gfx/editor_gui/editor_checkbox.dds"
+			framesize = { 16 16 }
+			block "checkbutton" {}
+		}
+		widget = {
+			size = { 4 0 }
+			layoutpolicy_horizontal = fixed
+		}
+		editor_textbox = {
+			autoresize = yes
+			align = top
+			block "textbox" {}
+			using = tooloptions_font
+			fontsize = 12
+		}
+		block "tooltip" {}
+		tooltipwidget = { using = dockable_tooltip }
+	}
+
+	# TODO(Tomasz): [PSGE-???] We shall clean up these button types once we make absolutely all tools using uniform style.
+	#               Notice that gui animation editor is a solid base for target UI style.
+	#               I've already begun doing it on my old PDT branch.
+
+	type map_editor_button = button {
+		using = editor_toolbar_font
+		texture = "gfx/tools/common_button_bg.tga"
+		gfxtype = framedbuttongfx
+		spriteType = CorneredStretched
+		spriteborder = { 8 8 }
+		framesize = { 26 26 }
+		upframe = 1
+		downframe = 3
+		overframe = 2
+		disableframe = 4
+		intersectionmask = no
+		default_format = "#editor_formatting"
+		focuspolicy = click
+		tooltipwidget = {
+			using = dockable_tooltip
+		}
+		size = { 24 24 }
+	}
+
+	type map_editor_icon_in_button = icon {
+		parentanchor = vcenter|hcenter
+		size = { 90% 90% }
+	}
+
+	# Note: This toggle button is not a checkbutton, because checkbuttons has limited hardcoded
+	#       behavior regarding the background frame index, and our desired style should keep
+	#		the background frame index behavior the same as button, but using different image instead.
+	type map_editor_toggle_button = map_editor_button {
+		map_editor_icon_in_button = {
+			block "frame_1" {}
+			framesize = { 64 64 }
+			frame = 1
+		}
+		map_editor_icon_in_button = {
+			block "frame_2" {}
+			framesize = { 64 64 }
+			frame = 2		
+		}
+	}
+
+	type map_editor_toggle_text_button = toolbox_checkbutton {
+		size = { 0 24 }
+		fontsize = 12
+		tooltipwidget = { using = dockable_tooltip }
+	}
+
+	# Different variant of above button type, but instead of 2 frames image, it's changing the
+	# background image to the same as in ordinary tool checkboxes.
+	type map_editor_toggle_button_highlighted = map_editor_button {
+		icon = {
+			size = { 100% 100% }
+			texture = "gfx/tools/common_checkbutton_bg.tga"
+			framesize = { 26 26 }
+			frame = 2
+			block "checked" {
+				visible = no
+			}
+		}
+	}
+
+	# Viewport content that is common to all tools in the map editor.
+	type map_editor_viewport_common_content = vbox {
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = expanding
+		hbox = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = shrinking
+			margin = { 2 2 }
+			spacing = 2
+			
+			hbox = {
+				spacing = 2
+				block "toolbar" {}
+			}
+
+			widget = { layoutpolicy_horizontal = expanding }
+
+			hbox = {
+				using = map_editor_viewport_bg
+				spacing = 2
+
+				# Draw Water
+				map_editor_button = {
+					size = { 32 32 }
+					onclick = "[ExecuteConsoleCommand('Draw.Water')]"
+					map_editor_icon_in_button = {
+						texture = "gfx/tools/water.png"
+					}
+					raw_tooltip = "Toggle visibility of water."
+					tooltipwidget = { using = dockable_tooltip }
+				}
+
+				# Frame selection
+				map_editor_button = {
+					size = { 32 32 }
+					input_action = "map_editor_focus_selected"
+					visible = "[MapEditorGui.IsFramingCameraFeatureSupported]"
+					onclick = "[MapEditorGui.FrameCameraToSelection]"
+					enabled = "[MapEditorGui.CanFrameCameraToSelection]"
+					map_editor_icon_in_button = {
+						texture = "gfx/tools/frame_camera.png"
+					}
+					raw_tooltip = "Focus Camera on current selection."
+					tooltipwidget = { using = dockable_tooltip }
+				}
+			}
+
+			hbox = {
+				using = map_editor_viewport_bg
+				spacing = 2
+
+				# Lock Pitch
+				tooloptions_checkbutton = {
+					size = { 32 32 }
+					onclick = "[MapEditorGui.ToggleCameraPitchLock]"
+					checked = "[MapEditorGui.IsCameraPitchLocked]"
+					map_editor_icon_in_button = {
+						texture = "gfx/tools/frame_camera.png"
+					}
+					raw_tooltip = "Toggle camera pitch lock."
+					tooltipwidget = { using = dockable_tooltip }
+				}
+
+				# Lock Yaw
+				tooloptions_checkbutton = {
+					size = { 32 32 }
+					onclick = "[MapEditorGui.ToggleCameraYawLock]"
+					checked = "[MapEditorGui.IsCameraYawLocked]"
+					map_editor_icon_in_button = {
+						texture = "gfx/tools/frame_camera.png"
+					}
+					raw_tooltip = "Toggle camera yaw lock."
+					tooltipwidget = { using = dockable_tooltip }
+				}
+
+				# Lock Camera Fully
+				tooloptions_checkbutton = {
+					size = { 32 32 }
+					onclick = "[MapEditorGui.ToggleCameraLock]"
+					checked = "[MapEditorGui.IsCameraLocked]"
+					map_editor_icon_in_button = {
+						texture = "gfx/tools/frame_camera.png"
+					}
+					raw_tooltip = "Toggle full camera lock."
+					tooltipwidget = { using = dockable_tooltip }
+				}
+
+				# Set Top Down View
+				map_editor_button = {
+					size = { 32 32 }
+					onclick = "[MapEditorGui.SetCameraTopDownView]"
+					map_editor_icon_in_button = {
+						texture = "gfx/tools/frame_camera.png"
+					}
+					raw_tooltip = "Sets the camera into a top down view."
+					tooltipwidget = { using = dockable_tooltip }
+				}
+
+				# Reset camera rotation
+				map_editor_button = {
+					size = { 32 32 }
+					onclick = "[MapEditorGui.ResetCameraRotation]"
+					map_editor_icon_in_button = {
+						texture = "gfx/tools/frame_camera.png"
+					}
+					raw_tooltip = "Resets the camera rotation to default for zoom level."
+					tooltipwidget = { using = dockable_tooltip }
+				}
+			}
+
+			hbox = {
+				using = map_editor_viewport_bg
+				spacing = 2
+				block "views" {}
+			}
+		}
+		block "viewport_content" {}
+		widget = { layoutpolicy_vertical = expanding }
+	}
+}
+
+
+widget = {
+	name = "default_widget"
+}
+
+widget = {
+	name = "viewport_widget"
+	alwaystransparent = no
+}

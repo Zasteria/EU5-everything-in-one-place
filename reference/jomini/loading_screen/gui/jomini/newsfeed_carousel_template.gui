@@ -1,0 +1,158 @@
+template Newsfeed_Animation_Curve
+{
+	bezier = { 0.25 0.1 0.25 1 }
+}
+
+types Newsfeed
+{
+	type "newsfeed_carousel" = button
+	{
+		# Expects MarketingSlot data context provided
+		name = "newsfeed_slot_template"
+		visible = "[MarketingSlot.HasContent]"
+		alwaystransparent = no
+		scissor = yes
+		widget = {
+			size = { 902 230 }
+			widgetanchor = bottom|left
+			parentanchor = bottom|left
+			alwaystransparent = yes
+
+			# Rotation cycle
+			state = {
+				name = carousel_hold
+				next = carousel_transition
+
+				trigger_when = "[MarketingSlot.StartAnimating]"
+				on_start = "[MarketingSlot.ClearStartAnimating]"
+				
+				delay = "[MarketingSlot.GetCarouselDelay]"
+				position_x = 0
+			}
+			state = {
+				name = carousel_transition
+				next = carousel_flip
+
+				duration = 0.4
+				using = Newsfeed_Animation_Curve
+				block "offset_x" {
+					position_x = -451
+				}
+			}
+			state = {
+				name = carousel_flip
+				next = carousel_hold
+
+				delay = 0
+				duration = 0
+
+				on_start = "[MarketingSlot.CycleActiveContentCard]"
+				
+				position_x = 0
+			}
+
+			state = {
+				name = carousel_stop
+				trigger_when = "[MarketingSlot.StopAnimating]"
+				on_start = "[MarketingSlot.ClearStopAnimating]"
+				on_start = "[PdxGuiWidget.InterruptAnimation( 'carousel_hold' )]"
+				on_start = "[PdxGuiWidget.InterruptAnimation( 'carousel_transition' )]"
+				on_start = "[PdxGuiWidget.InterruptAnimation( 'carousel_flip' )]"
+				duration = 0
+				position_x = 0
+			}
+			button = {
+				name = "newsfeed_slot_main_button"
+				texture = "[MarketingSlot.GetTexture]"
+				block "current_button_pos" {
+					size = { 451 230 }
+				}
+				position = { 0 0 }
+				widgetanchor = bottom|left
+				parentanchor = bottom|left
+				visible = yes
+				alwaystransparent = yes # makes the button be ignored so click is passed to parent - alternatively we may want different onclicks for the two buttons
+			}
+			button = {
+				name = "newsfeed_slot_main_button_next"
+				texture = "[MarketingSlot.GetNextTexture]"
+				block "next_button_pos" {
+					size = { 451 230 }
+					position = { 451 0 }
+				}
+				widgetanchor = bottom|left
+				parentanchor = bottom|left
+				visible = yes
+				alwaystransparent = yes # makes the button be ignored so click is passed to parent - alternatively we may want different onclicks for the two buttons
+			}
+		}
+		onclick = "[MarketingSlot.ClickActiveCard]"
+	}
+
+	type newsfeed_full = widget {
+		position = { -1000 1000 }
+		parentanchor = top|right
+		widgetanchor = bottom|left
+		alwaystransparent = yes
+		visible = yes
+		size = { 960 230 }
+		scissor = yes
+
+		flowcontainer = {
+			spacing = 10
+
+			alwaystransparent = yes
+			ignoreinvisible = yes
+			visible = yes
+			scissor = yes
+
+			newsfeed_carousel = {
+				name = "newsfeed_slot_main"
+				size = { 451 230 }
+				align = left
+				datacontext = "[FrontEndMainView.AccessMarketingContainer.AccessSlotByName('main')]"
+				parentanchor = top|left
+				widgetanchor = top|left
+			}
+
+			newsfeed_carousel = {
+				name = "newsfeed_slot_secondary_1"
+				size = { 245 230 }
+				align = left
+				datacontext = "[FrontEndMainView.AccessMarketingContainer.AccessSlotByName('secondary-1')]"
+				parentanchor = top|left
+				widgetanchor = top|left
+				blockoverride "offset_x" {
+					position_x = -245
+				}
+				blockoverride "current_button_pos" {
+					size = { 245 230 }
+				}
+				blockoverride "next_button_pos" {
+					size = { 245 230 }
+					position = { 245 0 }
+				}
+			}
+
+			newsfeed_carousel = {
+				name = "newsfeed_slot_secondary_2"
+				size = { 245 230 }
+				align = left
+				datacontext = "[FrontEndMainView.AccessMarketingContainer.AccessSlotByName('secondary-2')]"
+				parentanchor = top|left
+				widgetanchor = top|left
+				blockoverride "offset_x" {
+					position_x = -245
+				}
+				blockoverride "current_button_pos" {				
+					size = { 245 230 }
+				}
+				blockoverride "next_button_pos" {
+					size = { 245 230 }
+					position = { 245 0 }
+				}
+			}
+		}
+	}
+}
+

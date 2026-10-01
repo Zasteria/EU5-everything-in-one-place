@@ -1,0 +1,243 @@
+types EntityDesigner
+{
+	type entity_designer_widget = cameracontrolwidget_entity_view
+	{
+		gfxtype = scene_gfx_type
+		shaderfile = "gfx/FX/pdxgui_default.shader"
+		effectname = "PdxGuiDefaultNoAlpha"
+		clear_color = { 0.2 0.2 0.2 1.0 }
+	}
+
+	type default_entity_previewer = entity_designer_widget 
+	{
+		layoutpolicy_vertical = expanding
+		layoutpolicy_horizontal = expanding
+		minimumsize = { 740 500 }
+
+		background = {
+			gfxtype = icongfx
+			texture = "gfx/editor_gui/editor_transparent.dds"
+			shaderfile = "gfx/FX/pdxgui_default.shader"
+			spriteType = CorneredTiled
+			tintcolor = { 0.3 0.3 0.3 1 }
+		}
+
+		camera_fov_y_degrees = 60
+		camera_zoom_limits = { 0.1 2000 }
+		camera_near_far = { 1.0 5000 }
+		camera_look_at = { 0.0 0.0 0.0 }
+		camera_position = { -1.5 2.0 -2 }
+	}
+}
+
+hbox = {
+	layoutpolicy_vertical = expanding
+	layoutpolicy_horizontal = expanding
+	minimumsize = { 1100 950 }
+	name = "entity_designer" #Don't change, used in code.
+
+	input_context = "entity_designer"
+
+	vbox = {
+		layoutpolicy_vertical = expanding
+		layoutpolicy_horizontal = expanding
+		margin = { 4 4 }
+		spacing = 8
+		
+		hbox = {
+			layoutpolicy_horizontal = expanding
+			history_toolbar = {
+				datacontext = "[EntityDesigner.AccessUndoer]"
+			}
+
+			# Spacer
+			widget = {
+				size = {10 32}
+			}
+
+			editor_button = {
+				icon = {
+					using = tools_centred_anchor
+					texture = "gfx/tools/material/settings.png"
+					size = { 26 26 }
+				}
+				onclick = "[EntityDesigner.OnEditorSettingsClick]"
+				raw_tooltip = "Entity designer Editor Settings"
+				tooltipwidget = { 
+					using = dockable_tooltip
+				}
+				size = { 32 32 }
+			}
+			# Spacer
+			widget = {
+				layoutpolicy_horizontal = expanding
+			}
+		}
+		
+		hbox = { #Top Row. Search list and mute and fit buttons
+			margin = { 4 4 }
+			layoutpolicy_horizontal = expanding
+			vbox = {
+				spacing = 8
+				layoutpolicy_vertical = expanding
+				layoutpolicy_horizontal = expanding
+				hbox = {
+					spacing = 8
+					layoutpolicy_horizontal = expanding
+					hbox = {
+						layoutpolicy_horizontal = growing
+						name = "schematic_list"
+					}
+
+					editor_button = {
+						icon = {
+							using = tools_centred_anchor
+							texture = "gfx/tools/node_graph.dds"
+							raw_tooltip = "Open the schematic node editor for this schematic"
+							tooltipwidget = { 
+								using = dockable_tooltip
+							}
+							size = { 24 24 }
+						}
+						onclick = "[EntityDesigner.OpenSchematicEditor]"
+						size = { 32 32 }
+					}
+
+					widget = { # Spacer
+						layoutpolicy_horizontal = expanding
+					}
+					
+					hbox = {
+						layoutpolicy_horizontal = shrinking
+						spacing = 8
+
+						editor_button = {
+							raw_tooltip = "Toggle debug drawing of Bounds.      Turqouise/Light Blue: Axially Aligned Bounding Box      Green: Oriented Bounding Box      Blue: Bounding Sphere      Red: Aggregate (total hierarchy) Bounds"
+							onclick = "[EntityDesigner.ToggleBoundsVisible]"
+							toolbox_icon = {
+								texture = "gfx/tools/material/bounds.png"
+								size = { 26 26 }
+							}
+							size = { 32 32 }
+							tooltipwidget = { 
+								using = dockable_tooltip
+							}
+						}
+						
+						editor_button = {
+							raw_tooltip = "Toggle debug drawing of Joints & Locators"
+							onclick = "[EntityDesigner.ToggleSkeletonVisible]"
+							toolbox_icon = {
+								texture = "gfx/tools/material/skeleton.png"
+								size = { 26 26 }
+							}
+							size = { 32 32 }
+							tooltipwidget = { 
+								using = dockable_tooltip
+							}
+						}
+						
+						toolbox_checkbutton = {
+							raw_tooltip = "Toggle Grid"
+							checked = "[EntityDesigner.IsGridVisible]"
+							onclick = "[EntityDesigner.ToggleGridVisible]"
+							input_action = "entity_designer_toggle_grid"
+							toolbox_icon = {
+								texture = "gfx/tools/material/grid.png"
+							}
+						}
+
+						editor_button = {
+							icon = {
+								using = tools_centred_anchor
+								texture = "gfx/tools/camera_fit.dds"
+								size = { 26 26 }
+							}
+							input_action = "entity_designer_fit_camera"
+							onclick = "[EntityDesigner.FitCamera]"
+							raw_tooltip = "Move and Rotate the camera so it fits the Entity"
+							tooltipwidget = { 
+								using = dockable_tooltip
+							}
+							size = { 32 32 }
+						}
+					}
+				}
+
+				editor_textbox = {
+					raw_text = "#color:{1.0,1.0,1.0,0.6};SIZE:13 #ITALIC Use scroll wheel to zoom, left mouse button to rotate and right mouse button to pan."
+					autoresize = yes
+				}
+			}
+		}
+
+		default_entity_previewer = {
+			name = "entity_designer_viewer_widget"
+			
+			widget = {
+				name = "camera_info_view"
+				vbox = {
+					editor_textbox = {
+						raw_text = "#color:{1.0,1.0,1.0,1.0};SIZE:13 #ITALIC Camera Position: #color:{1.0,0.0,0.0,1.0} X: #color:{1.0,1.0,1.0,1.0} [EntityDesigner.GetCameraPosX] #color:{0.0,1.0,0.0,1.0} Y: #color:{1.0,1.0,1.0,1.0} [EntityDesigner.GetCameraPosY] #color:{0.0,0.0,1.0,1.0} Z: #color:{1.0,1.0,1.0,1.0} [EntityDesigner.GetCameraPosZ]"
+						autoresize = yes
+						visible = [EntityDesigner.IsCameraInfoVisible]
+					}
+				}
+			}
+
+			widget = {
+				name = "animation_states_buttons_view"
+				parentanchor = bottom|right
+				widgetanchor = bottom|right
+				minimumsize = { 152 32 }
+
+				vbox = {
+					vbox = {
+						visible = "[EntityDesigner.IsAnimationStatesListVisible]"
+						datamodel = "[EntityDesigner.AnimationStatesButtons]"
+						spacing = 3
+						item = {
+							toolbox_checkbutton = {
+								size = { 145 25 } # The height should be same as animation_states_buttons_view min height. As total height of the widget = min height * num items. Calculated in cpp code.
+								text = "[AnimationStateButton.Name]"
+								checked = "[AnimationStateButton.IsChecked]"
+								onclick = "[AnimationStateButton.OnClick(AnimationStateButton.AccessSelf)]"
+							}
+						}
+						
+					}
+					hbox = {
+						toolbox_checkbutton = {
+							onclick = "[EntityDesigner.OnAnimationStatesButtonViewClicked]"
+							raw_tooltip = "Select an Active Animation state for the Entity."
+							tooltipwidget = { 
+								using = dockable_tooltip
+							}
+							icon = {
+								texture = "gfx/editor_gui/expand_left.png"
+							}
+							editor_textbox = { 
+								raw_text = "Animation List"
+								position = { 25 11 }
+							}
+							size = { 145 25 }
+						}
+				
+					}
+				}
+			}
+	}
+
+		entity_designer_player = {
+			name = "entity_designer_player"
+			visible = "[And( EntityDesigner.HasEntity, EntityDesignerPlayer.HasAnimation )]"
+
+			layoutpolicy_horizontal = expanding
+        	layoutpolicy_vertical = "[EntityDesignerPlayer.GetVerticalPolicy]"
+		}
+	}
+
+	entity_designer_properties = {
+		visible = "[EntityDesigner.HasEntity]"
+	}
+}

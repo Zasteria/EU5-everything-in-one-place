@@ -1,0 +1,351 @@
+types InspectorTypes {
+
+	type scope_object_inspector = hbox {
+		layoutpolicy_horizontal = growing
+		spacing = 2
+		widget = {
+			layoutpolicy_horizontal = growing
+			layoutpolicy_vertical = fixed
+			size = { 50 20 }
+
+			editor_textinput = {
+				size = { 100% 100% }
+				fontsize = 12
+				text = "[ScopeObjectEditor.AsString]"
+				oneditingfinished = "[ScopeObjectEditor.SetFromString]"
+				visible = "[Or(ScopeObjectEditor.IsNumber,ScopeObjectEditor.IsFlag)]"
+			}
+
+			hbox = {
+				size = { 100% 100% }
+				visible = "[ScopeObjectEditor.IsReference]"
+				
+				editor_textinput = {
+					layoutpolicy_vertical = preferred
+					layoutpolicy_horizontal = growing
+					size = { 0 0 }
+					fontsize = 12
+					text = "[ScopeObjectEditor.AsString]"
+					enabled = no
+				}
+
+				editor_textinput = {
+					layoutpolicy_vertical = preferred
+					layoutpolicy_horizontal = fixed
+					size = { 50 0 }
+					fontsize = 12
+					align = right
+					text = "[ScopeObjectEditor.GetID]"
+					oneditingfinished = "[ScopeObjectEditor.SetIDFromString]"
+					raw_tooltip = "The ID of the reference"
+				}
+			}
+			
+			checkbutton = {
+				parentanchor = right|vcenter
+				position = { 0 0 }
+				gfxtype = checkbuttongfx
+				shaderfile = "gfx/FX/pdxgui_pushbutton.shader"
+				texture = "gfx/editor_gui/editor_checkbox.dds"
+				framesize = { 16 16 }
+				size = { 16 16 }
+				checked = "[ScopeObjectEditor.AsBool]"
+				onclick = "[ScopeObjectEditor.ToggleBool]"
+				visible = "[ScopeObjectEditor.IsBool]"
+			}
+		}
+
+		dropDown = {
+			using = EditorTextDropdown
+			layoutpolicy_horizontal = fixed
+			name = "variable_type"
+			size = { 120 20 }
+
+			blockoverride "dropdown_list_position"
+			{
+				position = { 2 100% }
+			}
+
+			blockoverride "dropdown_item_size"
+			{
+				size = { 100% 20 }
+			}
+
+			blockoverride "dropdown_item_text"
+			{
+				text = "[ScopeObjectType.GetName]"
+			}
+			blockoverride "dropdown_gridbox_size"
+			{
+				addcolumn = 256
+				addrow = 20
+			}
+
+			datamodel = "[ScopeObjectEditor.GetVariableTypes]"
+			onselectionchanged = "[ScopeObjectEditor.SetSelectedType]"
+		    selectedindex = "[ScopeObjectEditor.GetSelectedType]"
+		    focuspolicy = all
+		}
+
+		editor_textinput = {
+			layoutpolicy_horizontal = fixed
+			size = { 40 0 }
+			fontsize = 12
+			align = right
+			raw_text = "[ScopeObjectEditor.GetTypeData]"
+			oneditingfinished = "[ScopeObjectEditor.SetTypeDataFromString]"
+			raw_tooltip = "Optional type data. It allows you to add extra data to the type and is used in a few cases to further distinguish a scope. Check with a programmer as to what cases are affected by this."
+		}
+	}
+
+	type variable_list_entry = hbox {
+		spacing = 2
+
+		scope_object_inspector = {
+			datacontext = "[VariableListEntry.AccessScopeEditor]"
+		}
+
+		editor_textinput = {
+			layoutpolicy_horizontal = fixed
+			size = { 60 18 }
+			align = right
+			text = "[VariableListEntry.GetTicksRemaining]"
+			oneditingfinished = "[VariableListEntry.SetTicksRemaining]"
+			raw_tooltip = "Ticks until deleted"
+		}
+
+		editor_button = {
+			layoutpolicy_horizontal = fixed
+			name = "delete_variable"
+			size = { 20 20 }
+			using = editor_font
+			using = GruvboxLightRedFont
+			fontweight = bold
+			raw_text = "X"
+			align = center|nobaseline
+			raw_tooltip = "Delete variable"
+			
+			onclick = "[VariableListEntry.Delete]"
+		}
+	}
+
+	type variable_list = vbox {
+		oncreate = "[BindFoldOutContext]"
+		inspector_header = {
+			blockoverride "textbox" {
+				fontcolor = { 1 1 1 1 }
+				raw_text = "[VariableList.GetName] ([VariableList.GetSize] entries)"
+			}
+		}
+
+		vbox = {
+			background = { using = EditorFoldoutBackground }
+			visible = "[PdxGuiFoldOut.IsUnfolded]"
+			datamodel = "[VariableList.AccessEntries]"
+			layoutpolicy_horizontal = preferred
+			layoutpolicy_vertical = expanding
+			using = InspectorSubIndentBig
+			
+			item = {
+				variable_list_entry = {
+					layoutpolicy_horizontal = preferred
+					layoutpolicy_vertical = fixed
+				}
+			}
+		}
+	}
+
+	type variable_list_store = vbox {
+		spacing = 3
+
+		editor_textbox = {
+			layoutpolicy_horizontal = preferred
+			size = { 0 20 }
+			align = left|vcenter
+			raw_text = "#BOLD Variable Lists #! ([VariableListStore.GetNumVariableLists] entries)"
+
+			block "title" { }
+		}
+
+		vbox = {
+			layoutpolicy_horizontal = preferred
+			layoutpolicy_vertical = expanding
+			using = InspectorSubIndent
+
+			vbox = {
+				datamodel = "[VariableListStore.AccessVariableLists]"
+				layoutpolicy_horizontal = preferred
+				layoutpolicy_vertical = expanding
+				spacing = 2
+				minimumsize = { 0 15 }
+
+				item = {
+					variable_list = {
+						layoutpolicy_horizontal = preferred
+					}
+				}
+			}
+
+			editor_textbox = {
+				layoutpolicy_horizontal = preferred
+				layoutpolicy_vertical = fixed
+				size = { 0 20 }
+				align = left|vcenter
+				raw_text = "Add new entry to list: "
+			}
+
+			hbox = {
+				layoutpolicy_horizontal = preferred
+				layoutpolicy_vertical = preferred
+				spacing = 2
+				margin = { 2 2 }
+
+				editor_textinput = {
+					layoutpolicy_horizontal = growing
+					size = { 50 18 }
+					raw_text = "[VariableListStore.GetNewVariableListName]"
+					oneditingfinished = "[VariableListStore.SetNewVariableListName]"
+					raw_tooltip = "Which list to add the entry to"
+				}
+
+				scope_object_inspector = {
+					layoutpolicy_horizontal = growing
+					datacontext = "[VariableListStore.AccessNewEntryEditor]"
+				}
+
+				editor_textinput = {
+					layoutpolicy_horizontal = fixed
+					size = { 60 18 }
+					align = right
+					text = "[VariableListStore.GetVariableTicksRemaining]"
+					oneditingfinished = "[VariableListStore.SetVariableTicksRemaining]"
+					raw_tooltip = "Ticks until deleted"
+				}
+
+				editor_button = {
+					layoutpolicy_horizontal = fixed
+					name = "add_variable"
+					size = { 20 20 }
+					using = editor_font
+					using = GruvboxLightAquaFont
+					fontweight = bold
+					raw_text = "+"
+					align = center|nobaseline
+					raw_tooltip = "Add new entry to list [VariableListStore.GetNewVariableListName]"
+					
+					onclick = "[VariableListStore.AddNewEntry]"
+					focuspolicy = all
+				}
+			}
+		}
+	}
+
+	type variable_entry = hbox {
+		spacing = 2
+		editor_textinput = {
+			layoutpolicy_horizontal = preferred
+			layoutstretchfactor_horizontal = 1
+			size = { 50 18 }
+			raw_text = "[VariableEntry.GetName]"
+			oneditingfinished = "[VariableEntry.SetName]"
+			raw_tooltip = "Variable name"
+		}
+		scope_object_inspector = {
+			layoutpolicy_horizontal = preferred
+			layoutstretchfactor_horizontal = 2
+			datacontext = "[VariableEntry.AccessScopeEditor]"
+		}
+		editor_button = {
+			layoutpolicy_horizontal = fixed
+			name = "delete_variable"
+			size = { 20 20 }
+			using = editor_font
+			using = GruvboxLightRedFont
+			fontweight = bold
+			raw_text = "X"
+			align = center|nobaseline
+			raw_tooltip = "Delete variable"
+			
+			onclick = "[VariableEntry.Delete]"
+		}
+	}
+
+	type variable_store = vbox {
+		spacing = 3
+		editor_textbox = {
+			layoutpolicy_horizontal = preferred
+			size = { 0 20 }
+			align = left|vcenter
+			raw_text = "#BOLD Variables #! ([VariableStore.GetNumVariables] entries)"
+
+			block "title" {}
+		}
+
+		vbox = {
+			layoutpolicy_horizontal = preferred
+			layoutpolicy_vertical = expanding
+			using = InspectorSubIndent
+
+			vbox = {
+				datamodel = "[VariableStore.AccessVariables]"
+				layoutpolicy_horizontal = preferred
+				layoutpolicy_vertical = expanding
+				spacing = 2
+				margin = { 3 3 }
+
+				size = { 0 15 }
+
+				item = {
+					variable_entry = {
+						layoutpolicy_horizontal = preferred
+					}
+				}
+			}
+
+			editor_textbox = {
+				layoutpolicy_horizontal = preferred
+				layoutpolicy_vertical = fixed
+				size = { 0 20 }
+				align = left|vcenter
+				raw_text = "Add new entry: "
+			}
+
+			hbox = {
+				layoutpolicy_horizontal = preferred
+				layoutpolicy_vertical = preferred
+				margin = { 2 2 }
+				spacing = 2
+
+				editor_textinput = {
+					layoutpolicy_horizontal = preferred
+					size = { 50 18 }
+					layoutstretchfactor_horizontal = 1
+					text = "[VariableStore.GetNewVariableName]"
+					oneditingfinished = "[VariableStore.SetNewVariableName]"
+					raw_tooltip = "The name of the new variable"
+				}
+				
+				scope_object_inspector = {
+					layoutpolicy_horizontal = preferred
+					layoutstretchfactor_horizontal = 2
+					datacontext = "[VariableStore.AccessNewEntryEditor]"
+				}
+
+				editor_button = {
+					layoutpolicy_horizontal = fixed
+					name = "add_variable"
+					size = { 20 20 }
+					using = editor_font
+					using = GruvboxLightAquaFont
+					fontweight = bold
+					raw_text = "+"
+					align = center|nobaseline
+					raw_tooltip = "Add new entry named [VariableStore.GetNewVariableName]"
+					
+					onclick = "[VariableStore.AddNewEntry]"
+					focuspolicy = all
+				}
+			}
+		}
+	}
+}
