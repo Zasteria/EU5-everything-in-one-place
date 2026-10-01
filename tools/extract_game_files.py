@@ -192,7 +192,7 @@ def copy_tree(source: Path, target: Path,
     A copy is not a change, and a tool that counts copies cannot tell the two
     apart for him.
     """
-    files = size = new = changed = 0
+    count = size = new = changed = 0
     for path in sorted(source.rglob("*")):
         if not path.is_file():
             continue
@@ -200,11 +200,11 @@ def copy_tree(source: Path, target: Path,
         state = copy_file(path, destination)
         if states is not None:
             states[destination] = state
-        files += 1
+        count += 1
         size += path.stat().st_size
         new += state == "new"
         changed += state == "changed"
-    return files, size, new, changed
+    return count, size, new, changed
 
 
 def copy_file(path: Path, destination: Path) -> str:
@@ -226,9 +226,10 @@ def elsewhere(game: Path, relative: str) -> Path | None:
     """
     # The last two names, not one: `main_menu/gui` searched for as `gui` alone
     # would land on `in_game/gui`, a folder that is already copied.
-    tail = relative.split("/")[-2:]
+    tail = [part.lower() for part in relative.split("/")[-2:]]
     for candidate in sorted(game.rglob(tail[-1])):
-        if candidate.is_dir() and list(candidate.parts[-len(tail):]) == tail:
+        if (candidate.is_dir()
+                and [part.lower() for part in candidate.parts[-len(tail):]] == tail):
             return candidate
     return None
 
@@ -253,6 +254,17 @@ def sweep(game: Path, out: Path, already: set[Path]) -> list[tuple[str, int]]:
         folder = str(relative.parent).replace(os.sep, "/")
         found[folder] = found.get(folder, 0) + 1
     return sorted(found.items())
+
+
+def files(count: int) -> str:
+    """«1 файл», «3 файла», «12 файлов»."""
+    if count % 10 == 1 and count % 100 != 11:
+        word = "файл"
+    elif 2 <= count % 10 <= 4 and not 12 <= count % 100 <= 14:
+        word = "файла"
+    else:
+        word = "файлов"
+    return "%d %s" % (count, word)
 
 
 def human(size: int) -> str:
@@ -316,14 +328,26 @@ def layer_files(layer: Path) -> list[Path]:
     return wanted
 
 
-def mod_roots(extra: list[Path]) -> list[tuple[str, Path]]:
-    """(name, folder) of every mod to look at, each mod once.
+def mod_label(folder: Path) -> str:
+    """The mod's own name from its metadata, or the folder's."""
+    try:
+        data = json.loads((folder / ".metadata/metadata.json").read_text(encoding="utf-8-sig"))
+        name = str(data.get("name") or "").strip()
+    except (OSError, ValueError):
+        name = ""
+    return name or folder.name
 
-    A workshop folder is named by its number alone, the copies here by number
-    and name, so the number is what says two are the same mod; the copies here
-    come first and give the readable name.
+
+def mod_roots(extra: list[Path]) -> list[tuple[str, Path]]:
+    """(name, folder) of every mod folder to look at.
+
+    The same mod is usually here twice: the copy in this repository and the
+    one Steam downloaded, which after an update is the newer of the two. Both
+    are read, under one name: the workshop folder is named by its number alone,
+    the copies here by number and name, so the number says they are one mod.
     """
-    seen: dict[str, tuple[str, Path]] = {}
+    names: dict[str, str] = {}
+    found: list[tuple[str, Path]] = []
     for base in [REPO / "reference/mods", REPO / "reference/playset", REPO / "mods", *extra]:
         if not base.is_dir():
             continue
@@ -332,13 +356,14 @@ def mod_roots(extra: list[Path]) -> list[tuple[str, Path]]:
                 continue
             head = folder.name.split("_", 1)[0]
             key = head if head.isdigit() else folder.name
-            seen.setdefault(key, (folder.name, folder))
-    return list(seen.values())
+            names.setdefault(key, mod_label(folder))
+            found.append((names[key], folder))
+    return found
 
 
-def replaced_by_mods(game: Path, extra: list[Path]) -> dict[str, list[str]]:
-    """Game file (relative path) -> the mods that ship a file at that path."""
-    found: dict[str, list[str]] = {}
+def shipped_by_mods(extra: list[Path]) -> dict[str, list[str]]:
+    """Every text file the mods ship (relative path) -> the mods shipping it."""
+    shipped: dict[str, list[str]] = {}
     for name, root in mod_roots(extra):
         for path in root.rglob("*"):
             if not path.is_file() or path.suffix.lower() not in TEXT_SUFFIXES:
@@ -346,11 +371,22 @@ def replaced_by_mods(game: Path, extra: list[Path]) -> dict[str, list[str]]:
             relative = path.relative_to(root)
             if relative.parts[0].startswith("."):
                 continue
-            if (game / relative).is_file():
-                mods = found.setdefault(relative.as_posix(), [])
-                if name not in mods:
-                    mods.append(name)
-    return found
+            mods = shipped.setdefault(relative.as_posix(), [])
+            if name not in mods:
+                mods.append(name)
+    return shipped
+
+
+def by_mod(paths: list[str], shipped: dict[str, list[str]], indent: str = "  ") -> None:
+    """Print paths grouped under the mods that ship them, a mod per line."""
+    grouped: dict[str, list[str]] = {}
+    for relative in paths:
+        for mod in shipped.get(relative, []):
+            grouped.setdefault(mod, []).append(relative)
+    for mod in sorted(grouped, key=lambda m: (-len(grouped[m]), m.lower())):
+        print("%s%s — %s:" % (indent, mod, files(len(grouped[mod]))))
+        for relative in grouped[mod]:
+            print("%s    %s" % (indent, relative))
 
 
 def prune(out: Path, source: Path) -> tuple[list[str], bool]:
@@ -475,16 +511,16 @@ def main(argv: list[str]) -> int:
                 continue
             source = moved
             found_at = str(moved.relative_to(game)).replace(os.sep, "/")
-        files, size, new, changed = copy_tree(source, out / found_at, states)
+        count, size, new, changed = copy_tree(source, out / found_at, states)
         copied.update(p for p in source.rglob("*") if p.is_file())
-        total_files += files
+        total_files += count
         total_size += size
         total_new += new
         total_changed += changed
         note = "" if found_at == relative else "   <- нашлось в %s" % found_at
         if new or changed:
             note = ("   новых %d, изменённых %d" % (new, changed)) + note
-        print("  %-46s %5d файлов %9s%s" % (relative, files, human(size), note))
+        print("  %-46s %12s %9s%s" % (relative, files(count), human(size), note))
 
     if not args.no_sweep:
         extra = sweep(game, out, copied)
@@ -494,20 +530,26 @@ def main(argv: list[str]) -> int:
                 print("  %-46s %5d" % (folder, count))
                 total_files += count
 
-    # Every game file a mod replaces whole, wherever it lives.
-    replaced = replaced_by_mods(game, args.mods_from)
-    moved: list[tuple[str, str]] = []
-    extra_new = extra_changed = 0
-    for relative in sorted(replaced):
+    # Every game file a mod replaces whole, wherever it lives. "changed" is the
+    # answer to "which mods does this patch break"; "new" only means the file
+    # was never copied here before, so there is no older copy to compare with.
+    shipped = shipped_by_mods(args.mods_from)
+    replaced = sorted(r for r in shipped if (game / r).is_file())
+    changed_under_mods: list[str] = []
+    first_time = 0
+    for relative in replaced:
         destination = out / relative
         state = states.get(destination)
         if state is None:
             # Outside the folders above: copied here and nowhere else.
             state = copy_file(game / relative, destination)
-            extra_new += state == "new"
-            extra_changed += state == "changed"
-        if state in ("new", "changed"):
-            moved.append((relative, state))
+            total_files += 1
+            total_new += state == "new"
+            total_changed += state == "changed"
+        if state == "changed":
+            changed_under_mods.append(relative)
+        elif state == "new":
+            first_time += 1
     print("\nфайлы игры, которые моды заменяют целиком: %d" % len(replaced))
 
     layers: list[tuple[str, Path]] = []
@@ -519,17 +561,22 @@ def main(argv: list[str]) -> int:
         layers.append((name, layer))
         target = REPO / "reference" / name if not args.out else out.parent / name
         new = changed = 0
-        files = layer_files(layer)
-        for path in files:
+        wanted = layer_files(layer)
+        for path in wanted:
             state = copy_file(path, target / path.relative_to(layer))
             new += state == "new"
             changed += state == "changed"
+        total_files += len(wanted)
         total_new += new
         total_changed += changed
-        print("  слой %-10s %5d файлов%s" % (name, len(files),
-              "   новых %d, изменённых %d" % (new, changed) if new or changed else ""))
+        print("  слой %-10s %12s%s   (%s)" % (
+            name, files(len(wanted)),
+            "   новых %d, изменённых %d" % (new, changed) if new or changed else "",
+            layer))
 
     removed: list[str] = []
+    removed_from_game: list[str] = []
+    refused = False
     if args.prune:
         trees = [(out, game)] + [((REPO / "reference" / n) if not args.out
                                   else out.parent / n, layer) for n, layer in layers]
@@ -538,11 +585,14 @@ def main(argv: list[str]) -> int:
                 continue
             gone, done = prune(target, source)
             if not done:
-                print("\n!! %s: в установке нет %d файлов отсюда — это больше трети."
+                print("\n!! %s: в установке нет %d файлов отсюда — больше 30%%."
                       % (target.name, len(gone)))
                 print("   Похоже, указана не та папка игры. Ничего не удалено.")
+                refused = True
                 continue
             removed += ["%s/%s" % (target.name, g) for g in gone]
+            if target == out:
+                removed_from_game = gone
         if removed:
             print("\nудалено, потому что из игры их убрали: %d" % len(removed))
             for line in removed[:40]:
@@ -557,17 +607,25 @@ def main(argv: list[str]) -> int:
         print("\nПапка, которую Paradox переименовали, сама по себе не беда — поиск по "
               "содержимому выше ловит нужные файлы.")
 
-    if moved:
-        print("\nМоды заменяют эти файлы игры целиком, а файлы новые или изменились:")
-        for relative, state in moved:
-            print("  %-8s %s" % ("новый" if state == "new" else "изменён", relative))
-            print("           %s" % ", ".join(replaced[relative]))
+    if changed_under_mods:
+        print("\nИгра изменила файлы, которые эти моды заменяют целиком. Если автор "
+              "не обновил свою копию, мод вернёт игре старую версию:")
+        by_mod(changed_under_mods, shipped)
+    orphaned = [r for r in removed_from_game if r in shipped]
+    if orphaned:
+        print("\nИгра убрала файлы, которые эти моды всё ещё везут:")
+        by_mod(orphaned, shipped)
+    if first_time:
+        print("\nЕщё %s игры, которые моды заменяют, взяты сюда впервые: "
+              "старой копии нет, сравнить не с чем." % files(first_time))
 
-    total_new += extra_new
-    total_changed += extra_changed
+    if refused:
+        print("\n!! Не коммить это: похоже, взята не та папка игры (см. выше). "
+              "Откати изменения в GitHub Desktop и укажи папку через --game.")
+        return 3
     write_build(out, build)
-    print("\n%d файлов, %s: новых %d, изменённых %d, удалённых %d."
-          % (total_files, human(total_size), total_new, total_changed, len(removed)))
+    print("\n%s, %s: новых %d, изменённых %d, удалённых %d."
+          % (files(total_files), human(total_size), total_new, total_changed, len(removed)))
     # **No git here.** He commits through GitHub Desktop and asked that nothing
     # in this repository's tooling write the working tree behind him.
     if total_new or total_changed or removed:

@@ -51,6 +51,10 @@ What it can do, in the order the work actually happens:
 
 5. **Commit and push**, to whatever branch he says, `main` included.
 
+6. **After a game update, everything at once** (menu item 9): the workshop
+   mods, the game's files with what the patch removed taken out too, every game
+   file a mod replaces whole, the engine layers, the API dumps, the rebuild.
+
 Nothing here needs the repository to be checked out anywhere in particular and
 nothing needs a session: steps 1 and 2 do not touch git at all, so it is
 usable as a mod updater on a day when modding is the last thing on his mind.
@@ -1431,7 +1435,7 @@ def screen_diag() -> None:
     ask("Enter — назад ")
 
 
-def screen_from_game() -> None:
+def screen_from_game(configured: dict) -> None:
     """Забрать из установленной игры то, чего нет в репозитории.
 
     **Существует потому, что сессия не видит игру, а видит только репозиторий.**
@@ -1455,7 +1459,8 @@ def screen_from_game() -> None:
         choice = ask("> ")
         if choice == "1":
             say()
-            run_python("tools/extract_game_files.py")
+            given = configured.get("game")
+            run_python("tools/extract_game_files.py", *(["--game", given] if given else []))
             say()
             say("Скопировано в reference/game/. Пока это не закоммичено —")
             say("в GitHub Desktop — сессия этих файлов не видит.")
@@ -1541,31 +1546,55 @@ def update_api_dumps(updated: int) -> bool:
     data["api_dumps"] = time.strftime("%Y-%m-%d %H:%M", time.localtime(taken))
     record.write_text(json.dumps(data, indent=1, ensure_ascii=False, sort_keys=True) + "\n",
                       encoding="utf-8")
-    say("Скопировал %d файлов в reference/game/docs, изменилось %d." % (len(found), changed))
+    say("Скопировал в reference/game/docs файлов: %d, изменилось: %d." % (len(found), changed))
     return True
 
 
 def screen_full_update(world: World, configured: dict) -> World:
     """Всё, что в reference пришло извне, — заново, после обновления игры.
 
-    Один проход вместо четырёх пунктов, которые надо помнить: файлы игры (с
-    локализацией, окнами и слоями движка), дампы API, моды из мастерской —
+    Один проход вместо четырёх пунктов, которые надо помнить: моды из
+    мастерской, файлы игры (с локализацией, окнами и слоями движка), дампы API —
     и пересборка того, что из них компилируется. Удаляет то, что игра убрала:
     без этого файл, которого в игре больше нет, лежал бы здесь как живой.
+
+    Моды идут первыми: шаг с файлами игры ищет, какие файлы игры моды заменяют
+    целиком, и искать это надо в обновлённых модах, а не во вчерашних.
     """
     say()
     say("Полное обновление reference после обновления игры. Четыре шага:")
-    say("  1  файлы игры: скрипты, события, окна, локализация, слои движка,")
+    say("  1  моды из мастерской: скачать отстающие, обновить reference и playset")
+    say("  2  файлы игры: скрипты, события, окна, локализация, слои движка,")
     say("     и каждый файл игры, который какой-нибудь мод заменяет целиком;")
     say("     то, что игра убрала, удаляется и отсюда")
-    say("  2  дампы API движка (script_docs, dump_data_types)")
-    say("  3  моды из мастерской: скачать отстающие, обновить reference и playset")
+    say("  3  дампы API движка (script_docs, dump_data_types)")
     say("  4  пересобрать файлы *_generated_* в наших модах")
     if not yes("Начать?"):
         return world
 
     say()
-    say("--- 1. Файлы игры ---")
+    say("--- 1. Моды из мастерской ---")
+    if world.content is None:
+        say("Папка мастерской не найдена — моды пропускаю.")
+    else:
+        outdated = show_updates(world)
+        if outdated and yes("Скачать свежие (%d) через steamcmd?" % len(outdated)):
+            if download(configured, outdated, world.content):
+                world = gather(configured)
+        tracked = {item.id for item in workshop.tracked()}
+        mine = [m for m in world.mods if m.id in tracked]
+        # Без ответа Steam не видно, кто отстал, — тогда копируются все.
+        behind = ([m for m in mine if not reference_is_current(m)]
+                  if world.asked_steam else mine)
+        say()
+        if behind:
+            update_reference(world, behind)
+        else:
+            say("Копии в reference/mods те же, что в мастерской.")
+        update_playset(world)
+
+    say()
+    say("--- 2. Файлы игры ---")
     game, updated = game_install(configured, world.content)
     if game is None:
         say("Steam не сказал, где стоит игра.")
@@ -1582,40 +1611,22 @@ def screen_full_update(world: World, configured: dict) -> World:
     taken = run_python("tools/extract_game_files.py", *args) == 0
 
     say()
-    say("--- 2. Дампы API движка ---")
+    say("--- 3. Дампы API движка ---")
     fresh = update_api_dumps(updated)
     if not fresh:
         say("Их снимает только сама игра. Один раз:")
         say("  Steam → EU5 → Свойства → Параметры запуска: -debug_mode")
         say("  в игре открой консоль (~) и введи  script_docs  затем  dump_data_types")
-        say("  выйди из игры и снова выбери этот пункт: остальное повторится")
-        say("  быстро и без изменений, а дампы лягут в reference/game/docs.")
-
-    say()
-    say("--- 3. Моды из мастерской ---")
-    copied: list[str] = []
-    if world.content is None:
-        say("Папка мастерской не найдена — моды пропускаю.")
-    else:
-        outdated = show_updates(world)
-        if outdated and yes("Скачать свежие (%d) через steamcmd?" % len(outdated)):
-            if download(configured, outdated, world.content):
-                world = gather(configured)
-        tracked = {item.id for item in workshop.tracked()}
-        mine = [m for m in world.mods if m.id in tracked]
-        # Без ответа Steam не видно, кто отстал, — тогда копируются все.
-        behind = ([m for m in mine if not reference_is_current(m)]
-                  if world.asked_steam else mine)
-        say()
-        if behind:
-            copied = update_reference(world, behind)
-        else:
-            say("Копии в reference/mods те же, что в мастерской.")
-        update_playset(world)
+        say("  выйди из игры, убери -debug_mode и снова выбери этот пункт:")
+        say("  остальное повторится без изменений, а дампы лягут в reference/game/docs.")
 
     say()
     say("--- 4. Пересборка ---")
     rebuild()
+    say()
+    say("Строки FAIL после пересборки коммиту не мешают: это проверки наших модов")
+    say("(например, «версия та же, а файлы изменены» — их пересобрали под новую")
+    say("игру). Их разбирает сессия, когда подгоняет моды.")
 
     say()
     say("=" * 62)
@@ -1623,9 +1634,9 @@ def screen_full_update(world: World, configured: dict) -> World:
     say("  GitHub Desktop → закоммить всё одним коммитом и запушь,")
     say("  потом напиши в тред — сессия сравнит новую версию со старой.")
     if not taken:
-        say("  !! Файлы игры не скопировались — ошибка выше.")
+        say("  !! Шаг 2 с файлами игры не прошёл — выше написано, что он сказал.")
     if not fresh:
-        say("  !! Дампы API старые — шаг 2 выше говорит, как снять новые.")
+        say("  !! Дампы API старые — шаг 3 выше говорит, как снять новые.")
     say()
     ask("Enter — назад ")
     return gather(configured)
@@ -1738,7 +1749,7 @@ def menu(configured: dict) -> int:
         elif choice == "6":
             screen_diag()
         elif choice == "7":
-            screen_from_game()
+            screen_from_game(configured)
         elif choice == "8":
             world = gather(configured)
         elif choice == "9":
