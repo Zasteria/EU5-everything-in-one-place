@@ -1455,6 +1455,7 @@ def screen_from_game(configured: dict) -> None:
         say()
         say("  1  Файлы игры → reference/game/  (по списку tools/game_files_manifest.txt)")
         say("  2  Логи игры → маленький архив, который можно приложить в чат")
+        say("  3  Дампы API движка → reference/game/docs (снимает их сама игра)")
         say("  0  назад")
         choice = ask("> ")
         if choice == "1":
@@ -1468,6 +1469,15 @@ def screen_from_game(configured: dict) -> None:
             ask("Enter — назад ")
         elif choice == "2":
             screen_logs()
+        elif choice == "3":
+            say()
+            _, updated = game_install(configured, None)
+            if update_api_dumps(updated):
+                say("Пока это не закоммичено — в GitHub Desktop — сессия их не видит.")
+            else:
+                say_how_to_dump("снова выбери этот пункт")
+            say()
+            ask("Enter — назад ")
         elif choice in {"0", "q", "в", "назад"}:
             return
 
@@ -1515,6 +1525,13 @@ def api_dumps() -> tuple[Path | None, list[tuple[Path, str]]]:
                   for p in sorted((base / "logs/data_types").glob("*.txt"))]
         return base, found
     return None, []
+
+
+def say_how_to_dump(then: str) -> None:
+    say("Их снимает только сама игра. Один раз:")
+    say("  Steam → EU5 → Свойства → Параметры запуска: -debug_mode")
+    say("  в игре открой консоль (~) и введи  script_docs  затем  dump_data_types")
+    say("  выйди из игры, убери -debug_mode и %s." % then)
 
 
 def update_api_dumps(updated: int) -> bool:
@@ -1614,11 +1631,7 @@ def screen_full_update(world: World, configured: dict) -> World:
     say("--- 3. Дампы API движка ---")
     fresh = update_api_dumps(updated)
     if not fresh:
-        say("Их снимает только сама игра. Один раз:")
-        say("  Steam → EU5 → Свойства → Параметры запуска: -debug_mode")
-        say("  в игре открой консоль (~) и введи  script_docs  затем  dump_data_types")
-        say("  выйди из игры, убери -debug_mode и снова выбери этот пункт:")
-        say("  остальное повторится без изменений, а дампы лягут в reference/game/docs.")
+        say_how_to_dump("выбери 7 → 3: дампы лягут в reference/game/docs")
 
     say()
     say("--- 4. Пересборка ---")

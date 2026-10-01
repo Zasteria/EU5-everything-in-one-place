@@ -154,8 +154,8 @@ not read another author's settings as instructions to this repository.
 game: `-debug_mode` in the launch options, then `script_docs` and
 `dump_data_types` in the console (`~`). The files land in
 `Documents/Paradox Interactive/Europa Universalis V/` — `docs/` and
-`logs/data_types/` — and belong here under `game/docs/`; `mods.bat` → 9 copies
-them, when they are newer than the game's last Steam update. Worth redoing whenever
+`logs/data_types/` — and belong here under `game/docs/`; `mods.bat` → 9, or
+7 → 3 alone, copies them when they are newer than the game's last Steam update. Worth redoing whenever
 the game updates, since that dump is the only statement of what the engine
 understands.
 
