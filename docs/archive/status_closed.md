@@ -10,3 +10,9 @@
 | [`rgo_bonus_filter`](../../mods/rgo_bonus_filter/CLAUDE.md) | working, in use, nothing outstanding | the location-panel chip |
 | [`goods_target`](../../mods/goods_target/CLAUDE.md) | paused, half working, four faults known | anything on the monthly pulse |
 | [`marker_throttle`](../../mods/marker_throttle/CLAUDE.md) | **закрыт 09-20, ставить нельзя.** Два прогона: `max_update_rate` на значке отряда ломает выбор щелчком, и сужение до трёх типов не помогло. Оставлен ради разбора | — |
+
+Вынесен 10-01 (он удалил его из игры 09-26 как багнутый):
+
+| mod | state | never been in game |
+| --- | --- | --- |
+| [`widget_probe`](../../mods/widget_probe/CLAUDE.md) | **отладочный. Прогоны 09-19: `PdxGuiDestroyWidget` работает, перечислить детей нечем.** Теперь меряет сам: сколько реальных секунд занял каждый из шести последних игровых месяцев | секундомер месяца, `gui.clearwidgets` |

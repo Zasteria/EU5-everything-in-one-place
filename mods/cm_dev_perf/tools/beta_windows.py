@@ -91,12 +91,17 @@ def type_block(text: str, name: str) -> tuple[int, int] | None:
 
 
 def beta_type(game_gui: Path, name: str) -> str:
+    """The beta's definition of `name`: in_game's interface first, then main_menu's
+    (`error_platypus`, `header_button_right` live there since the beta)."""
     hits = []
-    for path in sorted(game_gui.rglob("*.gui")):
-        text = path.read_text(encoding="utf-8-sig").replace("\r\n", "\n")
-        span = type_block(text, name)
-        if span:
-            hits.append(text[span[0]:span[1]])
+    for root in (game_gui, game_gui.parent.parent / "main_menu/gui"):
+        for path in sorted(root.rglob("*.gui")):
+            text = path.read_text(encoding="utf-8-sig").replace("\r\n", "\n")
+            span = type_block(text, name)
+            if span:
+                hits.append(text[span[0]:span[1]])
+        if hits:
+            break
     if len(hits) != 1:
         raise EditFailed(f"type {name}: defined {len(hits)} times in the beta")
     return hits[0]

@@ -1,0 +1,35 @@
+[
+ {
+  "op": "insert_before_block",
+  "anchor": "visible = \"[And3(BuildingItem.HasBuildings, BuildingItem.GetBuildingType.IsMultipleLevels, Not(BuildingItem.GetBuildingType.OnlyEstatesCanBuild))]\"",
+  "up": 0,
+  "text": "\t\t\t\t\t\t\t\t\t# CM: mass auto-expand button for the building type\n\t\t\t\t\t\t\t\t\tcm_mass_auto_expand_button_pl = {}",
+  "why": "CM's own mass auto-expand toggle, in the building-type header's hbox before vanilla's mass auto-expand checkbox"
+ },
+ {
+  "op": "replace",
+  "anchor": "visible = \"[And3(BuildingItem.HasBuildings, BuildingItem.GetBuildingType.IsMultipleLevels, Not(BuildingItem.GetBuildingType.OnlyEstatesCanBuild))]\"",
+  "text": "visible = \"[And4(BuildingItem.HasBuildings, BuildingItem.GetBuildingType.IsMultipleLevels, Not(BuildingItem.GetBuildingType.OnlyEstatesCanBuild), Not(GetScriptedGui('glorpui_is_cm_active').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End)))]\"",
+  "why": "vanilla's mass auto-expand checkbox is hidden while CM is active (CM's button replaces it)"
+ },
+ {
+  "op": "insert_before_block",
+  "anchor": "visible = \"[And(ObjectsEqual(Building.GetOwner, Player.Self), BuildingType.IsMultipleLevels)]\"",
+  "up": 0,
+  "text": "\t\t\t\t\t\t\t\t\t\t# CM: auto-expand button for this building; 20x20 instead of the type's 20x44 slot, which would overflow the beta's 60-high checkbox column\n\t\t\t\t\t\t\t\t\t\tcm_auto_expand_existing_building_button_pl = { size = { 20 20 } }",
+  "why": "CM's per-building auto-expand button, next to vanilla's per-building auto-expand checkbox (beta: in the subsidize/close/auto-expand vbox)"
+ },
+ {
+  "op": "replace",
+  "anchor": "visible = \"[And(ObjectsEqual(Building.GetOwner, Player.Self), BuildingType.IsMultipleLevels)]\"",
+  "text": "visible = \"[And3(Not(GetScriptedGui('glorpui_is_cm_active').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End)), ObjectsEqual(Building.GetOwner, Player.Self), BuildingType.IsMultipleLevels)]\"",
+  "why": "vanilla's per-building auto-expand checkbox is hidden while CM is active"
+ },
+ {
+  "op": "insert_after_block",
+  "anchor": "datacontext = \"[BuildingItem.GetNoCandidateUIAction]\"",
+  "up": 0,
+  "text": "\t\t\t\t\t# CM: auto-expand button for an unbuilt type, overlaid on the card left of the build icon\n\t\t\t\t\tcm_auto_expand_new_building_button_pl = {\n\t\t\t\t\t\tignore_layout = yes\n\t\t\t\t\t\tparentanchor = right|vcenter\n\t\t\t\t\t\tposition = { -101 0 }\n\t\t\t\t\t\tdatacontext = \"[BuildingItem.GetBuildingType]\"\n\t\t\t\t\t}",
+  "why": "CM's new-building auto-expand button on the no-candidate card, after card_header_button_04 as in CM's copy; x moved from -133 to -101 to stay 17px inside the build widget, which the beta narrowed 140->110 (margin_right 10->8)"
+ }
+]

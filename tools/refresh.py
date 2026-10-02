@@ -51,6 +51,7 @@ GENERATORS = (
     ("cm_dev_perf", "mods/cm_dev_perf/tools/port_from_cm_dev.py"),
     ("marker_throttle", "mods/marker_throttle/tools/port_from_fum.py"),
     ("qol_beta", "mods/qol_beta/tools/port_from_qol.py"),
+    ("cmf_dev_beta", "mods/cmf_dev_beta/tools/port_from_cmf_dev.py"),
     ("nd_ru", "mods/nd_ru/tools/generate_ru.py"),
     ("nmt_ru", "mods/nmt_ru/tools/generate_ru.py"),
     ("nmt_fix", "mods/nmt_fix/tools/generate.py"),
