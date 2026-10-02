@@ -44,7 +44,7 @@ _spec = importlib.util.spec_from_file_location(
 beta = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(beta)
 
-REVISION = 1
+REVISION = 2
 PAUSE_MENU = "in_game/gui/cmm/cmm_ingame_menu.gui"
 LOBBY = "in_game/gui/multiplayer_lobby.gui"
 # CMF replaces the lobby whole, and the beta rewrote it (1 653 lines, five new
@@ -67,8 +67,14 @@ def cmf_buttons(cmf_text: str) -> str:
     """CMF's two pause-menu buttons, as CMF wrote them."""
     span = beta.type_block(cmf_text, "frontend_menu_middle_template")
     body = cmf_text[span[0]:span[1]]
+    # The two CMF buttons and nothing after them: CMF's 1.3 template went on with
+    # vanilla's message, report and AI buttons, and taking the rest of the body
+    # put those in twice (his run 10-02: two «Настройки уведомлений»).
     start = body.index("\t# CMF: CMM open menu button")
-    end = body.rstrip().rindex("}")
+    end = start
+    for _ in range(2):
+        at = body.index("button_wax = {", end)
+        _, end = beta._block(body, at + len("button_wax = {"), 0)
     return body[start:end].rstrip()
 
 
