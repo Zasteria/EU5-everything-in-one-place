@@ -1,0 +1,163 @@
+[
+ {
+  "op": "beta_type",
+  "name": "AutomationSystemStandardCard",
+  "why": "the beta's card (its diplomacy options: access requests, subject annexation, improve-relations list; trade policies card); CM's hooks re-added below"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\t\tvisible = \"[Not(AutomatedSystemsItem.IsEnabled)]\"",
+  "text": "\t\t\t\t# CM: engine enable suppressed on the five intercepted cards\n\t\t\t\tvisible = \"[And(Not(AutomatedSystemsItem.IsEnabled), Not(Or5(AutomatedSystemsItem.IsName('expandbuildings'), AutomatedSystemsItem.IsName('expandrgo'), AutomatedSystemsItem.IsName('buildings'), AutomatedSystemsItem.IsName('closebuildings'), AutomatedSystemsItem.IsName('destroybuildings'))))]\"",
+  "why": "CM intercepts the five building cards: hide the engine's enable toggle there"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\t\tvisible = \"[AutomatedSystemsItem.IsEnabled]\"\n\t\t\t\tusing = snd_UI_checkbutton_automation",
+  "text": "\t\t\t\t# CM: engine disable suppressed on the five intercepted cards\n\t\t\t\tvisible = \"[And(AutomatedSystemsItem.IsEnabled, Not(Or5(AutomatedSystemsItem.IsName('expandbuildings'), AutomatedSystemsItem.IsName('expandrgo'), AutomatedSystemsItem.IsName('buildings'), AutomatedSystemsItem.IsName('closebuildings'), AutomatedSystemsItem.IsName('destroybuildings'))))]\"\n\t\t\t\tusing = snd_UI_checkbutton_automation",
+  "why": "CM intercepts the five building cards: hide the engine's disable toggle there"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\t}\n\n\t\t\t# Right-click opens the relevant panel",
+  "text": "\t\t\t}\n\n\t\t\t# CM: expand cards toggle auto-expand\n\t\t\taction_tooltip = {\n\t\t\t\tclick_type = left\n\t\t\t\ttitle = \"CM_AUTOMATION_TOGGLE\"\n\t\t\t\tvisible = \"[Or(AutomatedSystemsItem.IsName('expandbuildings'), AutomatedSystemsItem.IsName('expandrgo'))]\"\n\t\t\t\tusing = snd_UI_checkbutton_automation\n\t\t\t\ton_action = \"[GetScriptedGui(Select_CString(AutomatedSystemsItem.IsName('expandbuildings'), 'cm_toggle_auto_expand_buildings_feature', 'cm_toggle_auto_expand_rgos_feature')).Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]\"\n\t\t\t}\n\n\t\t\t# CM: Buildings card toggles Auto-Build\n\t\t\taction_tooltip = {\n\t\t\t\tclick_type = left\n\t\t\t\ttitle = \"CM_AUTOMATION_TOGGLE_AUTO_BUILD\"\n\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('buildings')]\"\n\t\t\t\tusing = snd_UI_checkbutton_automation\n\t\t\t\ton_action = \"[GetScriptedGui('cm_ab_toggle_master').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]\"\n\t\t\t}\n\n\t\t\t# CM: Close and Open Buildings card toggles Building Cleanup's closing and opening\n\t\t\taction_tooltip = {\n\t\t\t\tclick_type = left\n\t\t\t\ttitle = \"CM_AUTOMATION_TOGGLE_CLOSE_OPEN\"\n\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('closebuildings')]\"\n\t\t\t\tusing = snd_UI_checkbutton_automation\n\t\t\t\ton_action = \"[GetScriptedGui('cm_cu_toggle_close_open').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]\"\n\t\t\t}\n\n\t\t\t# CM: Destroy Buildings card toggles Building Cleanup's destroying\n\t\t\taction_tooltip = {\n\t\t\t\tclick_type = left\n\t\t\t\ttitle = \"CM_AUTOMATION_TOGGLE_DESTROY\"\n\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('destroybuildings')]\"\n\t\t\t\tusing = snd_UI_checkbutton_automation\n\t\t\t\ton_action = \"[GetScriptedGui('cm_cu_toggle_destroy').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]\"\n\t\t\t}\n\n\t\t\t# Right-click opens the relevant panel",
+  "why": "CM's own left-click toggles on the five intercepted cards"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\taction_tooltip = {\n\t\t\t\tclick_type = right\n\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('buildings')]\"",
+  "text": "\t\t\t# CM: Buildings card opens the Auto-Build settings\n\t\t\taction_tooltip = {\n\t\t\t\tclick_type = right\n\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('buildings')]\"",
+  "why": "right-click on the card opens CM's settings tab instead of the vanilla panel"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\t\ton_action = \"[OpenLateralView('production')]\"\n\t\t\t}\n\t\t\taction_tooltip = {\n\t\t\t\tclick_type = right\n\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('closebuildings')]\"",
+  "text": "\t\t\t\ton_action = \"[GetScriptedGui(Select_CString(Or(Not(GameIsMultiplayer), IsHost), 'CMM_SetHostAndRegisterCoreMod', 'CMM_RegisterCoreMod')).Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]\"\n\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_window_open', 'true')]\"\n\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_selected_mod', 'cm')]\"\n\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_selected_tab', 'cm__ab_master')]\"\n\t\t\t}\n\t\t\taction_tooltip = {\n\t\t\t\tclick_type = right\n\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('closebuildings')]\"",
+  "why": "right-click on the card opens CM's settings tab instead of the vanilla panel"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\taction_tooltip = {\n\t\t\t\tclick_type = right\n\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('closebuildings')]\"",
+  "text": "\t\t\t# CM: Close and Open Buildings card opens the Building Cleanup settings\n\t\t\taction_tooltip = {\n\t\t\t\tclick_type = right\n\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('closebuildings')]\"",
+  "why": "right-click on the card opens CM's settings tab instead of the vanilla panel"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\t\ton_action = \"[OpenLateralView('production')]\"\n\t\t\t}\n\t\t\taction_tooltip = {\n\t\t\t\tclick_type = right\n\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('subsidizebuildings')]\"",
+  "text": "\t\t\t\ton_action = \"[GetScriptedGui(Select_CString(Or(Not(GameIsMultiplayer), IsHost), 'CMM_SetHostAndRegisterCoreMod', 'CMM_RegisterCoreMod')).Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]\"\n\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_window_open', 'true')]\"\n\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_selected_mod', 'cm')]\"\n\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_selected_tab', 'cm__cleanup')]\"\n\t\t\t}\n\t\t\taction_tooltip = {\n\t\t\t\tclick_type = right\n\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('subsidizebuildings')]\"",
+  "why": "right-click on the card opens CM's settings tab instead of the vanilla panel"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\taction_tooltip = {\n\t\t\t\tclick_type = right\n\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('expandbuildings')]\"",
+  "text": "\t\t\t# CM: expand-buildings card opens the Construction Manager settings\n\t\t\taction_tooltip = {\n\t\t\t\tclick_type = right\n\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('expandbuildings')]\"",
+  "why": "right-click on the card opens CM's settings tab instead of the vanilla panel"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\t\ton_action = \"[OpenLateralView('production')]\"\n\t\t\t}\n\t\t\taction_tooltip = {\n\t\t\t\tclick_type = right\n\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('destroybuildings')]\"",
+  "text": "\t\t\t\ton_action = \"[GetScriptedGui(Select_CString(Or(Not(GameIsMultiplayer), IsHost), 'CMM_SetHostAndRegisterCoreMod', 'CMM_RegisterCoreMod')).Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]\"\n\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_window_open', 'true')]\"\n\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_selected_mod', 'cm')]\"\n\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_selected_tab', 'cm__auto_expand')]\"\n\t\t\t}\n\t\t\taction_tooltip = {\n\t\t\t\tclick_type = right\n\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('destroybuildings')]\"",
+  "why": "right-click on the card opens CM's settings tab instead of the vanilla panel"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\taction_tooltip = {\n\t\t\t\tclick_type = right\n\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('destroybuildings')]\"",
+  "text": "\t\t\t# CM: Destroy Buildings card opens the Building Cleanup settings\n\t\t\taction_tooltip = {\n\t\t\t\tclick_type = right\n\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('destroybuildings')]\"",
+  "why": "right-click on the card opens CM's settings tab instead of the vanilla panel"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\t\ton_action = \"[OpenLateralView('production')]\"\n\t\t\t}\n\t\t\taction_tooltip = {\n\t\t\t\tclick_type = right\n\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('destroyestatebuildings')]\"",
+  "text": "\t\t\t\ton_action = \"[GetScriptedGui(Select_CString(Or(Not(GameIsMultiplayer), IsHost), 'CMM_SetHostAndRegisterCoreMod', 'CMM_RegisterCoreMod')).Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]\"\n\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_window_open', 'true')]\"\n\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_selected_mod', 'cm')]\"\n\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_selected_tab', 'cm__cleanup')]\"\n\t\t\t}\n\t\t\taction_tooltip = {\n\t\t\t\tclick_type = right\n\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('destroyestatebuildings')]\"",
+  "why": "right-click on the card opens CM's settings tab instead of the vanilla panel"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\taction_tooltip = {\n\t\t\t\tclick_type = right\n\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('expandrgo')]\"",
+  "text": "\t\t\t# CM: expand-RGO card opens the Construction Manager settings\n\t\t\taction_tooltip = {\n\t\t\t\tclick_type = right\n\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('expandrgo')]\"",
+  "why": "right-click on the card opens CM's settings tab instead of the vanilla panel"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\t\ton_action = \"[OpenLateralView('goods_production')]\"\n\t\t\t}\n\t\t\taction_tooltip = {\n\t\t\t\tclick_type = right\n\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('rgo')]\"",
+  "text": "\t\t\t\ton_action = \"[GetScriptedGui(Select_CString(Or(Not(GameIsMultiplayer), IsHost), 'CMM_SetHostAndRegisterCoreMod', 'CMM_RegisterCoreMod')).Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]\"\n\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_window_open', 'true')]\"\n\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_selected_mod', 'cm')]\"\n\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_selected_tab', 'cm__auto_expand')]\"\n\t\t\t}\n\t\t\taction_tooltip = {\n\t\t\t\tclick_type = right\n\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('rgo')]\"",
+  "why": "right-click on the card opens CM's settings tab instead of the vanilla panel"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\t\t\t\t\tvisible = \"[AutomatedSystemsItem.IsEnabled]\"",
+  "text": "\t\t\t\t\t\t\t# CM: engine tick suppressed on the five intercepted cards\n\t\t\t\t\t\t\tvisible = \"[And(AutomatedSystemsItem.IsEnabled, Not(Or5(AutomatedSystemsItem.IsName('expandbuildings'), AutomatedSystemsItem.IsName('expandrgo'), AutomatedSystemsItem.IsName('buildings'), AutomatedSystemsItem.IsName('closebuildings'), AutomatedSystemsItem.IsName('destroybuildings'))))]\"\n\t\t\t\t\t\t}\n\t\t\t\t\t\t# CM: the five intercepted cards tick from this mod's own settings\n\t\t\t\t\t\ticon = {\n\t\t\t\t\t\t\tsize = { 100% 100% }\n\t\t\t\t\t\t\tusing = checkbox_auto_texture\n\t\t\t\t\t\t\tframe = 2\n\t\t\t\t\t\t\tvisible = \"[Or5(And(AutomatedSystemsItem.IsName('expandbuildings'), GetScriptedGui('cm_is_auto_expand_buildings_feature_enabled').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End)), And(AutomatedSystemsItem.IsName('expandrgo'), GetScriptedGui('cm_is_auto_expand_rgos_feature_enabled').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End)), And(AutomatedSystemsItem.IsName('buildings'), GetScriptedGui('cm_ab_is_master_enabled').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End)), And(AutomatedSystemsItem.IsName('closebuildings'), GetScriptedGui('cm_cu_close_open_is_enabled').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End)), And(AutomatedSystemsItem.IsName('destroybuildings'), GetScriptedGui('cm_cu_destroy_is_enabled').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End)))]\"",
+  "why": "the cog shows CM's own on/off state on the five intercepted cards"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('buildings')]\"",
+  "text": "\t\t\t\t\t# CM: Buildings card opens the Auto-Build settings\n\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('buildings')]\"",
+  "why": "right-click on the card opens CM's settings tab instead of the vanilla panel"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\t\t\t\ton_action = \"[OpenLateralView('production')]\"\n\t\t\t\t\t}\n\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('closebuildings')]\"",
+  "text": "\t\t\t\t\t\ton_action = \"[GetScriptedGui(Select_CString(Or(Not(GameIsMultiplayer), IsHost), 'CMM_SetHostAndRegisterCoreMod', 'CMM_RegisterCoreMod')).Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]\"\n\t\t\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_window_open', 'true')]\"\n\t\t\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_selected_mod', 'cm')]\"\n\t\t\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_selected_tab', 'cm__ab_master')]\"\n\t\t\t\t\t}\n\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('closebuildings')]\"",
+  "why": "right-click on the card opens CM's settings tab instead of the vanilla panel"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('closebuildings')]\"",
+  "text": "\t\t\t\t\t# CM: Close and Open Buildings card opens the Building Cleanup settings\n\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('closebuildings')]\"",
+  "why": "right-click on the card opens CM's settings tab instead of the vanilla panel"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\t\t\t\ton_action = \"[OpenLateralView('production')]\"\n\t\t\t\t\t}\n\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('subsidizebuildings')]\"",
+  "text": "\t\t\t\t\t\ton_action = \"[GetScriptedGui(Select_CString(Or(Not(GameIsMultiplayer), IsHost), 'CMM_SetHostAndRegisterCoreMod', 'CMM_RegisterCoreMod')).Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]\"\n\t\t\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_window_open', 'true')]\"\n\t\t\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_selected_mod', 'cm')]\"\n\t\t\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_selected_tab', 'cm__cleanup')]\"\n\t\t\t\t\t}\n\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('subsidizebuildings')]\"",
+  "why": "right-click on the card opens CM's settings tab instead of the vanilla panel"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('expandbuildings')]\"",
+  "text": "\t\t\t\t\t# CM: expand-buildings card opens the Construction Manager settings\n\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('expandbuildings')]\"",
+  "why": "right-click on the card opens CM's settings tab instead of the vanilla panel"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\t\t\t\ton_action = \"[OpenLateralView('production')]\"\n\t\t\t\t\t}\n\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('destroybuildings')]\"",
+  "text": "\t\t\t\t\t\ton_action = \"[GetScriptedGui(Select_CString(Or(Not(GameIsMultiplayer), IsHost), 'CMM_SetHostAndRegisterCoreMod', 'CMM_RegisterCoreMod')).Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]\"\n\t\t\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_window_open', 'true')]\"\n\t\t\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_selected_mod', 'cm')]\"\n\t\t\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_selected_tab', 'cm__auto_expand')]\"\n\t\t\t\t\t}\n\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('destroybuildings')]\"",
+  "why": "right-click on the card opens CM's settings tab instead of the vanilla panel"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('destroybuildings')]\"",
+  "text": "\t\t\t\t\t# CM: Destroy Buildings card opens the Building Cleanup settings\n\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('destroybuildings')]\"",
+  "why": "right-click on the card opens CM's settings tab instead of the vanilla panel"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\t\t\t\ton_action = \"[OpenLateralView('production')]\"\n\t\t\t\t\t}\n\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('destroyestatebuildings')]\"",
+  "text": "\t\t\t\t\t\ton_action = \"[GetScriptedGui(Select_CString(Or(Not(GameIsMultiplayer), IsHost), 'CMM_SetHostAndRegisterCoreMod', 'CMM_RegisterCoreMod')).Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]\"\n\t\t\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_window_open', 'true')]\"\n\t\t\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_selected_mod', 'cm')]\"\n\t\t\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_selected_tab', 'cm__cleanup')]\"\n\t\t\t\t\t}\n\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('destroyestatebuildings')]\"",
+  "why": "right-click on the card opens CM's settings tab instead of the vanilla panel"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('expandrgo')]\"",
+  "text": "\t\t\t\t\t# CM: expand-RGO card opens the Construction Manager settings\n\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('expandrgo')]\"",
+  "why": "right-click on the card opens CM's settings tab instead of the vanilla panel"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\t\t\t\ton_action = \"[OpenLateralView('goods_production')]\"\n\t\t\t\t\t}\n\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('rgo')]\"",
+  "text": "\t\t\t\t\t\ton_action = \"[GetScriptedGui(Select_CString(Or(Not(GameIsMultiplayer), IsHost), 'CMM_SetHostAndRegisterCoreMod', 'CMM_RegisterCoreMod')).Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]\"\n\t\t\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_window_open', 'true')]\"\n\t\t\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_selected_mod', 'cm')]\"\n\t\t\t\t\t\ton_action = \"[GetVariableSystem.Set('cmm_selected_tab', 'cm__auto_expand')]\"\n\t\t\t\t\t}\n\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\ttitle = \"[AutomatedSystemsItem.GetClickAction]\"\n\t\t\t\t\t\tvisible = \"[AutomatedSystemsItem.IsName('rgo')]\"",
+  "why": "right-click on the card opens CM's settings tab instead of the vanilla panel"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\t\t\t\t\tonvaluechanged = \"[AutomatedSystemsItem.OnChangedGoldSlider]\"",
+  "text": "\t\t\t\t\t\t\t# CM: pinned to the reserve setting while a push is pending; the forced\n\t\t\t\t\t\t\t# value commits through the callbacks below.\n\t\t\t\t\t\t\tmincap = \"[Select_CFixedPoint(And(GetPlayer.MakeScope.GetVariable('cm_gold_reserve_from_cmm').IsSet, Not(EqualTo_CFixedPoint(AutomatedSystemsItem.GetGoldSliderScaled, GuiScope.AddScope('cm_country', GetPlayer.MakeScope).ScriptValue('cm_gold_reserve_value')))), GuiScope.AddScope('cm_country', GetPlayer.MakeScope).ScriptValue('cm_gold_reserve_push_target'), '(CFixedPoint)0')]\"\n\t\t\t\t\t\t\tmaxcap = \"[Select_CFixedPoint(And(GetPlayer.MakeScope.GetVariable('cm_gold_reserve_from_cmm').IsSet, Not(EqualTo_CFixedPoint(AutomatedSystemsItem.GetGoldSliderScaled, GuiScope.AddScope('cm_country', GetPlayer.MakeScope).ScriptValue('cm_gold_reserve_value')))), GuiScope.AddScope('cm_country', GetPlayer.MakeScope).ScriptValue('cm_gold_reserve_push_target'), '(CFixedPoint)1')]\"\n\t\t\t\t\t\t\tonvaluechanged = \"[AutomatedSystemsItem.OnChangedGoldSlider]\"",
+  "why": "gold slider pinned to CM's Gold Reserve setting while a push is pending"
+ },
+ {
+  "op": "replace",
+  "anchor": "\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}",
+  "text": "\n\t\t\t\t\t# CM: two-way link between this slider and the Gold Reserve setting\n\n\t\t\t\t\t# Arms a push on every card creation: the settings value wins the open.\n\t\t\t\t\twidget = {\n\t\t\t\t\t\tsize = { 0 0 }\n\t\t\t\t\t\tvisible_at_creation = no\n\t\t\t\t\t\tvisible = \"[GetPlayer.Exists]\"\n\t\t\t\t\t\tstate = {\n\t\t\t\t\t\t\tname = _show\n\t\t\t\t\t\t\ton_start = \"[GetScriptedGui('cm_gold_reserve_reconcile').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]\"\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\n\t\t\t\t\t# Pull: samples the slider into the reserve setting on a loop. A\n\t\t\t\t\t# visibility-gated transition goes sticky after a few changes.\n\t\t\t\t\twidget = {\n\t\t\t\t\t\tsize = { 0 0 }\n\t\t\t\t\t\tstate = {\n\t\t\t\t\t\t\tname = cm_gold_reserve_poll\n\t\t\t\t\t\t\ttrigger_on_create = yes\n\t\t\t\t\t\t\tduration = 0.25\n\t\t\t\t\t\t\ton_finish = \"[GetScriptedGui('cm_gold_reserve_changed').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('cm_gold_res', MakeScopeValue(AutomatedSystemsItem.GetGoldSliderScaled)).End)]\"\n\t\t\t\t\t\t\ton_finish = \"[PdxGuiWidget.TriggerAnimation('cm_gold_reserve_poll')]\"\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\n\t\t\t\t\t# Samples the engine slider's scale, which appears in no file.\n\t\t\t\t\twidget = {\n\t\t\t\t\t\tsize = { 0 0 }\n\t\t\t\t\t\tvisible_at_creation = no\n\t\t\t\t\t\tvisible = \"[And(GreaterThan_CFixedPoint(AutomatedSystemsItem.GetGoldSlider, '(CFixedPoint)0'), Not(EqualTo_CFixedPoint(Divide_CFixedPoint(AutomatedSystemsItem.GetGoldSliderScaled, AutomatedSystemsItem.GetGoldSlider), GuiScope.AddScope('cm_country', GetPlayer.MakeScope).ScriptValue('cm_gold_reserve_max_value'))))]\"\n\t\t\t\t\t\tstate = {\n\t\t\t\t\t\t\tname = _show\n\t\t\t\t\t\t\ton_start = \"[GetScriptedGui('cm_gold_reserve_max_changed').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('cm_gold_max', MakeScopeValue(Divide_CFixedPoint(AutomatedSystemsItem.GetGoldSliderScaled, AutomatedSystemsItem.GetGoldSlider))).End)]\"\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\n\t\t\t\t\t# The equality branch clears a pending flag that has nothing to push.\n\t\t\t\t\twidget = {\n\t\t\t\t\t\tsize = { 0 0 }\n\t\t\t\t\t\tvisible_at_creation = no\n\t\t\t\t\t\tvisible = \"[And(GetPlayer.MakeScope.GetVariable('cm_gold_reserve_from_cmm').IsSet, Or(GreaterThan_CFixedPoint(GuiScope.AddScope('cm_country', GetPlayer.MakeScope).ScriptValue('cm_gold_reserve_max_value'), '(CFixedPoint)0'), EqualTo_CFixedPoint(AutomatedSystemsItem.GetGoldSliderScaled, GuiScope.AddScope('cm_country', GetPlayer.MakeScope).ScriptValue('cm_gold_reserve_value'))))]\"\n\t\t\t\t\t\tstate = {\n\t\t\t\t\t\t\tname = _show\n\t\t\t\t\t\t\tduration = 0.3\n\t\t\t\t\t\t\ton_finish = \"[AutomatedSystemsItem.PostGoldSlider]\"\n\t\t\t\t\t\t\ton_finish = \"[GetScriptedGui('cm_gold_reserve_pushed').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]\"\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}",
+  "why": "two-way link between the gold slider and CM's Gold Reserve setting"
+ }
+]

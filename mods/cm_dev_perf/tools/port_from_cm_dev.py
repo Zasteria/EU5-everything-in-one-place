@@ -58,6 +58,12 @@ _spec.loader.exec_module(perf)
 
 WINDOW = perf.WINDOW
 
+_spec = importlib.util.spec_from_file_location(
+    "beta_windows", Path(__file__).resolve().parent / "beta_windows.py")
+beta = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(beta)
+BETA_SPECS = Path(__file__).resolve().parent / "beta"
+
 _CLASSIFY = (
     "GetScriptedGui('cm_should_building_type_section_show')"
     ".IsShown(GuiScope.SetRoot(GetPlayer.MakeScope)"
@@ -127,7 +133,7 @@ EDITS = (
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 4
+PERF_REVISION = 5
 
 
 def metadata() -> str:
@@ -139,8 +145,10 @@ def metadata() -> str:
     base["version"] = f"{version}+perf{PERF_REVISION}"
     base["short_description"] = (
         f"Construction Manager Dev {version} with its hidden building-type tree "
-        "gated on the passes that need it. Load this INSTEAD of Construction Manager Dev, never alongside it."
+        "gated on the passes that need it, and its vanilla windows rebuilt on the 2026-10-01 beta. "
+        "Load this INSTEAD of Construction Manager Dev, never alongside it."
     )
+    base["supported_game_version"] = "1.*"
     return json.dumps(base, indent=4, ensure_ascii=False) + "\n"
 
 
@@ -160,6 +168,10 @@ def main() -> int:
         if patched == text:
             raise SystemExit(f"{path}: {label} changed nothing")
         target.write_text("﻿" + patched.lstrip("﻿"), encoding="utf-8")
+    # 10-01: CM Dev's copies of vanilla windows are Glorp UI's 1.3 layout and
+    # break on the beta; each with a spec in tools/beta/ is rebuilt as the
+    # beta's window plus CM's hooks (beta_windows.py).
+    rebuilt = beta.rebuild(refs.GAME_GUI, BETA_SPECS, MOD / "in_game/gui")
     # The probe window (09-27) ships beside CM's files; its sources live in
     # tools/probe/ so this rebuild does not wipe them.
     for src in PROBE.rglob("*"):
@@ -172,7 +184,8 @@ def main() -> int:
     thumb = SRC / ".metadata/thumbnail.png"
     if thumb.exists():
         shutil.copy2(thumb, MOD / ".metadata/thumbnail.png")
-    print("cm_dev_perf: %d files copied from %s, %d edits applied" % (copied, SRC.name, len(EDITS)))
+    print("cm_dev_perf: %d files copied from %s, %d edits applied, rebuilt on the beta: %s"
+          % (copied, SRC.name, len(EDITS), ", ".join(rebuilt)))
     return 0
 
 
