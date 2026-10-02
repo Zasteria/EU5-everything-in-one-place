@@ -1,19 +1,26 @@
 #!/usr/bin/env python3
-"""Rebuilds `cmf_dev_beta`: the files of Community Mod Framework Dev that carry
-vanilla interface types the 2026-10-01 beta changed, with those types taken
-from the beta.
+"""Rebuilds `cmf_dev_beta`: Community Mod Framework Dev, fitted to the
+2026-10-01 beta. **A whole copy, loaded instead of CMF Dev** — like `qol_beta`
+and `cm_dev_perf`.
 
-CMF keeps copies of vanilla `types` in its own files (`gui/vanilla/cmf_*`,
-`multiplayer_lobby.gui`, `cmm/cmm_ingame_menu.gui`); a later definition wins,
-so its 1.3 copies pinned 75 types of the beta's windows to 1.3 — the
-investigation of 2026-10-01 counted them. 69 are verbatim 1.3 copies; five in
-the lobby only swap a tooltip key («avoids a tooltip error»), and those swaps are
-dropped; one, the pause menu, carries CMF's own button to its menu, which is
-put back after the beta's buttons.
+It was an overlay of 16 files until his run of 10-02: the playset held the
+overlay and not CMF Dev, so none of CMF's effects, macros or keys existed, and
+CM's icons, CMF's pause button and its action bar all went missing. A copy
+that is the whole framework cannot be loaded without it.
 
-This mod is **an overlay**: it holds only those 16 files, at CMF's own paths,
-and loads after CMF Dev (its dependency), so its files replace CMF's. Remove it
-once CMF Dev is updated for the beta.
+The changes, and nothing else:
+
+1. **75 vanilla types from the beta.** CMF keeps copies of vanilla `types` in
+   its own files (`gui/vanilla/cmf_*`, `multiplayer_lobby.gui`,
+   `cmm/cmm_ingame_menu.gui`); a later definition wins, so its 1.3 copies
+   pinned 75 types of the beta's windows to 1.3. 69 are verbatim copies; five
+   in the lobby only swap a tooltip key, and those swaps are dropped; the
+   pause menu carries CMF's own button, put back after the beta's buttons.
+2. **The lobby is the beta's file** plus CMF's row of mod banners; the types
+   CMF moved out of it into `cmf_multiplayer_lobby_vanilla_types.gui` are
+   taken out of that file, or both register them (his log 10-02: 20 errors).
+3. **`use_global_input_instance` commented out**, as the beta itself does:
+   the engine dropped the property («input actions reimplementation»).
 
     python3 mods/cmf_dev_beta/tools/port_from_cmf_dev.py
 
@@ -44,7 +51,7 @@ _spec = importlib.util.spec_from_file_location(
 beta = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(beta)
 
-REVISION = 2
+REVISION = 3
 PAUSE_MENU = "in_game/gui/cmm/cmm_ingame_menu.gui"
 LOBBY = "in_game/gui/multiplayer_lobby.gui"
 # CMF replaces the lobby whole, and the beta rewrote it (1 653 lines, five new
@@ -81,34 +88,44 @@ def cmf_buttons(cmf_text: str) -> str:
 def metadata() -> str:
     base = json.loads((SRC / ".metadata/metadata.json").read_text(encoding="utf-8-sig"))
     version = base.get("version", "unknown")
-    meta = {
-        "name": "Community Mod Framework Dev — beta types",
-        "id": "bag.cmf_dev_beta",
-        "version": f"{version}+beta{REVISION}",
-        "game_id": "eu5",
-        "supported_game_version": "1.*",
-        "short_description": (
-            f"For Community Mod Framework Dev {version} on the 2026-10-01 beta: the "
-            "75 vanilla interface types CMF keeps 1.3 copies of, taken from the beta. "
-            "Load after CMF Dev; remove once CMF Dev is updated."),
-        "tags": ["Fixes", "User Interface"],
-        "relationships": [{
-            "rel_type": "dependency",
-            "id": base["id"],
-            "display_name": base.get("name", "Community Mod Framework Dev"),
-            "resource_type": "mod",
-            "version": "2.*",
-        }],
-        "game_custom_data": {},
-    }
-    return json.dumps(meta, indent=4, ensure_ascii=False) + "\n"
+    base["name"] = "Community Mod Framework Dev (beta)"
+    base["id"] = "bag.cmf_dev_beta"
+    base["version"] = f"{version}+beta{REVISION}"
+    base["supported_game_version"] = "1.*"
+    base["short_description"] = (
+        f"Community Mod Framework Dev {version} fitted to the 2026-10-01 beta: the 75 "
+        "vanilla interface types it keeps 1.3 copies of are taken from the beta. "
+        "Load this INSTEAD of CMF Dev; remove once CMF Dev is updated.")
+    base["relationships"] = []
+    return json.dumps(base, indent=4, ensure_ascii=False) + "\n"
+
+
+def without_types(text: str, names: set[str]) -> str:
+    """`text` with every type or template named in `names` (any case) cut out."""
+    for name in re.findall(r"^[ \t]*(?:type\s+(\w+)\s*=|template\s+(\w+))", text, re.M):
+        name = name[0] or name[1]
+        if name.lower() in names:
+            span = beta.type_block(text, name)
+            if not span:
+                raise SystemExit(f"type {name}: not a single block")
+            text = text[:span[0]] + text[span[1]:].lstrip("\n")
+    return text
+
+
+NO_GLOBAL_INPUT = re.compile(r"^([ \t]*)(use_global_input_instance\s*=\s*yes)", re.M)
 
 
 def main() -> int:
-    for name in ("in_game", "main_menu", ".metadata"):
+    for name in ("in_game", "main_menu", "loading_screen", ".metadata"):
         if (MOD / name).exists():
             shutil.rmtree(MOD / name)
+    for name in ("in_game", "main_menu", "loading_screen"):
+        if (SRC / name).exists():
+            shutil.copytree(SRC / name, MOD / name)
     plan = json.loads(TYPES.read_text(encoding="utf-8"))
+    lobby_types = {(a or b).lower() for a, b in re.findall(
+        r"^[ \t]*(?:type\s+(\w+)\s*=|template\s+(\w+))",
+        (refs.GAME / LOBBY).read_text(encoding="utf-8-sig"), re.M)}
     count = 0
     for path, names in plan.items():
         text = (SRC / path).read_text(encoding="utf-8-sig").replace("\r\n", "\n")
@@ -124,6 +141,8 @@ def main() -> int:
         else:
             edits = [{"op": "beta_type", "name": name} for name in names]
             text = beta.apply(text, edits, path, refs.GAME_GUI)
+            if path.endswith("cmf_multiplayer_lobby_vanilla_types.gui"):
+                text = without_types(text, lobby_types)
         if buttons:
             text = beta.apply(text, [{
                 "op": "insert_after_block", "anchor": 'text = "AI_SETTINGS"', "up": 0,
@@ -134,13 +153,21 @@ def main() -> int:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text("﻿" + text, encoding="utf-8")
         count += len(names)
+    silenced = 0
+    for path in MOD.rglob("*.gui"):
+        text = path.read_text(encoding="utf-8-sig")
+        text, n = NO_GLOBAL_INPUT.subn(
+            r"\1# use_global_input_instance removed from engine (beta 10-01)\n\1# \2", text)
+        if n:
+            path.write_text("\ufeff" + text, encoding="utf-8")
+            silenced += n
     (MOD / ".metadata").mkdir(parents=True, exist_ok=True)
     (MOD / ".metadata/metadata.json").write_text("﻿" + metadata(), encoding="utf-8")
     thumb = SRC / ".metadata/thumbnail.png"
     if thumb.exists():
         shutil.copy2(thumb, MOD / ".metadata/thumbnail.png")
-    print("cmf_dev_beta: %d types in %d files of %s taken from the beta"
-          % (count, len(plan), SRC.name))
+    print("cmf_dev_beta: whole copy of %s; %d types in %d files taken from the beta,"
+          " %d use_global_input_instance silenced" % (SRC.name, count, len(plan), silenced))
     return 0
 
 

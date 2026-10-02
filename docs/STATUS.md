@@ -5,7 +5,7 @@ One line each. **Read only the brief of the mod the task is about** —
 
 | mod | state | never been in game |
 | --- | --- | --- |
-| [`ru_loc_fix`](../mods/ru_loc_fix/CLAUDE.md) | разметка русского и перевод беты 10-01 (0.4.1); **09-26: круг 4 подтверждён** | круги 5–8 |
+| [`ru_loc_fix`](../mods/ru_loc_fix/CLAUDE.md) | разметка русского и перевод беты 10-01, окна на бете (0.4.2); **09-26: круг 4 подтверждён** | круги 5–8 |
 | [`nd_ru`](../mods/nd_ru/CLAUDE.md) | in progress; 4 395 keys, 10.6% (0.2.0: + Речь Посполитая) | everything except Westphalia and the override itself |
 | [`nmt_ru`](../mods/nmt_ru/CLAUDE.md) | Русский для National Mission Trees: 17 стран (0.4.0: + Литва, Польша), 3 555 ключей. База без русского и без отката, дерево пишется целиком | всё |
 | [`nmt_fix`](../mods/nmt_fix/CLAUDE.md) | 09-29. NMT засчитывает земли подданных, 111 условий | всё |
@@ -14,7 +14,7 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`cm_perf`](../mods/cm_perf/CLAUDE.md) | **потолок скорости снят 09-18, но 09-19 он снял мод: тормозит тем сильнее, чем больше точек авторасширения.** Копия CM. Месячный пульс трогать нельзя — его слово 09-19. Ставится **вместо** CM | правки 3 и 5 |
 | [`cm_dev_perf`](../mods/cm_dev_perf/CLAUDE.md) | 09-26, не в игре. CM Dev + правка 1 `cm_perf`; 10-01 окна на бете | всё |
 | [`qol_beta`](../mods/qol_beta/CLAUDE.md) | 10-01, не в игре. QoL by Buddy под бету, без границ | всё |
-| [`cmf_dev_beta`](../mods/cmf_dev_beta/CLAUDE.md) | 10-01, не в игре. Заплатка к CMF Dev: 75 типов окон с беты | всё |
+| [`cmf_dev_beta`](../mods/cmf_dev_beta/CLAUDE.md) | 10-02: без CMF Dev в плейсете не работал; +beta3 — полная копия CMF Dev, ставится вместо | всё |
 | [`war_sliders`](../mods/war_sliders/CLAUDE.md) | **0.6.2 ждёт прогона** (0.5.2 работала 09-29). Кнопка на панели CMF: содержание и инфляция, без нажатия спит | кнопка: содержание, правка чеканки (09-30) |
 
 Закрытые моды (и `widget_probe`) вынесены:

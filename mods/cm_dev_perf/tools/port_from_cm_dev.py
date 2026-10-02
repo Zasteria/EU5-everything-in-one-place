@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -133,7 +134,7 @@ EDITS = (
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 5
+PERF_REVISION = 6
 
 
 def metadata() -> str:
@@ -172,6 +173,14 @@ def main() -> int:
     # break on the beta; each with a spec in tools/beta/ is rebuilt as the
     # beta's window plus CM's hooks (beta_windows.py).
     rebuilt = beta.rebuild(refs.GAME_GUI, BETA_SPECS, MOD / "in_game/gui")
+    # The beta's engine dropped `use_global_input_instance` (his log 10-02:
+    # «not a valid widget/type/property»); commented out as the beta does.
+    for path in (MOD / "in_game/gui").rglob("*.gui"):
+        text = path.read_text(encoding="utf-8-sig")
+        text, n = re.subn(r"^([ \t]*)(use_global_input_instance\s*=\s*yes)",
+                          r"\1# \2  (removed from the engine, beta 10-01)", text, flags=re.M)
+        if n:
+            path.write_text("\ufeff" + text, encoding="utf-8")
     # The probe window (09-27) ships beside CM's files; its sources live in
     # tools/probe/ so this rebuild does not wipe them.
     for src in PROBE.rglob("*"):
