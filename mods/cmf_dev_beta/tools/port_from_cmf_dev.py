@@ -21,6 +21,11 @@ The changes, and nothing else:
    taken out of that file, or both register them (his log 10-02: 20 errors).
 3. **`use_global_input_instance` commented out**, as the beta itself does:
    the engine dropped the property («input actions reimplementation»).
+4. **`cmf_is_host`.** The beta added a native trigger `is_host` («the host of
+   a multiplayer session»), the name of CMF's own scripted trigger; which one a
+   call reaches is not documented. CMF's body is copied under `cmf_is_host` and
+   CMF's own calls use it; `is_host` stays for other mods. His run 10-02: CM's
+   classification, gated on `is_host`, never ran.
 
     python3 mods/cmf_dev_beta/tools/port_from_cmf_dev.py
 
@@ -51,7 +56,7 @@ _spec = importlib.util.spec_from_file_location(
 beta = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(beta)
 
-REVISION = 3
+REVISION = 4
 PAUSE_MENU = "in_game/gui/cmm/cmm_ingame_menu.gui"
 LOBBY = "in_game/gui/multiplayer_lobby.gui"
 # CMF replaces the lobby whole, and the beta rewrote it (1 653 lines, five new
@@ -112,6 +117,34 @@ def without_types(text: str, names: set[str]) -> str:
     return text
 
 
+HOST_TRIGGERS = "in_game/common/scripted_triggers/cmf_core_triggers.txt"
+HOST_CALL = re.compile(r"^([ \t]*)is_host(\s*=\s*(?:yes|no)\b)", re.M)
+
+
+def own_host_trigger() -> int:
+    """CMF's `is_host` copied as `cmf_is_host`, and CMF's calls moved onto it."""
+    path = MOD / HOST_TRIGGERS
+    text = path.read_text(encoding="utf-8-sig")
+    span = re.search(r"^is_host = \{", text, re.M)
+    if not span:
+        raise SystemExit(f"{HOST_TRIGGERS}: CMF no longer defines is_host")
+    _, end = beta._block(text, span.end(), 0)
+    body = text[span.start():end]
+    calls = 0
+    for each in (MOD / "in_game/common").rglob("*.txt"):
+        old = each.read_text(encoding="utf-8-sig")
+        new, n = HOST_CALL.subn(r"\1cmf_is_host\2", old)
+        if n:
+            each.write_text("\ufeff" + new, encoding="utf-8")
+            calls += n
+    text = path.read_text(encoding="utf-8-sig")
+    text += ("\n\n# cmf_dev_beta: CMF's is_host under a name of its own -- the beta added a\n"
+             "# native trigger is_host, and CMF's calls must reach this body.\n"
+             + body.replace("is_host = {", "cmf_is_host = {", 1) + "\n")
+    path.write_text("\ufeff" + text, encoding="utf-8")
+    return calls
+
+
 NO_GLOBAL_INPUT = re.compile(r"^([ \t]*)(use_global_input_instance\s*=\s*yes)", re.M)
 
 
@@ -161,13 +194,15 @@ def main() -> int:
         if n:
             path.write_text("\ufeff" + text, encoding="utf-8")
             silenced += n
+    host_calls = own_host_trigger()
     (MOD / ".metadata").mkdir(parents=True, exist_ok=True)
     (MOD / ".metadata/metadata.json").write_text("﻿" + metadata(), encoding="utf-8")
     thumb = SRC / ".metadata/thumbnail.png"
     if thumb.exists():
         shutil.copy2(thumb, MOD / ".metadata/thumbnail.png")
     print("cmf_dev_beta: whole copy of %s; %d types in %d files taken from the beta,"
-          " %d use_global_input_instance silenced" % (SRC.name, count, len(plan), silenced))
+          " %d use_global_input_instance silenced, %d is_host calls on cmf_is_host"
+          % (SRC.name, count, len(plan), silenced, host_calls))
     return 0
 
 

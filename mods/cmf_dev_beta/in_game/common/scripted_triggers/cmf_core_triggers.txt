@@ -27,7 +27,7 @@ cmf_can_use_unrestricted_tools = {
 			is_key_in_global_variable_map = { name = cmm target = flag:cmf_core__enable_unrestricted_tools }
 		}
 		"global_variable_map(cmm|flag:cmf_core__enable_unrestricted_tools)" >= 1
-		is_host = yes
+		cmf_is_host = yes
 	}
 	trigger_else = {
 		always = no
@@ -64,5 +64,24 @@ cmf_was_mod_active_at_game_start = {
 cmf_game_start_mods_recorded = {
 	hidden_trigger = {
 		has_global_variable = cmf_game_start_recorded
+	}
+}
+
+
+# cmf_dev_beta: CMF's is_host under a name of its own -- the beta added a
+# native trigger is_host, and CMF's calls must reach this body.
+cmf_is_host = {
+	trigger_if = {
+		limit = { has_multiple_players = no }
+		is_human = yes
+	}
+	trigger_else = {
+		trigger_if = {
+			limit = { has_global_variable = cmf_core_host_country }
+			this ?= global_var:cmf_core_host_country
+		}
+		trigger_else = {
+			always = no
+		}
 	}
 }

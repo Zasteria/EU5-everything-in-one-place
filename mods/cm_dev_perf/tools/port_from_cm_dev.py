@@ -134,7 +134,7 @@ EDITS = (
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 6
+PERF_REVISION = 7
 
 
 def metadata() -> str:
@@ -179,6 +179,15 @@ def main() -> int:
         text = path.read_text(encoding="utf-8-sig")
         text, n = re.subn(r"^([ \t]*)(use_global_input_instance\s*=\s*yes)",
                           r"\1# \2  (removed from the engine, beta 10-01)", text, flags=re.M)
+        if n:
+            path.write_text("\ufeff" + text, encoding="utf-8")
+    # The beta added a native trigger `is_host`, CMF's own trigger's name; CM's
+    # host gates (the classification among them, his run 10-02: never ran) go
+    # to cmf_is_host, which cmf_dev_beta defines with CMF's body.
+    for path in (MOD / "in_game/common").rglob("*.txt"):
+        text = path.read_text(encoding="utf-8-sig")
+        text, n = re.subn(r"^([ \t]*(?:limit = \{ )?)is_host(\s*=\s*(?:yes|no)\b)",
+                          r"\1cmf_is_host\2", text, flags=re.M)
         if n:
             path.write_text("\ufeff" + text, encoding="utf-8")
     # The probe window (09-27) ships beside CM's files; its sources live in
