@@ -35,4 +35,4 @@ One line each. **Read only the brief of the mod the task is about** —
   медленнее с плейсетом с первой минуты. **Не путать с утечкой.**
 
 Инструменты вокруг всего этого — [`CONVENTIONS.md`](CONVENTIONS.md);
-`mods.bat` и `tools/workshop.py` **перестраивать не надо** ([`SETTLED.md`](SETTLED.md)).
+`mods.bat` перестроен 10-03 по его списку и **ничего не пересобирает**: генераторы — работа сессии.

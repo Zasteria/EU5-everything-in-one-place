@@ -74,12 +74,11 @@ This file is the part that is live. What has already been settled is in
 [`archive/next_deferred_by_him.md`](archive/next_deferred_by_him.md).
 **Придёт с ответом — тогда и делать.**
 
-## The job: `mods.bat`, and one run to confirm it
+## The job: `mods.bat`, rebuilt 10-03 and never run
 
-**Both halves are repaired and neither has been run on his machine** — a failed
-steamcmd run looked exactly like a successful one
-([`archive/mods_bat_repair.md`](archive/mods_bat_repair.md)). **Ask for** the
-output of `mods.bat → 1`, `→ 4` and `mods.bat check`.
+Four items ([`CONVENTIONS.md`](CONVENTIONS.md)), **no rebuild in it** — after a
+reference update he pushes, `tools/refresh.py` is ours. Tried only on a mock
+Steam folder. **Ask for** `mods.bat → 1`, `→ 2` and `mods.bat check`.
 
 ## Then `glorpui_hints` goes out
 
@@ -89,8 +88,8 @@ Nothing outstanding; five steps in
 
 ## Also waiting on the owner, all of it cheap
 
-- **`mods.bat → 2` on his machine** — the 2026-08-28 files of Advanced Auto Build
-  and Glorp UI are still missing here; entry 2 does **not** re-extract the game.
+- **`mods.bat → 3 → 1` on his machine** — the 2026-08-28 files of Advanced Auto
+  Build and Glorp UI are still missing here; it does **not** re-extract the game.
 - **The panel-open bisect and the hover run** —
   [`investigations/panel_hitch.md`](investigations/panel_hitch.md),
   [`investigations/widget_leak.md`](investigations/widget_leak.md). **Do not

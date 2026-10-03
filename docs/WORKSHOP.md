@@ -13,8 +13,8 @@
 `music`. Всё остальное в `mods/<мод>/` — `tools/`, `README.md`, `workshop/`,
 `translations/` — наше и никуда не едет.
 
-**Ничего паковать не надо.** Пункт **4 «Поставить наши моды в игру»** в
-`mods.bat` уже делает ровно эту выборку и кладёт результат в
+**Ничего паковать не надо.** `mods.bat` → **2** → мод → **«поставить в игру»**
+уже делает ровно эту выборку и кладёт результат в
 
 ```
 Documents\Paradox Interactive\Europa Universalis V\mod\<имя мода>\
@@ -71,7 +71,7 @@ clicking on the sandbox icon next to Selected Mods»*. Дневник целик
 **Upload New Mod** на скриншоте.
 
 **Значит сторонний PDX Workshop Manager не нужен.** Он остаётся запасным путём
-(и `mods.bat → 5 → «к»` по-прежнему делает ему конфиг), но первым идти надо в
+(конфиг для него пишет `tools/publish.py`, из меню этот пункт убран 10-03), но первым идти надо в
 игру.
 
 ### Что вписывать
@@ -183,7 +183,7 @@ two Required Items in step 5.
 
 `python3 tools/publish.py glorpui_hints` says `ok`; everything is ready.
 
-1. merge the branch, then `mods.bat → 4` with the `git pull`;
+1. merge the branch, then `mods.bat → 2` → the mod → «поставить в игру»;
 2. load once and check the list above;
 3. in game: mods screen → «Выбранные модификации» row → **sandbox icon** → Mod
    Tools → *Create mod*, filled from `metadata.json` (the table is in
@@ -191,6 +191,6 @@ two Required Items in step 5.
 4. check the page is not empty and that `relationships` survived in
    `.metadata/metadata.json` — both are known ways this tool has misbehaved. The
    fallback is [PDX Workshop Manager](https://github.com/kaiser-chris/pdx-workshop-manager);
-   `mods.bat → 5 → «к»` writes its config;
+   `tools/publish.py` writes its config (a session runs it);
 5. on the workshop page, by hand: **Glorp UI** and **Community Mod Framework**
    as Required Items, and **hidden first**.
