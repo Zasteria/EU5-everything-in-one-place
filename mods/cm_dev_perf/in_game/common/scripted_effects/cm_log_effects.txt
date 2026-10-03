@@ -11,6 +11,8 @@
 cm_dbg_log = {
 	if = {
 		limit = { exists = global_var:cm_dbg_$cat$ }
+		# cm_dev_perf: the same line into debug.log
+		debug_log = "CM $cat$ $action$"
 		cmf_log = { action = $action$ }
 	}
 }
@@ -19,6 +21,9 @@ cm_dbg_log = {
 cm_dbg_log_value = {
 	if = {
 		limit = { exists = global_var:cm_dbg_$cat$ }
+		# cm_dev_perf: the same line into debug.log
+		set_global_variable = { name = cm_perf_log_v1 value = $value$ }
+		debug_log = "CM $cat$ $action$ [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v1')|2]"
 		cmf_log_value = { action = $action$ value = $value$ }
 	}
 }
@@ -27,6 +32,9 @@ cm_dbg_log_value = {
 cm_dbg_log_at_loc = {
 	if = {
 		limit = { exists = global_var:cm_dbg_$cat$ }
+		# cm_dev_perf: the same line into debug.log
+		debug_log = "CM $cat$ $action$"
+		scope:cmf_log_loc ?= { debug_log_scopes = no }
 		cmf_log_at_location = { action = $action$ }
 	}
 }
@@ -35,6 +43,10 @@ cm_dbg_log_at_loc = {
 cm_dbg_log_loc = {
 	if = {
 		limit = { exists = global_var:cm_dbg_$cat$ }
+		# cm_dev_perf: the same line into debug.log
+		set_global_variable = { name = cm_perf_log_v1 value = $value$ }
+		debug_log = "CM $cat$ $action$ $arg1$ [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v1')|2]"
+		scope:cmf_log_loc ?= { debug_log_scopes = no }
 		cmf_log_with_location = { action = $action$ arg1 = $arg1$ value = $value$ }
 	}
 }
@@ -43,6 +55,12 @@ cm_dbg_log_loc = {
 cm_dbg_log_loc_values = {
 	if = {
 		limit = { exists = global_var:cm_dbg_$cat$ }
+		# cm_dev_perf: the same line into debug.log
+		set_global_variable = { name = cm_perf_log_v1 value = $value$ }
+		set_global_variable = { name = cm_perf_log_v2 value = $value2$ }
+		set_global_variable = { name = cm_perf_log_v3 value = $value3$ }
+		debug_log = "CM $cat$ $action$ $arg1$ [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v1')|2] [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v2')|2] [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v3')|2]"
+		scope:cmf_log_loc ?= { debug_log_scopes = no }
 		cmf_log_with_location_values = {
 			action = $action$
 			arg1 = $arg1$
@@ -57,6 +75,12 @@ cm_dbg_log_loc_values = {
 cm_dbg_log_bld = {
 	if = {
 		limit = { exists = global_var:cm_dbg_$cat$ }
+		# cm_dev_perf: the same line into debug.log
+		set_global_variable = { name = cm_perf_log_v1 value = $value$ }
+		set_global_variable = { name = cm_perf_log_v2 value = $value2$ }
+		debug_log = "CM $cat$ $action$ $arg1$ $arg2$ [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v1')|2] [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v2')|2]"
+		scope:cmf_log_bt ?= { debug_log_scopes = no }
+		scope:cmf_log_loc ?= { debug_log_scopes = no }
 		cmf_log_with_building_location = {
 			action = $action$
 			arg1 = $arg1$

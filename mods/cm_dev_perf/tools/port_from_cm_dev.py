@@ -124,17 +124,66 @@ def _widen_refresh(text: str) -> str:
     )
 
 
+LOG = "in_game/common/scripted_effects/cm_log_effects.txt"
+# wrapper: (number of values, logs a location, logs a building type)
+_LOGGED = {
+    "cm_dbg_log": (0, False, False),
+    "cm_dbg_log_value": (1, False, False),
+    "cm_dbg_log_at_loc": (0, True, False),
+    "cm_dbg_log_loc": (1, True, False),
+    "cm_dbg_log_loc_values": (3, True, False),
+    "cm_dbg_log_bld": (2, True, True),
+}
+
+
+def _mirror_log(text: str) -> str:
+    """Every line CM's Debug tab logs goes to `debug.log` as well (+perf8).
+
+    CM's own log is CMF's action pane: 200 lines, on screen only, gone with the
+    session. The same line in `debug.log` comes back with `mods.bat` → 4, so a
+    run says what each cycle did without a screenshot. Still gated on the Debug
+    tab's category toggles, so with them off nothing is written. The key is
+    printed as the key (a `debug_log` does not resolve localization), the values
+    through a scratch global, the location and building as named scopes
+    (docs/research/engine.md, «What a `debug_log` string reaches»). The three
+    script values that read the globals back ship with the probe, in tools/probe/.
+    """
+    for name, (values, loc, bt) in _LOGGED.items():
+        head = f"\n{name} = {{\n"
+        at = text.index(head)
+        call = text.index("\t\tcmf_log", at)
+        shown = []
+        mirror = ["\t\t# cm_dev_perf: the same line into debug.log"]
+        for n in range(1, values + 1):
+            arg = "$value$" if n == 1 else f"$value{n}$"
+            mirror.append(f"\t\tset_global_variable = {{ name = cm_perf_log_v{n} value = {arg} }}")
+            shown.append(f"[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v{n}')|2]")
+        words = ["CM", "$cat$", "$action$"]
+        if values and name != "cm_dbg_log_value":
+            words.append("$arg1$")
+        if bt:
+            words.append("$arg2$")
+        mirror.append('\t\tdebug_log = "%s"' % " ".join(words + shown))
+        if bt:
+            mirror.append("\t\tscope:cmf_log_bt ?= { debug_log_scopes = no }")
+        if loc:
+            mirror.append("\t\tscope:cmf_log_loc ?= { debug_log_scopes = no }")
+        text = text[:call] + "\n".join(mirror) + "\n" + text[call:]
+    return text
+
+
 EDITS = (
     (WINDOW, "gate the building-type tree", _gate_the_tree),
     (WINDOW, "widen the first pass's instantiation window", perf._widen_first_pass),
     (WINDOW, "widen the upgrade refresh's instantiation window", _widen_refresh),
+    (LOG, "mirror the Debug tab's log into debug.log", _mirror_log),
 )
 
 
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 7
+PERF_REVISION = 8
 
 
 def metadata() -> str:
