@@ -1,6 +1,6 @@
 ﻿# Working in this repository
 
-Mods for Europa Universalis V in [`mods/`](mods/), the game's own files to grep,
+Mods for Europa Universalis V in [`mods/`](mods), the game's own files to grep,
 and the tooling around both.
 
 ## Do not read this repository. Ask it.

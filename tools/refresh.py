@@ -36,21 +36,11 @@ import refs  # noqa: E402
 
 # Every generator, in the order that makes the output read sensibly. Each takes
 # its reference paths from `refs`, so none of them is given an argument here.
-#
-# **`auto_build_ru` не в списке с 2026-09-12.** Владелец убрал Advanced Auto
-# Build из дерева совсем -- «он говнище и больше не пригодится», -- а генератор
-# перевода читает английские ключи из копии этого мода. Сам перевод (1269
-# ключей) лежит в `mods/auto_build_ru` и работает; пересобрать его нельзя, пока
-# копия AAB не вернётся в `reference/mods/`.
 GENERATORS = (
     ("rgo_bonus_filter", "mods/rgo_bonus_filter/tools/generate_rgo_filter.py"),
-    ("goods_target", "mods/goods_target/tools/generate.py"),
-    ("where_to_produce", "mods/where_to_produce/tools/generate.py"),
     ("cm_maps", "mods/cm_maps/tools/port_from_cm.py"),
     ("cm_perf", "mods/cm_perf/tools/port_from_cm.py"),
     ("cm_dev_perf", "mods/cm_dev_perf/tools/port_from_cm_dev.py"),
-    ("marker_throttle", "mods/marker_throttle/tools/port_from_fum.py"),
-    ("qol_beta", "mods/qol_beta/tools/port_from_qol.py"),
     ("cmf_dev_beta", "mods/cmf_dev_beta/tools/port_from_cmf_dev.py"),
     ("quiet_alerts", "mods/quiet_alerts/tools/generate.py"),
     ("nd_ru", "mods/nd_ru/tools/generate_ru.py"),

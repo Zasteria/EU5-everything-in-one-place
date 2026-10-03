@@ -78,15 +78,13 @@ caught it, not only in prose.
 | `kb.py` | this repository's own documents, asked rather than read |
 | `extract_game_files.py` | copy the game directories a task needs out of an EU5 install into `reference/game/`; the `.ps1` twin is for the Windows box that has the game. Both read `game_files_manifest.txt` |
 | `mods.py` | **the owner's own tool, and the one he runs.** A menu over the whole mod loop. `mods.bat` is what he double-clicks |
-| `workshop.py` | the same work without the menu; `sync_workshop.ps1` is the unattended loop |
+| `workshop.py` | the same work without the menu, and the daily check on GitHub |
 | `check_cmm.py` | every CMM call in a mod against CMF's declared arguments, and every localization key CMM will look for |
 | `check_docs.py` | the documents still describe files that exist, and stay inside their size budget |
 | `check_script.py` | every way a mod file or a window has died quietly here: an effect's `if` inside a trigger, a doubled byte order mark, a name nothing defines, a script value defined twice, a window missing from `scripted_widgets/`, a window without its frame line, a row wider than the window holding it. Each check carries the run it cost in its docstring. Runs from `refresh.py` |
-| `eu5data.py` | the game's goods, methods and building types, and the RGO formula |
 | `guicost.py` | what the interface costs before anybody clicks |
 | `playset.py` | which mods the player actually runs, from the mount table in his `debug.log` |
 | `which_build.py` | which *build* of them ran, fingerprinted from the template line numbers in his `gui.log` |
-| `diag.py` | the `where_to_produce` diagnosis out of the game's `debug.log`, folded, **read for the owner in a dozen Russian lines** and copied to the clipboard. `mods.bat → 4 → 1` is the same from the menu, and asks whether to take every report in the log or the last |
 | `publish.py` | whether a mod is fit to upload |
 
 **Editing a generator is not editing its output.** `generate.py` writes game
@@ -149,8 +147,8 @@ generators and the checkers are the session's to run.
    `workshop_generated_state.json`, so no «нет подписки» row outlives it.
 3. **Всё сразу.** Update every copy; drop everything he is no longer subscribed
    to; reinstall our mods whose game copy differs.
-4. **Забрать из игры**, because a session sees the repository and nothing else:
-   - **диагностика** — `diag.py`, the `where_to_produce` report to the clipboard;
+4. **Забрать из игры** — logs, game files, API dumps — because a session sees
+   the repository and nothing else:
    - **логи** — `error.log`, `gui.log`, `warning.log`,
      `database_conflicts.log`, `system.log` and the last 4 MB of `debug.log` in
      one gitignored zip in the repository root, for him to attach (111 KB
@@ -169,9 +167,8 @@ so a mount nobody has heard of cannot be dropped in silence, and a new source
 folder cannot end up inside a live mod.
 
 That shape is deliberate and was asked for in those words: **nothing about
-updating his mods may require a session of ours.** `sync_workshop.ps1` is still
-there for the unattended path, and `workshop.py` is still the machinery under
-both.
+updating his mods may require a session of ours.** `workshop.py` is the
+machinery under the menu.
 
 **The first real sync ran on 2026-08-25**, and brought both mods this repository
 translates up to date in one command. It also showed what the loop is worth:
@@ -186,12 +183,6 @@ and so nothing said the translations had drifted. The update check survives it �
 workshop's last update cannot be behind, so it does not need `record` to have
 run — but the generators do not run themselves. After a sync, make sure someone
 ran `python3 tools/refresh.py` and read its report.
-
-Advanced Auto Build used to arrive in `reference/` without its `.metadata/`,
-which is why `auto_build_ru` declares only CMF as a dependency. The workshop copy
-the sync brings carries it, so `refs.py` now reads that mod's id and version out
-of the tree like every other; the dependency line is the only thing left over
-from when it could not.
 
 ## Два мода, которых в `reference/` не хватает — его предложение, 2026-09-05
 
@@ -210,13 +201,12 @@ from when it could not.
 приходится ставить, чтобы она сработала. Ровно этот разрыв стоил здесь редизайна
 («subsidies were written off as GUI-only»). И у него большой интерфейс — то
 есть живые примеры `fixedgridbox` с datamodel, а это прямо то, что нужно
-[шагу 2б](investigations/wtp_practice_plan.md).
+[шагу 2б](archive/where_to_produce/wtp_practice_plan.md).
 
 **`Advanced Auto Build` из дерева убран, 2026-09-12** — его слово: «он говнище
 и больше не пригодится, всё самое нужное из него давно было взято». Что из него
 успели измерить, осталось в `docs/research/interface.md` и
-`investigations/panel_hitch.md`; самих файлов нет, и `auto_build_ru` поэтому не
-пересобирается.
+`investigations/panel_hitch.md`; самих файлов нет.
 
 **И его надо закоммитить.** `reference/` лежит в git — 9 325 файлов, — но
 последний коммит по нему старый, так что мод, положенный в дерево локально, до

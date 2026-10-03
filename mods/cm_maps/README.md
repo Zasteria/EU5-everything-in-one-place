@@ -186,7 +186,7 @@ governor map, or instead of it, not alongside it.
 ## Рядом с `where_to_produce`
 
 **Две из трёх карт у `where_to_produce` уже есть**, под `bag_wtp_*`, из того же
-CM dev — [`wtp_town_right_map.md`](../../docs/investigations/wtp_town_right_map.md).
+CM dev — [`wtp_town_right_map.md`](../../docs/archive/where_to_produce/wtp_town_right_map.md).
 Имена не сталкиваются, но обход провинций идёт дважды: осознанная цена, а не
 находка. Перенесено сюда из
 [`CLAUDE.md`](CLAUDE.md) 2026-09-19, когда тот вышел за бюджет.

@@ -22,14 +22,13 @@ moved into the generator because that shape needs one branch per raw material.
 **Побочно это дешевле**: обход провинции идёт только по тем видам сырья, которые
 здание правда потребляет.
 
-**Проба локации теперь общая с `where_to_produce`.** Оба мода перекрывают
-`gui/location_production_lateralview.gui` — иначе фильтру не узнать, какую
-локацию показывает панель, — и тот, кто загрузился последним, унёс бы пробу
-другого. Поэтому проба одна, под именами `bag_view_location`,
-`bag_store_view_location`, `bag_view_location_is_current`, и оба мода возят две
-копии **побайтово одинаковыми**: сам `.gui` и
-`common/scripted_guis/bag_shared_view_location.txt`. Разойдутся — `tools/check_script.py`
-уронит сборку. **Править в обеих копиях или не править вовсе.**
+**Проба локации** (`bag_view_location`, `bag_store_view_location`,
+`bag_view_location_is_current`) живёт в перекрытом
+`gui/location_production_lateralview.gui` и
+`common/scripted_guis/bag_shared_view_location.txt`. Её возил и
+`where_to_produce` (в архиве с 10-03); второму моду, перекрывающему ту же
+панель, — возить те же два файла побайтово и вписать пару в `SHARED_COPIES`
+`tools/check_script.py`, иначе последний загруженный унесёт пробу другого.
 
 **And the one open cost.** Four of the fifteen chips mods add to the `building`
 tag are this mod's, and they are not cheap: `bag_rgo_has_local_bonus` walks

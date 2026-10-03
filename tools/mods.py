@@ -29,8 +29,8 @@ The menu, as he asked for it on 2026-10-03:
 3. **Всё сразу** — the same for everything: update all, drop everything he is no
    longer subscribed to, reinstall our mods whose game copy differs.
 
-4. **Забрать из игры** — the `where_to_produce` diagnosis, a zip of the logs, the
-   game's own files into `reference/game/`, the engine's API dumps.
+4. **Забрать из игры** — a zip of the logs, the game's own files into
+   `reference/game/`, the engine's API dumps.
 
 **Nothing here rebuilds or checks anything**, and nothing commits: generators,
 `tools/refresh.py` and the checkers are a session's job, and commit and push
@@ -1069,27 +1069,6 @@ def show_updates(world: World) -> list[Mod]:
     return outdated
 
 
-def screen_diag() -> None:
-    """Забрать отчёт «Диагностика» из логов игры и положить в буфер обмена.
-
-    Существует, чтобы прогон стоил один раз. Только игрок может запустить игру,
-    и раньше ответ приходил скриншотами -- по одному вопросу за прогон; отчёт
-    отвечает на весь вопрос сразу, и этот пункт нужен, чтобы достать его из
-    `debug.log` не разбираясь, где игра держит логи.
-    """
-    say()
-    say("Отчёт пишется по кнопке «Диагностика» на вкладке «Расчёт» в меню мода,")
-    say("сразу после «Считать план». Здесь он достаётся из логов игры.")
-    say()
-    say("Файл каждый раз перезаписывается, а лог игры копит: если нужно сравнить")
-    say("два нажатия подряд — ответь «в», и в файл попадут все отчёты из лога.")
-    every = ask("все отчёты? (в/Enter — только последний) ").strip().lower()
-    say()
-    run_python("tools/diag.py", *(["--all"] if every in {"в", "v", "y", "д", "да"} else []))
-    say()
-    ask("Enter — назад ")
-
-
 # ------------------------------------------------------------- из игры
 
 # Где игра держит свои папки в «Документах»: логи, дампы API, моды.
@@ -1178,25 +1157,19 @@ def update_api_dumps(updated: int) -> bool:
 # Что кладётся в архив логов, и почему именно это. `game.log` и `data_types/`
 # намеренно не берутся: вместе они мегабайт шесть, а отвечают на вопросы,
 # которые и так закрыты дампами в `reference/`. Хвост `debug.log` берётся
-# целиком — там лежит отчёт «Диагностика».
+# целиком — последний прогон в нём.
 LOG_FILES = ("error.log", "gui.log", "warning.log", "database_conflicts.log",
              "system.log")
 DEBUG_TAIL_MB = 4
 
 
 def screen_logs() -> None:
-    """Собрать логи игры в один небольшой архив рядом с репозиторием.
-
-    **Папку логов ищет `diag.py`, а не этот файл.** `GAME_FOLDER` здесь
-    кончается на `/mod` -- это папка модов, а логи лежат рядом с ней, — и второй
-    экземпляр той же догадки разошёлся бы с первым в тот день, когда Paradox
-    что-нибудь переименует.
-    """
+    """Собрать логи игры в один небольшой архив рядом с репозиторием."""
     from datetime import datetime
-    import diag
 
     say()
-    folder = diag.logs_folder()
+    folder = next((d / GAME_DOCUMENTS / "logs" for d in documents_dir()
+                   if (d / GAME_DOCUMENTS / "logs").is_dir()), None)
     if folder is None:
         say("Не нашёл папку логов игры. Обычно она здесь:")
         say(r"  C:\Users\<ты>\Documents\Paradox Interactive\Europa Universalis V\logs")
@@ -1539,17 +1512,14 @@ def screen_collect(world: World, configured: dict) -> None:
     """Пункт 4: забрать из игры то, чего сессия не видит."""
     while True:
         say()
-        say("  1  Диагностика where_to_produce → в буфер обмена")
-        say("  2  Логи игры → маленький архив, приложить в чат")
-        say("  3  Файлы игры → reference/game/ (то, что игра убрала, удаляется и здесь)")
-        say("  4  Дампы API движка → reference/game/docs")
+        say("  1  Логи игры → маленький архив, приложить в чат")
+        say("  2  Файлы игры → reference/game/ (то, что игра убрала, удаляется и здесь)")
+        say("  3  Дампы API движка → reference/game/docs")
         say("  0  назад")
         choice = ask("> ")
         if choice == "1":
-            screen_diag()
-        elif choice == "2":
             screen_logs()
-        elif choice == "3":
+        elif choice == "2":
             say()
             game, _ = game_install(configured, world.content)
             args = ["--prune"]
@@ -1560,7 +1530,7 @@ def screen_collect(world: World, configured: dict) -> None:
             run_python("tools/extract_game_files.py", *args)
             say()
             ask("Enter — назад ")
-        elif choice == "4":
+        elif choice == "3":
             say()
             _, updated = game_install(configured, world.content)
             if not update_api_dumps(updated):
@@ -1586,7 +1556,7 @@ def menu(configured: dict) -> int:
         say("  1  Мастерская: проверить, скачать свежие в игру, обновить копии")
         say("  2  Все моды: выбрать мод и решить, что с ним делать")
         say("  3  Всё сразу: обновить всё, убрать отсутствующее, наши в игру")
-        say("  4  Забрать из игры: диагностика, логи, файлы игры, дампы API")
+        say("  4  Забрать из игры: логи, файлы игры, дампы API")
         say("  0  Выход")
         say()
         say("  Коммит и пуш — в GitHub Desktop; отсюда репозиторий не пишется.")

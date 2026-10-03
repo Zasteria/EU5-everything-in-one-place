@@ -64,6 +64,16 @@ BUDGETS = (
 # description of it, and neither is part of the path.
 PATHS = re.compile(r"(?:\]\(|`|^|\s)((?:mods|docs|tools|reference)/[\w./-]*[\w/])")
 IGNORE = "check-docs: ignore"
+# Mods and tools retired on 2026-10-03, whose files live on only in git history
+# (`docs/archive/retired_mods.md` says where). A document naming one of them is
+# talking about what was, not about the tree, so the path is not checked — and
+# nothing under `docs/archive/` is, for the same reason.
+RETIRED = ("mods/goods_target", "mods/marker_throttle", "mods/widget_probe",
+           "mods/where_to_produce", "mods/qol_beta", "mods/auto_build_ru",
+           "tools/diag.py", "tools/eu5data.py", "tools/sync_workshop.ps1",
+           "tools/extract_game_files.ps1",
+           # glorpui_hints went back to its Steam build (8e028184), tools and all.
+           "mods/glorpui_hints/tools")
 # A version number sitting next to a mod's name, which `tools/refs.py` owns.
 VERSIONS = re.compile(
     r"(?:CMF|Community Mod Framework|Construction Manager|Glorp UI|"
@@ -101,6 +111,8 @@ def check_path(text: str, document: Path) -> bool:
         # `mods/*/tools/` and friends describe a shape rather than name a file.
         return True
     target = text.rstrip("/")
+    if target.startswith(RETIRED) or "docs/archive" in document.as_posix():
+        return True
     return (refs.REPO / target).exists() or (document.parent / target).exists()
 
 

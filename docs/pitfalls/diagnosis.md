@@ -70,12 +70,12 @@ location's numbers into globals inside the walk, and print those.
 the root `CLAUDE.md`: *a cause you cannot name is not a cause — do not guess it,
 measure it.* Four of the owner's runs went on four theories about one symptom and
 none on a measurement. The narrative, and what each theory cost, is in
-[`../archive/diagnosis_four_theories.md`](../archive/diagnosis_four_theories.md).
+[`../archive/diagnosis_four_theories.md`](../archive/where_to_produce/diagnosis_four_theories.md).
 
 ## «Диагностика»: одна кнопка, всё, текстом
 
 Построена, прогнана, подтверждена. **Как её строили, чем читают и что она
-ответила с первого нажатия** — [`../archive/diagnostics_built.md`](../archive/diagnostics_built.md).
+ответила с первого нажатия** — [`../archive/diagnostics_built.md`](../archive/where_to_produce/diagnostics_built.md).
 Правила, которые из этого остались, — ниже.
 
 ## What a `debug_log` string can and cannot reach
