@@ -155,6 +155,6 @@ C++, и дальше зовётся та же внутренняя процед�
 
 **И всё это вместе галочку не поставило.** Попытка 2026-09-14 -- три сборки, два
 его прогона, откачена целиком по его решению:
-[`archive/wtp_vanilla_autoexpand_attempt.md`](archive/wtp_vanilla_autoexpand_attempt.md).
+[`archive/wtp_vanilla_autoexpand_attempt.md`](archive/where_to_produce/wtp_vanilla_autoexpand_attempt.md).
 **Не начинать заново без его слова.**
 

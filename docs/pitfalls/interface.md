@@ -250,8 +250,8 @@ with a size of its own, size the children too.
 выпускает наружу то, что не влезло, — на экране это читается как «плашка не
 растягивается». **Ширину мерить, а не прикидывать**: `check_script.py` →
 `overflowing_windows` делает это на каждой сборке. Правила целиком, с числами:
-[`../archive/wtp_window_rules.md`](../archive/wtp_window_rules.md), расследование —
-[`../archive/wtp_window_width.md`](../archive/wtp_window_width.md).
+[`../archive/wtp_window_rules.md`](../archive/where_to_produce/wtp_window_rules.md), расследование —
+[`../archive/wtp_window_width.md`](../archive/where_to_produce/wtp_window_width.md).
 
 **A `widget` with `onclick` does not take clicks; a button does.**
 `alwaystransparent = no` makes a widget receive the mouse for a *tooltip*, and

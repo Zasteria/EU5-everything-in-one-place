@@ -78,15 +78,13 @@ caught it, not only in prose.
 | `kb.py` | this repository's own documents, asked rather than read |
 | `extract_game_files.py` | copy the game directories a task needs out of an EU5 install into `reference/game/`; the `.ps1` twin is for the Windows box that has the game. Both read `game_files_manifest.txt` |
 | `mods.py` | **the owner's own tool, and the one he runs.** A menu over the whole mod loop. `mods.bat` is what he double-clicks |
-| `workshop.py` | the same work without the menu; `sync_workshop.ps1` is the unattended loop |
+| `workshop.py` | the same work without the menu, and the daily check on GitHub |
 | `check_cmm.py` | every CMM call in a mod against CMF's declared arguments, and every localization key CMM will look for |
 | `check_docs.py` | the documents still describe files that exist, and stay inside their size budget |
 | `check_script.py` | every way a mod file or a window has died quietly here: an effect's `if` inside a trigger, a doubled byte order mark, a name nothing defines, a script value defined twice, a window missing from `scripted_widgets/`, a window without its frame line, a row wider than the window holding it. Each check carries the run it cost in its docstring. Runs from `refresh.py` |
-| `eu5data.py` | the game's goods, methods and building types, and the RGO formula |
 | `guicost.py` | what the interface costs before anybody clicks |
 | `playset.py` | which mods the player actually runs, from the mount table in his `debug.log` |
 | `which_build.py` | which *build* of them ran, fingerprinted from the template line numbers in his `gui.log` |
-| `diag.py` | the `where_to_produce` diagnosis out of the game's `debug.log`, folded, **read for the owner in a dozen Russian lines** and copied to the clipboard. `mods.bat → «Забрать диагностику из игры»` is the same from the menu, and asks whether to take every report in the log or the last. `mods.bat → «Забрать из игры файлы или логи»` is its sibling: the game's own files into `reference/`, or its logs into a small zip to attach |
 | `publish.py` | whether a mod is fit to upload |
 
 **Editing a generator is not editing its output.** `generate.py` writes game
@@ -131,45 +129,35 @@ and then into `reference/`, rebuilt, committed and pushed, all from the menu.
 The playset came in the same evening: **17 mods, 18 MB of text**, which is the
 first time anything here could see more than five of the twenty-two.
 
-**He brings them over from a menu — `mods.bat` in the repository root, which is
-there so the command never has to be looked up again — and that menu is not
-only about this repository.** It reads his whole subscription out of Steam's own
-`appworkshop_3450310.acf`, says which mods the workshop has moved on since Steam
-downloaded them, fetches those with steamcmd into the game's workshop folder so
-the next launch loads them, and only then offers the copies here, the rebuild,
-and the push. A mod moves between `reference/mods/` (whole, watched daily) and
-`reference/playset/` (text only) from the same menu, which rewrites
-`tools/workshop_mods.txt` itself.
+**He brings them over from a menu — `mods.bat` in the repository root.** Rebuilt
+2026-10-03 to his list, four items, and **it never rebuilds or checks anything**:
+«любые обновления идут через тебя, и я не хочу сталкиваться с генераторами
+лично — совсем». After he pushes a reference update, `tools/refresh.py`, the
+generators and the checkers are the session's to run.
 
-**It also installs what we build.** Menu item 4 copies the mods in `mods/` into
-`Documents/Paradox Interactive/Europa Universalis V/mod/`, which is the folder
-he used to keep in step by hand — pull the branch, delete the old folder, paste
-the new one, six times. It offers a `git pull` first, says of each mod whether
-the game's copy is the same, different or absent, and can take one back out
-again.
-
-**And menu item 7 brings things the other way, because a session sees the
-repository and nothing else.** It reads what is committed and what he attaches to
-a message; the game on his machine is invisible to it. Two halves, and they
-arrive by different routes:
-
-- **«Файлы игры»** runs `extract_game_files.py` over
-  `tools/game_files_manifest.txt` and drops the result into `reference/game/`,
-  where a commit carries it. That is how a folder nobody thought to extract gets
-  in: `in_game/gui` was missing until 2026-09-03, and with it
-  `gui/scripted_widgets/`, which is the file that decides whether a mod's window
-  exists at all. Two rounds went on guessing at that.
-- **«Логи игры»** packs `error.log`, `gui.log`, `warning.log`,
-  `database_conflicts.log`, `system.log` and the last 4 MB of `debug.log` into
-  one zip in the repository root, gitignored, for him to attach. On the logs of
-  2026-09-03 that is **111 KB against 12 MB** for the whole folder, and both
-  diagnosis reports still survive the tail cut — `game.log` and `data_types/`
-  are five sixths of the weight and answer nothing the dumps do not.
-
-**Item 9 is the after-a-patch pass**, everything from outside in one go: game
-files with `--prune` (what the patch removed leaves too), every game file a mod
-replaces whole, `jomini/` and `clausewitz/`, the API dumps if newer than the
-Steam update, the workshop mods, the rebuild. `refs.py --game` names the build.
+1. **Мастерская.** His whole subscription out of Steam's own
+   `appworkshop_3450310.acf`, compared by build id; the ones he picks are
+   fetched with steamcmd into the game's workshop folder, and their copies here
+   follow at once — `reference/mods/` whole, `reference/playset/` text only.
+2. **Все моды.** One list: ours in `mods/`, everything from the workshop,
+   anything else in `Documents/.../mod/`. Per mod: download, put in reference
+   or playset (rewrites `tools/workshop_mods.txt`), install into the game,
+   remove from the game, remove from the repository — the copy, its manifest
+   line, its build notes in `mods.local.json` and its entry in
+   `workshop_generated_state.json`, so no «нет подписки» row outlives it.
+3. **Всё сразу.** Update every copy; drop everything he is no longer subscribed
+   to; reinstall our mods whose game copy differs.
+4. **Забрать из игры** — logs, game files, API dumps — because a session sees
+   the repository and nothing else:
+   - **логи** — `error.log`, `gui.log`, `warning.log`,
+     `database_conflicts.log`, `system.log` and the last 4 MB of `debug.log` in
+     one gitignored zip in the repository root, for him to attach (111 KB
+     against 12 MB for the folder on 2026-09-03);
+   - **файлы игры** — `extract_game_files.py --prune` over
+     `tools/game_files_manifest.txt` into `reference/game/`, with every game
+     file a workshop mod replaces whole; `in_game/gui` was missing until
+     2026-09-03, and two rounds went on guessing at `gui/scripted_widgets/`;
+   - **дампы API** — copied only if taken after the last Steam update.
 
 **Only the game's half of a mod folder goes.** `.metadata/` and the mount
 directories (`in_game`, `main_menu`, `loading_screen`, …); never `tools/`,
@@ -179,9 +167,8 @@ so a mount nobody has heard of cannot be dropped in silence, and a new source
 folder cannot end up inside a live mod.
 
 That shape is deliberate and was asked for in those words: **nothing about
-updating his mods may require a session of ours.** `sync_workshop.ps1` is still
-there for the unattended path, and `workshop.py` is still the machinery under
-both.
+updating his mods may require a session of ours.** `workshop.py` is the
+machinery under the menu.
 
 **The first real sync ran on 2026-08-25**, and brought both mods this repository
 translates up to date in one command. It also showed what the loop is worth:
@@ -196,12 +183,6 @@ and so nothing said the translations had drifted. The update check survives it �
 workshop's last update cannot be behind, so it does not need `record` to have
 run — but the generators do not run themselves. After a sync, make sure someone
 ran `python3 tools/refresh.py` and read its report.
-
-Advanced Auto Build used to arrive in `reference/` without its `.metadata/`,
-which is why `auto_build_ru` declares only CMF as a dependency. The workshop copy
-the sync brings carries it, so `refs.py` now reads that mod's id and version out
-of the tree like every other; the dependency line is the only thing left over
-from when it could not.
 
 ## Два мода, которых в `reference/` не хватает — его предложение, 2026-09-05
 
@@ -220,13 +201,12 @@ from when it could not.
 приходится ставить, чтобы она сработала. Ровно этот разрыв стоил здесь редизайна
 («subsidies were written off as GUI-only»). И у него большой интерфейс — то
 есть живые примеры `fixedgridbox` с datamodel, а это прямо то, что нужно
-[шагу 2б](investigations/wtp_practice_plan.md).
+[шагу 2б](archive/where_to_produce/wtp_practice_plan.md).
 
 **`Advanced Auto Build` из дерева убран, 2026-09-12** — его слово: «он говнище
 и больше не пригодится, всё самое нужное из него давно было взято». Что из него
 успели измерить, осталось в `docs/research/interface.md` и
-`investigations/panel_hitch.md`; самих файлов нет, и `auto_build_ru` поэтому не
-пересобирается.
+`investigations/panel_hitch.md`; самих файлов нет.
 
 **И его надо закоммитить.** `reference/` лежит в git — 9 325 файлов, — но
 последний коммит по нему старый, так что мод, положенный в дерево локально, до

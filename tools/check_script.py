@@ -1212,21 +1212,14 @@ def _widest_rows(block: str, base: int = 0,
 # Поэтому проба одна, под именами, не принадлежащими ни одному из модов, и оба
 # мода возят её копию. Разойдутся копии -- вернётся ровно та же пропажа, только
 # теперь её никто не заметит, потому что «у меня же есть этот файл».
-SHARED_COPIES = (
-    ("in_game/gui/location_production_lateralview.gui",
-     ("rgo_bonus_filter", "where_to_produce")),
-    ("in_game/common/scripted_guis/bag_shared_view_location.txt",
-     ("rgo_bonus_filter", "where_to_produce")),
-)
+# `where_to_produce` ушёл в архив 2026-10-03, и проба осталась у одного
+# `rgo_bonus_filter`. Второй мод с ней — вписать пару сюда.
+SHARED_COPIES: tuple = ()
 
 
 # Перенесённые из чужого мода разборы: их можно рисовать в перенесённом окне и
 # нельзя в своём. Ключ -> файл, в котором он законен.
-FOREIGN_BREAKDOWNS = (
-    ("bag_wtp_trmm_ur_rank_", "bag_wtp_trmm_l_"),
-    ("bag_wtp_trmm_bd_slot_", "bag_wtp_trmm_l_"),
-    ("bag_wtp_trmm_slot_", "bag_wtp_trmm_l_"),
-)
+FOREIGN_BREAKDOWNS: tuple = ()     # были у `where_to_produce`, ушёл в архив 10-03
 
 
 def ungated_live_windows(root: Path) -> list[str]:

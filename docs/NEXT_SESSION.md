@@ -1,96 +1,25 @@
 # Next session: the job in progress
 
-Six mods, a pile of documents and more history than any session should read.
-This file is the part that is live. What has already been settled is in
+This file is the part that is live; history is in `docs/archive/`, and the
+mods retired on 2026-10-03 are in [`archive/retired_mods.md`](archive/retired_mods.md). What has already been settled is in
 [`SETTLED.md`](SETTLED.md); where each mod stands is [`STATUS.md`](STATUS.md).
 
-## Вторая версия мода закрыта, работа возвращается в первую
+## Патч 2026-10-01: моды подогнаны, в игре почти ничего
 
-**2026-09-12: `where_to_produce_v2` построен и удалён в тот же день**
-([`archive/wtp2_failed.md`](archive/wtp2_failed.md)) — **чужой инструмент
-копировать файлами, а не воспроизводить формулой**. Его список —
-[`investigations/wtp_backlog.md`](investigations/wtp_backlog.md); **CM и Glorp UI
-сняты с плейсета, CMF остаётся.**
+Что патч сломал и что сделано — [`investigations/patch_2026_10_01.md`](investigations/patch_2026_10_01.md).
+Копии под бету (`cmf_dev_beta`, `cm_dev_perf`) ставятся **вместо** оригиналов;
+что из них не было в игре — [`STATUS.md`](STATUS.md).
 
-## Работа: `where_to_produce` — что ждёт прогона
+## The job: `mods.bat`, rebuilt 10-03 and never run
 
-## Glorp UI снят с плейсета, `glorpui_hints` автономен
-
-Снят по его решению, дорогим он не был
-([`investigations/glorp_ui_cost.md`](investigations/glorp_ui_cost.md)). **09-14
-форкнуто** четыре их генерируемых файла под именами `svx_svh_*`, одиннадцать
-языков шлются отсюда, зависимость `glorp.ui` снята; **имя мода — всё ещё их, это
-его решение**. **Прогона форк не видел**, что смотреть —
-[`../mods/glorpui_hints/README.md`](../mods/glorpui_hints/README.md#форк-что-взято-у-glorp-ui).
-
-**Вылеты игры закрыты 09-17** — прекратились сами, причину он искать не
-просил ([`archive/next_crashes_0914.md`](archive/next_crashes_0914.md)).
-
-**Раздача грамот принята прогоном 09-14**: с галочкой «Грамоты — поровну»
-разброс в его области 3..6, «пока что оставим это так». Галочка снята по
-умолчанию и взаимоисключима со «Специализацией» — у той своя раздача, и ноль у
-грамоты там **ответ, а не сбой**: сессия 09-14 уже «починила» этот режим, и он
-её снял.
-
-**«Из плана — сюда» отстаёт на локацию — на это есть кнопка «⟳»**, она
-пересобирает панель (`ShowLocationProductionView`, ваниль зовёт это сама после
-смены фильтров). **Прогона не видело.** Кнопка в общем с `rgo_bonus_filter`
-файле, и иначе никак.
-
-**Раздачу грамот больше не правят на глаз:** `rights_sim.py <дамп>` повторяет
-реальный заход город в город. **Просить дамп, а не скриншот**, когда речь о
-числах раздачи — скриншот не говорит ни режима, ни того, что земля платит.
-
-**Окно замены, порядок «Пригодности» и `ERROR` приняты прогонами 09-14.** **Не
-видело прогона:** `_cov_pass` со спросом о локации, сторона в `_stands_` под
-галочкой ранга («Торговая деревня» в городе), «на конец» без устаревших зданий,
-поделённое среднее провинции в лесенке. **Что смотреть — в конце
-[`investigations/wtp_backlog.md`](investigations/wtp_backlog.md)**, семь пунктов.
-
-**Просить `debug.log`, а не только `error.log`:** три ошибки из четырёх за 09-14
-нашлись только там. Почему CM ест производительность —
-[`investigations/cm_performance.md`](investigations/cm_performance.md).
-**Community Mod Toolkit прочитан**, игрового скрипта в нём нет; ждёт его решения
-про `upload.py` со SteamworksPy —
-[`investigations/community_mod_toolkit.md`](investigations/community_mod_toolkit.md).
-**Автострой: закрыт, переоткрыт им же, построен, не заработал, снят целиком**
-([`archive/wtp_vanilla_autoexpand_attempt.md`](archive/wtp_vanilla_autoexpand_attempt.md)).
-**Не предлагать заново.**
-
-**Открыто из первых девяти:** режим ручного заполнения (9).
-
-## Старое по `where_to_produce`, до его списка — в архиве
-
-Раздача, перетасовка, три числа диагностики, цена чужих модов, продовольственный
-потенциал и отложенные грамоты из плана:
-[`archive/wtp_before_his_list.md`](archive/wtp_before_his_list.md).
-
-## Отложено его решением — не поднимать самому
-
-Два вопроса он задал сам 2026-09-14, выслушал ответ с числами и **сознательно
-оставил как есть**: знаменатель покрытия (от всего входа или от сырьевой части)
-и всегда истинный `visible` у `bag_wtp_trmm_search_panel`. Это не «не дошли
-руки». Разбор, цена и его слова —
-[`archive/next_deferred_by_him.md`](archive/next_deferred_by_him.md).
-**Придёт с ответом — тогда и делать.**
-
-## The job: `mods.bat`, and one run to confirm it
-
-**Both halves are repaired and neither has been run on his machine** — a failed
-steamcmd run looked exactly like a successful one
-([`archive/mods_bat_repair.md`](archive/mods_bat_repair.md)). **Ask for** the
-output of `mods.bat → 1`, `→ 4` and `mods.bat check`.
-
-## Then `glorpui_hints` goes out
-
-Nothing outstanding; five steps in
-[`WORKSHOP.md`](WORKSHOP.md#putting-glorpui_hints-out-in-order) and
-[`archive/next_glorpui_publish.md`](archive/next_glorpui_publish.md).
+Four items ([`CONVENTIONS.md`](CONVENTIONS.md)), **no rebuild in it** — after a
+reference update he pushes, `tools/refresh.py` is ours. Tried only on a mock
+Steam folder. **Ask for** `mods.bat → 1`, `→ 2` and `mods.bat check`.
 
 ## Also waiting on the owner, all of it cheap
 
-- **`mods.bat → 2` on his machine** — the 2026-08-28 files of Advanced Auto Build
-  and Glorp UI are still missing here; entry 2 does **not** re-extract the game.
+- **`mods.bat → 3 → 1` on his machine** — the 2026-08-28 files of Advanced Auto
+  Build and Glorp UI are still missing here; it does **not** re-extract the game.
 - **The panel-open bisect and the hover run** —
   [`investigations/panel_hitch.md`](investigations/panel_hitch.md),
   [`investigations/widget_leak.md`](investigations/widget_leak.md). **Do not

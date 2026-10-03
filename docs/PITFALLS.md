@@ -6,7 +6,7 @@ would notice.
 
 **«Возьми этот инструмент» — это `cp` и замена префикса, а не новый код**, и
 «соберём заново по подобию» оплачивается его прогонами:
-[`archive/wtp2_failed.md`](archive/wtp2_failed.md), 2026-09-12.
+[`archive/wtp2_failed.md`](archive/where_to_produce/wtp2_failed.md), 2026-09-12.
 
 **Мод с неполным `metadata.json` лаунчер не показывает вовсе**, и не говорит
 почему. Дважды: 09-20 у `marker_throttle` не было `game_custom_data`, 09-22 у
@@ -56,7 +56,7 @@ would notice.
 
 **А дальше — что три сборки по этому следу всё равно ничего не поставили**, и
 попытка снята целиком:
-[`archive/wtp_vanilla_autoexpand_attempt.md`](archive/wtp_vanilla_autoexpand_attempt.md).
+[`archive/wtp_vanilla_autoexpand_attempt.md`](archive/where_to_produce/wtp_vanilla_autoexpand_attempt.md).
 Найденная дверь и работающая функция — разные вещи.
 
 These subjects outgrew this file and have their own, which `tools/kb.py`

@@ -3,7 +3,7 @@
 Out of [`SETTLED.md`](../SETTLED.md) when it outgrew its budget again. Every one
 of them is answered, shipped and no longer shapes a decision — the two market
 rows are the summary of
-[`../investigations/market_truth.md`](../investigations/market_truth.md), and the
+[`../investigations/market_truth.md`](where_to_produce/market_truth.md), and the
 upgrade-in-place row is why `where_to_produce` never asks about demolition.
 `tools/kb.py` searches this file like any other.
 

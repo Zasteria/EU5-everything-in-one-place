@@ -1,4 +1,4 @@
-﻿# Where the thirteen mods stand
+﻿# Where the mods stand
 
 One line each. **Read only the brief of the mod the task is about** —
 `mods/<mod>/CLAUDE.md`.
@@ -9,21 +9,16 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`nd_ru`](../mods/nd_ru/CLAUDE.md) | in progress; 4 395 keys, 10.6% (0.2.0: + Речь Посполитая) | everything except Westphalia and the override itself |
 | [`nmt_ru`](../mods/nmt_ru/CLAUDE.md) | Русский для National Mission Trees: 17 стран (0.4.0: + Литва, Польша), 3 555 ключей. База без русского и без отката, дерево пишется целиком | всё |
 | [`nmt_fix`](../mods/nmt_fix/CLAUDE.md) | 09-29. NMT засчитывает земли подданных, 111 условий | всё |
-| [`where_to_produce`](../mods/where_to_produce/CLAUDE.md) | **Единственная версия, работа идёт в ней.** Заходы — [`investigations/wtp_backlog.md`](investigations/wtp_backlog.md), открыт пункт 9 | [`archive/status_wtp_untested.md`](archive/status_wtp_untested.md) |
 | [`cm_maps`](../mods/cm_maps/CLAUDE.md) | **загружен 09-19, рисует**; губернатор починен и подтверждён, права починены. Три карты CM dev без CM и CMF | починка прав, карта еды |
 | [`cm_perf`](../mods/cm_perf/CLAUDE.md) | **09-19 он снял мод: тормозит тем сильнее, чем больше точек авторасширения.** Копия CM, ставится **вместо** CM; месячный пульс не трогать | правки 3 и 5 |
 | [`cm_dev_perf`](../mods/cm_dev_perf/CLAUDE.md) | 09-26, не в игре. CM Dev + правка 1 `cm_perf`; 10-01 окна на бете | всё |
-| [`qol_beta`](../mods/qol_beta/CLAUDE.md) | 10-01, не в игре. QoL by Buddy под бету, без границ | всё |
 | [`cmf_dev_beta`](../mods/cmf_dev_beta/CLAUDE.md) | 10-02: без CMF Dev в плейсете не работал; +beta3 — полная копия CMF Dev, ставится вместо | всё |
 | [`quiet_alerts`](../mods/quiet_alerts/CLAUDE.md) | 10-02: 0.3.0 не в игре. Красные и оранжевые с жёлтым звуком, галочка в CMF | всё |
 | [`war_sliders`](../mods/war_sliders/CLAUDE.md) | **0.6.2 ждёт прогона** (0.5.2 работала 09-29). Кнопка на панели CMF: содержание и инфляция, без нажатия спит | кнопка: содержание, правка чеканки (09-30) |
 
-Закрытые моды (и `widget_probe`) вынесены:
-[`archive/status_closed.md`](archive/status_closed.md).
-
-`where_to_produce` — **вторая** попытка; первая провалилась непроверенной:
-[`archive/where_to_produce.md`](archive/where_to_produce.md).
-**Вылетов больше нет — его слово 2026-09-17.**
+Закрытые, но лежащие здесь: [`archive/status_closed.md`](archive/status_closed.md).
+Убранные из дерева 10-03 (`where_to_produce`, `goods_target`, `marker_throttle`,
+`widget_probe`, `qol_beta`, `auto_build_ru`): [`archive/retired_mods.md`](archive/retired_mods.md).
 
 ## Two things being hunted that are not any mod's fault
 
@@ -35,4 +30,4 @@ One line each. **Read only the brief of the mod the task is about** —
   медленнее с плейсетом с первой минуты. **Не путать с утечкой.**
 
 Инструменты вокруг всего этого — [`CONVENTIONS.md`](CONVENTIONS.md);
-`mods.bat` и `tools/workshop.py` **перестраивать не надо** ([`SETTLED.md`](SETTLED.md)).
+`mods.bat` перестроен 10-03 по его списку и **ничего не пересобирает**: генераторы — работа сессии.

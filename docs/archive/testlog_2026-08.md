@@ -810,7 +810,7 @@ Four things the run asked for, all built and none of them loaded yet:
   in the tree now: `1_building_unlocks.txt` gates 119 buildings by age and
   `3_production_method_unlocks.txt` gates ten methods directly, so
   `can_build_building` in country scope plus `has_advance` answers "available to
-  me now". This is what `docs/archive/where_to_produce.md` recorded as
+  me now". This is what `docs/archive/where_to_produce/where_to_produce.md` recorded as
   unanswerable; `common/advances/` was not in the tree then.
 - **The table ran out of rows before it ran out of answers.** Every location of a
   province scores the same, so it now holds one row per province.
@@ -1394,7 +1394,7 @@ method, bonus and materials, «Ценность» ranking them.
 Moved out of [`../TESTLOG.md`](../TESTLOG.md) when it outgrew its budget a
 second time. This is the run that settled the two-slot question; the working of
 it is in
-[`../investigations/production_ladder.md`](../investigations/production_ladder.md).
+[`../investigations/production_ladder.md`](where_to_produce/production_ladder.md).
 
 **2026-08-31 — `where_to_produce`, twenty-first load. The two-slot question is
 answered, from the game's own panel.** Three screenshots.
@@ -2289,7 +2289,7 @@ ground looked to him the way he had meant it: «именно в этом ком�
 it was undone at his word — «лучше мы решим уже на том моменте основную мучающую
 проблему, чем будем делать это после того как накрутили сверху множество других
 неработающих правок» — so everything above in this file is the code again,
-exactly. The run itself is in [`../archive/testlog_2026-08.md`](../archive/testlog_2026-08.md).
+exactly. The run itself is in [`../archive/testlog_2026-08.md`](testlog_2026-08.md).
 
 **Open at the rollback, and he named all of it himself. Three of the five were
 answered on 2026-09-02 when he asked for them by name:**

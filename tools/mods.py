@@ -7,57 +7,34 @@ no session of mine in the loop:
     python3 tools/mods.py           the menu
     python3 tools/mods.py check     just the answer, for a script or a shortcut
 
-What it can do, in the order the work actually happens:
+The menu, as he asked for it on 2026-10-03:
 
-1. **Look at every mod he is subscribed to** — not the five this repository
-   tracks — and say which ones the workshop has moved on since Steam last
-   downloaded them. That comparison is between Steam's own record of what is
-   installed (`appworkshop_3450310.acf`) and Steam's public
-   `GetPublishedFileDetails`, **by build id** — the `manifest` on one side
-   against `hcontent_file` on the other — rather than by dates. Dates are what
-   made this loop untrustworthy: Steam stamps an item as updated when it
-   notices the update, which is not the same as having downloaded it, so a mod
-   could read as current and load as the old version in game. Two build ids
-   that differ are two different sets of files, and nothing about that is a
-   guess. Anything Steam has no build id for falls back to the dates, and the
-   report says which of the two answered.
+1. **Мастерская** — every mod he is subscribed to, compared with what the
+   workshop serves **by build id** (`manifest` in Steam's own
+   `appworkshop_3450310.acf` against `hcontent_file` from the public
+   `GetPublishedFileDetails`), not by dates: Steam stamps an item as updated
+   when it *notices* the update, not when it has fetched it. The ones he picks
+   are downloaded with `steamcmd` under his account (anonymous does not work for
+   this app — measured) into the game's own workshop folder, and the copies in
+   this repository follow at once: `reference/mods/` whole, `reference/playset/`
+   text only.
 
-2. **Download the ones he picks, into the game's own workshop folder**, so the
-   next launch loads them. Steam itself will not be told to do this on demand —
-   hence the unsubscribe-and-resubscribe dance this replaces — so it is done
-   with `steamcmd` under his own account and the result is copied over
-   `steamapps/workshop/content/3450310/<id>/`, which is where the game reads
-   mods from. Anonymous does not work for this app; that was measured. Any mod
-   can be re-fetched on demand, whether or not the check thinks it is behind —
-   "ничего не отстаёт" is exactly the answer that used to be wrong. What
-   steamcmd actually brought back is checked against what the workshop serves,
-   and written down here, because Steam's own record still names the build
-   *Steam* downloaded.
+2. **Все моды** — one list: ours in `mods/`, everything from the workshop,
+   anything else in the game's local mod folder. Pick one and choose what to do
+   with it: download, put it in reference or in the playset, install into the
+   game, remove from the game, remove from the repository — copy, line in
+   `tools/workshop_mods.txt` and every note this menu keeps, so no row of
+   «нет подписки» is left behind.
 
-3. **Update the copies in this repository**, either kind: `reference/mods/` for
-   the mods something here is built against (whole, unedited) and
-   `reference/playset/` for the rest (text only). Then rebuild everything
-   generated from them and say what moved. This copies out of the Steam folder,
-   so a mod Steam has not actually fetched would be copied in stale and every
-   generator would rebuild against the old files without a word — it stops and
-   offers to download first instead.
+3. **Всё сразу** — the same for everything: update all, drop everything he is no
+   longer subscribed to, reinstall our mods whose game copy differs.
 
-4. **Move a mod between those two**, which is the only decision in here that
-   changes what this repository watches: promoting one adds it to
-   `tools/workshop_mods.txt` and it starts arriving whole and getting checked
-   daily on GitHub; demoting one puts it back in the text-only tree; forgetting
-   one deletes the copy and the daily check, leaving the Steam subscription
-   alone.
+4. **Забрать из игры** — a zip of the logs, the game's own files into
+   `reference/game/`, the engine's API dumps.
 
-5. **Commit and push**, to whatever branch he says, `main` included.
-
-6. **After a game update, everything at once** (menu item 9): the workshop
-   mods, the game's files with what the patch removed taken out too, every game
-   file a mod replaces whole, the engine layers, the API dumps, the rebuild.
-
-Nothing here needs the repository to be checked out anywhere in particular and
-nothing needs a session: steps 1 and 2 do not touch git at all, so it is
-usable as a mod updater on a day when modding is the last thing on his mind.
+**Nothing here rebuilds or checks anything**, and nothing commits: generators,
+`tools/refresh.py` and the checkers are a session's job, and commit and push
+are his, in GitHub Desktop.
 
 Settings that are his rather than the repository's — where steamcmd lives, which
 Steam account, which branch — go in `tools/mods.local.json`, which is ignored by
@@ -261,6 +238,7 @@ class Mod:
     folder: Path | None = None    # the copy in this repository
     version: str | None = None
     key: str = ""                 # the name tools/workshop_mods.txt gives it
+    on_disk: bool = False         # Steam has it, i.e. he is subscribed
 
     @property
     def by_manifest(self) -> bool:
@@ -295,6 +273,14 @@ class World:
 
     def by_id(self, item: str) -> Mod | None:
         return next((m for m in self.mods if m.id == item), None)
+
+
+def meta_name(folder: Path) -> str:
+    """What the mod calls itself, for a list Steam did not answer for."""
+    try:
+        return str(refs._metadata(folder).get("name") or "")
+    except SystemExit:
+        return ""
 
 
 def gather(configured: dict, ask_steam: bool = True) -> World:
@@ -334,14 +320,22 @@ def gather(configured: dict, ask_steam: bool = True) -> World:
     in_playset = {}
     for mod in refs.playset():
         found = re.search(r"(\d{6,})", mod.folder)
-        if found:
-            in_playset[found.group(1)] = mod
+        in_playset[found.group(1) if found else mod.folder] = mod
+    # A folder in reference/mods that no line of workshop_mods.txt claims:
+    # still a copy, still his to move or delete.
+    claimed = {copy.path for copy in in_reference.values()}
+    loose: dict[str, Path] = {}
+    for mod in refs.mods():
+        if mod.path not in claimed:
+            found = re.search(r"(\d{6,})", mod.folder)
+            loose[found.group(1) if found else mod.folder] = mod.path
 
     for folder in sorted(content.iterdir()):
         if not folder.is_dir() or not folder.name.isdigit():
             continue
         stamp, manifest = versions.get(folder.name, (0, ""))
-        mod = Mod(id=folder.name, installed=stamp, installed_manifest=manifest)
+        mod = Mod(id=folder.name, installed=stamp, installed_manifest=manifest, on_disk=True,
+                  title=meta_name(folder))
         if folder.name in tracked:
             mod.where, mod.key = REFERENCE, tracked[folder.name].key
             copy = in_reference.get(folder.name)
@@ -349,8 +343,10 @@ def gather(configured: dict, ask_steam: bool = True) -> World:
                 mod.folder, mod.version = copy.path, copy.version
         elif folder.name in in_playset:
             mod.where = PLAYSET
-            mod.folder = in_playset[folder.name].path
-            mod.version = in_playset[folder.name].version
+            copy = in_playset.pop(folder.name)
+            mod.folder, mod.version = copy.path, copy.version
+        elif folder.name in loose:
+            mod.where, mod.folder = REFERENCE, loose.pop(folder.name)
         world.mods.append(mod)
 
     # A tracked mod whose copy is here but which Steam has not downloaded still
@@ -361,11 +357,18 @@ def gather(configured: dict, ask_steam: bool = True) -> World:
             world.mods.append(Mod(id=item.id, where=REFERENCE, key=item.key,
                                   folder=copy.path if copy else None,
                                   version=copy.version if copy else None))
+    # Copies of mods he is no longer subscribed to: the rows «убрать
+    # отсутствующее» is for.
+    for item, copy in in_playset.items():
+        world.mods.append(Mod(id=item, where=PLAYSET, folder=copy.path,
+                              version=copy.version, title=copy.name or copy.folder))
+    for item, path in loose.items():
+        world.mods.append(Mod(id=item, where=REFERENCE, folder=path, title=path.name))
 
     if ask_steam:
         with Doing("спрашиваю мастерскую про %d мод(ов)" % len(world.mods)) as step:
             try:
-                details = workshop.steam_details([m.id for m in world.mods])
+                details = workshop.steam_details([m.id for m in world.mods if m.id.isdigit()])
                 world.asked_steam = True
                 step.finish("ответила")
             except SystemExit:
@@ -373,7 +376,7 @@ def gather(configured: dict, ask_steam: bool = True) -> World:
                 step.finish("Steam не ответил — версии покажу по тому, что записано")
         for mod in world.mods:
             detail = details.get(mod.id, {})
-            mod.title = detail.get("title", "")
+            mod.title = detail.get("title", "") or mod.title
             mod.published = int(detail.get("time_updated") or 0)
             mod.published_manifest = str(detail.get("hcontent_file") or "")
 
@@ -445,7 +448,9 @@ def ask(prompt: str, default: str = "") -> str:
     try:
         answer = input(prompt).strip()
     except EOFError:
-        return default
+        # The console closed: every menu here loops until "0", and an input
+        # that never comes again would spin it for ever.
+        raise SystemExit(0)
     return answer or default
 
 
@@ -710,88 +715,12 @@ def run_python(script: str, *args: str) -> int:
     return done.returncode
 
 
-def reference_is_current(mod: Mod) -> bool:
-    """Is the copy under `reference/mods/` already the workshop's version?
-
-    Copying a mod that has not moved costs nothing in git — identical files are
-    no diff — but it reads as though the tool were rewriting things nobody
-    touched, and National Destinies alone is a hundred megabytes of it. So the
-    same test the update check uses answers here too: a folder committed after
-    the workshop last moved cannot be behind, and one with uncommitted changes
-    was just copied.
-    """
-    if mod.folder is None or not mod.folder.exists():
-        return False
-    if not mod.published:
-        return True                      # Steam did not answer; do not churn on a guess
-    if workshop.committed_at(mod.folder) > mod.published:
-        return True
-    return workshop.copied_since_commit(mod.folder)
-
-
-def update_reference(world: World, chosen: list[Mod] | None = None) -> list[str]:
-    """Replace the whole copies under `reference/mods/` from the workshop."""
-    if world.content is None:
-        say("папка мастерской не найдена.")
-        return []
-    tracked = {item.id: item for item in workshop.tracked()}
-    wanted = [m for m in (chosen or world.mods) if m.id in tracked]
-    if not wanted:
-        say("нечего обновлять: ни один из выбранных модов не в reference.")
-        return []
-
-    here = workshop.local_copies()
-    done: list[str] = []
-    for mod in wanted:
-        source = world.content / mod.id
-        if not source.is_dir():
-            say("  %-44s Steam его не скачал" % mod.name[:44])
-            continue
-        item = tracked[mod.id]
-        existing = here.get(mod.id)
-        folder = workshop.folder_for(item, source, existing)
-        # National Destinies is a hundred megabytes; a copy of it is not instant
-        # and the line has to appear before the wait, not after it.
-        with Doing("копирую %s" % item.key) as step:
-            files, size = workshop.copy_in(source, refs.MODS / folder)
-            note = ""
-            if existing is not None and existing.folder != folder:
-                shutil.rmtree(existing.path, ignore_errors=True)
-                note = ", заменил %s" % existing.folder
-            step.finish("%s: %d файлов, %s%s"
-                        % (folder, files, workshop.human(size), note))
-        done.append(item.key)
-    return done
-
-
-def update_playset(world: World) -> None:
-    """The text-only copies. Told where the workshop is, because this machine's
-    Steam may be on a drive the default search does not know about."""
-    if world.content is None:
-        say("папка мастерской не найдена.")
-        return
-    run_python("tools/workshop.py", "playset", "--from", str(world.content))
-
-
-def rebuild() -> None:
-    """Rebuild what this repository compiles *from* the reference copies.
-
-    Worth being plain about, because the output looks alarming otherwise: this
-    touches only the `*_generated_*` files inside our own mods. Those are
-    compiled from the reference copies — a translation is built against the base
-    mod's English — so a base mod moving has to be followed here or the mod ships
-    against a version that is gone. Nothing hand-written is read or rewritten.
-    """
-    say()
-    say("--- пересобираю файлы *_generated_* в наших модах ---")
-    say("    (они компилируются из reference; руками написанное не трогается)")
-    run_python("tools/refresh.py", "--brief")
-    if run_python("tools/workshop.py", "record") != 0:
-        say("    отметку о версиях записать не удалось — это не страшно:")
-        say("    проверка обновлений всё равно определит их по истории git.")
-
-
 # ---------------------------------------------------------- moving mods around
+#
+# **Ни один пункт меню ничего не пересобирает и не проверяет** — его слова
+# 2026-10-03: «любые обновления идут через тебя, и я не хочу сталкиваться с
+# какими-либо генераторами лично — совсем». Меню только носит файлы между
+# мастерской, игрой и репозиторием; `tools/refresh.py` запускает сессия.
 
 
 def slug(text: str) -> str:
@@ -799,100 +728,123 @@ def slug(text: str) -> str:
     return made or "mod"
 
 
-def promote(mod: Mod, world: World) -> None:
-    """Track this mod: whole copy in `reference/mods/`, watched for updates."""
-    default = slug(mod.title or mod.id)
-    key = ask("Короткое имя для него [%s]: " % default, default)
-    reason = ask("Зачем он здесь (одна строка): ", "")
-
-    text = workshop.MANIFEST.read_text(encoding="utf-8").rstrip("\n")
-    line = "%-11s %s" % (mod.id, key)
-    if reason:
-        line = "%-34s # %s" % (line, reason)
-    text += "\n" + line + "\n"
-    workshop.MANIFEST.write_text(text, encoding="utf-8")
-
-    if mod.where == PLAYSET and mod.folder is not None:
-        shutil.rmtree(mod.folder, ignore_errors=True)
-    if world.content is not None and (world.content / mod.id).is_dir():
-        item = workshop.Tracked(id=mod.id, key=key, reason=reason)
-        source = world.content / mod.id
-        folder = workshop.folder_for(item, source, None)
-        files, size = workshop.copy_in(source, refs.MODS / folder)
-        say("  %s: %d файлов, %s" % (folder, files, workshop.human(size)))
-    say()
-    say("%s теперь в reference — целиком, и за его обновлениями следит" % key)
-    say("ежедневная проверка на GitHub.")
-
-
-def demote(mod: Mod, world: World) -> None:
-    """Stop tracking: text-only copy in the playset, no daily check."""
+def manifest_drop(item: str) -> bool:
+    """Убрать строку мода из `tools/workshop_mods.txt`. True — строка была."""
     lines = workshop.MANIFEST.read_text(encoding="utf-8").splitlines()
-    kept = [line for line in lines if not line.strip().startswith(mod.id)]
+    kept = [line for line in lines
+            if line.lstrip().startswith("#") or line.split()[:1] != [item]]
+    if len(kept) == len(lines):
+        return False
     workshop.MANIFEST.write_text("\n".join(kept) + "\n", encoding="utf-8")
+    return True
 
-    if mod.folder is not None and mod.folder.exists():
-        shutil.rmtree(mod.folder, ignore_errors=True)
-    if world.content is not None and (world.content / mod.id).is_dir():
-        item = workshop.Tracked(id=mod.id, key=slug(mod.title or mod.id), reason="")
-        source = world.content / mod.id
+
+def manifest_add(item: str, key: str) -> None:
+    text = workshop.MANIFEST.read_text(encoding="utf-8").rstrip("\n")
+    workshop.MANIFEST.write_text(text + "\n%-11s %s\n" % (item, key), encoding="utf-8")
+
+
+def forget_records(item: str, configured: dict) -> None:
+    """Всё, что меню и ежедневная проверка помнят про мод, — кроме его файлов.
+
+    Без этого удалённый мод оставался строкой «отсутствует» в списке: запись
+    о сборке в `mods.local.json` и отметка в `workshop_generated_state.json`
+    переживали и подписку, и копию.
+    """
+    changed = False
+    for section in ("installed", "installed_manifest"):
+        if item in (configured.get(section) or {}):
+            del configured[section][item]
+            changed = True
+    if changed:
+        settings_write(configured)
+    state_drop(item)
+
+
+def state_drop(item: str) -> None:
+    """Убрать отметку ежедневной проверки на GitHub: мода в reference больше нет."""
+    entries = dict(workshop.state_read().get("mods", {}))
+    if item in entries:
+        del entries[item]
+        workshop.state_write(entries)
+
+
+def record_quietly(ids: list[str]) -> None:
+    """Отметить для проверки на GitHub, что копии в reference свежие. Без шума:
+    это не его забота, и без сети она догадается сама по истории git."""
+    if not ids:
+        return
+    try:
+        workshop.record(ids)
+    except (SystemExit, OSError):
+        pass
+
+
+def inventory() -> None:
+    try:
+        refs.INVENTORY.write_text(refs.table(), encoding="utf-8")
+    except (SystemExit, OSError):
+        pass
+
+
+def copy_from_steam(mod: Mod, world: World, kind: str) -> bool:
+    """Положить мод из папки мастерской в reference (целиком) или playset (текст)."""
+    if world.content is None or not (world.content / mod.id).is_dir():
+        say("  %-44s Steam его не скачал — сначала «скачать свежую версию»" % mod.name[:44])
+        return False
+    source = world.content / mod.id
+    if kind == REFERENCE:
+        key = mod.key or slug(mod.title or mod.id)
+        item = workshop.Tracked(id=mod.id, key=key, reason="")
+        existing = workshop.local_copies().get(mod.id)
+        folder = workshop.folder_for(item, source, existing)
+        with Doing("reference ← %s" % mod.name[:40]) as step:
+            files, size = workshop.copy_in(source, refs.MODS / folder)
+            if existing is not None and existing.folder != folder:
+                shutil.rmtree(existing.path, ignore_errors=True)
+            step.finish("%d файлов, %s" % (files, workshop.human(size)))
+        mod.folder = refs.MODS / folder
+    else:
+        item = workshop.Tracked(id=mod.id, key=mod.id, reason="")
         folder = workshop.folder_for(item, source, None)
         refs.PLAYSET.mkdir(parents=True, exist_ok=True)
-        files, size = workshop.copy_slim(source, refs.PLAYSET / folder)
-        say("  %s: %d файлов текста, %s" % (folder, files, workshop.human(size)))
-    say()
-    say("Готово. Помни: если на него что-то здесь опиралось — оно сломается,")
-    say("потому что в playset лежит только текст.")
+        with Doing("playset ← %s" % mod.name[:40]) as step:
+            files, size = workshop.copy_slim(source, refs.PLAYSET / folder)
+            step.finish("%d файлов текста, %s" % (files, workshop.human(size)))
+        if mod.folder is not None and mod.folder != refs.PLAYSET / folder:
+            shutil.rmtree(mod.folder, ignore_errors=True)
+        mod.folder = refs.PLAYSET / folder
+    return True
 
 
-def forget(mod: Mod, world: World) -> None:
-    """Убрать копию мода из репозитория совсем -- и из reference, и из playset.
-
-    **Третья дверь рядом с `promote` и `demote`, и она никуда не ведёт.** Те две
-    перекладывают копию между двумя деревьями; эта удаляет её. Нужна была ровно
-    затем, зачем и появилась: 2026-09-12 владелец убрал Advanced Auto Build --
-    «он говнище и больше не пригодится, всё самое нужное из него давно было
-    взято», -- и сделать это из меню было нечем.
-
-    **Подписка Steam не трогается.** Файлы в `steamapps/workshop/content` --
-    его, не наши: мод остаётся установленным и играется как играл. Удаляется
-    копия в этом репозитории и строка в `tools/workshop_mods.txt`, то есть
-    ежедневная проверка обновлений.
-
-    **Что на него опиралось, сломается**, и молча: генератор, читающий чужие
-    английские ключи, после этого не соберётся. Поэтому спрашивается имя, а не
-    «да/нет», -- то же, что делает сама мастерская, когда удаляет предмет.
-    """
-    say()
-    say("Это удалит копию %s из репозитория:" % mod.name)
-    if mod.folder is not None:
-        say("  %s" % mod.folder)
-    if mod.key:
-        say("  и строку «%s» из tools/workshop_mods.txt — проверка обновлений прекратится" % mod.key)
-    say()
-    say("Подписка Steam не трогается: мод останется установленным и в игре.")
-    say("Всё, что читало его файлы отсюда, сломается — генераторы переводов в том числе.")
-    say()
-    if ask("Впиши имя мода, чтобы подтвердить (Enter — отмена): ").strip() != mod.name.strip():
-        say("Отменено.")
+def to_reference(mod: Mod, world: World) -> None:
+    """Целиком в `reference/mods/`, и проверка на GitHub начинает за ним следить."""
+    if world.content is None or not (world.content / mod.id).is_dir():
+        say("Steam его не скачал — сначала «скачать свежую версию».")
         return
+    old = mod.folder if mod.where == PLAYSET else None
+    if not mod.key:
+        mod.key = slug(mod.title or mod.id)
+        manifest_add(mod.id, mod.key)
+    if copy_from_steam(mod, world, REFERENCE) and old is not None:
+        shutil.rmtree(old, ignore_errors=True)
+    record_quietly([mod.id])
+    inventory()
 
-    if mod.key or mod.id:
-        lines = workshop.MANIFEST.read_text(encoding="utf-8").splitlines()
-        kept = [line for line in lines if not line.strip().startswith(mod.id)]
-        if len(kept) != len(lines):
-            workshop.MANIFEST.write_text("\n".join(kept) + "\n", encoding="utf-8")
-            say("  убрано из tools/workshop_mods.txt")
 
-    if mod.folder is not None and mod.folder.exists():
-        shutil.rmtree(mod.folder, ignore_errors=True)
-        say("  удалено: %s" % mod.folder)
-    else:
-        say("  копии в репозитории и не было")
-
-    say()
-    say("Готово. Проверь `python3 tools/refresh.py`: генератор, который читал")
-    say("этот мод, теперь падает, и его надо убрать из списка или вернуть копию.")
+def to_playset(mod: Mod, world: World) -> None:
+    """Только текст в `reference/playset/`, без проверки на GitHub."""
+    if world.content is None or not (world.content / mod.id).is_dir():
+        say("Steam его не скачал — сначала «скачать свежую версию».")
+        return
+    old = mod.folder if mod.where == REFERENCE else None
+    manifest_drop(mod.id)
+    mod.folder = None
+    if copy_from_steam(mod, world, PLAYSET) and old is not None:
+        shutil.rmtree(old, ignore_errors=True)
+    state_drop(mod.id)
+    mod.key = ""
+    inventory()
 
 
 # ------------------------------------------------- our own mods, into the game
@@ -1068,125 +1020,6 @@ def install(mod: refs.Mod, target: Path) -> tuple[int, int]:
     return files, size
 
 
-def screen_install(configured: dict) -> None:
-    target = game_mods_dir(configured, make=True)
-    if target is None:
-        say()
-        say("Не нашёл папку модов игры. Обычно она здесь:")
-        say(r"  C:\Users\<ты>\Documents\Paradox Interactive\Europa Universalis V\mod")
-        say("Укажи её один раз:")
-        say('  mods.bat --game-mods "<путь>"')
-        return
-
-    say()
-    say("Папка модов игры: %s" % target)
-    say("Репозиторий: %s" % here())
-    if yes("Сначала подтянуть свежее из GitHub (git pull)?"):
-        was = workshop.git("rev-parse", "HEAD", check=False).stdout.strip()
-        with Doing("git pull") as step:
-            done = workshop.git("pull", check=False)
-            step.finish("готово" if done.returncode == 0 else "не вышло")
-        if done.returncode != 0:
-            say((done.stdout + done.stderr).strip())
-            say()
-            say("Дальше ставится то, что лежит здесь сейчас — то есть старое.")
-        else:
-            now = workshop.git("rev-parse", "HEAD", check=False).stdout.strip()
-            say("  %s" % ("подтянулось до %s" % here() if now != was
-                          else "и так последнее — %s" % here()))
-
-    mods = our_mods()
-    say()
-    # **«версия» and «в игре» are not the same question, and the pair read as one
-    # on 2026-09-06**: he took «отличается» for a version mismatch and asked why
-    # the version had changed. It had not — the column is the number in this
-    # repository's `.metadata`, and the one beside it compares the *files* that
-    # would be installed, byte for byte. Saying so in the headings is cheaper
-    # than saying it again.
-    # «в игре» is the version in the game's own copy of `.metadata`; the note
-    # beside it compares the two, so a branch older than the game says so.
-    say("  %-3s %-18s %-13s %-13s %-12s %s"
-        % ("#", "мод", "версия тут", "версия в игре", "файлы в игре", "заметка"))
-    older: set[str] = set()
-    for number, mod in enumerate(mods, 1):
-        state = installed_state(mod, target)
-        in_game = installed_version(mod, target) if state != "нет в игре" else ""
-        note = version_note(mod.version, in_game, state)
-        if note == "ТУТ СТАРЕЕ":
-            older.add(mod.path.name)
-        say("  %-3d %-18s %-13s %-13s %-12s %s"
-            % (number, mod.path.name[:18], (mod.version or "—")[:13],
-               (in_game or "—")[:13], state, note))
-    say()
-    if older:
-        say("ТУТ СТАРЕЕ — в этой ветке версия ниже, чем уже стоит в игре.")
-        say("Поставишь — откатишь мод назад. Сначала переключись на нужную ветку.")
-        say()
-    say("Enter — поставить все, номера через запятую — только их,")
-    answer = ask("«у» + номера — убрать из игры, 0 — назад: ")
-    if answer == "0":
-        return
-
-    remove = answer.lower().startswith(("у", "y"))
-    if remove:
-        answer = answer[1:].strip()
-    chosen: list[refs.Mod] = []
-    if not answer:
-        chosen = list(mods)
-    else:
-        for part in re.split(r"[,\s]+", answer):
-            if part.isdigit() and 1 <= int(part) <= len(mods):
-                chosen.append(mods[int(part) - 1])
-    if not chosen:
-        return
-    downgrade = [mod.path.name for mod in chosen if mod.path.name in older]
-    if not remove and downgrade and not yes(
-            "Откатить к старой версии из этой ветки: %s?" % ", ".join(downgrade), default=False):
-        chosen = [mod for mod in chosen if mod.path.name not in older]
-        if not chosen:
-            return
-
-    say()
-    trouble = False
-    for mod in chosen:
-        if remove:
-            there = target / mod.path.name
-            if there.is_dir():
-                shutil.rmtree(there, ignore_errors=True)
-                say("  %-22s убран из игры" % mod.path.name)
-            else:
-                say("  %-22s его там и не было" % mod.path.name)
-            continue
-        _, unknown = game_files(mod.path)
-        with Doing("ставлю %s" % mod.path.name) as step:
-            files, size = install(mod, target)
-            step.finish("%d файлов, %s" % (files, workshop.human(size)))
-        if unknown:
-            say("     не знаю, что это, и потому не копировал: %s" % ", ".join(unknown))
-        # Read back rather than trust the loop above. Everything that has gone
-        # wrong here was silent — a folder the game does not read, a copy that
-        # half happened — and this is the one line that would have caught it.
-        state = installed_state(mod, target)
-        if state != "совпадает":
-            trouble = True
-            say("     ПРОВЕРКА НЕ ПРОШЛА: в игре «%s», а не «совпадает»." % state)
-            say("     Смотри сам: %s" % (target / mod.path.name))
-
-    say()
-    if trouble:
-        say("Что-то не доехало. Пока это не сойдётся, игра грузит старую версию,")
-        say("и по ней ничего проверять нельзя. Логи потом читай через")
-        say("  python3 tools/which_build.py <папка с логами>")
-        say("— он скажет, какую сборку игра взяла на самом деле.")
-        return
-    if not remove:
-        say("Поставлено из %s." % here())
-        say("Готово. В игру уехало только то, что она читает — .metadata и папки")
-        say("монтирования; генераторы, переводы-исходники и README остались здесь.")
-        say("Если мод ставится впервые, включи его в лаунчере один раз; дальше")
-        say("обновления подхватываются сами, папка та же.")
-
-
 # **Nothing here commits or pushes, and that is his rule.** 2026-09-03: «на самом
 # деле модс.бат не должен ничего комитить и пушить. Комичу и пушу любые изменения
 # в папке репозитория я через соответствующее десктопное приложение гитхаба.»
@@ -1211,7 +1044,7 @@ def show_updates(world: World) -> list[Mod]:
     by_date = [m for m in world.mods if m.installed and not m.by_manifest]
     say()
     say("Подписка: %d мод(ов). В reference: %d, в playset: %d."
-        % (len(world.mods),
+        % (sum(1 for m in world.mods if m.on_disk),
            sum(1 for m in world.mods if m.where == REFERENCE),
            sum(1 for m in world.mods if m.where == PLAYSET)))
     if by_date:
@@ -1236,253 +1069,7 @@ def show_updates(world: World) -> list[Mod]:
     return outdated
 
 
-def screen_updates(world: World, configured: dict) -> None:
-    outdated = show_updates(world)
-    if outdated:
-        say()
-        chosen = pick(outdated,
-                      "Что скачать? [Enter — все, номера через запятую, 0 — назад]: ")
-    else:
-        # There is always something to do here, because "ничего не отстаёт" is
-        # exactly the answer that used to be wrong: Steam marks a mod updated
-        # when it notices the update, and the files may not have followed. So a
-        # mod can be re-fetched on demand whatever the check thinks — which is
-        # what unsubscribing and resubscribing was for.
-        if world.content is None or not world.mods:
-            return
-        say()
-        if not yes("Всё равно перекачать какой-нибудь мод заново?", default=False):
-            return
-        say()
-        for number, mod in enumerate(world.mods, 1):
-            say("  %-3d %-46s %-10s %s"
-                % (number, mod.name[:46], mod.where, when(mod.installed)))
-        say()
-        chosen = pick(world.mods, "Какие? [номера через запятую, 0 — назад]: ",
-                      default_all=False)
-    if not chosen:
-        return
-    got = download(configured, chosen, world.content)
-    if not got:
-        return
-    say()
-    if yes("Обновить и копии в репозитории для тех из них, что там есть?"):
-        say()
-        update_reference(world, got)
-        if any(m.where == PLAYSET for m in got):
-            update_playset(world)
-        rebuild()
-
-
-def screen_repository(world: World, configured: dict) -> None:
-    say()
-    say("Что обновить в репозитории из того, что уже скачано Steam:")
-    say("  1  reference — пять модов целиком, те, на которых всё здесь держится")
-    say("  2  playset — все остальные, только текст")
-    say("  3  и то, и другое")
-    say("  0  назад")
-    choice = ask("> ")
-    if choice not in {"1", "2", "3"}:
-        return
-    say()
-    copied: list[str] = []
-    if choice in {"1", "3"}:
-        tracked = {item.id for item in workshop.tracked()}
-        mine = [m for m in world.mods if m.id in tracked]
-        behind = [m for m in mine if not reference_is_current(m)]
-        if behind:
-            say("Отстают от мастерской копии в reference:")
-            for mod in behind:
-                say("  %s%s" % (mod.name,
-                                "   ← и в папке Steam тоже старая сборка"
-                                if mod.outdated else ""))
-            # The trap this walks into otherwise: this copies out of the Steam
-            # workshop folder, so a mod Steam has not actually fetched is copied
-            # in stale, the generators rebuild against the old files, and
-            # everything reads as done. Caught here rather than in a git diff.
-            stale = [mod for mod in behind if mod.outdated]
-            if stale:
-                say()
-                say("Копировать их сейчас — значит принести в репозиторий ту же")
-                say("старую версию: reference берётся из папки Steam, а не из сети.")
-                if yes("Сначала скачать свежие (%d)?" % len(stale)):
-                    got = download(configured, stale, world.content)
-                    if got:
-                        world.mods = gather(configured).mods
-                        behind = [m for m in world.mods
-                                  if m.id in {b.id for b in behind}]
-            say()
-            copied = update_reference(world, behind)
-        else:
-            say("Копии в reference уже те же, что в мастерской — копировать нечего.")
-            if yes("Всё равно перекопировать все %d?" % len(mine), default=False):
-                copied = update_reference(world)
-    if choice in {"2", "3"}:
-        update_playset(world)
-    # Only a changed reference copy can change anything generated: nothing here
-    # compiles from the playset, and a rebuild that had no input to react to is
-    # ten seconds of output saying so.
-    if copied:
-        rebuild()
-
-
-def screen_list(world: World, configured: dict) -> None:
-    while True:
-        say()
-        say("  %-3s %-46s %-10s %-10s %s" % ("#", "мод", "где", "версия", "обновление"))
-        for number, mod in enumerate(world.mods, 1):
-            say("  %-3d %-46s %-10s %-10s %s"
-                % (number, mod.name[:46], mod.where, (mod.version or "—")[:10],
-                   "есть" if mod.outdated else ""))
-        say()
-        answer = ask("Номер мода (0 — назад): ")
-        if not answer or answer == "0":
-            return
-        if not answer.isdigit() or not 1 <= int(answer) <= len(world.mods):
-            continue
-        mod = world.mods[int(answer) - 1]
-
-        say()
-        say("%s  (id %s)" % (mod.name, mod.id))
-        say("  сейчас: %s" % mod.where)
-        if mod.where == REFERENCE:
-            say("  1  вернуть в playset (только текст, без ежедневной проверки)")
-        else:
-            say("  1  отправить в reference (целиком, с проверкой обновлений)")
-        say("  2  скачать свежую версию в Steam")
-        if mod.where != UNTRACKED:
-            say("  3  убрать копию из репозитория совсем (подписку Steam не трогает)")
-        say("  0  назад")
-        choice = ask("> ")
-        if choice == "1":
-            if mod.where == REFERENCE:
-                if yes("Убрать %s из reference?" % mod.name, default=False):
-                    demote(mod, world)
-            else:
-                promote(mod, world)
-            world.mods = gather(configured).mods
-        elif choice == "2":
-            download(configured, [mod], world.content)
-        elif choice == "3" and mod.where != UNTRACKED:
-            forget(mod, world)
-            world.mods = gather(configured).mods
-
-
-def screen_publish() -> None:
-    """Готов ли наш мод к мастерской — и что вставлять на её страницу."""
-    import publish
-
-    mods = our_mods()
-    say()
-    say("Проверяю то, на что мастерская не ругается, а просто молча роняет:")
-    say("теги, картинку, версию, BOM. Как загружать — docs/WORKSHOP.md.")
-    say()
-    publish.main(["publish"])
-    say()
-    say("Номер мода — подробности и текст для страницы,")
-    say("«к» + номер — сделать manager-config.json для загрузчика, Enter — назад.")
-    for number, mod in enumerate(mods, 1):
-        say("  %-3d %s" % (number, mod.path.name))
-    answer = ask("> ").strip()
-
-    config = answer.lower().startswith(("к", "k"))
-    if config:
-        answer = answer[1:].strip()
-    if not (answer.isdigit() and 1 <= int(answer) <= len(mods)):
-        return
-    mod = mods[int(answer) - 1]
-
-    if not config:
-        publish.main(["publish", mod.path.name])
-        ask("Enter — назад ")
-        return
-
-    # The uploader takes the *installed* copy, not this repository: the folder
-    # in the repository also holds tools/ and workshop/, which are not the mod.
-    target = game_mods_dir(configured)
-    if target is None or not (target / mod.path.name).is_dir():
-        say()
-        say("Сначала поставь мод в игру — пункт 4. Загружается именно та папка,")
-        say("а не эта: здесь рядом лежат tools/ и workshop/, они не часть мода.")
-        ask("Enter — назад ")
-        return
-    say()
-    say(publish.write_manager_config(mod.path, target / mod.path.name,
-                                     target / "manager-config.json"))
-    say("Открой его загрузчиком: https://github.com/kaiser-chris/pdx-workshop-manager")
-    say("Steam должен быть запущен и залогинен. Подробности — docs/WORKSHOP.md.")
-    ask("Enter — назад ")
-
-
-def screen_diag() -> None:
-    """Забрать отчёт «Диагностика» из логов игры и положить в буфер обмена.
-
-    Существует, чтобы прогон стоил один раз. Только игрок может запустить игру,
-    и раньше ответ приходил скриншотами -- по одному вопросу за прогон; отчёт
-    отвечает на весь вопрос сразу, и этот пункт нужен, чтобы достать его из
-    `debug.log` не разбираясь, где игра держит логи.
-    """
-    say()
-    say("Отчёт пишется по кнопке «Диагностика» на вкладке «Расчёт» в меню мода,")
-    say("сразу после «Считать план». Здесь он достаётся из логов игры.")
-    say()
-    say("Файл каждый раз перезаписывается, а лог игры копит: если нужно сравнить")
-    say("два нажатия подряд — ответь «в», и в файл попадут все отчёты из лога.")
-    every = ask("все отчёты? (в/Enter — только последний) ").strip().lower()
-    say()
-    run_python("tools/diag.py", *(["--all"] if every in {"в", "v", "y", "д", "да"} else []))
-    say()
-    ask("Enter — назад ")
-
-
-def screen_from_game(configured: dict) -> None:
-    """Забрать из установленной игры то, чего нет в репозитории.
-
-    **Существует потому, что сессия не видит игру, а видит только репозиторий.**
-    Она читает то, что закоммичено, и то, что приложено к сообщению — больше
-    ничего. Пока файла нет ни там, ни там, любой вопрос про него сессия может
-    только угадать, и 2026-09-03 это стоило двух кругов: окно мода не
-    открывалось, потому что его надо назвать в `gui/scripted_widgets/`, а всей
-    этой папки в `reference/game/` не было — `in_game/gui` никто не выкачивал.
-
-    Две половины, и они попадают к сессии по-разному:
-
-    - **файлы игры** ложатся в `reference/game/` и уезжают коммитом;
-    - **логи** весят слишком много для репозитория, поэтому они собираются в
-      маленький архив, который остаётся приложить к сообщению.
-    """
-    while True:
-        say()
-        say("  1  Файлы игры → reference/game/  (по списку tools/game_files_manifest.txt)")
-        say("  2  Логи игры → маленький архив, который можно приложить в чат")
-        say("  3  Дампы API движка → reference/game/docs (снимает их сама игра)")
-        say("  0  назад")
-        choice = ask("> ")
-        if choice == "1":
-            say()
-            given = configured.get("game")
-            run_python("tools/extract_game_files.py", *(["--game", given] if given else []))
-            say()
-            say("Скопировано в reference/game/. Пока это не закоммичено —")
-            say("в GitHub Desktop — сессия этих файлов не видит.")
-            say()
-            ask("Enter — назад ")
-        elif choice == "2":
-            screen_logs()
-        elif choice == "3":
-            say()
-            _, updated = game_install(configured, None)
-            if update_api_dumps(updated):
-                say("Пока это не закоммичено — в GitHub Desktop — сессия их не видит.")
-            else:
-                say_how_to_dump("снова выбери этот пункт")
-            say()
-            ask("Enter — назад ")
-        elif choice in {"0", "q", "в", "назад"}:
-            return
-
-
-# --------------------------------------------------- после обновления игры
+# ------------------------------------------------------------- из игры
 
 # Где игра держит свои папки в «Документах»: логи, дампы API, моды.
 GAME_DOCUMENTS = "Paradox Interactive/Europa Universalis V"
@@ -1567,116 +1154,22 @@ def update_api_dumps(updated: int) -> bool:
     return True
 
 
-def screen_full_update(world: World, configured: dict) -> World:
-    """Всё, что в reference пришло извне, — заново, после обновления игры.
-
-    Один проход вместо четырёх пунктов, которые надо помнить: моды из
-    мастерской, файлы игры (с локализацией, окнами и слоями движка), дампы API —
-    и пересборка того, что из них компилируется. Удаляет то, что игра убрала:
-    без этого файл, которого в игре больше нет, лежал бы здесь как живой.
-
-    Моды идут первыми: шаг с файлами игры ищет, какие файлы игры моды заменяют
-    целиком, и искать это надо в обновлённых модах, а не во вчерашних.
-    """
-    say()
-    say("Полное обновление reference после обновления игры. Четыре шага:")
-    say("  1  моды из мастерской: скачать отстающие, обновить reference и playset")
-    say("  2  файлы игры: скрипты, события, окна, локализация, слои движка,")
-    say("     и каждый файл игры, который какой-нибудь мод заменяет целиком;")
-    say("     то, что игра убрала, удаляется и отсюда")
-    say("  3  дампы API движка (script_docs, dump_data_types)")
-    say("  4  пересобрать файлы *_generated_* в наших модах")
-    if not yes("Начать?"):
-        return world
-
-    say()
-    say("--- 1. Моды из мастерской ---")
-    if world.content is None:
-        say("Папка мастерской не найдена — моды пропускаю.")
-    else:
-        outdated = show_updates(world)
-        if outdated and yes("Скачать свежие (%d) через steamcmd?" % len(outdated)):
-            if download(configured, outdated, world.content):
-                world = gather(configured)
-        tracked = {item.id for item in workshop.tracked()}
-        mine = [m for m in world.mods if m.id in tracked]
-        # Без ответа Steam не видно, кто отстал, — тогда копируются все.
-        behind = ([m for m in mine if not reference_is_current(m)]
-                  if world.asked_steam else mine)
-        say()
-        if behind:
-            update_reference(world, behind)
-        else:
-            say("Копии в reference/mods те же, что в мастерской.")
-        update_playset(world)
-
-    say()
-    say("--- 2. Файлы игры ---")
-    game, updated = game_install(configured, world.content)
-    if game is None:
-        say("Steam не сказал, где стоит игра.")
-        given = ask("Путь к папке Europa Universalis V (Enter — искать самому): ").strip().strip('"')
-        if given:
-            configured["game"] = given
-            settings_write(configured)
-            game = Path(given)
-    args = ["--prune"]
-    if game is not None:
-        args += ["--game", str(game)]
-    if world.content is not None:
-        args += ["--mods-from", str(world.content)]
-    taken = run_python("tools/extract_game_files.py", *args) == 0
-
-    say()
-    say("--- 3. Дампы API движка ---")
-    fresh = update_api_dumps(updated)
-    if not fresh:
-        say_how_to_dump("выбери 7 → 3: дампы лягут в reference/game/docs")
-
-    say()
-    say("--- 4. Пересборка ---")
-    rebuild()
-    say()
-    say("Строки FAIL после пересборки коммиту не мешают: это проверки наших модов")
-    say("(например, «версия та же, а файлы изменены» — их пересобрали под новую")
-    say("игру). Их разбирает сессия, когда подгоняет моды.")
-
-    say()
-    say("=" * 62)
-    say("Готово. Что дальше:")
-    say("  GitHub Desktop → закоммить всё одним коммитом и запушь,")
-    say("  потом напиши в тред — сессия сравнит новую версию со старой.")
-    if not taken:
-        say("  !! Шаг 2 с файлами игры не прошёл — выше написано, что он сказал.")
-    if not fresh:
-        say("  !! Дампы API старые — шаг 3 выше говорит, как снять новые.")
-    say()
-    ask("Enter — назад ")
-    return gather(configured)
-
-
 # Что кладётся в архив логов, и почему именно это. `game.log` и `data_types/`
 # намеренно не берутся: вместе они мегабайт шесть, а отвечают на вопросы,
 # которые и так закрыты дампами в `reference/`. Хвост `debug.log` берётся
-# целиком — там лежит отчёт «Диагностика».
+# целиком — последний прогон в нём.
 LOG_FILES = ("error.log", "gui.log", "warning.log", "database_conflicts.log",
              "system.log")
 DEBUG_TAIL_MB = 4
 
 
 def screen_logs() -> None:
-    """Собрать логи игры в один небольшой архив рядом с репозиторием.
-
-    **Папку логов ищет `diag.py`, а не этот файл.** `GAME_FOLDER` здесь
-    кончается на `/mod` -- это папка модов, а логи лежат рядом с ней, — и второй
-    экземпляр той же догадки разошёлся бы с первым в тот день, когда Paradox
-    что-нибудь переименует.
-    """
+    """Собрать логи игры в один небольшой архив рядом с репозиторием."""
     from datetime import datetime
-    import diag
 
     say()
-    folder = diag.logs_folder()
+    folder = next((d / GAME_DOCUMENTS / "logs" for d in documents_dir()
+                   if (d / GAME_DOCUMENTS / "logs").is_dir()), None)
     if folder is None:
         say("Не нашёл папку логов игры. Обычно она здесь:")
         say(r"  C:\Users\<ты>\Documents\Paradox Interactive\Europa Universalis V\logs")
@@ -1719,54 +1212,364 @@ def screen_logs() -> None:
     ask("Enter — назад ")
 
 
+# ------------------------------------------------- every mod, wherever it is
+
+
+@dataclass
+class Entry:
+    """Один мод, где бы он ни лежал: мастерская, репозиторий, папка модов игры."""
+
+    name: str
+    workshop: Mod | None = None       # подписка или строка в workshop_mods.txt
+    ours: refs.Mod | None = None      # наш, mods/<папка>
+    in_game: Path | None = None       # Documents/.../mod/<папка>
+    game_state: str = ""              # для нашего: совпадает / отличается
+    game_version: str = ""
+
+    @property
+    def missing(self) -> bool:
+        """Мод мастерской, на который больше нет подписки, а записи и копии остались."""
+        return self.workshop is not None and not self.workshop.on_disk
+
+    def steam_column(self) -> str:
+        if self.workshop is None:
+            return "—"
+        if not self.workshop.on_disk:
+            return "нет подписки"
+        return "ОТСТАЁТ" if self.workshop.outdated else "есть"
+
+    def repo_column(self) -> str:
+        if self.ours is not None:
+            return "наш %s" % (self.ours.version or "")
+        mod = self.workshop
+        if mod is None:
+            return "—"
+        if mod.folder is not None and mod.folder.exists():
+            return mod.where
+        return "НЕТ КОПИИ" if mod.key else "—"
+
+    def game_column(self) -> str:
+        if self.in_game is None:
+            return "—"
+        if self.ours is None:
+            return "лежит"
+        if self.game_state == "отличается":
+            note = version_note(self.ours.version or "", self.game_version, self.game_state)
+            return "отличается" + (" (%s)" % note if note else "")
+        return self.game_state
+
+
+def entries(world: World, configured: dict) -> list[Entry]:
+    """Наши моды, потом мастерская, потом всё остальное в папке модов игры."""
+    target = game_mods_dir(configured)
+    local = {p.name: p for p in sorted(target.iterdir()) if p.is_dir()} if target else {}
+
+    ours: list[Entry] = []
+    for mod in our_mods():
+        entry = Entry(name=mod.path.name, ours=mod)
+        there = local.pop(mod.path.name, None)
+        if there is not None and target is not None:
+            entry.in_game = there
+            entry.game_state = installed_state(mod, target)
+            entry.game_version = installed_version(mod, target)
+        ours.append(entry)
+
+    steam = [Entry(name=mod.name, workshop=mod) for mod in world.mods]
+    other = [Entry(name=name, in_game=path) for name, path in local.items()]
+    return ours + steam + other
+
+
+def show_entries(found: list[Entry]) -> None:
+    say()
+    say("  %-3s %-40s %-13s %-18s %s" % ("#", "мод", "мастерская", "репозиторий", "в игре (локально)"))
+    titles = {0: "наши", 1: "из мастерской", 2: "прочее в папке модов игры"}
+    group = -1
+    for number, entry in enumerate(found, 1):
+        kind = 0 if entry.ours is not None else 1 if entry.workshop is not None else 2
+        if kind != group:
+            group = kind
+            say("  --- %s" % titles[kind])
+        say("  %-3d %-40s %-13s %-18s %s"
+            % (number, entry.name[:40], entry.steam_column(), entry.repo_column()[:18],
+               entry.game_column()))
+
+
+def install_ours(chosen: list[refs.Mod], target: Path) -> None:
+    """Поставить наши моды в папку модов игры и перечитать, что доехало."""
+    for mod in chosen:
+        _, unknown = game_files(mod.path)
+        with Doing("в игру ← %s" % mod.path.name) as step:
+            files, size = install(mod, target)
+            step.finish("%d файлов, %s" % (files, workshop.human(size)))
+        if unknown:
+            say("     не знаю, что это, и потому не копировал: %s" % ", ".join(unknown))
+        # Read back rather than trust the copy: everything that has gone wrong
+        # here was silent — a folder the game does not read, a half copy.
+        state = installed_state(mod, target)
+        if state != "совпадает":
+            say("     ПРОВЕРКА НЕ ПРОШЛА: в игре «%s». Смотри сам: %s"
+                % (state, target / mod.path.name))
+    say("Поставлено из %s. Новый мод включи в лаунчере один раз." % here())
+
+
+def remove_from_game(entry: Entry) -> None:
+    if entry.in_game is not None and entry.in_game.is_dir():
+        shutil.rmtree(entry.in_game, ignore_errors=True)
+        say("  %s убран из папки модов игры" % entry.name)
+        entry.in_game = None
+
+
+def remove_from_repository(entry: Entry, world: World, configured: dict) -> None:
+    """Удалить мод из репозитория — копию, строку в списке и все записи меню.
+
+    Подписка Steam и папка модов игры не трогаются: для них свои пункты.
+    """
+    say()
+    if entry.ours is not None:
+        say("Это удалит наш мод целиком: %s" % entry.ours.path)
+        say("Вернуть можно только из истории git (GitHub Desktop → Discard).")
+        if ask("Впиши имя папки, чтобы подтвердить (Enter — отмена): ").strip() != entry.name:
+            say("Отменено.")
+            return
+        shutil.rmtree(entry.ours.path, ignore_errors=True)
+        say("  удалено: mods/%s" % entry.name)
+        return
+
+    mod = entry.workshop
+    if mod is None:
+        return
+    if not yes("Удалить %s из репозитория?" % mod.name, default=False):
+        return
+    if mod.folder is not None and mod.folder.exists():
+        shutil.rmtree(mod.folder, ignore_errors=True)
+        say("  удалено: %s" % mod.folder.relative_to(refs.REPO))
+    if manifest_drop(mod.id):
+        say("  убрано из tools/workshop_mods.txt")
+    forget_records(mod.id, configured)
+    inventory()
+
+
+def screen_mod(entry: Entry, world: World, configured: dict) -> bool:
+    """Что сделать с одним модом. True — что-то поменялось, список перечитать."""
+    mod = entry.workshop
+    target = game_mods_dir(configured, make=True)
+    actions: list[tuple[str, object]] = []
+    if mod is not None:
+        actions.append(("скачать свежую версию из мастерской в игру",
+                        lambda: download(configured, [mod], world.content)))
+        if mod.on_disk and (mod.where != REFERENCE or mod.folder is None):
+            actions.append(("положить в reference — целиком", lambda: to_reference(mod, world)))
+        if mod.on_disk and mod.where != PLAYSET:
+            actions.append(("положить в playset — только текст", lambda: to_playset(mod, world)))
+        if mod.folder is not None and mod.folder.exists() and mod.on_disk:
+            actions.append(("обновить копию в репозитории из папки мастерской",
+                            lambda: copy_from_steam(mod, world, mod.where)))
+    if entry.ours is not None and target is not None:
+        actions.append(("поставить в игру", lambda: install_ours([entry.ours], target)))
+    if entry.in_game is not None:
+        actions.append(("удалить из игры (папка модов игры)", lambda: remove_from_game(entry)))
+    if entry.ours is not None or (mod is not None and (mod.key or mod.folder is not None)):
+        actions.append(("удалить из репозитория",
+                        lambda: remove_from_repository(entry, world, configured)))
+
+    say()
+    say("%s%s" % (entry.name, "  (id %s)" % mod.id if mod else ""))
+    say("  мастерская: %s   репозиторий: %s   в игре: %s"
+        % (entry.steam_column(), entry.repo_column(), entry.game_column()))
+    for number, (text, _) in enumerate(actions, 1):
+        say("  %d  %s" % (number, text))
+    say("  0  назад")
+    choice = ask("> ")
+    if not choice.isdigit() or not 1 <= int(choice) <= len(actions):
+        return False
+    say()
+    actions[int(choice) - 1][1]()          # type: ignore[operator]
+    return True
+
+
+def screen_mods(world: World, configured: dict) -> World:
+    while True:
+        found = entries(world, configured)
+        show_entries(found)
+        say()
+        answer = ask("Номер мода (Enter — назад): ")
+        if not answer.isdigit() or not 1 <= int(answer) <= len(found):
+            return world
+        if screen_mod(found[int(answer) - 1], world, configured):
+            world = gather(configured)
+
+
+def screen_workshop(world: World, configured: dict) -> World:
+    """Пункт 1: сверить с мастерской, скачать в игру, обновить копии в репозитории."""
+    outdated = show_updates(world)
+    if outdated:
+        say()
+        chosen = pick(outdated, "Что скачать? [Enter — все, номера через запятую, 0 — назад]: ")
+    else:
+        # «Ничего не отстаёт» — ровно тот ответ, который бывал неправдой: Steam
+        # помечает мод обновлённым, когда заметил обновление, а не когда скачал.
+        if world.content is None or not world.mods:
+            return world
+        say()
+        if not yes("Всё равно перекачать какой-нибудь мод заново?", default=False):
+            return world
+        say()
+        on_disk = [m for m in world.mods if m.on_disk]
+        for number, mod in enumerate(on_disk, 1):
+            say("  %-3d %-46s %-10s %s" % (number, mod.name[:46], mod.where, when(mod.installed)))
+        say()
+        chosen = pick(on_disk, "Какие? [номера через запятую, 0 — назад]: ", default_all=False)
+    if not chosen:
+        return world
+    got = download(configured, chosen, world.content)
+    copied = [m for m in got if m.where in (REFERENCE, PLAYSET)
+              and m.folder is not None and m.folder.exists()]
+    if copied:
+        say()
+        say("Копии в репозитории:")
+        for mod in copied:
+            copy_from_steam(mod, world, mod.where)
+        record_quietly([m.id for m in copied if m.where == REFERENCE])
+        inventory()
+    return gather(configured)
+
+
+def screen_bulk(world: World, configured: dict) -> World:
+    """Пункт 3: то же, что в списке, но сразу для всех."""
+    say()
+    say("  1  Обновить всё: скачать отстающие из мастерской в игру и обновить")
+    say("     все копии в репозитории (reference целиком, playset текстом)")
+    say("  2  Убрать отсутствующее: из репозитория и записей меню — всё,")
+    say("     на что больше нет подписки")
+    say("  3  Обновить наши моды в игре: переставить те, что там отличаются")
+    say("  0  назад")
+    choice = ask("> ")
+    say()
+    if choice == "1":
+        if world.outdated and yes("Отстают от мастерской: %d. Скачать?" % len(world.outdated)):
+            download(configured, world.outdated, world.content)
+            world = gather(configured)
+        copies = [m for m in world.mods if m.on_disk and m.folder is not None and m.folder.exists()]
+        say()
+        say("Копии в репозитории: %d" % len(copies))
+        for mod in copies:
+            copy_from_steam(mod, world, mod.where)
+        record_quietly([m.id for m in copies if m.where == REFERENCE])
+        inventory()
+    elif choice == "2":
+        if world.content is None:
+            say("Папка мастерской не найдена — не видно, на что есть подписка.")
+            return world
+        gone = [m for m in world.mods if not m.on_disk]
+        stale = set(configured.get("installed") or {}) | set(configured.get("installed_manifest") or {})
+        stale -= {m.id for m in world.mods if m.on_disk}
+        if not gone and not stale:
+            say("Отсутствующего нет.")
+            return world
+        for mod in gone:
+            say("  %-46s %s" % (mod.name[:46],
+                                mod.folder.relative_to(refs.REPO) if mod.folder else "только запись"))
+        if stale - {m.id for m in gone}:
+            say("  и записи меню о %d мод(ах), которых нет нигде" % len(stale - {m.id for m in gone}))
+        say()
+        say("Подписка взята из %s." % world.content)
+        copies = sum(1 for m in world.mods if m.folder is not None)
+        if copies and len(gone) * 2 > copies:
+            say("Это %d из %d копий. Если подписка на них есть, меню смотрит не в ту" % (len(gone), copies))
+            say("папку Steam — тогда ответь «н» и укажи её: mods.bat --workshop \"<путь>\".")
+        if not yes("Удалить это из репозитория?", default=False):
+            return world
+        for mod in gone:
+            if mod.folder is not None and mod.folder.exists():
+                shutil.rmtree(mod.folder, ignore_errors=True)
+            manifest_drop(mod.id)
+        for item in stale | {m.id for m in gone}:
+            forget_records(item, configured)
+        inventory()
+        say("Готово.")
+    elif choice == "3":
+        target = game_mods_dir(configured)
+        if target is None:
+            say("Папка модов игры не найдена.")
+            return world
+        found = [e for e in entries(world, configured)
+                 if e.ours is not None and e.game_state == "отличается"]
+        if not found:
+            say("Наши моды в игре совпадают с репозиторием.")
+            return world
+        older = [e.name for e in found
+                 if version_note(e.ours.version or "", e.game_version, e.game_state) == "ТУТ СТАРЕЕ"]
+        if older and not yes("В этой ветке старее, чем в игре: %s. Откатить и их?"
+                             % ", ".join(older), default=False):
+            found = [e for e in found if e.name not in older]
+        install_ours([e.ours for e in found if e.ours is not None], target)
+    else:
+        return world
+    return gather(configured)
+
+
+def screen_collect(world: World, configured: dict) -> None:
+    """Пункт 4: забрать из игры то, чего сессия не видит."""
+    while True:
+        say()
+        say("  1  Логи игры → маленький архив, приложить в чат")
+        say("  2  Файлы игры → reference/game/ (то, что игра убрала, удаляется и здесь)")
+        say("  3  Дампы API движка → reference/game/docs")
+        say("  0  назад")
+        choice = ask("> ")
+        if choice == "1":
+            screen_logs()
+        elif choice == "2":
+            say()
+            game, _ = game_install(configured, world.content)
+            args = ["--prune"]
+            if game is not None:
+                args += ["--game", str(game)]
+            if world.content is not None:
+                args += ["--mods-from", str(world.content)]
+            run_python("tools/extract_game_files.py", *args)
+            say()
+            ask("Enter — назад ")
+        elif choice == "3":
+            say()
+            _, updated = game_install(configured, world.content)
+            if not update_api_dumps(updated):
+                say_how_to_dump("снова выбери этот пункт")
+            say()
+            ask("Enter — назад ")
+        else:
+            return
+
+
 def menu(configured: dict) -> int:
     world = gather(configured)
     while True:
-        outdated = len(world.outdated)
         say()
         say("=" * 62)
         say("  МОДЫ EU5")
-        say("  подписка: %-3d   reference: %-3d   playset: %-3d   обновлений: %d"
-            % (len(world.mods),
+        say("  подписка: %-3d   reference: %-3d   playset: %-3d   отстают: %d"
+            % (sum(1 for m in world.mods if m.on_disk),
                sum(1 for m in world.mods if m.where == REFERENCE),
                sum(1 for m in world.mods if m.where == PLAYSET),
-               outdated))
+               len(world.outdated)))
         say("=" * 62)
-        say("  1  Обновить моды в Steam: сверить сборки, скачать, заменить")
-        say("  2  Обновить копии в репозитории (reference / playset)")
-        say("  3  Мои моды: список, что где лежит, перенос между ними и удаление")
-        say("  4  Поставить наши моды в игру")
-        say("  5  Готов ли наш мод к мастерской")
-        say("  6  Забрать диагностику из игры")
-        say("  7  Забрать из игры файлы или логи")
-        say("  8  Перечитать всё заново")
-        say("  9  После обновления игры: обновить в репозитории всё — игру,")
-        say("     локализацию, дампы API, моды, — и пересобрать")
+        say("  1  Мастерская: проверить, скачать свежие в игру, обновить копии")
+        say("  2  Все моды: выбрать мод и решить, что с ним делать")
+        say("  3  Всё сразу: обновить всё, убрать отсутствующее, наши в игру")
+        say("  4  Забрать из игры: логи, файлы игры, дампы API")
         say("  0  Выход")
         say()
         say("  Коммит и пуш — в GitHub Desktop; отсюда репозиторий не пишется.")
         choice = ask("> ")
 
         if choice == "1":
-            screen_updates(world, configured)
-            world = gather(configured)
+            world = screen_workshop(world, configured)
         elif choice == "2":
-            screen_repository(world, configured)
-            world = gather(configured)
+            world = screen_mods(world, configured)
         elif choice == "3":
-            screen_list(world, configured)
+            world = screen_bulk(world, configured)
         elif choice == "4":
-            screen_install(configured)
-        elif choice == "5":
-            screen_publish()
-        elif choice == "6":
-            screen_diag()
-        elif choice == "7":
-            screen_from_game(configured)
-        elif choice == "8":
-            world = gather(configured)
-        elif choice == "9":
-            world = screen_full_update(world, configured)
+            screen_collect(world, configured)
         elif choice in {"0", "q", "в", "выход"}:
             return 0
 
@@ -1779,9 +1582,8 @@ def main(argv: list[str]) -> int:
         prog="mods.py",
         description="Обновление модов EU5: мастерская, папка игры и этот репозиторий.")
     parser.add_argument("command", nargs="?", default="menu",
-                        choices=["menu", "check", "full"],
-                        help="menu — меню (по умолчанию); check — только отчёт; "
-                             "full — пункт 9, полное обновление после патча")
+                        choices=["menu", "check"],
+                        help="menu — меню (по умолчанию); check — только отчёт")
     parser.add_argument("--workshop", metavar="DIR",
                         help="папка steamapps/workshop/content, если она не там, где обычно")
     parser.add_argument("--steamcmd", metavar="PATH", help="путь к steamcmd")
@@ -1821,12 +1623,8 @@ def main(argv: list[str]) -> int:
         if wrong:
             say()
             say("Игра грузит не то, что лежит здесь. Пока это так, проверять по")
-            say("ней нечего: mods.bat → 4 ставит заново.")
+            say("ней нечего: mods.bat → 2 → мод → «поставить в игру».")
         return 1 if (behind or wrong) else 0
-
-    if parsed.command == "full":
-        screen_full_update(gather(configured), configured)
-        return 0
 
     try:
         return menu(configured)

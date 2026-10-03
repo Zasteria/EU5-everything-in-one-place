@@ -57,7 +57,7 @@ goods_supply_in_market(goods:X)     сколько рынок даёт
 (2026-09-07): план — карта резерваций, а не очередь стройки. «Спрос и предложение
 решают не то, что и где будет построено — только то, КОГДА.» Так что в формулу
 плана эти числа не входят;
-[`../investigations/plan_as_reservation.md`](../investigations/plan_as_reservation.md).
+[`../investigations/plan_as_reservation.md`](../archive/where_to_produce/plan_as_reservation.md).
 
 **Где они всё-таки пригодятся:** шаг 8 — стыковка с Construction Manager, который
 на них и стоит, и любой будущий ответ на вопрос «что строить прямо сейчас».
@@ -235,7 +235,7 @@ in the game, so a patch that drops it is a build error and not a wrong answer.
 ## What gates a production method
 
 `common/advances/` is in the tree now, which answers what
-[`../archive/where_to_produce.md`](../archive/where_to_produce.md) recorded as
+[`../archive/where_to_produce.md`](../archive/where_to_produce/where_to_produce.md) recorded as
 unanswerable. `1_building_unlocks.txt` carries 119 `unlock_building = <type>`
 blocks, each with an `age = age_N_...`; `3_production_method_unlocks.txt` carries
 ten `unlock_production_method = <method>` the same way. So a method is available

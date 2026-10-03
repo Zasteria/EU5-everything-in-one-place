@@ -138,15 +138,15 @@ window = {
   дважды.
 - **И всё это вместе может не сработать.** Галочка автостроя по этой форме не
   встала ни в одной из трёх сборок, и попытка снята:
-  [`../archive/wtp_vanilla_autoexpand_attempt.md`](../archive/wtp_vanilla_autoexpand_attempt.md).
+  [`../archive/wtp_vanilla_autoexpand_attempt.md`](../archive/where_to_produce/wtp_vanilla_autoexpand_attempt.md).
   **Прежде чем строить такой привод снова — прочитать, чем он кончился.**
 
 ## Где остальное
 
 Правила про коробки, ряды и датамодели, которые не про окно как таковое, —
 [`interface.md`](interface.md). Расследование ширины с числами —
-[`../archive/wtp_window_width.md`](../archive/wtp_window_width.md) и
-[`../archive/wtp_window_rules.md`](../archive/wtp_window_rules.md).
+[`../archive/wtp_window_width.md`](../archive/where_to_produce/wtp_window_width.md) и
+[`../archive/wtp_window_rules.md`](../archive/where_to_produce/wtp_window_rules.md).
 
 ## Окно берёт скоуп один раз, на контейнере содержимого
 

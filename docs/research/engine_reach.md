@@ -108,4 +108,4 @@
 (вызов доходит, привязки отваливаются молча), 09-17 ночью (привод найден),
 09-17 днём (мод работает на войне). Разборы — в
 [`../TESTLOG.md`](../TESTLOG.md) и
-[`../archive/wtp_vanilla_autoexpand_attempt.md`](../archive/wtp_vanilla_autoexpand_attempt.md).
+[`../archive/wtp_vanilla_autoexpand_attempt.md`](../archive/where_to_produce/wtp_vanilla_autoexpand_attempt.md).

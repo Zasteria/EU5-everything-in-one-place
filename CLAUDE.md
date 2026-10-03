@@ -1,6 +1,6 @@
 ﻿# Working in this repository
 
-Mods for Europa Universalis V in [`mods/`](mods/), the game's own files to grep,
+Mods for Europa Universalis V in [`mods/`](mods), the game's own files to grep,
 and the tooling around both.
 
 ## Do not read this repository. Ask it.
@@ -102,10 +102,11 @@ Do not hardcode a reference folder's name or trust a version written in prose:
 
     python3 tools/refresh.py           rebuild every generated file, report what moved
 
-The session hook runs it and reports what moved — believe it over a document.
-His whole mod loop is `mods.bat`, a menu rather than commands to remember: **do
-not tell him to run the pieces by hand when the menu covers it**, and do not
-build a step only a session can perform.
+The session hook runs it — believe it over a document. **The menu never
+rebuilds** (10-03): what he pushes, we rebuild. His whole mod loop is
+`mods.bat`, a menu rather than commands to remember: **do not tell him to run
+the pieces by hand when the menu covers it**, and do not build a step only a
+session can perform.
 
 ## Keeping this current
 
