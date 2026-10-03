@@ -12,7 +12,7 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`cm_maps`](../mods/cm_maps/CLAUDE.md) | **загружен 09-19, рисует**; губернатор починен и подтверждён, права починены. Три карты CM dev без CM и CMF | починка прав, карта еды |
 | [`cm_perf`](../mods/cm_perf/CLAUDE.md) | **09-19 он снял мод: тормозит тем сильнее, чем больше точек авторасширения.** Копия CM, ставится **вместо** CM; месячный пульс не трогать | правки 3 и 5 |
 | [`cm_dev_perf`](../mods/cm_dev_perf/CLAUDE.md) | CM Dev + правка 1 `cm_perf`, окна беты; +perf8 (10-03): журнал CM в `debug.log` — так проверяется, работает ли | всё |
-| [`cmf_dev_beta`](../mods/cmf_dev_beta/CLAUDE.md) | +beta5 (10-03): копия авторского CMF 2.5.0 (1.4) + `cmf_is_host`; ставится вместо CMF и CMF Dev | всё |
+| [`cmf_dev_beta`](../mods/cmf_dev_beta/CLAUDE.md) | +beta5 (10-03): копия авторского CMF под 1.4 + `cmf_is_host`; ставится вместо CMF и CMF Dev | всё |
 | [`quiet_alerts`](../mods/quiet_alerts/CLAUDE.md) | 10-02: 0.3.0 не в игре. Красные и оранжевые с жёлтым звуком, галочка в CMF | всё |
 | [`war_sliders`](../mods/war_sliders/CLAUDE.md) | **0.6.2 ждёт прогона** (0.5.2 работала 09-29). Кнопка на панели CMF: содержание и инфляция, без нажатия спит | кнопка: содержание, правка чеканки (09-30) |
 
