@@ -172,6 +172,34 @@ def _mirror_log(text: str) -> str:
     return text
 
 
+_LOOKUP = re.compile(r"is_key_in_variable_map\s*=\s*\{\s*name\s*=\s*(\S+)\s+target\s*=\s*(\S+)\s*\}")
+
+
+def _guard_maps(text: str) -> tuple[str, int]:
+    """`AND = { has_variable_map = M <lookup> }` for every lookup not already
+    guarded within the two lines above it, as CM itself writes the guard.
+
+    The AND keeps the meaning under a `NOT`, which reads its children as NOR.
+    """
+    lines = text.split("\n")
+    n = 0
+    for i, line in enumerate(lines):
+        if line.lstrip().startswith("#"):
+            continue
+        out, pos = [], 0
+        for match in _LOOKUP.finditer(line):
+            above = "\n".join(lines[max(0, i - 2):i]) + line[:match.start()]
+            if re.search(r"has_variable_map\s*=\s*%s(?!\S)" % re.escape(match.group(1)), above):
+                continue
+            out.append(line[pos:match.start()])
+            out.append("AND = { has_variable_map = %s %s }" % (match.group(1), match.group(0)))
+            pos = match.end()
+            n += 1
+        if out:
+            lines[i] = "".join(out) + line[pos:]
+    return "\n".join(lines), n
+
+
 EDITS = (
     (WINDOW, "gate the building-type tree", _gate_the_tree),
     (WINDOW, "widen the first pass's instantiation window", perf._widen_first_pass),
@@ -183,7 +211,7 @@ EDITS = (
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 8
+PERF_REVISION = 9
 
 
 def metadata() -> str:
@@ -239,6 +267,15 @@ def main() -> int:
                           r"\1cmf_is_host\2", text, flags=re.M)
         if n:
             path.write_text("\ufeff" + text, encoding="utf-8")
+    # A lookup into a map the scope does not have yet is an error, not false
+    # (his log 10-04: 1 243 of them, cm_rgob_cov and cm_rgob_sum the bulk). CM
+    # guards most of its lookups with `has_variable_map`; the rest get the
+    # same guard (+perf9).
+    for path in (MOD / "in_game/common").rglob("*.txt"):
+        text = path.read_text(encoding="utf-8-sig")
+        guarded, n = _guard_maps(text)
+        if n:
+            path.write_text("\ufeff" + guarded, encoding="utf-8")
     # The probe window (09-27) ships beside CM's files; its sources live in
     # tools/probe/ so this rebuild does not wipe them.
     for src in PROBE.rglob("*"):

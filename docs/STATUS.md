@@ -11,7 +11,7 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`nmt_fix`](../mods/nmt_fix/CLAUDE.md) | 0.2.0 (10-03): земли подданных (121 условие) + NMT под 1.4: Арагон, модификатор, подданные, 7 старых ошибок NMT | всё |
 | [`cm_maps`](../mods/cm_maps/CLAUDE.md) | **загружен 09-19, рисует**; губернатор починен и подтверждён, права починены. Три карты CM dev без CM и CMF | починка прав, карта еды |
 | [`cm_perf`](../mods/cm_perf/CLAUDE.md) | **09-19 он снял мод: тормозит тем сильнее, чем больше точек авторасширения.** Копия CM, ставится **вместо** CM; месячный пульс не трогать | правки 3 и 5 |
-| [`cm_dev_perf`](../mods/cm_dev_perf/CLAUDE.md) | CM Dev + правка 1 `cm_perf`, окна беты; +perf8 (10-03): журнал CM в `debug.log` — так проверяется, работает ли | всё |
+| [`cm_dev_perf`](../mods/cm_dev_perf/CLAUDE.md) | CM Dev + правка 1 `cm_perf`, окна беты; журнал CM в `debug.log` (+perf8) пишет; +perf9 — без ошибок «нет карты» | основные товары строят? |
 | [`cmf_dev_beta`](../mods/cmf_dev_beta/CLAUDE.md) | +beta5 (10-03): копия авторского CMF под 1.4 + `cmf_is_host`; ставится вместо CMF и CMF Dev | всё |
 | [`glorpui_hints`](../mods/glorpui_hints/CLAUDE.md) | 1.2.0 (10-03): подсказка ценностей из файлов 1.4, словами Glorp UI, работает и без него | всё |
 | [`quiet_alerts`](../mods/quiet_alerts/CLAUDE.md) | 10-02: 0.3.0 не в игре. Красные и оранжевые с жёлтым звуком, галочка в CMF | всё |
