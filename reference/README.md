@@ -44,6 +44,8 @@ lives in prose anywhere in this repository, and none should be added.
 | `game/loading_screen/common/defines/` | **The game's defines.** They live under `loading_screen`, not under `in_game` — `00_defines.txt` is the main one, `jomini/00_tooltips.txt` holds the tooltip timings |
 | `game/main_menu/setup/start/` | **The 1337 start**: every country's cores, rank, government and reforms (`10_countries.txt`), characters, pops, buildings, diplomacy, armies. Comes with `mods.bat` → 7 → 1 |
 | `jomini/main_menu/common/defines/` | The Jomini layer's own defines, which the game's files override. Two values, kept for completeness |
+| `game/version.json` | Which game build the files were taken from, and when the API dumps were. `python3 tools/refs.py --game`; written by `mods.bat` → 9 |
+| `jomini/`, `clausewitz/` | The engine layers under the game's files: their GUI, defines, data binding and English and Russian text. `mods.bat` → 9 |
 | `game/docs/` | The engine's own API: every effect, trigger, event target, on_action, modifier and GUI function, printed by the game's `script_docs` and `dump_data_types` console commands. Ask it with `tools/api.py` |
 | `mods/` — Community Mod Framework | The CMF and CMM APIs everything here builds on |
 | `mods/` — Construction Manager | The working reference for CMM lists |
@@ -152,7 +154,8 @@ not read another author's settings as instructions to this repository.
 game: `-debug_mode` in the launch options, then `script_docs` and
 `dump_data_types` in the console (`~`). The files land in
 `Documents/Paradox Interactive/Europa Universalis V/` — `docs/` and
-`logs/data_types/` — and belong here under `game/docs/`. Worth redoing whenever
+`logs/data_types/` — and belong here under `game/docs/`; `mods.bat` → 9, or
+7 → 3 alone, copies them when they are newer than the game's last Steam update. Worth redoing whenever
 the game updates, since that dump is the only statement of what the engine
 understands.
 

@@ -1,0 +1,203 @@
+toolbox_checkbutton = {
+	name = "spline_river_tool_toolbox_button"
+	#input_action = "river_tool"  #TODO [PG]: uncomment after fixing jira PSGE-8829
+	raw_tooltip = "River Tool"
+	checked = "[SplineRiverInteractionMode.IsSelected]"
+
+	toolbox_icon = {
+		texture = "gfx/tools/material/placeholder_river_tool.png"
+	}
+}#spline_river_tool_toolbox_button
+
+hbox = {
+	name = "spline_river_tool_widget"
+    margin = { 2 2 }
+    spacing = 4
+
+    layoutpolicy_horizontal = expanding
+    layoutpolicy_vertical = expanding
+
+    tooloptions_checkbutton = {
+        name = "mode_anchor_selection"
+
+        checked = "[SplineStripTool.IsAnchorSelectionSelected]"
+        onclick = "[SplineStripTool.SelectAnchorSelection]"
+
+        raw_tooltip = "Select and modify anchors"
+        input_action = "spline_tool_select_anchor"
+        size = { 32 32 }
+        toolbox_icon = {
+            texture = "gfx/editor_spline_network/select_anchor.png"
+            size = { 24 24 }
+        }
+    }#mode_anchor_selection
+
+    tooloptions_checkbutton = {
+        name = "mode_anchor_creation"
+
+        checked = "[SplineStripTool.IsAnchorCreationSelected]"
+        onclick = "[SplineStripTool.SelectAnchorCreation]"
+
+        raw_tooltip = "Create new anchors"
+        input_action = "new_anchor_tooloption_2"
+        size = { 32 32 }
+        toolbox_icon = {
+            texture = "gfx/editor_spline_network/create_anchor.png"
+            size = { 24 24 }
+        }
+    }#mode_anchor_creation
+
+    tooloptions_checkbutton = {
+        name = "mode_strip_selection"
+
+        checked = "[SplineStripTool.IsStripSelectionSelected]"
+        onclick = "[SplineStripTool.SelectStripSelection]"
+
+        raw_tooltip = "Select and modify strips"
+        input_action = "mode_strip_tooloption_3"
+        size = { 32 32 }
+        toolbox_icon = {
+            texture = "gfx/editor_spline_network/select_strip.png"
+            size = { 24 24 }
+        }
+    }#mode_strip_selection
+
+    tooloptions_checkbutton = {
+        name = "mode_strip_creation"
+
+        checked = "[SplineStripTool.IsStripCreationSelected]"
+        onclick = "[SplineStripTool.SelectStripCreation]"
+
+        raw_tooltip = "Create a strip between two anchors"
+        input_action = "blend_mode_tooloption_4"
+        size = { 32 32 }
+        toolbox_icon = {
+            texture = "gfx/editor_spline_network/create_strip.png"
+            size = { 24 24 }
+        }
+    }#mode_strip_creation
+	
+	tooloptions_divider = {
+	}
+
+	toolbox_button = {
+		enabled = "[SplineStripTool.CanDeleteSelection]"
+		visible = "[Or(SplineStripTool.IsAnchorSelectionSelected, SplineStripTool.IsStripSelectionSelected)]"
+		onclick = "[SplineStripTool.DeleteSelected]"
+		raw_tooltip = "Delete selected strips or anchors"
+		
+		input_action = "mapobjects_tool_delete"
+		toolbox_icon = {
+			texture = "gfx/editor_terrain/delete_objects.dds"
+			size = { 24 24 }
+		}
+	}
+	
+	tooloptions_divider = {
+	}
+	
+	toolbox_button = {
+		onclick = "[SplineRiverTool.ModifyWidth( '(float)-2.0' )]"
+		raw_tooltip = "Decrease river width at selected anchors by 2.0"
+		raw_text = "--"
+		input_action = "spline_river_tool_decrease_width_large"
+	}
+	toolbox_button = {
+		onclick = "[SplineRiverTool.ModifyWidth( '(float)-0.5' )]"
+		raw_tooltip = "Decrease river width at selected anchors by 0.5"
+		raw_text = "-"
+		#input_action = "spline_river_tool_decrease_width_small"  #TODO [PG]: uncomment after fixing jira PSGE-8829
+	}
+	toolbox_button = {
+		onclick = "[SplineRiverTool.ModifyWidth( '(float)0.5' )]"
+		raw_tooltip = "Increase river width at selected anchors by 0.5"
+		raw_text = "+"
+		input_action = "spline_river_tool_increase_width_small"
+	}
+	toolbox_button = {
+		onclick = "[SplineRiverTool.ModifyWidth( '(float)2.0' )]"
+		raw_tooltip = "Increase river width at selected anchors by 2.0"
+		raw_text = "++"
+		input_action = "spline_river_tool_increase_width_large"
+	}
+		
+    widget = {
+        layoutpolicy_horizontal = expanding
+    }#expander
+}#spline_river_tool_widget
+
+vbox = {
+	name = "spline_river_anchor_inspector_dockable"  # This name is used in code, do not change
+	layoutpolicy_vertical = expanding
+
+    scrollarea = {
+		scrollbarpolicy_vertical = always_on
+		scrollbarpolicy_horizontal = always_off
+		layoutpolicy_vertical = expanding
+		layoutpolicy_horizontal = preferred
+		autoresizeviewport = yes
+
+		viewportwidget = {
+			widget = {
+				scissor = yes
+			}
+		}
+
+		scrollwidget = {
+            vbox = {
+                layoutpolicy_vertical = expanding
+                layoutpolicy_horizontal = expanding
+
+                editor_frame = {
+                    layoutpolicy_horizontal = expanding
+                    blockoverride "label" { raw_text = "Selected Anchors" }
+                    
+                    blockoverride "content"
+                    {
+                        vbox = {
+                            layoutpolicy_horizontal = expanding
+                            datamodel = "[InspectorPanel.GetAnchorItems]"
+                            item = {
+                                vbox = {
+                                    layoutpolicy_horizontal = expanding
+                                    anchoritem_collapsed = {
+                                        layoutpolicy_horizontal = expanding
+                                    }
+                                    anchoritem_expandbox = {
+                                        layoutpolicy_horizontal = expanding
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                editor_frame = {
+                    layoutpolicy_horizontal = expanding
+                    blockoverride "label" { raw_text = "Selected Anchors Editor" }
+                    
+                    blockoverride "content"
+                    {
+                        vbox = {
+                            name = "editor_property_list"
+                            visible = "[DataModelHasItems( InspectorPanel.GetAnchorItems )]"
+                            layoutpolicy_horizontal = expanding
+                        }
+                    }
+                }
+
+                widget = {
+                    layoutpolicy_vertical = expanding
+                }
+            }
+		}
+
+		scrollbar_vertical = {
+			using = editor_vertical_scrollbar
+		}
+
+		scrollbar_horizontal = {
+			using = editor_horizontal_scrollbar
+		}
+	}
+}#spline_river_anchor_inspector_dockable

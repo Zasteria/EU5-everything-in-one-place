@@ -1,0 +1,647 @@
+template animation_editor_line
+{
+	gfxtype = linegfx
+	effectname = "PdxGuiLine"
+	
+	line_cap = yes
+	line_feather_distance = 1
+
+	uv_scale = { 0.015 1.0 }
+	texture = "gfx/node_editor/line_white.dds"
+	mask = "gfx/node_editor/line_mask.dds"
+	mask_uv_scale = { 0.01 1.0 }
+	line_type = line
+
+	from = "[StateConnection.From]"
+	to = "[StateConnection.To]"
+	
+	# Soft orange for selected, or white if not selected.
+	color = "[Select_CVector4f( StateConnection.IsRandom, Select_CVector4f( StateConnection.IsSelected, '(CVector4f)1.0, 0.6, 0.4, 1.0', '(CVector4f)1.0, 0.6, 0.6, 1' ), Select_CVector4f( StateConnection.IsSelected, '(CVector4f)1.0, 0.6, 0.2, 1.0', '(CVector4f)1.0, 1.0, 1.0, 1.0' ) ) ]"
+	width = "[Select_float( StateConnection.IsSelected, Multiply_float( '(float)7.5', AnimationEditor.Zoom ), Multiply_float( '(float)5.0', AnimationEditor.Zoom ) ) ]"
+}
+
+template cancel_drag_onclick
+{
+	onclick = "[AnimationEditor.CancelDrag]"
+}
+
+types AnimationEditor
+{
+	type connection_button = button
+	{
+		texture = "gfx/animation_editor/connection_button.png"
+		framesize = { 64 64 }
+		upframe = 1
+		overframe = 2
+		downframe = 3
+		disableframe = 4
+		gfxtype = framedbuttongfx
+		spriteType = CorneredStretched
+		spriteborder = { 4 4 }
+		effectname = "NoHighlight"
+		intersectionmask = yes
+		filter_mouse = left
+		parentanchor = center|vcenter
+	}
+
+	# Type name used in code.
+	type state_connection = widget
+	{
+	  input_context = "animation_editor::state_connection"
+
+		allow_outside = yes
+		size = { 100% 100% }
+
+		line = {
+			using = animation_editor_line
+			# This allows the line to be rendered without having to determine its size first.
+			allow_outside = yes
+		}
+
+		connection_button = {
+			name = "connection_button"
+			size = { 48 48 }
+			
+			raw_tooltip = "[StateConnection.DebugTooltip]"
+			tooltipwidget = { using = editor_tooltip }
+
+			state = {
+				name = "selected"
+				frame = 3
+				on_start = "[AnimationEditor.OnSelected]"
+			}
+
+			state = {
+				name = "default"
+				frame = 1
+				duration = 0.0
+			}
+
+			upframe = "[Select_int32( StateConnection.IsSelected, '(int32)3', '(int32)1' )]"
+
+			visible = "[Not( StateConnection.IsUnconnected )]"
+			position = "[StateConnection.ButtonPos]"
+			click_modifiers = {
+				ondefault = "[AnimationEditor.SetSelected( StateConnection.Id, '(bool)yes', '(bool)yes' )]" # yes it is selected, and yes it is exclusive.
+				onshift = "[AnimationEditor.SetSelected( StateConnection.Id, '(bool)yes', '(bool)yes' )]" # Same as on default
+				onctrl = "[AnimationEditor.SetSelected( StateConnection.Id, Not( StateConnection.IsSelected ), '(bool)no' )]" # Toggle and non-exclusive
+			}
+		}
+	}
+
+	type state_looping_connection = widget
+	{
+		allow_outside = yes
+		size = { 100% 100% }
+
+		connection_button = {
+			name = "connection_button"
+			size = { 28 28 }
+			texture = "gfx/animation_editor/self_connection_button.png"
+			frame = 1
+			raw_tooltip = "[StateConnection.DebugTooltip]"
+			tooltipwidget = { using = editor_tooltip }
+			visible = "[Not( StateConnection.IsUnconnected )]"
+			position = "[StateConnection.ButtonPos]"
+
+			state = {
+				name = "selected"
+				frame = 1
+				on_start = "[AnimationEditor.OnSelected]"
+			}
+
+			state = {
+				name = "default"
+				frame = 0
+				duration = 0.0
+			}
+			click_modifiers = {
+				ondefault = "[AnimationEditor.SetSelected( StateConnection.Id, '(bool)yes', '(bool)yes' )]" # yes it is selected, and yes it is exclusive.
+				onshift = "[AnimationEditor.SetSelected( StateConnection.Id, '(bool)yes', '(bool)yes' )]" # Same as on default
+				onctrl = "[AnimationEditor.SetSelected( StateConnection.Id, Not( StateConnection.IsSelected ), '(bool)no' )]" # Toggle and non-exclusive
+			}
+		}
+	}
+
+	type animation_editor_error_icon = icon {
+		position = { 2 2 }
+		size = { 32 32 }
+		texture = "gfx/tools/material/error_icon.png"
+		color = { 0.98 0.27 0.20 1 } # Gruvbox:LightRed
+
+		visible = "[AnimationEditor.HasErrors]"
+
+		tooltip_widgetanchor = top|left
+		tooltip_parentanchor = bottom|left
+
+		tooltipwidget = {
+			flowcontainer = {
+				direction = vertical
+
+				alwaystransparent = no
+
+				spacing = 2
+				margin = { 4 4 }
+
+				background = {
+					texture = "gfx/editor_gui/editor_layout_button.png"
+					spriteType = corneredstretched
+					spriteborder = { 2 2 }
+					framesize = { 16 16 }
+					shaderfile = "gfx/FX/pdxgui_default.shader"
+				}
+
+				item = {
+					editor_toolbar_button = {
+						using = editor_font
+						size = { 300 25 }
+						text = ""
+						align = left|vcenter
+						#onclick = ""
+						elide = right
+
+						#tooltip = "[NodeError.Message]"
+
+						margin_left = 6
+						margin_right = 6
+					}
+				}
+
+				#datamodel = "[Graph.Errors]"
+			}
+		}
+	}
+
+	type animation_editor_search = container {
+		minimumsize = { 295 30 }
+
+		background = {
+			texture = "gfx/editor_gui/editor_layout_window_content.png"
+			spriteType = CorneredStretched
+			spriteborder = { 5 5 }
+			shaderfile = "gfx/FX/pdxgui_default.shader"
+		}
+
+		editor_textbox = {
+			position = { 5 5 }
+			size = { 0 25 }
+			raw_text = "Search:"
+			autoresize = yes
+			align = left|nobaseline
+		}
+		
+		editor_editbox = {
+			name = "animation_editor_search_editbox"
+			position = { 55 5 }
+			margin_left = 6
+			using = tools_editbox
+			align = left|nobaseline
+			ontextchanged = "[NodeEditorSearch.Search]"
+			focus_on_visible = yes
+			alwaystransparent = no
+			text = "[NodeEditorSearch.GetSearchText]"
+			size = { 150 20 }
+			fontsize = 12
+
+			editor_button = {
+				raw_tooltip = "Clear Text"
+				onclick = "[NodeEditorSearch.ClearSearchText]"
+				alpha = 0.7
+				position = { -3 0 }
+				parentanchor = vcenter|right
+				size = { 16 16 }
+				texture = "gfx/editor_gui/editor_layout_window_close.dds"
+				tooltipwidget = {
+					using = dockable_tooltip
+				}
+			}
+
+			# Toggles visibility of the editbox off and then immediately on again, to trigger its focus_on_visible, when the user uses the search-shortcut while the search widget is already visible.
+			button = {
+				size = { 0.1 0.1 }
+				visible = yes
+				onclick = "[PdxGuiWidget.AccessParent.Hide]"
+				onclick = "[PdxGuiWidget.AccessParent.Show]"
+				input_action = "tools_search"
+			}
+		}
+
+		editor_textbox = {
+			position = { 210 7 }
+			size = { 0 25 }
+			visible = "[NodeEditorSearch.HasOccurrences]"
+			# We offset 1 so we don't have 0 index in the UI
+			text = "[Add_int32( NodeEditorSearch.CurrentResultIndex, '(int32)1' )] of [NodeEditorSearch.NumOccurrences]"
+			autoresize = yes
+			align = left|nobaseline
+			alpha = 0.7
+			fontsize = 11
+		}
+
+		editor_toolbar_button = {
+			raw_tooltip = "Next result"
+			onclick = "[NodeEditorSearch.GoToNextResult]"
+			enabled = "[NodeEditorSearch.HasOccurrences]"
+			input_action = "tools_search_go_to_next"
+			position = { 250 7 }
+			size = { 18 18 }
+			editor_toolbar_icon = {
+				size = { 18 18 }
+				texture = "gfx/tools/log_viewer/arrow_down.png"
+			}
+
+			tooltipwidget = {
+				using = dockable_tooltip
+			}
+		}
+
+		editor_toolbar_button = {
+			raw_tooltip = "Previous result"
+			onclick = "[NodeEditorSearch.GoToPreviousResult]"
+			enabled = "[NodeEditorSearch.HasOccurrences]"
+			input_action = "tools_search_go_to_prev"
+			position = { 270 7 }
+			size = { 18 18 }
+			editor_toolbar_icon = {
+				size = { 18 18 }
+				texture = "gfx/tools/log_viewer/arrow_up.png"
+			}
+			
+			tooltipwidget = {
+				using = dockable_tooltip
+			}
+		}
+
+		editor_button = {
+			raw_tooltip = "Close Serach Widget"
+			position = { 295 8 }
+			size = { 16 16 }
+			onclick = "[NodeEditorSearch.Hide]"
+			texture = "gfx/editor_gui/editor_layout_window_close.dds"
+			input_action = "tools_close_search"
+
+			tooltipwidget = {
+				using = dockable_tooltip
+			}
+		}
+
+		widget = {
+			# padding, to the right of the "Close"-button
+			position = { 311 8 }
+			size = { 5 1 }
+		}
+	}
+
+	type viewport_zoom_area = zoomarea {
+		name = "graph_zoomarea"
+
+		layoutpolicy_horizontal = preferred
+		layoutpolicy_vertical = expanding
+
+		state = {
+			name = "_zoom_changed"
+			duration = 0.1
+		}
+
+		zoom = 1
+		zoom_step = 0.35
+		zoom_min = 0.2
+		zoom_max = 2.0
+		pan_position = { 0 0 }
+
+		scissor = yes
+
+		viewportwidget = {
+			widget = {
+				name = "graph_viewport"
+
+				size = { 100% 100% }
+
+				background = {
+					texture = "gfx/editor_gui/node_editor/node_editor_window_background.dds"
+					spriteType = CorneredTiled
+					shaderfile = "gfx/FX/pdxgui_default.shader"
+				}
+
+				scissor = yes
+				alwaystransparent = no
+				allow_outside = yes
+			}
+		}
+
+		# Where all the states will be parented under
+		zoomwidget = {
+			widget = {
+				allow_outside = yes
+				name = "animation_editor_graph_panel"
+				focuspolicy = click
+
+				editor_selection = {
+					name = "selection"
+					position = { 0 0 }
+					size = { 0 0 }
+				}
+
+				# We use this to organize the line widgets under a single parent and so it is rendered bellow the states.
+				widget = {
+					allow_outside = yes
+					size = { 100% 100% }
+					name = "connections"
+				}
+
+				# We put the starting state window below the connections widget in script so that the starting state will be rendered in front of the connections
+				animation_editor_starting_state_window = {
+					name = "starting_state_window" # Name used in code
+				}
+			}
+		}
+	}
+
+	type context_aware_tab = vbox {
+		layoutpolicy_horizontal = fixed
+		layoutpolicy_vertical = expanding
+		
+		min_width = 200
+		max_width = 300
+		margin_right = 4
+
+		editor_frame = {
+			
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+
+			blockoverride "label" 
+			{ 
+				text = "[AnimationEditorTabHelper.TabLabel]" 
+			}
+
+			blockoverride "content"
+			{
+				name  = "frame_content"
+				using = tools_spacing
+			}
+		}
+	}
+}
+
+widget = {
+	name = "animation_editor_graph_panel"
+
+	size = { 1480 720 }
+	
+	layoutpolicy_horizontal = expanding
+	layoutpolicy_vertical = expanding
+
+	input_context = "animation_editor"
+
+	vbox = {
+
+		spacing = 4
+
+		hbox = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = shrinking 
+
+			spacing = 8
+
+			editor_toolbar_button = {
+				using = cancel_drag_onclick
+				raw_text = "New"
+				raw_tooltip = "New"
+				size = { 32 25 }
+				onclick = "[AnimationEditor.New]"
+				input_action = "tools_new"
+			}
+
+			editor_toolbar_button = {
+				using = cancel_drag_onclick
+				raw_text = "Open"
+				raw_tooltip = "Open"
+				size = { 32 25 }
+				onclick = "[AnimationEditor.Load]"
+				input_action = "tools_open"
+			}
+
+			editor_toolbar_button = {
+				using = cancel_drag_onclick
+				raw_text = "Save"
+				raw_tooltip = "Save"
+				size = { 32 25 }
+				onclick = "[AnimationEditor.Save]"
+				enabled = "[AnimationEditor.IsSaveButtonEnabled]"
+				input_action = "tools_save"
+			}
+
+			editor_toolbar_button = {
+				using = cancel_drag_onclick
+				raw_text = "Save As"
+				raw_tooltip = "Save as"
+				size = { 64 25 }
+				onclick = "[AnimationEditor.SaveAs]"
+				input_action = "tools_save_as"
+			}
+
+			editor_toolbar_button = {
+				visible = no # PSGE-6409
+				using = cancel_drag_onclick
+				raw_text = "Copy"
+				raw_tooltip = "Copy selection"
+				size = { 32 25 }
+				#onclick = "[GraphPanel.Copy]"
+				input_action = "tools_copy"
+			}
+
+			editor_toolbar_button = {
+				visible = no # PSGE-6409
+				using = cancel_drag_onclick
+				raw_text = "Cut"
+				raw_tooltip = "Cut selection"
+				size = { 32 25 }
+				#onclick = "[GraphPanel.Cut]"
+				input_action = "tools_cut"
+			}
+
+			editor_toolbar_button = {
+				visible = no # PSGE-6409
+				using = cancel_drag_onclick
+				raw_text = "Paste"
+				raw_tooltip = "Paste"
+				size = { 32 25 }
+				#enabled = "[GraphPanel.IsPasteable]"
+				#onclick = "[GraphPanel.Paste]"
+				input_action = "tools_paste"
+			}
+
+			editor_toolbar_divider = {
+				margin = { 4 0 }
+			}
+
+			# Only one "Search"-button will be visible at a time. The one that does not have a shortcut is visible when the search widget is visible, to avoid shortcut collisions.
+			editor_toolbar_button = {
+				visible = "[Not(AnimationEditor.ShouldShowAnimationStateSearch)]"
+				onclick = "[AnimationEditor.ShowAnimationStateSearch]"
+				input_action = "tools_search"
+				using = cancel_drag_onclick
+				editor_toolbar_icon = {
+					texture = "gfx/social/magnifier.dds"
+				}
+				size = { 25 25 }
+				raw_tooltip = "Show State Search"
+			}
+
+			editor_toolbar_button = {
+				visible = "[AnimationEditor.ShouldShowAnimationStateSearch]"
+				onclick = "[AnimationEditor.ShowAnimationStateSearch]"
+				using = cancel_drag_onclick
+				editor_toolbar_icon = {
+					texture = "gfx/social/magnifier.dds"
+				}
+				size = { 25 25 }
+				raw_tooltip = "Show State Search"
+			}
+
+
+			editor_toolbar_button = {
+				using = cancel_drag_onclick
+				editor_toolbar_icon = {
+					texture = "gfx/editor_gui/node_editor/control_panel_preferences.png"
+				}
+				raw_tooltip = "Animation Editor Preferences"
+				onclick = "[AnimationEditor.OnSettingsButtonClick]"
+			}
+
+			editor_toolbar_divider = {
+				margin = { 4 0 }
+			}
+
+			history_toolbar = {
+				datacontext = "[AnimationEditor.AccessUndoer]"
+			}
+
+			editor_toolbar_divider = {
+				margin = { 4 0 }
+			}
+
+			editor_toolbar_button = {
+				raw_text = "Fit"
+				raw_tooltip = "Fit"
+				size = { 32 25 }
+				onclick = "[AnimationEditor.Fit]"
+				input_action = "animation_editor_fit"
+			}
+
+			editor_toolbar_button = {
+				raw_text = "100%"
+				raw_tooltip = "Set zoom level to 100%"
+				size = { 32 25 }
+				onclick = "[AnimationEditor.SetZoom('(int32)100')]"
+				input_action = "animation_editor_100%"
+			}
+
+			editor_toolbar_divider = {
+				margin = { 4 0 }
+			}
+
+			editor_toolbar_button = {
+				using = cancel_drag_onclick
+				raw_text = "Del"
+				raw_tooltip = "Delete selected elements"
+				size = { 32 25 }
+				onclick = "[AnimationEditor.DeleteSelection]"
+				input_action = "animation_editor_remove"
+			}
+
+			editor_toolbar_divider = {
+				margin = { 4 0 }
+			}
+
+			editor_toolbar_button = {
+				raw_text = "All"
+				raw_tooltip = "Select all"
+				onclick = "[AnimationEditor.SelectAll]"
+				input_action = "animation_editor_select_all"
+			}
+
+			editor_toolbar_button = {
+				raw_text = "Clr"
+				raw_tooltip = "Clear selection"
+				onclick = "[AnimationEditor.ClearSelection]"
+				input_action = "animation_editor_selection_clear"
+			}
+
+			hbox = {
+
+				spacing = 0
+
+				editor_toolbar_button = {
+					raw_text = "Inv"
+					raw_tooltip = "Invert selection"
+					onclick = "[AnimationEditor.InvertSelection]"
+					input_action = "animation_editor_selection_invert"
+				}
+
+				editor_toolbar_button = {
+					size = { 0 0 }
+					onclick = "[AnimationEditor.CancelDrag]"
+					input_action = "animation_editor_cancel_drag"
+				}
+
+				editor_toolbar_button = {
+					using = cancel_drag_onclick
+					size = { 0 0 }
+					enabled = "[EqualTo_int32( AnimationEditor.NumSelected, '(int32)1' )]"
+					onclick = "[AnimationEditor.RenameSelected]"
+					input_action = "animation_editor_rename"
+				}
+			}
+
+			editor_toolbar_divider = {
+				margin = { 4 0 }
+			}
+
+			editor_toolbar_button = {
+				size = { 32 25 }
+				raw_text = "Clips"
+				raw_tooltip = "Open the Animation Clip Editor"
+				onclick = "[AnimationEditor.OpenClipEditor]"
+			}
+
+			toolbox_checkbutton = {
+				size = { 60 25 }
+				raw_text = "Variables"
+				raw_tooltip = "Show/Hide the 'Global variables' and 'Local variables' panel"
+				checked = "[AnimationEditor.ShouldShowVariablesGui]"
+				onclick = "[AnimationEditor.ToggleVariablesGuiVisibility]"
+			}
+
+			widget = {
+				layoutpolicy_horizontal = expanding
+			}
+		}
+
+		# Viewport + Context aware panel
+		hbox = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+
+			viewport_zoom_area = {}
+			context_aware_tab = {
+				name = "context_aware_tab"
+				visible = "[AnimationEditor.CanShowContentTab]"
+			}
+
+			animation_editor_variables_panel = {
+				visible = "[AnimationEditor.ShouldShowVariablesGui]"
+				datacontext = "[AnimationEditor.AccessVariablesPanel]"
+			}
+		}
+	}
+
+	animation_editor_search = {
+		visible = "[AnimationEditor.ShouldShowAnimationStateSearch]"
+		datacontext = "[AnimationEditor.AccessAnimationStateSearch]"
+		name = "search"
+		widgetanchor = top|left
+		position = { 5 40 }
+	}
+}

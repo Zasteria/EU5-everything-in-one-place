@@ -1,0 +1,189 @@
+﻿# Calidad de vida EU5 - cooldown alerts - core watch logic.
+#
+# Raises a CMF alert (cmf_show_alert) when a watched cooldown expires. Edge-detection
+# via a saved country variable qol_cd_watch_<type>, so it survives save/load:
+#   - cooldown active now + not tracked -> start tracking; also clear any stale "ready" alert
+#   - cooldown gone   now + was tracked -> it just expired -> raise the "ready" alert
+#
+# The alert flag is qol_cd_ready_<type>; CMF renders it from the loc keys
+# qol_cd_ready_<type>_color / _icon / _name / _tooltip. Left-click acts (auto-removes),
+# right-click dismisses.
+
+# ============================================================================
+# SINGLE SOURCE OF TRUTH for the watch-list.
+# $each$ = the name of a scripted effect to invoke per row; it receives
+# i / type / years / def / rel. Consumers pass different callbacks:
+#   - qol_cd_check_all       -> each = qol_cd_check_one      (monthly detection)
+#   - qol_cd_seed_defaults   -> each = qol_cd_seed_one       (one-time default seed)
+#   - qol_cd_apply_relevance -> each = qol_cd_relevance_one  (disable/enable row toggles)
+# (seed_one / relevance_one live in qol_cooldown_cmm_effects.txt.) This is the verified CMF
+# callback pattern. NOTE: a shared $each$ callback MUST reference every arg the table
+# passes or the engine fails to COMPILE it ("unknown arguments") - unused ones are
+# consumed in a never-run `limit = { always = no ... }` block.
+#
+# Per-row fields:
+#   i     = CMM list row index. MUST line up with the loc keys
+#           (qol__cd_watchlist_i<i>_name) and item_count in qol_cooldown_cmm_effects.txt.
+#   type  = the has_cooldown cooldown TYPE (also the qol_cd_ready_<type> alert key and
+#           the qol_cd_watch_<type> tracking var). For country_interactions this equals
+#           the action name. Verified against the game files.
+#   years = cooldown length in years (approx for computed ones). Informational only.
+#   def   = default watch state (1 on / 0 off).
+#   rel   = relevance scripted trigger (qol_cd_rel_*) gating both the row's toggle
+#           enable/disable in the menu and the check, so mechanic-specific actions stay
+#           visible but non-interactive for irrelevant countries.
+#   sid   = the CMM list setting this row belongs to. Row indices i are PER LIST.
+qol_cd_watched_actions = {
+	# The list is split into four CMM groups by category. Rows are sorted so the indices i
+	# are per-list (see the sid comment above). Each $each$ row below carries its sid; the
+	# CMM registration (qol_cooldown_cmm_effects.txt) mirrors these groups with one
+	# cmm_register_global_settings_list per sid.
+	#
+	# GENERAL / COMMON country_interactions (default ON). sid = cd_watchlist_general.
+	$each$ = { i = 1  type = request_divorce             years = 10 def = 1 rel = qol_cd_rel_catholic             sid = cd_watchlist_general }
+	$each$ = { i = 2  type = enforce_culture             years = 10 def = 1 rel = qol_cd_rel_always                sid = cd_watchlist_general }
+	$each$ = { i = 3  type = enforce_religion            years = 10 def = 1 rel = qol_cd_rel_always                sid = cd_watchlist_general }
+	$each$ = { i = 4  type = invite_settlers             years = 2  def = 1 rel = qol_cd_rel_always                sid = cd_watchlist_general }
+	$each$ = { i = 5  type = force_change_court_language years = 10 def = 1 rel = qol_cd_rel_always                sid = cd_watchlist_general }
+	$each$ = { i = 6  type = mil_order_request_funds     years = 1  def = 1 rel = qol_cd_rel_military_sponsorship  sid = cd_watchlist_general }
+	$each$ = { i = 7  type = take_over_seniority         years = 25 def = 1 rel = qol_cd_rel_union_seniority       sid = cd_watchlist_general }
+
+	# HOLY ROMAN EMPIRE (members + circles; default ON). sid = cd_watchlist_hre.
+	$each$ = { i = 1  type = ask_to_vote_for_me_as_emperor                  years = 2  def = 1 rel = qol_cd_rel_hre                 sid = cd_watchlist_hre }
+	$each$ = { i = 2  type = petition_imperial_diet                         years = 10 def = 1 rel = qol_cd_rel_hre_circle_leader   sid = cd_watchlist_hre }
+	$each$ = { i = 3  type = request_circle_privilege                       years = 5  def = 1 rel = qol_cd_rel_hre_circle_leader   sid = cd_watchlist_hre }
+	$each$ = { i = 4  type = challenge_circle_leadership                    years = 5  def = 1 rel = qol_cd_rel_hre_member           sid = cd_watchlist_hre }
+	$each$ = { i = 5  type = appeal_to_circle_diet                          years = 10 def = 1 rel = qol_cd_rel_hre_member           sid = cd_watchlist_hre }
+	$each$ = { i = 6  type = request_circle_infrastructure_expansion        years = 10 def = 1 rel = qol_cd_rel_hre_member           sid = cd_watchlist_hre }
+	$each$ = { i = 7  type = request_new_circle_titles                      years = 10 def = 1 rel = qol_cd_rel_hre_member           sid = cd_watchlist_hre }
+
+	# SITUATIONAL (Italian Wars leagues; default ON). sid = cd_watchlist_situational.
+	$each$ = { i = 1  type = violate_italian_sovereignty   years = 1 def = 1 rel = qol_cd_rel_italian_wars sid = cd_watchlist_situational }
+	$each$ = { i = 2  type = italian_wars_bribe_country    years = 5 def = 1 rel = qol_cd_rel_italian_wars sid = cd_watchlist_situational }
+
+	# COUNTRY-SPECIFIC (Japan / Sengoku, China / Red Turban; default ON). sid = cd_watchlist_country.
+	$each$ = { i = 1  type = scout_enemy_holdings  years = 1 def = 1 rel = qol_cd_rel_japanese    sid = cd_watchlist_country }
+	$each$ = { i = 2  type = rtr_demand_annexation years = 3 def = 1 rel = qol_cd_rel_red_turban   sid = cd_watchlist_country }
+
+	# ESTATE INTERACTIONS (estate emergency actions; default ON). sid = cd_watchlist_estate.
+	# NOTE: vanilla cooldown type names have a _cooldown suffix (e.g. ask_for_extra_levies_cooldown).
+	$each$ = { i = 1  type = ask_for_extra_levies_cooldown              years = 5 def = 1 rel = qol_cd_rel_has_estates sid = cd_watchlist_estate }
+	$each$ = { i = 2  type = extraordinary_taxes_cooldown               years = 5 def = 1 rel = qol_cd_rel_has_estates sid = cd_watchlist_estate }
+	$each$ = { i = 3  type = ask_clergy_for_legitimacy_cooldown         years = 5 def = 1 rel = qol_cd_rel_has_estates sid = cd_watchlist_estate }
+	$each$ = { i = 4  type = ask_nobility_for_diplomats_cooldown        years = 5 def = 1 rel = qol_cd_rel_has_estates sid = cd_watchlist_estate }
+	$each$ = { i = 5  type = ask_burghers_for_loan_cooldown             years = 5 def = 1 rel = qol_cd_rel_has_estates sid = cd_watchlist_estate }
+	$each$ = { i = 6  type = ask_commoners_for_stability_cooldown       years = 5 def = 1 rel = qol_cd_rel_has_estates sid = cd_watchlist_estate }
+	$each$ = { i = 7  type = ask_tribes_for_manpower_cooldown           years = 5 def = 1 rel = qol_cd_rel_has_estates sid = cd_watchlist_estate }
+	$each$ = { i = 8  type = call_emergency_parliament_cooldown         years = 5 def = 1 rel = qol_cd_rel_has_estates sid = cd_watchlist_estate }
+}
+
+# Check a single watched action for the current country. Args from the table:
+# i / sid / type / rel used; years / def accepted but unused (consumed below).
+qol_cd_check_one = {
+	# Resolve this row's CMM per-action toggle key (qol__<sid>_i<i>_f1) to a
+	# local_var first; flag:$param$ via set_local_variable is the pattern CMF's own core
+	# effects use.
+	set_local_variable = { name = qol_cd_tmp_watch_flag value = flag:qol__$sid$_i$i$_f1 }
+
+	# Gate on: relevance ($rel$) AND this row's per-action toggle.
+	if = {
+		limit = {
+			$rel$ = yes
+			"global_variable_map(cmm|local_var:qol_cd_tmp_watch_flag)" >= 1
+		}
+		if = {
+			limit = { has_cooldown = $type$ }
+			# On cooldown now: ensure tracked, and clear any lingering "ready" alert
+			# (e.g. the player re-used the action before dismissing the old alert).
+			if = {
+				limit = { NOT = { has_variable = qol_cd_watch_$type$ } }
+				set_variable = { name = qol_cd_watch_$type$ value = yes }
+				cmf_remove_alert = { alert = qol_cd_ready_$type$ }
+			}
+		}
+		else = {
+			# Available now: if we were tracking it, it just became usable -> alert,
+			# gated on the CMM "Enable Cooldown Alerts" master toggle.
+			if = {
+				limit = { has_variable = qol_cd_watch_$type$ }
+				remove_variable = qol_cd_watch_$type$
+				if = {
+					limit = { has_variable = qol__cd_enable_alerts }
+					cmf_show_alert = { alert = qol_cd_ready_$type$ }
+				}
+			}
+		}
+	}
+	else = {
+		# Row excluded (relevance / unticked): drop any tracking state so exclusion can
+		# never leave a row frozen "on cooldown" forever. Re-enabling the row later
+		# starts tracking fresh rather than firing on stale state.
+		remove_variable = qol_cd_watch_$type$
+	}
+
+	# Benign warning suppression + consume the unused $years$/$def$ table params. A shared
+	# $each$ callback MUST reference every arg the table passes or the engine fails to
+	# compile ("unknown arguments"); referencing them in a never-run trigger satisfies
+	# the compiler.
+	if = {
+		limit = {
+			always = no
+			gold >= $years$
+			gold >= $def$
+		}
+		cmf_suppress = { v = qol_cd_tmp_watch_flag }
+	}
+}
+
+# Run the per-row check for every watched action. Scope: country.
+qol_cd_check_all = {
+	qol_cd_watched_actions = { each = qol_cd_check_one }
+}
+
+# Chivalric-order diplomacy cooldown watch.
+#
+# join_foreign_order_of_chivalry and invite_to_order_of_chivalry share ONE country-scope
+# PLAIN VARIABLE cooldown: order_of_chivalry_country_cooldown, set via
+# `set_variable = { value = yes years = 10 }` and gated by
+# `allow = { not = { has_variable = order_of_chivalry_country_cooldown } }`.
+# There is no cooldown = {} block and no has_cooldown token for this mechanic, so it
+# cannot be a qol_cd_watched_actions row - it needs its own edge-detect check reading
+# has_variable instead of has_cooldown.
+#
+# Gated by its own CMM toggle (qol__cd_watch_order_of_chivalry) - only the alert raise
+# is gated, not the tracking, so toggling off mid-cooldown can never strand the watch
+# flag in a state it cannot leave.
+qol_cd_check_order_of_chivalry = {
+	if = {
+		limit = { qol_cd_rel_order_of_chivalry = yes }
+		if = {
+			limit = { has_variable = order_of_chivalry_country_cooldown }
+			# On cooldown now: ensure tracked, and clear any lingering "ready" alert.
+			if = {
+				limit = { NOT = { has_variable = qol_cd_watch_order_of_chivalry } }
+				set_variable = { name = qol_cd_watch_order_of_chivalry value = yes }
+				cmf_remove_alert = { alert = qol_cd_ready_order_of_chivalry }
+			}
+		}
+		else = {
+			# Available now: if we were tracking it, it just cleared -> alert, gated on both
+			# the master "Enable Cooldown Alerts" toggle and this feature's own toggle.
+			if = {
+				limit = { has_variable = qol_cd_watch_order_of_chivalry }
+				remove_variable = qol_cd_watch_order_of_chivalry
+				if = {
+					limit = {
+						has_variable = qol__cd_enable_alerts
+						has_variable = qol__cd_watch_order_of_chivalry
+					}
+					cmf_show_alert = { alert = qol_cd_ready_order_of_chivalry }
+				}
+			}
+		}
+	}
+	else = {
+		# Not relevant (e.g. no longer Christian, or became Pope): drop tracking state so the
+		# row can never freeze "on cooldown" forever with no path back to unset.
+		remove_variable = qol_cd_watch_order_of_chivalry
+	}
+}

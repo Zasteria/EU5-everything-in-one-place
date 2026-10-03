@@ -1,0 +1,191 @@
+﻿# Urban Rights Available - map mode
+#
+# This folder is SCANNED, so this file ADDS a map mode. It does not replace vanilla's 9,690-line
+# map_modes.txt, and it must never be named that. Adding a mode is therefore free of conflicts:
+# nothing here is shared with another mod, unlike the rights card, which is a whole-file replacement.
+#
+# The menu builds itself from the GetMapModesSlots / MapModeSlot.GetMapModes data models
+# (hud_bot.gui, context_menu_types.gui), so a mode places itself with `category` + `index` and NO
+# .gui file needs touching.
+#
+# NO `color_mode` on purpose. That field selects one of ~90 hardcoded C++ colorizers. Omitting it and
+# supplying `map_color` instead means the color comes from script, with the location as root.
+# Vanilla does the same in `stability`, `nobles_percentage` and 14 other modes.
+#
+# Colors come from the NMapColors defines in loading_screen/common/defines/graphic/00_graphics.txt.
+# Using the defines rather than literal rgb keeps the mode consistent with the colorblind variants
+# vanilla ships for the same palette.
+#
+# WHY THIS MODE EXISTS, given that vanilla ships an Urban Rights map mode already. Vanilla's is an
+# unfiltered has-any test across every location on the map: MAPMODE_TOWN_RIGHTS says it "colors
+# locations depending on if they have any town rights or not". So it paints a rural settlement that
+# can never hold a right exactly like an empty city of yours, and it never isolates the set you can
+# act on. This mode answers the actionable question instead: where could I grant another right?
+#
+# WHAT THE COLORS MEAN, and why these particular defines. NMapColors carries a dedicated build-site
+# group -- CANBUILD, CANBUILD_SUBJECT, CANUPGRADEBUILDING, CANTBUILD, FULLYBUILD, QUEUED -- whose
+# meaning is already "you can act here / you cannot / it is full". That is this mode's exact
+# semantics, it is the color language the game teaches for choosing build sites, and using vanilla's
+# own defines keeps the mode consistent with the colorblind variants shipped alongside them.
+#
+# THE CLAIM IS A FREE SLOT, NOT A WORTHWHILE RIGHT. Script cannot enumerate rights or read their
+# conditions, so it cannot tell whether any right actually qualifies for a location. Vanilla can:
+# it has a NO_POSSIBLE_TOWN_RIGHTS string. We cannot. The wording must never promise more than
+# capacity.
+#
+# SLOT CAPACITY IS NOT FIXED, which is what makes this worth a map mode at all. location_ranks sets
+# local_possible_town_rights to 3 for a megalopolis, 2 for a city and 1 for a town, and four separate
+# age advances each add capital_possible_town_rights = 1. So a town that upgrades to a city silently
+# gains a slot, and a capital grows from 3 to 7 over a campaign. Nothing in the interface reports
+# this: there is no slot-count data function and no "2 of 3" string anywhere in vanilla.
+
+urqol_urban_rights_available = {
+
+	map_color = {
+		if = {
+			limit = {
+				has_owner = yes
+
+				# Before this advance the whole system is locked, so painting the map would offer an
+				# action the player cannot take.
+				owner = { has_advance = city_building_advance }
+
+				# STRICT ownership. Vanilla uses two idioms here, four modes each:
+				# `owner = scope:actor` and `is_owned_or_owned_by_subjects_or_below_of = scope:actor`.
+				# The second includes subject land, which is not land the player can grant rights in,
+				# so this mode uses the strict one.
+				owner = scope:actor
+
+				# Carries the urban test as well, in theory. rural_settlement has no
+				# local_possible_town_rights entry at all, so it holds zero slots and should already
+				# read as being at maximum.
+				has_max_town_rights = no
+			}
+
+			if = {
+				limit = { has_any_town_rights = no }
+				value = define:NMapColors|CANBUILD_MAP_COLOR
+			}
+			else = {
+				value = define:NMapColors|CANUPGRADEBUILDING_MAP_COLOR
+			}
+		}
+	}
+
+	# REQUIRED whenever `map_color` is used, even when empty. It returns the NAME of a localization
+	# key, not a string, and it is chosen by triggers with the location as root, exactly like
+	# `map_color` above. Vanilla does the same in `works_of_art` and `privateering`.
+	#
+	# Four states, one more than the color has. The color cannot paint "full" or "cannot hold any"
+	# without adding noise to the map, but a hover on those locations should still answer the
+	# question rather than say nothing.
+	#
+	# `has_max_town_rights` alone cannot separate "full" from "cannot hold any", because a
+	# rural_settlement has zero capacity and so reads as already at maximum. Pairing it with
+	# `has_any_town_rights` separates them without needing a location-rank trigger: at maximum WITH
+	# rights is genuinely full, at maximum WITHOUT any means the location can never hold one.
+	tooltip_key = {
+		if = {
+			limit = {
+				has_owner = yes
+				owner = scope:actor
+				owner = { has_advance = city_building_advance }
+			}
+
+			if = {
+				limit = {
+					has_max_town_rights = no
+					has_any_town_rights = no
+				}
+				value = URQOL_MAPMODE_TT_NONE_GRANTED
+			}
+			else_if = {
+				limit = { has_max_town_rights = no }
+				value = URQOL_MAPMODE_TT_ROOM_LEFT
+			}
+			else_if = {
+				limit = { has_any_town_rights = yes }
+				value = URQOL_MAPMODE_TT_FULL
+			}
+			else = {
+				value = URQOL_MAPMODE_TT_CANNOT_HOLD
+			}
+		}
+	}
+
+	# Colors and their meaning, shown in the map mode legend. Only the two painted states appear:
+	# a legend entry for something the map never draws would be noise.
+	legend_key = {
+		desc = "URQOL_LEGEND_NONE_GRANTED"
+		color = define:NMapColors|CANBUILD_MAP_COLOR
+	}
+	legend_key = {
+		desc = "URQOL_LEGEND_ROOM_LEFT"
+		color = define:NMapColors|CANUPGRADEBUILDING_MAP_COLOR
+	}
+
+	small_map_names = location
+	medium_map_names = country
+	large_map_names = country
+
+	small_tooltip_context = location
+	medium_tooltip_context = location
+	large_tooltip_context = location
+
+	flatmap_behaviour = Always
+	use_fow = no
+
+	category = economy
+	index = 1
+
+	# `all = no` rather than naming individual markers. Vanilla toggles at least twelve marker types
+	# (toll, market, fort, unit, raw_goods, port, holy_site, dynasty, combat, combat_imminent,
+	# supply_depot), so disabling four by name leaves the rest drawing on top of the mode. `all` is a
+	# supported key and vanilla uses it in 21 places.
+	map_markers = {
+		all = no
+	}
+
+	# REQUIRED. Every one of vanilla's 14 scripted-color modes carries this block, and without it the
+	# locations do not fill: the alpha and edge behavior of the color has nothing to work from.
+	#
+	# The numbers are vanilla's own `@data_*` constants, resolved to literals on purpose. Those
+	# constants are declared at the top of vanilla's map_modes.txt, and whether an `@` value is
+	# visible across files is not established, so referencing them from here would be a guess.
+	# Resolved chain, for anyone re-deriving them:
+	#   gradient_width  = @flatmap_far_gradient_width = @flatmap_edge_color_mult * 1.25 = 0.7 * 1.25
+	#   color_mult      = @flatmap_gradient_color_mult
+	#   edge_sharpness  = @flatmap_edge_sharpness
+	#   lighting blends = @flatmap_before/after_lighting_blend
+	# This is the "works well with data and heatmaps" preset: solid fill, no edge.
+	gradient_parameters = {
+		zoom_step = 2
+
+		gradient_alpha_inside = 1
+		gradient_alpha_outside = 1
+		gradient_width = 0.875
+		gradient_color_mult = 0.9
+		edge_width = 0
+		edge_sharpness = 0.01
+		edge_alpha = 0
+		edge_color_mult = 0
+		before_lighting_blend = 0.5
+		after_lighting_blend = 0.5
+	}
+
+	# WHEN THE COLORS RECOMPUTE. `map_color` runs per location, so refreshing cheaply matters.
+	#
+	# There is NO counter for a right being granted or revoked. The counter list is hardcoded, and
+	# vanilla's own town_rights mode has the same gap, using only the two below. What covers it is
+	# `refresh_colors_on_selection_change`: granting a right means selecting the location, so the
+	# map recomputes on the way in and on the way out.
+	#
+	# `Advances` catches the two advance-driven changes: city_building_advance unlocks the system
+	# outright, and four separate age advances each raise the capital's capacity by one.
+	# `Month` is the safety net for anything the named counters miss, chiefly a location changing
+	# rank and silently gaining a slot. Capacity moves on rank-ups and advances, never daily, so a
+	# monthly sweep is enough and `Day` would only cost frames.
+	refresh_colors_on_selection_change = yes
+	color_refresh_counters = { Month Advances }
+	color_and_names_refresh_counters = { LocationOwnerChanged CountryStatus }
+}

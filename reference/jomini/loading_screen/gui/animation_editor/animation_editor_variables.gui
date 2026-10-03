@@ -1,0 +1,275 @@
+types AnimationEditor
+{
+	type animation_editor_global_variable_item = hbox {
+		layoutpolicy_horizontal = expanding
+
+		icon = {
+			visible = "[AnimationEditorVariable.HasErrorMessage]"
+			size = { 18 18 }
+			texture = "gfx/tools/material/error_icon.png"
+			raw_tooltip = "[AnimationEditorVariable.ErrorMessage]"
+			tooltipwidget = { using = dockable_tooltip }
+		}
+
+		editor_textbox = {
+			size = { 80 25 }
+			fontsize = 12
+			align = center|nobaseline
+			elide = right
+			raw_text = "[AnimationEditorVariable.TypeName]"
+			fontcolor = { 0.5 0.5 1.0 1.0 }
+			raw_tooltip = "[AnimationEditorVariable.TypeName]"
+			tooltipwidget = { using = dockable_tooltip }
+		}
+
+		editor_textbox = {
+
+			layoutpolicy_horizontal = expanding
+			size = { 0 22 }
+			using = tools_spacing
+			fontsize = 12
+			align = left|nobaseline
+			elide = right
+			raw_text = "[AnimationEditorVariable.Name]"
+			raw_tooltip = "[AnimationEditorVariable.Name]"
+			tooltipwidget = { using = dockable_tooltip }
+		}
+
+		gui_editor_button = {
+			layoutpolicy_horizontal = fixed
+			size = { 22 22 }
+			onclick = "[AnimationEditorVariablesPanel.RemoveVariable( AnimationEditorVariable.Id )]"
+
+			raw_tooltip = "Remove global variable reference"
+
+			toolbox_icon = {
+				texture = "gfx/editor_gui/16px/node_editor_icon_close.png"
+				size = { 16 16 }
+			}
+		}
+	}
+
+	type animation_editor_global_variables_frame = editor_frame {
+
+		layoutpolicy_horizontal = preferred
+
+		blockoverride "title"
+		{
+			editor_toolbar_layout = {
+				margin_left = 5
+
+				blockoverride "left"
+				{
+					button = {
+						onclick = "[AnimationEditorVariablesPanel.ToggleGlobalVariablesExpanded]"
+
+						hbox = {
+							spacing = 3
+							resizeparent = yes
+
+							checkbutton = {
+								texture = "gfx/tools/expand_icon.dds"
+								framesize = { 16 16 }
+								size = { 10 10 }
+								checked = "[AnimationEditorVariablesPanel.IsGlobalVariablesExpanded]"
+								alwaystransparent = yes
+							}
+
+							editor_textbox = {
+								raw_text = "Global variables"
+								fontcolor = { 0.8 0.8 0.8 1.0 }
+								fontsize = 10
+								autoresize = yes
+								align = top|left
+							}
+						}
+					}
+				}
+			}
+		}
+
+		blockoverride "content"
+		{
+			visible = "[AnimationEditorVariablesPanel.IsGlobalVariablesExpanded]"
+
+			vbox = {
+
+				layoutpolicy_horizontal = expanding
+				spacing = 7
+
+				editor_toolbar_button = {
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = fixed
+					raw_text = "Add global variable reference"
+					onclick = "[AnimationEditorVariablesPanel.OpenAddGlobalVariableSearchList( PdxGuiWidget.Self )]"
+				}
+
+				vbox = {
+					spacing = 5
+					layoutpolicy_horizontal = preferred
+					layoutpolicy_vertical = expanding
+
+					datamodel = "[AnimationEditorVariablesPanel.GlobalVariables]"
+
+					item = {
+						animation_editor_global_variable_item = {}
+					}
+				}
+			}
+		}
+	}
+
+	type animation_editor_local_variable_item = hbox {
+		layoutpolicy_horizontal = expanding
+		spacing = 4
+
+		icon = {
+			visible = "[AnimationEditorVariable.HasErrorMessage]"
+			size = { 18 18 }
+			texture = "gfx/tools/material/error_icon.png"
+			raw_tooltip = "[AnimationEditorVariable.ErrorMessage]"
+			tooltipwidget = { using = dockable_tooltip }
+		}
+
+		editor_toolbar_button = {
+			size = { 80 25 }
+			fontcolor = { 0.5 0.5 1.0 1.0 }
+			fontsize = 12
+			raw_text = "[AnimationEditorVariable.TypeName]"
+			onclick = "[AnimationEditorVariablesPanel.OpenLocalVariableTypeSelectionList( AnimationEditorVariable.Id, PdxGuiWidget.Self )]"
+
+			raw_tooltip = "[AnimationEditorVariable.TypeName]"
+		}
+
+		editor_textinput = {
+			size = { 80 25 }
+			layoutpolicy_horizontal = expanding
+			text = "[AnimationEditorVariable.Name]"
+			oneditingfinished_with_changes = "[AnimationEditorVariablesPanel.SetVariableName( AnimationEditorVariable.Id, PdxGuiWidget.AccessSelf )]"
+
+			raw_tooltip = "[AnimationEditorVariable.Name]"
+			tooltipwidget = { using = dockable_tooltip }
+		}
+
+		gui_editor_button = {
+			size = { 22 22 }
+			onclick = "[AnimationEditorVariablesPanel.RemoveVariable( AnimationEditorVariable.Id )]"
+
+			raw_tooltip = "Remove local variable"
+
+			toolbox_icon = {
+				texture = "gfx/editor_gui/16px/node_editor_icon_close.png"
+				size = { 16 16 }
+			}
+		}
+	}
+
+	type animation_editor_local_variables_frame = editor_frame {
+
+		layoutpolicy_horizontal = preferred
+
+		blockoverride "title"
+		{
+			editor_toolbar_layout = {
+				margin_left = 5
+
+				blockoverride "left"
+				{
+					button = {
+						onclick = "[AnimationEditorVariablesPanel.ToggleLocalVariablesExpanded]"
+
+						hbox = {
+							spacing = 3
+							resizeparent = yes
+
+							checkbutton = {
+								texture = "gfx/tools/expand_icon.dds"
+								framesize = { 16 16 }
+								size = { 10 10 }
+								checked = "[AnimationEditorVariablesPanel.IsLocalVariablesExpanded]"
+								alwaystransparent = yes
+							}
+
+							editor_textbox = {
+								raw_text = "Local variables"
+								fontcolor = { 0.8 0.8 0.8 1.0 }
+								fontsize = 10
+								autoresize = yes
+								align = top|left
+							}
+						}
+					}
+				}
+			}
+		}
+
+		blockoverride "content"
+		{
+			visible = "[AnimationEditorVariablesPanel.IsLocalVariablesExpanded]"
+			vbox = {
+
+				layoutpolicy_horizontal = expanding
+				spacing = 7
+
+				editor_toolbar_button = {
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = fixed
+					raw_text = "Add local variable"
+					onclick = "[AnimationEditorVariablesPanel.AddLocalVariable]"
+				}
+
+				vbox = {
+					spacing = 5
+					layoutpolicy_horizontal = preferred
+					layoutpolicy_vertical = expanding
+
+					datamodel = "[AnimationEditorVariablesPanel.LocalVariables]"
+
+					item = {
+						animation_editor_local_variable_item = {}
+					}
+				}
+			}
+		}
+	}
+
+	type animation_editor_variables_panel = vbox {
+		layoutpolicy_horizontal = fixed
+		layoutpolicy_vertical = expanding
+
+		min_width = 300
+		max_width = 300
+		margin_right = 4
+
+		editor_scrollarea = {
+			blockoverride "Properties"
+			{
+				viewportwidget = {
+					widget = {
+						scissor = yes
+					}
+				}
+			}
+			
+			blockoverride "content"
+			{
+				vbox = {
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = preferred
+
+					# TODO [JG] Restore visibility with https://beta.paradoxplaza.com/browse/PSGE-6773
+					animation_editor_global_variables_frame = {
+						visible = no
+					}
+					animation_editor_local_variables_frame = {}
+
+					widget = {
+						# spacer
+						layoutpolicy_vertical = expanding
+					}
+				}
+			}
+		}
+	}
+
+}

@@ -1,0 +1,101 @@
+﻿# Calidad de vida EU5 - cooldown relevance triggers.
+# Each watched action's qol_cd_watched_actions row names one of these (rel = ...).
+# Evaluated in COUNTRY scope (root = the player country), used two ways:
+#   - qol_cd_relevance_one -> disable/enable the action's CMM list-row toggle
+#   - qol_cd_check_one     -> gate the monthly check (no alert if not relevant)
+# So mechanic/religion-specific actions stay visible in the list but their toggle reads as
+# unavailable for countries that can't use them. Relevance is a COARSE, potential-level
+# filter.
+
+# Always relevant: universally-available interactions.
+qol_cd_rel_always = {
+	always = yes
+}
+
+# Relevant only to Catholic nations (request_divorce is a papal action).
+qol_cd_rel_catholic = {
+	religion = religion:catholic
+}
+
+# Holy Roman Empire interactions (ask_to_vote_for_me_as_emperor). Members only.
+qol_cd_rel_hre = {
+	is_member_of_international_organization = international_organization:hre
+}
+
+# HRE circle-leader actions (petition_imperial_diet, request_circle_privilege).
+# Circle leaders are HRE members that also lead one of the imperial circles.
+qol_cd_rel_hre_circle_leader = {
+	is_imperial_circle_leader = yes
+	is_emperor = no
+}
+
+# HRE member-circle actions (challenge_circle_leadership, appeal_to_circle_diet,
+# request_circle_infrastructure_expansion, request_new_circle_titles). Available to HRE
+# members that are neither emperor nor a circle leader (they petition the leader).
+qol_cd_rel_hre_member = {
+	is_member_of_international_organization = international_organization:hre
+	is_imperial_circle_leader = no
+	is_emperor = no
+	is_subject = no
+}
+
+# Italian Wars league leader actions (violate_italian_sovereignty,
+# italian_wars_bribe_country). Only while the situation runs and the country leads a league.
+qol_cd_rel_italian_wars = {
+	situation:italian_wars = {
+		situation_is_active = yes
+	}
+	is_leader_of_any_league = yes
+}
+
+# Military-order sponsor actions (mil_order_request_funds). Requires being at war and at
+# least one related country that sponsors us (military_sponsorship relation).
+qol_cd_rel_military_sponsorship = {
+	at_war = yes
+	any_related_country = {
+		type = military_sponsorship
+	}
+}
+
+# Personal-union seniority actions (take_over_seniority). Requires an active union in which
+# a senior partner is established and we are not it yet.
+qol_cd_rel_union_seniority = {
+	exists = union
+	union ?= {
+		has_variable = union_senior_partner
+		international_organization_has_policy = policy:union_establish_seniority_policy
+		NOT = { country_is_senior_partner = { country = root } }
+	}
+}
+
+# Sengoku-period Japanese covert actions (scout_enemy_holdings). Japanese culture group
+# (mirrors the action's own potential, scout_enemy_holdings in
+# japanese_clans_covert_actions.txt - note has_culture_group lives in culture scope).
+qol_cd_rel_japanese = {
+	culture ?= { has_culture_group = culture_group:japanese_group }
+}
+
+# Red Turban Rebellions China actions (rtr_demand_annexation). Active situation and either
+# China itself, the rebel organization, or a country able to create the red-turban CB.
+qol_cd_rel_red_turban = {
+	is_situation_active = situation:red_turban_rebellions
+	OR = {
+		is_member_of_international_organization = international_organization:red_turban_rebels
+		modifier:can_create_red_turban_rebellions_cb = yes
+		tag = CHI
+	}
+}
+
+# Estate emergency actions (ask_for_extra_levies, extraordinary_taxes, etc.). All countries
+# with at least one estate can use them; countries without estates are irrelevant.
+qol_cd_rel_has_estates = {
+	any_estate = { always = yes }
+}
+
+# Chivalric-order diplomacy (join_foreign_order_of_chivalry / invite_to_order_of_chivalry
+# share one country-scope variable cooldown). Mirrors both actions' potential:
+# religion_group:christian + modifier:is_pope = no.
+qol_cd_rel_order_of_chivalry = {
+	religion.group = religion_group:christian
+	modifier:is_pope = no
+}

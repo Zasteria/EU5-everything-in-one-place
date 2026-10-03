@@ -410,6 +410,7 @@ widget = {
 	size = { 100% 100% }
 	name = "ingame_topbar"
  using = pmcqcb_tools
+ using = pmcq_insult_shortcut_controller
 
  # Keep assignment cleanup alive outside the panels being opened/closed.
  widget = { name = "pmcqcs_close_coordinator" size = { 1 1 } alwaystransparent = yes
@@ -639,6 +640,10 @@ widget = {
  }
 }
 window = {
+ name = "pmcq_event_catalog"
+ using = pmcq_event_catalog_window
+}
+window = {
  name = "pmcqvalues_window"
  layer = top movable = yes
  parentanchor = center widgetanchor = center
@@ -816,59 +821,9 @@ button = { name = "pmcqvalues_unsinicized_button" position = { 380 347 } size = 
  onclick = "[GetVariableSystem.Set('pmcqvalues_refresh', Select_CString(IsLateralViewOpened('government'), 'requested', ''))]"
 }
 }
-window = {
- name = "pmcq_setup_window"
- layer = top
- movable = yes
- parentanchor = center
- widgetanchor = center
- position = { 0 0 }
- size = { 300 116 }
- visible = "[GetVariableSystem.HasValue('pmcq_setup_window', 'open')]"
- using = bg_main_inner_alt
- text_single = { position = { 8 3 } size = { 260 22 } text = "pmcq_tab_setup" fontsize = 14 }
- button = { name = "pmcq_setup_window_close" position = { 272 3 } size = { 21 21 }
-  using = button_regular_texture raw_text = "X"
-  onclick = "[GetVariableSystem.Clear('pmcq_setup_window')]"
- }
- widget = {
- name = "pmcq_secret_menu_content"
- parentanchor = top|left
- widgetanchor = top|left
- position = { 0 28 } size = { 300 84 }
- using = bg_main_inner_alt
+using = pmcq_cmf_ui_bridge
+using = pmcqsg_tools
 
-action_button_regular = {
- name = "pmcqp_dismantle_hre_button" position = { 8 10 } size = { 136 25 }
- actor = "[GetPlayer]" title = "pmcqp_dismantle_hre"
- left_click_and_hold_action = { action_name = "pmcqp_dismantle_hre" }
- enabled = "[UIAction.IsEnabled]"
- text = "pmcqp_dismantle_hre" fontsize = 10
-}
-action_button_regular = {
- name = "pmcqp_add_hre_locations_button" position = { 154 10 } size = { 136 25 }
- actor = "[GetPlayer]" title = "pmcqp_add_hre_locations"
- left_click_and_hold_action = { action_name = "pmcqp_add_hre_locations" }
- enabled = "[UIAction.IsEnabled]"
- text = "pmcqp_add_hre_locations" fontsize = 10
-}
-
-button = {
- name = "pmcq_secret_debug" position = { 8 44 } size = { 136 25 } using = button_regular_texture fontsize = 11
- text = "[SelectLocalization(InDebugMode, 'pmcq_secret_debug_on', 'pmcq_secret_debug_off')]"
- down = "[InDebugMode]"
- tooltip = "pmcq_secret_debug_desc"
- onclick = "[ExecuteConsoleCommand('debug_mode')]"
-}
-button = {
- name = "pmcq_secret_occupy" position = { 154 44 } size = { 136 25 } using = button_regular_texture fontsize = 10
- text = "pmcq_secret_occupy" tooltip = "pmcq_secret_occupy_desc"
- onclick = "[ExecuteConsoleCommand('occupy_war_enemies')]"
- onclick = "[GetVariableSystem.Clear('pmcq_setup_window')]"
-}
-
-}
-}
 window = {
  name = "pmcqfav_window"
  layer = top movable = yes
@@ -2057,7 +2012,7 @@ action_button_default = {
 }action_button_default = {
  name = "pmcqr_continue_button" position = { 4 104 } size = { 387 23 }
  actor = "[GetPlayer]" title = "pmcqr_continue" left_action = { action_name = "pmcqr_continue" }
- text = "[SelectLocalization(GetPlayer.MakeScope.GetVariable('pmcqr_ignore_total').IsSet, 'pmcqr_continue_on', 'pmcqr_continue_off')]" fontsize = 10
+ text = "[SelectLocalization(GetPlayer.MakeScope.GetVariable('pmcqr_stop_at_total_cap').IsSet, 'pmcqr_continue_off', 'pmcqr_continue_on')]" fontsize = 10
 }action_button_default = {
  name = "pmcqx_toggle_button" position = { 4 26 } size = { 215 23 }
  actor = "[GetPlayer]" title = "pmcqx_toggle" left_action = { action_name = "pmcqx_toggle" }
@@ -3160,7 +3115,3 @@ widget = {
 }
 
 ### END OF "ingame_topbar"
-
-
-
-

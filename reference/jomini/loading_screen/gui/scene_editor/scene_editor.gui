@@ -1,0 +1,391 @@
+@regular_spacing = 8
+@min_hierarchy_panel_width = 490 # Also defined in scene_editor_side_panel.gui with the same value
+
+template scene_toolbox_button_size
+{
+	size = { 30 30 }
+}
+
+template scene_toolbox_icon_size
+{
+	size = { 26 26 }
+}
+
+types SceneEditor
+{
+	type spacer_32 = widget
+	{
+		size = { 32 0 }
+	}
+
+	type scene_button = editor_toolbar_button
+	{
+        using = scene_toolbox_button_size
+		tooltipwidget = {
+			using = dockable_tooltip
+		}
+        block "button" {}
+        toolbox_icon = {
+			parentanchor = vcenter|hcenter
+            block "icon" {}
+            using = scene_toolbox_icon_size
+        }
+    }
+
+    type scene_viewport_widget = cameracontrolwidget_entity_view
+	{
+		gfxtype = scene_gfx_type
+		shaderfile = "gfx/FX/pdxgui_default.shader"
+		effectname = "PdxGuiDefaultNoAlpha"
+		alwaystransparent = no
+	}
+
+	type scene_editor_viewport = scene_viewport_widget 
+	{
+		layoutpolicy_vertical = expanding
+		layoutpolicy_horizontal = expanding
+
+		background = {
+			gfxtype = icongfx
+			texture = "gfx/editor_gui/editor_transparent.dds"
+			shaderfile = "gfx/FX/pdxgui_default.shader"
+			spriteType = CorneredTiled
+			tintcolor = { 0.3 0.3 0.3 1 }
+		}
+
+		camera_fov_y_degrees = 70
+		camera_zoom_limits = { 0.1 90000 }
+		camera_near_far = { 1.0 100000 }
+		camera_look_at = { 0.0 0.0 0.0 }
+		camera_position = { -40 40 -40 }
+		clear_color = { 0.2 0.2 0.2 1.0 }
+		zoom_speed = 0.6
+	}
+}
+
+vbox = {
+	layoutpolicy_vertical = expanding
+	layoutpolicy_horizontal = expanding
+	name = "scene_editor" #Don't change, used in code.
+	spacing = @regular_spacing
+	
+	input_context = "scene_editor"
+	disable_input_fallthrough = yes    # <--- Disable rest of the input stack
+
+	hbox = {
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = shrinking
+
+		spacing = 8
+
+		history_toolbar = {
+			datacontext = "[SceneEditor.AccessUndoer]"
+		}
+
+		gui_editor_button = {
+			onclick = "[SceneEditor.CreateNewScene( PdxGuiWidget.Self )]"
+			raw_text = "New"
+			size = { 35 25 }
+		}
+
+		gui_editor_button = {
+			onclick = "[SceneEditor.LoadScene( PdxGuiWidget.Self )]"
+			raw_text = "Load"
+			size = { 35 25 }
+		}
+
+		scene_button = {
+			blockoverride "button" 
+			{
+				onclick = "[SceneEditor.Save]"
+				enabled = "[SceneEditor.IsSaveable]"
+				raw_tooltip = "Save"
+				input_action = "tools_save"
+			}
+
+			blockoverride "icon" 
+			{
+				texture = "gfx/tools/material/save.png"
+			}
+		}
+
+		scene_button = {
+			blockoverride "button" 
+			{
+				onclick = "[SceneEditor.SaveAs]"
+				raw_tooltip = "Save As"
+				input_action = "tools_save_as"
+			}
+
+			blockoverride "icon" 
+			{
+				texture = "gfx/tools/material/save_as.png"
+			}
+		}
+		
+		spacer_32 = {}
+		scene_button = {
+			blockoverride "button" 
+			{
+				onclick = "[SceneEditor.AddSchematic( PdxGuiWidget.Self )]"
+				raw_tooltip = "Add Schematic"
+			}
+			blockoverride "icon" 
+			{
+				texture = "gfx/editor_terrain/add_object.dds"
+			}
+		}
+
+		scene_button = {
+			blockoverride "button" 
+			{
+				onclick = "[SceneEditor.AddMesh( PdxGuiWidget.Self )]"
+				raw_tooltip = "Add Mesh"
+			}
+			blockoverride "icon" 
+			{
+				texture = "gfx/editor_gui/add_mesh.png"
+			}
+		}
+
+		scene_button = {
+			blockoverride "button" 
+			{
+				onclick = "[SceneEditor.AddParticle( PdxGuiWidget.Self )]"
+				raw_tooltip = "Add Particle"
+			}
+			blockoverride "icon" 
+			{
+				texture = "gfx/editor_gui/add_particle.dds"
+			}
+		}
+
+		scene_button = {
+			blockoverride "button" 
+			{
+				onclick = "[SceneEditor.AddLocator]"
+				raw_tooltip = "Add Locator"
+			}
+			blockoverride "icon" 
+			{
+				texture = "gfx/editor_gui/add_locator.png"
+			}
+		}
+
+		scene_button = {
+			blockoverride "button" 
+			{
+				onclick = "[SceneEditor.AddSubscene( PdxGuiWidget.Self )]"
+				raw_tooltip = "Add Subscene"
+			}
+			blockoverride "icon" 
+			{
+				texture = "gfx/editor_gui/add_subscene.png"
+			}
+		}
+
+		scene_button = {
+			blockoverride "button" 
+			{
+				onclick = "[SceneEditor.RemoveSelectedEntities]"
+				raw_tooltip = "Remove Selected Entities"
+				input_action = "scene_editor_delete_entity"
+				enabled = "[SceneSelection.HasSelection]"
+			}
+			blockoverride "icon" 
+			{
+				texture = "gfx/editor_terrain/delete_objects.dds"
+			}				
+		}
+
+		scene_button = {
+			blockoverride "button"
+			{
+				onclick = "[SceneEditor.CloneSelectedEntities]"
+				raw_tooltip = "Duplicate Selected Entities"
+				input_action = "scene_editor_duplicate_entity"
+				enabled = "[SceneSelection.HasSelection]"
+			}
+			blockoverride "icon"
+			{
+				texture = "gfx/scene_editor/clone_objects.png"
+			}
+		}
+
+		scene_button = {
+			blockoverride "button"
+			{
+				onclick = "[SceneHierarchy.CloneSelectedHierarchies]"
+				raw_tooltip = "Duplicate Selected Entities and their hierarchies"
+				input_action = "scene_editor_duplicate_entity_hierarchy"
+				enabled = "[SceneHierarchy.CanCloneHierarchies]"
+			}
+			blockoverride "icon"
+			{
+				texture = "gfx/scene_editor/clone_hierarchy.png"
+			}
+		}
+
+		spacer_32 = {}
+
+		toolbox_checkbutton = {
+			raw_tooltip = "Show/Hide Grid"
+			onclick = "[SceneEditor.ToggleGridEnabled]"
+			checked = "[SceneEditor.IsGridEnabled]"
+			input_action = "scene_editor_toggle_grid"
+			using = scene_toolbox_button_size
+			toolbox_icon = {
+				texture = "gfx/tools/material/grid.png"
+				using = scene_toolbox_icon_size
+			}
+		}
+
+		gui_editor_button = {
+			onclick = "[SceneEditor.FitCamera]"
+			size = { 0 0 }
+			input_action = "scene_editor_fit_camera"
+		}
+
+		spacer_32 = {}
+
+		toolbox_checkbutton = {
+			raw_tooltip = "Pan Tool"
+			checked = "[SceneTransform.IsModeSelected( 'None' )]"
+			onclick = "[SceneTransform.SetMode( 'None' )]"
+			toolbox_icon = {
+				texture = "gfx/scene_editor/pan_mode.png"
+				using = scene_toolbox_icon_size
+			}
+			input_action = "scene_editor_pan_mode"
+		}
+
+		toolbox_checkbutton = {
+			raw_tooltip = "Translate Tool"
+			checked = "[SceneTransform.IsModeSelected( 'translation' )]"
+			onclick = "[SceneTransform.SetMode( 'translation' )]"
+			toolbox_icon = {
+				texture = "gfx/editor_terrain/move_objects.dds"
+				using = scene_toolbox_icon_size
+			}
+			input_action = "scene_editor_translation_mode"
+		}
+
+		toolbox_checkbutton = {
+			raw_tooltip = "Rotation Tool"
+			checked = "[SceneTransform.IsModeSelected( 'rotation' )]"
+			onclick = "[SceneTransform.SetMode( 'rotation' )]"
+			toolbox_icon = {
+				texture = "gfx/editor_terrain/rotate_objects.dds"
+				using = scene_toolbox_icon_size
+			}
+			input_action = "scene_editor_rotation_mode"
+		}
+
+		toolbox_checkbutton = {
+			raw_tooltip = "Scale Tool"
+			checked = "[SceneTransform.IsModeSelected( 'scale' )]"
+			onclick = "[SceneTransform.SetMode( 'scale' )]"
+			toolbox_icon = {
+				texture = "gfx/editor_terrain/scale_objects.dds"
+				using = scene_toolbox_icon_size
+			}
+			input_action = "scene_editor_scale_mode"
+		}
+
+
+		editor_toolbar_divider = {
+			margin = { 4 0 }
+		}
+
+		scene_button = {
+			onclick = "[SceneTransform.ToggleGizmoSpace()]"
+			raw_tooltip = "[Select_CString(SceneTransform.IsCurrentGizmoSpaceLocal,'Current transformation mode: local.','Current transformation mode: global.')]"
+			input_action = "scene_editor_toggle_gizmo_space"
+
+			toolbox_icon = {
+				visible = "[Not( SceneTransform.IsCurrentGizmoSpaceLocal )]"
+				texture = "gfx/editor_gui/planet_globe.png"
+				using = scene_toolbox_icon_size
+			}
+
+			toolbox_icon = {
+				visible = "[SceneTransform.IsCurrentGizmoSpaceLocal]"
+				texture = "gfx/editor_gui/3D_cube.dds"
+				using = scene_toolbox_icon_size
+			}
+		}
+
+		scene_button = {
+			blockoverride "button"
+			{
+				onclick = "[SceneTransform.OpenTransformSettings]"
+				raw_tooltip = "Settings for transform manipulation"
+			}
+			blockoverride "icon"
+			{
+				texture = "gfx/scene_editor/transform_settings.dds"
+			}
+		}
+
+		spacer_32 = {}
+
+		scene_button = {
+			blockoverride "button"
+			{
+				raw_tooltip = "Align Selected Objects With Viewport Camera"
+				onclick = "[SceneEditor.OnAlignSelectedObjectsWithViewportClick]"
+				enabled = "[SceneSelection.HasSelection]"
+				input_action = "scene_editor_align_objects_with_viewport_camera"
+			}
+			blockoverride "icon"
+			{
+				texture = "gfx/scene_editor/align_selected_with_viewport_camera.dds"
+			}
+		}
+
+		scene_button = {
+			blockoverride "button"
+			{
+				raw_tooltip = "Align Viewport Camera With Selected Object"
+				onclick = "[SceneEditor.OnAlignViewportWithSelectedObjectClick]"
+				enabled = "[SceneSelection.HasSelection]"
+				input_action = "scene_editor_align_viewport_camera_with_object"
+			}
+			blockoverride "icon"
+			{
+				texture = "gfx/scene_editor/align_viewport_camera_with_selected.dds"
+			}
+		}
+
+		spacer_32 = {}
+		
+		scene_button = {
+			raw_tooltip = "Scene Editor Settings"
+			onclick = "[SceneEditor.OnSettingsClick]"
+			toolbox_icon = {
+				texture = "gfx/tools/material/settings.png"
+				using = scene_toolbox_icon_size
+			}
+		}
+		
+		# Spacer
+		widget = {
+			layoutpolicy_horizontal = expanding
+		}
+	}
+
+	hbox = {
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = expanding
+		
+		scene_editor_viewport = {
+			name = "scene_viewport"
+			using = profiler_view
+			using = context_view
+		}
+
+		side_panel = {
+			min_width = @min_hierarchy_panel_width
+		}
+	}
+}

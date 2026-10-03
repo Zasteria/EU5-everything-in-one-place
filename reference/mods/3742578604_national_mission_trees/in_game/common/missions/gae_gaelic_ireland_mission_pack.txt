@@ -1,0 +1,336 @@
+﻿gae_gaelic_ireland_mission_pack = {
+	icon = nmt_gaelic_ireland
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		culture = { this = culture:irish }
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = { always = yes }
+
+	on_start = { set_variable = gae_mission_started }
+	on_completion = { remove_variable = gae_mission_started }
+	on_abort = { remove_variable = gae_mission_started }
+
+	# ===== ROOT =====
+
+	gae_gaelic_resurgence = {
+		icon = sme_frontier_warriors
+		requires = { }
+		enabled = { always = yes }
+		on_completion = {
+			add_country_modifier = { modifier = gae_resurgence_mod years = 20 mode = add }
+		}
+	}
+
+	# ===== A: 氏族の礎 =====
+
+	gae_brehon_law = {
+		icon = crown_rights_laws_advance
+		requires = { gae_gaelic_resurgence }
+		enabled = {
+			estate_satisfaction:nobles_estate >= 0.50
+			estate_satisfaction:clergy_estate >= 0.50
+		}
+		on_completion = {
+			add_country_modifier = { modifier = gae_brehon_mod years = 20 mode = add }
+		}
+	}
+
+	gae_fili_and_bards = {
+		icon = byz_ancient_greek_studies
+		requires = { gae_gaelic_resurgence }
+		enabled = {
+			average_country_literacy >= 10
+		}
+		on_completion = {
+			add_country_modifier = { modifier = gae_bards_mod years = 20 mode = add }
+		}
+	}
+
+	gae_gallowglass_recruitment = {
+		icon = glorious_arms
+		requires = { gae_gaelic_resurgence }
+		enabled = {
+			regular_army_size >= 0.2
+		}
+		on_completion = {
+			add_country_modifier = { modifier = gae_gallowglass_mod years = 20 mode = add }
+		}
+	}
+
+	gae_clan_unification = {
+		icon = noble_society_cologne
+		requires = { gae_gaelic_resurgence }
+		enabled = {
+			any_owned_location = {
+				owner = root
+				count >= 3
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = gae_clan_mod years = 20 mode = add }
+		}
+	}
+
+	gae_lord_of_the_clan = {
+		icon = noble_officers
+		requires = { gae_brehon_law gae_fili_and_bards gae_gallowglass_recruitment gae_clan_unification }
+		enabled = {
+			any_owned_location = {
+				count >= 3
+				OR = { owner = root owner = { is_subject_of = root } }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = gae_lord_clan_mod years = 30 mode = add }
+		}
+	}
+
+	# ===== B: ゲール人の巻き返し =====
+
+	gae_rout_the_settlers = {
+		icon = chg_border_wars
+		requires = { gae_lord_of_the_clan }
+		enabled = {
+			any_current_war = {
+				OR = { attacker_leader = root defender_leader = root }
+				any_war_participant = {
+					NOT = { this = root }
+					culture = culture:english
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = gae_rout_settlers_mod years = 20 mode = add }
+		}
+	}
+
+	gae_ostmen_towns = {
+		icon = nav_people_of_the_sea
+		requires = { gae_lord_of_the_clan }
+		enabled = {
+			any_owned_location = {
+				owner = root
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+				count >= 3
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = gae_ostmen_mod years = 20 mode = add }
+		}
+	}
+
+	gae_resurgence_triumphant = {
+		icon = chg_glory_of_conquest
+		requires = { gae_rout_the_settlers gae_ostmen_towns }
+		enabled = {
+			OR = {
+				c:PLE = { monthly_income_trade_and_tax <= root.monthly_income_trade_and_tax }
+				NOT = { country_exists = c:PLE }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = gae_triumphant_mod years = 30 mode = add }
+		}
+	}
+
+	# ===== C: ゲール人アイルランドの統一 =====
+
+	gae_ulster_hegemony = {
+		icon = sme_atabegs_of_samtskhe
+		requires = { gae_lord_of_the_clan }
+		enabled = {
+			any_owned_location = {
+				area = area:ulster_area
+				OR = { owner = root owner = { is_subject_of = root } }
+				count >= 15
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = gae_ulster_mod years = 20 mode = add }
+		}
+	}
+
+	gae_connaught_hegemony = {
+		icon = geo_georgian_highlands
+		requires = { gae_lord_of_the_clan }
+		enabled = {
+			any_owned_location = {
+				area = area:connaught_area
+				OR = { owner = root owner = { is_subject_of = root } }
+				count >= 12
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = gae_connaught_hegemony_mod years = 20 mode = add }
+		}
+	}
+
+	gae_munster_hegemony = {
+		icon = settle_the_frontier_advance
+		requires = { gae_lord_of_the_clan }
+		enabled = {
+			any_owned_location = {
+				area = area:munster_area
+				OR = { owner = root owner = { is_subject_of = root } }
+				count >= 18
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = gae_munster_mod years = 20 mode = add }
+		}
+	}
+
+	gae_leinster_hegemony = {
+		icon = nav_navarrese_defense_force
+		requires = { gae_lord_of_the_clan }
+		enabled = {
+			any_owned_location = {
+				area = area:leinster_area
+				OR = { owner = root owner = { is_subject_of = root } }
+				count >= 16
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = gae_leinster_mod years = 20 mode = add }
+		}
+	}
+
+	gae_high_king_of_ireland = {
+		icon = legacy_of_great_empires
+		requires = { gae_ulster_hegemony gae_connaught_hegemony gae_munster_hegemony gae_leinster_hegemony }
+		enabled = {
+			num_locations >= 60
+		}
+		on_completion = {
+			trigger_event_non_silently = gae_events.1
+		}
+	}
+
+	# ===== D: ペイルの駆逐 =====
+
+	gae_conquer_the_pale = {
+		icon = war_bonfires
+		requires = { gae_resurgence_triumphant gae_high_king_of_ireland }
+		enabled = {
+			OR = {
+				NOT = { country_exists = c:PLE }
+				c:PLE = { is_subject_of = root }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = gae_conquer_pale_mod years = 20 mode = add }
+		}
+	}
+
+	gae_expel_the_english = {
+		icon = liberty_egalite_fraternity
+		requires = { gae_conquer_the_pale }
+		enabled = {
+			NOT = {
+				any_owned_location = {
+					region = region:ireland_region
+					owner = c:ENG
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = gae_expel_english_mod years = 20 mode = add }
+		}
+	}
+
+	gae_master_of_the_emerald_isle = {
+		icon = imperial_ambitions
+		requires = { gae_expel_the_english }
+		enabled = {
+			tag = c:IRE
+		}
+		on_completion = {
+			trigger_event_non_silently = gae_events.2
+			area:wales_area = {
+				every_location_in_area = {
+					limit = { NOT = { owner = root } }
+					save_scope_as = temp_location
+					root = {
+						add_casus_belli = {
+							target = scope:temp_location.owner
+							type = casus_belli:cb_conquer_province
+							province = scope:temp_location.province
+							years = 20
+						}
+					}
+				}
+			}
+		}
+	}
+
+	# ===== E: イングランド征服 =====
+
+	gae_gaelic_fleet = {
+		icon = nav_fearless_seamen
+		requires = { gae_master_of_the_emerald_isle }
+		enabled = {
+			total_sub_unit_count:navy_heavy_ship >= 1
+		}
+		on_completion = {
+			add_country_modifier = { modifier = gae_fleet_mod years = 20 mode = add }
+		}
+	}
+
+	gae_invade_wales = {
+		icon = nav_memories_reconquista
+		requires = { gae_master_of_the_emerald_isle }
+		enabled = {
+			any_owned_location = {
+				area = area:wales_area
+				OR = { owner = root owner = { is_subject_of = root } }
+				count >= 8
+			}
+		}
+		on_completion = {
+			culture:welsh = {
+				change_cultural_view = {
+					target = root.culture
+					change = 2
+				}
+			}
+		}
+	}
+
+	gae_war_on_england = {
+		icon = crown_power_advance_renaissance
+		requires = { gae_gaelic_fleet gae_invade_wales }
+		enabled = {
+			any_current_war = {
+				OR = { attacker_leader = root defender_leader = root }
+				any_war_participant = { NOT = { this = root } this = c:ENG }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = gae_war_england_mod years = 20 mode = add }
+		}
+	}
+
+	gae_conquest_of_england = {
+		icon = golden_fleece
+		requires = { gae_war_on_england }
+		final = yes
+		enabled = {
+			OR = {
+				NOT = { country_exists = c:ENG }
+				c:ENG = { is_subject_of = root }
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = gae_events.99
+		}
+	}
+}

@@ -1,0 +1,74 @@
+﻿# Automatic parliament pause: hook into the base game pulses.
+# parliament_monthly_pulse only fires while a session is active.
+
+parliament_monthly_pulse = {
+	on_actions = {
+		qol_parliament_session_ending_popup_schedule
+	}
+}
+
+monthly_country_pulse = {
+	on_actions = {
+		qol_parliament_availability_popup_reset
+		qol_parliament_availability_popup_schedule
+	}
+}
+
+# Start the daily poller when a session is active and auto-pause is enabled.
+# Scope: country
+qol_parliament_session_ending_popup_schedule = {
+	trigger = {
+		is_human = yes
+		has_ongoing_parliament_debate = yes
+		NOT = { has_variable = qol_parliament_ending_poller_active }
+		OR = {
+			qol_parliament_mode_always = yes
+			qol_parliament_mode_if_fail = yes
+		}
+	}
+	effect = {
+		remove_variable = qol_parliament_ending_notified
+		set_variable = qol_parliament_ending_poller_active
+	}
+	events = {
+		qol_parliament.2
+	}
+}
+
+# Clear the availability notification when it is no longer applicable.
+# Scope: country
+qol_parliament_availability_popup_reset = {
+	trigger = {
+		has_variable = qol_parliament_availability_notified
+		OR = {
+			NOT = { qol_parliament_availability_enabled_effective = yes }
+			has_parliament = no
+			is_active_parliament = yes
+			months_since_last_parliament_called <= "define:NCountry|PARLIAMENT_COOLDOWN_MONTHS"
+			modifier:parliament_abolished = yes
+		}
+	}
+	effect = {
+		remove_variable = qol_parliament_availability_notified
+	}
+}
+
+# Schedule the hidden poller when a new session can be called and the reminder
+# is active.
+# Scope: country
+qol_parliament_availability_popup_schedule = {
+	trigger = {
+		is_human = yes
+		qol_parliament_availability_enabled_effective = yes
+		has_parliament = yes
+		is_active_parliament = no
+		months_since_last_parliament_called > "define:NCountry|PARLIAMENT_COOLDOWN_MONTHS"
+		NOT = {
+			modifier:parliament_abolished = yes
+		}
+		NOT = { has_variable = qol_parliament_availability_notified }
+	}
+	events = {
+		qol_parliament.4
+	}
+}

@@ -1,0 +1,756 @@
+vbox = {
+	name = "script_profiler"
+
+    minimumsize = { 600 300 }
+
+	spacing = 2
+
+	layoutpolicy_horizontal = preferred
+	layoutpolicy_vertical = expanding
+
+    hbox = {
+        size = { 0 24 }
+
+        layoutpolicy_horizontal = expanding
+        layoutpolicy_vertical = fixed
+		spacing = 4
+
+		toolbox_button = {
+			layoutpolicy_horizontal = fixed
+			enabled = "[Not(ScriptProfilerGui.IsCapturing)]"
+			raw_tooltip = "Reset capture data"
+            onclick = "[ScriptProfilerGui.ResetCaptureData]"
+			size = { 20 20 }
+			toolbox_icon = {
+				size = { 22 22 }
+				texture = "gfx/editor_gui/remove.dds"
+			}
+		}
+		
+		toolbox_button = {
+			layoutpolicy_horizontal = fixed
+			enabled = "[Not(ScriptProfilerGui.IsCapturing)]"
+			raw_tooltip = "Start capture"
+            onclick = "[ScriptProfilerGui.StartCapture]"
+			size = { 20 20 }
+			toolbox_icon = {
+				size = { 22 22 }
+				texture = "gfx/tools/script_profiler/play.png"
+			}
+		}
+		
+		toolbox_button = {
+			layoutpolicy_horizontal = fixed
+			enabled = "[ScriptProfilerGui.IsCapturing]"
+			raw_tooltip = "Stop capture"
+            onclick = "[ScriptProfilerGui.StopCapture]"
+			size = { 20 20 }
+			toolbox_icon = {
+				size = { 22 22 }
+				texture = "gfx/tools/script_profiler/pause.png"
+			}
+		}
+		
+		toolbox_button = {
+			layoutpolicy_horizontal = fixed
+			enabled = "[ScriptProfilerGui.IsCapturing]"
+			raw_tooltip = "Restart capture"
+            onclick = "[ScriptProfilerGui.RestartCapture]"
+			size = { 20 20 }
+			toolbox_icon = {
+				size = { 22 22 }
+				texture = "gfx/tools/script_profiler/reset.png"
+			}
+		}
+		
+        editor_textbox = {
+            using = tools_label
+            layoutpolicy_horizontal = fixed
+            layoutpolicy_vertical = fixed
+            raw_text = "Capture length:"
+            autoresize = yes
+        }
+		
+        editor_textbox = {
+            using = tools_label
+            layoutpolicy_horizontal = preferred
+            layoutpolicy_vertical = fixed
+            raw_text = "[ScriptProfilerGui.GetCaptureTime|1] s"
+            autoresize = yes
+        }
+		
+        editor_textbox = {
+            using = tools_label
+            layoutpolicy_horizontal = fixed
+            layoutpolicy_vertical = fixed
+            raw_text = "Captured frames:"
+            autoresize = yes
+        }
+		
+        editor_textbox = {
+            using = tools_label
+            layoutpolicy_horizontal = preferred
+            layoutpolicy_vertical = fixed
+            text = "[ScriptProfilerGui.GetCapturedFrames]"
+            autoresize = yes
+        }
+		
+        editor_textbox = {
+            using = tools_label
+            layoutpolicy_horizontal = fixed
+            layoutpolicy_vertical = fixed
+            raw_text = "Captured ticks:"
+            autoresize = yes
+        }
+		
+        editor_textbox = {
+            using = tools_label
+            layoutpolicy_horizontal = preferred
+            layoutpolicy_vertical = fixed
+            text = "[ScriptProfilerGui.GetCapturedTicks]"
+            autoresize = yes
+        }
+		
+        editor_textbox = {
+            using = tools_label
+            layoutpolicy_horizontal = fixed
+            layoutpolicy_vertical = fixed
+            raw_text = "Captured samples:"
+            autoresize = yes
+        }
+		
+        editor_textbox = {
+            using = tools_label
+            layoutpolicy_horizontal = preferred
+            layoutpolicy_vertical = fixed
+			visible = "[Not(ScriptProfilerGui.IsCapturing)]"
+            text = "[ScriptProfilerGui.GetCapturedSamples]"
+            autoresize = yes
+        }
+		
+        editor_textbox = {
+            using = tools_label
+            layoutpolicy_horizontal = preferred
+            layoutpolicy_vertical = fixed
+			visible = "[ScriptProfilerGui.IsCapturing]"
+            raw_text = "---"
+            autoresize = yes
+        }
+	}
+	
+    hbox = {
+        size = { 0 24 }
+
+        layoutpolicy_horizontal = expanding
+        layoutpolicy_vertical = fixed
+		spacing = 4
+		
+        editor_textbox = {
+            using = tools_label
+            layoutpolicy_horizontal = fixed
+            layoutpolicy_vertical = fixed
+            raw_text = "Show:"
+            autoresize = yes
+        }
+
+		custom_property_searchlist = {
+			minimumsize = { 200 0 }
+		
+			datacontext = "[ScriptProfilerGui.GetModeSearchList]"
+		}
+		
+        editor_textbox = {
+            using = tools_label
+            layoutpolicy_horizontal = fixed
+            layoutpolicy_vertical = fixed
+            raw_text = "File:"
+            autoresize = yes
+			margin_left = 4
+        }
+		
+		hbox = {
+			toolbox_button = {
+				layoutpolicy_horizontal = fixed
+				enabled = "[ScriptProfilerGui.HasPreviousFile]"
+				tooltip = "[ScriptProfilerGui.GetPreviousFile]"
+				onclick = "[ScriptProfilerGui.OpenPreviousFile]"
+				size = { 20 20 }
+				toolbox_icon = {
+					size = { 22 22 }
+					texture = "gfx/editor_gui/attach_arrow_left.png"
+				}
+			}
+
+			toolbox_button = {
+				layoutpolicy_horizontal = fixed
+				enabled = "[ScriptProfilerGui.HasNextFile]"
+				tooltip = "[ScriptProfilerGui.GetNextFile]"
+				onclick = "[ScriptProfilerGui.OpenNextFile]"
+				size = { 20 20 }
+				toolbox_icon = {
+					size = { 22 22 }
+					texture = "gfx/editor_gui/attach_arrow_right.png"
+				}
+			}
+		}
+
+		custom_property_searchlist = {
+            layoutpolicy_horizontal = expanding
+			
+			datacontext = "[ScriptProfilerGui.GetFileSearchList]"
+		}
+		
+		toolbox_button = {
+			layoutpolicy_horizontal = fixed
+			raw_tooltip = "Open in script editor"
+            onclick = "[ScriptProfilerGui.OpenFileInScriptEditor]"
+			size = { 20 20 }
+			toolbox_icon = {
+				size = { 22 22 }
+				texture = "gfx/tools/script_profiler/script_document.png"
+			}
+		}
+
+		toolbox_button = {
+			layoutpolicy_horizontal = fixed
+			raw_tooltip = "Open in code editor"
+            onclick = "[ScriptProfilerGui.OpenFileInCodeEditor]"
+			size = { 20 20 }
+			toolbox_icon = {
+				size = { 22 22 }
+				texture = "gfx/tools/script_profiler/code_document.png"
+			}
+		}
+    }
+
+
+	scrollarea = {
+		scrollbarpolicy_vertical = as_needed
+		scrollbarpolicy_horizontal = as_needed
+
+		size = { 0 50 }
+		layoutpolicy_vertical = expanding
+		layoutpolicy_horizontal = preferred
+
+		autoresizeviewport = yes
+
+		viewportwidget = {
+			widget = {
+				scissor = yes
+			}
+		}
+		
+		scrollbar_vertical = {
+			using = editor_vertical_scrollbar
+		}
+		
+		scrollbar_horizontal = {
+			using = editor_horizontal_scrollbar
+		}
+		
+		scrollwidget = {
+			fixedgridbox = {
+				alwaystransparent = no
+				addcolumn = 100%
+				addrow = 24
+				
+				datamodel = "[ScriptProfilerGui.GetFileLines]"
+				
+				item = {
+					widget = {
+						size = { 100% 24 }
+						
+						hbox = {
+							editor_textbox = {
+								layoutpolicy_horizontal = fixed
+								layoutpolicy_vertical = expanding
+								text = "[ScriptProfilerFileLine.GetLine]"
+								font = "tools_font_mono"
+								size = { 64 0 }
+								align = right
+								margin_right = 4
+							}
+							
+							widget = {
+								layoutpolicy_horizontal = fixed
+								layoutpolicy_vertical = expanding
+								size = { 96 0 }
+								
+								editor_textbox = {
+									visible = "[ScriptProfilerFileLine.HasSamples]"
+									text = "[ScriptProfilerFileLine.GetFormattedBottleneckTiming]"
+									size = { 100% 100% }
+									align = right
+									margin_right = 4
+									raw_tooltip = "Bottleneck time (worst thread)"
+								}
+							}
+
+							widget = {
+								layoutpolicy_horizontal = fixed
+								layoutpolicy_vertical = expanding
+								size = { 96 0 }
+
+								editor_textbox = {
+									visible = "[ScriptProfilerFileLine.HasSamples]"
+									text = "[ScriptProfilerFileLine.GetFormattedTiming]"
+									size = { 100% 100% }
+									align = right
+									margin_right = 4
+									raw_tooltip = "Total time (sum all threads)"
+								}
+							}
+							
+							widget = {
+								layoutpolicy_horizontal = fixed
+								layoutpolicy_vertical = expanding
+								size = { 24 0 }
+								
+								toolbox_button = {
+									parentanchor = bottom|left
+									layoutpolicy_horizontal = fixed
+									visible = "[ScriptProfilerFileLine.HasSamples]"
+									raw_tooltip = "Show in call graph"
+									onclick = "[ScriptProfilerFileLine.Select]"
+									size = { 20 20 }
+									toolbox_icon = {
+										size = { 22 22 }
+										texture = "gfx/editor_gui/attach_arrow_down.png"
+									}
+								}
+							}
+				
+							widget = {
+								layoutpolicy_horizontal = fixed
+								layoutpolicy_vertical = expanding
+								size = { 24 0 }
+								
+								toolbox_button = {
+									parentanchor = bottom|left
+									layoutpolicy_horizontal = fixed
+									visible = "[ScriptProfilerFileLine.HasSamples]"
+									raw_tooltip = "Open in script editor"
+									onclick = "[ScriptProfilerFileLine.OpenInScriptEditor]"
+									size = { 20 20 }
+									toolbox_icon = {
+										size = { 22 22 }
+										texture = "gfx/tools/script_profiler/script_document.png"
+									}
+								}
+							}
+							
+							widget = {
+								layoutpolicy_horizontal = fixed
+								layoutpolicy_vertical = expanding
+								size = { 24 0 }
+								
+								toolbox_button = {
+									parentanchor = bottom|left
+									layoutpolicy_horizontal = fixed
+									visible = "[ScriptProfilerFileLine.HasSamples]"
+									raw_tooltip = "Open in code editor"
+									onclick = "[ScriptProfilerFileLine.OpenInCodeEditor]"
+									size = { 20 20 }
+									toolbox_icon = {
+										size = { 22 22 }
+										texture = "gfx/tools/script_profiler/code_document.png"
+									}
+								}
+							}
+							
+							editor_textbox = {
+								layoutpolicy_horizontal = expanding
+								layoutpolicy_vertical = fixed
+								text = "[ScriptProfilerFileLine.GetText]"
+								font = "tools_font_mono"
+								autoresize = yes
+								margin_right = 4
+								tooltip = "[ScriptProfilerFileLine.GetTooltip]"
+								tooltipwidget = {
+									using = dockable_tooltip
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	hbox = {
+		size = { 0 24 }
+
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = fixed
+		spacing = 4
+
+		editor_textbox = {
+			layoutpolicy_horizontal = preferred
+			raw_text = "Call graph"
+			autoresize = yes
+			margin_right = 4
+		}
+
+		toolbox_button = {
+			layoutpolicy_horizontal = fixed
+			raw_tooltip = "Show roots"
+			onclick = "[ScriptProfilerGui.SelectRoot]"
+			size = { 20 20 }
+			toolbox_icon = {
+				size = { 22 22 }
+				texture = "gfx/editor_gui/attach_arrow_up.png"
+			}
+		}
+
+		toolbox_button = {
+			layoutpolicy_horizontal = fixed
+			raw_tooltip = "Show edges"
+			onclick = "[ScriptProfilerGui.SelectEdge]"
+			size = { 20 20 }
+			toolbox_icon = {
+				size = { 22 22 }
+				texture = "gfx/editor_gui/attach_arrow_down.png"
+			}
+		}
+		
+		widget = {
+			layoutpolicy_horizontal = expanding
+		}
+	}
+	
+	hbox = {
+		minimumsize = { 0 150 }
+		layoutpolicy_vertical = fixed
+		layoutpolicy_horizontal = expanding
+	
+		editor_frame = {
+			using = tools_spacing
+			
+			minimumsize = { 125 0 }
+			layoutpolicy_vertical = expanding
+			layoutpolicy_horizontal = preferred
+
+			blockoverride "label" { raw_text = "Callers" }
+			blockoverride "content" {
+				scrollarea = {
+					scrollbarpolicy_vertical = as_needed
+					scrollbarpolicy_horizontal = as_needed
+
+					size = { 0 50 }
+					minimumsize = { 125 0 }
+					layoutpolicy_vertical = expanding
+					layoutpolicy_horizontal = preferred
+
+					autoresizeviewport = yes
+
+					viewportwidget = {
+						widget = {
+							scissor = yes
+						}
+					}
+					
+					scrollbar_vertical = {
+						using = editor_vertical_scrollbar
+					}
+					
+					scrollbar_horizontal = {
+						using = editor_horizontal_scrollbar
+					}
+					
+					scrollwidget = {
+						fixedgridbox = {
+							alwaystransparent = no
+							addcolumn = 100%
+							addrow = 24
+							
+							datamodel = "[ScriptProfilerGui.GetCurrentEntryParents]"
+							
+							item = {
+								button = {
+									size = { 100% 24 }
+									onclick = "[ScriptProfilerEntry.Select]"
+									
+									hbox = {
+										editor_textbox = {
+											layoutpolicy_horizontal = expanding
+											layoutpolicy_vertical = fixed
+											text = "[ScriptProfilerEntry.GetShortDescription]"
+											autoresize = yes
+											margin_right = 4
+										}
+
+										widget = {
+											layoutpolicy_horizontal = fixed
+											layoutpolicy_vertical = expanding
+											size = { 102 0 }
+
+											editor_textbox = {
+												visible = "[ScriptProfilerEntry.HasSamples]"
+												text = "[ScriptProfilerEntry.GetFormattedBottleneckTiming]"
+												size = { 100% 100% }
+												align = right
+												margin_right = 4
+												raw_tooltip = "Bottleneck time (worst thread)"
+											}
+										}
+										
+										widget = {
+											layoutpolicy_horizontal = fixed
+											layoutpolicy_vertical = expanding
+											size = { 102 0 }
+											
+											editor_textbox = {
+												visible = "[ScriptProfilerEntry.HasSamples]"
+												text = "[ScriptProfilerEntry.GetFormattedTiming]"
+												size = { 100% 100% }
+												align = right
+												margin_right = 4
+												raw_tooltip = "Total time (sum all threads)"
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		editor_frame = {
+			using = tools_spacing
+			
+			layoutpolicy_vertical = expanding
+			layoutpolicy_horizontal = preferred
+
+			blockoverride "label" { raw_text = "Current" }
+			blockoverride "content" {
+				vbox = {
+					minimumsize = { 125 0 }
+					layoutpolicy_horizontal = preferred
+					layoutpolicy_vertical = expanding
+					
+					hbox = {
+						size = { 0 24 }
+
+						layoutpolicy_horizontal = expanding
+						layoutpolicy_vertical = fixed
+						spacing = 4
+				
+						editor_textbox = {
+							layoutpolicy_horizontal = preferred
+							text = "[ScriptProfilerGui.GetCurrentEntry.GetShortDescription]"
+							autoresize = yes
+						}
+						
+						widget = {
+							layoutpolicy_horizontal = expanding
+						}
+						
+						toolbox_button = {
+							layoutpolicy_horizontal = fixed
+							raw_tooltip = "Open in profiler file view"
+							visible = "[ScriptProfilerGui.GetCurrentEntry.HasFileLocation]"
+							onclick = "[ScriptProfilerGui.GetCurrentEntry.SelectFile]"
+							size = { 20 20 }
+							toolbox_icon = {
+								size = { 22 22 }
+								texture = "gfx/editor_gui/attach_arrow_up.png"
+							}
+						}
+						
+						toolbox_button = {
+							layoutpolicy_horizontal = fixed
+							raw_tooltip = "Open in script editor"
+							visible = "[ScriptProfilerGui.GetCurrentEntry.HasFileLocation]"
+							onclick = "[ScriptProfilerGui.GetCurrentEntry.OpenInScriptEditor]"
+							size = { 20 20 }
+							toolbox_icon = {
+								size = { 22 22 }
+								texture = "gfx/tools/script_profiler/script_document.png"
+							}
+						}
+
+						toolbox_button = {
+							layoutpolicy_horizontal = fixed
+							raw_tooltip = "Open in code editor"
+							visible = "[ScriptProfilerGui.GetCurrentEntry.HasFileLocation]"
+							onclick = "[ScriptProfilerGui.GetCurrentEntry.OpenInCodeEditor]"
+							size = { 20 20 }
+							toolbox_icon = {
+								size = { 22 22 }
+								texture = "gfx/tools/script_profiler/code_document.png"
+							}
+						}
+					}
+					
+					hbox = {
+						size = { 0 24 }
+
+						layoutpolicy_horizontal = expanding
+						layoutpolicy_vertical = fixed
+						
+						visible = "[ScriptProfilerGui.GetCurrentEntry.HasSamples]"
+				
+						editor_textbox = {
+							layoutpolicy_horizontal = expanding
+							raw_text = "Call count"
+							autoresize = yes
+							margin_right = 4
+						}
+						editor_textbox = {
+							layoutpolicy_horizontal = expanding
+							text = "[ScriptProfilerGui.GetCurrentEntry.GetCallCount]"
+							autoresize = yes
+							margin_right = 4
+						}
+					}
+
+					hbox = {
+						size = { 0 24 }
+
+						layoutpolicy_horizontal = expanding
+						layoutpolicy_vertical = fixed
+
+						visible = "[ScriptProfilerGui.GetCurrentEntry.HasSamples]"
+
+						editor_textbox = {
+							layoutpolicy_horizontal = expanding
+							raw_text = "Bottleneck time"
+							autoresize = yes
+							margin_right = 4
+							raw_tooltip = "Time on the slowest thread"
+						}
+						editor_textbox = {
+							layoutpolicy_horizontal = expanding
+							text = "[ScriptProfilerGui.GetCurrentEntry.GetFormattedBottleneckTiming]"
+							autoresize = yes
+							margin_right = 4
+						}
+					}
+
+					hbox = {
+						size = { 0 24 }
+
+						layoutpolicy_horizontal = expanding
+						layoutpolicy_vertical = fixed
+						
+						visible = "[ScriptProfilerGui.GetCurrentEntry.HasSamples]"
+				
+						editor_textbox = {
+							layoutpolicy_horizontal = expanding
+							raw_text = "Total time           "
+							autoresize = yes
+							margin_right = 4
+							raw_tooltip = "Sum of time across all threads"
+						}
+						editor_textbox = {
+							layoutpolicy_horizontal = expanding
+							text = "[ScriptProfilerGui.GetCurrentEntry.GetFormattedTiming]"
+							autoresize = yes
+							margin_right = 4
+						}
+					}
+						
+					widget = {
+						layoutpolicy_vertical = expanding
+					}
+				}
+			}
+		}
+		
+		editor_frame = {
+			using = tools_spacing
+			
+			minimumsize = { 125 0 }
+			layoutpolicy_vertical = expanding
+			layoutpolicy_horizontal = preferred
+
+			blockoverride "label" { raw_text = "Callees" }
+			blockoverride "content" {
+				scrollarea = {
+					scrollbarpolicy_vertical = as_needed
+					scrollbarpolicy_horizontal = as_needed
+
+					size = { 0 50 }
+					minimumsize = { 125 0 }
+					layoutpolicy_vertical = expanding
+					layoutpolicy_horizontal = preferred
+
+					autoresizeviewport = yes
+
+					viewportwidget = {
+						widget = {
+							scissor = yes
+						}
+					}
+					
+					scrollbar_vertical = {
+						using = editor_vertical_scrollbar
+					}
+					
+					scrollbar_horizontal = {
+						using = editor_horizontal_scrollbar
+					}
+					
+					scrollwidget = {
+						fixedgridbox = {
+							alwaystransparent = no
+							addcolumn = 100%
+							addrow = 24
+							
+							datamodel = "[ScriptProfilerGui.GetCurrentEntryChildren]"
+							
+							item = {
+								button = {
+									size = { 100% 24 }
+									onclick = "[ScriptProfilerEntry.Select]"
+									
+									hbox = {
+										editor_textbox = {
+											layoutpolicy_horizontal = expanding
+											layoutpolicy_vertical = fixed
+											text = "[ScriptProfilerEntry.GetShortDescription]"
+											autoresize = yes
+											margin_right = 4
+										}
+
+										widget = {
+											layoutpolicy_horizontal = fixed
+											layoutpolicy_vertical = expanding
+											size = { 102 0 }
+
+											editor_textbox = {
+												visible = "[ScriptProfilerEntry.HasSamples]"
+												text = "[ScriptProfilerEntry.GetFormattedBottleneckTiming]"
+												size = { 100% 100% }
+												align = right
+												margin_right = 4
+												raw_tooltip = "Bottleneck time (worst thread)"
+											}
+										}
+										
+										widget = {
+											layoutpolicy_horizontal = fixed
+											layoutpolicy_vertical = expanding
+											size = { 102 0 }
+											
+											editor_textbox = {
+												visible = "[ScriptProfilerEntry.HasSamples]"
+												text = "[ScriptProfilerEntry.GetFormattedTiming]"
+												size = { 100% 100% }
+												align = right
+												margin_right = 4
+												raw_tooltip = "Total time (sum all threads)"
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,282 @@
+template EditorSettingsButtonStyle
+{
+	block "settings_button_style"
+	{
+		texture = "gfx/editor_gui/editor_button.dds"
+		gfxtype = framedbuttongfx
+		spriteType = CorneredStretched
+		spriteborder = { 4 4 }
+		effectname = "NoHighlight"
+		framesize = { 16 16 }
+		upframe = 1
+		downframe = 2
+		overframe = 3
+		disableframe = 4
+		intersectionmask = yes
+	}
+}
+
+template EditorSettingsButtonTextStyle
+{
+	block "settings_button_text_style"
+	{
+		parentanchor = vcenter|hcenter
+		font = "standard_cw_font"
+		fontsize = 15
+		fontcolor = { 0.86 0.86 0.73 1 }
+		autoresize = yes
+		position = { 0 0 }
+		align = left
+	}
+}
+
+types EditorSettings
+{
+	type editor_settings_save_button = button {
+		using = EditorSettingsButtonStyle
+		align = center
+		margin = { 15 5 }
+		block "settings_save_button" {}
+
+		buttonText = {
+			textbox = {
+				using = EditorSettingsButtonTextStyle
+				parentanchor = vcenter|hcenter
+				resizeparent = yes
+				block "settings_save_button_text" {}
+			}
+		}
+	}
+
+	type editor_setting_page_button = button {
+		text = "[EditorSettingsPage.GetName]"
+		size = { 150 30 }
+		using = EditorSettingsButtonStyle
+		align = left
+		onclick = "[EditorSettingsPage.OnClick]"
+		upframe = "[Select_int32(EditorSettingsPage.IsSelected,'(int32)2','(int32)1')]"
+		block "editor_setting_page_button" {}
+
+		buttonText = {
+			textbox = {
+				using = EditorSettingsButtonTextStyle
+				parentanchor = vcenter|left
+				position = { 5 0 }
+				fontcolor = { 1 1 1 1 }
+				block "editor_setting_page_button_text" {}
+			}
+		}
+	}
+
+	type editor_settings_property_view = tools_properties_dialog {
+		margin = { 5 5 }
+		spacing = 8
+		size = { 450 24 }
+		minimumsize = { 450 24 }
+		name = "editor_settings_view" 
+	}
+
+	type editor_settings_window = window {
+		using = editor_window
+		name = "editor_settings_window"
+		position = { 300 100 }
+		size = { 630 500 }
+		minimumsize = { 630 500 }
+		resizable = yes
+
+		editor_textbox = {
+			position = { 10 3 }
+			size = { 450 22 }
+			text = "[EditorSettingsWindow.GetWindowName]"
+		}
+
+		editor_button = {
+			name = "close"
+			position = { -5 5 }
+			size = { 20 20 }
+			fontcolor = { 1 1 1 1 }
+			parentanchor = top|right
+			raw_text = "x"
+			align = center|nobaseline
+			shortcut = "close_window"
+			onclick = [EditorSettingsWindow.Close]
+		}
+
+		vbox = {
+			alwaystransparent = yes
+			widget = {
+				size = { 0 32 }
+				layoutpolicy_horizontal = Fixed
+			}
+
+			hbox = {
+				layoutpolicy_horizontal = Preferred
+				layoutpolicy_vertical = Preferred
+
+				widget = {
+					size = { 10 0 }
+					layoutpolicy_horizontal = Fixed
+				}
+
+
+				scrollarea = {
+					alwaystransparent = yes
+					layoutpolicy_horizontal = fixed
+					layoutpolicy_vertical = expanding
+					focuspolicy = all
+					minimumsize = { 150 200 }
+					scrollbaralign_vertical = left
+					autoresizeviewport = yes
+					autoresizescrollarea = yes
+
+					background = {
+						margin = { 2 2 }
+						margin_bottom = 6
+						margin_right = 6
+						texture = "gfx/editor_gui/editor_dropdown_list.dds"
+						spriteType = CorneredStretched
+						spriteborder = { 6 6 }
+						spriteborder_right = 8
+						spriteborder_bottom = 8
+						shaderfile = "gfx/FX/pdxgui_default.shader"
+						layoutpolicy_horizontal = expanding
+						layoutpolicy_vertical = expanding
+					}
+
+					viewportwidget = {
+						widget = {
+							scissor = no
+						}
+					}
+
+					scrollwidget = {
+						dynamicgridbox = {
+							flipdirection = no
+							alwaystransparent = no
+							parentanchor = top|left
+							datamodel = [EditorSettingsWindow.AccessPages]
+							item = {
+								editor_setting_page_button = {}
+							}
+						}
+					}
+
+					scrollbar_vertical = {
+						using = editor_vertical_scrollbar
+					}
+
+					scrollbar_horizontal = {
+						using = editor_horizontal_scrollbar
+					}
+				}
+
+				widget = {
+					size = { 10 0 }
+					layoutpolicy_horizontal = fixed
+				}
+
+				scrollarea = {
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = Preferred
+					scrollbarpolicy_vertical = as_needed
+					scrollbarpolicy_horizontal = as_needed
+					scrollbaralign_vertical = right
+					scrollbaralign_horizontal = bottom
+					autoresizeviewport = yes
+
+					background = {
+						margin = { 2 2 }
+						margin_bottom = 6
+						margin_right = 6
+						texture = "gfx/editor_gui/editor_dropdown_list.dds"
+						spriteType = CorneredStretched
+						spriteborder = { 6 6 }
+						spriteborder_right = 8
+						spriteborder_bottom = 8
+						shaderfile = "gfx/FX/pdxgui_default.shader"
+						layoutpolicy_horizontal = expanding
+						layoutpolicy_vertical = expanding
+					}
+
+					scrollwidget = {
+						vbox = {
+							vbox = {
+								name = "editor_settings"
+							}
+							#spacer
+							widget = {
+								layoutpolicy_vertical = expanding
+							}
+						}				
+					}
+
+					scrollbar_vertical = {
+						using = editor_vertical_scrollbar
+					}
+
+					scrollbar_horizontal = {
+						using = editor_horizontal_scrollbar
+					}
+				}
+
+				widget = {
+					size = { 10 0 }
+				}
+			}
+			widget = {
+				size = { 0 10 }
+			}
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				restrictparent_min = yes
+
+				widget = {
+					size = { 400 0 }
+				}
+				
+				editor_settings_save_button = {
+					size = { 20 20 }
+					fontcolor = { 1 1 1 1 }
+					raw_text = "Apply"
+					align = center|nobaseline
+					onclick = [EditorSettingsWindow.OnApply]
+					enabled = [EditorSettingsWindow.AllowApply]
+				}
+
+				widget = {
+					size = { 5 0 }
+				}
+
+				editor_settings_save_button = {
+					size = { 20 20 }
+					fontcolor = { 1 1 1 1 }
+					raw_text = "Discard"
+					align = center|nobaseline
+					onclick = [EditorSettingsWindow.Restore]
+					enabled = [EditorSettingsWindow.HasChanged]
+				}
+
+				widget = {
+					size = { 5 0 }
+				}
+
+				editor_settings_save_button = {
+					fontcolor = { 1 1 1 1 }
+					raw_text = "Ok"
+					align = center|nobaseline
+					onclick = [EditorSettingsWindow.SaveAndClose]
+				}
+
+				widget = {
+					size = { 10 0 }
+					layoutpolicy_horizontal = fixed
+				}
+			}
+
+			widget = {
+				size = { 0 10 }
+				layoutpolicy_vertical = fixed
+			}
+		}
+	}
+}

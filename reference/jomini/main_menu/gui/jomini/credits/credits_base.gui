@@ -1,0 +1,199 @@
+# Credits window
+
+template JominiCreditsWindowBackground {
+	block "background" {
+		shaderfile = "gfx/FX/pdxgui_default.shader"
+		texture = "gfx/editor_gui/editor_window.dds"
+		spriteType = CorneredStretched
+		spriteborder = { 6 6 }
+		spriteborder_top = 30
+		gfxtype = windowgfx
+	}
+}
+
+template JominiCreditsWindowScrollbar {
+	block "scrollbar" {
+		using = editor_vertical_scrollbar
+	}
+}
+
+template JominiCreditsWindowTextbox
+{
+	textbox = {
+		block "textbox" {
+			font = "standard_cw_font"
+			fontsize = 13
+			fontcolor = { 1 1 1 1 }
+			widgetanchor = top|hcenter
+			parentanchor = top|hcenter
+			align = center
+		}
+		autoresize = yes
+		multiline = yes
+		text = "[CreditsWindow.GetCredits]"
+	}	
+}
+
+types CreditsWindow {
+			
+	# Button Style
+	type JominiCredistsViewButton = button {
+		block "buttonstyle" {
+			size = { 100% 40 }
+			texture = "gfx/editor_gui/editor_button.dds"
+			gfxtype = framedbuttongfx
+			spriteType = CorneredStretched
+			spriteborder = { 4 4 }
+			effectname = "NoHighlight"
+			framesize = { 16 16 }
+			upframe = 1
+			downframe = 2
+			overframe = 3
+			disableframe = 4
+			intersectionmask = yes
+		}
+	}
+		
+	type JominiCreditsWindowScrollarea = scrollarea {
+		name = "credits_scroll_area"
+		size = { 100% 100% }
+		scrollbarpolicy_horizontal = always_off
+		
+		scrollbar_vertical = {
+			using = JominiCreditsWindowScrollbar
+		}
+		
+		scrollwidget = {
+			using = JominiCreditsWindowTextbox
+		}
+	}
+
+	type JominiCreditsWindow = widget {
+		name = "JominiCreditsWindow"
+
+		size = { 40% 80% }
+		widgetanchor = vcenter|hcenter
+		parentanchor = vcenter|hcenter
+
+		alwaystransparent = no
+		
+		background = {
+			using = JominiCreditsWindowBackground
+		}
+
+		state = {
+			name = _show
+			next = "auto_scrollbar"
+		}
+
+		state = {
+			name = "auto_scrollbar"
+			delay = 0.5
+			on_finish = "[CreditsWindow.OnTogglePause]"
+		}
+
+		JominiCreditsWindowScrollarea = {}
+
+		JominiCreditsWindowCloseButton = {}
+
+		JominiCreditsWindowSlowerButton = {}
+		
+		JominiCreditsWindowTogglePauseButton = {}
+		
+		JominiCreditsWindowFasterButton = {}		
+	}
+
+	type JominiCreditsWindowCloseButton = JominiCredistsViewButton {
+		block "close_button"
+		{
+			position = { 0 0 }
+			size = { 100 25 }
+			text = "CREDITS_CLOSE"
+			parentanchor = top|right
+			widgetanchor = top|right
+		}
+		name = "close_button"
+		onclick = "[CreditsWindow.OnClose]"
+	}
+
+	type JominiCreditsWindowTogglePauseButton = JominiCredistsViewButton {
+		block "toggle_pause_button"
+		{
+			position = { 0 0 }
+			size = { 100 25 }
+			text = "[SelectLocalization(CreditsWindow.IsPaused,'CREDITS_CONTINUE','CREDITS_PAUSE')]"
+			parentanchor = bottom|hcenter
+			widgetanchor = bottom|hcenter
+		}
+		name = "toggle_pause_button"
+		onclick = "[CreditsWindow.OnTogglePause]"
+	}
+
+	type JominiCreditsWindowSlowerButton = JominiCredistsViewButton {
+		block "slower_button"
+		{
+			position = { -150 0 }
+			size = { 100 25 }
+			text = "CREDITS_SLOWER"
+			parentanchor = bottom|hcenter
+			widgetanchor = bottom|hcenter
+		}
+		name = "slower_button"
+		visible = "[Not(CreditsWindow.IsSlowest)]"
+		onclick = "[CreditsWindow.OnSlower]"
+	}
+
+	type JominiCreditsWindowFasterButton = JominiCredistsViewButton {
+		block "faster_button"
+		{
+			position = { 150 0 }
+			size = { 100 25 }
+			text = "CREDITS_FASTER"
+			parentanchor = bottom|hcenter
+			widgetanchor = bottom|hcenter
+		}
+		name = "faster_button"
+		visible = "[Not(CreditsWindow.IsFastest)]"
+		onclick = "[CreditsWindow.OnFaster]"		
+	}
+}
+
+# Credits frontend view
+
+template JominiCreditsViewBackground {
+	block "background" {
+		shaderfile = "gfx/FX/pdxgui_default.shader"
+		texture = "gfx/editor_gui/editor_window.dds"
+		spriteType = CorneredStretched
+		spriteborder = { 6 6 }
+		spriteborder_top = 30
+		gfxtype = windowgfx
+	}
+}
+
+types FrontEndCreditsView {
+	type JominiFrontEndCreditsView = widget {
+		name = "JominiFrontEndCreditsView"
+		size = { 100% 100% }
+		
+		background = {
+			using = JominiCreditsViewBackground
+		}
+		
+		JominiFrontEndCreditsViewBackButton = {}
+	}
+
+	type JominiFrontEndCreditsViewBackButton = JominiCredistsViewButton {
+		block "back_button"
+		{
+			parentanchor = bottom|hcenter
+			position = { 0 0 }
+			size = { 250 42 }
+			text = "CREDITS_BACK"
+		}
+		
+		name = "back_button"
+		shortcut = "close_window"
+		onclick = "[FrontEndCreditsView.OnBack]"
+	}
+}

@@ -1,0 +1,89 @@
+﻿# GENERATED -- rebuild with tools/gen_rights_goods_table.js --emit-values
+#
+# Returns the matched raw material's share of the recipe, as a fraction, so the card can print an
+# exact number rather than the words "major" / "minor". EU5 shows the player exact figures
+# everywhere else; a marker that says "major input" and nothing more is out of place.
+#
+# root        = a location of the province (the one whose RGO matched)
+# scope:right = the town rights type whose card is being drawn
+#
+# Read from GUI as
+#   [GuiScope.SetRoot(Location.MakeScope).AddScope('right', ...MakeScope).ScriptValue('urqol_input_share')|%0]
+# which is the construct vanilla uses at economy_lateralview.gui:1414.
+#
+# Multiply by the country's raw_material_in_province_impact (+10% base, +2.5% each from Local
+# Storehouses and Improved Storehouses) to get the actual production-efficiency gain.
+
+urqol_input_share = {
+	value = 0
+
+	if = {
+		limit = { scope:right = town_rights_type:royal_tooling_rights }
+		if = { limit = { OR = { raw_material = goods:copper raw_material = goods:iron raw_material = goods:stone } }  value = 1.00 }
+		else_if = { limit = { raw_material = goods:coal }  value = 0.20 }
+	}
+	else_if = {
+		limit = { scope:right = town_rights_type:royal_jewelry_rights }
+		if = { limit = { OR = { raw_material = goods:amber raw_material = goods:copper raw_material = goods:gems raw_material = goods:goods_gold raw_material = goods:ivory raw_material = goods:pearls raw_material = goods:silver } }  value = 1.00 }
+	}
+	else_if = {
+		limit = { scope:right = town_rights_type:royal_naval_rights }
+		if = { limit = { raw_material = goods:lumber }  value = 1.00 }
+		else_if = { limit = { raw_material = goods:fiber_crops }  value = 0.38 }
+	}
+	else_if = {
+		limit = { scope:right = town_rights_type:royal_textile_rights }
+		if = { limit = { OR = { raw_material = goods:cotton raw_material = goods:dyes raw_material = goods:fiber_crops raw_material = goods:fur raw_material = goods:lumber raw_material = goods:silk raw_material = goods:wool } }  value = 1.00 }
+	}
+	else_if = {
+		limit = { scope:right = town_rights_type:royal_weaponry_rights }
+		if = { limit = { raw_material = goods:stone }  value = 0.93 }
+		else_if = { limit = { raw_material = goods:iron }  value = 0.90 }
+		else_if = { limit = { raw_material = goods:copper }  value = 0.73 }
+		else_if = { limit = { raw_material = goods:lumber }  value = 0.70 }
+		else_if = { limit = { OR = { raw_material = goods:lead raw_material = goods:saltpeter } }  value = 0.50 }
+		else_if = { limit = { raw_material = goods:coal }  value = 0.29 }
+	}
+	else_if = {
+		limit = { scope:right = town_rights_type:royal_book_rights }
+		if = { limit = { OR = { raw_material = goods:dyes raw_material = goods:fiber_crops raw_material = goods:lumber } }  value = 1.00 }
+	}
+	else_if = {
+		limit = { scope:right = town_rights_type:royal_artisan_rights }
+		if = { limit = { raw_material = goods:clay }  value = 0.88 }
+		else_if = { limit = { raw_material = goods:lumber }  value = 0.82 }
+		else_if = { limit = { raw_material = goods:wild_game }  value = 0.75 }
+		else_if = { limit = { raw_material = goods:livestock }  value = 0.64 }
+		else_if = { limit = { raw_material = goods:sand }  value = 0.28 }
+	}
+	else_if = {
+		limit = { scope:right = town_rights_type:royal_brewing_rights }
+		if = { limit = { raw_material = goods:wine }  value = 1.00 }
+		else_if = { limit = { OR = { raw_material = goods:millet raw_material = goods:potato raw_material = goods:rice raw_material = goods:wheat } }  value = 0.92 }
+		else_if = { limit = { OR = { raw_material = goods:maize raw_material = goods:fruit } }  value = 0.82 }
+		else_if = { limit = { raw_material = goods:sugar }  value = 0.79 }
+		else_if = { limit = { raw_material = goods:beeswax }  value = 0.67 }
+		else_if = { limit = { raw_material = goods:lumber }  value = 0.25 }
+	}
+	else_if = {
+		limit = { scope:right = town_rights_type:royal_masonry_rights }
+		if = { limit = { OR = { raw_material = goods:clay raw_material = goods:sand raw_material = goods:stone } }  value = 1.00 }
+	}
+	else_if = {
+		limit = { scope:right = town_rights_type:scandinavian_tar_privileges }
+		if = { limit = { raw_material = goods:lumber }  value = 1.00 }
+		else_if = { limit = { raw_material = goods:fiber_crops }  value = 0.38 }
+	}
+	else_if = {
+		limit = { scope:right = town_rights_type:flemish_cloth_industries_right }
+		if = { limit = { OR = { raw_material = goods:cotton raw_material = goods:dyes raw_material = goods:fiber_crops raw_material = goods:fur raw_material = goods:silk raw_material = goods:wool } }  value = 1.00 }
+	}
+}
+
+# The production efficiency this input is actually worth: its share of the recipe times
+# the viewer's raw_material_in_province_impact (+10% base, more with the Storehouse
+# advances). This is the same figure the building panel shows as "<Good> R.G.O. in <Province>".
+urqol_input_bonus = {
+	value = urqol_input_share
+	multiply = scope:viewer.modifier:raw_material_in_province_impact
+}

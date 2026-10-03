@@ -1,0 +1,73 @@
+﻿# Auto-vote on papal resolutions for the Catholic Church.
+# Rebuilds the two variable lists used by qol_papal_bulls_auto_vote from the
+# CMF dropdown field "vote" (1 = disabled, 2 = vote yes, 3 = vote no).
+# Scope: country
+qol_papal_bulls_sync_vote_lists = {
+	clear_variable_list = qol_papal_auto_vote_yes
+	clear_variable_list = qol_papal_auto_vote_no
+	cmm_for_each_list_item = {
+		setting = qol__auto_vote
+		effect = qol_papal_bulls_sync_vote_item
+	}
+	cmm_for_each_list_item = {
+		setting = qol__auto_vote_schism
+		effect = qol_papal_bulls_sync_vote_item
+	}
+}
+
+# Per-item: add the resolution to the yes/no list depending on its field value.
+# Called by cmm_for_each_list_item.
+# Scope: country
+# Args: setting (key), i (number)
+qol_papal_bulls_sync_vote_item = {
+	set_local_variable = { name = qol_tmp_pv value = flag:$setting$_i$i$_f1 }
+	if = {
+		limit = { "variable_map(cmm|local_var:qol_tmp_pv)" = 2 }
+		add_to_variable_list = {
+			name = qol_papal_auto_vote_yes
+			target = scope:cmm_list_current_item_value
+		}
+	}
+	else_if = {
+		limit = { "variable_map(cmm|local_var:qol_tmp_pv)" = 3 }
+		add_to_variable_list = {
+			name = qol_papal_auto_vote_no
+			target = scope:cmm_list_current_item_value
+		}
+	}
+}
+
+# Point each list item's name at the vanilla resolution loc key (identical to
+# the papal bull voting menu) and its desc at a custom loc key that lists the
+# playable effects (bonuses) of the bull.
+# Runs every registration (idempotent), after the list and its fields exist.
+# Scope: country
+qol_papal_bulls_setup_item_tooltips = {
+	set_variable = { name = qol__auto_vote_i1_name value = flag:benedictus_deus }
+	set_variable = { name = qol__auto_vote_i1_desc value = flag:qol__auto_vote_benedictus_deus_desc }
+	set_variable = { name = qol__auto_vote_i2_name value = flag:christiana_pietas }
+	set_variable = { name = qol__auto_vote_i2_desc value = flag:qol__auto_vote_christiana_pietas_desc }
+	set_variable = { name = qol__auto_vote_i3_name value = flag:in_coena_domini }
+	set_variable = { name = qol__auto_vote_i3_desc value = flag:qol__auto_vote_in_coena_domini_desc }
+	set_variable = { name = qol__auto_vote_i4_name value = flag:apostolicae_servitutis }
+	set_variable = { name = qol__auto_vote_i4_desc value = flag:qol__auto_vote_apostolicae_servitutis_desc }
+	set_variable = { name = qol__auto_vote_i5_name value = flag:immensa_aeterni_dei }
+	set_variable = { name = qol__auto_vote_i5_desc value = flag:qol__auto_vote_immensa_aeterni_dei_desc }
+	set_variable = { name = qol__auto_vote_i6_name value = flag:inter_gravissimas }
+	set_variable = { name = qol__auto_vote_i6_desc value = flag:qol__auto_vote_inter_gravissimas_desc }
+	set_variable = { name = qol__auto_vote_i7_name value = flag:libertas_ecclesiae }
+	set_variable = { name = qol__auto_vote_i7_desc value = flag:qol__auto_vote_libertas_ecclesiae_desc }
+	set_variable = { name = qol__auto_vote_i8_name value = flag:dei_gratia_rex }
+	set_variable = { name = qol__auto_vote_i8_desc value = flag:qol__auto_vote_dei_gratia_rex_desc }
+	set_variable = { name = qol__auto_vote_i9_name value = flag:illius_qui_se_pro_divini }
+	set_variable = { name = qol__auto_vote_i9_desc value = flag:qol__auto_vote_illius_qui_se_pro_divini_desc }
+	set_variable = { name = qol__auto_vote_i10_name value = flag:excommunicate_resolution }
+	set_variable = { name = qol__auto_vote_i10_desc value = flag:qol__auto_vote_excommunicate_resolution_desc }
+	set_variable = { name = qol__auto_vote_i11_name value = flag:call_crusade }
+	set_variable = { name = qol__auto_vote_i11_desc value = flag:qol__auto_vote_call_crusade_desc }
+	set_variable = { name = qol__auto_vote_schism_i1_name value = flag:qol__auto_vote_schism_western_schism_resolution_name }
+	set_variable = { name = qol__auto_vote_schism_i1_desc value = flag:qol__auto_vote_western_schism_resolution_desc }
+}
+
+# Note: qol_papal_bulls_auto_vote is defined as an on_action block in
+# qol_papal_bulls_on_actions.txt, matching the "Papal bulls auto vote" mod.

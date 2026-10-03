@@ -1,0 +1,541 @@
+types AnalyzerTypes
+{
+	type save_game_analyzer_button = button {
+		texture = "gfx/editor_gui/editor_button.dds"
+		framesize = { 16 16 }
+		gfxtype = framedbuttongfx
+		spriteType = CorneredStretched
+		spriteborder = { 4 4 }
+		effectname = "NoHighlight"
+	}
+
+	type save_game_analyzer_button_flat = save_game_analyzer_button {
+		texture = "gfx/editor_gui/editor_layout_button.png"
+	}
+
+	type save_game_analyzer_checkbutton_flat = checkbutton {
+		texture = "gfx/editor_gui/editor_layout_button.png"
+		framesize = { 16 16 }
+		gfxtype = checkbuttongfx
+		shaderfile = "gfx/FX/pdxgui_pushbutton.shader"
+		spriteType = CorneredStretched
+		spriteborder = { 4 4 }
+	}
+
+	type save_game_analyzer_editbox = editbox {
+		alwaystransparent = no
+
+		margin = { 5 5 }
+		background = {
+			texture = "gfx/editor_gui/editor_field.dds"
+			spriteType = CorneredStretched
+			spriteborder = { 4 4 }
+			shaderfile = "gfx/FX/pdxgui_default.shader"
+		}
+	}
+
+	type save_game_analyzer_checkbutton = container {
+		checkbutton = {
+			texture = "gfx/editor_gui/editor_checkbox.dds"
+			framesize = { 16 16 }
+			gfxtype = checkbuttongfx
+			shaderfile = "gfx/FX/pdxgui_pushbutton.shader"
+			widgetanchor = left|vcenter
+			parentanchor = left|vcenter
+
+			block "checkbutton"
+			{
+			}
+		}
+
+		textbox = {
+			position = { 20 0 }
+			autoresize = yes
+			widgetanchor = left|vcenter
+			parentanchor = left|vcenter
+			align = nobaseline
+
+			block "label"
+			{
+			}
+		}
+	}
+
+	type save_game_analyzer_analysis_view_buttons = flowcontainer {
+		layoutpolicy_horizontal = expanding
+
+		save_game_analyzer_button = {
+			size = { 150 50 }
+			onclick = "[SaveGameAnalyzer.ListSaves]"
+			enabled = "[Not(SaveGameAnalysisView.IsReading)]"
+
+			textbox = {
+				size = { 100% 100% }
+				align = center|nobaseline
+				multiline = yes
+				raw_text = "Load"
+			}
+		}
+	}
+
+	type save_game_analyzer_analysis_view = vbox {
+		layoutpolicy_vertical = expanding
+		layoutpolicy_horizontal = expanding
+
+		textbox = {
+			layoutpolicy_horizontal = expanding
+			minimumsize = { 300 40 }
+			align = left|nobaseline
+			raw_text = "Save Game: [SaveGameAnalysisView.GetSaveGame.GetName]"
+		}
+
+		save_game_analyzer_checkbutton = {
+			layoutpolicy_horizontal = expanding
+			minimumsize = { 300 40 }
+			blockoverride "checkbutton"
+			{
+				onclick = "[SaveGameAnalysisView.ToggleShowHidden]"
+				checked = "[SaveGameAnalysisView.GetShowHidden]"
+			}
+			blockoverride "label"
+			{
+				raw_text = "Show hidden tokens"
+			}
+		}
+
+
+		flowcontainer = {
+			layoutpolicy_horizontal = expanding
+
+			save_game_analyzer_button_flat = {
+				size = { 300 50 }
+				onclick = "[SaveGameAnalysisView.Sort('token_name')]"
+
+				textbox = {
+					size = { 100% 100% }
+					align = center|nobaseline
+					multiline = yes
+					raw_text = "#bold Token Name#!"
+				}
+			}
+
+			save_game_analyzer_button_flat = {
+				size = { 100 50 }
+				onclick = "[SaveGameAnalysisView.Sort('size')]"
+
+				textbox = {
+					size = { 100% 100% }
+					align = center|nobaseline
+					multiline = yes
+					raw_text = "#bold Percentage#!"
+				}
+			}
+
+			save_game_analyzer_button_flat = {
+				size = { 100 50 }
+				onclick = "[SaveGameAnalysisView.Sort('size')]"
+
+				textbox = {
+					size = { 100% 100% }
+					align = center|nobaseline
+					multiline = yes
+					raw_text = "#bold Parent Percentage#!"
+				}
+			}
+
+			save_game_analyzer_button_flat = {
+				size = { 100 50 }
+				onclick = "[SaveGameAnalysisView.Sort('size')]"
+
+				textbox = {
+					size = { 100% 100% }
+					align = center|nobaseline
+					multiline = yes
+					raw_text = "#bold Size#!"
+				}
+			}
+
+			save_game_analyzer_button_flat = {
+				size = { 100 50 }
+				onclick = "[SaveGameAnalysisView.Sort('whitespace_count')]"
+
+				textbox = {
+					size = { 100% 100% }
+					align = center|nobaseline
+					multiline = yes
+					raw_text = "#bold Whitespace Size#!"
+				}
+			}
+
+			save_game_analyzer_button_flat = {
+				size = { 100 50 }
+				onclick = "[SaveGameAnalysisView.Sort('whitespace_ratio')]"
+
+				textbox = {
+					size = { 100% 100% }
+					align = center|nobaseline
+					multiline = yes
+					raw_text = "#bold Whitespace Ratio#!"
+				}
+			}
+
+			save_game_analyzer_button_flat = {
+				size = { 100 50 }
+				onclick = "[SaveGameAnalysisView.Sort('other_paths')]"
+
+				textbox = {
+					size = { 100% 100% }
+					align = center|nobaseline
+					multiline = yes
+					raw_text = "#bold Other Paths#!"
+				}
+			}
+
+			widget = {
+				size = { 40 50 }
+				# so that the default window size has room for the config button
+				# and that the scroll bar does not cover anything
+			}
+
+		}
+
+		textbox = {
+			layoutpolicy_horizontal = expanding
+			minimumsize = { 300 40 }
+			align = left|nobaseline
+			raw_text = "Analyzing save. Progress: [SaveGameAnalysisView.GetProgress|2%]"
+			visible = "[SaveGameAnalysisView.IsReading]"
+		}
+
+		textbox = {
+			layoutpolicy_horizontal = expanding
+			minimumsize = { 300 40 }
+			align = left|nobaseline
+			raw_text = "No save game loaded.."
+			visible = "[And(Not(SaveGameAnalysisView.IsReading), SaveGameAnalysisView.IsEmpty)]"
+		}
+
+		scrollarea = {
+			layoutpolicy_vertical = expanding
+			layoutpolicy_horizontal = expanding
+
+			scrollbarpolicy_horizontal = always_off
+			scrollbar_vertical = {
+				using = editor_vertical_scrollbar
+			}
+
+			scrollwidget = {
+				tree = {
+					size = { 100% 100% }
+					name = "block_tree"
+					indent = 18
+
+					expandButton = {
+						checkbutton = {
+							size = { 20 20 }
+							texture = "gfx/editor_gui/editor_tree_expand.dds"
+							framesize = { 16 16 }
+							gfxtype = checkbuttongfx
+						}
+					}
+
+					item = {
+						tree_item_outline = {
+							size = { 920 20 }
+							upframe = 1
+							downframe = 2
+							overframe = 2
+							tree_item_indentation = {
+								flowcontainer = {
+									tooltip = "[SaveGameAnalysisView.GetNote(SaveGameBlockData.Self)]"
+
+									textbox = {
+										name = "title"
+										size = { 300 20 }
+										align = left|nobaseline
+										elide = right
+										text = "[SaveGameBlockData.GetTitle]"
+									}
+
+									textbox = {
+										size = { 100 20 }
+										align = right|nobaseline
+										text = "[SaveGameBlockData.GetPercentage|%]"
+										margin = { 10 0 }
+									}
+
+									textbox = {
+										size = { 100 20 }
+										align = right|nobaseline
+										text = "[SaveGameBlockData.GetParentPercentage|%]"
+										margin = { 10 0 }
+									}
+
+									textbox = {
+										size = { 100 20 }
+										align = right|nobaseline
+										text = "[SaveGameBlockData.GetCharCount|D]"
+										margin = { 10 0 }
+									}
+
+									textbox = {
+										size = { 100 20 }
+										align = right|nobaseline
+										text = "[SaveGameBlockData.GetWhitespaceCount|D]"
+										margin = { 10 0 }
+									}
+
+									textbox = {
+										size = { 100 20 }
+										align = right|nobaseline
+										text = "[SaveGameBlockData.GetWhitespaceRatio|%]"
+										margin = { 10 0 }
+									}
+
+									textbox = {
+										size = { 100 20 }
+										align = right|nobaseline
+										text = "[SaveGameBlockData.GetOtherPathsCount]"
+										margin = { 10 0 }
+										tooltip = "[SaveGameBlockData.GetOtherPaths]"
+									}
+
+									save_game_analyzer_button = {
+										size = { 20 20 }
+										onclick = "[SaveGameAnalyzer.EditNotes(SaveGameBlockData.GetTokenName)]"
+
+										raw_text = "..."
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	type save_game_analyzer_list_view_buttons = flowcontainer {
+		layoutpolicy_horizontal = expanding
+
+		save_game_analyzer_button = {
+			size = { 150 50 }
+			onclick = "[SaveGameAnalyzer.LoadSelected]"
+			enabled = "[And(Not(SaveGameListView.IsReading), SaveGameListView.HasSelection)]"
+
+			textbox = {
+				size = { 100% 100% }
+				align = center|nobaseline
+				multiline = yes
+				raw_text = "Load Selected"
+			}
+		}
+
+		save_game_analyzer_button = {
+			size = { 150 50 }
+			onclick = "[SaveGameAnalyzer.CancelLoad]"
+			enabled = "[Not(SaveGameListView.IsReading)]"
+
+			textbox = {
+				size = { 100% 100% }
+				align = center|nobaseline
+				multiline = yes
+				raw_text = "Cancel"
+			}
+		}
+	}
+
+	type save_game_analyzer_list_view = vbox {
+		layoutpolicy_vertical = expanding
+		layoutpolicy_horizontal = expanding
+
+		flowcontainer = {
+			layoutpolicy_horizontal = expanding
+
+			save_game_analyzer_button_flat = {
+				size = { 300 50 }
+				onclick = "[SaveGameListView.Sort('title')]"
+
+				textbox = {
+					size = { 100% 100% }
+					align = center|nobaseline
+					multiline = yes
+					raw_text = "#bold Title#!"
+				}
+			}
+
+			save_game_analyzer_button_flat = {
+				size = { 200 50 }
+				onclick = "[SaveGameListView.Sort('last_modified')]"
+
+				textbox = {
+					size = { 100% 100% }
+					align = center|nobaseline
+					multiline = yes
+					raw_text = "#bold Last Modified#!"
+				}
+			}
+		}
+
+		textbox = {
+			layoutpolicy_horizontal = expanding
+			minimumsize = { 300 40 }
+			align = left|nobaseline
+			raw_text = "Reading saves.."
+			visible = "[SaveGameListView.IsReading]"
+		}
+
+		textbox = {
+			layoutpolicy_horizontal = expanding
+			minimumsize = { 300 40 }
+			align = left|nobaseline
+			raw_text = "No saves found.."
+			visible = "[And(Not(SaveGameListView.IsReading), IsDataModelEmpty(SaveGameListView.AccessSaves))]"
+		}
+
+		scrollarea = {
+			layoutpolicy_vertical = expanding
+			layoutpolicy_horizontal = expanding
+
+			scrollbarpolicy_horizontal = always_off
+			scrollbar_vertical = {
+				using = editor_vertical_scrollbar
+			}
+
+			scrollwidget = {
+				flowcontainer = {
+					direction = vertical
+					datamodel = "[SaveGameListView.AccessSaves]"
+
+					item = {
+						save_game_analyzer_checkbutton_flat = {
+							size = { 500 40 }
+							onclick = "[SaveGameListView.SetSelected(SaveGame.AccessSelf)]"
+							checked = "[SaveGameListView.IsSelected(SaveGame.Self)]"
+
+							flowcontainer = {
+								textbox = {
+									size = { 300 40 }
+									align = left|nobaseline
+									elide = right
+									text = "[SaveGame.GetName]"
+									margin = { 10 0 }
+								}
+
+								textbox = {
+									size = { 200 40 }
+									align = right|nobaseline
+									text = "[SaveGame.GetLastModified]"
+									margin = { 10 0 }
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	type save_game_analyzer_notes_view_buttons = flowcontainer {
+		layoutpolicy_horizontal = expanding
+
+		save_game_analyzer_button = {
+			size = { 150 50 }
+			onclick = "[SaveGameConfigView.Save]"
+			enabled = "[SaveGameConfigView.IsDirty]"
+
+			textbox = {
+				size = { 100% 100% }
+				align = center|nobaseline
+				multiline = yes
+				raw_text = "Save"
+			}
+		}
+
+		save_game_analyzer_button = {
+			size = { 150 50 }
+			onclick = "[SaveGameAnalyzer.CloseNotes]"
+			visible = "[SaveGameConfigView.IsDirty]"
+
+			textbox = {
+				size = { 100% 100% }
+				align = center|nobaseline
+				multiline = yes
+				raw_text = "Discard"
+			}
+		}
+
+		save_game_analyzer_button = {
+			size = { 150 50 }
+			onclick = "[SaveGameAnalyzer.CloseNotes]"
+			visible = "[Not(SaveGameConfigView.IsDirty)]"
+
+			textbox = {
+				size = { 100% 100% }
+				align = center|nobaseline
+				multiline = yes
+				raw_text = "Close"
+			}
+		}
+	}
+
+	type save_game_analyzer_notes_view = vbox {
+		layoutpolicy_vertical = expanding
+		layoutpolicy_horizontal = expanding
+
+		textbox = {
+			layoutpolicy_horizontal = expanding
+			minimumsize = { 300 40 }
+			align = left|nobaseline
+			text = "[SaveGameConfigView.GetTokenName]"
+		}
+
+		save_game_analyzer_editbox = {
+			name = "note"
+			layoutpolicy_vertical = expanding
+			layoutpolicy_horizontal = expanding
+			align = left|top
+			multiline = yes
+		}
+
+		save_game_analyzer_checkbutton = {
+			layoutpolicy_horizontal = expanding
+			minimumsize = { 300 40 }
+			blockoverride "checkbutton"
+			{
+				name = "is_hidden"
+			}
+			blockoverride "label"
+			{
+				raw_text = "Hide this token ( size will be merged to parent )"
+			}
+		}
+	}
+}
+
+vbox = {
+	name = "save_game_analyzer_window"
+	layoutpolicy_vertical = expanding
+	layoutpolicy_horizontal = expanding
+
+	save_game_analyzer_analysis_view_buttons = {
+		visible = "[SaveGameAnalysisView.IsActive]"
+	}
+	save_game_analyzer_list_view_buttons = {
+		visible = "[SaveGameListView.IsActive]"
+	}
+	save_game_analyzer_notes_view_buttons = {
+		visible = "[SaveGameConfigView.IsActive]"
+	}
+
+	save_game_analyzer_analysis_view = {
+		visible = "[SaveGameAnalysisView.IsActive]"
+	}
+	save_game_analyzer_list_view = {
+		visible = "[SaveGameListView.IsActive]"
+	}
+	save_game_analyzer_notes_view = {
+		visible = "[SaveGameConfigView.IsActive]"
+	}
+}
+

@@ -1,0 +1,583 @@
+types MeshImporterTypes {
+	type mesh_importer_log_num_entry = hbox {
+		layoutpolicy_horizontal = preferred
+		icon = {
+			size = { 20 20 }
+			block "icon" {}
+		}
+		editor_textbox = {
+			layoutpolicy_horizontal = expanding
+			autoresize = yes
+			block "text" {}
+		}
+		tooltipwidget = { using = dockable_tooltip }
+	}
+
+	type mesh_importer_material_entry = vbox {
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = expanding
+		spacing = 4
+		widget = {
+			layoutpolicy_horizontal = expanding
+			size = { 0 25 }
+			hbox = {
+				layoutpolicy_horizontal = expanding
+
+				flowcontainer = {
+					layoutpolicy_horizontal = expanding
+					direction = horizontal
+					margin_left = 4
+					margin_top = 2
+					spacing = 4
+					editor_textbox = {
+						raw_text = "#BOLD;COLOR:{0.4,0.6,0.4} [MeshImporterMaterialEntry.GetName] #! >> #BOLD;COLOR:{0.4,0.4,0.6} [MeshImporterMaterialEntry.GetNumberGeometriesUsingMaterial()] meshes: #!"
+						autoresize = yes
+						fontsize = 15
+						tooltipwidget = { using = dockable_tooltip }
+						raw_tooltip = "This material is used by [MeshImporterMaterialEntry.GetNumberGeometriesUsingMaterial()] meshes."
+					}
+					icon = {
+						size = { 20 20 }
+						texture = "gfx/tools/material/info_icon.png"
+						tooltipwidget = { using = dockable_tooltip }
+						raw_tooltip = "[MeshImporterMaterialEntry.GetDetailsDescription]"
+					}
+				}
+
+				widget = { layoutpolicy_horizontal = expanding }
+
+				dockable_togglebutton = {
+					raw_text = "Collision"
+					size = { 100 25 }
+					checked = "[MeshImporterMaterialEntry.IsCollision]"
+					onclick = "[MeshImporterMaterialEntry.ToggleCollision]"
+					raw_tooltip = "Marking this material as a collision will not render its geometry and instead will be used as a collision mesh."
+				}
+			}
+		}
+		vbox = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+			spacing = 2
+			state = {
+				name = "init_list"
+				trigger_on_create = yes
+				on_start = "[MeshImporterMaterialEntry.InjectPropertyList(PdxGuiWidget.AccessSelf, MeshImporter.IsTargetMesh2, 'dialog_grid_property')]"
+			}
+			state = {
+				name = "mesh_type_changed"
+				trigger_when = "[MeshImporter.IsTargetMesh2]"
+				on_start = "[MeshImporterMaterialEntry.InjectPropertyList(PdxGuiWidget.AccessSelf, '(bool)yes', 'dialog_grid_property')]"
+			}
+			state = {
+				name = "mesh_type_changed_to_mesh1"
+				trigger_when = "[Not(MeshImporter.IsTargetMesh2)]"
+				on_start = "[MeshImporterMaterialEntry.InjectPropertyList(PdxGuiWidget.AccessSelf, '(bool)no', 'dialog_grid_property')]"
+			}
+		}
+		icon = { # TODO: This is defined in horizontal_separator = {} in entity_editor. Let's move these into a general place.
+			alpha = 0.3
+			texture = "gfx/editor_gui/separator.dds"
+			size = { 0 3 }
+			layoutpolicy_horizontal = expanding
+		}
+	}
+
+	type mesh_importer_browser_entry = hbox {
+		layoutpolicy_horizontal = expanding
+		margin_right = 16
+		dockable_togglebutton = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = fixed
+			size = { 0 20 }
+			checked = "[MeshImporterBrowserEntry.IsSelected]"
+			onclick = "[MeshImporterBrowserEntry.ToggleSelect]"
+			raw_text = "[Select_CString(MeshImporterBrowserEntry.IsSettingsDiskFileExist, '', '#italic;color:{0.7,0.7,0.7}')] [MeshImporterBrowserEntry.GetFileName] [Select_CString(MeshImporterBrowserEntry.IsSettingsDifferentThanDiskFile, '*', '')] #!"
+			raw_tooltip = "[MeshImporterBrowserEntry.GetFileDescription]"
+			align = left
+			margin_left = 6
+		}
+		dockable_button = {
+			size = { 20 20 }
+			block "arrow_btn_visibility" {}
+			onclick = "[MeshImporterBrowserEntry.ToggleQueue]"
+			icon = {
+				size = { 18 18 }
+				block "arrow_btn_texture" {}
+				parentanchor = hcenter|vcenter
+			}
+		}
+	}
+
+	type topbar_aligned_container = widget {
+		size = { 175 30 }
+		hbox = {
+			layoutpolicy_vertical = expanding
+			layoutpolicy_horizontal = expanding
+			block "body" {}
+		}
+	}
+}
+
+vbox= {
+	name = "tools_mesh_importer" # Used in code; don't change without also updating cpp-side.
+
+	layoutpolicy_vertical = expanding
+	layoutpolicy_horizontal = expanding
+	spacing = 8
+	
+	input_context = "mesh_importer"
+
+	# Top bar - 1st row
+	hbox = {
+		layoutpolicy_vertical = shrinking
+		layoutpolicy_horizontal = expanding
+		spacing = 4
+
+		topbar_aligned_container = {
+			blockoverride "body" {
+
+				# Toggle Browser
+				dockable_togglebutton = {
+					onclick = "[MeshImporter.ToggleBrowserView]"
+					checked = "[MeshImporter.IsBrowserViewOpen]"
+					size = { 30 30 }
+					icon = {
+						size = { 26 26 }
+						texture = "gfx/tools/side_panel.png"
+						parentanchor = hcenter|vcenter
+					}
+				}
+
+				dockable_togglebutton = {
+					onclick = "[MeshImporter.OpenImporterSettings]"
+					checked = "[MeshImporter.IsEditorSettingsOpen]"
+					size = { 30 30 }
+					icon = {
+						size = { 26 26 }
+						texture = "gfx/tools/material/settings.png"
+						parentanchor = hcenter|vcenter
+					}
+				}
+
+				editor_toolbar_divider = {}
+
+				# Undo buttons
+				history_toolbar = {
+					layoutpolicy_horizontal = shrinking
+					datacontext = "[MeshImporter.AccessUndoer]"
+				}
+
+				widget = { layoutpolicy_horizontal = expanding }
+			}
+		}
+
+		editor_toolbar_divider = {}
+
+		# Name of the mesh
+		editor_textbox = {
+			raw_text = "[MeshImporter.GetInputFileName]"
+			autoresize = yes
+			fontsize = 20
+			margin_right = 8
+		}
+
+		widget = { layoutpolicy_horizontal = expanding }
+
+		# Edit shader sets
+		dockable_button = {
+			raw_text = "Shader Sets"
+			size = { 110 30 }
+			onclick = "[MeshImporter.EditShaderSets]"
+			raw_tooltip = "Define an explicit list of shaders that should be listed in the shader selection dropdown. If list is empty, dropdown will show all shaders in the project."
+		}
+	}
+
+	# Top bar - 2nd row
+	hbox = {
+		layoutpolicy_vertical = shrinking
+		layoutpolicy_horizontal = expanding
+		spacing = 4
+
+		topbar_aligned_container = {
+			blockoverride "body" {
+
+				# Save settings button
+				dockable_button = {
+					size = { 30 30 }
+					enabled = "[MeshImporter.IsSettingsDifferentThanDiskFile]"
+					onclick = "[MeshImporter.SaveSettings]"
+					raw_tooltip = "Save settings file so that next time you import the same mesh, all the fields will have the same values."
+					icon = {
+						size = { 22 22 }
+						parentanchor = center
+						widgetanchor = center
+						texture = "gfx/tools/save_settings.png"
+					}
+				}
+
+				editor_toolbar_divider = {}
+
+				# Auto save settings on import - checkbutton
+				dockable_button = {
+					size = { 0 30 }
+					layoutpolicy_horizontal = expanding
+					onclick = "[MeshImporter.ToggleAutoSaveOnImport]"
+					hbox = {
+						layoutpolicy_horizontal = expanding
+						margin_left = 4
+						margin_right = 4
+						spacing = 2
+						icon = {
+							size = { 22 22 }
+							texture = "gfx/tools/save_settings.png"
+							alwaystransparent = yes
+						}
+						editor_textbox = { 
+							layoutpolicy_horizontal = expanding
+							raw_text = "On import"
+							alwaystransparent = yes 
+							align = hcenter
+						}
+
+						checkbutton = {
+							tooltip_enabled = no
+							size = { 16 16 }
+							using = editor_checkbutton
+							alwaystransparent = yes
+							checked = "[MeshImporter.IsAutoSaveOnImport]"
+						}
+					}
+					raw_tooltip = "When enabled, clicking on the 'Import' button at the bottom of this window, will also auto save the settings."
+				}
+			}
+		}
+
+		editor_toolbar_divider = {}
+
+		# Name of the settings file (in 2 style variants)
+		editor_textbox = {
+			visible = "[Not(MeshImporter.IsSettingsDiskFileExist)]"
+			raw_text = "#italic;color:{0.7,0.7,0.7,0.5} [MeshImporter.GetSettingsFileName] #!"
+			raw_tooltip = "Settings file does not exist, which indicates that this mesh is being imported for the first time."
+			tooltipwidget = { using = dockable_tooltip }
+			autoresize = yes
+			fontsize = 15
+		}
+		editor_textbox = {
+			visible = "[MeshImporter.IsSettingsDiskFileExist]"
+			raw_text = "#color:[Select_CString(MeshImporter.IsSettingsDifferentThanDiskFile, '{0.9,0.9,0.5}', '{0.8,0.8,0.8}')] [MeshImporter.GetSettingsFileName] [Select_CString(MeshImporter.IsSettingsDifferentThanDiskFile, '*', '')] #!"
+			raw_tooltip = "Settings file exists, and all the fields has been restored to the same values as when this mesh was last time imported."
+			tooltipwidget = { using = dockable_tooltip }
+			autoresize = yes
+			fontsize = 15
+		}
+
+		widget = { layoutpolicy_horizontal = expanding }
+	}
+
+	scrollarea = {
+		name = "content_scroll_area"
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = expanding
+		autoresizeviewport = yes
+		scrollbarpolicy_vertical = always_on
+		scrollwidget = {
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+				vbox = {
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = expanding
+
+					editor_frame = {
+						layoutpolicy_horizontal = expanding
+						
+						blockoverride "label"
+						{
+							raw_text = "Basic Import Settings"
+						}
+
+						blockoverride "content"
+						{
+							tools_properties_dialog = {
+								name = "basic_settings_properties"
+							}
+						}
+					}
+					
+					editor_frame = {
+						layoutpolicy_horizontal = expanding
+						
+						blockoverride "label"
+						{
+							raw_text = "Mesh Optimization Settings"
+						}
+
+						blockoverride "content"
+						{
+							tools_properties_dialog = {
+								name = "mesh_optimization_settings"
+							}
+						}
+					}
+
+					editor_frame = {
+						visible = "[MeshImporter.IsTargetMesh2]"
+						layoutpolicy_horizontal = expanding
+						
+						blockoverride "label"
+						{
+							raw_text = "Mesh Data Process Settings"
+						}
+
+						blockoverride "content"
+						{
+							tools_properties_dialog = {
+								name = "mesh_process_settings_properties"
+							}
+						}
+					}
+
+					editor_frame = {
+						visible = "[MeshImporter.IsMeshLodded]"
+						layoutpolicy_horizontal = expanding
+						
+						blockoverride "label"
+						{
+							raw_text = "LOD Screen Percentages"
+						}
+
+						blockoverride "content"
+						{
+							tools_properties_dialog = {
+								name = "lod_screen_percentages"
+							}
+						}
+					}
+
+					editor_frame = {
+						layoutpolicy_horizontal = expanding
+						
+						blockoverride "label"
+						{
+							raw_text = "Material Import Settings"
+						}
+
+						blockoverride "content"
+						{
+							datamodel = "[MeshImporter.AccessMaterialImportSettings.AccessMaterialEntries]"
+							item = { # [MeshImporterMaterialEntry]
+								mesh_importer_material_entry = {}
+							}
+						}
+					}
+
+					widget = {
+						# Spacer
+						size = { 0 0 }
+						layoutpolicy_vertical = expanding
+						layoutpolicy_horizontal = expanding
+					}
+				}
+				widget = { size = { 20 20 } } # Scrollbar compensation, so content doesn't go under it
+			}
+		}
+		scrollbar_vertical = { using = editor_vertical_scrollbar }
+		scrollbar_horizontal = { using = editor_horizontal_scrollbar }
+	}
+
+	hbox = {
+		layoutpolicy_horizontal = expanding
+
+		dockable_button = {
+			size = { 220 32 }
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				spacing = 4
+				margin_left = 4
+				margin_right = 4
+				icon = {
+					size = { 26 26 }
+					texture = "gfx/tools/import_icon.png"
+				}
+				editor_textbox = {
+					layoutpolicy_horizontal = expanding
+					raw_text = "[Select_CString(MeshImporter.IsAutoSaveOnImport, 'Import and Save settings', 'Import')]"
+					align = hcenter
+				}
+			}
+			raw_tooltip = "Click to import currently selected mesh using the above import settings."
+			onclick = "[MeshImporter.ImportCurrentlySelected]"
+		}
+
+		hbox = {
+			layoutpolicy_horizontal = expanding
+			spacing = 8
+
+			widget = { layoutpolicy_horizontal = expanding }
+
+			mesh_importer_log_num_entry = {
+				visible = "[GreaterThan_int32(MeshImporter.GetLogEntryCountInfo, '(int32)0')]"
+				blockoverride "icon" { texture = "gfx/tools/log_viewer/info_icon.png" }
+				blockoverride "text" { raw_text = "[MeshImporter.GetLogEntryCountInfo]" }
+				raw_tooltip = "Notifications."
+			}
+			mesh_importer_log_num_entry = {
+				visible = "[GreaterThan_int32(MeshImporter.GetLogEntryCountWarning, '(int32)0')]"
+				blockoverride "icon" { texture = "gfx/tools/log_viewer/warning_icon.png" }
+				blockoverride "text" { raw_text = "[MeshImporter.GetLogEntryCountWarning]" }
+				raw_tooltip = "Warnings."
+			}
+			mesh_importer_log_num_entry = {
+				visible = "[GreaterThan_int32(MeshImporter.GetLogEntryCountError, '(int32)0')]"
+				blockoverride "icon" { texture = "gfx/tools/log_viewer/error_icon.png" }
+				blockoverride "text" { raw_text = "[MeshImporter.GetLogEntryCountError]" }
+				raw_tooltip = "Errors."
+			}
+			mesh_importer_log_num_entry = {
+				visible = "[GreaterThan_int32(MeshImporter.GetLogEntryCountCritical, '(int32)0')]"
+				blockoverride "icon" { texture = "gfx/tools/log_viewer/critical_icon.png" }
+				blockoverride "text" { raw_text = "[MeshImporter.GetLogEntryCountCritical]" }
+				raw_tooltip = "Critical Errors."
+			}
+
+			dockable_togglebutton = {
+				raw_text = "Show Log"
+				size = { 100 32 }
+				checked = "[MeshImporter.IsLogViewOpen]"
+				onclick = "[MeshImporter.ToggleLogView]"
+			}
+		}
+	}
+}
+
+vbox = {
+	name = "tools_mesh_importer_browser"
+
+	layoutpolicy_vertical = expanding
+	layoutpolicy_horizontal = expanding
+
+	spacing = 8
+
+	hbox = {
+		layoutpolicy_horizontal = expanding
+
+		dockable_button = {
+			onclick = "[MeshImporterBrowser.ReloadAllFiles]"
+			raw_tooltip = "Reload all files"
+			icon = {
+				size = { 24 24 }
+				texture = "gfx/tools/reload_property.png"
+				parentanchor = hcenter|vcenter
+			}
+		}
+
+		editor_toolbar_divider = {}
+
+		dockable_button = {
+			layoutpolicy_horizontal = expanding
+			onclick = "[MeshImporterBrowser.SelectAllFiles]"
+			raw_text = "Select all"
+		}
+
+		dockable_button = {
+			layoutpolicy_horizontal = expanding
+			onclick = "[MeshImporterBrowser.DeselectAllFiles]"
+			raw_text = "Deselect all"
+		}
+	}
+
+	editor_frame = {
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = expanding
+		layoutstretchfactor_vertical = 3
+		blockoverride "label" {
+			raw_text = "All files:"
+		}
+		blockoverride "content" {
+			scrollarea = {
+				layoutpolicy_vertical = expanding
+				autoresizeviewport = yes
+				scrollbarpolicy_vertical = always_on
+				scrollwidget = {
+					vbox = {
+						vbox = {
+							layoutpolicy_horizontal = expanding
+							layoutpolicy_vertical = shrinking
+							datamodel = "[MeshImporterBrowser.GetAllFiles]"
+							item = {
+								mesh_importer_browser_entry = {
+									blockoverride "arrow_btn_visibility" {
+										visible = "[Not(MeshImporterBrowserEntry.IsInQueue)]"
+									}
+									blockoverride "arrow_btn_texture" {
+										texture = "gfx/tools/down_arrow_icon.dds"
+									}
+								}
+							}
+						}
+						widget = { layoutpolicy_vertical = expanding }
+					}
+				}
+				scrollbar_vertical = { using = editor_vertical_scrollbar }
+				scrollbar_horizontal = { using = editor_horizontal_scrollbar }
+			}
+		}
+	}
+
+	editor_frame = {
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = expanding
+		layoutstretchfactor_vertical = 1
+		blockoverride "label" {
+			raw_text = "Import queue:"
+		}
+		blockoverride "content" {
+			scrollarea = {
+				layoutpolicy_vertical = expanding
+				autoresizeviewport = yes
+				scrollbarpolicy_vertical = always_on
+				scrollwidget = {
+					vbox = {
+						vbox = {
+							layoutpolicy_horizontal = expanding
+							layoutpolicy_vertical = shrinking
+							datamodel = "[MeshImporterBrowser.GetQueuedFiles]"
+							item = {
+								mesh_importer_browser_entry = {
+									blockoverride "arrow_btn_visibility" {
+										visible = "[MeshImporterBrowserEntry.IsInQueue]"
+									}
+									blockoverride "arrow_btn_texture" {
+										texture = "gfx/tools/up_arrow_icon.dds"
+									}
+								}
+							}
+						}
+						widget = { layoutpolicy_vertical = expanding }
+					}
+				}
+				scrollbar_vertical = { using = editor_vertical_scrollbar }
+				scrollbar_horizontal = { using = editor_horizontal_scrollbar }
+			}
+		}
+	}
+
+	hbox = {
+		layoutpolicy_horizontal = expanding
+		dockable_button = {
+			layoutpolicy_horizontal = expanding
+			layoutstretchfactor_horizontal = 62
+			onclick = "[MeshImporterBrowser.ImportAllInQueue]"
+			raw_text = "Import All In Queue"
+			enabled = "[Not(IsDataModelEmpty(MeshImporterBrowser.GetQueuedFiles))]"
+		}
+		dockable_button = {
+			layoutpolicy_horizontal = expanding
+			layoutstretchfactor_horizontal = 38
+			onclick = "[MeshImporterBrowser.ClearQueue]"
+			raw_text = "Clear Queue"
+		}
+	}
+}

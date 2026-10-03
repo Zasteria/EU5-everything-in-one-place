@@ -1,0 +1,41 @@
+﻿# Auto child education - eligibility triggers.
+# Adapted from the "Auto Child Education" workshop mod (original by
+# victoriaposting, 1.3 fix by justinrudisal) into Calidad de vida EU5.
+# Scope: character (owner = the child's country).
+
+qol_ace_has_child_trait = {
+	has_trait_category = child
+}
+
+# A child the auto education may assign, regardless of whether it was already
+# processed. Respects the CMF toggles, synced to the qol_ace_educate_* country
+# variables (present = auto-educate this group; absent = keep it manual).
+# Scope: character
+qol_ace_eligible_child = {
+	is_adult = no
+	qol_ace_has_child_trait = yes
+	NOT = { has_child_education = expensive_in_depth_education }
+	NOT = { has_child_education = orthodox_education }
+
+	trigger_if = {
+		limit = { owner = { NOT = { has_variable = qol_ace_educate_heirs } } }
+		NOT = { is_heir = yes }
+	}
+	trigger_if = {
+		limit = { owner = { NOT = { has_variable = qol_ace_educate_crown } } }
+		NOT = { has_estate = estate_type:crown_estate }
+	}
+	trigger_if = {
+		limit = { owner = { NOT = { has_variable = qol_ace_educate_prodigy } } }
+		NOT = { has_trait = child_prodigy }
+		NOT = { has_trait = child_gifted }
+	}
+}
+
+# A child the monthly check should still process: eligible and not yet
+# auto-assigned, so manual choices are never overridden.
+# Scope: character
+qol_ace_should_auto_educate_child = {
+	qol_ace_eligible_child = yes
+	NOT = { has_variable = qol_ace_processed }
+}

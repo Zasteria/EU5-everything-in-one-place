@@ -1,0 +1,144 @@
+template animation_editor_state_tooltip
+{
+	tooltip = "[AnimationEditorState.DebugTooltip]"
+	tooltipwidget = { using = editor_tooltip }
+}
+
+types AnimationEditor
+{
+	type animation_editor_state_window = window {
+		shaderfile = "gfx/FX/pdxgui_default.shader"
+		texture = "gfx/editor_gui/node_editor/node_editor_frame_filled.dds"
+		spriteType = CorneredTiled
+		spriteborder = { 5 5 }
+		framesize = { 64 64 }
+		frame = 1
+		gfxtype = windowgfx
+		
+		block "state_tooltip"
+		{
+			using = animation_editor_state_tooltip
+		}
+
+		filter_mouse = left|right
+		alwaystransparent = no
+
+		#scissor = yes
+		resizable = no
+		movable = no
+
+		state = {
+			name = "default"
+			frame = 1
+			duration = 0.0
+		}
+
+		state = {
+			name = "selected"
+			frame = 2
+			duration = 0.0
+			alpha = 0.8
+			next = selected_end
+			on_start = "[AnimationEditor.OnSelected]"
+		}
+		
+		state = {
+			name = "selected_end"
+			duration = 0.0
+			alpha = 1.0
+		}
+
+		state = {
+			name = "ping"
+			frame = 3
+			next = "ping_end"
+		}
+
+		state = {
+			name = "ping_end"
+			frame = 1
+			using = ping_animation
+		}
+
+		state = {
+			name = "ping_selected"
+			frame = 3
+			next = "ping_selected_end"
+		}
+
+		state = {
+			name = "ping_selected_end"
+			frame = 2
+			using = ping_animation
+		}
+
+		hbox = {
+			margin = { 20 20 }
+			restrictparent_min = yes
+			set_parent_size_to_minimum = yes
+			# Title area
+			hbox = {
+				margin = { 8 8 }
+				name = "title_area"
+
+				block "title_background"
+				{
+					background = {
+						texture = "gfx/editor_gui/node_editor/node_editor_title_background.dds"
+						color = { 0.05 0.05 0.05 1 }
+					}
+				}
+
+				spacing = 8
+
+				layoutpolicy_horizontal = expanding
+
+				block "state_tooltip"
+				{
+					using = animation_editor_state_tooltip
+				}
+
+				editor_textbox = {
+					name = "node_name_textbox"
+					autoresize = yes
+					maximumsize = { 160 24 }
+					fontsize = 12
+					fontweight = bold
+					block "state_name"
+					{
+						text = "[AnimationEditorState.Name]"
+					}
+					align = left|nobaseline
+					elide = right
+					using = editor_toolbar_font
+					block "state_tooltip"
+					{
+						using = animation_editor_state_tooltip
+					}
+				}
+			}
+		}
+	}
+
+	type animation_editor_starting_state_window = animation_editor_state_window
+	{
+		blockoverride "title_background"
+		{
+			background = {
+				texture = "gfx/editor_gui/node_editor/node_editor_title_background.dds"
+				color = { 0.05 0.35 0.05 1 }
+			}
+		}
+
+		blockoverride "state_name"
+		{
+			text = "[AnimationEditor.StartingStateDisplayName]"
+		}
+
+		blockoverride "state_tooltip"
+		{
+			tooltip = "[AnimationEditor.StartingStateDebugTooltip]"
+			tooltipwidget = { using = editor_tooltip }
+		}
+	}
+}

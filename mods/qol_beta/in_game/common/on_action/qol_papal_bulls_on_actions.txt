@@ -1,0 +1,233 @@
+﻿# Auto-vote on papal resolutions each month.
+# Every month the configured vote is re-asserted: if the player's current vote
+# differs from the configured one, it is re-cast (overriding manual changes).
+# Scope: country
+
+monthly_country_pulse = {
+	on_actions = {
+		qol_papal_bulls_auto_vote
+	}
+}
+
+# Cast automatic votes on active papal resolutions.
+# With CMF present, the votes come from the CMF list (qol_papal_auto_vote_yes/no),
+# mirroring the "Papal bulls auto vote" workshop mod. Without CMF, the game rule
+# qol_papal_auto_vote_rule governs.
+# Scope: country
+qol_papal_bulls_auto_vote = {
+	trigger = {
+		is_human = yes
+		is_member_of_international_organization = international_organization:catholic_church
+		num_cardinals > 0
+		international_organization:catholic_church = {
+			has_active_resolution = yes
+		}
+	}
+	effect = {
+		if = {
+			limit = {
+				has_variable = cmm_list_initialized_qol__auto_vote
+			}
+			international_organization:catholic_church = {
+				every_active_resolution = {
+					save_temporary_scope_as = the_active_resolution
+
+					if = {
+						limit = {
+							root = {
+								is_target_in_variable_list = {
+									name = qol_papal_auto_vote_yes
+									target = scope:the_active_resolution.resolution
+								}
+							}
+						}
+						international_organization:catholic_church = {
+							if = {
+								limit = {
+									scope:the_active_resolution.resolution = resolution:western_schism_resolution
+									NOT = {
+										international_organization:catholic_church = {
+											has_voted_for = {
+												voter = root
+												resolution = scope:the_active_resolution.resolution
+												vote = c:PAP
+											}
+										}
+									}
+								}
+								set_vote = {
+									voter = root
+									resolution = scope:the_active_resolution.resolution
+									vote = c:PAP
+								}
+							}
+							else_if = {
+								limit = {
+									NOT = { scope:the_active_resolution.resolution = resolution:western_schism_resolution }
+									NOT = {
+										international_organization:catholic_church = {
+											has_voted_for = {
+												voter = root
+												resolution = scope:the_active_resolution.resolution
+												vote = yes
+											}
+										}
+									}
+								}
+								set_vote = {
+									voter = root
+									resolution = scope:the_active_resolution.resolution
+									vote = yes
+								}
+							}
+						}
+					}
+					else_if = {
+						limit = {
+							root = {
+								is_target_in_variable_list = {
+									name = qol_papal_auto_vote_no
+									target = scope:the_active_resolution.resolution
+								}
+							}
+						}
+						international_organization:catholic_church = {
+							if = {
+								limit = {
+									scope:the_active_resolution.resolution = resolution:western_schism_resolution
+									exists = situation:western_schism.var:schism_opponent_country
+									NOT = {
+										international_organization:catholic_church = {
+											has_voted_for = {
+												voter = root
+												resolution = scope:the_active_resolution.resolution
+												vote = situation:western_schism.var:schism_opponent_country
+											}
+										}
+									}
+								}
+								set_vote = {
+									voter = root
+									resolution = scope:the_active_resolution.resolution
+									vote = situation:western_schism.var:schism_opponent_country
+								}
+							}
+							else_if = {
+								limit = {
+									NOT = { scope:the_active_resolution.resolution = resolution:western_schism_resolution }
+									NOT = {
+										international_organization:catholic_church = {
+											has_voted_for = {
+												voter = root
+												resolution = scope:the_active_resolution.resolution
+												vote = no
+											}
+										}
+									}
+								}
+								set_vote = {
+									voter = root
+									resolution = scope:the_active_resolution.resolution
+									vote = no
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		else = {
+			if = {
+				limit = {
+					has_game_rule = qol_papal_auto_vote_all
+				}
+				international_organization:catholic_church = {
+					every_active_resolution = {
+						save_temporary_scope_as = the_active_resolution
+
+						international_organization:catholic_church = {
+							if = {
+								limit = {
+									scope:the_active_resolution.resolution = resolution:western_schism_resolution
+									NOT = {
+										international_organization:catholic_church = {
+											has_voted_for = {
+												voter = root
+												resolution = scope:the_active_resolution.resolution
+												vote = c:PAP
+											}
+										}
+									}
+								}
+								set_vote = {
+									voter = root
+									resolution = scope:the_active_resolution.resolution
+									vote = c:PAP
+								}
+							}
+							else_if = {
+								limit = {
+									NOT = { scope:the_active_resolution.resolution = resolution:western_schism_resolution }
+									NOT = {
+										international_organization:catholic_church = {
+											has_voted_for = {
+												voter = root
+												resolution = scope:the_active_resolution.resolution
+												vote = yes
+											}
+										}
+									}
+								}
+								set_vote = {
+									voter = root
+									resolution = scope:the_active_resolution.resolution
+									vote = yes
+								}
+							}
+						}
+					}
+				}
+			}
+			else_if = {
+				limit = {
+					has_game_rule = qol_papal_auto_vote_non_directed
+				}
+				international_organization:catholic_church = {
+					every_active_resolution = {
+						save_temporary_scope_as = the_active_resolution
+
+						if = {
+							limit = {
+								NOT = {
+									scope:the_active_resolution.resolution = resolution:excommunicate_resolution
+								}
+								NOT = {
+									scope:the_active_resolution.resolution = resolution:call_crusade
+								}
+								NOT = {
+									scope:the_active_resolution.resolution = resolution:western_schism_resolution
+								}
+								NOT = {
+									international_organization:catholic_church = {
+										has_voted_for = {
+											voter = root
+											resolution = scope:the_active_resolution.resolution
+											vote = yes
+										}
+									}
+								}
+							}
+							international_organization:catholic_church = {
+								set_vote = {
+									voter = root
+									resolution = scope:the_active_resolution.resolution
+									vote = yes
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

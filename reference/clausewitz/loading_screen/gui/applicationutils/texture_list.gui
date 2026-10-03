@@ -1,0 +1,332 @@
+types Types
+{
+	type texture_list_textbox = textbox {		
+		layoutpolicy_horizontal = growing
+		layoutpolicy_vertical = fixed
+		font = "tools_font"
+		fontcolor = { 1 1 1 1 }
+		fontsize = 11
+		align = left|vcenter|nobaseline
+		scissor = yes
+		margin = { 2 0 }
+		
+		background = {
+			texture = "gfx/editor_gui/editor_field.dds"
+			spriteType = CorneredStretched
+			spriteborder = { 4 4 }
+			shaderfile = "gfx/FX/pdxgui_default.shader"
+		}
+	}
+	
+	type texture_list_button = editor_button {		
+		font = "tools_font"
+		fontcolor = { 1 1 1 1 }
+		fontsize = 11
+		align = center|nobaseline
+		margin = { 2 0 }
+	}
+}
+
+widget = {
+	name = "texture_list"
+	size = { 640 480 }
+
+	layoutpolicy_horizontal = Expanding
+	layoutpolicy_vertical = Expanding
+	
+	vbox = {
+			
+		hbox = {
+			layoutpolicy_horizontal = Preferred
+			
+			spacing = 5
+			
+			widget = { size = { 4 0 } }
+			
+			editor_editbox = {
+				layoutpolicy_horizontal = Preferred
+				using = property_editbox
+				alwaystransparent = no
+				size = { 0 18 }
+				text = [TextureList.GetFilterString]
+				ontextedited = [TextureList.SetFilterString]
+			}
+			
+			texture_list_button = {
+				size = { 45 18 }
+				raw_text = "Update"
+				onclick = "[TextureList.UpdateTextureList]"
+			}
+			
+			editor_checkbutton = {
+				blockoverride "checkbutton"
+				{
+					checked = "[TextureList.GetAutoUpdate]"
+					onclick = "[TextureList.SetAutoUpdate(Not(TextureList.GetAutoUpdate))]"
+				}
+				
+				blockoverride "label"
+				{
+					raw_text = "Auto Update"
+				}
+			}
+			
+			editor_checkbutton = {
+				raw_tooltip = "When enabled, shows all descendant subdirectories and textures in the current directory, instead of just showing the immediate children."
+				
+				blockoverride "checkbutton"
+				{
+					checked = "[TextureList.IsFlatView]"
+					onclick = "[TextureList.SetFlatView(Not(TextureList.IsFlatView))]"
+				}
+				
+				blockoverride "label"
+				{
+					raw_text = "Flat View"
+				}
+			}
+		}
+	
+		hbox = {
+			layoutpolicy_horizontal = preferred
+			spacing = 3
+			
+			texture_list_button = 
+			{
+				layoutpolicy_horizontal = growing
+				size = { 0 18 }
+				raw_text = "Name"
+				onclick = "[TextureList.SortByName]"
+			}
+			
+			texture_list_button = 
+			{
+				size = { 150 18 }
+				raw_text = "Format"
+				onclick = "[TextureList.SortByFormat]"
+			}
+			
+			texture_list_button = 
+			{
+				size = { 80 18 }
+				raw_text = "Resolution"
+				onclick = "[TextureList.SortByResolution]"
+			}
+			
+			texture_list_button = 
+			{
+				size = { 70 18 }
+				raw_text = "Size"
+				onclick = "[TextureList.SortBySize]"
+			}
+			
+			texture_list_button = 
+			{
+				size = { 60 18 }
+				raw_text = "RefCount"
+				onclick = "[TextureList.SortByRefCount]"
+			}
+			
+			texture_list_button = 
+			{
+				size = { 60 18 }
+				raw_text = "MipMaps"
+				onclick = "[TextureList.SortByMipMaps]"
+			}
+		}
+
+		hbox = {
+			layoutpolicy_horizontal = growing
+			minimumsize = { -1 18 }
+			spacing = 3
+			raw_tooltip = "Current directory"
+			tooltip_widgetanchor = top|right
+			tooltip_parentanchor = top|left
+			
+			icon =
+			{
+				size = { 16 16 }
+				texture = "gfx/editor_gui/editor_tree_expand.dds"
+				framesize = { 16 16 }
+				frame = 2
+			}
+			
+			texture_list_textbox = {
+				layoutstretchfactor_horizontal = 1
+				text = "[TextureList.GetCurrentDirectory]"
+			}
+			
+			texture_list_textbox = {
+				maximumsize = { 432 -1 }
+				layoutstretchfactor_horizontal = 5
+				raw_text = "Count: [TextureList.GetTotalTextureCount] textures. Total memory: [TextureListFormatSize(TextureList.GetTotalSize)] ([TextureListFormatkB(TextureList.GetTotalSize)])"
+			}
+		}
+
+		scrollarea = {
+			layoutpolicy_horizontal = preferred
+			layoutpolicy_vertical = preferred
+			scrollbarpolicy_vertical = as_needed
+			scrollbarpolicy_horizontal = as_needed
+			scrollbaralign_vertical = right
+			scrollbaralign_horizontal = bottom
+			#autoresizeviewport = yes
+
+			#viewportwidget = {
+			#	widget = {
+			#		scissor = yes
+			#	}
+			#}
+		
+			scrollwidget = {
+				vbox = {
+					button_group = {
+						name = "parent_directory"
+						layoutpolicy_horizontal = preferred
+						layoutpolicy_vertical = fixed
+						minimumsize = { -1 18 }
+						onclick = "[TextureList.GoToParentDirectory]"
+						
+						hbox = {
+							spacing = 3
+							raw_tooltip = "Click to go to parent directory"
+							tooltip_widgetanchor = top|right
+							tooltip_parentanchor = top|left
+							
+							icon = {
+								size = { 16 16 }
+								texture = "gfx/editor_gui/editor_tree_expand.dds"
+								framesize = { 16 16 }
+								frame = 1
+							}
+							
+							texture_list_textbox = {
+								layoutstretchfactor_horizontal = 1
+								raw_text = "../"
+							}
+							
+							texture_list_textbox = {
+								maximumsize = { 432 -1 }
+								layoutstretchfactor_horizontal = 5
+								text = ""
+							}
+						}
+					}
+
+					fixedgridbox = {
+						name = "directory_list"
+						layoutpolicy_horizontal = preferred
+						layoutpolicy_vertical = fixed
+						alwaystransparent = no
+						addcolumn = 100%
+						addrow = 18
+						setitemsizefromcell = yes
+						datamodel = "[TextureList.GetDirectories]"
+
+						item = {
+							hbox = {
+								spacing = 3
+								raw_tooltip = "Click to go to child directory"
+								tooltip_widgetanchor = top|right
+								tooltip_parentanchor = top|left
+								
+								icon = {
+									size = { 16 16 }
+									texture = "gfx/editor_gui/editor_tree_expand.dds"
+									framesize = { 16 16 }
+									frame = 1
+								}
+								
+								texture_list_textbox = {
+									text = "[TextureListDirectory.GetName]"
+								}
+								
+								texture_list_textbox = {
+									maximumsize = { 130 -1 }
+									raw_text = "[TextureListDirectory.GetSubDirectoryCount] subdirectories"
+								}
+								
+								texture_list_textbox = {
+									maximumsize = { 100 -1 }
+									raw_text = "[TextureListDirectory.GetTextureCount] textures"
+								}
+								
+								texture_list_textbox = {
+									maximumsize = { 70 -1 }
+									text = "[TextureListFormatSize(TextureListDirectory.GetSize)]"
+								}
+								
+								texture_list_textbox = {
+									maximumsize = { 60 -1 }
+									text = "[TextureListDirectory.GetRefcount]"
+								}
+								
+								texture_list_textbox = {
+									maximumsize = { 60 -1 }
+									text = "[TextureListDirectory.GetMipMaps]"
+								}
+							}
+						}
+					}
+
+					fixedgridbox = {
+						name = "list"
+						layoutpolicy_horizontal = preferred
+						layoutpolicy_vertical = growing
+						alwaystransparent = no
+						addcolumn = 100%
+						addrow = 18
+						setitemsizefromcell = yes
+						datamodel = "[TextureList.GetTextures]"
+						
+						item = {
+							hbox = {
+								spacing = 3
+								raw_tooltip = "Click to view texture"
+								tooltip_widgetanchor = top|right
+								tooltip_parentanchor = top|left
+								
+								texture_list_textbox = {
+									text = "[TextureListTexture.GetName]"
+								}
+								
+								texture_list_textbox = {
+									maximumsize = { 150 -1 }
+									text = "[TextureListTexture.GetFormat]"
+								}
+								
+								texture_list_textbox = {
+									maximumsize = { 80 -1 }
+									text = "[TextureListTexture.GetResolution]"
+								}
+								
+								texture_list_textbox = {
+									maximumsize = { 70 -1 }
+									text = "[TextureListFormatSize(TextureListTexture.GetSize)]"
+								}
+								
+								texture_list_textbox = {
+									maximumsize = { 60 -1 }
+									text = "[TextureListTexture.GetRefcount]"
+								}
+								
+								texture_list_textbox = {
+									maximumsize = { 60 -1 }
+									text = "[TextureListTexture.GetMipMaps]"
+								}
+							}
+						}
+					}
+				}
+			}
+		
+			scrollbar_vertical = {
+				using = editor_vertical_scrollbar
+			}
+		
+			scrollbar_horizontal = {
+				using = editor_horizontal_scrollbar
+			}
+		}
+	}
+}

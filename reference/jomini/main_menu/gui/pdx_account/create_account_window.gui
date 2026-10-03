@@ -1,0 +1,249 @@
+types SDK
+{
+	type create_account_window = sdk_window {
+		name = "create_container"
+		parentanchor = vcenter|hcenter
+		blockoverride "title"
+		{
+			text = "CREATE_POPS_ACCOUNT"
+		}
+		blockoverride "hbox_properties"
+		{
+			layoutpolicy_horizontal = Preferred
+			layoutpolicy_vertical = Preferred
+		}
+		blockoverride "content_layout"
+		{
+			hbox = {
+				name = "create_layout"
+
+				block "create_account_content_layout_properties"
+				{
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = expanding
+				}
+
+				widget = {
+					block "create_account_entries_block_properties" {}
+
+					vbox = {
+						name = "create_entries"
+
+						block "create_account_entries_vbox_properties"
+						{
+							resizeparent = yes
+							layoutpolicy_vertical = fixed
+							layoutpolicy_horizontal = expanding
+							margin = { 5 5 }
+						}
+
+						sdk_textbox_entry = {
+							name = "entry_create_email"
+							blockoverride "title"
+							{
+								text = "EMAIL"
+							}
+							blockoverride "editbox_text"
+							{
+								text = "[CreateAccount.GetEmail]"
+							}
+							blockoverride "sdk_editbox"
+							{
+								ontextchanged = "[CreateAccount.SetEmail]"
+							}
+						}
+						sdk_vertical_spacer = {}
+						sdk_textbox_entry = {
+							name = "entry_create_password"
+							blockoverride "title"
+							{
+								text = "PASSWORD"
+							}
+							blockoverride "editbox_text"
+							{
+								text = "[CreateAccount.GetPassword]"
+							}
+							blockoverride "sdk_editbox"
+							{
+								ontextchanged = "[CreateAccount.SetPassword]"
+							}
+							blockoverride "password"
+							{
+								password = yes
+							}
+						}
+						sdk_vertical_spacer = {}
+						sdk_generic_entry = {
+							blockoverride "sdk_generic_entry_properties"
+							{
+								layoutpolicy_horizontal = expanding
+								layoutpolicy_vertical = expanding
+							}
+							blockoverride "required_field" {}
+							blockoverride "title"
+							{
+								text = "DATE_OF_BIRTH"
+							}
+							blockoverride "sdk_generic_entry_field"
+							{
+								sdk_dropdown = {
+									layoutpolicy_horizontal = expanding
+									blockoverride "sdk_dropdown"
+									{
+										datamodel = "[CreateAccount.GetYears]"
+										onselectionchanged = "[CreateAccount.OnYearChanged]"
+										selectedindex = "[CreateAccount.GetSelectedYearIndex]"
+									}
+									name = "year_dropdown"
+									blockoverride "item_text"
+									{
+										text = "[uint32.GetUint]"
+									}
+									blockoverride "active_item"
+									{
+										size = { 70 30 }
+									}
+									blockoverride "item"
+									{
+										size = { 70 20 }
+									}
+									blockoverride "scrollarea"
+									{
+										maximumsize = { 70 210 }
+									}
+								}
+								sdk_horizontal_spacer = {}
+								sdk_dropdown = {
+									blockoverride "sdk_dropdown"
+									{
+										datamodel = "[CreateAccount.GetMonths]"
+										onselectionchanged = "[CreateAccount.OnMonthChanged]"
+										selectedindex = "[CreateAccount.GetSelectedMonthIndex]"
+									}
+									name = "month_dropdown"
+									blockoverride "item_text"
+									{
+										text = "[uint32.GetUint]"
+									}
+									blockoverride "active_item"
+									{
+										size = { 70 30 }
+									}
+									blockoverride "item"
+									{
+										size = { 70 20 }
+									}
+									blockoverride "scrollarea"
+									{
+										maximumsize = { 70 210 }
+									}
+								}
+								sdk_horizontal_spacer = {}
+								sdk_dropdown = {
+									blockoverride "sdk_dropdown"
+									{
+										datamodel = "[CreateAccount.GetDays]"
+										onselectionchanged = "[CreateAccount.OnDayChanged]"
+										selectedindex = "[CreateAccount.GetSelectedDayIndex]"
+									}
+									name = "day_dropdown"
+									blockoverride "item_text"
+									{
+										text = "[uint32.GetUint]"
+									}
+									blockoverride "active_item"
+									{
+										size = { 70 30 }
+									}
+									blockoverride "item"
+									{
+										size = { 70 20 }
+									}
+									blockoverride "scrollarea"
+									{
+										maximumsize = { 70 210 }
+									}
+								}
+							}
+						}
+						sdk_vertical_spacer = {}
+						sdk_dropdown_entry = {
+							blockoverride "sdk_dropdown"
+							{
+								datamodel = "[CreateAccount.GetCountries]"
+								onselectionchanged = "[CreateAccount.OnCountryChanged]"
+								selectedindex = "[CreateAccount.GetSelectedCountryIndex]"
+							}
+							name = "dd_create_country"
+							blockoverride "title"
+							{
+								text = "COUNTRY"
+							}
+							blockoverride "sdk_dropdown_name"
+							{
+								name = "country_dropdown"
+							}
+							blockoverride "item_text"
+							{
+								text = "[CountryEntry.GetCountry]"
+							}
+						}
+
+						sdk_checkbutton = {
+							layoutpolicy_horizontal = expanding
+							blockoverride "label"
+							{
+								text = "OPT_IN_TO_MARKETING"
+							}
+							blockoverride "checkbutton"
+							{
+								onclick = "[CreateAccount.OnOptedIntoMarketingToggled]"
+								checked = "[CreateAccount.GetOptedIntoMarketingChecked]"
+							}
+						}
+
+						block "create_account_legal_consent" {}
+
+						sdk_error_textbox = {
+							name = "create_lbl_error_message"
+							multiline = yes
+							text = "[CreateAccount.GetErrorMessage]"
+							align = center
+
+							layoutpolicy_horizontal = expanding
+							size = { -1 60 }
+						}
+
+						sdk_vertical_spacer = {}
+						hbox = {
+							layoutpolicy_horizontal = expanding
+
+							sdk_button = {
+								name = "create_btn_cancel"
+								text = "CANCEL"
+								onclick = "[CreateAccount.Hide]"
+							}
+
+							widget = {
+								layoutpolicy_vertical = expanding
+								layoutpolicy_horizontal = expanding
+							}
+
+
+							sdk_button_load_indicator = {
+								name = "create_btn_create"
+								text = "ACCOUNT_BUTTON_CREATE"
+								onclick = "[CreateAccount.CreateAccount]"
+								enabled = "[CreateAccount.CanCreateAccount]"
+								blockoverride "load_indicator"
+								{
+									visible = "[CreateAccount.IsCreatingAccount]"
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

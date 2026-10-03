@@ -1,0 +1,84 @@
+template SocialWidgetWindowStyle
+{
+	block "social_widget_window_style"
+	{
+		shaderfile = "gfx/FX/pdxgui_default.shader"
+		texture = "gfx/account/status_widget_background.dds"
+		spriteType = CorneredStretched
+		spriteborder = { 6 6 }
+		gfxtype = windowgfx
+	}
+}
+
+types Social
+{
+	type social_widget = window
+	{
+		name = "social_widget"
+		using = SocialWidgetWindowStyle
+		alwaystransparent = no
+		resizable = no
+		scissor = no # We can not scissor because notifications use this as a parent
+		movable = no
+		filter_mouse = none
+		visible = "[SocialUI.IsAllowedToBeShown]"
+
+		hbox = {
+			margin = { 5 5 }
+			restrictparent_min = yes
+			social_button = {
+				layoutpolicy_vertical = expanding
+				layoutpolicy_horizontal = expanding
+				# size = { 80 32 }
+				minimumsize = { 32 32 }
+				enabled = "[SocialUI.IsAllowedToBeShown]"
+				onclick = "[SocialUI.ToggleShow]"
+
+				hbox = {
+					icon = {
+						texture = "gfx/interface/paradox_logo.dds"
+						size = { 32 32 }
+						enabled = "[SocialUI.WantsToBeShown]"
+						block "social_logo"
+						{}
+					}
+					restrictparent_min = yes
+					social_horizontal_spacer = {}
+					icon = {
+						texture = "gfx/social/friend.dds"
+						size = { 20 20 }
+						block "friends_logo"
+						{}
+					}
+					social_horizontal_spacer = {}
+					social_textbox = {
+						layoutpolicy_horizontal = expanding
+						align = left|vcenter
+						size = { 20 20 }
+						text = "[Friends.CalcNumberOfOnlineFriends]"
+						block "friend_online_textbox"
+						{}
+					}
+					social_horizontal_spacer = {}
+					icon = {
+						texture = "gfx/social/chat.dds"
+						size = { 20 20 }
+						block "chat_logo"
+						{}
+					}
+
+					social_horizontal_spacer = {}
+					social_textbox = {
+						layoutpolicy_horizontal = expanding
+						align = left|vcenter
+						size = { 20 20 }
+						text = "[Social.GetTotalUnreadChatMessages]"
+						block "chats_unread_textbox"
+						{}
+					}
+					social_horizontal_spacer = {}
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,606 @@
+@common_property_enum_height = 20
+@common_property_height = 20
+@common_property_width = 100
+
+template common_property_size {
+	size = { 0 @common_property_height }
+	layoutpolicy_horizontal = expanding
+}
+
+template common_property_text_input {
+	using = common_property_size
+	align = right
+}
+
+types CommonProperyTypes
+{
+	type common_property = hbox {
+		tooltipwidget = {
+			using = dockable_tooltip
+		}
+
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = preferred
+
+		tooltip = "[ToolProperty.GetTooltip]"
+		tooltip_widgetanchor = bottom|left
+
+		spacing = 16
+
+		visible = "[ToolProperty.IsVisible]"
+		
+		editor_textbox = {
+			text = "[ToolProperty.GetLabel]"
+			autoresize = yes
+			elide = right
+			fontcolor = "[ToolProperty.GetColor]"
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = preferred
+		}
+
+		block "content"
+		{
+		}
+	}
+
+	type vertical_common_property = vbox {
+		tooltipwidget = {
+			using = dockable_tooltip
+		}
+		
+		layoutpolicy_horizontal = preferred
+		layoutpolicy_vertical = preferred
+
+		tooltip = "[ToolProperty.GetTooltip]"
+		tooltip_widgetanchor = bottom|left
+
+		spacing = 8
+
+		editor_textbox = {
+			text = "[ToolProperty.GetLabel]"
+			autoresize = yes
+			elide = right
+			fontcolor = "[ToolProperty.GetColor]"
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = preferred
+		}
+
+		block "content"
+		{
+		}
+	}
+	
+	type common_property_bool = common_property {
+		blockoverride "content"
+		{
+			checkbutton = {
+				size = { @common_property_height @common_property_height }
+				gfxtype = checkbuttongfx
+				shaderfile = "gfx/FX/pdxgui_pushbutton.shader"
+				texture = "gfx/editor_gui/editor_checkbox.dds"
+				framesize = { 16 16 }
+				enabled = "[ToolProperty.IsActive]"
+				checked = "[ToolPropertyBool.IsEnabled]"
+				onclick = "[ToolPropertyBool.SetEnabled(Not(ToolPropertyBool.IsEnabled))]"
+			}
+		}
+	}
+
+	type common_property_string = common_property {
+		blockoverride "content"
+		{
+			editor_textinput = {
+				using = common_property_text_input
+				text = "[ToolPropertyString.GetString]"
+				oneditingfinished_with_changes = "[ToolPropertyString.SetString]"
+				#onreturnpressed = "[ToolInputDialog.Confirm]"
+			}
+		}
+	}
+
+	type common_property_cstring = common_property {
+		blockoverride "content"
+		{
+			editor_textinput = {
+				using = common_property_text_input
+				text = "[ToolPropertyCString.GetString]"
+				oneditingfinished_with_changes = "[ToolPropertyCString.SetString]"
+			}
+		}
+	}
+	
+	type common_property_float = common_property {
+		blockoverride "content"
+		{
+			editor_textinput = {
+				using = common_property_text_input
+				text = "[ToolPropertyFloat.GetFloat]"
+				oneditingfinished_with_changes = "[ToolPropertyFloat.SetFloat]"
+			}
+		}
+	}
+	
+	type common_property_fixed = common_property {
+		blockoverride "content"
+		{
+			editor_textinput = {
+				using = common_property_text_input
+				text = "[ToolPropertyFixed.GetFixed]"
+				oneditingfinished_with_changes = "[ToolPropertyFixed.SetFixed]"
+			}
+		}
+	}
+
+	type common_property_int8 = common_property {
+		blockoverride "content"
+		{
+			editor_textinput = {
+				using = common_property_text_input
+				text = "[ToolPropertyInt8.GetInt8]"
+				oneditingfinished_with_changes = "[ToolPropertyInt8.SetInt8]"
+			}
+		}
+	}
+	
+	type common_property_uint8 = common_property {
+		blockoverride "content"
+		{
+			editor_textinput = {
+				using = common_property_text_input
+				text = "[ToolPropertyUint8.GetUint8]"
+				oneditingfinished_with_changes = "[ToolPropertyUint8.SetUint8]"
+			}
+		}
+	}
+	
+	type common_property_int16 = common_property {
+		blockoverride "content"
+		{
+			editor_textinput = {
+				using = common_property_text_input
+				text = "[ToolPropertyInt16.GetInt16]"
+				oneditingfinished_with_changes = "[ToolPropertyInt16.SetInt16]"
+			}
+		}
+	}
+	
+	type common_property_uint16 = common_property {
+		blockoverride "content"
+		{
+			editor_textinput = {
+				using = common_property_text_input
+				text = "[ToolPropertyUint16.GetUint16]"
+				oneditingfinished_with_changes = "[ToolPropertyUint16.SetUint16]"
+			}
+		}
+	}
+	
+	type common_property_int = common_property {
+		blockoverride "content"
+		{
+			editor_textinput = {
+				using = common_property_text_input
+				text = "[ToolPropertyInt.GetInt]"
+				oneditingfinished_with_changes = "[ToolPropertyInt.SetInt]"
+				#onreturnpressed = "[ToolInputDialog.Confirm]"
+			}
+		}
+	}
+	
+	type common_property_uint = common_property {
+		blockoverride "content"
+		{
+			editor_textinput = {
+				using = common_property_text_input
+				text = "[ToolPropertyUint.GetUint]"
+				oneditingfinished_with_changes = "[ToolPropertyUint.SetUint]"
+				#onreturnpressed = "[ToolInputDialog.Confirm]"
+			}
+		}
+	}
+
+	type common_property_enum = common_property {
+		blockoverride "content"
+		{
+			dropdown = {
+				name = "tools_property_enum_dropdown"
+				size = { @common_property_width @common_property_enum_height }
+				using = settings_dropdown
+				datamodel = "[CPdxEnumValue.GetDropdownEntries]"
+				onselectionchanged = "[CPdxEnumValue.SetDropdownValueIndex]"
+				selectedindex = "[CPdxEnumValue.GetDropdownValueIndex]"
+				blockoverride "dropdown_item_size" { size = { @common_property_width @common_property_enum_height } }
+				blockoverride "dropdown_list_position" { position = { 0 @common_property_enum_height } }
+				blockoverride "dropdown_gridbox_size" { addcolumn = @common_property_width  addrow = @common_property_enum_height }
+				blockoverride "dropdown_item_text" { text = "[CString.GetString]" }
+			}
+		}
+	}
+	
+	type common_property_color = common_property {
+		blockoverride "content"
+		{
+			tools_colorpicker = {
+				color = "[ToolPropertyColor.GetColor]"
+				#oncoloredited = "[ToolPropertyColor.SetColor]"
+				oneditingfinished_with_changes = "[ToolPropertyColor.SetColor]"
+			}
+		}
+	}
+	
+	type common_property_ccolor = common_property {
+		blockoverride "content"
+		{
+			tools_colorpicker = {
+				color = "[ToolPropertyCColor.GetCColor]"
+				#oncoloredited = "[ToolPropertyCColor.SetColor]"
+				oneditingfinished_with_changes = "[ToolPropertyCColor.SetCColor]"
+			}
+		}
+	}
+	
+	type common_property_vec4Fixed = common_property {
+		blockoverride "content"
+		{
+			flowcontainer = {
+				spacing = 8
+
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 58 @common_property_height }
+					text = "[ToolPropertyVec4F.GetX]"
+					oneditingfinished_with_changes = "[ToolPropertyVec4F.SetX]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 58 @common_property_height }
+					text = "[ToolPropertyVec4F.GetY]"
+					oneditingfinished_with_changes = "[ToolPropertyVec4F.SetY]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 58 @common_property_height }
+					text = "[ToolPropertyVec4F.GetZ]"
+					oneditingfinished_with_changes = "[ToolPropertyVec4F.SetZ]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 58 @common_property_height }
+					text = "[ToolPropertyVec4F.GetW]"
+					oneditingfinished_with_changes = "[ToolPropertyVec4F.SetW]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+			}
+		}
+	}
+
+	type common_property_vec4i = common_property {
+		blockoverride "content"
+		{
+			flowcontainer = {
+				spacing = 8
+
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 58 @common_property_height }
+					text = "[ToolPropertyVec4i.GetX]"
+					oneditingfinished_with_changes = "[ToolPropertyVec4i.SetX]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 58 @common_property_height }
+					text = "[ToolPropertyVec4i.GetY]"
+					oneditingfinished_with_changes = "[ToolPropertyVec4i.SetY]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 58 @common_property_height }
+					text = "[ToolPropertyVec4i.GetZ]"
+					oneditingfinished_with_changes = "[ToolPropertyVec4i.SetZ]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 58 @common_property_height }
+					text = "[ToolPropertyVec4i.GetW]"
+					oneditingfinished_with_changes = "[ToolPropertyVec4i.SetW]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+			}
+		}
+	}
+	
+	type common_property_vec3f = common_property {
+		blockoverride "content"
+		{
+			flowcontainer = {
+				spacing = 8
+
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 58 @common_property_height }
+					text = "[ToolPropertyVec3f.GetX]"
+					oneditingfinished_with_changes = "[ToolPropertyVec3f.SetX]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 58 @common_property_height }
+					text = "[ToolPropertyVec3f.GetY]"
+					oneditingfinished_with_changes = "[ToolPropertyVec3f.SetY]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 58 @common_property_height }
+					text = "[ToolPropertyVec3f.GetZ]"
+					oneditingfinished_with_changes = "[ToolPropertyVec3f.SetZ]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+			}
+		}
+	}
+	
+	type common_property_vec3Fixed = common_property {
+		blockoverride "content"
+		{
+			flowcontainer = {
+				spacing = 8
+
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 58 @common_property_height }
+					text = "[ToolPropertyVec3F.GetX]"
+					oneditingfinished_with_changes = "[ToolPropertyVec3F.SetX]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 58 @common_property_height }
+					text = "[ToolPropertyVec3F.GetY]"
+					oneditingfinished_with_changes = "[ToolPropertyVec3F.SetY]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 58 @common_property_height }
+					text = "[ToolPropertyVec3F.GetZ]"
+					oneditingfinished_with_changes = "[ToolPropertyVec3F.SetZ]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+			}
+		}
+	}
+
+	type common_property_vec3i = common_property {
+		blockoverride "content"
+		{
+			flowcontainer = {
+				spacing = 8
+
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 58 @common_property_height }
+					text = "[ToolPropertyVec3i.GetX]"
+					oneditingfinished_with_changes = "[ToolPropertyVec3i.SetX]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 58 @common_property_height }
+					text = "[ToolPropertyVec3i.GetY]"
+					oneditingfinished_with_changes = "[ToolPropertyVec3i.SetY]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 58 @common_property_height }
+					text = "[ToolPropertyVec3i.GetZ]"
+					oneditingfinished_with_changes = "[ToolPropertyVec3i.SetZ]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+			}
+		}
+	}
+	
+	type common_property_vec2f = common_property {
+		blockoverride "content"
+		{
+			flowcontainer = {
+				spacing = 8
+
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 92 @common_property_height }
+					text = "[ToolPropertyVec2f.GetX]"
+					oneditingfinished_with_changes = "[ToolPropertyVec2f.SetX]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 92 @common_property_height }
+					text = "[ToolPropertyVec2f.GetY]"
+					oneditingfinished_with_changes = "[ToolPropertyVec2f.SetY]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+			}
+		}
+	}
+
+	type common_property_vec2Fixed = common_property {
+		blockoverride "content"
+		{
+			flowcontainer = {
+				spacing = 8
+
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 92 @common_property_height }
+					text = "[ToolPropertyVec2F.GetX]"
+					oneditingfinished_with_changes = "[ToolPropertyVec2F.SetX]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+				
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 92 @common_property_height }
+					text = "[ToolPropertyVec2F.GetY]"
+					oneditingfinished_with_changes = "[ToolPropertyVec2F.SetY]"
+					#onreturnpressed = "[ToolInputDialog.Confirm]"
+				}
+			}
+		}
+	}
+
+	type common_property_vec2i = common_property {
+		blockoverride "content"
+		{
+			flowcontainer = {
+				spacing = 8
+
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 92 @common_property_height }
+					text = "[ToolPropertyVec2i.GetX]"
+					oneditingfinished_with_changes = "[ToolPropertyVec2i.SetX]"
+				}
+				
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 92 @common_property_height }
+					text = "[ToolPropertyVec2i.GetY]"
+					oneditingfinished_with_changes = "[ToolPropertyVec2i.SetY]"
+				}
+			}
+		}
+	}
+
+	type common_property_percentvalue = common_property {
+		blockoverride "content"
+		{
+			flowcontainer = {
+				spacing = 8
+
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 92 @common_property_height }
+					text = "[ToolPropertyVec2fPercent.GetX]"
+					oneditingfinished_with_changes = "[ToolPropertyVec2fPercent.SetX]"
+				}
+				
+				editor_textinput = {
+					using = common_property_text_input
+					size = { 92 @common_property_height }
+					text = "[ToolPropertyVec2fPercent.GetY]"
+					oneditingfinished_with_changes = "[ToolPropertyVec2fPercent.SetY]"
+				}
+			}
+		}
+	}
+	
+	type common_property_searchlist = common_property {
+		blockoverride "content"
+		{
+			editor_toolbar_button = {
+				using = common_property_size
+				text = "[ToolPropertySearchList.GetSelectedText]"
+				onclick = "[ToolPropertySearchList.OpenSearchList]"
+				elide = middle
+			}
+		}
+	}
+
+	type common_property_undoable_searchlist = common_property {
+		blockoverride "content"
+		{
+			editor_toolbar_button = {
+				using = common_property_size
+				text = "[ToolPropertyUndoableSearchList.GetSelectedText]"
+				onclick = "[ToolPropertyUndoableSearchList.OpenSearchList]"
+				elide = middle
+				tooltip = "[ToolProperty.GetTooltip]"
+			}
+		}
+	}
+
+	type common_property_curve = common_property {
+		blockoverride "content"
+		{
+			widget = {
+				using = tools_property_curve
+			}
+		}
+	}
+	
+	type common_property_categories = vbox {
+		layoutpolicy_horizontal = preferred
+		layoutpolicy_vertical = preferred
+		
+		checkbutton = {
+			checked = "[ToolPropertyList.IsExpanded]"
+			onclick = "[ToolPropertyList.SetExpanded(Not(ToolPropertyList.IsExpanded))]"
+			texture = "gfx/editor_gui/editor_entry_header.dds"
+			layoutpolicy_horizontal = preferred
+			
+			size = { 0 24 }
+
+			spriteborder = { 5 5 }
+			spriteType = CorneredStretched
+			framesize = { 16 16 }
+			
+			hbox = {
+				margin_left = 8
+				margin_bottom = 4
+				margin_right = 8
+				
+				editor_textbox = {
+					#raw_text = "#BOLD;COLOR:{0.72,0.72,0.15} [ToolPropertyList.GetLabel] #!"
+					raw_text = "#BOLD; [ToolPropertyList.GetLabel] #!"
+					fontcolor = "[ToolPropertyList.GetColor]"
+					autoresize = yes
+				}
+				
+				widget = {
+					layoutpolicy_horizontal = preferred
+				}
+				
+				checkbutton = {
+					gfxtype = checkbuttongfx
+					shaderfile = "gfx/FX/pdxgui_pushbutton.shader"
+					texture = "gfx/editor_gui/editor_expand_checkbox.dds"
+					framesize = { 16 16 }
+					size = { 8 8 }
+					checked = "[ToolPropertyList.IsExpanded]"
+					onclick = "[ToolPropertyList.SetExpanded(Not(ToolPropertyList.IsExpanded))]"
+				}
+			}
+		}
+		
+		vbox = {
+			name = "list"
+			margin_top = 2
+			spacing = 4
+			layoutpolicy_horizontal = preferred
+			layoutpolicy_vertical = preferred
+			visible = "[ToolPropertyList.IsExpanded]"
+		}
+	}
+}

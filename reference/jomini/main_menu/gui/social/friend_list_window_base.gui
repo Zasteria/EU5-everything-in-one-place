@@ -1,0 +1,457 @@
+types Social
+{
+	type friend_entry = widget
+	{
+		size = { 300 50 }
+		hbox = {
+
+			social_horizontal_spacer = {}
+
+			vbox = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+
+				social_textbox = {
+					text = "[Friend.GetName]"
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = fixed
+					minimumsize = { -1 25 }
+					size = { 0 25 }
+					block "friend_name"
+					{}
+
+					social_textbox = {
+						raw_text = "([Friend.GetUnreadMessageCount])"
+						parentanchor = top|right
+						minimumsize = { 10 -1 }
+						size = { 0 0 }
+						autoresize = yes
+						align = center
+						visible = "[Friend.HasUnreadMessages]"
+						block "friend_unread_messages"
+						{}
+					}
+				}
+
+				social_textbox = {
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = fixed
+					minimumsize = { -1 25 }
+					size = { 0 25 }
+					text = "[Friend.GetAvailabilityString]"
+					block "friend_availability"
+					{}
+				}
+			}
+
+			button = {
+				onclick = "[Friend.StartChat]"
+				texture = "gfx/social/chat.dds"
+				size = { 32 32 }
+				block "friend_button_start_chat"
+				{}
+			}
+
+			social_horizontal_spacer = {}
+
+			vbox = {
+				layoutpolicy_vertical = expanding
+				social_vertical_spacer = {}
+				button = {
+					onclick = "[Friend.RemoveWithConfirmation]"
+					texture = "gfx/social/remove.dds"
+					size = { 10 10 }
+					block "friend_button_remove"
+					{}
+				}
+				widget = {
+					layoutpolicy_vertical = expanding
+				}
+			}
+
+			social_horizontal_spacer = {}
+			social_horizontal_spacer = {}
+		}
+		block "friend_background"
+		{
+			background = {
+				margin = { 2 2 }
+				margin_bottom = 6
+				margin_right = 6
+				texture = "gfx/editor_gui/editor_dropdown_list.dds"
+				spriteType = CorneredStretched
+				spriteborder = { 6 6 }
+				spriteborder_right = 8
+				spriteborder_bottom = 8
+				shaderfile = "gfx/FX/pdxgui_default.shader"
+			}
+		}
+	}
+	type friend_request_entry = widget
+	{
+		size = { 300 50 }
+
+		block "ingoing_friend_request_background"
+		{
+			background = {
+				margin = { 2 2 }
+				margin_bottom = 6
+				margin_right = 6
+				texture = "gfx/editor_gui/editor_dropdown_list.dds"
+				spriteType = CorneredStretched
+				spriteborder = { 6 6 }
+				spriteborder_right = 8
+				spriteborder_bottom = 8
+				shaderfile = "gfx/FX/pdxgui_default.shader"
+			}
+		}
+
+		hbox = {
+
+			social_textbox = {
+				layoutpolicy_horizontal = expanding
+				size = { 50 30 }
+				text = "[FriendRequest.GetName]"
+				block "ingoing_friend_request_name"
+				{}
+			}
+
+			button = {
+				onclick = "[FriendRequest.Accept]"
+				texture = "gfx/social/accept.dds"
+				size = { 32 32 }
+				block "ingoing_friend_request_button_accept"
+				{}
+			}
+
+			social_horizontal_spacer = {}
+			social_horizontal_spacer = {}
+			social_horizontal_spacer = {}
+
+			button = {
+				onclick = "[FriendRequest.Reject]"
+				texture = "gfx/social/remove.dds"
+				size = { 32 32 }
+				block "ingoing_friend_request_button_reject"
+				{}
+			}
+
+			social_horizontal_spacer = {}
+		}
+	}
+	type outgoing_friend_request_entry = widget
+	{
+		size = { 300 48 }
+
+		block "outgoing_friend_request_background"
+		{
+			background = {
+				margin = { 2 2 }
+				margin_bottom = 6
+				margin_right = 6
+				texture = "gfx/editor_gui/editor_dropdown_list.dds"
+				spriteType = CorneredStretched
+				spriteborder = { 6 6 }
+				spriteborder_right = 8
+				spriteborder_bottom = 8
+				shaderfile = "gfx/FX/pdxgui_default.shader"
+			}
+		}
+
+		hbox = {
+
+			social_textbox = {
+				layoutpolicy_horizontal = expanding
+				text = "[OutgoingFriendRequest.GetName]"
+				block "outgoing_friend_request_name"
+				{}
+			}
+
+			button = {
+				texture = "gfx/social/remove.dds"
+				size = { 32 32 }
+				onclick = "[OutgoingFriendRequest.Remove]"
+				block "outgoing_friend_request_button_remove"
+				{}
+			}
+
+			social_horizontal_spacer = {}
+		}
+	}
+
+	type friend_list_window = social_window
+	{
+		name = "friend_list_window"
+		parentanchor = vcenter|left
+		size = { 300 700 }
+		visible = "[FriendListWindow.ShouldBeShown]"
+		blockoverride "title"
+		{
+			text = "FRIEND_LIST_TITLE"
+		}
+		blockoverride "close_button"
+		{
+			onclick = "[FriendListWindow.Hide]"
+		}
+		blockoverride "hbox_properties"
+		{
+			layoutpolicy_horizontal = Preferred
+			layoutpolicy_vertical = Preferred
+		}
+		blockoverride "content_layout"
+		{
+			vbox = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+
+				hbox = {
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = fixed
+
+					icon = {
+						texture = "gfx/interface/paradox_logo.dds"
+						size = { 48 48 }
+					}
+
+					social_horizontal_spacer = {}
+
+					vbox = {
+						layoutpolicy_horizontal = expanding
+						layoutpolicy_vertical = expanding
+
+						social_textbox = {
+							layoutpolicy_horizontal = expanding
+							text = "[Friends.GetLocalProfileName]"
+						}
+
+						hbox = {
+							layoutpolicy_horizontal = expanding
+							layoutpolicy_vertical = fixed
+
+							social_dropdown = {
+								blockoverride "social_dropdown"
+								{
+									datamodel = "[Friends.AccessAvailabilityEntries]"
+									onselectionchanged = "[Friends.SetSelectedAvailabilityEntryIndex]"
+									selectedindex = "[Friends.GetSelectedAvailabilityEntryIndex]"
+									size = {250 30}
+								}
+								blockoverride "item_text"
+								{
+									text = "[AvailabilityEntry.GetAvailabilityString]"
+								}
+							}
+
+							widget = {
+								layoutpolicy_horizontal = expanding
+							}
+						}
+					}
+				}
+
+				social_vertical_spacer = {}
+
+				scrollarea = {
+					# autoresizescrollarea = yes
+					alwaystransparent = yes
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = expanding
+					focuspolicy = all
+					block "scrollarea_friends"
+					{}
+					
+					block "background_friends"
+					{
+						background = {
+							margin = { 2 2 }
+							margin_bottom = 6
+							margin_right = 6
+							texture = "gfx/editor_gui/editor_dropdown_list.dds"
+							spriteType = CorneredStretched
+							spriteborder = { 6 6 }
+							spriteborder_right = 8
+							spriteborder_bottom = 8
+							shaderfile = "gfx/FX/pdxgui_default.shader"
+						}
+					}
+					
+					scrollwidget = {
+						dynamicgridbox = {
+							alwaystransparent = no
+							datamodel = "[Friends.AccessFriends]"
+							block "friend_entries"
+							{}
+
+							item = {
+								friend_entry = { }
+							}
+						}
+					}
+					
+					scrollbar_vertical = {
+						using = SocialVerticalScrollbar
+					}
+					
+					scrollbar_horizontal = {
+						using = SocialHorizontalScrollbar
+					}
+				}
+
+				social_vertical_spacer = {}
+
+				social_textbox = {
+					visible = "[Friends.HasIngoingFriendRequests]"
+					text = "SOCIAL_INGOING_FRIEND_REQUESTS"
+					layoutpolicy_horizontal = expanding
+					autoresize = yes
+					block "friends_ingoing_requests"
+					{}
+				}
+
+				social_vertical_spacer = {
+					visible = "[Friends.HasIngoingFriendRequests]"
+				}
+
+				scrollarea = {
+					visible = "[Friends.HasIngoingFriendRequests]"
+					alwaystransparent = yes
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = expanding
+					focuspolicy = all
+					maximumsize = { -1 150 }
+					block "scrollarea_ingoing_friends"
+					{}
+					
+					block "background_ingoing_requests"
+					{
+						background = {
+							margin = { 2 2 }
+							margin_bottom = 6
+							margin_right = 6
+							texture = "gfx/editor_gui/editor_dropdown_list.dds"
+							spriteType = CorneredStretched
+							spriteborder = { 6 6 }
+							spriteborder_right = 8
+							spriteborder_bottom = 8
+							shaderfile = "gfx/FX/pdxgui_default.shader"
+						}
+					}
+					
+					scrollwidget = {
+						dynamicgridbox = {
+							alwaystransparent = no
+							datamodel = "[Friends.AccessFriendRequests]"
+							block "ingoing_request_entries"
+							{}
+
+							item = {
+								friend_request_entry = {
+								}
+							}
+						}
+					}
+					
+					scrollbar_vertical = {
+						using = SocialVerticalScrollbar
+					}
+					
+					scrollbar_horizontal = {
+						using = SocialHorizontalScrollbar
+					}
+				}
+
+				social_vertical_spacer = {}
+
+				social_textbox = {
+					visible = "[Friends.HasOutgoingFriendRequests]"
+					text = "SOCIAL_OUTGOING_FRIEND_REQUESTS"
+					layoutpolicy_horizontal = expanding
+					autoresize = yes
+				}
+
+				social_vertical_spacer = {
+					visible = "[Friends.HasOutgoingFriendRequests]"
+				}
+
+				scrollarea = {
+					visible = "[Friends.HasOutgoingFriendRequests]"
+					# autoresizescrollarea = yes
+					alwaystransparent = yes
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = expanding
+					focuspolicy = all
+					maximumsize = { -1 150 }
+					
+					block "background_outgoing_requests"
+					{
+						background = {
+							margin = { 2 2 }
+							margin_bottom = 6
+							margin_right = 6
+							texture = "gfx/editor_gui/editor_dropdown_list.dds"
+							spriteType = CorneredStretched
+							spriteborder = { 6 6 }
+							spriteborder_right = 8
+							spriteborder_bottom = 8
+							shaderfile = "gfx/FX/pdxgui_default.shader"
+						}
+					}
+					
+					scrollwidget = {
+						dynamicgridbox = {
+							alwaystransparent = no
+							datamodel = "[Friends.AccessOutgoingFriendRequests]"
+							block "ingoing_request_entries"
+							{}
+
+							item = {
+								outgoing_friend_request_entry = {
+								}
+							}
+						}
+					}
+					
+					scrollbar_vertical = {
+						using = SocialVerticalScrollbar
+					}
+					
+					scrollbar_horizontal = {
+						using = SocialHorizontalScrollbar
+					}
+				}
+
+				social_vertical_spacer = {}
+
+				hbox = {
+					layoutpolicy_horizontal = expanding
+
+					social_horizontal_spacer = {}
+
+					button = {
+						onclick = "[Friends.UpdateFriends]"
+						texture = "gfx/social/refresh.dds"
+						size = { 32 32 }
+						block "button_refresh_friends"
+						{}
+					}
+
+					social_horizontal_spacer = {}
+
+					widget = {
+						layoutpolicy_horizontal = expanding
+					}
+
+					button = {
+						texture = "gfx/social/plus.dds"
+						onclick = "[FriendListWindow.ShowAddFriendWindow]"
+						size = { 32 32 }
+						block "button_add_friend"
+						{}
+					}
+
+					social_horizontal_spacer = {}
+				}
+			}
+		}
+	}
+}

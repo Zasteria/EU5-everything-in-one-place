@@ -1,0 +1,26 @@
+﻿pmcqsg_add = {
+ type = owncountry ai_tick = never automation_tick = never show_message = no
+ potential = { scope:actor = { is_ai = no } }
+ allow = { always = yes }
+ select_trigger = {
+  looking_for_a = country source = actor target_flag = pmcqsg_target name = pmcqsg_pick
+  move_to_next_section_on_click = yes
+  enabled = { scope:actor = { NOT = { is_target_in_variable_list = { name = pmcqsg_pending target = prev } } } }
+  selected = { scope:actor = { is_target_in_variable_list = { name = pmcqsg_pending target = prev } } }
+  interaction_source_list = { scope:actor = { every_country_in_diplomatic_range = { add_to_list = source } } }
+  column = { data = name }
+  visible = {
+   NOT = { this = scope:actor } num_locations > 0 is_discovered_by = scope:actor
+   scope:actor = { NOT = { is_target_in_variable_list = { name = pmcqsg_targets target = prev } } }
+  }
+ }
+ # Native map clicks stage one country. Confirm in the header commits the batch.
+ effect = { scope:actor = {
+  if = { limit = {
+   exists = scope:pmcqsg_target
+   NOT = { is_target_in_variable_list = { name = pmcqsg_pending target = scope:pmcqsg_target } }
+   NOT = { is_target_in_variable_list = { name = pmcqsg_targets target = scope:pmcqsg_target } }
+  } add_to_variable_list = { name = pmcqsg_pending target = scope:pmcqsg_target } }
+  set_variable = pmcqsg_reopen_picker
+ } }
+}

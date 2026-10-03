@@ -1,0 +1,414 @@
+types "LogViewerTypes" {
+
+	type log_list_entry = widget {
+		name = "log_list_entry"
+		size = { 100% 24 }
+
+        tools_checkbutton = {
+            gfxtype = checkbuttongfx
+            shaderfile = "gfx/FX/pdxgui_pushbutton.shader"
+
+            texture = "gfx/editor_gui/editor_selectable_line.png"
+
+            tooltipwidget = {
+                widget = {} # No tooltip
+            }
+            spriteType = CorneredStretched
+
+            margin = { 2 2 }
+    		size = { 100% 24 }
+            fontsize = 12
+            align = left
+            checked = "[LogViewerEntry.IsSelected]"
+            onclick = "[LogViewerEntry.SetSelected( Not(LogViewerEntry.IsSelected) )]"
+            onrightclick = [LogViewerEntry.OpenInEditor]
+
+            hbox = {
+                layoutpolicy_horizontal = expanding
+                layoutpolicy_vertical = fixed
+                spacing = 4
+
+                button = {
+                    tooltipwidget = {
+                        using = dockable_tooltip
+                    }
+                    raw_tooltip = "Open in editor (or: right-click row)"
+                    size = { 20 20 }
+
+                    onclick = [LogViewerEntry.OpenInEditor]
+
+                    icon = {
+                        layoutpolicy_horizontal = fixed
+                        size = { 20 20 }
+                        texture = [LogViewerEntry.GetIcon]
+                        alpha = 0.5
+                    }
+
+                    icon = {
+                        visible = [LogViewerEntry.ContainsScriptFile]
+                        layoutpolicy_horizontal = fixed
+                        parentanchor = bottom|right
+                        size = { 12 12 }
+                        texture = "gfx/tools/log_viewer/script_icon.png"
+                    }
+                }
+                vbox = {
+                    layoutpolicy_horizontal = growing
+                    layoutpolicy_vertical = fixed
+                    editor_textbox = {
+                        layoutpolicy_vertical = fixed
+                        layoutpolicy_horizontal = preferred
+                        raw_text = "#color:{0.6,0.8,0.8,1.0} [LogViewerEntry.GetTimestampShort]#! : [LogViewerEntry.GetMessage]"
+                        align = top|left
+                        size = { 0 18 }
+                        multiline = yes
+                    }
+                }
+            }
+        }
+	}
+}
+
+vbox = {
+	name = "log_status"
+    layoutpolicy_vertical = expanding
+    layoutpolicy_horizontal = expanding
+
+	vbox = {
+	    layoutpolicy_vertical = expanding
+        layoutpolicy_horizontal = expanding
+
+        spacing = -1
+        maximumsize = { 70 110 }
+
+        toolbox_button = {
+            layoutpolicy_vertical = expanding
+            layoutpolicy_horizontal = expanding
+            raw_tooltip = "Show Log Viewer"
+            onclick = "[LogViewer.OpenLinkedLogViewer]"
+            onrightclick = "[LogViewer.GetLastLogEntry.OpenInExternalLogViewer]"
+            size = { 0 0 }
+            minimumsize = { 0 0 }
+            maximumsize = { 70 70 }
+            scissor = yes
+            icon = {
+                name = ":cw_chonk:" 
+                gfxtype = icongfx
+                shaderfile = "gfx/FX/pdxgui_default.shader"
+                texture = "gfx/tools/log_viewer/cw_icon.png"
+                parentanchor = top|hcenter
+                widgetanchor = top|hcenter
+            }
+        }
+
+        vbox = {
+            name = "log_types_counters"
+            datamodel = [LogViewer.AccessTypes]
+
+            layoutpolicy_vertical = fixed
+            layoutpolicy_horizontal = expanding
+
+            spacing = -1
+            item = {
+                toolbox_button = {
+                    size = { 0 21 }
+                    layoutpolicy_vertical = preferred
+                    layoutpolicy_horizontal = growing
+                    raw_tooltip = "Show Log Viewer [LogViewerType.GetName]"
+                    onclick = "[LogViewer.OpenLinkedLogViewerFilteredByType(LogViewerType.GetId)]"
+                    hbox = {
+                        background = {
+                            texture = "gfx/editor_gui/editor_progressbar_background.png"
+                            spriteType = CorneredStretched
+                            spriteborder = { 5 5 }
+                            shaderfile = "gfx/FX/pdxgui_default.shader"
+                            framesize = { 16 16 }
+                            alpha = .7
+                        }
+                        icon = {
+                            layoutpolicy_horizontal = fixed
+                            texture = [LogViewerType.GetIcon]
+                            size = { 16 16 }
+                        }
+                        margin = { 4 2 }
+
+                        textbox = {
+                            margin_left = 2
+                            layoutpolicy_horizontal = preferred                            
+                            layoutpolicy_vertical = fixed
+                            using = tools_label
+                            align = left|top
+                            text = [LogViewerType.GetFilteredCount]
+                            autoresize = yes
+                        }
+                    }
+                }
+            }
+        }
+    }
+    widget = {
+        layoutpolicy_vertical = preferred
+    }
+}
+
+vbox = {
+	name = "log_viewer"
+
+    minimumsize = { 300 150 }
+
+	spacing = 2
+
+	layoutpolicy_horizontal = preferred
+	layoutpolicy_vertical = expanding
+
+    hbox = {
+        size = { 0 24 }
+
+        layoutpolicy_horizontal = expanding
+        layoutpolicy_vertical = fixed
+
+        editor_textbox = {
+            using = tools_label
+            layoutpolicy_horizontal = preferred
+            layoutpolicy_vertical = fixed
+            raw_text = "Search:"
+            autoresize = yes
+            margin_right = 4
+        }
+
+        editor_editbox = {
+            using = tools_editbox
+            align = left
+            margin_left = 4
+            layoutpolicy_horizontal = expanding
+            layoutpolicy_vertical = fixed
+            size = { 100 21 }
+            text = "[LogViewer.GetTextFilter]"
+            oneditingfinished = "[LogViewer.SetTextFilter]"
+
+            toolbox_button = {
+                raw_tooltip = "Reset text filter"
+                onclick = "[LogViewer.ResetTextFilter]"
+                alpha = 0.4
+
+                position = { -3 0 }
+                parentanchor = vcenter|right
+                size = { 14 14 }
+
+                toolbox_icon = {
+                    size = { 16 16 }
+                    texture = "gfx/editor_gui/16px/close.png"
+                }
+            }
+        }
+        toolbox_button = {
+            layoutpolicy_horizontal = preferred
+            raw_tooltip = "Flush log"
+            onclick = "[LogViewer.FlushLog]"
+            size = { 22 22 }
+            toolbox_icon = {
+                size = { 16 16 }
+                texture = "gfx/tools/material/delete.png"
+            }
+        }
+        hbox = {
+            name = "log_types_counters"
+            datamodel = [LogViewer.AccessTypes]
+
+            item = {
+                tools_checkbutton = {
+                    tooltip = "[LogViewerType.GetName]"
+
+                    onclick = "[LogViewerType.SetIsFiltered( Not(LogViewerType.GetIsFiltered) )]"
+
+                    checked = "[LogViewerType.GetIsFiltered()]"
+                    texture = "gfx/editor_gui/editor_selectable_line.png"
+
+                    flowcontainer = {
+                        margin = { 4 3 }
+                        resizeparent = yes
+                        icon = {
+                            texture = [LogViewerType.GetIcon]
+                            size = { 16 16 }
+                        }
+
+                        textbox = {
+                            margin_left = 2
+                            using = tools_label
+                            align = left|top
+                            text = [LogViewerType.GetFilteredCount]
+                            autoresize = yes
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+	scrollarea = {
+		name = "scrollarea_entries"
+		scrollbarpolicy_vertical = always_on
+		scrollbarpolicy_horizontal = always_off
+
+		size = { 0 50 }
+		layoutpolicy_vertical = expanding
+		layoutpolicy_horizontal = preferred
+
+		autoresizeviewport = yes
+
+		viewportwidget = {
+			widget = {
+				scissor = yes
+			}
+		}
+		
+		scrollbar_vertical = {
+			using = editor_vertical_scrollbar
+		}
+		
+		scrollbar_horizontal = {
+			using = editor_horizontal_scrollbar
+		}
+		
+		scrollwidget = {
+			fixedgridbox = {
+				name = "log_entries_gridbox"
+				alwaystransparent = no
+				addcolumn = 100%
+				addrow = 24
+			}
+		}
+	}
+
+	vbox = {
+		visible = "[LogViewer.IsAnyEntrySelected]"
+		layoutpolicy_vertical = preferred
+		layoutpolicy_horizontal = expanding
+		hbox = {
+		    minimumsize = { 0 20 }
+		    layoutpolicy_vertical = fixed
+		    layoutpolicy_horizontal = expanding
+
+		    editor_textbox = {
+                using = tools_label
+                layoutpolicy_vertical = fixed
+	            layoutpolicy_horizontal = preferred
+                raw_text = "Log info:"
+                autoresize = yes
+                margin_right = 4
+            }
+
+            widget = {
+                layoutpolicy_horizontal = expanding
+            }
+
+            toolbox_button = {
+                layoutpolicy_horizontal = preferred
+                raw_tooltip = "Give more space to the log info box"
+                onclick = "[LogViewer.IncreaseLogInfoExpandSize]"
+                size = { 20 20 }
+                toolbox_icon = {
+                    size = { 22 22 }
+                    texture = "gfx/tools/log_viewer/arrow_up.png"
+                }
+            }
+
+            toolbox_button = {
+                layoutpolicy_horizontal = preferred
+                raw_tooltip = "Decrease size of the log info box"
+                onclick = "[LogViewer.DecreaseLogInfoExpandSize]"
+                size = { 20 20 }
+                toolbox_icon = {
+                    size = { 22 22 }
+                    texture = "gfx/tools/log_viewer/arrow_down.png"
+                }
+            }
+            toolbox_button = {
+                visible = [LogViewer.GetSelectedLogEntry.ContainsScriptFile]
+                layoutpolicy_horizontal = preferred
+                raw_tooltip = "Open in script editor (or: right-click log row)"
+                onclick = "[LogViewer.GetSelectedLogEntry.OpenInScriptEditor]"
+                size = { 20 20 }
+                toolbox_icon = {
+                    size = { 22 22 }
+                    texture = "gfx/tools/log_viewer/script_document.png"
+                }
+            }
+
+            toolbox_button = {
+                layoutpolicy_horizontal = preferred
+                raw_tooltip = "Open in code editor (or: right-click log row)"
+                onclick = "[LogViewer.GetSelectedLogEntry.OpenInCodeEditor]"
+                size = { 20 20 }
+                toolbox_icon = {
+                    size = { 22 22 }
+                    texture = "gfx/tools/log_viewer/code_document.png"
+                }
+            }
+
+            toolbox_button = {
+                layoutpolicy_horizontal = preferred
+                raw_tooltip = "Open in external log viewer"
+                onclick = "[LogViewer.GetSelectedLogEntry.OpenInExternalLogViewer]"
+                size = { 20 20 }
+                toolbox_icon = {
+                    size = { 22 22 }
+                    texture = "gfx/tools/log_viewer/open_in_logviewer.png"
+                }
+            }
+		}
+
+        scrollarea = {
+            name = "scrollarea_log"
+            visible = "[LogViewer.IsAnyEntrySelected]"
+            scrollbarpolicy_vertical = always_on
+
+            background = {
+                margin = { 0 0 }
+                texture = "gfx/editor_gui/editor_field.dds"
+                spriteType = CorneredStretched
+                spriteborder = { 4 4 }
+                shaderfile = "gfx/FX/pdxgui_default.shader"
+            }
+
+            size = "[LogViewer.GetLogInfoExpandSizeVector('(float)60')]"
+            layoutpolicy_horizontal = preferred
+    
+            autoresizeviewport = yes
+    
+            viewportwidget = {
+                widget = {
+                    scissor = yes
+                }
+            }
+            
+            scrollbar_vertical = {
+                using = editor_vertical_scrollbar
+            }
+            
+            scrollbar_horizontal = {
+                using = editor_horizontal_scrollbar
+            }
+            
+            scrollwidget = {
+                vbox = {
+                    textbox = {
+                        using = tools_font
+
+                        layoutpolicy_horizontal = expanding
+                        autoresize = yes
+                        multiline= yes
+                        alwaystransparent = no
+                        align = left|top
+                        margin = { 4 4 }
+                        text = "[LogViewer.GetSelectedLogEntry.GetTimestampLong]([LogViewer.GetSelectedLogEntry.GetFilename]:[LogViewer.GetSelectedLogEntry.GetFileLineNo]): [LogViewer.GetSelectedLogEntry.GetMessage]"
+                    }
+                    widget = {
+                        layoutpolicy_vertical = expanding
+                    }
+                }   
+            }
+        }
+	}
+}

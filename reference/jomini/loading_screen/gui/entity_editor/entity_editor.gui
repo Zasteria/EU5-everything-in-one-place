@@ -1,0 +1,369 @@
+types EntityViewer
+{
+	type entity_viewer_widget = cameracontrolwidget
+	{
+		gfxtype = entity_viewer_gfx
+		shaderfile = "gfx/FX/pdxgui_default.shader"
+		effectname = "PdxGuiDefaultNoAlpha"
+	}
+
+	type horizontal_separator = widget
+	{
+		icon = {
+			alpha = 0.3
+			texture = "gfx/editor_gui/separator.dds"
+			size = { 100% 3 }
+		}
+	}
+
+	type vertical_separator = widget
+	{
+		icon = {
+			alpha = 0.3
+			texture = "gfx/editor_gui/separator.dds"
+			size = { 3 100% }
+		}
+	}
+
+	type entity_editor_textbox = editor_textbox
+	{
+		margin_left = 4
+		fontsize = 10
+		font = "tools_font"
+		fontcolor = { 0.8 0.8 0.8 1.0 }
+		autoresize = yes
+		align = left|nobaseline
+	}
+
+	type entity_editor_scrollarea = editor_scrollarea
+	{
+		background = {
+			texture = "gfx/editor_gui/editor_frame.dds"
+			spriteType = CorneredStretched
+			spriteborder = { 5 5 }
+			shaderfile = "gfx/FX/pdxgui_default.shader"
+		}
+	}
+}
+
+template frame_background_properties
+{
+	texture = "gfx/editor_gui/editor_frame.dds"
+	spriteType = CorneredStretched
+	spriteborder = { 5 5 }
+	shaderfile = "gfx/FX/pdxgui_default.shader"
+}
+
+template = frame_background
+{
+	background = {
+		using = frame_background_properties
+	}
+}
+
+template settings_label
+{
+	margin = { 8 0 }
+	autoresize = yes
+}
+
+template lod_info_margin
+{
+	margin = { 32 0 }
+	autoresize = yes
+}
+
+template lod_label_margin
+{
+	margin = { 8 4 }
+	autoresize = yes
+}
+
+hbox = {
+	layoutpolicy_vertical = expanding
+	layoutpolicy_horizontal = expanding
+	minimumsize = { 1100 1000 }
+	name = "entity_editor" #Don't change, used in code.
+
+	input_context = "entity_editor"
+
+
+	vbox = {
+		visible = "[And( EntityEditor.HasEntities, Not( EntityEditor.IsLoading ) )]"
+		layoutpolicy_vertical = expanding
+		layoutpolicy_horizontal = expanding
+		margin = { 4 4 }
+		spacing = 8
+
+		#These buttons are a workaround to make shortcuts work.
+		container = {
+			editor_toolbar_button = {   
+				size = { 0 0 }
+				onclick = "[EntityEditor.AddKeyframeOnMouseToHoveredLane]"
+				input_action = "entity_editor_add_keyframe_on_mouse"
+			}
+
+			editor_toolbar_button = {   
+				size = { 0 0 }
+				onclick = "[EntityEditor.AddKeyframeOnNeedleToHoveredLane]"
+				input_action = "entity_editor_add_keyframe_on_needle"
+			}
+		}
+
+		hbox = { #Top Row. Search list and mute and fit buttons
+			layoutpolicy_horizontal = expanding
+			vbox = {
+				spacing = 8
+				layoutpolicy_vertical = expanding
+				layoutpolicy_horizontal = expanding
+				hbox = {
+					layoutpolicy_horizontal = expanding
+					hbox = {
+						layoutpolicy_horizontal = growing
+						name = "entities_list"
+					}
+
+					editor_textbox = {
+						margin_left = 2
+						raw_text = "#color:{1.0,1.0,1.0,0.6}; * Unsaved Changes"
+						align = left|nobaseline
+						fontsize = 11
+						visible = "[EntityEditor.Entity.HasUnsavedChanges]"
+					}
+
+					hbox = {
+						name = "spacer" #used as a space in bwteen the search list and the fit camera button
+						layoutpolicy_horizontal = expanding
+					}
+					
+					hbox = {
+						layoutpolicy_horizontal = shrinking
+						spacing = 8
+						editor_button = {
+							visible = no #TODO Muting not working.
+							icon = {
+								visible = "[Not( EntityEditor.IsWorldMuted )]"
+								using = tools_centred_anchor
+								texture = "gfx/editor_gui/sound_on.dds"
+								input_action = "entity_editor_mute"
+								raw_tooltip = "Mute everything except this tool"
+								tooltipwidget = {
+									using = dockable_tooltip
+								}
+							}
+
+							icon = {
+								visible = "[EntityEditor.IsWorldMuted]"
+								using = tools_centred_anchor
+								texture = "gfx/editor_gui/sound_off.dds"
+								raw_tooltip = "Unmute everything"
+								input_action = "entity_editor_mute"
+								tooltipwidget = {
+									using = dockable_tooltip
+								}
+							}
+
+							size = { 35 35 }
+							onclick = "[EntityEditor.ToggleMuteWorld]"
+							input_action = "entity_editor_mute"
+							
+							tooltipwidget = {
+								using = dockable_tooltip
+							}
+						}
+
+						toolbox_checkbutton = {
+							raw_tooltip = "Toggle Grid"
+							checked = "[EntityEditor.IsGridVisible]"
+							onclick = "[EntityEditor.ToggleGridVisible]"
+							toolbox_icon = {
+								texture = "gfx/tools/material/grid.png"
+							}
+						}
+
+						editor_button = {
+							raw_text = "Frame Entity"
+							fontsize = 12
+							size = { 130 25 }
+							onclick = "[EntityEditor.FitCamera]"
+							raw_tooltip = "Move and Rotate the camera so it fits the Entity"
+							input_action = "entity_editor_fit_camera"
+							tooltipwidget = { 
+								using = dockable_tooltip
+							}
+						}
+					}
+				}
+
+				editor_textbox = {
+					raw_text = "#color:{1.0,1.0,1.0,0.6};SIZE:13 #ITALIC Use scroll wheel to zoom, left mouse button to rotate and right mouse button to pan."
+					autoresize = yes
+				}
+			}
+		}
+
+		block "entity_editor_viewer"
+		{
+			entity_viewer_widget = {
+				name = "entity_viewer_widget" #Don't change, used in code.
+				layoutpolicy_vertical = expanding
+				layoutpolicy_horizontal = expanding
+				minimumsize = { 720 480 }
+
+				background = {
+					gfxtype = icongfx
+					texture = "gfx/editor_gui/editor_transparent.dds"
+					shaderfile = "gfx/FX/pdxgui_default.shader"
+					spriteType = CorneredTiled
+					tintcolor = { 0.3 0.3 0.3 1 }
+				}
+
+				grid_entity_name = "entity_editor_grid_entity"
+				camera_fov_y_degrees = 60
+				camera_zoom_limits = { 0.1 2000 }
+				camera_near_far = { 0.1 2200 }
+				camera_position = { 8.0 9.0 -7.0 }
+			}
+		}
+
+		hbox = {
+			layoutpolicy_horizontal = expanding
+			hbox = {
+				name = "environments_list"
+			}
+
+			widget = {
+				layoutpolicy_horizontal = expanding
+			}
+			
+		}
+
+		entity_editor_player = {}
+
+		hbox = {
+			layoutpolicy_horizontal = expanding
+			spacing = 8
+
+			editor_textbox = {
+					raw_text = "#color:{1.0,1.0,1.0,0.6};SIZE:13 Last save at: [EntityEditor.GetLastAutoSaveTimestamp] (in [EntityEditor.GetLastAutoSaveDuration|2]s)"
+					autoresize = yes
+					visible = "[EntityEditor.HasLastSaveTimestamp]"
+			}
+
+			editor_textbox = {
+					raw_text = "#color:{1.0,1.0,1.0,0.6};SIZE:13 Auto Saving to User Folder..."
+					autoresize = yes
+					visible = "[EntityEditor.IsAutoSaving]"
+			}
+
+			widget = {
+				name = "spacer"
+				layoutpolicy_horizontal = expanding
+			}
+
+			editor_button = {
+				raw_text = "Save All Entities"
+				raw_tooltip = "Save your changes to all entities to the game folder"
+				fontsize = 12
+				size = { 125 25 }
+				onclick = "[EntityEditor.SaveChanges]"
+				input_action = "tools_save"
+			}
+		}
+	}
+
+	vbox = {
+		layoutpolicy_vertical = preferred
+		editor_frame = {
+			blockoverride "label" { raw_text = "History" }
+			blockoverride "content" {
+				hbox = {
+					layoutpolicy_horizontal = preferred
+					history_toolbar = {}
+					dummy_fill_up = {}
+				}
+			}
+		}
+		animation_tool_properties = {}
+	}
+}
+
+widget = {
+	name = "keyframe_event_editor"
+	layoutpolicy_horizontal = expanding
+	layoutpolicy_vertical = expanding
+	widgetanchor = vcenter|hcenter
+	parentanchor = vcenter|hcenter
+	minimumsize = { 420 260 }
+
+	#For if someone opens this window outside the keyframe
+	editor_textbox = {
+		raw_text = "No valid Event Datacontext is set"
+		visible = "[Not( KeyframeEventEditor.HasKeyframe )]"
+		fontcolor = { 0.5 0.5 0.5 1 }
+		autoresize = yes
+	}
+
+	#for when there is no event
+	vbox = { 
+		visible = "[And( KeyframeEventEditor.HasKeyframe, Not( KeyframeEventEditor.HasEvent ) )]"
+		margin_left = 15
+		editor_textbox = {
+			layoutpolicy_horizontal = expanding
+			raw_text = "No Event is set for this keyframe"
+			align = left
+			autoresize = yes
+		}
+
+		widget = {
+			name = "spacer"
+		}
+	}
+
+	editor_frame = {
+		visible = "[And( KeyframeEventEditor.HasKeyframe, KeyframeEventEditor.HasEvent )]"
+		name = "event_editor_properties"
+		
+		blockoverride "label" { raw_text = "[KeyframeEventEditor.EventDescription] Event" }
+		blockoverride "content"  {
+			#This property list is populated through code. Don't change the name
+			tools_properties_dialog = {
+				margin = { 5 5 }
+				name = "properties" 
+
+				hbox = {
+					layoutpolicy_horizontal = expanding
+					editor_textbox = {
+						raw_text = "Debug Id: [KeyframeEventEditor.KeyframeId]"
+						autoresize = yes
+						align = left|nobaseline
+					}
+
+					widget = {
+						layoutpolicy_horizontal = expanding
+					}
+				}
+
+				hbox = {
+					layoutpolicy_horizontal = expanding
+					editor_textbox = {
+						raw_text = "Editor Id: [KeyframeEventEditor.KeyframeEditorId]"
+						autoresize = yes
+						align = left|nobaseline
+					}
+
+					widget = {
+						layoutpolicy_horizontal = expanding
+					}
+				}
+			}
+
+			widget = {
+				name = "spacer"
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+			}
+		}
+	}
+}
+

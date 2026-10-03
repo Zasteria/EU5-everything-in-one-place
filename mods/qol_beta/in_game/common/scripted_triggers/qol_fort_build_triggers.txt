@@ -1,0 +1,127 @@
+﻿# Calidad de vida EU5 - fort building gates.
+# Read from the fort building_types' allow block (forts.txt / coastal_forts.txt),
+# which runs at location scope with root = location. Forts are only built in
+# owned locations, so the builder is always the location `owner`; vanilla allow
+# blocks use `owner` the same way (e.g. rural_buildings.txt "owner = scope:actor").
+
+# True when the actor country may raise a fortification in this location.
+# The AI always builds forts as before. With no "forbidden" criteria enabled in
+# the CMM list qol__fort_build_forbidden - and no game rule restriction without
+# CMF - nothing is forbidden: vanilla behavior. With the buildings automation off
+# the player is free to build manually anywhere; with it on, a forbidden location
+# type blocks the build (manual and automated alike).
+# Scope: location
+qol_fort_build_allowed = {
+	OR = {
+		# AI countries always build fortifications normally.
+		owner = { is_ai = yes }
+
+		# The player builds manually (automation off): free choice anywhere.
+		owner = {
+			NOT = {
+				OR = {
+					is_system_automated = buildings
+					is_system_automated = expandbuildings
+				}
+			}
+		}
+
+		# Automation on: build anywhere that is not a forbidden location type.
+		NOT = { qol_fort_build_forbidden_at_location = yes }
+	}
+}
+
+# True when this location's type/rank is on the actor country's "forbidden fort
+# locations" list, one criterion per CMM list row (slot 1 = enabled field).
+# Without CMF the row flags do not exist; the non-CMF game rule
+# qol_fort_build_forbidden_rule then governs instead (see
+# qol_fort_build_forbidden_by_rule below).
+# Scope: location. Rows (qol__fort_build_forbidden_i<N>_f1):
+#   i1 rural settlement, i2 town, i3 city, i4 megalopolis, i5 capital,
+#   i6 coast, i7 province capital, i8 every location, i9 not a province capital,
+#   i10 not a coast.
+qol_fort_build_forbidden_at_location = {
+	OR = {
+		AND = {
+			location_rank = location_rank:rural_settlement
+			owner = { "variable_map(cmm|flag:qol__fort_build_forbidden_i1_f1)" >= 1 }
+		}
+		AND = {
+			location_rank = location_rank:town
+			owner = { "variable_map(cmm|flag:qol__fort_build_forbidden_i2_f1)" >= 1 }
+		}
+		AND = {
+			location_rank = location_rank:city
+			owner = { "variable_map(cmm|flag:qol__fort_build_forbidden_i3_f1)" >= 1 }
+		}
+		AND = {
+			location_rank = location_rank:megalopolis
+			owner = { "variable_map(cmm|flag:qol__fort_build_forbidden_i4_f1)" >= 1 }
+		}
+		AND = {
+			is_capital = yes
+			owner = { "variable_map(cmm|flag:qol__fort_build_forbidden_i5_f1)" >= 1 }
+		}
+		AND = {
+			is_coastal = yes
+			owner = { "variable_map(cmm|flag:qol__fort_build_forbidden_i6_f1)" >= 1 }
+		}
+		AND = {
+			is_province_capital = yes
+			owner = { "variable_map(cmm|flag:qol__fort_build_forbidden_i7_f1)" >= 1 }
+		}
+		AND = {
+			always = yes
+			owner = { "variable_map(cmm|flag:qol__fort_build_forbidden_i8_f1)" >= 1 }
+		}
+		AND = {
+			NOT = { is_province_capital = yes }
+			owner = { "variable_map(cmm|flag:qol__fort_build_forbidden_i9_f1)" >= 1 }
+		}
+		AND = {
+			NOT = { is_coastal = yes }
+			owner = { "variable_map(cmm|flag:qol__fort_build_forbidden_i10_f1)" >= 1 }
+		}
+		AND = {
+			# No CMF: the row flags never exist, so the game rule governs.
+			NOT = { is_key_in_variable_map = { name = cmm target = flag:qol__fort_build_forbidden_i1_f1 } }
+			qol_fort_build_forbidden_by_rule = yes
+		}
+	}
+}
+
+# True when a non-CMF game rule forbids raising a fortification in this location
+# type. Each option forbids that rank and every rank below it; "all" forbids
+# every location regardless of rank. Scope: location.
+qol_fort_build_forbidden_by_rule = {
+	OR = {
+		AND = {
+			location_rank = location_rank:rural_settlement
+			OR = {
+				has_game_rule = qol_fort_build_forbidden_rural
+				has_game_rule = qol_fort_build_forbidden_town
+				has_game_rule = qol_fort_build_forbidden_city
+				has_game_rule = qol_fort_build_forbidden_all
+			}
+		}
+		AND = {
+			location_rank = location_rank:town
+			OR = {
+				has_game_rule = qol_fort_build_forbidden_town
+				has_game_rule = qol_fort_build_forbidden_city
+				has_game_rule = qol_fort_build_forbidden_all
+			}
+		}
+		AND = {
+			location_rank = location_rank:city
+			OR = {
+				has_game_rule = qol_fort_build_forbidden_city
+				has_game_rule = qol_fort_build_forbidden_all
+			}
+		}
+		AND = {
+			location_rank = location_rank:megalopolis
+			has_game_rule = qol_fort_build_forbidden_all
+		}
+	}
+}

@@ -1,0 +1,115 @@
+types Social
+{
+	type create_social_profile_window = social_window
+	{
+		name = "create_social_profile_window"
+		visible = no
+		parentanchor = vcenter|hcenter
+		size = { 500 -1 }
+		minimumsize = { 500 -1 }
+
+
+		blockoverride "title"
+		{
+			text = "CREATE_SOCIAL_PROFILE_WINDOW_TITLE"
+		}
+		blockoverride "close_button"
+		{
+			onclick = "[CreateSocialProfileWindow.Hide]"
+		}
+		blockoverride "hbox_properties"
+		{
+			layoutpolicy_horizontal = Preferred
+			layoutpolicy_vertical = expanding
+		}
+		blockoverride "content_layout"
+		{
+			widget = {
+				block "create_social_profile_block_properties" {}
+
+				vbox = {
+					block "create_social_profile_vbox_properties"
+					{
+						resizeparent = yes
+						margin = { 10 10 }
+					}
+
+					social_textbox = {
+						text = "CREATE_SOCIAL_PROFILE_WINDOW_DESCRIPTION"
+
+						layoutpolicy_vertical = expanding
+						layoutpolicy_horizontal = expanding
+						multiline = yes
+						align = top
+					}
+
+					social_textbox_entry = {
+						blockoverride "title"
+						{
+							text = "SOCIAL_NAME"
+						}
+						blockoverride "editbox_text"
+						{
+							text = "[CreateSocialProfileWindow.GetName]"
+						}
+						blockoverride "textbox_size"
+						{
+							size = { 130 30 }
+						}
+						layoutpolicy_horizontal = expanding
+						blockoverride "social_editbox"
+						{
+							ontextchanged = "[CreateSocialProfileWindow.SetName]"
+							onreturnpressed = "[CreateSocialProfileWindow.Create]"
+							block "social_editbox_properties"{}
+						}
+
+					}
+					widget = {
+						visible = "[Not(StringIsEmpty(CreateSocialProfileWindow.GetErrorMessage))]"
+						layoutpolicy_horizontal = expanding
+						size = { -1 60 }
+
+						social_error_textbox = {
+							text = "CREATE_SOCIAL_PROFILE_ERROR"
+							multiline = yes
+							align = center
+							size = { 100% 60 }
+
+							block "textbox_error" {}
+						}
+					}
+
+					social_vertical_spacer = {}
+					hbox = {
+						layoutpolicy_horizontal = expanding
+						social_button = {
+							text = "CANCEL"
+							layoutpolicy_horizontal = fixed
+							onclick = "[CreateSocialProfileWindow.Hide]"
+
+							block "button_cancel" {}
+						}
+
+						widget = {
+							layoutpolicy_horizontal = expanding
+						}
+
+						social_button_load_indicator = {
+							text = "J_CREATE_PROFILE"
+							layoutpolicy_horizontal = fixed
+							enabled = "[And(CreateSocialProfileWindow.IsValidName, Not(CreateSocialProfileWindow.IsCreatingProfile))]"
+							onclick = "[CreateSocialProfileWindow.Create]"
+
+							block "button_load_create_profile" {}
+							blockoverride "load_indicator"
+							{
+								visible = "[CreateSocialProfileWindow.IsCreatingProfile]"
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

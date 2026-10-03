@@ -1,0 +1,384 @@
+template settings_dropdown
+{
+	block "dropdown_item_size" {}
+	alwaystransparent = no
+
+	active_item = {
+		widget = {
+			block "dropdown_item_size" {}
+			
+			button = {
+				size = { 100% 100% }
+				texture = "gfx/editor_gui/editor_dropdown.dds"
+				spriteType = CorneredStretched
+				gfxtype = framedbuttongfx
+				effectname = "NoHighlight"
+				spriteborder = { 4 4 }
+				spriteborder_right = 24
+				button_trigger = none
+				framesize = { 32 16 }
+				upframe = 1
+				downframe = 2
+				overframe = 3
+				activeframe = 2
+				disableframe = 4
+			}
+			
+			editor_textbox = {
+				margin_left = 10
+				block "dropdown_active_item_text"
+				{
+					block "dropdown_item_text" {}
+				}
+				size = { 100% 100% }
+				fontsize = 12
+				align = vcenter|nobaseline
+			}
+		}
+	}
+	
+	item = {
+		widget = {			
+			button = {
+				size = { 100% 100% }
+				texture = "gfx/editor_gui/editor_dropdown_item_norm_over_active.png"
+				spriteType = CorneredTiled
+				spriteborder = { 1 1 }
+				gfxtype = framedbuttongfx
+				framesize = { 8 8 }
+				upframe = 1
+				downframe = 3
+				overframe = 2
+				activeframe = 3
+				disableframe = 1
+				button_trigger = none
+			}
+			
+			editor_textbox = {
+				margin_left = 10
+				block "dropdown_item_text" {}
+				size = { 100% 100% }
+				fontsize = 12
+				align = vcenter|nobaseline
+			}
+		}
+	}
+	
+	list = {
+		scrollarea = {
+			block "dropdown_list_position" {}
+			maximumsize = { -1 300 }
+			autoresizescrollarea = yes
+			alwaystransparent = yes
+			
+			background = {
+				margin_bottom = 4
+				margin_right = 4
+				texture = "gfx/editor_gui/editor_dropdown_list.dds"
+				spriteType = CorneredStretched
+				spriteborder = { 6 6 }
+				spriteborder_right = 8
+				spriteborder_bottom = 8
+				shaderfile = "gfx/FX/pdxgui_default.shader"
+			}
+			
+			scrollwidget = {
+				fixedgridbox = {
+					alwaystransparent = no
+					setitemsizefromcell = yes
+					block "dropdown_gridbox_size" {}
+				}
+			}
+			
+			scrollbar_vertical = {
+				using = editor_vertical_scrollbar
+			}
+			
+			scrollbar_horizontal = {
+				using = editor_horizontal_scrollbar
+			}
+		}
+	}
+}
+
+
+
+editor_textbox = {
+	name = "setting_title"
+	fontsize = 13
+	size = { 210 20 }
+	text = "[PdxSetting.GetTitle]"
+	tooltipwidget = {
+        using = editor_tooltip
+    }
+	tooltip = "[PdxSetting.GetTooltip]"
+	elide = right
+	align = vcenter|nobaseline
+	margin_right = 20
+}
+
+
+container = {
+	name = "setting_value"
+	
+	scrollbar = {
+		name = "setting_value_scrollbar"
+		size = { 175 14 }
+		direction = horizontal
+		parentanchor = left|vcenter
+
+		value = "[PdxValueSetting.GetPendingValue(PdxSetting.GetSetting)]"
+
+		track = {
+			using = editor_scrollbar_track
+		}
+
+		slider = {
+			using = editor_scrollbar_slider
+		}
+
+		dec_button = {
+			editor_scrollbar_button = {
+				upframe = 9
+				downframe = 10
+				overframe = 11
+				disableframe = 12
+			}
+		}
+
+		inc_button = {
+			editor_scrollbar_button = {
+				upframe = 13
+				downframe = 14
+				overframe = 15
+				disableframe = 16
+			}
+		}
+	}
+	
+	editor_textbox = {
+		name = "setting_value_eb"
+		position = { 180 0 }
+		size = { 40 20 }
+		align = center|nobaseline
+		text = "[PdxValueSetting.GetPendingValue(PdxSetting.GetSetting)]"
+		fontcolor = "[Select_CVector4f( PdxValueSetting.HasValueChanged(PdxSetting.GetSetting), '(CVector4f)1.0,0.0,0.0,1.0', '(CVector4f)1.0,1.0,1.0,1.0' )]"
+	}
+}
+
+
+container = {
+	name = "setting_enum"
+
+	dropdown = {
+		name = "setting_enum_dropdown"
+		using = settings_dropdown
+		selectedindex = "[GetEnumIndex(PdxSetting.GetSetting)]"
+		
+		blockoverride "dropdown_item_size" { size = { 220 20 } }
+		blockoverride "dropdown_list_position" { position = { 0 20 } }
+		blockoverride "dropdown_gridbox_size"
+		{
+			addcolumn = 220
+			addrow = 20
+		}
+		blockoverride "dropdown_item_text"
+		{
+			text = "[Localize(CString.GetString)]"
+			fontcolor = "[Select_CVector4f( PdxEnumSetting.HasValueChanged(CString.GetString), '(CVector4f)1.0,0.0,0.0,1.0', '(CVector4f)1.0,1.0,1.0,1.0' )]"
+		}
+	}
+}
+
+
+widget = {
+	name = "setting_bool"
+	size = { 220 20 }
+
+	checkbutton = {
+		using = editor_checkbutton
+		name = "setting_bool_cb"
+		parentanchor = left|vcenter
+		checked = "[GetIsChecked(PdxSetting.GetSetting)]"
+	}
+}
+
+widget = {
+	name = "setting_callback"
+	size = { 220 20 }
+
+	button = {
+		size = { 24 24 }
+		name = "setting_callback_button"
+		parentanchor = left|vcenter
+	}
+}
+
+container = {
+	name = "setting_string"
+
+	editor_editbox = {
+		name = "setting_string_eb"
+		text = "[GetStringSettingText(PdxSetting.GetSetting)]"
+		using = property_editbox
+		size = { 220 20 }
+	}
+}
+
+container = {
+	name = "setting_string_no_edit"
+
+	editor_textbox = {
+		name = "setting_string_eb"
+		text = "[GetStringSettingText(PdxSetting.GetSetting)]"
+		size = { 220 20 }
+		fontsize = 12
+		align = vcenter|nobaseline
+		parentanchor = left|vcenter
+	}
+}
+
+
+vbox =
+{
+    name = "settingswindow"	
+    layoutpolicy_horizontal = expanding
+    layoutpolicy_vertical = expanding
+    spacing = 2
+    margin = { 0 0 }
+    minimumsize = { 0 0 }
+
+    hbox = {
+        layoutpolicy_horizontal = expanding
+        layoutpolicy_vertical = fixed
+
+        margin_bottom = 4
+
+        editor_textbox = {
+            using = tools_label
+            layoutpolicy_horizontal = preferred
+            layoutpolicy_vertical = fixed
+            raw_text = "Category:"
+            autoresize = yes
+            margin_right = 8
+        }
+        dropdown = {
+            name = "categories"
+            using = settings_dropdown
+
+            size = { 200 18 }
+
+            blockoverride "dropdown_item_size" { size = { 200 20 } }
+            blockoverride "dropdown_list_position" { position = { 0 20 } }
+            blockoverride "dropdown_gridbox_size"
+            {
+                addcolumn = 200
+                addrow = 20
+            }
+            blockoverride "dropdown_item_text"
+            {
+                text = "[PdxSettingsWindowCategory.GetName]"
+            }
+        }
+        widget = {
+            layoutpolicy_horizontal = expanding
+        }
+    }
+
+    hbox = {
+        margin_left = 5
+
+        layoutpolicy_horizontal = preferred
+        layoutpolicy_vertical = preferred
+
+        scrollarea = {
+            layoutpolicy_horizontal = expanding
+            layoutpolicy_vertical = expanding
+            scrollbarpolicy_vertical = as_needed
+            scrollbarpolicy_horizontal = as_needed
+            scrollbaralign_vertical = right
+            scrollbaralign_horizontal = bottom
+            autoresizeviewport = yes
+
+            viewportwidget = {
+                widget = {
+                    scissor = yes
+                }
+            }
+
+            scrollwidget = {
+                dynamicgridbox = {
+                    size = { 100% 100% }
+                    name = "settings"
+                    setitemsizefromcell = yes
+                    alwaystransparent = yes
+                }
+            }
+
+            scrollbar_vertical = {
+                using = editor_vertical_scrollbar
+            }
+
+            scrollbar_horizontal = {
+                using = editor_horizontal_scrollbar
+            }
+        }
+    }
+    hbox = {
+        layoutpolicy_horizontal = expanding
+
+        margin = { 5 5 }
+
+        editor_textbox = {
+            visible = [PdxSettingsWindow.AppliedOnRestart]
+            fontcolor = { 1 0.1 0.1 1 }
+            fontsize = 14
+            size = { 130 20 }
+            raw_text = "Restart Required"
+            elide = right
+            align = vcenter|nobaseline
+            margin_right = 20
+        }        
+		
+		editor_textbox = {
+            visible = [PdxSettingsWindow.HasChanged]
+            fontcolor = { 1 0.1 0.1 1 }
+            fontsize = 14
+            size = { 120 20 }
+            raw_text = "Save Required"
+            elide = right
+            align = vcenter|nobaseline
+            margin_right = 20
+        }
+
+        widget = {
+            layoutpolicy_horizontal = expanding
+        }
+        editor_button = {
+            name = "apply"
+            size = { 80 22 }
+            raw_text = "Apply"
+            enabled = [PdxSettingsWindow.AllowApply]
+            onclick = [PdxSettingsWindow.OnApply]
+        }
+		editor_button = {
+            name = "restore"
+            size = { 80 22 }
+            raw_text = "Restore"
+            enabled = [PdxSettingsWindow.AllowRestore]
+            onclick = [PdxSettingsWindow.OnRestore]
+        }
+        editor_button = {
+            name = "cancel"
+            size = { 80 22 }
+            raw_text = "Cancel"
+            onclick = [PdxSettingsWindow.OnCancel]
+        }
+        editor_button = {
+            name = "save"
+            size = { 80 22 }
+            raw_text = "Ok"
+            onclick = [PdxSettingsWindow.OnSave]
+        }
+    }
+}

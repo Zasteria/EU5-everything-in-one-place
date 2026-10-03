@@ -1,0 +1,114 @@
+types VariableInspector
+{
+	type variable_inspector = hbox {
+		spacing = 2
+		editor_textinput = {
+			layoutpolicy_horizontal = growing
+			layoutstretchfactor_horizontal = 1
+			size = { 50 18 }
+			text = "[VariableInspectorVariable.GetName]"
+			oneditingfinished = "[VariableInspectorVariable.SetName]"
+			raw_tooltip = "Variable name"
+		}
+		scope_object_inspector = {
+			layoutstretchfactor_horizontal = 2
+			datacontext = "[VariableInspectorVariable.AccessScopeEditor]"
+		}
+		editor_textinput = {
+			layoutpolicy_horizontal = fixed
+			size = { 60 18 }
+			align = right
+			text = "[VariableInspectorVariable.GetRemainingTicks]"
+			oneditingfinished = "[VariableInspectorVariable.SetRemainingTicks]"
+			raw_tooltip = "Ticks until deleted"
+		}
+	}
+
+	type variable_inspector_entry = hbox {
+		spacing = 2
+		variable_inspector = {
+			layoutpolicy_horizontal = growing
+			datacontext = "[VariableInspectorEntry.AccessVariable]"
+		}
+		editor_button = {
+			layoutpolicy_horizontal = fixed
+			name = "delete_variable"
+			size = { 20 20 }
+			using = editor_font
+			using = GruvboxLightRedFont
+			fontweight = bold
+			raw_text = "X"
+			align = center|nobaseline
+			raw_tooltip = "Delete variable"
+			
+			onclick = "[VariableInspectorEntry.Delete]"
+		}
+	}
+}
+
+vbox = {
+	name = "variable_inspector_plugin"
+	layoutpolicy_horizontal = preferred
+	layoutpolicy_vertical = expanding
+	spacing = 2
+
+	editor_textbox = {
+		layoutpolicy_horizontal = preferred
+		size = { 0 20 }
+		align = left|vcenter
+		raw_text = "#BOLD Variables #! ([VariableInspectorPlugin.GetNumVariables] entries)"
+	}
+
+	vbox = {
+		datamodel = "[VariableInspectorPlugin.AccessVariables]"
+		layoutpolicy_horizontal = preferred
+		layoutpolicy_vertical = expanding
+		
+		using = InspectorSubIndent
+
+		item = {
+			variable_inspector_entry = {
+				layoutpolicy_horizontal = preferred
+				layoutpolicy_vertical = fixed
+			}
+		}
+	}
+
+	vbox = {
+		layoutpolicy_horizontal = preferred
+		layoutpolicy_vertical = expanding
+		using = InspectorSubIndent
+
+		editor_textbox = {
+			layoutpolicy_horizontal = preferred
+			size = { 0 20 }
+			align = left|vcenter
+			raw_text = "Add new variable"
+		}
+
+		hbox = {
+			layoutpolicy_horizontal = preferred
+			layoutpolicy_vertical = preferred
+			margin = { 2 2 }
+			spacing = 2
+
+			variable_inspector = {
+				layoutpolicy_horizontal = growing
+				datacontext = "[VariableInspectorPlugin.AccessSetupVariable]"
+			}
+
+			editor_button = {
+				name = "add_variable"
+				size = { 20 20 }
+				using = editor_font
+				using = GruvboxLightAquaFont
+				fontweight = bold
+				raw_text = "+"
+				align = center|nobaseline
+				
+				onclick = "[VariableInspectorPlugin.AddVariable]"
+				focuspolicy = all
+			}
+		}
+	}
+}

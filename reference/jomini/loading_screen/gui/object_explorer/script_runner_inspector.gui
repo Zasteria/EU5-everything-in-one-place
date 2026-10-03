@@ -1,0 +1,265 @@
+types ScriptRunnerTypes {
+	type script_runner_result = vbox {
+		layoutpolicy_horizontal = preferred
+		visible = "[ScriptRunnerResult.IsValid]"
+
+		editor_info_hbox = {
+			tooltip = "[ScriptRunnerResult.GetTooltip]"
+			visible = "[Not(ScriptRunnerResult.IsMissingTooltip)]"
+
+			blockoverride "text"
+			{
+				raw_text = "Hover me for a tooltip."
+			}
+		}
+
+		editor_error_hbox = {
+			layoutpolicy_horizontal = fixed
+			visible = "[ScriptRunnerResult.IsMissingTooltip]"
+			blockoverride "text"
+			{
+				raw_text = "No tooltip found!"
+			}
+		}
+
+		vbox = {
+			oncreate = "[BindFoldOutContext]"
+			visible = "[ScriptRunnerResult.HasResult]"
+			layoutpolicy_horizontal = preferred
+			inspector_header = {
+				blockoverride "textbox" {
+					fontcolor = { 1 1 1 1 }
+					raw_text = "Debug Output"
+				}
+			}
+
+			vbox = {
+				layoutpolicy_horizontal = preferred
+				using = InspectorSubIndent
+				visible = "[PdxGuiFoldOut.IsUnfolded]"
+
+				inspector_scrollarea = {
+					layoutpolicy_horizontal = preferred
+
+					size = { 0 150 }
+					
+					blockoverride "area_widget" 
+					{
+						editor_textbox = {
+							name = "result"
+							minimumsize = { 200 150 }
+							background = { using = EditorGreyOutBackground }
+
+							autoresize = yes
+							align = top|left
+							multiline = yes
+							text = "[ScriptRunnerResult.GetResult]"
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+vbox = {
+	name = "script_runner_inspector_plugin"
+	layoutpolicy_horizontal = preferred
+	layoutpolicy_vertical = expanding
+
+	spacing = 5
+	margin_top = 5
+	margin_bottom = 5
+
+	vbox = {
+		layoutpolicy_horizontal = preferred
+		layoutpolicy_vertical = expanding
+		oncreate = "[BindFoldOutContext]"
+		inspector_header = {
+			blockoverride "textbox" {
+				fontcolor = { 1 1 1 1 }
+				raw_text = "Saved Scopes"
+			}
+		}
+
+		vbox = {
+			margin_top = 4
+			layoutpolicy_horizontal = preferred
+			layoutpolicy_vertical = expanding
+			visible = "[PdxGuiFoldOut.IsUnfolded]"
+			spacing = 5
+			using = InspectorSubIndentBig
+			background = { using = EditorFoldoutBackground }
+
+			variable_store = {
+				layoutpolicy_horizontal = preferred
+				datacontext = "[ScriptRunnerInspector.AccessEventTargets.AccessVariables]"
+
+				blockoverride "title" {
+					raw_text = "#BOLD Scopes #! ([VariableStore.GetNumVariables] entries)"
+					raw_tooltip = "Set up the scope references that should be available during script execution."
+				}
+			}
+
+			variable_list_store = {
+				layoutpolicy_horizontal = preferred
+				datacontext = "[ScriptRunnerInspector.AccessEventTargets.AccessVariableLists]"
+
+				blockoverride "title" {
+					raw_text = "#BOLD Scope Lists #! ([VariableListStore.GetNumVariableLists] entries)"
+					raw_tooltip = "Set up the lists of scope reference that should be available during script execution."
+				}
+			}
+
+			editor_textbox = {
+				layoutpolicy_horizontal = growing
+				layoutpolicy_vertical = fixed
+				size = { 0 20 }
+				align = left|vcenter
+				raw_text = "Let effect modify saved scopes:"
+				raw_tooltip = "When checked, any modifications made to the saved scopes by an effect (not a trigger!) will be reflected here and override the previous settings. This allows you to set scopes from an effect."
+
+				checkbutton = {
+					parentanchor = right|vcenter
+					position = { 0 0 }
+					gfxtype = checkbuttongfx
+					shaderfile = "gfx/FX/pdxgui_pushbutton.shader"
+					texture = "gfx/editor_gui/editor_checkbox.dds"
+					framesize = { 16 16 }
+					size = { 16 16 }
+					checked = "[ScriptRunnerInspector.ShouldModifyEventTargets]"
+					onclick = "[ScriptRunnerInspector.ToggleModifyEventTargets]"
+				}
+			}
+		}
+	}
+
+	vbox = {
+		oncreate = "[BindFoldOutContext]"
+		layoutpolicy_horizontal = preferred
+		layoutpolicy_vertical = expanding
+		inspector_header = {
+			blockoverride "textbox" {
+				fontcolor = { 1 1 1 1 }
+				raw_text = "Trigger"
+			}
+		}
+		vbox = {
+			margin_top = 4
+			layoutpolicy_horizontal = preferred
+			layoutpolicy_vertical = preferred
+			visible = "[PdxGuiFoldOut.IsUnfolded]"
+			spacing = 3
+			using = InspectorSubIndentBig
+			background = { using = EditorFoldoutBackground }
+
+			editor_textinput = {
+				layoutpolicy_horizontal = preferred
+				name = "trigger"
+				autoresize = yes
+				minimumsize = { 200 150 }
+
+				align = top|left
+				text = "[ScriptRunnerInspector.GetTrigger]"
+				multiline = yes
+				maxcharacters = 10000000
+				font = tools_font_mono
+				oneditingfinished = "[ScriptRunnerInspector.SetTrigger]"
+				accept_tabs = yes
+			}
+
+			editor_button = {
+				layoutpolicy_horizontal = expanding
+				name = "run_trigger"
+				size = { 20 20 }
+				fontcolor = { 1 1 1 1 }
+				raw_text = "Run"
+				align = center|nobaseline
+				using = editor_font
+				raw_tooltip = "Run the trigger in the current scope, set up the tooltip, and print out debug information."
+				
+				onclick = "[ScriptRunnerInspector.RunTrigger]"
+				focuspolicy = all
+			}
+
+			script_runner_result = {
+				datacontext = "[ScriptRunnerInspector.AccessTriggerResult]"
+			}
+		}
+	}
+
+	vbox = {
+		oncreate = "[BindFoldOutContext]"
+		layoutpolicy_horizontal = preferred
+		layoutpolicy_vertical = expanding
+		inspector_header = {
+			blockoverride "textbox" {
+				fontcolor = { 1 1 1 1 }
+				raw_text = "Effect"
+			}
+		}
+		vbox = {
+			margin_top = 4
+			layoutpolicy_horizontal = preferred
+			layoutpolicy_vertical = expanding
+			visible = "[PdxGuiFoldOut.IsUnfolded]"
+			spacing = 3
+			using = InspectorSubIndentBig
+			background = { using = EditorFoldoutBackground }
+
+			editor_textinput = {
+				layoutpolicy_horizontal = preferred
+				name = "effect"
+				autoresize = yes
+				minimumsize = { 200 150 }
+
+				align = top|left
+				text = "[ScriptRunnerInspector.GetEffect]"
+				multiline = yes
+				maxcharacters = 10000000
+				font = tools_font_mono
+				oneditingfinished = "[ScriptRunnerInspector.SetEffect]"
+				accept_tabs = yes
+			}
+
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = fixed
+
+				editor_button = {
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = fixed
+					name = "parse_trigger"
+					size = { 20 20 }
+					fontcolor = { 1 1 1 1 }
+					raw_text = "Parse"
+					align = center|nobaseline
+					using = editor_font
+					
+					onclick = "[ScriptRunnerInspector.ParseEffect]"
+					raw_tooltip = "Parse the effect and update the tooltip, but do not run it."
+					focuspolicy = all
+				}
+
+				editor_button = {
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = fixed
+					name = "run_trigger"
+					size = { 20 20 }
+					fontcolor = { 1 1 1 1 }
+					raw_text = "Run"
+					align = center|nobaseline
+					using = editor_font
+					
+					onclick = "[ScriptRunnerInspector.RunEffect]"
+					raw_tooltip = "Run the effect and update the tooltip. Attention: This modifies the game state!"
+					focuspolicy = all
+				}
+			}
+
+			script_runner_result = {
+				datacontext = "[ScriptRunnerInspector.AccessEffectResult]"
+			}
+		}
+	}
+}

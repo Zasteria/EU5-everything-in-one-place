@@ -18,7 +18,6 @@
 # Leading and trailing spaces are stripped from both, so a pair cannot depend on
 # them. Lines starting with # are comments.
 
-
 # ---------------------------------------------------------------------------
 # Accessors that do not exist. `dump_data_types` lists every one the engine has
 # and none of these are in it; the correct spelling is the one the English key
@@ -61,21 +60,9 @@ why: `GerHerHis` — r for t. The accessor is `GetHerHis`.
 from: .GerHerHis
 to: .GetHerHis
 
-why: `GetRuвler` carries a Cyrillic в in the middle of a Latin accessor name.
-from: .GetRuвler
-to: .GetRuler
-
-why: `GetEstateNameWith(` — an accessor name cut off mid-word. `Government.GetEstateName` takes the estate key.
-from: .GetEstateNameWith(
-to: .GetEstateName(
-
 why: `GetParliamentName` is not an accessor; the parliament is an object with a name of its own.
 from: .GetGovernment.GetParliamentName
 to: .GetGovernment.GetParliament.GetName
-
-why: `GetCapitalName` is not an accessor. Where the chain already reached the capital, only the name is missing.
-from: .GetCapital.GetCapitalName
-to: .GetCapital.GetName
 
 why: and where it did not, both steps are.
 from: .GetCountry.GetCapitalName
@@ -92,7 +79,6 @@ to: .GetGovernment.GetConsort.
 why: a country has no `.Ruler`; the ruler is reached through the government.
 from: .GetLeaderCountry.Ruler.
 to: .GetLeaderCountry.GetGovernment.GetRuler.
-
 
 # ---------------------------------------------------------------------------
 # Roots that are not scopes.
@@ -115,7 +101,6 @@ why: `Rtarget_ruler` — a stray R in front of the saved scope `target_ruler`.
 from: Rtarget_ruler.
 to: target_ruler.
 
-
 # ---------------------------------------------------------------------------
 # `Custom()` asked of a string.
 #
@@ -125,10 +110,6 @@ to: target_ruler.
 # the custom localization produces the name itself, declined.
 # ---------------------------------------------------------------------------
 
-why: the country is already in hand; `GetName` in front of `Custom` throws it away.
-from: .GetName.Custom(
-to: .Custom(
-
 why: `GetName.GetName` — the same doubling, without a Custom after it.
 from: .GetName.GetName]
 to: .GetName]
@@ -136,7 +117,6 @@ to: .GetName]
 why: `GetCourt` is not an accessor, and `parliament_ru_GEN` is a country custom localization anyway.
 from: .GetCountry.GetCourt.Custom('parliament_ru_GEN')
 to: .GetCountry.Custom('parliament_ru_GEN')
-
 
 # ---------------------------------------------------------------------------
 # Custom localizations asked of the wrong scope.
@@ -154,7 +134,6 @@ to: .GetInternationalOrganization.Custom('parliament_io_ru_
 why: `Parliament.GetParliamentLocation` — the government has no such accessor, the parliament does.
 from: Player.GetGovernment.GetParliamentLocation.
 to: Player.GetGovernment.GetParliament.GetParliamentLocation.
-
 
 # ===========================================================================
 # Brackets.
@@ -198,11 +177,6 @@ key: coup_attempt.7.desc
 why: Select_CString with no `[` in front of it.
 from: и Select_CString(target_character_2.IsFemale
 to: и [Select_CString(target_character_2.IsFemale
-
-key: DIPLOREASON_CULTURE_VIEW
-why: one `]` too many at the end of the line.
-from: Custom('CL_GEN')|L]#!#!]
-to: Custom('CL_GEN')|L]#!#!
 
 key: pradhana_maha_samanta_tt
 why: the line begins mid-data-function; the `[` never made it.
@@ -299,16 +273,6 @@ why: Select_CString with no `[` in front of it.
 from: станет Select_CString(mongol_aristocrat.IsFemale
 to: станет [Select_CString(mongol_aristocrat.IsFemale
 
-key: flavor_kor.6.title
-why: the title ends inside an unclosed data function.
-from: из [target_country.Custom('CL_GEN')
-to: из [target_country.Custom('CL_GEN')]
-
-key: flavor_mam.79.desc
-why: an extra `[` inside Select_CString's first argument.
-from: [Select_CString([target_character.IsFemale, 'Она'
-to: [Select_CString(target_character.IsFemale, 'Она'
-
 key: flavor_mug.7.desc
 why: the rank lost its `[`.
 from: ROOT.GetCountry.Custom('rank_ru_PREP')
@@ -354,11 +318,6 @@ why: a `]` left behind after the tooltip markup it belonged to.
 from: #L библиотек#!#! ] в ваших
 to: #L библиотек#!#! в ваших
 
-key: hint_control_hint_text_1
-why: the paragraph starts with a Concept that lost its `[`.
-from: \n\nConcept('max_control'
-to: \n\n[Concept('max_control'
-
 key: MARKET_BURGHER_FOOD_EXPORTS
 why: the multiplication lost its `[`.
 from: : Multiply_CFixedPoint(
@@ -385,11 +344,6 @@ from: [Select_CString([emperor_character.IsFemale
 to: [Select_CString(emperor_character.IsFemale
 
 key: WAR_UNIT_TYPE_STATS_TT_LOSSES
-why: a doubled `[`, and the second half naming a scope this tooltip does not have — the English key uses the same one twice.
-from: «[[FinishedWarUnitStats
-to: «[FinishedWarUnitStats
-
-key: WAR_UNIT_TYPE_STATS_TT_LOSSES
 why: see above.
 from: [BattleUnitStats.GetCategory.GetName]
 to: [FinishedWarUnitStats.GetCategory.GetName]
@@ -403,16 +357,6 @@ key: CURIA_PROPOSAL_REJECTED_DESC
 why: the second Concept lost its `[`.
 from: |e] Concept('curia'
 to: |e] [Concept('curia'
-
-key: MERCENARY_ARMY_RECRUIT
-why: the value starts mid-data-function.
-from: CHARACTER.GetNameWithNoTooltip]
-to: [CHARACTER.GetNameWithNoTooltip]
-
-key: MERCENARY_NAVY_RECRUIT
-why: the same.
-from: CHARACTER.GetNameWithNoTooltip]
-to: [CHARACTER.GetNameWithNoTooltip]
 
 key: offer_deny_market_access_cta_to_unknown
 why: a Concept opened, abandoned, and started again inside itself.
@@ -459,21 +403,10 @@ why: the same placeholder, three times in one sentence.
 from: [XXX.Custom(
 to: [ROOT.GetCountry.Custom(
 
-key: flavor_rus.51.desc
-why: the same placeholder.
-from: [XXX.Custom(
-to: [ROOT.GetCountry.Custom(
-
-key: lesson_economy_4_desc
-why: a Concept opened and abandoned mid-argument, taking a sentence of the tutorial with it. The English lesson says what belongs there: merchants cost capacity and earn or lose money, and burghers living in a market trade on their own account.
-from: [Concept('merchant_capacity_wth_icon', '#TOOLTIP:POPTYPE,burghers,X #L горожане#!#! будут самостоятельно вести [Concept('trade', 'торговлю')].
-to: [Concept('merchant_capacity_wth_icon', 'торговый потенциал')|e] и получая при этом прибыль или убыток. Кроме того, @burghers! #TOOLTIP:POPTYPE,burghers,X #L горожане#!#!, живущие на рынке, ведут собственную [Concept('trade', 'торговлю')].
-
 key: integrate_area_action_progress_tooltip
 why: the game says this one outright at load — `String contains "Cabinet.", which will not work. Use SCOPE.sCabinet('cabinet')`. The English key was migrated and the Russian one was not. Other keys keep `[Cabinet.` and are fine; only a cabinet action's *tooltip* runs in a scope where the promote is unavailable.
 from: #W [Cabinet.GetActionNumProgress|%]
 to: #W [SCOPE.sCabinet('cabinet').GetActionNumProgress|%]
-
 
 # ===========================================================================
 # Round two — what the hour-long run of 2026-08-24 (evening) showed once the
@@ -490,10 +423,6 @@ why: the estate panel supplies `Estate`, not `ESTATE` — the English key says `
 from: $ESTATE_GetNameWithNoTooltip_RU_GEN_lower$
 to: $Estate_GetNameWithNoTooltip_RU_GEN_lower$
 
-why: `Government` has no `IsFemale`; the ruler does. The game says so outright — `Could not find data system function 'IsFemale' in 'COUNTRY.GetGovernment.IsFemale'` — 524 times in one hour, from a standing alert.
-from: COUNTRY.GetGovernment.IsFemale
-to: COUNTRY.GetGovernment.GetRuler.IsFemale
-
 why: `TARGET_BUILDING` is not a promote — the effect describes a building *type*, and the English keys say `TARGET_BUILDING_TYPE`. `Promote 'TARGET_BUILDING' returned nullptr`, 638 times.
 from: TARGET_BUILDING.GetName
 to: TARGET_BUILDING_TYPE.GetName
@@ -508,7 +437,6 @@ why: the same `Cabinet.` promote the game refuses in a cabinet action's strings,
 from: [Cabinet.GetActionNumProgress|%]
 to: [SCOPE.sCabinet('cabinet').GetActionNumProgress|%]
 
-
 # ---------------------------------------------------------------------------
 # References to keys that do not exist. `$NAME$` naming nothing does not error
 # and does not log: the engine prints the name, in capitals, in the middle of
@@ -521,10 +449,6 @@ to: [SCOPE.sCabinet('cabinet').GetActionNumProgress|%]
 # overlap, all in the same tree. Confirmed on screen 2026-08-25 — the societal
 # value tooltip read "Дальше продвинуться в сторону SOCIEALVALUE_RIGHTITEM_WNTT_GEN:".
 # ---------------------------------------------------------------------------
-
-why: SOCIEAL for SOCIETAL, a missing T. Twenty four keys; see the note above.
-from: $SOCIEALVALUE_
-to: $SOCIETALVALUE_
 
 why: `protestant_union_tt` is written with an underscore where the key is defined with a dot, in situations_l_russian.yml. Twelve keys.
 from: $protestant_union_tt$
@@ -552,7 +476,6 @@ why: `LR_PREP` объявлен `type = location` (`ru_EU5_custom_loc.txt:46422`
 from: LOCATION.GetRank.Custom('LR_PREP')
 to: LOCATION.Custom('LR_PREP')
 
-
 # ---------------------------------------------------------------------------
 # Round four — the run of 2026-09-26, error.log and debug.log together.
 # ---------------------------------------------------------------------------
@@ -571,11 +494,6 @@ key: UNIT_TEMPLATE_RECRUIT_LOCATION_ACTION_SHIFT
 why: the recruit button supplies `Location` (a datacontext), not the promote `LOCATION`; the English key says `[Location.GetName]`. The three keys made 1 110 promote failures in eight minutes, the largest source of the run.
 from: [LOCATION.
 to: [Location.
-
-why: the town-rights button in the location window supplies `Location`, not a `TownRightsItem`; the English key says `[Location.GetName]`. 7 hovers, 21 lines.
-key: REVOKE_LOCATION_TOWN_RIGHT
-from: [TownRightsItem.GetFirstLocationName]
-to: [Location.GetName]
 
 key: strongest_beylik_has_over_75_locations
 why: the Rise of the Ottomans end-condition tooltip is shown where there is no `SituationView` ("No context supplied … wanted context of type 'SituationView'"). `GetSituationByKey` is a global promote and needs no context; the English tree uses it the same way for Tordesillas.
@@ -605,10 +523,6 @@ to: Ложный
 
 # Round six, the rule `foreign_context`: the Russian key asks a window's own
 # context, or the player, where the English asks the thing the tooltip is about.
-
-why: the unit type tooltips, 25 of them; English asks `SubUnitType`, which the tooltip sets wherever it is shown.
-from: [UnitTypeLateralView.GetUnitType.
-to: [SubUnitType.
 
 key: RIGHTEOUSNESS_TT_TEXT
 why: English asks `Country`.
@@ -640,11 +554,6 @@ why: printed the player's name on every other country's income; English asks `Co
 from: [Player.
 to: [Country.
 
-key: MARKET_HUB_TC_BUTTON_PROFIT
-why: English asks `Country` throughout.
-from: Player.
-to: Country.
-
 key: TT_ARMYTRADITION_TEXT
 why: the player's name and the unit overview's number on every country; English asks `Country` for both.
 from: [Player.Custom('longname_ru_GEN')] составляет [UnitOverview.GetArmyTradition|/%2V]
@@ -669,7 +578,6 @@ why: a war score breakdown row splits at its colon into label and value; «Це�
 from: 'Цель войны')|e]:
 to: 'Цель войны')|e] —
 
-
 # ---------------------------------------------------------------------------
 # Russian letters in the code of a data function (`cyrillic_code`). Mostly a
 # lost apostrophe, which leaves the Russian word outside its quotes; the rest are
@@ -677,10 +585,6 @@ to: 'Цель войны')|e] —
 # Found 2026-09-28 from `Could not find data system function 'латинян'` in his
 # error.log: every earlier rule read identifiers as ASCII and saw none of these.
 # ---------------------------------------------------------------------------
-
-why: `[латинян]` — an editor's insertion in a quote, which the engine reads as a data function. Round brackets say the same.
-from: [латинян]
-to: (латинян)
 
 why: `[Вселенную]` — the same editor's brackets.
 from: [Вселенную]
@@ -713,10 +617,6 @@ why: `|я` — `|e` typed on the Russian layout.
 from: 'доверие')|я
 to: 'доверие')|e
 
-why: the tooltip text was wrapped in `[... ')]` left over from `ShowSpecialStatusName('senior_partner')`; the junior half of the same line is plain text.
-from: [#TOOLTIP:SPECIAL_STATUS,senior_partner,X #L старшего#!#!')]
-to: #TOOLTIP:SPECIAL_STATUS,senior_partner,X #L старшего#!#!
-
 why: a closing apostrophe lost before `)`.
 from: 'преобладают)|e
 to: 'преобладают')|e
@@ -730,16 +630,8 @@ from: 'державы)|e
 to: 'державы')|e
 
 why: a closing apostrophe lost before `)`.
-from: 'державой)|e
-to: 'державой')|e
-
-why: a closing apostrophe lost before `)`.
 from: 'армии)|e
 to: 'армии')|e
-
-why: a closing apostrophe lost before `)`.
-from: 'курии)|e
-to: 'курии')|e
 
 why: a closing apostrophe lost before `)`.
 from: 'заблокирован)|e
@@ -817,7 +709,6 @@ why: `Select_CString` quoted inside Concept's second argument; apostrophes do no
 from: Concept('ruler', 'Select_CString(TARGET_CHARACTER.IsFemale,'правительницей', 'правителем')')
 to: Concept('ruler', Select_CString(TARGET_CHARACTER.IsFemale,'правительницей', 'правителем'))
 
-
 # ---------------------------------------------------------------------------
 # Members asked of a type that does not have them — `wrong_type` in locscan,
 # which walks each chain through the return types `dump_data_types` prints.
@@ -857,10 +748,6 @@ why: a Country has no `GetParliament`, and `parliament_ru_*` is asked of the cou
 regex: \.GetParliament\.Custom\('parliament_(io_)?ru_
 to: .Custom('parliament_\1ru_
 
-why: a SubUnit has no location; its unit does — the English key says `SUBUNIT.GetUnit.GetLocation`.
-from: SUBUNIT.GetLocation.
-to: SUBUNIT.GetUnit.GetLocation.
-
 why: a ScriptedRelationType has `GetName` only; English says `$RELATION$`-style plain name.
 regex: RELATION_TYPE\.GetNameWithContext\([^()]*\)
 to: RELATION_TYPE.GetName
@@ -898,10 +785,6 @@ key: flavor_dan.46.desc
 from: [ROOT.GetCountry.GetGovernment.GetGovernmentType.GetAdjective]ой власти
 to: королевской власти
 
-why: `LR_PREP` is a location's, not a cardinal's; English says only that the cardinal held two councils.
-regex: В\s\[(ROOT\.GetVariable\('\w+'\)\.GetCardinal)\.Custom\('LR_PREP'\)\|l\] \[\1\.GetName\] совет созывался два раза
-to: [\1.GetName] созывал совет два раза
-
 why: `CF_tt` and `rank_ru_*` are a country's; the location's own rank has `LR_tt` and the case forms (`ru_EU5_custom_loc.txt`). English prints `target_location.GetRank.GetName`.
 regex: #TOOLTIP:COUNTRY_RANK,\[(\w+)\.GetRank\.Custom\('CF_tt'\)\],X \[\1\.GetRank\.Custom\('rank_ru_(\w+)'\)\|l\]#!
 to: #TOOLTIP:LOCATIONRANK,[\1.Custom('LR_tt')],X [\1.Custom('LR_\2')|l]#!
@@ -918,14 +801,6 @@ why: a formable country and a rebel are not countries, and every `CL_*` is `type
 regex: #ONCLICK:COUNTRY,\[((?:TARGET_)?FORMABLE_COUNTRY|GetFormableCountry\('\w+'\)|NewCountryCandidate\.GetFormableCountry|SCOPE\.sRebel\('\w+'\))\.Custom\('CL_tt'\)\] #TOOLTIP:COUNTRY,\[\1\.Custom\('CL_tt'\)\],X \[\1\.Custom\('CL_\w+'\)\|L\]#!#!
 to: [\1.GetName]
 
-why: the verb endings for the same, where the sentence is about whether it exists: «Россия существует или уже создавалась».
-regex: \[(?:TARGET_)?FORMABLE_COUNTRY\.Custom\('etyut'\)\]
-to: ет
-
-why: the same.
-regex: \[(?:TARGET_)?FORMABLE_COUNTRY\.Custom\('assya'\)\]
-to: ась
-
 why: a rebel's preposition before its name — «переговоры с».
 regex: \[SCOPE\.sRebel\('\w+'\)\.Custom\('endlong_predlog_sso'\)\]
 to: с
@@ -933,3 +808,53 @@ to: с
 why: whatever `Custom` is still asked of a formable country, bare: its name.
 regex: ((?:TARGET_)?FORMABLE_COUNTRY|GetFormableCountry\('\w+'\)|NewCountryCandidate\.GetFormableCountry)\.Custom\('CL_\w+'\)
 to: \1.GetName
+
+key: lesson_economy_4_desc
+why: a Concept opened and abandoned mid-argument, taking a sentence of the tutorial with it. The English lesson says what belongs there: merchants cost capacity and earn or lose money, and burghers living in a market trade on their own account. The 2026-10-01 patch fixed the concept's name (`wth` → `with`) and left the rest broken.
+from: [Concept('merchant_capacity_with_icon', '#TOOLTIP:POPTYPE,burghers,X #L горожане#!#! будут самостоятельно вести [Concept('trade', 'торговлю')].
+to: [Concept('merchant_capacity_with_icon', 'торговый потенциал')|e] и получая при этом прибыль или убыток. Кроме того, @burghers! #TOOLTIP:POPTYPE,burghers,X #L горожане#!#!, живущие на рынке, ведут собственную [Concept('trade', 'торговлю')].
+
+key: MARKET_HUB_TC_BUTTON_PROFIT
+why: the 2026-10-01 patch moved the English to the projected profit and income; the Russian still prints the total and works the income out by hand, so the two languages show different numbers.
+from: [Merchant.GetTotalTradeProfit|+=2]
+to: [Merchant.GetProjectedTradeProfit|+=2]
+
+key: MARKET_HUB_TC_BUTTON_PROFIT
+why: the same — English takes the income straight from the merchant.
+from: [Multiply_CFixedPoint(Merchant.GetTotalTradeProfit, Country.GetModifier('trade_income'))|2+=]
+to: [Merchant.GetProjectedTradeIncome|2+=]
+
+# ---------------------------------------------------------------------------
+# Round nine — 2026-10-01, the beta. Faults its Russian brought in that a
+# rewrite can mend; text it left in English or out of date is translated in
+# `translations/` instead.
+# ---------------------------------------------------------------------------
+
+key: bureaucrat_die_desc
+why: a closing apostrophe lost inside `Select_CString`, so the second string runs on into the rest of the line.
+from: 'забыла ли она, 'забыл ли он'
+to: 'забыла ли она', 'забыл ли он'
+
+why: a Culture has `GetName`, and this call had lost even that: `GetCulture.GetWithNoTooltip`. Russian culture names are stems, so the ending written after the bracket agrees.
+regex: (GetCulture|CULTURE)\.GetWithNoTooltip\b
+to: \1.GetNameWithNoTooltip
+
+key: flavor_nap.280.desc
+why: `Government` has no `GetRulerOrRegentTitle`; English asks the country's custom localization of that name.
+from: [GetCountry('TWS').GetGovernment.GetRulerOrRegentTitle]
+to: [GetCountry('TWS').Custom('GetRulerOrRegentTitle')]
+
+key: nanbokuchou.3.desc
+why: `GetWithNoTooltip` is no function at all; the sentence wants the rival court's envoys, and the same event already declines that court's long name through `longname_ru_*`.
+from: [target_enemy_court.GetWithNoTooltip]ие посланники
+to: Посланники [target_enemy_court.Custom('longname_ru_GEN')]
+
+key: toulouse.aragonese_dialect
+why: `$toulouse_occitan_language$` names no key; the one it meant is `$toulouse.occitan_language$` («Толоса»; English has «Tolosa» for both).
+from: $toulouse_occitan_language$
+to: $toulouse.occitan_language$
+
+key: COMBAT_IMMINENT_STARTDATE
+why: the beta went to a daily tick and dropped `$HOUR$`; English prints the day alone, the Russian printed «в HOUR:00» after it.
+from: $DAY$ в $HOUR$:00
+to: $DAY$

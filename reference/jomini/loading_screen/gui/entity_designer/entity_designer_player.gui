@@ -1,0 +1,229 @@
+types EntityDesigner
+{
+     # Animation Controls
+    type entity_designer_animation_controls = hbox { 
+        margin = { 6 6 }
+        spacing = 5
+        
+        editor_button = {
+            icon = {
+                using = tools_centred_anchor
+                texture = "gfx/editor_gui/loop.dds"
+                alpha = "[Select_float(EntityDesignerPlayer.IsLooping, '(float)1.0', '(float)0.3')]"
+            }
+            size = { 30 28 }
+            onclick = "[EntityDesignerPlayer.ToggleLooping]"
+            input_action = "entity_designer_loop"
+            raw_tooltip = "Toggle Loop Animation"
+            tooltipwidget = {
+                using = dockable_tooltip
+            }
+        }
+        
+        #Pause/Play Button
+        editor_button = {
+            icon = {
+                using = tools_centred_anchor
+                visible = "[EntityDesignerPlayer.IsPlaying]"
+                texture = "gfx/editor_gui/pause.dds"
+                raw_tooltip = "Pause Animation"
+                tooltipwidget = {
+                    using = dockable_tooltip
+                }
+            }
+
+            icon = {
+                using = tools_centred_anchor
+                visible = "[Not( EntityDesignerPlayer.IsPlaying )]"
+                texture = "gfx/editor_gui/play.dds"
+                raw_tooltip = "Resume Animation"
+                tooltipwidget = { 
+                    using = dockable_tooltip
+                }
+            }
+            input_action = "entity_designer_play_pause"
+            size = { 30 28 }
+            onclick = "[EntityDesignerPlayer.TogglePausePlay]"
+        }
+    }
+
+    type entity_designer_player = vbox {
+
+        hbox = {
+            layoutpolicy_horizontal = expanding
+            
+            entity_designer_animation_controls = {
+                layoutpolicy_horizontal = preferred
+            }
+
+            widget = {
+                 layoutpolicy_horizontal = expanding
+            }
+        }
+        
+        hbox = {
+            layoutpolicy_horizontal = expanding
+            spacing = 8
+
+            editor_textbox = {
+                raw_text = "Animation Timelines"
+                alpha = 0.7
+                autoresize = yes
+                align = left|nobaseline
+            }
+
+            editor_expand_checkbutton = {
+                checked = "[EntityDesignerPlayer.IsExpanded]"
+                onclick = "[EntityDesignerPlayer.ToggleExpanded]"
+            }
+
+            widget = { # spacer
+                layoutpolicy_horizontal = expanding
+            }
+        }
+
+        editor_frame = {
+            visible = "[And( EntityDesignerPlayer.HasAnimation, EntityDesignerPlayer.IsExpanded )]"
+            using = tools_spacing
+            layoutpolicy_horizontal = expanding
+            layoutpolicy_vertical = expanding
+            minimumsize = {-1 20}
+            
+            blockoverride "label" { raw_text = "" }
+            blockoverride "content" {
+                layoutpolicy_horizontal = expanding
+                layoutpolicy_vertical = expanding
+
+                editor_scrollarea = {
+                    blockoverride "content"
+                    {
+                        vbox = {
+                            using = tools_spacing
+                            layoutpolicy_horizontal = expanding
+                            layoutpolicy_vertical = preferred
+                            datamodel = "[EntityDesignerPlayer.AnimationStates]"
+                            spacing = 12
+                            
+                            item = {
+                                editor_frame = {
+                                    layoutpolicy_horizontal = expanding
+                                    layoutpolicy_vertical = preferred
+                                    margin_right = 10
+                                    
+                                    blockoverride "label" { raw_text = "#BOLD Animation: [AnimationState.AnimationName]" }
+                                    blockoverride "content" {
+                                        spacing = 12 # This is to ensure the needle overlay is not on top of the Time labels
+                                        using = tools_spacing
+                                        vbox = {
+                                            layoutpolicy_horizontal = expanding
+                                            layoutpolicy_vertical = preferred
+                                            
+                                            #  Time labels
+                                            hbox = {
+                                                layoutpolicy_horizontal = expanding
+
+                                                hbox = {
+                                                    layoutpolicy_horizontal = expanding
+                                                    
+                                                    hbox = {
+                                                        spacing = 5
+                                                        layoutpolicy_horizontal = shrinking
+                                                        editor_textbox = {
+                                                            raw_text = "Time:"
+                                                            autoresize = yes
+                                                            align = left|nobaseline
+                                                        }
+
+                                                        editor_textbox = {
+                                                            align = center|nobaseline
+                                                            autoresize = yes
+                                                            raw_text = "[AnimationState.CurrentTime|2]s / [AnimationState.AnimationLength|2]s"
+                                                        }
+                                                    }
+
+                                                    widget = { # Spacer
+                                                        layoutpolicy_horizontal = expanding
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        hbox = {
+                                            layoutpolicy_horizontal = expanding
+                                            layoutpolicy_vertical = expanding
+                                            spacing = 8
+
+                                            vbox = {
+                                                layoutpolicy_horizontal = expanding
+                                                layoutpolicy_vertical = expanding
+                                                spacing = 2
+
+                                                editor_player = {
+                                                    name = "animation_player" #used in code, don't change
+                                                    minimumsize = { 0 25 }
+                                                    maximumsize = { -1 35 }
+                                                    layoutpolicy_horizontal = expanding
+                                                    layoutpolicy_vertical = fixed
+                                                    min = 0
+                                                    max = "[AnimationState.AnimationLength]"
+                                                    step = 0.001
+                                                    wheelstep = 0
+                                                    value = "[AnimationState.CurrentTime]" # Set by the running animation or by scrubbing the needle
+                                                    onchangestart = "[EntityDesignerPlayer.OnScrubStart(AnimationState.AnimationName)]"
+                                                    onvaluechanged = "[EntityDesignerPlayer.OnScrubChange]"
+                                                    onchangefinish = "[EntityDesignerPlayer.OnScrubEnd]"
+                                                    blockoverride "player_track"
+                                                    {
+                                                        name = "player_track"
+                                                    }
+
+                                                    blockoverride "overlay"
+                                                    {
+                                                        #visible = "[EntityDesignerPlayer.IsScrubbing]"
+                                                        raw_text = "[AnimationState.CurrentTime|2]s"
+                                                        visible = "[GreaterThan_float(AnimationState.AnimationLength, '(float)0.0')]"
+                                                    }
+
+                                                    blockoverride "player_needle"
+                                                    {
+                                                        #Clicking the needle is useless since scrubing can be done by clicking on the track.
+                                                        #Furthermore, double clicking the keyframe didn't work since the needle moved to the front
+                                                        alwaystransparent = yes
+                                                        visible = "[GreaterThan_float(AnimationState.AnimationLength, '(float)0.0')]"
+                                                    }
+                                                }
+
+                                                tools_player_timeline = {
+                                                    name = "timeline"
+                                                    layoutpolicy_horizontal = expanding
+                                                    layoutpolicy_vertical = fixed
+                                                    size = { -1 15 }
+                                                    max = "[AnimationState.AnimationLength]"
+                                                    min = 0
+                                                    timeline_time_points = 4
+                                                    timeline_line_direction = up
+                                                    timeline_line_height = 25
+                                                    color = { 1 1 1 0.5 }
+                                                    timeline_texts = {
+                                                        editor_textbox = {
+                                                            alpha = 0.5
+                                                            autoresize = yes
+                                                        }
+                                                    }
+                                                }
+
+                                                widget = { # Spacer
+                                                    layoutpolicy_vertical = expanding
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }   
+    }
+}

@@ -1,0 +1,108 @@
+types "UndoHistoryViewer" {
+
+	type undo_button = toolbox_button {
+		name = "undo_btn"
+		input_action = "history_tool_undo"
+		onclick = "[UndoStack.Undo]"
+		enabled = "[UndoStack.IsUndoable]"
+		raw_tooltip = "Undo"
+		toolbox_icon = {
+			texture = "gfx/undo_history_viewer/undo.png"
+		}
+	}
+
+	type redo_button = toolbox_button {
+		name = "redo_btn"
+		input_action = "history_tool_redo"
+		onclick = "[UndoStack.Redo]"
+		enabled = "[UndoStack.IsRedoable]"
+		raw_tooltip = "Redo"
+		toolbox_icon = {
+			texture = "gfx/undo_history_viewer/redo.png"
+		}
+	}
+
+	type history_button = toolbox_button {
+	    visible = yes
+		name = "history_btn"
+		input_action = "tools_history"
+		raw_tooltip = "Toggle undo history window."
+		toolbox_icon = {
+			texture = "gfx/undo_history_viewer/history.png"
+		}
+	}
+
+	type history_toolbar = hbox {
+		block "properties"{}
+		undo_button = {}
+		redo_button = {}
+		history_button = {
+			block "history_btn" {
+				onclick = "[UndoHistoryViewerClient.Toggle]"
+			}
+		}
+	}
+
+	type history_undo_frame_widget = widget {
+		name = "history_undo_frame_widget"
+		layoutpolicy_horizontal = preferred
+		layoutpolicy_vertical = fixed
+		size = { 100% 24 }
+		alpha = "[Select_float( HistoryViewer.IsEntryAhead(int32.GetInt), '(float)0.5', '(float)1.0' )]"
+		toolbox_checkbutton = {
+			margin = { 8 4 }
+			size = { 100% 24 }
+			fontsize = 12
+			align = left|nobaseline
+			layoutpolicy_horizontal = preferred
+			layoutpolicy_vertical = fixed
+			enabled = "[HistoryViewer.IsEntryExecutable(int32.GetInt)]"
+			text = "[Select_CString( HistoryViewer.IsEntryCurrent(int32.GetInt), JoinText( ' ', '#BOLD;COLOR:{0.95,1.0,0.5}', HistoryViewer.GetEntryName(int32.GetInt) ), HistoryViewer.GetEntryName(int32.GetInt))]"
+			checked = "[HistoryViewer.IsEntryCurrent(int32.GetInt)]"
+			onclick = "[HistoryViewer.SetEntryCurrent(int32.GetInt)]"
+			block "checkbutton" {}
+		}
+		block "entry" {}
+	}
+}
+
+vbox = {
+	name = "undo_history_viewer"
+	layoutpolicy_vertical = expanding
+
+	scrollarea = {
+		name = "undo_scroll_view"
+		scrollbarpolicy_vertical = always_on
+		scrollbarpolicy_horizontal = always_off
+		layoutpolicy_vertical = expanding
+		layoutpolicy_horizontal = preferred
+		autoresizeviewport = yes
+		
+		viewportwidget = {
+			widget = {
+				scissor = yes
+			}
+		}
+		
+		scrollwidget = {
+			fixedgridbox = {
+				#size = { 100% 100% }
+			   # layoutpolicy_vertical = preferred 
+			   # layoutpolicy_horizontal = preferred
+				name = "undo_frames_gridbox"
+				alwaystransparent = no
+				setitemsizefromcell = yes
+				addcolumn = 100%
+				addrow = 25
+			}
+		}
+
+		scrollbar_vertical = {
+			using = editor_vertical_scrollbar
+		}
+		
+		scrollbar_horizontal = {
+			using = editor_horizontal_scrollbar
+		}
+	}
+}

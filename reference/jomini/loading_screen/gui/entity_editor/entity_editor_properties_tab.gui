@@ -1,0 +1,250 @@
+types EntityEditor
+{
+	type mesh_info_lod_container = flowcontainer
+	{
+		spacing = 4
+		direction = vertical
+		layoutpolicy_horizontal = expanding
+		item = {
+			editor_textbox = {
+				using = lod_info_margin
+				block "item_text"
+				{
+					raw_text = "LOD 0: 123456"
+				}
+			}
+		}
+	}
+	
+    type animation_tool_properties = editor_frame
+	{
+		visible = "[And( EntityEditor.HasEntity, Not( EntityEditor.IsLoading ) )]"
+		using = tools_spacing
+		layoutpolicy_horizontal = shrinking
+		layoutpolicy_vertical = expanding
+		minimumsize = { 210 -1 } #to avoid adjusting when panels are different sizes
+		
+		blockoverride "label" { raw_text = "Properties" }
+		blockoverride "content" {
+			hbox = {
+				spacing = 8
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = shrinking
+
+				toolbox_checkbutton = {
+					raw_tooltip = "Open Mesh Settings"
+					checked = "[EntityViewerProperties.IsMeshSelected]"
+					onclick = "[EntityViewerProperties.SelectMeshWindow]"
+					toolbox_icon = {
+						texture = "gfx/editor_gui/3D_cube.dds"
+					}
+				}
+
+				toolbox_checkbutton = {
+					raw_tooltip = "Open Environment Settings"
+					checked = "[EntityViewerProperties.IsEnvSelected]"
+					onclick = "[EntityViewerProperties.SelectEnvWindow]"
+					toolbox_icon = {
+						texture = "gfx/editor_gui/light.dds"
+					}
+				}
+
+				hbox = {
+					name = "spacer"
+					layoutpolicy_horizontal = expanding
+				}
+			}
+
+			editor_frame = {
+				visible = "[EntityViewerProperties.IsMeshSelected]"
+				using = tools_spacing
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+				
+				blockoverride "label" { raw_text = "Mesh" }
+
+				blockoverride "content" {
+					spacing = 8
+
+					editor_textbox = {
+						using = lod_label_margin
+						raw_text = "Entity Scale: [EntityEditor.Entity.Scale|2]"
+					}
+
+					horizontal_separator = {}
+					
+					editor_textbox = {
+						using = settings_label
+						raw_text = "Joints: [EntityEditor.Entity.NumJoints]"
+					}
+
+					horizontal_separator = {}
+
+					editor_textbox = {
+						using = lod_label_margin
+						raw_text = "Vertices"
+					}
+
+					mesh_info_lod_container = {
+						datamodel = "[EntityEditor.Entity.EntityLods]"
+						blockoverride "item_text"
+						{
+							raw_text = "LOD [ViewerEntityLodInfo.Lod]: [ViewerEntityLodInfo.NumVertices|*^]"
+						}
+					}
+
+					horizontal_separator = {}
+
+					editor_textbox = {
+						using = lod_label_margin
+						raw_text = "Triangles"
+						
+					}
+
+					mesh_info_lod_container = {
+						datamodel = "[EntityEditor.Entity.EntityLods]"
+						blockoverride "item_text"
+						{
+							raw_text = "LOD [ViewerEntityLodInfo.Lod]: [ViewerEntityLodInfo.NumTriangles|*^]"
+						}
+					}
+
+					horizontal_separator = {}
+
+					vbox = {
+						name = "spacer"
+						layoutpolicy_vertical = expanding
+						layoutpolicy_horizontal = expanding
+					}
+				}
+			}
+
+			editor_frame = {
+				visible = "[EntityViewerProperties.IsEnvSelected]"
+				using = tools_spacing
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+				
+				blockoverride "label" { raw_text = "Environment" }
+
+				blockoverride "content" {
+					spacing = 8
+
+					tools_properties_dialog = {
+						margin = { 5 5 }
+						spacing = 8
+						name = "environment_properties" 
+					}
+
+					vbox = {
+						name = "spacer"
+						layoutpolicy_vertical = expanding
+						layoutpolicy_horizontal = expanding
+					}
+				}
+			}
+		}
+
+		#Start Events Panel
+		editor_frame = {
+			visible = "[EntityEditor.Entity.HasStates]"
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+			
+			blockoverride "label" { raw_text = "Start Events" }
+
+			blockoverride "content" {
+				layoutpolicy_horizontal = expanding
+
+				editor_scrollarea = {
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = expanding
+					
+					blockoverride "content" {
+						vbox = {
+							layoutpolicy_horizontal = expanding
+							layoutpolicy_vertical = shrinking
+							#Layer Container
+							vbox = {
+								layoutpolicy_horizontal = expanding
+								layoutpolicy_vertical = shrinking
+								
+								datamodel = "[EntityEditor.Entity.State.KeyframeLayers]"
+								item = {
+									editor_frame = {
+										using = tools_spacing
+										margin_right = 20
+										layoutpolicy_horizontal = expanding
+										layoutpolicy_vertical = shrinking
+										
+										blockoverride "label" { raw_text = "[EntityEditorEventLayer.Title]" }
+
+										blockoverride "content" {
+											hbox = {
+												layoutpolicy_horizontal = expanding
+
+												editor_expand_checkbutton = {
+													checked = "[EntityEditorEventLayer.IsExpanded]"
+													onclick = "[EntityEditorEventLayer.ToggleExpanded]"
+												}
+
+												hbox = { #spacer
+													layoutpolicy_horizontal = expanding
+												}
+											}
+
+											vbox = {
+												visible = "[And( EntityEditorEventLayer.IsExpanded, EntityEditorEventLayer.HasKeyframes )]"
+												using = tools_spacing
+												layoutpolicy_vertical = expanding
+												layoutpolicy_horizontal = expanding
+												spacing = 8
+												datamodel = "[EntityEditorEventLayer.Keyframes]"
+												item = {
+													hbox = {
+														visible = "[EntityEditorKeyframe.IsStartEvent]"
+														layoutpolicy_horizontal = expanding
+														editor_toolbar_button = {
+															layoutpolicy_horizontal = expanding
+															raw_text = "Edit [EntityEditorKeyframe.Label]"
+															onclick = "[EntityEditor.OpenEventEditor( EntityEditorKeyframe.AccessSelf )]"
+															elide = middle
+														}
+
+														editor_button = {
+															layoutpolicy_horizontal = fixed
+															size = { 16 16 }
+															visible = yes
+															texture = "gfx/editor_gui/editor_layout_window_close.dds"
+															onclick = "[EntityEditor.DeleteKeyframe( EntityEditorKeyframe.AccessSelf )]"
+															intersectionmask = no
+														}
+													}
+												}
+											}
+
+											editor_button = {
+												raw_text = "Add New Start Event"
+												visible = "[EntityEditorEventLayer.IsExpanded]"
+												fontsize = 11
+												margin = { 6 6 }
+												size = { 125 25 }
+												onclick = "[EntityEditorEventLayer.AddStartEventKeyframe( EntityEditor.AccessSelf )]"
+											}
+										}
+									}
+								}
+							}
+							
+							#Spacer to push the layer container up
+							vbox = {
+								layoutpolicy_horizontal = expanding
+								layoutpolicy_vertical = expanding
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

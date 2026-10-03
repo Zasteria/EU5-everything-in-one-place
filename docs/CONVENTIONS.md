@@ -148,7 +148,7 @@ the new one, six times. It offers a `git pull` first, says of each mod whether
 the game's copy is the same, different or absent, and can take one back out
 again.
 
-**And menu item 9 brings things the other way, because a session sees the
+**And menu item 7 brings things the other way, because a session sees the
 repository and nothing else.** It reads what is committed and what he attaches to
 a message; the game on his machine is invisible to it. Two halves, and they
 arrive by different routes:
@@ -165,6 +165,11 @@ arrive by different routes:
   2026-09-03 that is **111 KB against 12 MB** for the whole folder, and both
   diagnosis reports still survive the tail cut — `game.log` and `data_types/`
   are five sixths of the weight and answer nothing the dumps do not.
+
+**Item 9 is the after-a-patch pass**, everything from outside in one go: game
+files with `--prune` (what the patch removed leaves too), every game file a mod
+replaces whole, `jomini/` and `clausewitz/`, the API dumps if newer than the
+Steam update, the workshop mods, the rebuild. `refs.py --game` names the build.
 
 **Only the game's half of a mod folder goes.** `.metadata/` and the mount
 directories (`in_game`, `main_menu`, `loading_screen`, …); never `tools/`,

@@ -1,0 +1,199 @@
+vbox = {
+	name = "vfs_mount_path_browser"
+
+	layoutpolicy_vertical = expanding
+	layoutpolicy_horizontal = expanding
+	spacing = 4
+
+	# Topbar with tools
+	hbox = {
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = shrinking
+		margin = { 4 4 }
+		spacing = 4
+
+		editor_textbox = {
+			layoutpolicy_horizontal = fixed
+			size = { 50 30 }
+			raw_text = "Filter:"
+			align = center
+		}
+
+		editor_editbox = {
+			using = property_editbox
+			raw_text = "[VfsMountPathBrowser.GetFilter]"
+			ontextchanged = "[VfsMountPathBrowser.OnFilterEdit]"
+			size = { 0 30 }
+			layoutpolicy_horizontal = expanding
+		}
+
+		dockable_button = {
+			layoutpolicy_horizontal = fixed
+			layoutpolicy_vertical = fixed
+			size = { 130 30 }
+			onclick = "[VfsMountPathBrowser.RefreshAllDirectories]"
+			raw_text = "[Select_CString(VfsMountPathBrowser.IsRefreshingDirectories, 'Please wait', 'Refresh')]"
+			enabled = "[Not(VfsMountPathBrowser.IsRefreshingDirectories)]"
+			raw_tooltip = "Refresh directory tree."
+			tooloptions_progress_spinner = {
+				visible = "[VfsMountPathBrowser.IsRefreshingDirectories]"
+				size = { 30 30 }
+			}
+		}
+
+	}
+
+	scrollarea = {
+		name = "content_scroll_area" # Don't rename! Vfs mount path dockable, refers to it to auto-scroll to a given entry.
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = expanding
+		autoresizeviewport = yes
+		scrollbarpolicy_vertical = always_on
+		scrollwidget = {
+			fixedgridbox = {
+				addcolumn = 100%
+				addrow = 20
+				setitemsizefromcell = yes
+				datamodel = "[VfsMountPathBrowser.GetNodeTree]"
+				item = {
+					checkbutton = {
+						onclick = "[VfsMountPathBrowser.ToggleNodeSelected(VfsMountPathBrowserEntryNode.Self)]"
+						# highlight the background for every odd line
+						icon = {
+							visible = "[IsOdd_int32(PdxGuiWidget.GetIndexInDataModel)]"
+							size = { 100% 100% }
+							layoutpolicy_vertical = fixed
+							layoutpolicy_horizontal = fixed
+							texture = "gfx/editor_gui/editor_white_pixel.png"
+							color = { 0.1764 0.1764 0.1764 1.0 }
+							alwaystransparent = yes
+						}
+
+						# highlight overlay for selected line
+						icon = {
+							visible = "[VfsMountPathBrowser.IsNodeSelected(VfsMountPathBrowserEntryNode.Self)]"
+							size = { 100% 100% }
+							layoutpolicy_vertical = fixed
+							layoutpolicy_horizontal = fixed
+							texture = "gfx/editor_gui/editor_white_pixel.png"
+							color = { 0.7254 0.6666 0.2666 0.25 }
+							alwaystransparent = yes
+						}
+
+						layoutpolicy_horizontal = expanding
+						size = { 0 20 }
+						hbox = {
+							layoutpolicy_horizontal = expanding
+							spacing = 2
+
+							widget = {
+								layoutpolicy_horizontal = fixed
+								size = "[VfsMountPathBrowserEntryNode.GetBranchDepth('(int32)20', '(int32)20')]"
+							}
+
+							dockable_button = {
+								visible = "[VfsMountPathBrowserEntryNode.HasChildren]"
+								raw_text = "[Select_CString(VfsMountPathBrowser.IsNodeExpanded(VfsMountPathBrowserEntryNode.Self), '-', '+')]"
+								size = { 18 18 }
+								onclick = "[VfsMountPathBrowser.ToggleNodeExpanded(VfsMountPathBrowserEntryNode.Self)]"
+								raw_tooltip = "Click + Ctrl = Expand every first in hierarchy."
+							}
+
+							widget =  {
+								visible = "[Not(VfsMountPathBrowserEntryNode.HasChildren)]"
+								size = { 18 18 }
+							}
+
+							icon = {
+								visible = "[And(VfsMountPathBrowserEntryNode.HasChildren, 
+											    Not(VfsMountPathBrowser.IsNodeExpanded(VfsMountPathBrowserEntryNode.Self)))]"
+								size = { 18 18 }
+								texture = "gfx/tools/dir_closed.png"
+								alwaystransparent = yes
+							}
+
+							icon = {
+								visible = "[And(VfsMountPathBrowserEntryNode.HasChildren, 
+											    VfsMountPathBrowser.IsNodeExpanded(VfsMountPathBrowserEntryNode.Self))]"
+								size = { 18 18 }
+								texture = "gfx/tools/dir_open.png"
+								alwaystransparent = yes
+							}
+
+							editor_textbox = {
+								visible = "[Not(VfsMountPathBrowser.HasDirectFilterMatch(VfsMountPathBrowserEntryNode.Self))]"
+								margin_left = 4
+								layoutpolicy_horizontal = expanding
+								size = { 0 20 }
+								elide = right
+								raw_text = "[VfsMountPathBrowserEntryNode.GetName]"
+							}
+							editor_textbox = {
+								visible = "[VfsMountPathBrowser.HasDirectFilterMatch(VfsMountPathBrowserEntryNode.Self)]"
+								margin_left = 4
+								layoutpolicy_horizontal = expanding
+								size = { 0 20 }
+								elide = right
+								raw_text = "#COLOR:{0.8,0.8,0} [VfsMountPathBrowserEntryNode.GetName] #!"
+							}
+						}
+					}
+				}
+			}
+		}
+		scrollbar_vertical = { using = editor_vertical_scrollbar }
+		scrollbar_horizontal = { using = editor_horizontal_scrollbar }
+	}
+
+
+	# Status bar with physical path preview
+	hbox = {
+		visible = "[EqualTo_int32(VfsMountPathBrowser.GetNumSelectedNodes, '(int32)1')]"
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = shrinking
+		margin = { 4 4 }
+		editor_editbox = {
+			using = property_editbox
+			raw_text = "[VfsMountPathBrowser.GetFirstSelectedNode.GetFullPath]"
+			enabled = no
+			size = { 0 20 }
+			layoutpolicy_horizontal = expanding
+		}
+	}
+	hbox = {
+		visible = "[GreaterThan_int32(VfsMountPathBrowser.GetNumSelectedNodes, '(int32)1')]"
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = shrinking
+		margin = { 4 4 }
+		editor_editbox = {
+			using = property_editbox
+			raw_text = "[Concatenate('Selected files or directories: ', ToString_int32(VfsMountPathBrowser.GetNumSelectedNodes))]"
+			enabled = no
+			size = { 0 20 }
+			layoutpolicy_horizontal = expanding
+		}
+	}
+
+	# Buttons Select / Cancel
+	hbox = {
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = shrinking
+		dockable_button = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = fixed
+			size = { 0 30 }
+			min_width = 130
+			raw_text = "Select"
+			onclick = "[VfsMountPathBrowser.OnSelect]"
+			enabled = "[GreaterThan_int32(VfsMountPathBrowser.GetNumSelectedNodes, '(int32)0')]"
+		}
+		dockable_button = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = fixed
+			size = { 0 30 }
+			min_width = 130
+			raw_text = "Cancel"
+			onclick = "[VfsMountPathBrowser.OnCancel]"
+		}
+	}
+}

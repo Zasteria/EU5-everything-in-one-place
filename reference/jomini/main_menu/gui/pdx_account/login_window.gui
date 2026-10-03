@@ -1,0 +1,428 @@
+types SDK
+{
+	type login_window = sdk_window {
+		name = "login_window"
+		parentanchor = center
+		resizable = no
+		blockoverride "title"
+		{
+			text = "POPS_LOGIN"
+		}
+
+		blockoverride "content_layout"
+		{
+			container = {
+				name = "sdk_login_layout"
+				block "login_layout_properties" {
+					ignoreinvisible = yes
+				}
+
+				widget = {
+					visible = "[LoginView.IsLogin]"
+					block "login_block_properties" {}
+
+					hbox = {
+						block "login_hbox_properties"
+						{
+							resizeparent = yes
+						}
+
+						widget = {
+							block "login_entries_block_properties" {}
+
+							vbox = {
+								block "login_entries_vbox_properties"
+								{
+									layoutpolicy_vertical = expanding
+									layoutpolicy_horizontal = expanding
+									margin = { 10 10 }
+									spacing = 10
+									resizeparent = yes
+								}
+
+								sdk_textbox_entry = {
+									name = "login_entry_email"
+									minimumsize = { 500 0 }
+									maximumsize = { 500 0 }
+									blockoverride "title"
+									{
+										text = "EMAIL"
+									}
+									blockoverride "editbox_text"
+									{
+										text = "[LoginView.GetEmail]"
+									}
+									blockoverride "textbox_size"
+									{
+										size = { 130 30 }
+									}
+									layoutpolicy_horizontal = expanding
+									blockoverride "sdk_editbox"
+									{
+										ontextchanged = "[LoginView.SetEmail]"
+										onreturnpressed = "[LoginView.Login]"
+									}
+								}
+
+								sdk_textbox_entry = {
+									layoutpolicy_horizontal = expanding
+									name = "login_entry_password"
+									blockoverride "title"
+									{
+										text = "PASSWORD"
+									}
+									blockoverride "editbox_text"
+									{
+										text = "[LoginView.GetPassword]"
+									}
+									blockoverride "textbox_size"
+									{
+										size = { 130 30 }
+									}
+									blockoverride "sdk_editbox"
+									{
+										ontextchanged = "[LoginView.SetPassword]"
+										onreturnpressed = "[LoginView.Login]"
+									}
+									blockoverride "password"
+									{
+										password = yes
+									}
+								}
+
+								hbox = {
+									layoutpolicy_horizontal = expanding
+									block "reset_password_button_hbox_properties" {}
+
+									widget = {
+										layoutpolicy_vertical = expanding
+										layoutpolicy_horizontal = expanding
+									}
+
+									sdk_button = {
+										block "reset_password_button" {}
+										text = "POPS_LOGIN_RESET_PASSWORD"
+										onclick = "[LoginView.SetState( 'password_reset' )]"
+										enabled = "[Not(StatusIsLoggingIn)]"
+									}
+								}
+
+								sdk_error_textbox = {
+									text = "[LoginView.GetErrorMessage]"
+									multiline = yes
+									align = center
+
+									layoutpolicy_horizontal = expanding
+									size = { -1 60 }
+								}
+
+								hbox = {
+									layoutpolicy_horizontal = expanding
+									sdk_button = {
+										text = "CANCEL"
+										layoutpolicy_horizontal = fixed
+										onclick = "[LoginView.Hide]"
+									}
+
+									widget = {
+										layoutpolicy_vertical = expanding
+										layoutpolicy_horizontal = expanding
+									}
+
+									sdk_button_load_indicator = {
+										text = "[LoginView.GetLoginString]"
+										layoutpolicy_horizontal = fixed
+										enabled = "[LoginView.IsValidLoginInfo]"
+										onclick = "[LoginView.Login]"
+										blockoverride "load_indicator"
+										{
+											visible = "[StatusIsLoggingIn]"
+										}
+									}
+								}
+							}
+						}
+
+						widget = {
+							block "create_block_properties" {}
+
+							vbox = {
+								block "create_block_vbox_properties"
+								{
+									layoutpolicy_vertical = expanding
+									layoutpolicy_horizontal = expanding
+									margin = { 10 10 }
+									resizeparent = yes
+								}
+
+								sdk_textbox = {
+									text = "POPS_CREATE_ACCOUNT_CREARE_SUGGESTION"
+									layoutpolicy_horizontal = expanding
+									layoutpolicy_vertical = expanding
+									multiline = yes
+									autoresize = no
+									align = center
+								}
+
+								sdk_button = {
+									block "create_account_button" { }
+
+									text = "CREATE_ACCOUNT"
+									onclick = "[OnCreateAccount]"
+								}
+							}
+						}
+					}
+				}
+
+				widget = {
+					visible = "[LoginView.IsRestoringPassword]"
+					block "reset_password_block_properties" {}
+
+					vbox = {
+						block "reset_password_vbox_properties"
+						{
+							layoutpolicy_vertical = expanding
+							layoutpolicy_horizontal = expanding
+							spacing = 10
+							margin = { 10 10 }
+							resizeparent = yes
+						}
+
+						sdk_textbox = {
+							block "sent_email_text_size"
+							{
+								layoutpolicy_horizontal = expanding
+								size = { -1 120 }
+							}
+
+							multiline = yes
+							text = "POPS_LOGIN_RESET_PASSWORD_DESC"
+						}
+
+						sdk_textbox_entry = {
+							name = "login_entry_email"
+							layoutpolicy_horizontal = expanding
+							maximumsize = { 500 0 }
+
+							blockoverride "title"
+							{
+								text = "EMAIL"
+							}
+
+							blockoverride "editbox_text"
+							{
+								text = "[LoginView.GetEmail]"
+							}
+
+							blockoverride "textbox_size"
+							{
+								size = { 130 30 }
+							}
+
+							blockoverride "sdk_editbox"
+							{
+								ontextchanged = "[LoginView.SetEmail]"
+							}
+						}
+
+						hbox = {
+							layoutpolicy_vertical = expanding
+							layoutpolicy_horizontal = expanding
+							spacing = 5
+
+							sdk_button = {
+								text = "CANCEL"
+								layoutpolicy_horizontal = fixed
+								onclick = "[LoginView.SetState( 'login' )]"
+							}
+
+							widget = {
+								layoutpolicy_vertical = expanding
+								layoutpolicy_horizontal = expanding
+							}
+
+							sdk_button = {
+								text = "POPS_LOGIN_RESET_PASSWORD_SEND"
+								layoutpolicy_horizontal = fixed
+								onclick = "[LoginView.ResetPassword]"
+								onclick = "[LoginView.SetState( 'email_sent' )]"
+							}
+						}
+					}
+				}
+
+				widget = {
+					visible = "[LoginView.IsEmailSent]"
+					block "sent_email_block_properties" {}
+
+					vbox = {
+						block "sent_email_vbox_properties"
+						{
+							layoutpolicy_vertical = expanding
+							layoutpolicy_horizontal = expanding
+							spacing = 10
+							margin = { 10 10 }
+							resizeparent = yes
+						}
+
+						sdk_textbox = {
+							block "sent_email_text_size"
+							{
+								maximumsize = { 600 -1 }
+								minimumsize = { -1 200 }
+								autoresize = yes
+							}
+
+							multiline = yes
+							text = "POPS_LOGIN_RESET_PASSWORD_EMAIL_SENT"
+						}
+
+						sdk_button = {
+							text = "BACK"
+							layoutpolicy_horizontal = fixed
+							onclick = "[LoginView.SetState( 'login' )]"
+						}
+					}
+				}
+
+				widget = {
+					visible = "[LoginView.IsLoggedIn]"
+					block "loggedin_block_properties" {}
+
+					vbox = {
+						block "loggedin_vbox_properties"
+						{
+							layoutpolicy_vertical = expanding
+							layoutpolicy_horizontal = expanding
+							spacing = 10
+							margin = { 10 10 }
+							resizeparent = yes
+						}
+
+						sdk_textbox = {
+							text = "EMAIL"
+							align = center
+						}
+
+						sdk_textbox = {
+							layoutpolicy_horizontal = expanding
+							minimumsize = { 400 -1 }
+							maximumsize = { 500 -1 }
+							text = "[StatusGetUserEmailMasked]"
+							align = center
+						}
+
+						sdk_textbox = {
+							text = "USER_NAME"
+							align = center
+						}
+
+						sdk_textbox = {
+							text = "[StatusGetUserName]"
+							align = center
+						}
+
+						sdk_button = {
+							layoutpolicy_horizontal = expanding
+							text = "POPS_LOGIN_CHANGE_USERNAME"
+							maximumsize = { 200 -1 }
+							onclick = "[LoginView.SetState( 'change_username' )]"
+						}
+
+						sdk_button = {
+							text = "LOGOUT"
+							layoutpolicy_horizontal = expanding
+							maximumsize = { 200 -1 }
+							onclick = "[LoginView.Logout]"
+							onclick = "[LoginView.SetState( 'login' )]"
+						}
+
+						sdk_button = {
+							text = "CLOSE"
+							layoutpolicy_horizontal = fixed
+							onclick = "[LoginView.Hide]"
+						}
+					}
+				}
+
+				widget = {
+					visible = "[LoginView.IsChangingUserName]"
+					block "change_username_block_properties" {}
+
+					vbox = {
+						name = "change_username"
+						block "change_username_vbox_properties"
+						{
+							layoutpolicy_vertical = expanding
+							layoutpolicy_horizontal = expanding
+							spacing = 10
+							margin = { 10 10 }
+							resizeparent = yes
+						}
+
+						sdk_textbox = {
+							text = "POPS_LOGIN_CHANGE_USER_NAME_DESC"
+							max_width = 500
+							autoresize = yes
+							multiline = yes
+						}
+
+						sdk_textbox_entry = {
+							name = "edit_username"
+							maximumsize = { 500 0 }
+							blockoverride "title"
+							{
+								text = "USERNAME"
+							}
+							blockoverride "editbox_text"
+							{
+								text = "[StatusGetUserName]"
+							}
+							blockoverride "textbox_size"
+							{
+								size = { 130 30 }
+							}
+							layoutpolicy_horizontal = expanding
+							blockoverride "sdk_editbox"
+							{
+								ontextchanged = "[LoginView.OnUserNameChange]"
+								onreturnpressed = "[LoginView.SetUserName]"
+							}
+						}
+
+						sdk_button = {
+							text = "UPDATE_USERNAME"
+							layoutpolicy_horizontal = fixed
+							onclick = "[LoginView.SetUserName]"
+						}
+
+						sdk_textbox = {
+							visible = "[LoginView.IsSuccessfulSetName]"
+							text = "POPS_LOGIN_CHANGE_USERNAME_SUCCESS"
+						}
+
+						sdk_textbox = {
+							text = "[LoginView.GetErrorMessage]"
+							multiline = yes
+							layoutpolicy_horizontal = expanding
+							align = center
+							autoresize = yes
+						}
+
+						sdk_textbox = {
+							visible = "[LoginView.IsEmptyUserNamePrompt]"
+							text = "POPS_LOGIN_EMPTY_USERNAME"
+						}
+
+						sdk_button = {
+							text = "BACK"
+							layoutpolicy_horizontal = fixed
+							onclick = "[LoginView.SetState( 'logged_in' )]"
+						}
+					}
+				}
+			}
+		}
+	}
+}

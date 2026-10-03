@@ -905,9 +905,10 @@ def localization_markup(root: Path) -> list[str]:
     with `gfx/interface/buttons/checkbox_round.dds` and `frame_grid = { 2 1 }`,
     and any mod may declare a `texticon` over a texture the way Glorp UI and
     Construction Manager both do. Reach for one of those rather than a third
-    character.
+    character. `•` is not on the list: the game's own Russian uses it 196 times
+    (`SUBUNIT_CATEGORY_AVAILABLE_ENTRY`), the 2026-10-01 beta's English more.
     """
-    GLYPHS = "✔✓√☑✗✘☒●■▪◆★☆♦♣♠♥•‣▶◀"
+    GLYPHS = "✔✓√☑✗✘☒●■▪◆★☆♦♣♠♥‣▶◀"
     found = []
     for path in sorted(root.rglob("main_menu/localization/*/*.yml")):
         for number, line in enumerate(

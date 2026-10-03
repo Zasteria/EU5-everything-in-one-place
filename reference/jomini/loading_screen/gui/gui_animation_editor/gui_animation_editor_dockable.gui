@@ -1,0 +1,1081 @@
+
+@gui_animation_editor_common_btn_size = 26
+@gui_animation_editor_timeline_height = 26
+@gui_animation_editor_left_column_width = 300
+@gui_animation_editor_anim_sets_column_height = 30%
+@gui_animation_editor_animations_column_height = 70%
+@gui_animation_editor_track_height = @gui_animation_editor_common_btn_size
+@gui_animation_editor_track_left_column_width = 510
+@gui_animation_editor_keyframe_size = 16
+
+types GuiAnimationEditorTypes
+{
+	type gui_animation_editor_spacer = widget {
+		size = { 25 0 }
+	}
+
+	type gui_animation_editor_widget_outline = line {
+		gfxtype = linegfx
+		effectname = "PdxGuiLineOnlyColor"
+		width = 2
+		#visible = "[And( GuiAnimationTimeline.ShouldOutlineWidget, GuiAnimationTimeline.HasSelectedWidget )]" # TODO: Make user preferences in tool.
+	}
+
+	type gui_animation_editor_widget_outline_selected = gui_animation_editor_widget_outline {
+		color = { 1.0 0.0 0.0 0.7 }
+	}
+
+	type gui_animation_editor_widget_outline_hovered = gui_animation_editor_widget_outline {
+		color = { 1.0 1.0 0.0 0.5 }
+	}
+
+	type gui_animation_editor_button = button {
+		size = { @gui_animation_editor_common_btn_size @gui_animation_editor_common_btn_size }
+		using = editor_toolbar_font
+		texture = "gfx/gui_animation_editor/button_bg.tga"
+		gfxtype = framedbuttongfx
+		spriteType = CorneredStretched
+		spriteborder = { 8 8 }
+		framesize = { 26 26 }
+		effectname = "NoHighlight"
+		upframe = 1
+		downframe = 3
+		overframe = 2
+		disableframe = 4
+		intersectionmask = no
+		default_format = "#editor_formatting"
+		focuspolicy = click
+		tooltipwidget = {
+			using = dockable_tooltip
+		}
+	}
+
+	type gui_animation_editor_toggle_button = dockable_togglebutton {
+		size = { @gui_animation_editor_common_btn_size @gui_animation_editor_common_btn_size }
+		using = editor_toolbar_font
+		texture = "gfx/gui_animation_editor/checkbutton_bg.tga"
+		spriteType = CorneredStretched
+		spriteborder = { 8 8 }
+		framesize = { 26 26 }
+		#highlightchecked = yes
+		tooltipwidget = {
+			using = dockable_tooltip
+		}
+
+	}
+
+	type gui_animation_editor_new_track_dialog_content = vbox {
+		name = "tracks_gridbox"
+		alwaystransparent = no
+		minimumsize = { 500 80 }
+		layoutpolicy_horizontal = expanding
+		datamodel = "[GuiAnimationEditor.AccessAvailableTracks]"
+		item = {
+			dockable_button = {
+				
+				layoutpolicy_horizontal = expanding
+				size = { 0 40 }
+				enabled = "[Not(GuiAnimationEditorAvailableTrack.IsExcluded)]"
+				onclick = "[GuiAnimationEditorAvailableTrack.AddTrack]"
+				onclick = "[ToolDialog.Cancel]"
+				raw_tooltip = "[GuiAnimationEditorAvailableTrack.GetDescription]"
+				vbox = {
+					spacing = 5
+					editor_textbox = {
+						text = "[GuiAnimationEditorAvailableTrack.GetDisplayName]"
+						align = left|nobaseline
+					}
+
+					editor_textbox = {
+						visible = "[Not(GuiAnimationEditorAvailableTrack.IsExcluded)]"
+						raw_text = "[GuiAnimationEditorAvailableTrack.GetDescription]"
+						align = left|nobaseline
+						elide = right
+						fontsize = 12
+						fontcolor = { 1 1 1 0.6 }
+					}
+					editor_textbox = {
+						visible = "[GuiAnimationEditorAvailableTrack.IsExcluded]"
+						raw_text = "Unavailable because [GuiAnimationEditorAvailableTrack.GetExcludedDisplayName] track is already added."
+						align = left|nobaseline
+						elide = right
+						fontsize = 12
+						fontcolor = { 1.0 0.2 0.2 0.6 }
+					}
+					margin = { 10 5 }
+				}
+			}
+		}
+	}
+
+	# Fix for the issue with overlapping vertical scrollbar that when popping up, would cover some part of the timeline
+	type gui_animation_editor_scrollbar_fix = widget {
+		name = "gui_animation_editor_scrollbar_fix"
+		size = { 22 0 }
+		layoutpolicy_horizontal = fixed
+		layoutpolicy_vertical = preferred
+		alwaystransparent = yes
+	}
+
+	type gui_animation_editor_track_widget = widget {
+		background = {
+			texture = "gfx/editor_gui/gui_timeline/editor_animation_timeline_lane_background.png"
+			spriteType = CorneredStretched
+			spriteborder = { 5 5 }
+			shaderfile = "gfx/FX/pdxgui_default.shader"
+			block "bg" {}
+		}
+	}
+
+	
+	type gui_animation_editor_track = widget {
+		name = "gui_animation_editor_track" # Type name referenced by the application - do not rename!
+		layoutpolicy_horizontal = fixed
+		layoutpolicy_vertical = fixed
+		size = { 100% @gui_animation_editor_track_height }
+
+		hbox = {
+			layoutpolicy_horizontal = preferred
+			layoutpolicy_vertical = preferred
+
+			gui_animation_editor_track_widget = {
+				name = "track_column_left"
+				size = { @gui_animation_editor_track_left_column_width @gui_animation_editor_track_height }
+				layoutpolicy_horizontal = fixed
+				layoutpolicy_vertical = fixed
+				blockoverride "bg" {
+					tintcolor = "[Select_CVector4f( GuiAnimationEditorUniversalTrack.IsTrackTypeAnimation, '(CVector4f)0.55,0.55,0.8,0.2', '(CVector4f)0.3,0.3,0.3,0.1' )]"
+				}
+				hbox = {
+					spacing = 1
+					margin = { 4 0 }
+
+					gui_animation_editor_button = {
+						name = "btn_remove"
+						visible = "[GuiAnimationEditorUniversalTrack.IsRemovable]"
+						onclick = "[GuiAnimationEditorUniversalTrack.Remove]"
+						# Different looking icons depends on the universal track type
+						toolbox_icon = {
+							texture = "gfx/editor_gui/16px/node_editor_icon_close.png"
+							size = { 16 16 }
+							visible = "[GuiAnimationEditorUniversalTrack.IsTrackTypeAnimation]"
+						}
+						toolbox_icon = {
+							texture = "gfx/tools/material/delete.png"
+							size = { 20 20 }
+							visible = "[GuiAnimationEditorUniversalTrack.IsTrackTypeProperty]"
+						}
+					}
+
+					# Fake indentation depth
+					widget = {
+						size = { @gui_animation_editor_track_height @gui_animation_editor_track_height }
+						visible = "[GreaterThanOrEqualTo_int32(GuiAnimationEditorUniversalTrack.GetIndentationDepth, '(int32)1')]"
+					}
+					widget = {
+						size = { @gui_animation_editor_track_height @gui_animation_editor_track_height }
+						visible = "[GreaterThanOrEqualTo_int32(GuiAnimationEditorUniversalTrack.GetIndentationDepth, '(int32)2')]"
+					}
+
+					gui_animation_editor_button = {
+						onclick = "[GuiAnimationEditorUniversalTrack.ToggleCollapsed]"
+						visible = "[GuiAnimationEditorUniversalTrack.IsCollapsable]"
+						toolbox_icon = {
+							texture = "gfx/tools/expand_icon.dds"
+							framesize = { 16 16 }
+							size = { 8 8 }
+							frame = "[Select_int32(GuiAnimationEditorUniversalTrack.IsCollapsed, '(int32)1', '(int32)2')]"
+						}
+					}
+
+					editor_textbox = {
+						layoutpolicy_horizontal = preferred
+						layoutpolicy_vertical = preferred
+						size = { 0 0 }
+						text = "[GuiAnimationEditorUniversalTrack.GetDisplayName]"
+						align = left|nobaseline
+						elide = left
+						autoresize = yes
+					}
+
+					# Animation track tools (mutual exclusive with property track below)
+					hbox = {
+						visible = "[GuiAnimationEditorUniversalTrack.IsTrackTypeAnimation]"
+						gui_animation_editor_toggle_button = {
+							size = { 50 @gui_animation_editor_common_btn_size }
+							name = "btn_widget_assign_mode"
+							onclick = "[GuiAnimationEditorUniversalTrack.ToggleWidgetAssignmentMode]"
+							onrightclick = "[GuiAnimationEditorUniversalTrack.CleanAssignedWidgets]"
+							checked = "[GuiAnimationEditorUniversalTrack.IsInWidgetAssignmentMode]"
+							raw_tooltip = "Click to enable preview assignment mode, and then click on any widget to preview this animation. Click on the screen background or right-click this button to deselect all widgets previewing this animation."
+							toolbox_icon = {
+								texture = "gfx/gui_animation_editor/preview_btn.png"
+								size = { 20 20 }
+								position = { 4 0 }
+								parentanchor = vcenter|left
+								tintcolor = "[Select_CVector4f( GuiAnimationEditorUniversalTrack.IsInWidgetAssignmentMode, '(CVector4f)0.1,0.9,0.1,1.0', '(CVector4f)1,1,1,0.9' )]"
+							}
+							editor_textbox = {
+								margin_right= 6
+								margin_bottom = 3
+								raw_text = "[GuiAnimationEditorUniversalTrack.GetAssignedWidgetsCount]"
+								align = right
+								autoresize = yes
+								fontsize = 14
+								parentanchor = vcenter|right
+							}
+						}
+						gui_animation_editor_button = {
+							name = "btn_add_track"
+							raw_text = "+"
+							fontsize = 18
+							fontweight = BOLD
+							#enabled = "[]" # TODO: Disable if there are no more tracks that can be added.
+							onclick = "[GuiAnimationEditorUniversalTrack.OpenTrackSelection]"
+							raw_tooltip = "Add a new track."
+						}
+					}
+
+					# Animation track properties (mutual exclusive with animation track above)
+					hbox = {
+						layoutpolicy_horizontal = preferred
+						layoutpolicy_vertical = preferred
+						visible = "[GuiAnimationEditorUniversalTrack.IsTrackTypeProperty]"
+						margin_right = 3
+
+						dummy_fill_up = {}
+
+						widget = {
+							name = "property_injection_point" # Programmatically injected tools property
+							visible = "[GuiAnimationEditorUniversalTrack.IsTrackTypeProperty]"
+							layoutpolicy_horizontal = fixed
+							layoutpolicy_vertical = preferred
+							size = { 120 0 }
+						}
+
+						gui_animation_editor_button = {
+							visible = "[GuiAnimationEditorUniversalTrack.HasDataToAnimate]"
+							name = "btn_prev_keyframe"
+							raw_text = "<"
+							fontsize = 18
+							fontweight = BOLD
+							onclick = "[GuiAnimationEditorUniversalTrack.PreviousKeyframe]"
+							raw_tooltip = "Move time to previous keyframe of this track."
+						}
+						gui_animation_editor_button = {
+							visible = "[GuiAnimationEditorUniversalTrack.HasDataToAnimate]"
+							name = "btn_toggle_keyframe"
+							enabled = "[GuiAnimationEditorUniversalTrack.IsTimeWithinAnimation]"
+							onclick = "[GuiAnimationEditorUniversalTrack.ToggleKeyframe]"
+							raw_tooltip = "Toggles the existence of a keyframe at current time."
+							icon = {
+								texture = "gfx/gui_animation_editor/editor_keyframe.png"
+								framesize = { 16 16 }
+								frame = "[Select_int32(GuiAnimationEditorUniversalTrack.IsTimeAtKeyframe, '(int32)3', '(int32)4')]"
+								size = { @gui_animation_editor_keyframe_size @gui_animation_editor_keyframe_size }
+								parentanchor = hcenter|vcenter
+								widgetanchor = hcenter|vcenter
+							}
+						}
+						gui_animation_editor_button = {
+							visible = "[GuiAnimationEditorUniversalTrack.HasDataToAnimate]"
+							name = "btn_next_keyframe"
+							raw_text = ">"
+							fontsize = 18
+							fontweight = BOLD
+							onclick = "[GuiAnimationEditorUniversalTrack.NextKeyframe]"
+							raw_tooltip = "Move time to the next keyframe of this track."
+						}
+					}
+				}
+			}
+
+
+			widget = {
+				name = "track_column_right_total_space"
+				size = { 0 @gui_animation_editor_track_height }
+				layoutpolicy_horizontal = preferred
+				layoutpolicy_vertical = fixed
+				alwaystransparent = yes
+
+				gui_animation_editor_track_widget = {
+					name = "track_column_right" # Name is referenced by the application - do not rename!
+					size = "[GuiAnimationEditorUniversalTrack.GetTimelineViewSize]"
+					layoutpolicy_horizontal = fixed
+					layoutpolicy_vertical = preferred
+					blockoverride "bg" {
+						tintcolor = "[Select_CVector4f( GuiAnimationEditorUniversalTrack.IsTrackTypeProperty, '(CVector4f)0.8,0.8,0.8,0.5', '(CVector4f)0.55,0.55,0.8,0.2' )]"
+					}
+					alpha = "[Select_float(GuiAnimationEditorUniversalTrack.IsUnderMousePointer,'(float)0.9','(float)1.0')]"
+					
+					button = {
+						name = "background_btn"
+						ondoubleclick = "[GuiAnimationEditorUniversalTrack.AddKeyframeAtMousePointer]"
+						size = { 100% 100% }
+					}
+
+					widget = {
+						name = "keyframes"
+						size = { 100% 100% }
+						datamodel = "[GuiAnimationEditorUniversalTrack.AccessKeyframes]"
+						item = {
+							icon = {
+								visible = "[GuiAnimationEditorKeyframe.IsValid]"
+								texture = "gfx/gui_animation_editor/editor_keyframe.png"
+								framesize = { 16 16 }
+								size = { @gui_animation_editor_keyframe_size @gui_animation_editor_keyframe_size }
+								parentanchor = left|vcenter
+								widgetanchor = hcenter|vcenter
+								position = "[GuiAnimationEditorKeyframe.GetPosition]"
+								color = "[Select_CVector4f(GuiAnimationEditorKeyframe.IsUnderMousePointer, '(CVector4f)0.3,0.3,0.8,0.8' , Select_CVector4f( GuiAnimationEditorKeyframe.IsSelected, '(CVector4f)0.8,0.8,0.3,0.8', '(CVector4f)1.0,1.0,1.0,1.0' ) )]"
+								frame = "[Select_int32(GuiAnimationEditorKeyframe.IsDataFlowButton, Select_int32( GuiAnimationEditorKeyframe.IsDataFlowToWidget, '(int32)6', '(int32)5' ),'(int32)1')]"
+
+								button = { # Invisible button on the 1st keyframe that will accept mouse click and toggle the data flow
+									name = "dataflow_btn"
+									size = { 100% 100% }
+									visible = "[GuiAnimationEditorKeyframe.IsDataFlowButton]"
+									onclick = "[GuiAnimationEditorKeyframe.ToggleDataFlow]"
+									raw_tooltip = "Toggle first keyframe behaviour. Down arrow = value is taken from the keyframe. Up arrow = value is taken from the widget at its current state when animation is started. Up arrow is used to achieve smooth transition."
+									tooltipwidget = { using = dockable_tooltip }
+								}
+
+								editor_textbox = {
+									visible = "[And( Or( GuiAnimationEditorKeyframe.IsUnderMousePointer, GuiAnimationEditorKeyframe.IsDragged ), GreaterThan_float(GuiAnimationEditorKeyframe.GetTimeInSeconds, '(float)0.0') )]"
+									raw_text = "[GuiAnimationEditorKeyframe.GetTimeInSeconds|2]s"
+									align = nobaseline
+									autoresize = yes
+									parentanchor = right|vcenter
+									position = { -18 0 }
+									fontcolor = { 1.0 1.0 0.5 0.7 }
+									fontsize = 14
+									fontweight = BOLD
+								}
+
+							}
+						}
+					}
+					hbox = {
+						visible = "[GuiAnimationEditorUniversalTrack.IsTrackTypeAnimation]"
+						dummy_fill_up = {}
+						spacing = 8
+						margin = { 8 0 }
+						editor_textbox = {
+							text = "[GuiAnimationEditorUniversalTrack.GetDuration]"
+							align = nobaseline
+							elide = right
+							autoresize = yes
+						}
+					}
+				}
+
+				# Put the duration dragging button as a parent of the total space so that it's always clickable when mouse is within that widget bounds.
+				button = {
+					name = "btn_drag_duration"
+					texture = "gfx/gui_animation_editor/track_duration.png"
+					gfxtype = buttongfx
+					framesize = { 21 @gui_animation_editor_common_btn_size }
+					visible = "[GuiAnimationEditorUniversalTrack.IsTrackTypeAnimation]"
+					onpressed = "[GuiAnimationTimelineViewport.BeginDragDuration(GuiAnimationEditorUniversalTrack.AccessSelf)]"
+					#enabled = "[GuiAnimationTimelineViewport.CanBeginDragDuration]" #TODO: Lock other buttons but not the one that is being dragged.
+
+					# Note [TK]: This button cannot be attached to the "track_column_right" due to mouse intersection issues (when "track_column_right"
+					# width is 0, then this button would never get mouse events), it must be placed as a sibling to "track_column_right" instead.
+					# It can neither be placed in the hbox or such, because that would affect the grand parent size which leads to strange growing issues
+					# of the longest duration track. The only solution I've found is to compute position similarly as in the size of "track_column_right".
+					# Computed value contains overlapping offset, see CTimelineViewport::GetTimelineRightCornerDurationDragButtonOffset().
+					position = "[GuiAnimationEditorUniversalTrack.GetTimelineViewRightCornerPosition]"
+				}
+			}
+			gui_animation_editor_scrollbar_fix = {}
+		}
+	}
+
+	type gui_animation_editor_playback_tools = hbox {
+
+		enabled = "[GuiAnimationEditorPlayer.CanPlay]"
+
+		spacing = 4
+
+		gui_animation_editor_toggle_button = {
+			icon = {
+				using = tools_centred_anchor
+				texture = "gfx/editor_gui/loop.dds"
+				size = { 20 20 }
+			}
+			onclick = "[GuiAnimationEditorPlayer.ToggleLoopEnabled]"
+			input_action = "gui_animation_editor_loop"
+			checked = "[GuiAnimationEditorPlayer.IsLoopEnabled]"
+			raw_tooltip = "Toggle animation playback loop."
+			tooltipwidget = { using = dockable_tooltip }
+		}
+
+		#Rollback button
+		gui_animation_editor_button = {
+			icon = {
+				using = tools_centred_anchor
+				texture = "gfx/editor_gui/rollback.dds"
+			}
+			size = { @gui_animation_editor_common_btn_size @gui_animation_editor_common_btn_size }
+			onclick = "[GuiAnimationEditorPlayer.SetCurrentTime('(float)0')]"
+			input_action = "gui_animation_editor_rollback"
+			raw_tooltip = "Rollback Animation"
+			tooltipwidget = { using = dockable_tooltip }
+		}
+
+		#Step Backwards button
+		gui_animation_editor_button = {
+			icon = {
+				using = tools_centred_anchor
+				texture = "gfx/editor_gui/step_backwards.dds"
+			}
+			size = { @gui_animation_editor_common_btn_size @gui_animation_editor_common_btn_size }
+			onclick = "[GuiAnimationEditorPlayer.StepBackwards]"
+			enabled = "[Not(GuiAnimationEditorPlayer.IsPlaying)]"
+			input_action = "gui_animation_editor_step_backwards"
+			raw_tooltip = "Step forward in the animation"
+			tooltipwidget = { using = dockable_tooltip }
+		}
+
+		#Pause/Play Button
+		gui_animation_editor_button = {
+			icon = {
+				using = tools_centred_anchor
+				visible = "[GuiAnimationEditorPlayer.IsPlaying]"
+				texture = "gfx/editor_gui/pause.dds"
+				raw_tooltip = "Pause Animation"
+				tooltipwidget = { using = dockable_tooltip }
+			}
+
+			icon = {
+				using = tools_centred_anchor
+				visible = "[Not(GuiAnimationEditorPlayer.IsPlaying)]"
+				texture = "gfx/editor_gui/play.dds"
+				raw_tooltip = "Resume Animation"
+				tooltipwidget = { using = dockable_tooltip }
+			}
+			input_action = "gui_animation_editor_play_pause"
+			onclick = "[GuiAnimationEditorPlayer.ToggleIsPlaying]"
+			size = { @gui_animation_editor_common_btn_size @gui_animation_editor_common_btn_size }
+		}
+
+		#Step Forwards button
+		gui_animation_editor_button = {
+			icon = {
+				using = tools_centred_anchor
+				texture = "gfx/editor_gui/step_forward.dds"
+			}
+			size = { @gui_animation_editor_common_btn_size @gui_animation_editor_common_btn_size }
+			enabled = "[Not(GuiAnimationEditorPlayer.IsPlaying)]"
+			onclick = "[GuiAnimationEditorPlayer.StepForward]"
+			input_action = "gui_animation_editor_step_forward"
+			raw_tooltip = "Step forward 1 frame in the animation"
+			tooltipwidget = { using = dockable_tooltip }
+		}
+
+		#Rollforward button
+		gui_animation_editor_button = {
+			icon = {
+				using = tools_centred_anchor
+				texture = "gfx/editor_gui/rollforward.dds"
+			}
+			onclick = "[GuiAnimationEditorPlayer.SetCurrentTime( GuiAnimationEditorPlayer.GetMaxDuration )]"
+			input_action = "gui_animation_editor_rollforward"
+			raw_tooltip = "Rollforward Animation"
+			tooltipwidget = { using = dockable_tooltip }
+		}
+
+		editor_toolbar_divider = {}
+
+		dropDown = {
+			using = EditorTextDropdown
+			name = "speed_multiply_dropdown"
+			datamodel = "[GuiAnimationEditorPlayer.GetSpeedMultiplierOptions]"
+			layoutpolicy_horizontal = preferred
+			size = { 84 24 }
+			blockoverride "dropdown_list_position"
+			{
+				position = { 2 100% }
+			}
+			blockoverride "dropdown_item_size"
+			{
+				size = { 100% 24 }
+			}
+			blockoverride "dropdown_item_text"
+			{
+				text = "[GuiAnimationEditorPlayerSpeedMultiplierEntry.GetDisplayName]"
+				fontsize = 12
+			}
+			blockoverride "dropdown_gridbox_size"
+			{
+				addcolumn = 84
+				addrow = 24
+			}
+			onselectionchanged = "[GuiAnimationEditorPlayer.SetSpeedMultiplierOptionIndex]"
+			selectedindex = "[GuiAnimationEditorPlayer.GetCurrentSpeedMultiplierOptionIndex]"
+			focuspolicy = all
+		}
+	}
+
+	type gui_animation_editor_time_ruler = widget {
+		name = "time_ruler"
+		alwaystransparent = no
+		layoutpolicy_horizontal = preferred
+		layoutpolicy_vertical = fixed
+		size = { 0 @gui_animation_editor_timeline_height }
+		datamodel = "[GuiAnimationEditorRuler.GetRulerResolutionEntries]"
+		item = {
+			widget = {
+				alwaystransparent = yes
+				parentanchor = left|bottom
+				icon = {
+					visible = "[Not(GuiAnimationEditorRulerResolutionEntry.IsSubdivision)]"
+					texture = "gfx/gui_animation_editor/time_resolution_step.png"
+					layoutpolicy_horizontal = fixed
+					layoutpolicy_vertical = fixed
+					size = { 2 10 }
+					widgetanchor = hcenter|bottom
+					position = "[GuiAnimationEditorRulerResolutionEntry.GetPosition]"
+					editor_textbox = {
+						raw_text = "[GuiAnimationEditorRulerResolutionEntry.GetDisplayValue]"
+						align = nobaseline
+						autoresize = yes
+						widgetanchor = hcenter|bottom
+						parentanchor = hcenter|top
+						fontcolor = { 1.0 1.0 1.0 0.7 }
+						fontsize = 12
+					}
+				}
+				icon = {
+					visible = "[GuiAnimationEditorRulerResolutionEntry.IsSubdivision]"
+					texture = "gfx/gui_animation_editor/time_resolution_step.png"
+					layoutpolicy_horizontal = fixed
+					layoutpolicy_vertical = fixed
+					size = { 1 7 }
+					widgetanchor = hcenter|bottom
+					position = "[GuiAnimationEditorRulerResolutionEntry.GetPosition]"
+				}
+			}
+		}
+		icon = {
+			name = "needle_line"
+			alwaystransparent = yes
+			size = { 2 4096 } # TODO: find some way to compute how tall is grand grand grand grand parent.
+			position = "[GuiAnimationEditorViewportBase.GetNeedlePosition( PdxGuiWidget.AccessParent.Self, '(float)-1', '(float)26' )]"
+			texture = "gfx/gui_animation_editor/needle_line.png"
+			alpha = 0.75
+			icon = {
+				name = "needle_head"
+				position = { 0 -16 }
+				texture = "gfx/gui_animation_editor/needle_head.png"
+				parentanchor = hcenter|top
+			}
+		}
+	}
+}
+
+
+vbox = {
+	name = "gui_animation_editor"
+	input_context = "gui_animation_editor"
+	layoutpolicy_horizontal = expanding
+	layoutpolicy_vertical = expanding
+
+	# Window top bar
+	editor_toolbar = {
+		name = "topbar"
+		spacing = 1
+		margin_left = 10
+		margin_right = 2
+
+		blockoverride "left"
+		{
+			toolbox_button = {
+				name = "save_btn"
+				input_action = "tools_save"
+				#enabled = "[MapEditor.IsSavable]"
+				onclick = "[GuiAnimationEditor.OnSave]"
+				raw_tooltip = "Save changes back to gui animation files."
+				toolbox_icon = {
+					texture = "gfx/tools/material/save.png"
+				}
+			}
+
+			toolbox_button = {
+				name = "save_as_btn"
+				input_action = "tools_save_as"
+				onclick = "[GuiAnimationEditor.OnSaveAs]"
+				raw_tooltip = "Open a save dialog to cherry pick and/or alternate the paths of the gui animation files to be saved to."
+				toolbox_icon = {
+					texture = "gfx/tools/material/save_as.png"
+				}
+			}
+
+			editor_toolbar_divider = {}
+
+			history_toolbar = {}
+		}
+
+		blockoverride "right"
+		{
+			gui_animation_editor_toggle_button = {
+				name = "open_curve_editor_btn"
+				size = { 108 @gui_animation_editor_common_btn_size }
+				checked = "[GuiAnimationEditor.IsAnyCurveEditorOpen]"
+				onclick = "[ExecuteConsoleCommand('gui_animation_curve_editor')]"
+				raw_tooltip = "Open curve editor."
+				toolbox_icon = {
+					texture = "gfx/gui_animation_editor/curve_editor.png"
+					parentanchor = left|vcenter
+					position = { 4 0 }
+				}
+				editor_textbox = {
+					raw_text = "Curve Editor"
+					align = right|nobaseline
+					autoresize = yes
+					margin_right = 6
+					parentanchor = right|vcenter
+				}
+			}
+		}
+	}
+
+	# Window content
+	widget = {
+		name = "window_content"
+		layoutpolicy_horizontal = preferred
+		layoutpolicy_vertical = preferred
+		size = { 0 0 }
+
+		hbox = {
+			name = "hbox_content"
+			layoutpolicy_horizontal = preferred
+			layoutpolicy_vertical = preferred
+
+			widget = {
+				visible = "[Not(GuiAnimationEditorMetadataCtx.IsAnimationsTabCollapsed)]"
+				name = "left_panel"
+				layoutpolicy_horizontal = fixed
+				layoutpolicy_vertical = preferred
+				size = { @gui_animation_editor_left_column_width 0 }
+
+				# Left top cell = Anim-Sets
+				widget = {
+					name = "cell_left_top"
+					size = { @gui_animation_editor_left_column_width @gui_animation_editor_anim_sets_column_height }
+					editor_frame = {
+						blockoverride "label" { raw_text = "Animation Sets:" }
+						blockoverride "content" {
+							vbox = {
+								layoutpolicy_horizontal = preferred
+								layoutpolicy_vertical = preferred
+								editor_toolbar = {
+									name = "anim_sets_toolbar"
+									spacing = 5
+									margin_left = 10
+									margin_right = 2
+									blockoverride "left"
+									{
+										gui_animation_editor_button = {
+											name = "new_anim_set"
+											onclick = "[GuiAnimationEditor.CreateNewAnimSet]"
+											raw_tooltip = "Create new animation-set."
+											toolbox_icon = {
+												texture = "gfx/tools/material/import.png"
+											}
+										}
+										gui_animation_editor_button = {
+											name = "delete_anim_set"
+											enabled = "[GuiAnimationEditor.CanDeleteSelectedAnimSet]"
+											onclick = "[GuiAnimationEditor.DeleteSelectedAnimSet]"
+											raw_tooltip = "Delete currently selected animation-set."
+											toolbox_icon = {
+												texture = "gfx/tools/material/delete.png"
+											}
+										}
+
+										gui_animation_editor_button = {
+											enabled = "[GuiAnimationEditor.CanRenameSelectedAnimSet]"
+											onclick = "[GuiAnimationEditor.RenameSelectedAnimSet]"
+											raw_tooltip = "Rename the currently selected animation."
+											toolbox_icon = {
+												texture = "gfx/tools/rename_icon.dds"
+											}
+										}
+
+										editor_toolbar_divider = {}
+
+										gui_animation_editor_button = {
+											enabled = "[GuiAnimationEditor.CanChangeSelectedAnimSetParent]"
+											onclick = "[GuiAnimationEditor.ChangeSelectedAnimSetParent]"
+											raw_tooltip = "Change which anim-set the currently selected anim-set inherits from"
+											toolbox_icon = {
+												texture = "gfx/gui_animation_editor/change_animset_parent.png"
+											}
+										}
+									}
+									blockoverride "right"
+									{
+									}
+								}
+
+								editor_scrollarea = {
+									blockoverride "content"
+									{
+										fixedgridbox = {
+											name = "anim_sets_gridbox"
+											alwaystransparent = no
+											addcolumn = 100%
+											addrow = 26
+											datamodel = "[GuiAnimationEditor.AccessAnimSets]"
+											item = {
+												name = "anim_set_item"
+												dockable_togglebutton = {
+													size = { 100% 26 }
+													onclick = "[GuiAnimationEditorAnimSetEntry.ToggleSelected]"
+													checked = "[GuiAnimationEditorAnimSetEntry.IsSelected]"
+													#raw_tooltip = "Animation set defined in: [GuiAnimationEditorAnimSetEntry.GetFilePath]"
+													text = "[GuiAnimationEditorAnimSetEntry.GetDisplayName]"
+													align = left
+													margin_left = 10
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+				# Left bottom cell = Animations
+				widget = {
+					name = "cell_left_bottom"
+					position = { 0 @gui_animation_editor_anim_sets_column_height }
+					size = { @gui_animation_editor_left_column_width @gui_animation_editor_animations_column_height }
+
+					# List of animations for currently selected anim-set
+					editor_frame = {
+						blockoverride "label" {
+							raw_text = "Animations:"
+							raw_tooltip = "List of animations from the currently selected animation-set."
+						}
+						blockoverride "content" {
+							vbox = {
+								layoutpolicy_horizontal = preferred
+								layoutpolicy_vertical = preferred
+								editor_toolbar = {
+									name = "animations_toolbar"
+									spacing = 5
+									margin_left = 10
+									margin_right = 2
+									blockoverride "left"
+									{
+										gui_animation_editor_button = {
+											name = "new_animation"
+											enabled = "[GuiAnimationEditor.CanCreateNewAnimation]"
+											onclick = "[GuiAnimationEditor.CreateNewAnimation]"
+											raw_tooltip = "Create new animation inside of the currently selected anim-set."
+											toolbox_icon = {
+												texture = "gfx/tools/material/import.png"
+											}
+										}
+										gui_animation_editor_button = {
+											name = "delete_animation"
+											enabled = "[GuiAnimationEditor.CanDeleteSelectedAnimations]"
+											onclick = "[GuiAnimationEditor.DeleteSelectedAnimations]"
+											raw_tooltip = "Delete currently selected animations."
+											toolbox_icon = {
+												texture = "gfx/tools/material/delete.png"
+											}
+										}
+										
+										gui_animation_editor_button = {
+											enabled = "[GuiAnimationEditor.CanRenameSelectedAnimation]"
+											onclick = "[GuiAnimationEditor.RenameSelectedAnimation]"
+											raw_tooltip = "Rename the currently selected animation."
+											toolbox_icon = {
+												texture = "gfx/tools/rename_icon.dds"
+											}
+										}
+
+										editor_toolbar_divider = {}
+									}
+									blockoverride "right"
+									{
+									}
+								}
+
+								editor_scrollarea = {
+									blockoverride "content"
+									{
+										fixedgridbox = {
+											name = "animations_gridbox"
+											alwaystransparent = no
+											addcolumn = 100%
+											addrow = 26
+											datamodel = "[GuiAnimationEditor.AccessAnimations]"
+											item = {
+												name = "animation_item"
+												widget = {
+													size = { 100% 26 }
+
+													hbox = {
+														gui_animation_editor_button = {
+															visible = "[GuiAnimationEditorAnimationEntry.IsAnimationInherited]"
+															onclick = "[GuiAnimationEditorAnimationEntry.OverrideInheritedAnimation]"
+															raw_tooltip = "Copy this inherited animation from its source anim-set into the currently selected anim-set."
+															toolbox_icon = {
+																texture = "gfx/tools/paste_icon.dds"
+															}
+														}
+
+														dockable_togglebutton = {
+															name = "animation_item_button"
+															layoutpolicy_horizontal = expanding
+															layoutpolicy_vertical = expanding
+															onclick = "[GuiAnimationEditorAnimationEntry.ToggleSelected]"
+															checked = "[GuiAnimationEditorAnimationEntry.IsSelected]"
+															raw_tooltip = "[GuiAnimationEditorAnimationEntry.GetTooltipMessage]"
+															text = "[GuiAnimationEditorAnimationEntry.GetDisplayName]"
+															align = left
+															margin_left = 10
+														}
+
+														gui_animation_editor_scrollbar_fix = {}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			checkbutton = {
+				name = "left_panel_collapse_button"
+				texture = "gfx/gui_animation_editor/collapse_animations.png"
+				framesize = { 46 188 }
+				size = { 23 94 }
+				checked = "[GuiAnimationEditorMetadataCtx.IsAnimationsTabCollapsed]"
+				onclick = "[GuiAnimationEditorMetadataCtx.ToggleAnimationsTabCollapsed]"
+				input_action = gui_animation_editor_toggle_animations_tab
+			}
+
+			# Right column
+			widget = {
+				name = "column_right"
+				size = { 0 0 }
+				layoutpolicy_horizontal = preferred
+				layoutpolicy_vertical = preferred
+
+				# List of currently selected animations with their tracks.
+				editor_frame = {
+					blockoverride "label" { raw_text = "Selected animations tracks:" }
+					blockoverride "content" {
+						vbox = {
+							layoutpolicy_horizontal = preferred
+							layoutpolicy_vertical = preferred
+							hbox = {
+								name = "tracks_toolbar"
+								using = editor_toolbar_background
+								spacing = 5
+								margin = { 5 3 }
+								layoutpolicy_horizontal = preferred
+
+								widget = {
+									name = "tracks_toolbar_left"
+									size = { @gui_animation_editor_track_left_column_width @gui_animation_editor_common_btn_size }
+									layoutpolicy_horizontal = fixed
+									layoutpolicy_vertical = preferred
+
+									hbox = {
+
+										spacing = 4
+
+										gui_animation_editor_button = {
+											name = "btn_add_keyframes"
+											onclick = "[GuiAnimationEditor.AddKeyframesAtCurrentTime]"
+											input_action = "gui_animation_editor_add_keys"
+											raw_tooltip = "Adds keyframes to all visible tracks at current time. Alternatively user may double-click anywhere on the track to create a new keyframe on that single track."
+											toolbox_icon = {
+												texture = "gfx/gui_animation_editor/add_keyframe.png"
+											}
+										}
+										gui_animation_editor_button = {
+											name = "btn_delete_selected_keyframes"
+											onclick = "[GuiAnimationEditor.DeleteSelectedKeyframes]"
+											enabled = "[GuiAnimationEditorMetadataCtx.HasSelectedAnyKeyframes]"
+											input_action = gui_animation_editor_delete_selected_keyframes
+											raw_tooltip = "Delete all selected keyframes."
+											toolbox_icon = {
+												texture = "gfx/gui_animation_editor/delete_selected_keyframes.png"
+											}
+										}
+										gui_animation_editor_button = {
+											name = "btn_select_all_keyframes"
+											onclick = "[GuiAnimationEditorMetadataCtx.SelectAllKeyframes]"
+											input_action = gui_animation_editor_select_all_keyframes
+											raw_tooltip = "Selects all keyframes."
+											toolbox_icon = {
+												texture = "gfx/gui_animation_editor/select_all_keyframes.png"
+											}
+										}
+										gui_animation_editor_button = {
+											name = "btn_deselect_all_keyframes"
+											onclick = "[GuiAnimationEditorMetadataCtx.DeselectAllKeyframes]"
+											input_action = gui_animation_editor_deselect_all_keyframes
+											enabled = "[GuiAnimationEditorMetadataCtx.HasSelectedAnyKeyframes]"
+											raw_tooltip = "Deselects all keyframes. Alternatively user may click anywhere on the tracks to deselect."
+											toolbox_icon = {
+												texture = "gfx/gui_animation_editor/deselect_all_keyframes.png"
+											}
+										}
+
+										editor_toolbar_divider = {}
+
+										gui_animation_editor_button = {
+											name = "btn_time_edit_mode"
+											#onclick = "[GuiAnimationEditor.AlignSelectedKeyframes]"
+											enabled = no
+											raw_tooltip = "(TODO feature not implemented yet) Toggle time editing mode between: move and scale."
+											toolbox_icon = {
+												texture = "gfx/gui_animation_editor/edit_mode_move.png"
+												visible = yes # TODO
+											}
+											toolbox_icon = {
+												texture = "gfx/gui_animation_editor/edit_mode_scale.png"
+												visible = no # TODO
+											}
+										}
+
+										gui_animation_editor_button = {
+											name = "btn_align_selected_keyframes"
+											#onclick = "[GuiAnimationEditor.AlignSelectedKeyframes]"
+											#enabled = "[GuiAnimationEditorMetadataCtx.CanAlignSelectedKeyframes]"
+											enabled = no
+											raw_tooltip = "(TODO feature not implemented yet) Aligns all currently selected keyframes at the current time."
+											toolbox_icon = {
+												texture = "gfx/gui_animation_editor/align_selected_keyframes.png"
+											}
+										}
+
+										dummy_fill_up = {}
+									}
+								}
+
+								gui_animation_editor_playback_tools = {}
+
+								gui_animation_editor_spacer = {}
+
+								hbox = {
+									margin_left = 5
+									name = "preset_curve_list"
+									layoutpolicy_horizontal = shrinking
+									visible = "[GuiAnimationEditor.IsKeyframeSelectionValidForCurvePreset]"
+								}
+
+								# Placeholder for curve list discoverability, since we can't disable search lists.
+								dockable_button = {
+									enabled = no
+									layoutpolicy_horizontal = shrinking
+									visible = "[Not( GuiAnimationEditor.IsKeyframeSelectionValidForCurvePreset )]"
+									raw_text = "Select pairs of keyframes for curve preset selection"
+									fontsize = 11
+									size = { 265 26 }
+									color = { 1 1 1 0.3 }
+									# No Tooltip
+									tooltipwidget = { widget = {} }
+								}
+
+								dummy_fill_up = {}
+
+								# Toggle move Needle with keyframe button
+								gui_animation_editor_toggle_button = {
+									checked = "[GuiAnimationEditorPlayer.ShouldMoveNeedleWithKeyframe]"
+									onclick = "[GuiAnimationEditorPlayer.ToggleMoveNeedleWithKeyframe]"
+									# input_action = "entity_viewer_keyframe_needle_lock_toggle"
+									raw_tooltip = "Toggle the moving of the needle when moving keyframes"
+									toolbox_icon = {
+										texture = "gfx/editor_gui/editor_keyframe_player_lock.dds"
+									}
+								}
+
+								gui_animation_editor_toggle_button = { #TODO: make this to work when it'll be no longer needed to have keyframe at begin and at end.
+									name = "btn_keyframe_stretch_mode"
+									#checked = "[GuiAnimationEditor.]"
+									#onclick = "[GuiAnimationEditor.]"
+									checked = no
+									enabled = no
+									#enabled = no # TODO
+									raw_tooltip = "TODO (feature not implemented yet). Toggle keyframes behavior on animation duration change. Keyframes will either maintain their time values, or otherwise they'll scale to the new duration while cropping keyframes that goes out of bounds."
+									toolbox_icon = {
+										texture = "gfx/gui_animation_editor/keyframe_stretch_mode.png"
+									}
+								}
+								gui_animation_editor_toggle_button = {
+									name = "btn_key_snapping"
+									checked = "[GuiAnimationEditorMetadataCtx.IsKeyframeSnapping]"
+									onclick = "[GuiAnimationEditorMetadataCtx.ToggleKeyframeSnapping]"
+									raw_tooltip = "Toggles snapping of keyframes when dragging them on the time line."
+									toolbox_icon = {
+										texture = "gfx/gui_animation_editor/snap_btn.png"
+									}
+								}
+							}
+
+							widget = {
+								name = "timeline_topbar"
+								layoutpolicy_horizontal = preferred
+								layoutpolicy_vertical = fixed
+								size = { 0 @gui_animation_editor_timeline_height }
+								hbox = {
+									widget = {
+										name = "timeline_left_section"
+										size = { @gui_animation_editor_track_left_column_width @gui_animation_editor_timeline_height }
+										layoutpolicy_horizontal = fixed
+										layoutpolicy_vertical = fixed
+									}
+
+									gui_animation_editor_time_ruler = {}
+
+									gui_animation_editor_scrollbar_fix = {}
+								}
+							}
+
+							editor_scrollarea = {
+								name = "scroll_area"
+								autoresize_slider = yes
+								blockoverride "content"
+								{
+									fixedgridbox = {
+										name = "tracks_gridbox" # Note: Datamodel is inserted here programatically. Do not rename this fixedgribox.
+										alwaystransparent = no
+										addcolumn = 100%
+										addrow = 26 # Note: @gui_animation_editor_track_height should be here but it's unsupported by the gui engine.
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+
+		icon = {
+			name = "drag_rect_overlay"
+			visible = "[GuiAnimationEditorViewportUserInput.IsDraggingSelectionRect]"
+			size = "[GuiAnimationEditorViewportUserInput.GetSelectionDragRectSize]"
+			position = "[GuiAnimationEditorViewportUserInput.GetSelectionDragRectPosition( PdxGuiWidget.AccessParent.Self )]"
+			texture = "gfx/editor_gui/editor_frame_striped.dds"
+			spriteType = CorneredTiled
+			spriteborder = { 5 5 }
+			framesize = { 64 64 }
+			frame = 1
+			alpha = 0.5
+		}
+	}
+}

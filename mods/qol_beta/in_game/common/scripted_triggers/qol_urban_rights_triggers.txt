@@ -1,0 +1,177 @@
+﻿# The goods rule, in ONE place -- GENERATED. Run tools/gen_rights_goods_table.js --emit to rebuild
+# the block below, and --check to verify the shipped copy still matches the game files.
+#
+# Evaluated on a LOCATION scope, reading scope:right from the calling scripted gui. The caller runs
+# it over every location of the province, because the province is the unit the game itself uses.
+#
+# SHAPE IS LOAD-BEARING: one AND per right inside a single OR, so an unmatched right falls through to
+# false and a right this mod has never heard of shows no marker. More Unique Urban Rights alone adds
+# 191 of those. Do NOT convert to trigger_if/trigger_else -- a non-matching limit yields TRUE there,
+# which would mark every unknown right.
+#
+# RGOs ONLY, never goods_output. Matching what a location already produces is circular: the guild
+# standing there is why the good is produced. The marker describes the land's endowment.
+#
+# ONE TIER, WITH A FLOOR AT 20%. Measured in-game, the in-province bonus is
+#     raw_material_in_province_impact (+10% base) x the input's share of the recipe's total quantity
+# so an input worth 7% of a production method returns +0.74% -- nothing -- and is dropped entirely.
+# The percentages in the comments are each RGO's best share across the production methods making that
+# right's boosted goods. A second "strong" tier at 50% once drew a larger icon for a larger share;
+# the two treatments proved indistinguishable in play, so the exact figure now reaches the player
+# through the marker tooltip, where it was always the legible part, and the icon just means "matches".
+#
+# SPECIAL AND FOREIGN BUILDINGS ARE EXCLUDED. A share taken from a building the player cannot build
+# is a true number about nothing. Two entries came from Japanese clan buildings and are now gone:
+# iron scored 100% for Weaponry Rights through the tatara, and lumber scored 81% for Masonry Rights
+# through the shoen. Both gate on the Japanese culture group. Iron now reads 90% and lumber no longer
+# matches Masonry Rights at all.
+#
+# Note lumber still matches seven of the eleven rights. That is not an error: dyes are made from
+# lumber (lumber_dyes_guild is lumber-only), tar is made from nothing else, and the naval, book,
+# artisan and weaponry chains lean on it heavily. An earlier hand-written table excluded lumber as
+# "too generic"; the measured shares say it earns its place.
+
+urqol_goods_match = {
+	OR = {
+		# NEVER NAME A town_rights_type KEY THAT MIGHT NOT EXIST. Measured, not assumed: a probe row
+		# naming one key defined by no installed mod produced 2,278 errors in a single second, all
+		# reading "Invalid right side during comparison 'town_rights_type'", the moment the rights
+		# card list rendered. It is a RUNTIME error, once per comparison per card per frame, not a
+		# one-off at load. This is why support for another mod's rights must live in a separate
+		# compatibility mod rather than in rows added here.
+
+		# copper 100%, iron 100%, stone 100%, coal 20%
+		AND = {
+			scope:right = town_rights_type:royal_tooling_rights
+			OR = {
+				raw_material = goods:copper
+				raw_material = goods:iron
+				raw_material = goods:stone
+				raw_material = goods:coal
+			}
+		}
+
+		# amber 100%, copper 100%, gems 100%, goods_gold 100%, ivory 100%, pearls 100%, silver 100%
+		AND = {
+			scope:right = town_rights_type:royal_jewelry_rights
+			OR = {
+				raw_material = goods:amber
+				raw_material = goods:copper
+				raw_material = goods:gems
+				raw_material = goods:goods_gold
+				raw_material = goods:ivory
+				raw_material = goods:pearls
+				raw_material = goods:silver
+			}
+		}
+
+		# lumber 100%, fiber_crops 38%
+		AND = {
+			scope:right = town_rights_type:royal_naval_rights
+			OR = {
+				raw_material = goods:lumber
+				raw_material = goods:fiber_crops
+			}
+		}
+
+		# cotton 100%, dyes 100%, fiber_crops 100%, fur 100%, lumber 100%, silk 100%, wool 100%
+		AND = {
+			scope:right = town_rights_type:royal_textile_rights
+			OR = {
+				raw_material = goods:cotton
+				raw_material = goods:dyes
+				raw_material = goods:fiber_crops
+				raw_material = goods:fur
+				raw_material = goods:lumber
+				raw_material = goods:silk
+				raw_material = goods:wool
+			}
+		}
+
+		# stone 93%, iron 90%, copper 73%, lumber 70%, lead 50%, saltpeter 50%, coal 29%
+		AND = {
+			scope:right = town_rights_type:royal_weaponry_rights
+			OR = {
+				raw_material = goods:stone
+				raw_material = goods:iron
+				raw_material = goods:copper
+				raw_material = goods:lumber
+				raw_material = goods:lead
+				raw_material = goods:saltpeter
+				raw_material = goods:coal
+			}
+		}
+
+		# dyes 100%, fiber_crops 100%, lumber 100%
+		AND = {
+			scope:right = town_rights_type:royal_book_rights
+			OR = {
+				raw_material = goods:dyes
+				raw_material = goods:fiber_crops
+				raw_material = goods:lumber
+			}
+		}
+
+		# clay 88%, lumber 82%, wild_game 75%, livestock 64%, sand 28%
+		AND = {
+			scope:right = town_rights_type:royal_artisan_rights
+			OR = {
+				raw_material = goods:clay
+				raw_material = goods:lumber
+				raw_material = goods:wild_game
+				raw_material = goods:livestock
+				raw_material = goods:sand
+			}
+		}
+
+		# wine 100%, millet 92%, potato 92%, rice 92%, wheat 92%, maize 82%, fruit 82%, sugar 79%, beeswax 67%, lumber 25%
+		AND = {
+			scope:right = town_rights_type:royal_brewing_rights
+			OR = {
+				raw_material = goods:wine
+				raw_material = goods:millet
+				raw_material = goods:potato
+				raw_material = goods:rice
+				raw_material = goods:wheat
+				raw_material = goods:maize
+				raw_material = goods:fruit
+				raw_material = goods:sugar
+				raw_material = goods:beeswax
+				raw_material = goods:lumber
+			}
+		}
+
+		# clay 100%, sand 100%, stone 100%
+		AND = {
+			scope:right = town_rights_type:royal_masonry_rights
+			OR = {
+				raw_material = goods:clay
+				raw_material = goods:sand
+				raw_material = goods:stone
+			}
+		}
+
+		# lumber 100%, fiber_crops 38%
+		AND = {
+			scope:right = town_rights_type:scandinavian_tar_privileges
+			OR = {
+				raw_material = goods:lumber
+				raw_material = goods:fiber_crops
+			}
+		}
+
+		# cotton 100%, dyes 100%, fiber_crops 100%, fur 100%, silk 100%, wool 100%
+		AND = {
+			scope:right = town_rights_type:flemish_cloth_industries_right
+			OR = {
+				raw_material = goods:cotton
+				raw_material = goods:dyes
+				raw_material = goods:fiber_crops
+				raw_material = goods:fur
+				raw_material = goods:silk
+				raw_material = goods:wool
+			}
+		}
+
+	}
+}

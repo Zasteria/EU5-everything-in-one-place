@@ -1,0 +1,423 @@
+types "TextureImporter"
+{
+	type log_entry = flowcontainer {
+		editor_textbox = {
+			text = "[LogEntry.GetTime]"
+			fontcolor = { 0.7 0.7 0.7 1.0 }
+			autoresize = yes
+		}
+
+		widget = {
+			size = { 4 0 }
+		}
+
+		editor_textbox = {
+			text = "[LogEntry.GetText]"
+			fontcolor = "[LogEntry.GetColor]"
+			autoresize = yes
+		}
+	}
+}
+
+@texture_importer_width = 600
+@texture_importer_output_text_width = 560 # Relative to @texture_importer_width
+
+widget = {
+	name = "texture_importer"
+    size = { @texture_importer_width 840 }
+
+	layoutpolicy_horizontal = expanding
+	layoutpolicy_vertical = expanding
+
+	widgetanchor = vcenter|hcenter
+	parentanchor = vcenter|hcenter
+
+	vbox = {
+
+		margin_bottom = 8
+		margin_right = 8
+		spacing = 4
+
+		editor_toolbar_layout = {
+			blockoverride "left"
+			{
+				history_toolbar = {}
+
+				editor_toolbar_divider = {
+
+				}
+
+				gui_editor_button = {
+					onclick = "[TextureImporter.Refresh]"
+					size = { 50 24 }
+					raw_text = "Refresh"
+					raw_tooltip = "Reload textures, meta-data and game conversions."
+				}
+
+				editor_textbox = {
+					visible = "[TextureImporter.HasLastConversion]"
+					raw_text = "Last import: [TextureImporter.GetLastConversion]"
+					fontcolor = { 0.7 0.7 0.7 1 }
+					fontsize = 10
+					autoresize = yes
+				}
+			}
+		}
+
+		editor_frame = {
+			layoutpolicy_horizontal = expanding
+			enabled = "[Not(TextureImporter.IsImporting)]"
+			blockoverride "label"
+			{
+				raw_text = "Options"
+			}
+
+			blockoverride "content"
+			{
+				tools_properties_dialog = {
+					name = "properties"
+				}
+
+				widget = { size = { 0 8 } }
+
+				tools_properties_dialog = {
+					name = "properties_resolutions"
+					visible = "[TextureImporter.IsCustomResolution]"
+				}
+
+				widget = { size = { 0 8 } }
+
+				hbox = {
+					spacing = 15
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = fixed
+					alwaystransparent = no
+		
+					editor_textbox = {
+						raw_text = "Scale"
+						autoresize = yes
+					}
+
+					widget = { 
+						layoutpolicy_horizontal = expanding
+					}
+
+					editor_checkbutton = {
+						blockoverride "checkbutton" {
+							name = "divide_by_1"
+							onclick = "[TextureImporter.SetOutputScale('1')]"
+							checked = yes
+						}
+		
+						blockoverride "label" {
+							raw_text = "1/1"
+							using = tooloptions_font
+						}
+					}
+		
+					editor_checkbutton = {
+						blockoverride "checkbutton" {
+							name = "divide_by_2"
+							onclick = "[TextureImporter.SetOutputScale('2')]"
+						}
+		
+						blockoverride "label" {
+							raw_text = "1/2"
+							using = tooloptions_font
+						}
+					}
+		
+					editor_checkbutton = {
+						blockoverride "checkbutton" {
+							name = "divide_by_4"
+							onclick = "[TextureImporter.SetOutputScale('4')]"
+						}
+		
+						blockoverride "label" {
+							raw_text = "1/4"
+							using = tooloptions_font
+						}
+					}
+
+					editor_checkbutton = {
+						blockoverride "checkbutton" {
+							name = "divide_by_8"
+							onclick = "[TextureImporter.SetOutputScale('8')]"
+						}
+		
+						blockoverride "label" {
+							raw_text = "1/8"
+							using = tooloptions_font
+						}
+					}
+
+					editor_checkbutton = {
+						blockoverride "checkbutton" {
+							name = "custom_res_checkbox"
+							onclick = "[TextureImporter.SetOutputScale('-1')]"
+						}
+		
+						blockoverride "label" {
+							raw_text = "Custom"
+							using = tooloptions_font
+						}
+					}
+					
+					gui_editor_button = {
+						onclick = "[TextureImporter.AddCustomResolution]"
+						visible = "[TextureImporter.IsCustomResolution]"
+						size = { 72 24 }
+						raw_text = "Add Custom"
+					}
+					
+					gui_editor_button = {
+						onclick = "[TextureImporter.RemoveCustomResolution]"
+						visible = "[TextureImporter.IsCustomResolution]"
+						size = { 80 24 }
+						raw_text = "Remove Custom"
+					}
+				}
+			}
+		}
+
+		editor_frame = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+
+			blockoverride "label"
+			{
+				raw_text = "Loaded files"
+			}
+
+			blockoverride "content"
+			{
+				editor_scrollarea = {
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = expanding
+					
+					blockoverride "content"
+					{
+						vbox = {
+							hbox = {
+								hbox = {
+									spacing = 8
+									margin_right = 1
+									datamodel = "[TextureImporter.GetTextures]"
+							
+									item = {
+										vbox ={
+											gui_editor_button = {
+												size = { 96 96 }
+												visible = "[TextureEntry.IsAvailable]";
+												onclick = "[TextureEntry.OpenTextureViewer]"
+
+												icon = {
+													size = { 100% 100% }
+													texture = "[TextureEntry.GetTexture]"
+													alwaystransparent = yes
+												}
+											}
+		
+											gui_editor_button = {
+												size = { 96 96 }
+												visible = "[Not(TextureEntry.IsAvailable)]";
+												onclick = "[TextureImporter.Refresh]"
+												raw_text = "MISSING"
+											}
+		
+											editor_textbox = {
+												text = "[TextureEntry.GetName]"
+												autoresize = yes
+												fontsize = 10
+											}
+		
+											editor_textbox = {
+												text = "[TextureEntry.GetResolution]"
+												autoresize = yes
+												fontsize = 8
+											}
+										}
+									}
+								}
+			
+								widget = {
+									layoutpolicy_horizontal = expanding
+								}
+							}
+		
+							widget = {
+								layoutpolicy_vertical = expanding
+							}
+						}
+					}
+				}
+			}
+		}
+
+		editor_frame = {
+			layoutpolicy_horizontal = preferred
+			layoutpolicy_vertical = preferred
+
+			blockoverride "label"
+			{
+				raw_text = "Output"
+			}
+
+			blockoverride "content"
+			{
+				flowcontainer = {
+					direction = vertical
+					layoutpolicy_horizontal = expanding
+		
+					datamodel = "[TextureImporter.AccessOutputEntries]"
+		
+					item = {
+						flowcontainer = {
+							direction = vertical
+
+							editor_checkbutton = {
+								blockoverride "checkbutton"
+								{
+									onclick = "[OutputEntry.ToggleIsSelected]"
+									checked = "[OutputEntry.IsSelected]"
+								}
+
+								blockoverride "label"
+								{
+									text = "[OutputEntry.GetPath]";
+									fontcolor = "[Select_CVector4f( OutputEntry.IsValid, '(CVector4f)0.6,1.0,0.6,1.0', '(CVector4f)1.0,0.6,0.6,1.0' )]"
+									multiline = yes
+									max_width = @texture_importer_output_text_width
+								}
+
+								raw_tooltip = "Choose whether this file should be imported or not."
+								tooltipwidget = {
+									using = dockable_tooltip
+								}
+							}
+		
+							flowcontainer = {
+								direction = horizontal
+		
+								widget = { size = { 16 0 } }
+		
+								flowcontainer = {
+									direction = vertical
+									datamodel = "[OutputEntry.GetInputTextures]"
+			
+									item = {
+										editor_textbox = {
+											visible = "[TextureEntry.IsAvailable]";
+											text = "[TextureEntry.GetName]";
+											fontcolor = "[Select_CVector4f( TextureEntry.IsAvailable, '(CVector4f)1.0,1.0,1.0,1.0', '(CVector4f)0.7,0.7,0.7,1.0' )]"
+											fontsize = 10
+											autoresize = yes
+										}
+									}
+								}
+							}
+		
+							widget = { size = { 0 4 } }
+						}
+					}
+				}
+			}
+		}
+
+		editor_frame = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+
+			blockoverride "label"
+			{
+				raw_text = "Log"
+			}
+
+			blockoverride "content"
+			{
+				editor_scrollarea = {
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = expanding
+					
+					scrollbarpolicy_horizontal = always_on
+					scrollbarpolicy_vertical = always_on
+
+					blockoverride "scrollbars"
+					{
+						scrollbar_vertical = {
+							using = sticky_vertical_scrollbar
+						}
+						
+						scrollbar_horizontal = {
+							using = editor_horizontal_scrollbar
+						}
+					}
+
+					blockoverride "content"
+					{
+						vbox = {
+
+							hbox = {
+								layoutpolicy_horizontal = expanding
+
+								dynamicgridbox = {
+									name = "log_gridbox"
+				
+									alwaystransparent = no
+									layoutpolicy_horizontal = expanding
+								}
+
+								widget = {
+									size = { 18 0 }
+								}
+							}
+
+							widget = {
+								size = { 0 18 }
+							}
+
+							widget = {
+								layoutpolicy_vertical = expanding
+							}
+						}
+					}
+				}
+			}
+		}
+
+		hbox = {
+			layoutpolicy_horizontal = expanding
+			spacing = 8
+
+			widget = {
+				layoutpolicy_horizontal = expanding
+			}
+
+			button = {
+				gfxtype = animatedbuttongfx
+				shaderfile = "gfx/FX/pdxgui_pushbutton.shader"
+				texture = "gfx/editor_terrain/editor_spinner_26.dds"
+				visible = "[TextureImporter.IsImporting]"
+				framesize = { 26 26 }
+				size = { 25 25 }
+				loopinterval = 0.8
+				layoutpolicy_vertical = fixed
+				layoutpolicy_horizontal = fixed
+			}
+
+			gui_editor_button = {
+				onclick = "[TextureImporter.Import]"
+				enabled = "[Not(TextureImporter.IsImporting)]"
+				size = { 64 32 }
+				raw_text = "Import"
+			}
+
+			gui_editor_button = {
+				onclick = "[TextureImporter.Cancel]"
+				enabled = "[Not(TextureImporter.IsImporting)]"
+				size = { 64 32 }
+				raw_text = "Cancel"
+			}
+		}
+	}
+}

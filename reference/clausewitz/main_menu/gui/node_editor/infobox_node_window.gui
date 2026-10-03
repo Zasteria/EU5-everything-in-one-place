@@ -1,0 +1,164 @@
+types InfoboxNodeWindowTypes {
+	type infobox_selection_frame = icon {
+        visible = "[Node.IsSelected]"
+        color = "[Node.GetSelectedColor]"
+		texture = "gfx/editor_gui/editor_white_pixel.png"
+	}
+}
+
+widget = {
+	name = "infobox_node_window"
+	filter_mouse = left
+	alwaystransparent = no
+	size = { 256 128 } 
+	layoutpolicy_horizontal = expanding
+	layoutpolicy_vertical = expanding
+	alpha = 0.88
+
+	state = {
+		name = "default"
+		frame = 1
+		duration = 0.0
+	}
+
+	state = {
+		name = "selected"
+		frame = 3
+		duration = 0.1
+		alpha = 0.5
+		next = selected_end
+	}
+	
+	state = {
+		name = "selected_end"
+		duration = 0.1
+		alpha = 0.88
+	}
+
+	# Selection frame
+    infobox_selection_frame = {
+        size = { 100% 1% }
+    }
+    infobox_selection_frame = {
+    	position = { 0 99% }
+        size = { 100% 1% }
+    }
+    infobox_selection_frame = {
+        size = { 1% 100% }
+    }
+    infobox_selection_frame = {
+    	position = { 99% 0 }
+        size = { 1% 100% }
+    }
+
+    icon = { #Background
+        size = { 100% 100% }
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = expanding
+        texture = "gfx/editor_gui/editor_frame_striped.dds"
+        spriteType = CorneredTiled
+        spriteborder = { 5 5 }
+        framesize = { 64 64 }
+        frame = 1
+        color = "[Node.GetBackgroundColor]"
+    }
+
+	widget = {
+		name = "nodes_container"
+		size = { 100% 100% }
+	}
+
+ 	vbox = {
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = expanding
+		restrictparent_min = yes
+		margin_top = 2
+		margin_bottom = 2
+		margin_left = 5
+		margin_right = 5
+
+		hbox = {
+			margin_top = 3
+			spacing = 4
+			layoutpolicy_horizontal = expanding
+
+			editor_textbox = {
+				layoutpolicy_horizontal = expanding
+				name = "node_name_textbox"
+				margin_left = 5
+				fontsize = 20
+				scale = "[InfoboxNodeWindow.GetTitleScale]"
+				is_local_scale_fixed = yes
+				text = [Node.Name]
+				align = left|top
+				elide = right
+				using = editor_toolbar_font
+				fontcolor = { 1 1 1 1 }
+				tooltip = [Node.Tooltip]
+				tooltipwidget = { using = editor_tooltip }
+			}
+
+			widget = {
+				layoutpolicy_horizontal = expanding
+			}
+
+			# Color button 
+			# ...
+
+			# Name button
+			node_window_button = {
+				layoutpolicy_horizontal = fixed
+				blockoverride "button" { onclick = [NodeWindow.NameDialog] }
+				blockoverride "icon" { texture = "gfx/editor_gui/16px/node_editor_icon_edit_name.png" }
+			} 
+
+			# Edit description button
+			node_window_button = {
+				layoutpolicy_horizontal = fixed
+				blockoverride "button" { onclick = [NodeWindow.EnterDescriptionEditingMode] }
+				blockoverride "icon" { texture = "gfx/editor_gui/16px/node_editor_icon_edit_description.png" }
+			}
+
+			# Close button
+			node_window_button = {
+				layoutpolicy_horizontal = fixed
+				blockoverride "button" { onclick = [NodeWindow.Close] }
+				blockoverride "icon" { texture = "gfx/editor_gui/16px/close.png" }
+			}
+		}
+
+		editor_editbox = {
+			name = "comment_desc" # Do not rename. Expected by application.
+			background = {
+				visible = "[NodeWindow.IsDescriptionEditingMode]"
+				texture = "gfx/interface/white.dds"
+				tintcolor = { 0.3 0.3 0.15 0.5 }
+			}
+			fontsize = 17
+			text = "[Node.Description]"
+			fontcolor = { 0.95 0.8 0.7 1 }
+			oneditingfinished = "[NodeWindow.ExitDescriptionEditingMode]"
+			alwaystransparent = yes # prevent entering focus mode when clicking on the description
+			margin = { 0 4 }
+			font = "standard_cw_font"
+			align = top|left
+			tooltipwidget = { using = editor_tooltip }
+			multiline = yes
+			layoutpolicy_vertical = expanding
+			layoutpolicy_horizontal = preferred
+			min_height = 30
+		}
+
+		hbox = {
+			layoutpolicy_horizontal = expanding
+			widget = { layoutpolicy_horizontal = expanding }
+			margin_bottom = 4
+			icon = {
+				name = "resize_icon" # Do not rename. Expected by application.
+				size = { 26 26 }
+				texture = "gfx/tools/resize_window.dds"
+				alwaystransparent = no # Icon by default has yes but we need to override. We can't use button because it eats mouse events.
+			}
+		}
+	}
+}

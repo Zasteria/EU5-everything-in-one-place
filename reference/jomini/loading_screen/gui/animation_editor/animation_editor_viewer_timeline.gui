@@ -1,0 +1,340 @@
+@viewer_control_button_dimension = 20
+@viewer_control_button_icon_dimension = 18
+@clip_timeline_control_button_dimension = 16
+@clip_timeline_control_button_icon_dimension = 11
+@timeline_height = 30
+
+template state_machine_event_keyframe_properties
+{
+	texture = "gfx/editor_gui/editor_keyframe.dds"
+    framesize = { 16 16 }
+    frame = 1
+    state = {
+        name = _mouse_leave
+        frame = 1
+    }
+
+    state = {
+        name = _mouse_enter
+        frame = 2
+    }
+
+    enabled = "[AnimationEditorViewer.IsEventEditingEnabled]"
+    color = { 1 1 0 0.7 }
+    tooltipwidget = { using = dockable_tooltip }
+    # The tooltip doesn't work properly at the edges of the lane. See: PSGE-6720.
+    raw_tooltip = "[ActiveClipEventsKeyframe.Tooltip]"
+    size = { 16 16 }
+    onrightclick = "[AnimationEditorViewer.OpenKeyframeContextMenu( ActiveClip.AccessSelf, ActiveClipEventsKeyframe.AccessSelf )]"
+
+    # A game project may define the "button" type with `button_ignore = right`. The following line is needed to make it possible
+    # to open the context menu even in such games. Jira: PSGE-8083.
+    button_ignore = none
+
+    editor_textbox = {
+        fontsize = 11
+        fontcolor = { 0 0 1 1 }
+        raw_text = "[ActiveClipEventsKeyframe.EventCountText]"
+        parentanchor = center
+        align = top
+        autoresize = yes
+    }
+}
+
+types AnimationEditor
+{
+    type animation_editor_viewer_refresh_button = gui_editor_button {
+        icon = {
+            size = { @viewer_control_button_icon_dimension @viewer_control_button_icon_dimension }
+            parentanchor = vcenter|hcenter
+            texture = "gfx/editor_gui/refresh.png"
+        }
+
+        size = { @viewer_control_button_dimension @viewer_control_button_dimension }
+        raw_tooltip = "Refresh viewer"
+        align = left|nobaseline
+        onclick = "[AnimationEditorViewer.RefreshEntity]"
+        enabled = "[AnimationEditorViewer.HasEntity]"
+    }
+
+    type animation_editor_viewer_play_button = gui_editor_button {
+        icon = {
+            parentanchor = vcenter|hcenter
+            visible = "[AnimationEditorViewer.IsMachinePlaying]"
+            texture = "gfx/editor_gui/pause.dds"
+            size = { @viewer_control_button_icon_dimension @viewer_control_button_icon_dimension }
+        }
+
+        icon = {
+            parentanchor = vcenter|hcenter
+            visible = "[Not(AnimationEditorViewer.IsMachinePlaying)]"
+            texture = "gfx/editor_gui/play.dds"
+            size = { @viewer_control_button_icon_dimension @viewer_control_button_icon_dimension }
+        }
+
+        size = { @viewer_control_button_dimension @viewer_control_button_dimension }
+        onclick = "[AnimationEditorViewer.TogglePausePlay]"
+        block "time_control_play_button_enabled" {
+            enabled = "[AnimationEditorViewer.HasActiveClips]"
+        }
+        focus_on_visible = yes
+        input_action = "animation_editor_pause_play"
+        raw_tooltip = "[Select_CString(AnimationEditorViewer.IsMachinePlaying, 'Pause', 'Resume')]"
+        tooltipwidget = {
+            using = dockable_tooltip
+        }
+    }
+    
+    type animation_editor_viewer_fit_button = gui_editor_button {
+        size = { @viewer_control_button_dimension @viewer_control_button_dimension }
+        icon = {
+            parentanchor = vcenter|hcenter
+            texture = "gfx/editor_gui/fit_to_screen.png"
+            size = { @viewer_control_button_dimension @viewer_control_button_dimension }
+            alwaystransparent = yes
+        }
+        tooltipwidget = { using = dockable_tooltip }
+        raw_tooltip = "Fit the camera to the entity or reset if no entity."
+        align = center|nobaseline
+        onclick = "[AnimationEditorViewer.FitCamera]"
+        input_action = "animation_editor_fit"
+    }
+
+    type animation_editor_enter_exit_event_keyframe = vbox {
+        widget = {
+            size = "[Select_CVector2f( ActiveClip.HasAnimation, '(CVector2f)0,25', '(CVector2f)0,5' )]"
+        }
+        button = {
+            using = state_machine_event_keyframe_properties
+            block "properties"
+            {
+            }
+        }
+    }
+
+    type animation_editor_viewer_timeline = scrollarea {
+        layoutpolicy_horizontal = expanding
+        layoutpolicy_vertical = preferred
+		scissor = yes
+		scrollbarpolicy_horizontal = as_needed
+		scrollbarpolicy_vertical = as_needed
+		scrollbaralign_horizontal = bottom
+		scrollbaralign_vertical = right
+		autoresizeviewport = yes
+		alwaystransparent = yes
+        minimumsize = {-1 95}
+        visible = "[AnimationEditorViewer.HasActiveClips]"
+
+		block "scrollbars"
+		{
+			scrollbar_vertical = {
+				using = editor_vertical_scrollbar
+			}
+			
+			scrollbar_horizontal = {
+				using = editor_horizontal_scrollbar
+			}
+		}
+
+        scrollwidget = {
+            vbox = {
+                layoutpolicy_horizontal = expanding
+                datamodel = "[AnimationEditorViewer.ActiveClips]"
+                
+                item = {
+                    vbox = {
+                        layoutpolicy_horizontal = expanding
+                        margin_right = 50
+
+                        hbox = {
+                            layoutpolicy_horizontal = expanding
+                            margin_bottom = 1
+
+                            editor_textbox = {
+                                align = left|nobaseline
+                                autoresize = yes
+                                raw_text = "[ActiveClip.Name]"
+                                fontsize = 10
+                                elide = right
+                            }
+
+                            widget = {
+                                layoutpolicy_horizontal = expanding
+                            }
+
+                            gui_editor_button = {
+                                icon = {
+                                    parentanchor = vcenter|hcenter
+                                    texture = "gfx/editor_gui/step_backwards.dds"
+                                    size = { @clip_timeline_control_button_icon_dimension @clip_timeline_control_button_icon_dimension }
+                                }
+                                size = { @clip_timeline_control_button_dimension @clip_timeline_control_button_dimension }
+                                onclick = "[AnimationEditorViewer.StepBackwardsOneFrame( ActiveClip.Self )]"
+                                enabled = "[ActiveClip.CanStepBackwardsOneFrame]"
+                                raw_tooltip = "Go to the previous animation frame"
+                            }
+                            
+                            gui_editor_button = {
+                                icon = {
+                                    parentanchor = vcenter|hcenter
+                                    texture = "gfx/editor_gui/step_forward.dds"
+                                    size = { @clip_timeline_control_button_icon_dimension @clip_timeline_control_button_icon_dimension }
+                                }
+                                size = { @clip_timeline_control_button_dimension @clip_timeline_control_button_dimension }
+                                onclick = "[AnimationEditorViewer.StepForwardOneFrame( ActiveClip.Self )]"
+                                enabled = "[ActiveClip.CanStepForwardOneFrame]"
+                                raw_tooltip = "Go to the next animation frame"
+                            }
+                        }
+
+                        hbox = {
+                            layoutpolicy_horizontal = expanding
+                            layoutpolicy_vertical = expanding
+
+                            animation_editor_enter_exit_event_keyframe = {
+                                blockoverride "properties"
+                                {
+                                    datacontext = "[ActiveClip.OnEnterEventsKeyframe]"
+                                }
+                            }
+
+                            vbox = {
+                                layoutpolicy_horizontal = expanding
+                                layoutpolicy_vertical = expanding
+                                margin_bottom = 1
+                                spacing = 4
+
+                                tools_player_timeline = {
+                                    name = "frame_timeline"
+                                    visible = "[ActiveClip.HasAnimation]"
+                                    layoutpolicy_horizontal = expanding
+                                    layoutpolicy_vertical = fixed
+                                    size = { -1 15 }
+                                    max = "[ActiveClip.FrameCount]"
+                                    min = 1
+                                    timeline_time_points = 3
+                                    timeline_line_direction = down
+                                    timeline_line_height = 0
+                                    color = { 1 1 1 0.5 }
+                                    timeline_texts = {
+                                        editor_textbox = {
+                                            alpha = "[Select_float(ActiveClip.HasActiveAnimation, '(float)0.8', '(float)0.3')]"
+                                            autoresize = yes
+                                            fontsize = 10
+                                        }
+                                    }
+                                }
+
+                                editor_player = {
+                                    name = "timeline_player"
+                                    size = { 0 @timeline_height }
+                                    layoutpolicy_horizontal = expanding
+                                    layoutpolicy_vertical = fixed
+                                    min = 0
+                                    max = "[ActiveClip.Length]"
+                                    step = 0.001 # Corresponds to a millisecond.
+                                    wheelstep = 0 # Scrolling should work on the containing scrollarea.
+                                    value = "[ActiveClip.CurrentTime]"
+                                    onchangestart = "[AnimationEditorViewer.OnScrubStart(ActiveClip.Name)]"
+                                    onvaluechanged = "[AnimationEditorViewer.OnScrubChange(ActiveClip.Self)]"
+                                    onchangefinish = "[AnimationEditorViewer.OnScrubEnd]"
+                                    blockoverride "player_track"
+                                    {
+                                        name = "player_track"
+                                    }
+
+                                    blockoverride "overlay"
+                                    {
+                                        raw_text = "[ActiveClip.NeedleText]"
+                                        position = { 20 1 }
+                                        fontsize = 10
+                                    }
+
+                                    blockoverride "player_needle"
+                                    {
+                                        alwaystransparent = yes
+                                    }
+                                }
+
+                                tools_player_timeline = {
+                                    name = "time_timeline"
+                                    layoutpolicy_horizontal = expanding
+                                    layoutpolicy_vertical = fixed
+                                    size = { -1 15 }
+                                    max = "[ActiveClip.Length]"
+                                    min = 0
+                                    timeline_time_points = 3
+                                    timeline_line_direction = up
+                                    timeline_line_height = @timeline_height
+                                    color = { 1 1 1 0.5 }
+                                    timeline_texts = {
+                                        editor_textbox = {
+                                            alpha = 0.8
+                                            autoresize = yes
+                                            fontsize = 10
+                                        }
+                                    }
+                                }
+
+                                tools_keyframe_editor = {
+                                    keyframe_editor_lane_container = {
+                                        vbox = {
+                                            margin_bottom = 15
+                                            spacing = 3
+                                            layoutpolicy_horizontal = expanding
+                                            layoutpolicy_vertical = expanding
+                                        }
+                                    }
+
+                                    datamodel = "[ActiveClip.KeyframeLanes]"
+                                    item = {
+                                        tools_keyframe_editor_lane = {
+                                            onrightclick = "[AnimationEditorViewer.OpenTimelineContextMenu( KeyframeEditor.Self, ActiveClip.AccessSelf )]"
+                                            layoutpolicy_horizontal = expanding
+                                            size = { 0 @timeline_height }
+                                            datamodel = "[ActiveClip.ConditionalEventsKeyframes]"
+                                            item = {
+                                                tools_keyframe_button = {
+                                                    using = state_machine_event_keyframe_properties
+
+                                                    # If the keyframe includes an event that cannot be edited, disallow keyframe dragging.
+                                                    # This has the side-effect of also disallowing opening the context menu. See: PSGE-6719.
+                                                    enabled = "[AnimationEditorViewer.IsEventsKeyframeDraggable( ActiveClipEventsKeyframe.Self )]"
+
+                                                    widgetanchor = vcenter|hcenter
+                                                    value = "[ActiveClipEventsKeyframe.Time]"
+                                                    onpressed = "[AnimationEditorViewer.OnKeyframePressed( ActiveClipEventsKeyframe.Self )]"
+                                                    on_keyframe_move = "[AnimationEditorViewer.OnKeyframeMoved( KeyframeWidget.Self, ActiveClipEventsKeyframe.Self )]"
+                                                    onreleased = "[AnimationEditorViewer.OnKeyframeReleased( ActiveClip.Self, KeyframeWidget.Self, ActiveClipEventsKeyframe.Self )]"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            # This widget is intended to be positioned to the right of the time timeline while at the same time
+                            # the timeline control buttons should appear behind the right edge of the frame timeline.
+                            widget = {
+                                visible = "[ActiveClip.IsInfinite]"
+                                editor_textbox = {
+                                    alpha = 0.8
+                                    fontsize = 16
+                                    raw_text = "+∞"
+                                    position = "[Select_CVector2f( ActiveClip.HasAnimation, '(CVector2f)2,58.6', '(CVector2f)2,39.8' )]"
+                                }
+                            }
+
+                            animation_editor_enter_exit_event_keyframe = {
+                                blockoverride "properties"
+                                {
+                                    datacontext = "[ActiveClip.OnExitEventsKeyframe]"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

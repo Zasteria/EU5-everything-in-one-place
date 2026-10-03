@@ -1,0 +1,488 @@
+template editor_keyframe_button
+{
+    texture = "gfx/editor_gui/editor_keyframe.dds"
+    framesize = { 16 16 }
+    widgetanchor = hcenter|vcenter
+    tooltipwidget = { 
+        using = dockable_tooltip
+    }
+
+    frame = "[Select_int32(EntityEditorKeyframe.IsSelected, '(int32)3', '(int32)1')]"
+
+    state = {
+        name = _mouse_leave
+        frame = "[Select_int32(EntityEditorKeyframe.IsSelected, '(int32)3', '(int32)1')]"
+    }
+
+    state = {
+        name = _mouse_enter
+        frame = "[Select_int32(EntityEditorKeyframe.IsSelected, '(int32)3', '(int32)2')]"
+    }
+}
+
+types EntityEditor
+{
+    type entity_editor_keyframe_lane = tools_keyframe_editor_lane {
+        layoutpolicy_horizontal = expanding
+        size = { 0 32 }
+        background = {
+            texture = "gfx/editor_gui/editor_player_lane.dds"
+            alpha = "[Select_float(EntityEditorEventLayer.IsHovered, '(float)1.0', '(float)0.4')]"
+            spriteType = CorneredStretched
+            spriteborder = { 5 5 }
+            shaderfile = "gfx/FX/pdxgui_default.shader"
+        }
+        
+    }
+
+    type entity_editor_player = editor_frame {
+        visible = "[And(EntityEditor.HasEntity, EntityEditor.Entity.HasStates)]"
+        using = tools_spacing
+        layoutpolicy_horizontal = expanding
+        layoutpolicy_vertical = expanding
+        minimumsize = {-1 20}
+        
+        blockoverride "label" { raw_text = "Animation Controls" }
+        blockoverride "content" {
+            layoutpolicy_horizontal = expanding
+            layoutpolicy_vertical = expanding
+            vbox = {
+                using = tools_spacing
+                layoutpolicy_horizontal = expanding
+                layoutpolicy_vertical = expanding
+                hbox = {
+                    layoutpolicy_horizontal = expanding
+                    
+                    hbox = {
+                        name = "states_list"
+                        layoutpolicy_horizontal = preferred
+                    }
+
+                    widget = {
+                        name = "spacer"
+                        layoutpolicy_horizontal = expanding
+                    }
+                }
+
+                editor_frame = {
+                    visible = "[EntityEditor.Entity.State.HasAnimation]"
+                    name = "animation_controls"
+                    layoutpolicy_horizontal = expanding
+                    layoutpolicy_vertical = expanding
+                    
+                    blockoverride "label" { raw_text = "" }
+                    blockoverride "content" {
+                        vbox = {
+                            using = tools_spacing
+                            layoutpolicy_horizontal = expanding
+                            layoutpolicy_vertical = expanding
+                            spacing = 8
+                            hbox = {
+                                layoutpolicy_horizontal = expanding
+
+                                hbox = {
+                                    layoutpolicy_horizontal = shrinking
+                                    
+                                    vbox = {
+                                        hbox = {
+                                            layoutpolicy_horizontal = shrinking
+                                            editor_textbox = {
+                                                raw_text = "Frames:"
+                                                autoresize = yes
+                                                align = left|nobaseline
+                                            }
+
+                                            editor_editbox = {
+                                                using = tools_editbox
+                                                align = center|nobaseline
+                                                size = { 30 20 }
+                                                raw_text = "[EntityEditor.Entity.CurrentFrame]"
+                                                oneditingstart = "[EntityEditor.Entity.PauseAnimation]"
+                                                oneditingfinished = "[EntityEditor.Entity.SetCurrentFrameText( PdxGuiWidget.AccessSelf )]"
+                                            }
+
+                                            editor_textbox = {
+                                                margin_left = 2
+                                                raw_text = "/[EntityEditor.Entity.State.NumFrames]"
+                                                autoresize = yes
+                                                align = left|nobaseline
+                                            }
+                                        }
+                                        
+                                        hbox = {
+                                            layoutpolicy_horizontal = expanding
+                                            
+                                            hbox = {
+                                                layoutpolicy_horizontal = shrinking
+                                                editor_textbox = {
+                                                    raw_text = "Time:"
+                                                    autoresize = yes
+                                                    align = left|nobaseline
+                                                }
+
+                                                editor_editbox = {
+                                                    using = tools_editbox
+                                                    align = center|nobaseline
+                                                    size = { 40 20 }
+                                                    raw_text = "[EntityEditor.Entity.CurrentTime|2]s"
+                                                    oneditingstart = "[EntityEditor.Entity.PauseAnimation]"
+                                                    oneditingfinished = "[EntityEditor.Entity.SetCurrentTimeText( PdxGuiWidget.AccessSelf )]"
+                                                }
+
+                                                editor_textbox = {
+                                                    margin_left = 2
+                                                    raw_text = "/[EntityEditor.Entity.State.AnimationLength|2]s"
+                                                    autoresize = yes
+                                                    align = left|nobaseline
+                                                }
+                                            }
+
+                                            widget = {
+                                                name = "spacer"
+                                                layoutpolicy_horizontal = expanding
+                                            }
+                                        }
+                                    }
+
+                                    hbox = {
+                                        margin_left = 6
+                                        spacing = 4
+                                        
+                                        editor_button = {
+                                            icon = {
+                                                using = tools_centred_anchor
+                                                texture = "gfx/editor_gui/loop.dds"
+                                                alpha = "[Select_float(EntityEditor.Entity.IsLooping, '(float)1.0', '(float)0.3')]"
+                                            }
+                                            size = { 30 28 }
+                                            onclick = [EntityEditor.Entity.ToggleLooping]
+                                            input_action = "entity_editor_loop"
+                                            raw_tooltip = "Toggle Loop Animation"
+                                            tooltipwidget = {
+                                                using = dockable_tooltip
+                                            }
+                                        }
+
+                                        #Rollback button
+                                        editor_button = {
+                                            icon = {
+                                                using = tools_centred_anchor
+                                                texture = "gfx/editor_gui/rollback.dds"
+                                            }
+                                            size = { 30 28 }
+                                            onclick = "[EntityEditor.Entity.Rollback]"
+                                            input_action = "entity_editor_rollback"
+                                            raw_tooltip = "Rollback Animation"
+                                            tooltipwidget = {
+                                                using = dockable_tooltip
+                                            }
+                                        }
+                                        
+                                        #Step Backwards button
+                                        editor_button = {
+                                            icon = {
+                                                using = tools_centred_anchor
+                                                texture = "gfx/editor_gui/step_backwards.dds"
+                                            }
+                                            size = { 30 28 }
+                                            onclick = "[EntityEditor.Entity.StepBackwards]"
+                                            input_action = "entity_editor_step_backwards"
+                                            raw_tooltip = "Step forward 1 frame in the animation"
+                                            tooltipwidget = {
+                                                using = dockable_tooltip
+                                            }
+                                        }
+                                        
+                                        #Pause/Play Button
+                                        editor_button = {
+                                            icon = {
+                                                using = tools_centred_anchor
+                                                visible = "[EntityEditor.Entity.IsPlaying]"
+                                                texture = "gfx/editor_gui/pause.dds"
+                                                input_action = "entity_editor_play_pause"
+                                                raw_tooltip = "Pause Animation"
+                                                tooltipwidget = {
+                                                    using = dockable_tooltip
+                                                }
+                                            }
+
+                                            icon = {
+                                                using = tools_centred_anchor
+                                                visible = "[Not( EntityEditor.Entity.IsPlaying )]"
+                                                texture = "gfx/editor_gui/play.dds"
+                                                input_action = "entity_editor_play_pause"
+                                                raw_tooltip = "Resume Animation"
+                                                tooltipwidget = { 
+                                                    using = dockable_tooltip
+                                                }
+                                            }
+                                            input_action = "entity_editor_play_pause"
+
+                                            size = { 30 28 }
+                                            onclick = "[EntityEditor.Entity.TogglePausePlay]"
+                                        }
+                                        
+                                        #Step Forwards button
+                                        editor_button = {
+                                            icon = {
+                                                using = tools_centred_anchor
+                                                texture = "gfx/editor_gui/step_forward.dds"
+                                            }
+                                            size = { 30 28 }
+                                            onclick = "[EntityEditor.Entity.StepForward]"
+                                            input_action = "entity_editor_step_forward"
+                                            raw_tooltip = "Step forward 1 frame in the animation"
+                                            tooltipwidget = {
+                                                using = dockable_tooltip
+                                            }
+                                        }
+
+                                        #Rollforward button
+                                        editor_button = {
+                                            icon = {
+                                                using = tools_centred_anchor
+                                                texture = "gfx/editor_gui/rollforward.dds"
+                                            }
+                                            size = { 30 28 }
+                                            onclick = "[EntityEditor.Entity.RollForward]"
+                                            input_action = "entity_editor_rollforward"
+                                            raw_tooltip = "Rollback Animation"
+                                            tooltipwidget = {
+                                                using = dockable_tooltip
+                                            }
+                                        }
+                                    }
+                                }
+
+                                hbox = {
+                                    name = "spacer"
+                                    layoutpolicy_horizontal = expanding
+                                    layoutpolicy_vertical = expanding
+                                }
+
+                                toolbox_checkbutton = {
+                                    raw_tooltip = "Toggle to make the needle move when moving a keyframe."
+                                    checked = "[EntityEditor.MovePlayerWithKeyframe]"
+                                    onclick = "[EntityEditor.ToggleMovePlayerWithKeyframe]"
+                                    input_action = "entity_editor_keyframe_needle_lock_toggle"
+                                    toolbox_icon = {
+                                        texture = "gfx/editor_gui/editor_keyframe_player_lock.dds"
+                                        size = { 24 24 }
+                                    }
+                                }
+                            }
+
+                            hbox = {
+                                layoutpolicy_horizontal = expanding
+                                layoutpolicy_vertical = expanding
+                                spacing = 8
+
+                                vbox = {
+                                    name = "layer_view"
+                                    layoutpolicy_horizontal = growing
+                                    layoutpolicy_vertical = expanding
+                                    using = frame_background
+                                    margin = { 8 8 }
+                                    spacing = 8
+                                    vbox = {
+                                        layoutpolicy_horizontal = expanding
+                                        layoutpolicy_vertical = expanding
+                                        spacing = 3
+                                        name = "layers_container" #Don't change. Used in code.
+                                        datamodel = "[EntityEditor.Entity.State.KeyframeLayers]"
+                                        item = {
+                                            hbox = {
+                                                name = "layer"
+                                                layoutpolicy_horizontal = expanding
+                                                layoutpolicy_vertical = expanding
+                                                toolbox_checkbutton = {
+                                                    fontsize = 12
+                                                    layoutpolicy_horizontal = preferred
+                                                    layoutpolicy_vertical = fixed
+                                                    
+                                                    state = {
+                                                        name = _mouse_leave
+                                                        on_start = "[EntityEditorEventLayer.SetHovered( '(bool)no' )]"
+                                                    }
+
+                                                    state = {
+                                                        name = _mouse_enter
+                                                        on_start = "[EntityEditorEventLayer.SetHovered( '(bool)yes' )]"
+                                                    }
+                                                    
+                                                    onrightclick = "[EntityEditor.OnLayerRightClick( EntityEditorEventLayer.AccessSelf )]"
+                                                    raw_text = "[EntityEditorEventLayer.Title]"
+                                                    checked = "[EntityEditorEventLayer.IsHovered]"
+                                                }
+
+                                                icon = {
+                                                    texture = "gfx/editor_gui/editor_arrow_right.dds"
+                                                    framesize = { 16 16 }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    hbox = {
+                                        layoutpolicy_horizontal = growing
+                                        layoutpolicy_vertical = shrinking
+                                        spacing = 5
+
+                                        editor_button = {
+                                            raw_text = "Add Layer..."
+                                            fontsize = 12
+                                            size = { 250 25 }
+                                            onclick = "[EntityEditor.OnAddLayerClick]"
+                                        }
+                                    }
+
+                                    container = {
+                                        #Used for shortcuts but non visible
+                                        name = "invisible_buttons"
+                                        editor_button = {
+                                            size = { 0 0 }
+                                            onclick = "[EntityEditor.AddAudioLayer]"
+                                            input_action = "entity_editor_add_audio_layer"
+                                        }
+
+                                        editor_button = {
+                                            size = { 0 0 }
+                                            onclick = "[EntityEditor.AddVfxLayer]"
+                                            input_action = "entity_editor_add_vfx_layer"
+                                        }
+
+                                        editor_button = {
+                                            size = { 0 0 }
+                                            onclick = "[EntityEditor.AddEntitySpawnLayer]"
+                                            input_action = "entity_editor_add_entity_spawn_layer"
+                                        }
+
+                                        editor_button = {
+                                            size = { 0 0 }
+                                            onclick = "[EntityEditor.AddEntityRemovalLayer]"
+                                            input_action = "entity_editor_add_entity_removal_layer"
+                                        }
+                                    }
+                                }
+
+                                vbox = {
+                                    layoutpolicy_horizontal = expanding
+                                    layoutpolicy_vertical = expanding
+                                    spacing = 2
+
+                                    editor_player = {
+                                        name = "animation_player" #used in code, don't change
+                                        layoutpolicy_horizontal = expanding
+                                        layoutpolicy_vertical = expanding
+                                        min = 0
+                                        max = "[EntityEditor.Entity.State.AnimationLength]"
+                                        step = 0.001
+                                        wheelstep = 0
+                                        onchangestart = "[EntityEditor.OnScrubStart]" #Adds logic so we make sure an user interaction is moving the player
+                                        onvaluechanged = "[EntityEditor.ScrubPlayer]"
+                                        onchangefinish = "[EntityEditor.OnScrubEnd]" #Cleanup
+                                        value = "[DoubleToFloat( EntityEditor.Entity.CurrentTime )]" #Set by the running animation or by scrubbing the needle
+                                        blockoverride "player_track"
+                                        {
+                                            name = "player_track"
+                                        }
+
+                                        blockoverride "overlay"
+                                        {
+                                            visible = "[EntityEditor.IsScrubbing]"
+                                            raw_text = "[EntityEditor.Entity.CurrentTime|2]s"
+                                        }
+
+                                        blockoverride "player_needle"
+                                        {
+                                            #Clicking the needle is useless since scrubing can be done by clicking on the track.
+                                            #Furthermore, double clicking the keyframe didn't work since the needle moved to the front
+                                            alwaystransparent = yes
+                                        }
+                                    }
+
+                                    tools_player_timeline = {
+                                        name = "timeline"
+                                        layoutpolicy_horizontal = expanding
+                                        layoutpolicy_vertical = fixed
+                                        size = { -1 15 }
+                                        max = "[EntityEditor.CurrentAnimationMax]"
+                                        min = 0
+                                        timeline_time_points = 6
+                                        timeline_line_direction = up
+                                        timeline_line_height = 25
+                                        color = { 1 1 1 0.5 }
+                                        timeline_texts = {
+                                            editor_textbox = {
+                                                alpha = 0.5
+                                                autoresize = yes
+                                            }
+                                        }
+                                    }
+
+                                    tools_keyframe_editor = {
+                                        name = "keyframe_editor" #Don't change. Used in code.
+                                        enabled = "[EntityEditor.CanInteract]"
+
+                                        keyframe_editor_lane_container = {
+                                            vbox = {
+                                                margin_bottom = 15
+                                                spacing = 3
+                                                layoutpolicy_horizontal = expanding
+                                                layoutpolicy_vertical = expanding
+                                            }
+                                        }
+
+                                        datamodel = "[EntityEditor.Entity.State.KeyframeLayers]"
+                                        item = {
+                                            entity_editor_keyframe_lane = {
+                                                onrightclick = "[KeyframeEditor.OnLaneClick( PdxGuiWidget.AccessSelf )]"
+                                                onrightclick = "[EntityEditor.SetClickedLane( EntityEditorEventLayer.AccessSelf )]"
+                                                state = {
+                                                    name = _mouse_leave
+                                                    on_start = "[EntityEditorEventLayer.SetHovered( '(bool)no' )]"
+                                                }
+
+                                                state = {
+                                                    name = _mouse_enter
+                                                    on_start = "[EntityEditorEventLayer.SetHovered( '(bool)yes' )]"
+                                                }
+
+                                                datamodel = "[EntityEditorEventLayer.Keyframes]"
+                                                item = {
+                                                    tools_keyframe_button = {
+                                                        using = editor_keyframe_button
+                                                        visible = "[Not( EntityEditorKeyframe.IsStartEvent )]"
+                                                        color = "[EntityEditorKeyframe.KeyframeColor]"
+                                                        raw_tooltip = "[EntityEditorKeyframe.Label] ([EntityEditorKeyframe.TimePoint|2]s)"
+                                                        value = "[EntityEditorKeyframe.TimePoint]"
+                                                        widgetanchor = vcenter|hcenter
+                                                        size = { 16 16 }
+                                                        onclick = "[EntityEditor.OnKeyframeClick( KeyframeWidget.AccessSelf, EntityEditorKeyframe.AccessSelf )]"
+                                                        onpressed = "[EntityEditor.OnKeyframePressed( KeyframeWidget.AccessSelf, EntityEditorKeyframe.AccessSelf )]"
+                                                        on_keyframe_move = "[EntityEditor.OnKeyframeMove( KeyframeWidget.Self, EntityEditorKeyframe.Self )]"
+                                                        
+                                                        onreleased = "[EntityEditor.OnScrubEnd]"
+                                                        onreleased = "[EntityEditor.OnKeyframeReleased( KeyframeWidget.AccessSelf, EntityEditorKeyframe.AccessSelf )]"
+
+                                                        ondoubleclick = "[EntityEditor.OpenEventEditor( EntityEditorKeyframe.AccessSelf )]"
+
+                                                        onrightclick = "[EntityEditor.OnKeyframeRightClick( EntityEditorKeyframe.AccessSelf )]"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                editor_contextmenu = {
+                                    name = "entity_editor_contextmenu"
+                                }
+                            }
+                        }
+                    }
+                }
+            }   
+        }
+    }
+}

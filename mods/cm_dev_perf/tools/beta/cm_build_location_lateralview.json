@@ -1,0 +1,113 @@
+[
+ {
+  "op": "beta_type",
+  "name": "build_location_entry",
+  "why": "the beta's row, CM's hooks re-added below"
+ },
+ {
+  "op": "beta_type",
+  "name": "build_location_lateralview_panel_content",
+  "why": "the beta's panel, CM's hooks re-added below"
+ },
+ {
+  "op": "replace",
+  "anchor": "visible = \"[And(ObjectsEqual(LocationToBuildItem.GetBuilding.GetOwner, Player.Self), LocationToBuildItem.GetBuilding.GetType.IsMultipleLevels)]\"",
+  "text": "visible = \"[And3(ObjectsEqual(LocationToBuildItem.GetBuilding.GetOwner, Player.Self), LocationToBuildItem.GetBuilding.GetType.IsMultipleLevels, Not(GetScriptedGui('glorpui_is_cm_active').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End)))]\"",
+  "why": "vanilla auto-expand checkbox hidden while CM is active; CM's button stands in for it"
+ },
+ {
+  "op": "insert_after_block",
+  "anchor": "tooltipwidget = { using = AutoExpand_Building_Tooltip }",
+  "up": 1,
+  "text": "\n\t\t\t\t# CM: auto-expand button; the vanilla checkbox above hides while CM is active\n\t\t\t\tcm_auto_expand_building_button_bll = {}",
+  "why": "CM's per-row auto-expand button next to the vanilla checkbox column; the beta stacked that checkbox into an owner-only vbox, so CM's button goes beside it"
+ },
+ {
+  "op": "insert_before_line",
+  "anchor": "on_action = \"[LocationToBuildItem.DestroyDefault]\"\n\t\t\t\t\t\t\t\t\tenabled = \"[LocationToBuildItem.CanDestroy]\"\n\t\t\t\t\t\t\t\t\tvisible = \"[Not(LocationToBuildItem.CanDequeue)]\"\n\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\t\t\t\tclick_type = left\n\t\t\t\t\t\t\t\t\tclick_mode = confirm\n\t\t\t\t\t\t\t\t\tclick_modifier = ctrl\n\n\t\t\t\t\t\t\t\t\ttitle = \"DESTROY_BUILDING_ACTION_CTRL\"\n\t\t\t\t\t\t\t\t\tdescription = \"[LocationToBuildItem.CanDestroyDescCtrl]\"\n\t\t\t\t\t\t\t\tconfirmation = \"[LocationToBuildItem.CanDestroyDescCtrl]\"\n\t\t\t\t\t\t\t\t\ton_action = \"[LocationToBuildItem.DestroyCtrl]\"\n\t\t\t\t\t\t\t\t\tenabled = \"[LocationToBuildItem.CanDestroy]\"\n\t\t\t\t\t\t\t\t\tvisible = \"[Not(LocationToBuildItem.CanDequeue)]\"\n\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\t\t\t\tclick_type = left\n\t\t\t\t\t\t\t\t\tclick_mode = confirm\n\t\t\t\t\t\t\t\t\tclick_modifier = shift\n\n\t\t\t\t\t\t\t\t\ttitle = \"DESTROY_BUILDING_ACTION_SHIFT\"\n\t\t\t\t\t\t\t\t\tdescription = \"[LocationToBuildItem.CanDestroyDescShift]\"\n\t\t\t\t\t\t\t\t\tconfirmation = \"[LocationToBuildItem.CanDestroyDescShift]\"\n\t\t\t\t\t\t\t\t\ton_action = \"[LocationToBuildItem.DestroyShift]\"\n\t\t\t\t\t\t\t\t\tenabled = \"[LocationToBuildItem.CanDestroy]\"\n\t\t\t\t\t\t\t\t\tvisible = \"[Not(LocationToBuildItem.CanDequeue)]\"\n\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\t\t\t\tclick_type = left\n\t\t\t\t\t\t\t\t\tclick_mode = single\n\n\t\t\t\t\t\t\t\t\ttitle = \"DEQUEUE_BUILDING_TYPE_LOCATION_ACTION\"\n\t\t\t\t\t\t\t\t\tdescription = \"[LocationToBuildItem.CanDequeueDesc]\"\n\t\t\t\t\t\t\t\t\ton_action = \"[LocationToBuildItem.Dequeue]\"\n\t\t\t\t\t\t\t\t\tvisible = \"[LocationToBuildItem.CanDequeue]\"\n\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\ttooltipwidget = {\n\t\t\t\t\t\t\t\t\tusing = destroy_building_in_location_tt\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\tvbox = {",
+  "text": "\t\t\t\t\t\t\t\t\ton_action = \"[GetScriptedGui('cm_check_for_auto_expand_when_removing_building').Execute(GuiScope.SetRoot(Building.MakeScope).End)]\"",
+  "why": "CM re-checks its auto-expand list before a destroy (builder row)"
+ },
+ {
+  "op": "insert_before_line",
+  "anchor": "on_action = \"[LocationToBuildItem.DestroyDefault]\"\n\t\t\t\t\t\t\t\t\tenabled = \"[LocationToBuildItem.CanDestroy]\"\n\t\t\t\t\t\t\t\t\tvisible = \"[Not(LocationToBuildItem.CanDequeue)]\"\n\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\t\t\t\tclick_type = left\n\t\t\t\t\t\t\t\t\tclick_mode = confirm\n\t\t\t\t\t\t\t\t\tclick_modifier = ctrl\n\n\t\t\t\t\t\t\t\t\ttitle = \"DESTROY_BUILDING_ACTION_CTRL\"\n\t\t\t\t\t\t\t\t\tdescription = \"[LocationToBuildItem.CanDestroyDescCtrl]\"\n\t\t\t\t\t\t\t\tconfirmation = \"[LocationToBuildItem.CanDestroyDescCtrl]\"\n\t\t\t\t\t\t\t\t\ton_action = \"[LocationToBuildItem.DestroyCtrl]\"\n\t\t\t\t\t\t\t\t\tenabled = \"[LocationToBuildItem.CanDestroy]\"\n\t\t\t\t\t\t\t\t\tvisible = \"[Not(LocationToBuildItem.CanDequeue)]\"\n\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\t\t\t\tclick_type = left\n\t\t\t\t\t\t\t\t\tclick_mode = confirm\n\t\t\t\t\t\t\t\t\tclick_modifier = shift\n\n\t\t\t\t\t\t\t\t\ttitle = \"DESTROY_BUILDING_ACTION_SHIFT\"\n\t\t\t\t\t\t\t\t\tdescription = \"[LocationToBuildItem.CanDestroyDescShift]\"\n\t\t\t\t\t\t\t\t\tconfirmation = \"[LocationToBuildItem.CanDestroyDescShift]\"\n\t\t\t\t\t\t\t\t\ton_action = \"[LocationToBuildItem.DestroyShift]\"\n\t\t\t\t\t\t\t\t\tenabled = \"[LocationToBuildItem.CanDestroy]\"\n\t\t\t\t\t\t\t\t\tvisible = \"[Not(LocationToBuildItem.CanDequeue)]\"\n\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\taction_tooltip = {\n\t\t\t\t\t\t\t\t\tclick_type = left\n\t\t\t\t\t\t\t\t\tclick_mode = single\n\n\t\t\t\t\t\t\t\t\ttitle = \"DEQUEUE_BUILDING_TYPE_LOCATION_ACTION\"\n\t\t\t\t\t\t\t\t\tdescription = \"[LocationToBuildItem.CanDequeueDesc]\"\n\t\t\t\t\t\t\t\t\ton_action = \"[LocationToBuildItem.Dequeue]\"\n\t\t\t\t\t\t\t\t\tvisible = \"[LocationToBuildItem.CanDequeue]\"\n\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\ttooltipwidget = {\n\t\t\t\t\t\t\t\t\tusing = destroy_building_in_location_tt\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\twidget = {",
+  "text": "\t\t\t\t\t\t\t\t\ton_action = \"[GetScriptedGui('cm_check_for_auto_expand_when_removing_building').Execute(GuiScope.SetRoot(Building.MakeScope).End)]\"",
+  "why": "CM re-checks its auto-expand list before a destroy (upgrader row)"
+ },
+ {
+  "op": "insert_before_line",
+  "anchor": "on_action = \"[LocationToBuildItem.Dequeue]\"\n\t\t\t\t\t\t\t\t\tvisible = \"[LocationToBuildItem.CanDequeue]\"\n\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\ttooltipwidget = {\n\t\t\t\t\t\t\t\t\tusing = destroy_building_in_location_tt\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\tvbox = {",
+  "text": "\t\t\t\t\t\t\t\t\ton_action = \"[GetScriptedGui('cm_check_for_auto_expand_when_removing_building').Execute(GuiScope.SetRoot(Building.MakeScope).End)]\"",
+  "why": "CM re-checks its auto-expand list before a dequeue (builder row)"
+ },
+ {
+  "op": "insert_before_line",
+  "anchor": "on_action = \"[LocationToBuildItem.Dequeue]\"\n\t\t\t\t\t\t\t\t\tvisible = \"[LocationToBuildItem.CanDequeue]\"\n\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\ttooltipwidget = {\n\t\t\t\t\t\t\t\t\tusing = destroy_building_in_location_tt\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\twidget = {",
+  "text": "\t\t\t\t\t\t\t\t\ton_action = \"[GetScriptedGui('cm_check_for_auto_expand_when_removing_building').Execute(GuiScope.SetRoot(Building.MakeScope).End)]\"",
+  "why": "CM re-checks its auto-expand list before a dequeue (upgrader row)"
+ },
+ {
+  "op": "insert_after_line",
+  "anchor": "UpgradeBuildingDefault(BuildingType.Self, Location.Self)]\"",
+  "text": "\t\t\t\t\t\t\t\t\ton_action = \"[GetScriptedGui('cm_check_for_auto_expand_when_upgrading_building').Execute(GuiScope.SetRoot(LocationToBuildItem.GetBuilding.MakeScope).AddScope('cm_new_building_type', LocationToBuildItem.GetBuilding.GetType.GetNextReplacementBuilding(Player.Self).MakeScope).End)]\"",
+  "why": "CM moves auto-expand onto the replacement building on upgrade"
+ },
+ {
+  "op": "insert_after_line",
+  "anchor": "UpgradeBuildingCtrl(BuildingType.Self, Location.Self)]\"",
+  "text": "\t\t\t\t\t\t\t\t\ton_action = \"[GetScriptedGui('cm_check_for_auto_expand_when_upgrading_building').Execute(GuiScope.SetRoot(LocationToBuildItem.GetBuilding.MakeScope).AddScope('cm_new_building_type', LocationToBuildItem.GetBuilding.GetType.GetNextReplacementBuilding(Player.Self).MakeScope).End)]\"",
+  "why": "CM moves auto-expand onto the replacement building on upgrade"
+ },
+ {
+  "op": "insert_after_line",
+  "anchor": "UpgradeBuildingShift(BuildingType.Self, Location.Self)]\"",
+  "text": "\t\t\t\t\t\t\t\t\ton_action = \"[GetScriptedGui('cm_check_for_auto_expand_when_upgrading_building').Execute(GuiScope.SetRoot(LocationToBuildItem.GetBuilding.MakeScope).AddScope('cm_new_building_type', LocationToBuildItem.GetBuilding.GetType.GetNextReplacementBuilding(Player.Self).MakeScope).End)]\"",
+  "why": "CM moves auto-expand onto the replacement building on upgrade"
+ },
+ {
+  "op": "insert_after_block",
+  "anchor": "texture = \"gfx/interface/icons/_default.dds\"",
+  "up": 0,
+  "text": "\n\t\t\t\t\t\t\t\t\t\t# CM: mass auto-expand button\n\t\t\t\t\t\t\t\t\t\tcm_mass_auto_expand_button_bll = {}",
+  "why": "CM's mass auto-expand toggle on the build-in-best-location button"
+ },
+ {
+  "op": "replace",
+  "anchor": "texture = \"[GetBuildingIcon(BuildingType.Self)]\"\n\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\tblockoverride \"header_button_text_layout\" {\n\t\t\t\t\t\t\t\t\thbox = {\n\t\t\t\t\t\t\t\t\t\tusing = layoutpolicy_expanding\n\t\t\t\t\t\t\t\t\t\tmargin = { 5 0 }\n\t\t\t\t\t\t\t\t\t\tmargin_left = 10\n\n\t\t\t\t\t\t\t\t\t\ticon = { \n\t\t\t\t\t\t\t\t\t\t\tsize = { 25 25 }\n\t\t\t\t\t\t\t\t\t\t\ttexture = \"gfx/interface/icons/flat_icons/mass_upgrade.dds\"\n\t\t\t\t\t\t\t\t\t\t}\n",
+  "text": "texture = \"[GetBuildingIcon(BuildingType.Self)]\"\n\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\tblockoverride \"header_button_text_layout\" {\n\t\t\t\t\t\t\t\t\thbox = {\n\t\t\t\t\t\t\t\t\t\tusing = layoutpolicy_expanding\n\t\t\t\t\t\t\t\t\t\tmargin = { 5 0 }\n\t\t\t\t\t\t\t\t\t\tmargin_left = 10\n\n\t\t\t\t\t\t\t\t\t\ticon = { \n\t\t\t\t\t\t\t\t\t\t\tsize = { 25 25 }\n\t\t\t\t\t\t\t\t\t\t\ttexture = \"gfx/interface/icons/flat_icons/mass_upgrade.dds\"\n\t\t\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\t\t\t# CM: mass auto-expand button\n\t\t\t\t\t\t\t\t\t\tcm_mass_auto_expand_button_bll = {}\n",
+  "why": "CM's mass auto-expand toggle on the upgrade-in-best-location button"
+ },
+ {
+  "op": "replace",
+  "anchor": "icon = { \n\t\t\t\t\t\t\t\t\t\t\tsize = { 25 25 }\n\t\t\t\t\t\t\t\t\t\t\ttexture = \"gfx/interface/icons/flat_icons/mass_construct.dds\"\n\t\t\t\t\t\t\t\t\t\t}\n",
+  "text": "icon = { \n\t\t\t\t\t\t\t\t\t\t\tsize = { 25 25 }\n\t\t\t\t\t\t\t\t\t\t\ttexture = \"gfx/interface/icons/flat_icons/mass_construct.dds\"\n\t\t\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\t\t\t# CM: invisible spacer for the overlay twin\n\t\t\t\t\t\t\t\t\t\tcm_mass_auto_expand_button_bll = {\n\t\t\t\t\t\t\t\t\t\t\talpha = 0\n\t\t\t\t\t\t\t\t\t\t\tenabled = no\n\t\t\t\t\t\t\t\t\t\t}\n",
+  "why": "spacer keeping the cannot-build button's text where CM's overlay button sits"
+ },
+ {
+  "op": "replace",
+  "anchor": "icon = { \n\t\t\t\t\t\t\t\t\t\t\tsize = { 25 25 }\n\t\t\t\t\t\t\t\t\t\t\ttexture = \"gfx/interface/icons/flat_icons/mass_upgrade.dds\"\n\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\n",
+  "text": "icon = { \n\t\t\t\t\t\t\t\t\t\t\tsize = { 25 25 }\n\t\t\t\t\t\t\t\t\t\t\ttexture = \"gfx/interface/icons/flat_icons/mass_upgrade.dds\"\n\t\t\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\t\t\t# CM: invisible spacer for the overlay twin\n\t\t\t\t\t\t\t\t\t\tcm_mass_auto_expand_button_bll = {\n\t\t\t\t\t\t\t\t\t\t\talpha = 0\n\t\t\t\t\t\t\t\t\t\t\tenabled = no\n\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\n",
+  "why": "spacer keeping the cannot-upgrade button's text where CM's overlay button sits"
+ },
+ {
+  "op": "insert_after_block",
+  "anchor": "description = \"BUILDING_IN_LOCATION_ACTION_NO_LOCATION\"",
+  "up": 1,
+  "text": "\n\t\t\t\t\t\t\t# CM: mass auto-expand overlay\n\t\t\t\t\t\t\tcm_mass_auto_expand_overlay_no_upgrade = {}",
+  "why": "CM's live mass auto-expand button over the disabled cannot-build button"
+ },
+ {
+  "op": "insert_after_block",
+  "anchor": "description = \"UPGRADING_IN_LOCATION_ACTION_NO_LOCATION\"",
+  "up": 1,
+  "text": "\n\t\t\t\t\t\t\t# CM: mass auto-expand overlay\n\t\t\t\t\t\t\tcm_mass_auto_expand_overlay_upgrade = {}",
+  "why": "CM's live mass auto-expand button over the disabled cannot-upgrade button"
+ },
+ {
+  "op": "insert_before_block",
+  "anchor": "size = { 100% 58 }",
+  "up": 0,
+  "text": "\t\t\t\t\t\t\t# CM: viewed-type store for the R.G.O. Bonus filter\n\t\t\t\t\t\t\twidget = {\n\t\t\t\t\t\t\t\tsize = { 0 0 }\n\t\t\t\t\t\t\t\tstate = {\n\t\t\t\t\t\t\t\t\tname = cm_rgob_probe\n\t\t\t\t\t\t\t\t\ttrigger_on_create = yes\n\t\t\t\t\t\t\t\t\ton_start = \"[GetScriptedGui('cm_rgob_store_selected_type').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('cm_rgob_type', BuildInLocationLateralView.GetBuildingType.MakeScope).End)]\"\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t}\n",
+  "why": "each list row stores the viewed building type for CM's R.G.O. Bonus filter"
+ }
+]

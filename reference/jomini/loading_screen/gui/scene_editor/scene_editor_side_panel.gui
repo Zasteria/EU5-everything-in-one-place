@@ -1,0 +1,1036 @@
+@min_hierarchy_panel_width = 490 # Also defined in scene_editor.gui with the same value
+@entity_item_name_width = 220 # Relative to min_hierarchy_panel_width
+
+template scene_entity_hovered_states
+{
+	state = {
+		name = _mouse_enter
+		on_start = "[SceneEditorHierarchyEntry.SetHovered( '(bool)yes' )]"
+	}
+
+	state = {
+		name = _mouse_leave
+		on_start = "[SceneEditorHierarchyEntry.SetHovered( '(bool)no' )]"
+	}
+}
+
+template EnvPropertyListProperties
+{
+	margin = { 5 5 }
+	spacing = 8
+}
+
+types SceneEditor
+{
+	type toggle_subtree_checkbutton = checkbutton
+	{
+		gfxtype = checkbuttongfx
+		shaderfile = "gfx/FX/pdxgui_pushbutton.shader"
+		texture = "gfx/editor_gui/editor_tree_expand.dds"
+		framesize = { 16 16 }
+
+		using = scene_entity_hovered_states
+
+		visible = "[SceneEditorHierarchyEntry.HasChildren]"
+		checked = "[SceneEditorHierarchyEntry.ShouldShowChildren]"
+		onclick = "[SceneHierarchy.ToggleEntityShowChildren( SceneEditorHierarchyEntry.Id )]"
+	}
+
+	type visibility_checkbutton = checkbutton
+	{
+		gfxtype = checkbuttongfx
+		shaderfile = "gfx/FX/pdxgui_pushbutton.shader"
+		texture = "gfx/tools/visibility_icon.dds"
+		framesize = { 32 32 }
+
+		using = scene_entity_hovered_states
+		
+		visible = "[Or( SceneEditorHierarchyEntry.IsHovered, Not( SceneEditor.IsEnabled( SceneEditorHierarchyEntry.Id ) ) )]"
+		checked = "[SceneEditor.IsEnabled( SceneEditorHierarchyEntry.Id )]"
+		onclick = "[SceneEditor.ToggleEnabled( SceneEditorHierarchyEntry.Id )]"
+		
+		raw_tooltip =  "Toggle visibility of this entity."
+		tooltipwidget = { using = dockable_tooltip }
+	}
+
+
+	type scene_hierarchy_item = button
+	{
+		gfxtype = framedbuttongfx
+		texture = "gfx/editor_gui/editor_tree_item.dds"
+		spriteType = Corneredtiled
+		spriteborder = { 1 1 }
+		framesize = { 4 4 }
+		using = scene_entity_hovered_states
+
+		upframe = "[Select_int32( SceneSelection.IsSelected( SceneEditorHierarchyEntry.Id ), '(int32)3', '(int32)1' )]"
+		downframe = "[Select_int32( SceneSelection.IsSelected( SceneEditorHierarchyEntry.Id ), '(int32)4', '(int32)3' )]"
+		overframe = "[Select_int32( SceneSelection.IsSelected( SceneEditorHierarchyEntry.Id ), '(int32)4', '(int32)2' )]"
+		disableframe = 1
+		focuspolicy = click
+		button_ignore = none
+		onclick = "[SceneSelection.Select( SceneEditorHierarchyEntry.Id, PdxGuiWidget.Self )]"
+		ondoubleclick = "[SceneHierarchy.StartEntityRename( SceneEditorHierarchyEntry.AccessSelf )]"
+		input_action = "scene_editor_rename_entity"
+		onrightclick = "[SceneHierarchy.OnEntityRightClick( SceneEditorHierarchyEntry.AccessSelf )]"
+
+		hbox = {
+			# NOTE [JR]: According to what I could find, restrictparent_min should be avoided. But This was the only way I could find to make the parent button get its minimum size from the hbox, without forcing the button and hbox to shrink to that minimum size
+			restrictparent_min = yes
+			widget = {
+				name = "Entity indentation"
+				layoutpolicy_horizontal = fixed
+				min_width = "[SceneEditorHierarchyEntry.GetMargin]"
+			}
+
+			container = {
+				layoutpolicy_horizontal = fixed
+				toggle_subtree_checkbutton = {
+					size = { 16 16 }
+				}
+			}
+
+			widget = {
+				layoutpolicy_horizontal = fixed
+				size = { 5 1 }
+			}
+
+			widget = {
+				layoutpolicy_horizontal = expanding
+				size = { @entity_item_name_width 27 }
+
+				editor_textbox = {
+					size = { 100% 100% }
+					align = left|nobaseline
+					text = "[SceneEditorHierarchyEntry.Name]"
+					elide = right
+					visible = "[Not(SceneEditorHierarchyEntry.IsNameBeingEdited)]"
+				}
+				editor_textinput = {
+					size = { 100% 100% }
+					align = left|nobaseline
+					text = "[SceneEditorHierarchyEntry.Name]"
+					text_validator = "[SceneHierarchy.GetEntryValidator]"
+					visible = "[SceneEditorHierarchyEntry.IsNameBeingEdited]"
+					focus_on_visible = yes
+					oneditingfinished = "[SceneHierarchy.OnFinishedEntityRename( SceneEditorHierarchyEntry.AccessSelf )]"
+					onfocusout = "[SceneHierarchy.OnFinishedEntityRename( SceneEditorHierarchyEntry.AccessSelf )]"
+				}
+			}
+
+			container = {
+				layoutpolicy_horizontal = fixed
+				visibility_checkbutton = {
+					size = { 27 27 }
+				}
+			}
+
+			editor_textbox = {
+				margin_left = 10
+				size = {  200 27 }
+				align = left|nobaseline
+				fontcolor = { 0 1 1 1 }
+				text = "[SceneEditor.GetPresetNamesForEntity( SceneEditorHierarchyEntry.Id )]"
+			}
+		}
+
+		vbox = {
+			widget = {
+				layoutpolicy_vertical = expanding
+				layoutpolicy_horizontal = expanding
+				# drop-as-child
+				drop_target = {
+					accept_draggable_id = "[SceneEditor.GetEditorId]"		
+					on_receive_drop = "[SceneHierarchy.OnEntryDroppedAsChild( SceneEditorHierarchyEntry.Id )]"
+					on_drag_enter = "[SceneHierarchy.OnEntryDropAsChildEnter( SceneEditorHierarchyEntry.Id )]"
+					on_drag_exit = "[SceneEditorHierarchyEntry.SetIsDropTargetIndicatorVisible( '(bool)no' )]"
+				}
+			}
+
+			widget = {
+				layoutpolicy_vertical = fixed
+				layoutpolicy_horizontal = expanding
+				# drop-as-sibling
+				size = { @entity_item_name_width 7 }
+				drop_target = {
+					accept_draggable_id = "[SceneEditor.GetEditorId]"		
+					on_receive_drop = "[SceneHierarchy.OnEntryDroppedAsSibling( SceneEditorHierarchyEntry.Id )]"
+					on_drag_enter = "[SceneHierarchy.OnEntryDropAsSiblingEnter( SceneEditorHierarchyEntry.Id )]"
+					on_drag_exit = "[SceneEditorHierarchyEntry.SetIsDropTargetIndicatorVisible( '(bool)no' )]"
+				}
+
+				hbox = {
+					widget = {
+						#Indentation to align with visual interactable widgets
+						layoutpolicy_horizontal = fixed
+						min_width = "[SceneEditorHierarchyEntry.GetMargin]"
+					}
+
+					widget = {
+						# Additional indentation to align with name textbox
+						layoutpolicy_vertical = fixed
+						layoutpolicy_horizontal = fixed
+						size = { 21 1 }
+					}
+
+				widget = {
+					layoutpolicy_horizontal = fixed
+					min_width = 15
+					visible = "[Not(SceneEditorHierarchyEntry.IsSiblingDropTargetEntered)]"
+				}
+
+					widget = {
+						size = { @entity_item_name_width 7 }
+						layoutpolicy_horizontal = expanding
+						background = {
+							visible = "[SceneEditorHierarchyEntry.IsDropTargetIndicatorVisible]"			
+							texture = "gfx/editor_gui/editor_white_pixel.png"
+							shaderfile = "gfx/FX/pdxgui_default.shader"
+							gfxtype = icongfx
+							spriteType = corneredstretched
+							spriteborder = { 2 2 }
+							tintcolor = { 0.1294 0.4863 0.4745 1.0 }
+						}
+					}
+				}
+			}
+		}
+
+
+		draggable_behavior = {
+			draggable_id = "[SceneEditor.GetEditorId]"
+
+			on_drag_start = "[SceneSelection.ChangeSelectionIfNotSelected( SceneEditorHierarchyEntry.Id )]"
+			on_drag_end = "[SceneEditorHierarchyEntry.SetIsDropTargetIndicatorVisible( '(bool)no' )]"
+			drag_widget = {
+				icon = {
+					size = { 40 40 }
+					texture = "gfx/editor_gui/editor_dragdrop_icon.dds"
+					position = "[GuiCurrentDrag.CurrentPosition]"
+				}
+			}
+		}
+
+		raw_tooltip = "[SceneEditorHierarchyEntry.GetDebugTooltip]"
+		tooltipwidget = { using = dockable_tooltip }
+	}
+
+	type side_panel_header = checkbutton {
+			gfxtype = checkbuttongfx
+			size = { 0 20 } # Large enough to show the entire text and icon
+			layoutpolicy_horizontal = expanding
+
+			block "side_panel_header_properties"
+			{
+			}
+
+			hbox = {
+				spacing = 3
+
+				editor_textbox = {
+					block "checkbutton_textbox_properties"
+					{
+						raw_text = "Side Panel Header"
+					}
+					autoresize = yes
+					align = left|nobaseline
+					elide = right
+				}
+		
+				icon = {
+					shaderfile = "gfx/FX/pdxgui_default.shader"
+					texture = "gfx/editor_gui/editor_expand_checkbox.dds"
+					framesize = { 16 16 }
+					size = { 10 10 }
+					frame = 2 # expanded by default
+					block "checkbutton_icon_properties"
+					{
+					}
+				}
+
+				widget = { # spacer
+					layoutpolicy_horizontal = expanding
+				}
+			}
+	}
+
+	type side_panel_section = vbox
+	{
+		layoutpolicy_horizontal = expanding
+		layoutpolicy_vertical = expanding
+
+		side_panel_header = {
+			blockoverride "checkbutton_textbox_properties"
+			{
+				block "side_panel_header_textbox_properties" { }
+			}
+			blockoverride "checkbutton_icon_properties"
+			{
+				block "side_panel_header_icon_properties" {	}
+			}
+		}
+
+        editor_frame = {
+			layoutpolicy_vertical = expanding
+			layoutpolicy_horizontal = expanding
+			blockoverride "label" { raw_text = "" }
+
+			block "side_panel_section_properties" { }
+			
+			blockoverride "content"
+			{
+				block "side_panel_section_content" { }
+			}
+		}
+	}
+
+	type scene_hierarchy = side_panel_section
+	{
+		blockoverride "side_panel_header_textbox_properties"
+		{
+			raw_text = "[Select_CString( SceneEditor.IsSubscene, 'Subscene Hierarchy', 'Scene Hierarchy' )]"
+		}
+		blockoverride "side_panel_header_icon_properties"
+		{
+			visible = no
+		}
+			
+		blockoverride "side_panel_section_content"
+		{
+			editor_scrollarea = {
+				name = "hierarchy_content_scroll_area"
+					layoutpolicy_horizontal = expanding
+					layoutpolicy_vertical = expanding
+					
+					blockoverride "content"
+					{
+						vbox = {
+							name = "scene_editor_side_panel"
+							alwaystransparent = no
+							layoutpolicy_horizontal = expanding
+							layoutpolicy_vertical = expanding
+							spacing = 8
+
+							dynamicgridbox = {
+								layoutpolicy_horizontal = expanding
+								setitemsizefromcell = yes
+								datamodel = "[SceneHierarchy.Entities]"
+								item = {
+									scene_hierarchy_item = {}
+								}
+							}
+
+							drop_target = {
+								accept_draggable_id = "[SceneEditor.GetEditorId]"
+								on_receive_drop = "[SceneHierarchy.SetParentOfSelectionToNone()]"
+							}
+							
+							widget = {
+								layoutpolicy_vertical = expanding
+							}
+
+							editor_contextmenu = {
+								name = "scene_entity_contextmenu"
+								item = {
+									using = WidgetSelectionEditorContextMenuItem
+								}
+								expand_item = {
+									using = WidgetSelectionEditorContextMenuItem
+								}
+							}
+
+							editor_contextmenu = {
+								name = "scene_entity_presets_sub_contextmenu"
+								item = {
+									using = WidgetSelectionEditorContextMenuItem
+								}
+								expand_item = {
+									using = WidgetSelectionEditorContextMenuItem
+								}
+							}
+						}
+						
+					}
+				}
+		}
+	}
+
+	type component_editor_component_header = hbox {
+		spacing = 3
+		layoutpolicy_horizontal = expanding
+		tooltip = "[ToolProperty.GetTooltip]"
+		tooltip_widgetanchor = bottom|left
+		tooltipwidget = { 
+			using = dockable_tooltip
+		}
+
+		background = {
+			texture = "gfx/editor_gui/editor_progressbar_foreground.png"
+			spriteType = CorneredStretched
+			spriteborder = { 5 5 }
+			shaderfile = "gfx/FX/pdxgui_default.shader"
+			framesize = { 16 16 }
+			alpha = .2
+		}
+
+		editor_textbox = {
+			layoutpolicy_horizontal = preferred
+			fontsize = 13
+			fontweight = bold
+			autoresize = yes
+			elide = right
+			align = nobaseline
+			text = "[ToolPropertyCString.GetString]"
+		}
+
+		widget = {
+			layoutpolicy_horizontal = expanding
+			icon = {
+				texture = "gfx/editor_gui/separator.dds"
+				size = { 100% 10 }
+				position = { 0 30% }
+			}
+		}
+	}
+
+	type component_editor_component = vbox {
+		layoutpolicy_horizontal = expanding
+		name = "component_property_list" # Datamodel is set through code.
+	}
+
+	type component_editor = side_panel_section
+	{
+		layoutpolicy_vertical = "[SceneEditor.GetComponentEditorLayoutPolicy]"
+
+		blockoverride "side_panel_header_textbox_properties"
+		{
+			raw_text = "Component Editor"
+		}
+
+		blockoverride "side_panel_header_properties"
+		{
+			checked = "[SceneEditor.IsComponentEditorExpanded]"
+			onclick = "[SceneEditor.ToggleComponentEditorExpanded]"
+		}
+
+		blockoverride "side_panel_header_icon_properties"
+		{
+			frame = "[Select_int32(SceneEditor.IsComponentEditorExpanded, '(int32)2', '(int32)1')]"
+		}
+
+		blockoverride "side_panel_section_properties"
+		{
+			visible = "[SceneEditor.IsComponentEditorExpanded]"
+		}
+		
+		blockoverride "side_panel_section_content" {
+			editor_scrollarea = 
+		    {
+				scrollbarpolicy_vertical = always_on
+				alwaystransparent = no
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+				
+                blockoverride "Properties"
+                {
+                    viewportwidget = {
+                        widget = {
+                            scissor = yes
+                        }
+                    }
+                }
+
+				blockoverride "scrollbars"
+				{
+					scrollbar_vertical = {
+						# TODO [HB]: (PSGE-8637) Sticky scrolling provides only a minor improvement to scrolling UX. A better solution is needed.
+						using = sticky_vertical_scrollbar
+					}
+					
+					scrollbar_horizontal = {
+						using = editor_horizontal_scrollbar
+					}
+				}
+
+				blockoverride "content"
+				{
+					vbox = {
+						editor_textbox = {
+							layoutpolicy_horizontal = expanding
+							fontsize = 13
+							fontweight = bold
+							autoresize = yes
+							multiline = yes
+							align = nobaseline
+							max_width = @min_hierarchy_panel_width
+							visible = "[Not(SceneSelection.HasSelection)]"
+							raw_text = "Select one or more entities to show their editable components."
+						}
+
+						editor_textbox = {
+							layoutpolicy_horizontal = expanding
+							fontsize = 13
+							fontweight = bold
+							autoresize = yes
+							multiline = yes
+							align = nobaseline
+							max_width = @min_hierarchy_panel_width
+							visible = "[And(SceneSelection.HasSelection, Not(SceneEntityComponentsEditor.HasComponents))]"
+							raw_text = "The selected entities have no editable components whose types exist in all of them."
+						}
+
+						vbox = {
+							name = "component_editor_items" # Datamodel is set through code.
+							layoutpolicy_horizontal = expanding
+						}
+						
+						widget = {
+							layoutpolicy_vertical = expanding
+						}
+				    }
+				}
+			}
+		}
+	}
+
+	type preview_properties_editor = side_panel_section
+	{
+		layoutpolicy_vertical = "[CSceneEditorPreviewPropertiesPanel.GetPreviewPropertiesPanelLayoutPolicy]"
+
+		blockoverride "side_panel_header_textbox_properties"
+		{
+			raw_text = "Preview Properties"
+		}
+
+		blockoverride "side_panel_header_properties"
+		{
+			checked = "[CSceneEditorPreviewPropertiesPanel.IsPreviewPropertiesPanelVisible]"
+			onclick = "[CSceneEditorPreviewPropertiesPanel.ToggleIsPreviewPropertiesPanelVisible]"
+		}
+
+		blockoverride "side_panel_header_icon_properties"
+		{
+			frame = "[Select_int32(CSceneEditorPreviewPropertiesPanel.IsPreviewPropertiesPanelVisible, '(int32)2', '(int32)1')]"
+		}
+
+		blockoverride "side_panel_section_properties"
+		{
+			visible = "[CSceneEditorPreviewPropertiesPanel.IsPreviewPropertiesPanelVisible]"
+		}
+		
+		blockoverride "side_panel_section_content" {
+			editor_scrollarea = 
+		    {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+				
+				blockoverride "content"
+				{
+					vbox = {
+
+						editor_textbox = {
+							layoutpolicy_horizontal = expanding
+							fontsize = 13
+							fontweight = bold
+							autoresize = yes
+							multiline = yes
+							align = nobaseline
+							max_width = @min_hierarchy_panel_width
+							visible = "[Not(SceneSelection.HasSelection)]"
+							raw_text = "Select one or more entities to show their Preview Properties."
+						}
+
+						spacing = 8
+						tools_properties_dialog = {
+							using = EnvPropertyListProperties
+							name = "selected_entity_info" 
+						}
+
+						vbox ={
+							#spacer
+							layoutpolicy_vertical = expanding
+							layoutpolicy_horizontal = expanding
+						}
+					}
+				}
+			}
+		}
+	}
+
+	type preset_header = widget  
+	{
+		layoutpolicy_horizontal = expanding
+		size  = { 460 24 }
+
+		hbox = {
+			spacing = 5
+			layoutpolicy_horizontal = expanding
+
+			button = {
+				size = {17 17}
+				icon = {
+					shaderfile = "gfx/FX/pdxgui_default.shader"
+					texture = "gfx/editor_gui/editor_tree_expand.dds"
+					framesize = { 16 16 }
+					frame = "[Select_int32(ScenePreset.IsShowEntities, '(int32)2', '(int32)1')]"					
+				}
+				onclick = "[ScenePreset.ToggleShowEntities]"
+			}
+
+			editor_checkbutton = {
+				layoutpolicy_horizontal = expanding
+				blockoverride "checkbutton" {
+					onclick = "[SceneEditor.ToggleScenePresetEnabled( ScenePreset.AccessSelf )]"
+					checked = "[ScenePreset.IsEnable]"
+				}
+			}
+
+			widget = {
+				layoutpolicy_horizontal = expanding
+				size = { 356 24 }
+
+				editor_textbox = {
+					size = { 100% 100% }
+					align = left|nobaseline
+					text = "[ScenePreset.Name]"
+					elide = right
+					visible = "[Not(ScenePreset.IsNameBeingEdited)]"
+					button = {
+						size = { 100% 100% }
+						ondoubleclick = "[ScenePreset.ToggleNameBeingEdited]"
+					}
+				}
+				editor_textinput = {
+					size = { 100% 100% }
+					align = left|nobaseline
+					text = "[ScenePreset.Name]"
+					visible = "[ScenePreset.IsNameBeingEdited]"
+					focus_on_visible = yes
+					oneditingfinished = "[SceneEditor.RenameScenePreset( ScenePreset.AccessSelf )]"
+					onfocusout = "[SceneEditor.RenameScenePreset( ScenePreset.AccessSelf )]"
+				}												
+			}
+
+			toolbox_checkbutton = {
+				size = { 18 18 }
+				raw_tooltip = "Add Environment settings to Preset."
+				checked = "[SceneEditor.IsPresetContainsEnvironment( ScenePreset.Name )]"
+				onclick = "[SceneEditor.OnAddEnvironmentToPreset( ScenePreset.Name )]"
+				toolbox_icon = {
+					texture = "gfx/editor_gui/add_env.png"
+				}
+			}
+
+			gui_editor_button = {
+				size = { 18 18 }
+				visible = "[SceneEditor.IsPresetContainsEnvironment( ScenePreset.Name )]"
+				tooltipwidget = {
+					using = dockable_tooltip
+				}
+				raw_tooltip = "Delete Environment settings for this Preset."
+				editor_toolbar_icon = {
+					texture = "gfx/editor_gui/remove_env.png"
+				}          
+				onclick = "[SceneEditor.OnRemoveEnvironmentFromPreset( ScenePreset.Name )]"
+			}
+
+			gui_editor_button = {
+				size = { 18 18 }  
+				tooltipwidget = {
+					using = dockable_tooltip
+				}
+				raw_tooltip = "All entities will get removed from Preset and added into the scene as free entities"
+				editor_toolbar_icon = {
+					texture = "gfx/tools/material/delete.png"
+				}          
+				onclick = "[SceneEditor.RemoveScenePreset( ScenePreset.AccessSelf )]"
+			}
+		}
+	}
+
+	type preset_entity_entry = button
+	{
+		gfxtype = framedbuttongfx
+		texture = "gfx/editor_gui/editor_tree_item.dds"
+		spriteType = Corneredtiled
+		spriteborder = { 1 1 }
+		framesize = { 4 4 }
+		size  = { 460 30 }
+
+		upframe = "[Select_int32( SceneSelection.IsSelected( ScenePresetEntity.Id ), '(int32)3', '(int32)1' )]"
+		downframe = "[Select_int32( SceneSelection.IsSelected( ScenePresetEntity.Id ), '(int32)4', '(int32)3' )]"
+		overframe = "[Select_int32( SceneSelection.IsSelected( ScenePresetEntity.Id ), '(int32)4', '(int32)2' )]"
+		disableframe = 1
+		focuspolicy = click
+		onclick = "[SceneSelection.Select( ScenePresetEntity.Id, PdxGuiWidget.Self )]"
+
+		hbox ={
+			margin_left = "[ScenePresetEntity.GetPresetHierarchyDepth]"
+			maximumsize = { -1 30 }    
+			size  = { 460 30 }
+			
+			editor_textbox = {
+				size = { 180 18 }        
+				layoutpolicy_horizontal = expanding
+				text = "[ScenePresetEntity.Name]"
+				elide = right
+				tooltip_widgetanchor = bottom|left
+				tooltipwidget = { using = dockable_tooltip }
+			}
+
+			gui_editor_button = {
+				size = { 18 18 }  
+				tooltipwidget = {
+					using = dockable_tooltip
+				}
+				raw_tooltip = "Entity will be removed from preset and added into the scene as a free entity, It will not get deleted from scene"
+				editor_toolbar_icon = {
+					texture = "gfx/tools/material/delete.png"
+				}          
+				onclick = "[SceneEditor.RemoveEntityFromScenePreset( ScenePresetEntity.Id, ScenePreset.AccessSelf )]"
+			}
+		}
+	}
+
+	type side_panel = editor_frame
+	{
+		layoutpolicy_vertical = expanding
+		layoutpolicy_horizontal = fixed
+		blockoverride "label" { raw_text = "" }
+		blockoverride "content" {
+			hbox = {
+				margin_left = 8
+				margin_top = 8
+				spacing = 8
+
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = shrinking
+
+				toolbox_checkbutton = {
+					raw_tooltip = "Scene Hierarchy"
+					checked = "[SceneEditor.IsHierarchyWindowVisible]"
+					onclick = "[SceneEditor.EnableHierarchyWindow]"
+					toolbox_icon = {
+						texture = "gfx/editor_gui/editor_icon_hierarchy.png"
+					}
+				}
+
+				toolbox_checkbutton = {
+					raw_tooltip = "Environment properties"
+					checked = "[SceneEditor.IsEnvironmentPropertiesWindowVisible]"
+					onclick = "[SceneEditor.EnableEnvironmentsPropertiesWindow]"
+					toolbox_icon = {
+						texture = "gfx/editor_gui/light.dds"
+					}
+				}
+				toolbox_checkbutton = {
+					raw_tooltip = "Scene Presets"
+					checked = "[SceneEditor.IsScenePresetsWindowVisible]"
+					onclick = "[SceneEditor.EnableScenePresetsWindow]"
+					toolbox_icon = {
+						texture = "gfx/editor_gui/presets.png"
+					}
+				}
+
+				#spacer
+				hbox = {
+					layoutpolicy_horizontal = expanding
+				}
+			}
+
+
+			editor_scrollarea = {
+				visible = "[SceneEditor.IsHierarchyWindowVisible]"
+				blockoverride "content" {
+					vbox = {
+						scene_hierarchy = {
+							button = {
+								size = { 0.1 0.1 }
+								visible = yes
+								onclick = "[SceneHierarchy.GroupSelectedEntities]"
+								input_action = "scene_editor_group_entities"
+							}
+						}
+						component_editor = {
+						}
+						preview_properties_editor = {
+						}
+					}
+				}
+			}
+
+			editor_scrollarea = {
+				visible = "[SceneEditor.IsEnvironmentPropertiesWindowVisible]"
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+				
+				blockoverride "label" { raw_text = "Environment" }
+		
+				blockoverride "content" {
+					vbox = {
+						spacing = 8
+						
+						editor_textbox = {
+							visible = "[SceneEditor.IsSubscene]"
+							margin_top = 15
+							autoresize = yes
+							align = left|vcenter
+							fontcolor = { 1 0 0 1 }
+							raw_text = "The changes you make here are only for preview purposes, Subscenes do not save Env settings."
+						}
+
+						vbox = {
+							margin_top = 15
+							spacing = 8
+							layoutpolicy_horizontal = expanding
+							name = "environments_list"	
+						}
+		
+						side_panel_section =
+						{
+							layoutpolicy_vertical = fixed		
+							blockoverride "side_panel_header_textbox_properties"
+							{
+								raw_text = "Key light"
+							}		
+							blockoverride "side_panel_header_properties"
+							{
+								checked = "[SceneEditorEnvironmentProperties.IsKeyLightPropertiesExapnded]"
+								onclick = "[SceneEditorEnvironmentProperties.ToggleIsKeyLightPropertiesExapnded]"
+							}		
+							blockoverride "side_panel_header_icon_properties"
+							{
+								frame = "[Select_int32(SceneEditorEnvironmentProperties.IsKeyLightPropertiesExapnded, '(int32)2', '(int32)1')]"
+							}		
+							blockoverride "side_panel_section_properties"
+							{
+								visible = "[SceneEditorEnvironmentProperties.IsKeyLightPropertiesExapnded]"
+							}							
+							blockoverride "side_panel_section_content" {
+								tools_properties_dialog = {
+									using = EnvPropertyListProperties
+									name = "key_light_properties" 
+								}
+							}
+						}
+
+						side_panel_section =
+						{
+							layoutpolicy_vertical = fixed		
+							blockoverride "side_panel_header_textbox_properties"
+							{
+								raw_text = "Cube map"
+							}		
+							blockoverride "side_panel_header_properties"
+							{
+								checked = "[SceneEditorEnvironmentProperties.IsCubeMapPropertiesExpanded]"
+								onclick = "[SceneEditorEnvironmentProperties.ToggleIsCubeMapPropertiesExpanded]"
+							}		
+							blockoverride "side_panel_header_icon_properties"
+							{
+								frame = "[Select_int32(SceneEditorEnvironmentProperties.IsCubeMapPropertiesExpanded, '(int32)2', '(int32)1')]"
+							}		
+							blockoverride "side_panel_section_properties"
+							{
+								visible = "[SceneEditorEnvironmentProperties.IsCubeMapPropertiesExpanded]"
+							}							
+							blockoverride "side_panel_section_content" {
+								tools_properties_dialog = {
+									using = EnvPropertyListProperties
+									name = "cube_map_properties" 
+								}
+							}
+						}
+		
+						side_panel_section =
+						{
+							layoutpolicy_vertical = fixed		
+							blockoverride "side_panel_header_textbox_properties"
+							{
+								raw_text = "Fog"
+							}		
+							blockoverride "side_panel_header_properties"
+							{
+								checked = "[SceneEditorEnvironmentProperties.IsFogPropertiesExpanded]"
+								onclick = "[SceneEditorEnvironmentProperties.ToggleIsFogPropertiesExpanded]"
+							}		
+							blockoverride "side_panel_header_icon_properties"
+							{
+								frame = "[Select_int32(SceneEditorEnvironmentProperties.IsFogPropertiesExpanded, '(int32)2', '(int32)1')]"
+							}		
+							blockoverride "side_panel_section_properties"
+							{
+								visible = "[SceneEditorEnvironmentProperties.IsFogPropertiesExpanded]"
+							}							
+							blockoverride "side_panel_section_content" {
+								tools_properties_dialog = {
+									using = EnvPropertyListProperties
+									name = "fog_properties" 
+								}
+							}
+						}
+		
+						side_panel_section =
+						{
+							layoutpolicy_vertical = fixed		
+							blockoverride "side_panel_header_textbox_properties"
+							{
+								raw_text = "Bloom"
+							}		
+							blockoverride "side_panel_header_properties"
+							{
+								checked = "[SceneEditorEnvironmentProperties.IsBloomPropertiesExpanded]"
+								onclick = "[SceneEditorEnvironmentProperties.ToggleIsBloomPropertiesExpanded]"
+							}		
+							blockoverride "side_panel_header_icon_properties"
+							{
+								frame = "[Select_int32(SceneEditorEnvironmentProperties.IsBloomPropertiesExpanded, '(int32)2', '(int32)1')]"
+							}		
+							blockoverride "side_panel_section_properties"
+							{
+								visible = "[SceneEditorEnvironmentProperties.IsBloomPropertiesExpanded]"
+							}							
+							blockoverride "side_panel_section_content" {
+								tools_properties_dialog = {
+									using = EnvPropertyListProperties
+									name = "bloom_properties" 
+								}
+							}
+						}
+		
+						side_panel_section =
+						{
+							layoutpolicy_vertical = fixed		
+							blockoverride "side_panel_header_textbox_properties"
+							{
+								raw_text = "Post effects"
+							}		
+							blockoverride "side_panel_header_properties"
+							{
+								checked = "[SceneEditorEnvironmentProperties.IsPostEffectsPropertiesExpanded]"
+								onclick = "[SceneEditorEnvironmentProperties.ToggleIsPostEffectsPropertiesExpanded]"
+							}		
+							blockoverride "side_panel_header_icon_properties"
+							{
+								frame = "[Select_int32(SceneEditorEnvironmentProperties.IsPostEffectsPropertiesExpanded, '(int32)2', '(int32)1')]"
+							}		
+							blockoverride "side_panel_section_properties"
+							{
+								visible = "[SceneEditorEnvironmentProperties.IsPostEffectsPropertiesExpanded]"
+							}							
+							blockoverride "side_panel_section_content" {
+								tools_properties_dialog = {
+									using = EnvPropertyListProperties
+									name = "post_effects_properties" 
+								}
+							}
+						}
+		
+						side_panel_section =
+						{
+							layoutpolicy_vertical = fixed		
+							blockoverride "side_panel_header_textbox_properties"
+							{
+								raw_text = "SSAO"
+							}		
+							blockoverride "side_panel_header_properties"
+							{
+								checked = "[SceneEditorEnvironmentProperties.IsSsaoPropertiesExpanded]"
+								onclick = "[SceneEditorEnvironmentProperties.ToggleIsSsaoPropertiesExpanded]"
+							}		
+							blockoverride "side_panel_header_icon_properties"
+							{
+								frame = "[Select_int32(SceneEditorEnvironmentProperties.IsSsaoPropertiesExpanded, '(int32)2', '(int32)1')]"
+							}		
+							blockoverride "side_panel_section_properties"
+							{
+								visible = "[SceneEditorEnvironmentProperties.IsSsaoPropertiesExpanded]"
+							}							
+							blockoverride "side_panel_section_content" {
+								tools_properties_dialog = {
+									using = EnvPropertyListProperties
+									name = "ssao_properties" 
+								}
+							}
+						}
+		
+						side_panel_section =
+						{
+							layoutpolicy_vertical = fixed		
+							blockoverride "side_panel_header_textbox_properties"
+							{
+								raw_text = "Tone mapping"
+							}		
+							blockoverride "side_panel_header_properties"
+							{
+								checked = "[SceneEditorEnvironmentProperties.IsToneMappingPropertiesExpanded]"
+								onclick = "[SceneEditorEnvironmentProperties.ToggleIsToneMappingPropertiesExpanded]"
+							}		
+							blockoverride "side_panel_header_icon_properties"
+							{
+								frame = "[Select_int32(SceneEditorEnvironmentProperties.IsToneMappingPropertiesExpanded, '(int32)2', '(int32)1')]"
+							}		
+							blockoverride "side_panel_section_properties"
+							{
+								visible = "[SceneEditorEnvironmentProperties.IsToneMappingPropertiesExpanded]"
+							}							
+							blockoverride "side_panel_section_content" {
+								tools_properties_dialog = {
+									using = EnvPropertyListProperties
+									name = "tone_mapping_properties" 
+								}
+							}
+						}
+		
+						vbox = {
+							#spacer
+							layoutpolicy_vertical = expanding
+							layoutpolicy_horizontal = expanding
+						}
+					}
+				}
+			}
+
+			editor_scrollarea = {
+				visible = "[SceneEditor.IsScenePresetsWindowVisible]"
+				blockoverride "content" {
+					vbox ={
+						scene_button = {
+							size = { 100 24 }
+							raw_text = "Add Preset"
+							onclick = "[SceneEditor.AddScenePreset]"
+						}
+						vbox = {
+							datamodel = "[SceneEditor.ScenePresets]"
+							alwaystransparent = no
+							spacing = 5
+							item = {
+								vbox = {
+									layoutpolicy_horizontal = expanding
+									layoutpolicy_vertical = expanding
+									preset_header = { }
+
+									fixedgridbox = {
+										visible = "[ScenePreset.IsShowEntities]"
+										datamodel = "[ScenePreset.Entities]"
+										addcolumn = 460
+										addrow = 24
+										item = {
+											preset_entity_entry = { }
+										}
+									
+									}									
+								}
+							}
+						}
+
+						vbox ={
+							layoutpolicy_horizontal = expanding
+							layoutpolicy_vertical = expanding
+						}
+					}
+				}
+			}
+		}
+	}
+}
