@@ -1,0 +1,548 @@
+﻿mon_montferrat_mission_pack = {
+	icon = nmt_italy
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = MFA
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = { always = yes }
+
+	on_start = { set_variable = mon_mission_started }
+	on_completion = { remove_variable = mon_mission_started }
+	on_abort = { remove_variable = mon_mission_started }
+
+	# ==================== ROOT ====================
+
+	mon_palaiologos_ambition = {
+		icon = legacy_of_great_empires
+		requires = { }
+		enabled = { always = yes }
+		on_completion = {
+			add_prestige = 10
+			add_country_modifier = { modifier = mon_palaiologos_mod years = 30 mode = add }
+		}
+	}
+
+	# ==================== A: ギリシャ侵攻 ====================
+
+	mon_claim_thessaloniki = {
+		icon = glorious_arms
+		requires = { mon_palaiologos_ambition }
+		enabled = {
+			OR = {
+				has_fired_unique_event = flavor_mfa.3
+				AND = {
+					country_exists = c:BYZ
+					NOT = { location:thessaloniki = { owner = c:BYZ } }
+				}
+				NOT = { country_exists = c:BYZ }
+			}
+		}
+		on_completion = {
+			if = {
+				limit = { location:thessaloniki = { has_owner = yes } }
+				add_casus_belli = {
+					type = casus_belli:cb_conquer_province
+					target = location:thessaloniki.top_owner
+					years = 30
+				}
+			}
+			add_country_modifier = { modifier = mon_thessaloniki_claim_mod years = 30 mode = add }
+		}
+	}
+
+	mon_seize_thessaloniki = {
+		icon = crown_power_advance_renaissance
+		requires = { mon_claim_thessaloniki }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:thessaloniki
+		}
+		on_completion = {
+			trigger_event_non_silently = mon_events.10
+		}
+	}
+
+
+
+	mon_conquer_macedonia = {
+		icon = glorious_arms
+		requires = { mon_seize_thessaloniki }
+		enabled = {
+			area:macedonia_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 15
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = mon_macedonia_mod years = -1 mode = add }
+		}
+	}
+
+	mon_northern_greece = {
+		icon = expansionism
+		requires = { mon_conquer_macedonia }
+		enabled = {
+			area:northern_greece_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 10
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = mon_northern_greece_mod years = -1 mode = add }
+		}
+	}
+
+	mon_conquer_morea = {
+		icon = glorious_arms
+		requires = { mon_northern_greece }
+		enabled = {
+			area:morea_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 10
+				}
+			}
+			owns_or_non_sovereign_subject_owns = location:athens
+		}
+		on_completion = {
+			add_country_modifier = { modifier = mon_morea_mod years = -1 mode = add }
+		}
+	}
+
+	mon_aegean_control = {
+		icon = hsa_mastery_of_the_sea
+		requires = { mon_conquer_morea }
+		enabled = {
+			navy_tradition >= 25
+			area:aegean_archipelago_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 5
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = mon_aegean_mod years = -1 mode = add }
+		}
+	}
+
+	mon_new_byzantium = {
+		icon = legacy_of_great_empires
+		requires = { mon_conquer_morea }
+		enabled = {
+			OR = {
+				has_or_had_tag = BYZ
+				tag = BYZ
+				num_locations >= 120
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = mon_events.50
+		}
+	}
+
+	# ==================== B: 北イタリア制覇 ====================
+
+	mon_secure_piedmont = {
+		icon = expansionism
+		requires = { mon_palaiologos_ambition }
+		enabled = {
+			area:piemonte_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 20
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = mon_piedmont_mod years = -1 mode = add }
+		}
+	}
+
+	mon_casale_capital = {
+		icon = city_building_advance
+		requires = { mon_secure_piedmont }
+		enabled = {
+			location:casale = {
+				owner = root
+				rgo_level >= 8
+			}
+		}
+		on_completion = {
+			location:casale = {
+				add_location_modifier = { modifier = mon_casale_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	mon_rival_savoy = {
+		icon = crusader_tradition
+		requires = { mon_secure_piedmont }
+		enabled = {
+			OR = {
+				is_rival_of = c:SAV
+				NOT = { country_exists = c:SAV }
+				any_owned_location = {
+					area = area:savoy_area
+					count >= 5
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = mon_savoy_mod years = -1 mode = add }
+		}
+	}
+
+	mon_control_lombardy = {
+		icon = glorious_arms
+		requires = { mon_rival_savoy }
+		enabled = {
+			area:lombardy_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 20
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = mon_lombardy_mod years = -1 mode = add }
+		}
+	}
+
+	mon_seize_genoa = {
+		icon = hsa_mastery_of_the_sea
+		requires = { mon_control_lombardy }
+		enabled = {
+			area:liguria_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 8
+				}
+			}
+			owns_or_non_sovereign_subject_owns = location:genoa
+		}
+		on_completion = {
+			add_country_modifier = { modifier = mon_genoa_mod years = -1 mode = add }
+		}
+	}
+
+	mon_north_italy_trade = {
+		icon = a_magnanimous_empire
+		requires = { mon_seize_genoa }
+		enabled = {
+			monthly_income_trade_and_tax >= 100
+			any_owned_location = {
+				is_market_center = yes
+				count >= 2
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = mon_trade_mod years = -1 mode = add }
+		}
+	}
+
+	mon_emilia = {
+		icon = expansionism
+		requires = { mon_control_lombardy }
+		enabled = {
+			area:emilia_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 12
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = mon_emilia_mod years = -1 mode = add }
+		}
+	}
+
+	mon_king_of_italy = {
+		icon = crown_power_advance_renaissance
+		requires = { mon_seize_genoa mon_emilia }
+		enabled = {
+			any_owned_location = {
+				region = region:italy_region
+				owner = root
+				count >= 224
+			}
+			prestige >= 50
+		}
+		on_completion = {
+			trigger_event_non_silently = mon_events.20
+		}
+	}
+
+	# ==================== C: 内政・外交 ====================
+
+	mon_carta_di_franchigia = {
+		icon = city_building_advance
+		requires = { mon_casale_capital }
+		enabled = {
+			any_owned_location = {
+				owner = root
+				count >= 10
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = mon_city_charter_mod years = -1 mode = add }
+		}
+	}
+
+	mon_acqui_terme = {
+		icon = food_advance_renaissance
+		requires = { mon_casale_capital }
+		enabled = {
+			location:acqui = {
+				owner = root
+			}
+			location:acqui = {
+				population >= 60
+			}
+		}
+		on_completion = {
+			location:acqui = {
+				add_location_modifier = { modifier = mon_acqui_terme_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	mon_hre_relations = {
+		icon = lat_emperor_latins_advance
+		requires = { mon_palaiologos_ambition }
+		enabled = {
+			OR = {
+				is_part_of_hre = yes
+				is_allied_with = { target = international_organization:hre.leader_country }
+				is_leader_of_international_organization = international_organization:hre
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = mon_hre_mod years = -1 mode = add }
+		}
+	}
+
+	mon_dev_casale = {
+		icon = city_building_advance
+		requires = { mon_casale_capital }
+		enabled = {
+			location:casale = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:casale = {
+				add_development = 5
+				add_location_modifier = { modifier = mon_casale_dev_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	mon_renaissance_court = {
+		icon = encouragement_of_philosophers
+		requires = { mon_dev_casale }
+		enabled = {
+			global_monthly_literacy >= 0.05
+			any_owned_location = {
+				has_building = building_type:university
+				count >= 1
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = mon_renaissance_mod years = -1 mode = add }
+		}
+	}
+
+	mon_mercenary_tradition = {
+		icon = medieval_military
+		requires = { mon_palaiologos_ambition }
+		enabled = {
+			army_tradition >= 35
+			regular_army_size >= 5
+		}
+		on_completion = {
+			add_country_modifier = { modifier = mon_condottieri_mod years = -1 mode = add }
+		}
+	}
+
+	mon_papal_alliance = {
+		icon = ties_with_the_holy_see
+		requires = { mon_hre_relations }
+		enabled = {
+			OR = {
+				is_allied_with = { target = c:PAP }
+				opinion = { target = c:PAP value >= 150 }
+				owns_or_non_sovereign_subject_owns = location:rome
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = mon_papal_mod years = -1 mode = add }
+		}
+	}
+
+	mon_tuscany = {
+		icon = glorious_arms
+		requires = { mon_emilia }
+		enabled = {
+			area:tuscany_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 12
+				}
+			}
+			owns_or_non_sovereign_subject_owns = location:florence
+		}
+		on_completion = {
+			add_country_modifier = { modifier = mon_tuscany_mod years = -1 mode = add }
+		}
+	}
+
+
+	mon_veneto = {
+		icon = expansionism
+		requires = { mon_control_lombardy }
+		enabled = {
+			area:veneto_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 12
+				}
+			}
+			owns_or_non_sovereign_subject_owns = location:venice
+		}
+		on_completion = {
+			add_country_modifier = { modifier = mon_veneto_mod years = -1 mode = add }
+		}
+	}
+
+	mon_byzantine_heritage = {
+		icon = legacy_of_great_empires
+		requires = { mon_conquer_morea }
+		enabled = {
+			NOT = { country_exists = c:BYZ }
+		}
+		on_completion = {
+			if = {
+				limit = {
+					OR = {
+						culture = { this = culture:greek_culture }
+						culture = { this = culture:byzantine_culture }
+					}
+					religion = religion:orthodox
+				}
+				add_country_modifier = { modifier = mon_heritage_mod years = -1 mode = add }
+			}
+			else = {
+				add_country_modifier = { modifier = mon_heritage_basic_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	mon_navy_adriatic = {
+		icon = ship_building_advance
+		requires = { mon_seize_genoa }
+		enabled = {
+			navy_tradition >= 30
+			OR = {
+				total_sub_unit_count:navy_galley >= 30
+				total_sub_unit_count:navy_heavy_ship >= 10
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = mon_navy_mod years = -1 mode = add }
+		}
+	}
+
+	mon_southern_italy = {
+		icon = glorious_arms
+		requires = { mon_tuscany }
+		enabled = {
+			area:campania_area = {
+				any_location_in_area = {
+					OR = {
+						owner ?= root
+						owner ?= { is_subject_of = root }
+					}
+					count >= 8
+				}
+			}
+			owns_or_non_sovereign_subject_owns = location:naples
+		}
+		on_completion = {
+			add_country_modifier = { modifier = mon_southern_italy_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== 大合流 ====================
+
+	mon_marquis_of_italy = {
+		icon = legacy_of_great_empires
+		requires = { mon_king_of_italy mon_north_italy_trade mon_renaissance_court mon_mercenary_tradition }
+		enabled = {
+			prestige >= 70
+			monthly_income_trade_and_tax >= 200
+			num_locations >= 120
+		}
+		on_completion = {
+			trigger_event_non_silently = mon_events.60
+		}
+	}
+
+	# ==================== FINAL ====================
+
+	mon_new_roman_empire = {
+		icon = legacy_of_great_empires
+		requires = { mon_marquis_of_italy mon_new_byzantium }
+		final = yes
+		enabled = {
+			num_locations >= 300
+			monthly_income_trade_and_tax >= 500
+			prestige >= 80
+		}
+		on_completion = {
+			trigger_event_non_silently = mon_events.99
+		}
+	}
+}
