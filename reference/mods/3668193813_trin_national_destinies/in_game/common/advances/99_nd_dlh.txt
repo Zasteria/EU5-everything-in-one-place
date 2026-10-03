@@ -28,7 +28,8 @@ nd_dlh_iqta_system = {
 	tax_income_efficiency = 0.03
 }
 
-# Religion/Education: early madrasas
+# Religion/Education: the royal college at Hauz Khas (1352) and its like.
+# Not the generic madrasa every Muslim country builds (see the building).
 nd_dlh_sultanate_madrasas = {
 	age = age_1_traditions
 	potential = { has_or_had_tag = DLH }
@@ -92,7 +93,7 @@ nd_dlh_royal_karkhanas = {
 	requires = merchants_and_trade
 	icon = merchants_and_trade
 	unlock_building = nd_dlh_karkhana
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }
 
 ############################
@@ -123,7 +124,7 @@ nd_dlh_sultanate_currency = {
 	icon = printing_press_advance
 	unlock_production_method = nd_dlh_sultanate_minting
 	monthly_inflation = -0.001
-	minting_income_factor = 0.2
+	minting_income_factor = 0.1
 }
 
 # Infrastructure: Urban development
@@ -170,9 +171,9 @@ nd_dlh_suri_sarais = {
 	requires = global_trade_advance
 	icon = global_trade_advance
 	unlock_building = nd_dlh_sarai
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -220,9 +221,9 @@ nd_dlh_grand_trunk_expansion = {
 	requires = absolute_rulership
 	icon = absolute_rulership
 	global_road_building_time = -0.25
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	global_distance_from_capital_speed_propagation = 0.1
 }
@@ -260,7 +261,7 @@ nd_dlh_industrial_karkhanas = {
 	potential = { has_or_had_tag = DLH }
 	requires = industrialization_advance
 	icon = industrialization_advance
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 	global_raw_material_output = 0.1
 }
 
@@ -270,7 +271,7 @@ nd_dlh_legacy_of_synthesis = {
 	potential = { has_or_had_tag = DLH }
 	requires = enlightened_court
 	icon = enlightened_court
-	cultures_capacity = 3
+	cultures_capacity = 1.75
 	research_speed_modifier = 0.05
 }
 
@@ -296,8 +297,12 @@ nd_dlh_dest_deccan_conquest = {
 			text = nd_dlh_path_a_tt
 			has_variable = nd_dlh_path_a
 		}
-		owns_or_non_sovereign_subject_owns = location:gulbarga
-		owns_or_non_sovereign_subject_owns = location:bidar
+		# Delhi holds Gulbarga and Bidar on day one. What it does not hold
+		# in 1337 is what the Deccan had just taken back: Warangal (lost to
+		# the Musunuri chiefs about 1336) and the Raichur country (held by
+		# the new kingdom of Vijayanagar).
+		owns_or_non_sovereign_subject_owns = location:warangal
+		owns_or_non_sovereign_subject_owns = location:raichur
 		army_size >= 30
 	}
 	icon = feudalism_advance
@@ -310,10 +315,17 @@ nd_dlh_dest_subjugate_south = {
 	requires = nd_dlh_dest_deccan_conquest
 	potential = { has_or_had_tag = DLH has_variable = nd_dlh_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		owns_or_non_sovereign_subject_owns = location:warangal
 		owns_or_non_sovereign_subject_owns = location:vijayanagar
 		army_size >= 50
-		total_development >= 6000
+		# Daulatabad: Muhammad bin Tughluq made it a second capital in 1327
+		# to hold the south. Development 23.5 in 1337, half as much again.
+		custom_tooltip = {
+			text = nd_dlh_dest_daulatabad_developed_tt
+			location:daulatabad = {
+				owner ?= root
+				development >= 35
+			}
+		}
 	}
 	icon = imperial_ambitions
 	army_movement_speed = 0.1
@@ -327,7 +339,9 @@ nd_dlh_dest_sultan_of_all_india = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:madurai
 		owns_or_non_sovereign_subject_owns = location:goa
-		owns_or_non_sovereign_subject_owns = location:surat
+		# Thatta in place of Surat, which Delhi holds on day one: the Sindh
+		# campaign was the sultanate's last (1351).
+		owns_or_non_sovereign_subject_owns = location:thatta
 		army_size >= 75
 		gold >= 3000
 	}
@@ -349,13 +363,16 @@ nd_dlh_dest_bengal_integration = {
 			text = nd_dlh_path_b_tt
 			has_variable = nd_dlh_path_b
 		}
-		owns_or_non_sovereign_subject_owns = location:gaur
-		owns_or_non_sovereign_subject_owns = location:sonargaon
+		# Direct rule, as the stage's text says: in 1337 Gaur and Sonargaon
+		# are held by governors who are Delhi's subjects, so the usual
+		# subject-inclusive test would be true on day one.
+		owns = location:gaur
+		owns = location:sonargaon
 		prestige >= 50
 	}
 	icon = merchants_and_trade
 	global_monthly_prosperity = 0.001
-	global_population_growth = 0.002
+	global_population_growth = 0.00025
 }
 
 nd_dlh_dest_institutional_zenith = {
@@ -363,10 +380,20 @@ nd_dlh_dest_institutional_zenith = {
 	requires = nd_dlh_dest_bengal_integration
 	potential = { has_or_had_tag = DLH has_variable = nd_dlh_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		owns_or_non_sovereign_subject_owns = location:khambat
-		owns_or_non_sovereign_subject_owns = location:ujjain
+		# Diu in place of Khambat and Ujjain, which Delhi holds on day one:
+		# the ports of Saurashtra are the trading cities of the west it
+		# does not have.
+		owns_or_non_sovereign_subject_owns = location:diu
 		gold >= 2000
-		total_development >= 6000
+		# Jaunpur: founded by Firuz Shah Tughluq in 1359 and grown into a
+		# seat of learning. Development 32.5 in 1337, half as much again.
+		custom_tooltip = {
+			text = nd_dlh_dest_jaunpur_developed_tt
+			location:jaunpur = {
+				owner ?= root
+				development >= 49
+			}
+		}
 	}
 	icon = organized_religion
 	global_institution_growth_modifier = 0.15
@@ -381,11 +408,19 @@ nd_dlh_dest_beacon_of_hindustan = {
 		owns_or_non_sovereign_subject_owns = location:chittagong
 		prestige >= 75
 		gold >= 3000
-		total_development >= 8000
+		# Delhi itself: 41 in 1337, doubled. The capstone building is the
+		# Firuzabad complex, Firuz Shah's new city beside the old one.
+		custom_tooltip = {
+			text = nd_dlh_dest_delhi_developed_tt
+			location:delhi = {
+				owner ?= root
+				development >= 82
+			}
+		}
 	}
 	icon = crown_power_advance_renaissance
 	unlock_building = nd_dlh_firuzabad_complex
-	diplomatic_reputation = 1
+	global_migration_attraction = 0.1
 	global_estate_target_satisfaction = 0.025
 	global_monthly_control = 0.001
 }

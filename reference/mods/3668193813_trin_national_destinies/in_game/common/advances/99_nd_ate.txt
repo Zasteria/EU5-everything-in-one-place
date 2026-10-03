@@ -19,7 +19,6 @@ nd_ate_gold_dust_currency = {
 	requires = guilds
 	icon = guilds
 	unlock_building = nd_ate_gold_treasury
-	unlock_production_method = nd_ate_gold_dust_weighing
 }
 
 # Forest warfare traditions
@@ -40,9 +39,9 @@ nd_ate_cola_nut_trade = {
 	potential = { has_or_had_tag = ATE }
 	requires = guilds
 	icon = guilds
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	global_merchant_power = 0.05
 }
@@ -134,7 +133,7 @@ nd_ate_royal_gold_mines = {
 	potential = { has_or_had_tag = ATE }
 	requires = vibrant_court_advance
 	icon = vibrant_court_advance
-	global_goods_gold_output_modifier = 0.15
+	global_goods_gold_output_modifier = 0.1
 	tax_income_efficiency = 0.03
 }
 
@@ -202,8 +201,8 @@ nd_ate_craft_specialization = {
 	potential = { has_or_had_tag = ATE }
 	requires = regulate_court_procedures
 	icon = regulate_court_procedures
-	unlock_production_method = nd_ate_craft_villages
-	global_production_efficiency = 0.05
+	unlock_building = nd_ate_craft_village
+	global_production_efficiency = 0.025
 }
 
 # Rolling fire musket tactics
@@ -301,9 +300,9 @@ nd_ate_gold_coast_dominance = {
 	requires = global_trade_advance
 	icon = global_trade_advance
 	global_goods_gold_output_modifier = 0.1
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -315,7 +314,7 @@ nd_ate_anglo_ashanti_resistance = {
 	potential = { has_or_had_tag = ATE }
 	requires = absolutism_agressive_advance
 	icon = absolutism_agressive_advance
-	land_morale_modifier = 0.15
+	land_morale_modifier = 0.1
 	global_hostile_attrition = 0.5
 }
 
@@ -349,7 +348,7 @@ nd_ate_gold_refining = {
 	requires = absolute_rulership
 	icon = absolute_rulership
 	unlock_production_method = nd_ate_gold_refining_process
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }
 
 # Judicial reform and centralized courts
@@ -374,17 +373,17 @@ nd_ate_imperial_roads = {
 
 # === Age 6: Revolutions (6 advances) ===
 
-# Yaa Asantewaa War of resistance - DHE event
+# The Gyaman war of 1818, fought over a copy of the Golden Stool (the key keeps its first name). DHE event.
 nd_ate_war_of_resistance = {
 	age = age_6_revolutions
 	potential = { has_or_had_tag = ATE }
 	requires = napoleonic_warfare
 	icon = napoleonic_warfare
-	land_morale_modifier = 0.15
+	land_morale_modifier = 0.1
 	monthly_war_exhaustion = -0.05
 }
 
-# Cocoa economy transition
+# The kola trade to Salaga and Hausaland (the key keeps its first name)
 nd_ate_cocoa_economy = {
 	age = age_6_revolutions
 	potential = { has_or_had_tag = ATE }
@@ -394,7 +393,7 @@ nd_ate_cocoa_economy = {
 	unlock_production_method = nd_ate_cocoa_processing
 }
 
-# Cultural preservation movement
+# The crafts and festivals of the court kept
 nd_ate_cultural_preservation = {
 	age = age_6_revolutions
 	potential = { has_or_had_tag = ATE }
@@ -427,7 +426,7 @@ nd_ate_modern_army = {
 	}
 }
 
-# Prempeh I's diplomatic legacy
+# Osei Bonsu's diplomacy: the missions of 1817 and 1820 and the Muslim scribes of Kumasi (the key keeps its first name)
 nd_ate_prempeh_legacy = {
 	age = age_6_revolutions
 	potential = { has_or_had_tag = ATE }
@@ -476,7 +475,10 @@ nd_ate_dest_great_ashanti = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:oyo_ile
 		owns_or_non_sovereign_subject_owns = location:nikki
-		army_size >= 50
+		# No army_size: the Ashanti army is a levy of asafo companies, and
+		# whether a raised levy counts toward army_size is unverified
+		# (planner Step 4). The companies themselves are the requirement.
+		has_advance = nd_ate_asafo_companies
 		prestige >= 50
 	}
 	icon = imperial_ambitions
@@ -492,7 +494,8 @@ nd_ate_dest_ashanti_imperium = {
 		owns_or_non_sovereign_subject_owns = location:timbuktu
 		owns_or_non_sovereign_subject_owns = location:benin
 		owns_or_non_sovereign_subject_owns = location:niani
-		army_size >= 75
+		# The imperium was won with the Long Dane musket.
+		has_advance = nd_ate_firearms_trade
 		prestige >= 75
 		gold >= 3000
 	}
@@ -550,10 +553,30 @@ nd_ate_dest_gold_empire = {
 	potential = { has_or_had_tag = ATE has_variable = nd_ate_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:djenne
-		has_embraced_institution = institution:global_trade
+		# Kumasi starts as a forest village (development 0, rural). Bowdich
+		# found a planned city of broad streets there in 1817.
+		custom_tooltip = {
+			text = nd_ate_dest_kumasi_city_tt
+			location:kumasi = {
+				owner ?= root
+				OR = {
+					location_rank ?= location_rank:city
+					location_rank ?= location_rank:megalopolis
+				}
+			}
+		}
+		# The lodges of the great northern roads (age 3), in place of the
+		# global trade institution of age 4: the gold trade ran north to
+		# Djenne long before it ran overseas.
+		custom_tooltip = {
+			text = nd_ate_dest_trade_lodges_tt
+			any_owned_location = {
+				count >= 3
+				has_building = building_type:nd_ate_trade_lodge
+			}
+		}
 		gold >= 3000
 		prestige >= 75
-		total_development >= 500
 	}
 	icon = global_trade_advance
 	unlock_building = nd_ate_great_market

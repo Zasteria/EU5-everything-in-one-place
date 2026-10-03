@@ -52,6 +52,7 @@ nd_kon_raffia_weaving = {
 	requires = agriculture_advance
 	icon = agriculture_advance
 
+	unlock_building = nd_kon_raffia_looms
 	global_cloth_output_modifier = 0.1
 }
 
@@ -62,9 +63,9 @@ nd_kon_nzimbu_currency = {
 	requires = legalism_advance
 	icon = legalism_advance
 
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	minting_income_factor = 0.1
 }
@@ -105,6 +106,7 @@ nd_kon_royal_school = {
 	requires = renaissance_court
 	icon = renaissance_court
 
+	unlock_building = nd_kon_mestre_school
 	research_speed_modifier = 0.05
 	global_monthly_literacy = 0.01
 }
@@ -138,6 +140,7 @@ nd_kon_copper_trade = {
 	requires = merchants_and_trade
 	icon = merchants_and_trade
 
+	unlock_production_method = nd_kon_copper_working
 	global_copper_output_modifier = 0.1
 }
 
@@ -153,9 +156,9 @@ nd_kon_musket_regiment = {
 	icon = pike_square
 
 	unlock_unit = a_nd_kon_musket_regiment
-	army_light_cavalry_power = 0.2
+	army_light_cavalry_power = 0.15
 
-	army_heavy_cavalry_power = 0.2
+	army_heavy_cavalry_power = 0.1
 
 	ai_weight = {
 		add = 50
@@ -170,7 +173,7 @@ nd_kon_atlantic_diplomacy = {
 	icon = diplomatic_training
 
 	diplomatic_reputation = 2
-	improve_relation_impact = 0.25
+	improve_relation_impact = 0.15
 }
 
 # Cloth Market: Centers for the libongo cloth currency trade
@@ -181,11 +184,9 @@ nd_kon_cloth_market_tradition = {
 	icon = regulate_court_procedures
 
 	unlock_building = nd_kon_cloth_market
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
-
-	unlock_production_method = nd_kon_raffia_cloth_production
+	trade_sea_efficiency = 0.1
 }
 
 # Missionary Education: Catholic schooling and literacy programs
@@ -327,8 +328,8 @@ nd_kon_ivory_export = {
 	requires = manufactories_advance
 	icon = manufactories_advance
 
-	unlock_production_method = nd_kon_ivory_processing
-	global_production_efficiency = 0.05
+	unlock_building = nd_kon_ivory_carvers
+	global_production_efficiency = 0.025
 }
 
 ##############################
@@ -382,7 +383,6 @@ nd_kon_palm_oil_economy = {
 
 	unlock_building = nd_kon_palm_oil_press
 	global_raw_material_output = 0.1
-	unlock_production_method = nd_kon_copper_working
 }
 
 # ===== DESTINY TREE =====
@@ -430,7 +430,21 @@ nd_kon_dest_atlantic = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:sao_tome
 		owns_or_non_sovereign_subject_owns = location:gabun
-		total_development >= 2000
+		# Mbanza Soyo and its harbour Mpinda grew on the Atlantic trade into
+		# the kingdom's second town. A rank test, not a development figure:
+		# the place starts at development 0 (development_estimate.py), and a
+		# share of nothing asks for nothing.
+		custom_tooltip = {
+			text = nd_kon_dest_soyo_town_tt
+			location:mbanza_soyo = {
+				owner ?= root
+				OR = {
+					location_rank ?= location_rank:town
+					location_rank ?= location_rank:city
+					location_rank ?= location_rank:megalopolis
+				}
+			}
+		}
 		gold >= 2000
 	}
 	icon = merchants_and_trade
@@ -445,7 +459,11 @@ nd_kon_dest_christendom = {
 	potential = { has_or_had_tag = KON has_variable = nd_kon_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:lisbon
-		has_embraced_institution = institution:global_trade
+		# The ocean routes the Portuguese opened are what brought Kongo into
+		# Christendom (Diogo Cao reached the river in 1483): the institution
+		# of age 3. It stood at global_trade (age 4), three ages after the
+		# other path could end (owner's ruling 2026-10-02).
+		has_embraced_institution = institution:new_world
 		prestige >= 75
 		gold >= 3000
 	}
@@ -470,7 +488,13 @@ nd_kon_dest_interior = {
 		}
 		owns_or_non_sovereign_subject_owns = location:boma
 		owns_or_non_sovereign_subject_owns = location:bateke_kongo
-		army_size >= 30
+		custom_tooltip = {
+			text = nd_kon_dest_three_forges_tt
+			any_owned_location = {
+				count >= 3
+				has_building = building_type:nd_kon_iron_forge
+			}
+		}
 		stability >= 75
 	}
 	icon = feudalism_advance
@@ -486,7 +510,7 @@ nd_kon_dest_lunda = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:mussumba
 		owns_or_non_sovereign_subject_owns = location:katanga
-		army_size >= 50
+		owns_or_non_sovereign_subject_owns = location:kazembe
 		gold >= 2000
 	}
 	icon = imperial_ambitions
@@ -502,8 +526,26 @@ nd_kon_dest_heart = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:nyangwe
 		owns_or_non_sovereign_subject_owns = location:bangui
-		army_size >= 75
-		total_development >= 2500
+		custom_tooltip = {
+			text = nd_kon_dest_ten_forges_tt
+			any_owned_location = {
+				count >= 10
+				has_building = building_type:nd_kon_iron_forge
+			}
+		}
+		# Mbanza Kongo, a rural settlement in 1337 (development 0 by
+		# development_estimate.py), was a city of stone churches under Afonso I
+		# and Garcia II. Rank test for the same reason as Mbanza Soyo above.
+		custom_tooltip = {
+			text = nd_kon_dest_mbanza_kongo_city_tt
+			location:mbanza_kongo = {
+				owner ?= root
+				OR = {
+					location_rank ?= location_rank:city
+					location_rank ?= location_rank:megalopolis
+				}
+			}
+		}
 		prestige >= 75
 	}
 	icon = crown_power_advance_renaissance

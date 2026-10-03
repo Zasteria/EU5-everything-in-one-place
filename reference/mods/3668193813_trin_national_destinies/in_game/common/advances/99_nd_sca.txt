@@ -46,8 +46,11 @@ nd_sca_allodial_rights = {
 	potential = { has_or_had_tag = SCA }
 	requires = agriculture_advance
 	icon = agriculture_advance
+	# The freeholder's duty went with his right: he kept arms and answered
+	# the levy. Peasant satisfaction is vanilla's swedish_heritage in this
+	# age for a Swedish founder.
+	unlock_levy = levy_nd_sca_bondeuppbad
 	global_population_growth = 0.0005
-	peasants_estate_target_satisfaction = 0.025
 }
 
 # === AGE 2: Renaissance ===
@@ -59,7 +62,7 @@ nd_sca_herring_markets = {
 	requires = merchants_and_trade
 	icon = merchants_and_trade
 	unlock_building = nd_sca_sildesalteri
-	global_fish_output_modifier = 0.25
+	global_fish_output_modifier = 0.15
 }
 
 nd_sca_bergslagen_ironworks = {
@@ -76,9 +79,9 @@ nd_sca_hanseatic_challenge = {
 	potential = { has_or_had_tag = SCA }
 	requires = crown_power_advance_renaissance
 	icon = crown_power_advance_renaissance
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	global_merchant_power = 0.1
 }
@@ -127,6 +130,8 @@ nd_sca_hakkapeliitta_tradition = {
 	potential = { has_or_had_tag = SCA }
 	requires = pike_square
 	icon = pike_square
+	# Displayed as "Finnish Horse": the castle horsemen before they became
+	# the Hakkapeliitta, which is vanilla's own age 5 advance for Sweden.
 	unlock_unit = a_nd_sca_hakkapeliitta
 	army_light_cavalry_power = 0.1
 
@@ -143,7 +148,7 @@ nd_sca_baltic_dominion = {
 	requires = diplomatic_training
 	icon = diplomatic_training
 	diplomatic_reputation = 2
-	naval_morale_modifier = 0.25
+	naval_morale_modifier = 0.15
 }
 
 nd_sca_falun_copper_mountain = {
@@ -164,7 +169,7 @@ nd_sca_swedish_navy_expansion = {
 	requires = maritime_advance_age_4
 	icon = maritime_advance_age_4
 	unlock_unit = n_nd_sca_orlogsskib
-	monthly_navy_tradition = 0.15
+	monthly_navy_tradition = 0.1
 	ai_weight = {
 		add = 50
 	}
@@ -175,7 +180,8 @@ nd_sca_adelsvalde = {
 	potential = { has_or_had_tag = SCA }
 	requires = confessional_court
 	icon = confessional_court
-	nobles_estate_levy_size = 1.5
+	unlock_levy = levy_nd_sca_adelsfana
+	nobles_estate_levy_size = 0.5
 	nobles_estate_target_satisfaction = 0.025
 }
 
@@ -200,6 +206,10 @@ nd_sca_crown_reduction = {
 # === AGE 5: Absolutism ===
 # Vanilla has: swedish_roots (global_manpower)
 
+# Displayed as "Articles of War" and its levy as "Legd Soldiers" (the Danish
+# and Norwegian farm groups that each kept one soldier): vanilla has a
+# Caroleans advance and unit for Sweden (country_swe.txt), which a Swedish
+# founder holds beside this one. The keys keep their first names.
 nd_sca_carolean_tradition = {
 	age = age_5_absolutism
 	potential = { has_or_had_tag = SCA }
@@ -218,10 +228,14 @@ nd_sca_indelningsverket = {
 	potential = { has_or_had_tag = SCA }
 	requires = absolute_rulership
 	icon = absolute_rulership
+	# The croft carries the levy where it stands, so the country-wide
+	# levy bonus that stood here is gone.
+	# Displayed as "Knektehållet", the infantry contract of 1682 that the
+	# crofts belong to: vanilla has an advance named Indelningsverket for
+	# Sweden (country_swe.txt), which a Swedish founder holds beside this one.
+	unlock_building = nd_sca_soldattorp
 	army_maintenance_efficiency = 0.1
-
 	regiment_recruit_speed = 0.2
-	global_levy_size_modifier = 0.1
 }
 
 nd_sca_linjeskip_fleet = {
@@ -251,9 +265,9 @@ nd_sca_scandinavian_east_india = {
 	requires = absolutism_agressive_advance
 	icon = absolutism_agressive_advance
 	unlock_building = nd_sca_ostindisk_kontor
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	colonial_range_modifier = 0.4
 }
@@ -294,7 +308,8 @@ nd_sca_industrial_modernization = {
 	potential = { has_or_had_tag = SCA }
 	requires = industrialization_advance
 	icon = industrialization_advance
-	global_production_efficiency = 0.075
+	unlock_production_method = nd_sca_lancashire_forging
+	global_production_efficiency = 0.0375
 	global_construction_speed = 0.1
 }
 
@@ -364,6 +379,11 @@ nd_sca_dest_northern_empire = {
 		owns_or_non_sovereign_subject_owns = location:novgorod
 		owns_or_non_sovereign_subject_owns = location:brattahlid
 		army_size >= 75
+		# The colonial office is a thing of the trading companies (the
+		# Danish East India Company of 1616, New Sweden in 1638), and the
+		# gate keeps this path from ending four ages before the other
+		# (owner's ruling 2026-10-02, scripts/destiny/stage_floors.py).
+		has_embraced_institution = institution:global_trade
 	}
 	icon = imperial_ambitions
 	unlock_building = nd_sca_kolonikontor
@@ -385,10 +405,16 @@ nd_sca_dest_law_of_north = {
 		}
 		has_embraced_institution = institution:banking
 		stability >= 75
-		total_development >= 6500
+		custom_tooltip = {
+			text = nd_sca_dest_uppsala_developed_tt
+			location:uppsala = {
+				owner ?= root
+				development >= 24
+			}
+		}
 	}
 	icon = legalism_advance
-	global_monthly_prosperity = 0.0015
+	global_monthly_prosperity = 0.001
 	global_institution_growth_modifier = 0.1
 }
 
@@ -398,12 +424,18 @@ nd_sca_dest_riksdag = {
 	potential = { has_or_had_tag = SCA has_variable = nd_sca_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		has_embraced_institution = institution:printing_press
-		total_development >= 10000
+		custom_tooltip = {
+			text = nd_sca_dest_stockholm_developed_tt
+			location:stockholm = {
+				owner ?= root
+				development >= 34
+			}
+		}
 		gold >= 2000
 	}
 	icon = rights_of_man
 	monthly_diplomats = 0.05
-	global_monthly_development = 0.002
+	global_monthly_development = 0.001
 }
 
 nd_sca_dest_beacon = {
@@ -412,7 +444,13 @@ nd_sca_dest_beacon = {
 	potential = { has_or_had_tag = SCA has_variable = nd_sca_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		has_embraced_institution = institution:enlightenment
-		total_development >= 13000
+		custom_tooltip = {
+			text = nd_sca_dest_kobenhavn_developed_tt
+			location:kobenhavn = {
+				owner ?= root
+				development >= 50
+			}
+		}
 		prestige >= 75
 		gold >= 3000
 	}

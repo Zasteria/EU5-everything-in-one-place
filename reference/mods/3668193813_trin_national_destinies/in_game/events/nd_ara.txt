@@ -1,0 +1,728 @@
+﻿namespace = nd_ara
+
+# Formation event. It reaches two kinds of country:
+#   the Aragon that carries the tag from day one, or was released later: it
+#     never runs form_effect, and the four-yearly marker repair in
+#     99_nd_on_actions.txt delivers this event to it;
+#   a Catalan or Aragonese country that forms Aragon by the button
+#     (99_nd_ara.txt).
+# The first reads the account of the old Crown taking stock, the second the
+# account of a new house being crowned. original_tag = ARA is true for the
+# first kind only.
+nd_ara.1 = {
+	type = country_event
+	title = nd_ara.1.t
+	desc = {
+		first_valid = {
+			triggered_desc = {
+				trigger = { original_tag = ARA }
+				desc = nd_ara.1.d.crown
+			}
+			triggered_desc = {
+				desc = nd_ara.1.d
+			}
+		}
+	}
+	outcome = neutral
+	# Once per COUNTRY, by its own guard variable. Not fire_only_once: that
+	# is once per campaign (events/readme.txt:62), so an AI that formed the
+	# tag first would retire the popup for every later former. Country
+	# variables die with the country, so an Aragon that falls and rises
+	# again is asked again.
+	trigger = {
+		NOT = { has_variable = nd_ara_e1_done }
+	}
+	immediate = {
+		hidden_effect = { set_variable = nd_ara_e1_done }
+	}
+
+	# The kingdom in its own land: the king at Zaragoza, ruling with the
+	# four arms and looking to the peninsula.
+	option = {
+		name = nd_ara.1.a
+		add_country_modifier = {
+			modifier = nd_ara_reino_en_su_tierra
+			years = 20
+			mode = add_and_extend
+		}
+		change_societal_value = {
+			type = land_vs_naval
+			value = societal_value_move_to_left
+		}
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_ara_formed
+			set_variable = nd_ara_path_a
+		}
+	}
+	# The head of the Crown: Aragon as the title and seat of a house that
+	# rules many realms across the sea.
+	option = {
+		name = nd_ara.1.b
+		add_country_modifier = {
+			modifier = nd_ara_cabeza_de_la_corona
+			years = 20
+			mode = add_and_extend
+		}
+		change_societal_value = {
+			type = land_vs_naval
+			value = societal_value_move_to_right
+		}
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_ara_formed
+			set_variable = nd_ara_path_b
+		}
+	}
+}
+
+# The advance events below name the country's own tag only. The
+# orchestrator's scripts/sync_history_events.py adds the tags of the larger
+# formables an Aragon can go on to; every event tests has_advance, which is
+# what keeps it from every other holder of those tags.
+
+# Advance event: the communities of villages
+nd_ara.2 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = ARA
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		tag = TKT
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_ara_comunidades_de_aldeas
+	}
+
+	title = nd_ara.2.t
+	desc = nd_ara.2.d
+	outcome = neutral
+
+	option = {
+		name = nd_ara.2.a
+	}
+}
+
+# Advance event: the War of the Two Peters and the town hosts
+nd_ara.3 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = ARA
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		tag = TKT
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_ara_huestes_concejiles
+	}
+
+	title = nd_ara.3.t
+	desc = nd_ara.3.d
+	outcome = neutral
+
+	option = {
+		name = nd_ara.3.a
+	}
+}
+
+# Advance event: Papa Luna. The fork is the one Ferdinand of Antequera faced
+# in 1416: keep the kingdom's obedience to its own pope, or withdraw it and
+# end the Schism.
+nd_ara.4 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = ARA
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		tag = TKT
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_ara_papa_luna
+	}
+
+	title = nd_ara.4.t
+	desc = nd_ara.4.d
+	outcome = neutral
+
+	option = {
+		name = nd_ara.4.a
+		add_country_modifier = {
+			modifier = nd_ara_obediencia_de_peniscola
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_ara.4.b
+		add_country_modifier = {
+			modifier = nd_ara_sustraccion_de_obediencia
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# Advance event: the Hurus press
+nd_ara.5 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = ARA
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		tag = TKT
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_ara_imprenta_de_los_hurus
+	}
+
+	title = nd_ara.5.t
+	desc = nd_ara.5.d
+	outcome = neutral
+
+	option = {
+		name = nd_ara.5.a
+	}
+}
+
+# Advance event: the Moriscos. The fork is the decree of 1610: carry it out,
+# or hear the lords who petitioned to keep their vassals.
+nd_ara.6 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = ARA
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		tag = TKT
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_ara_vasallos_moriscos
+	}
+
+	title = nd_ara.6.t
+	desc = nd_ara.6.d
+	outcome = neutral
+
+	option = {
+		name = nd_ara.6.a
+		add_country_modifier = {
+			modifier = nd_ara_expulsion_de_los_moriscos
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_ara.6.b
+		add_country_modifier = {
+			modifier = nd_ara_vasallos_amparados
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# Advance event: the servicio de armas of 1645
+nd_ara.7 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = ARA
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		tag = TKT
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_ara_servicio_de_armas
+	}
+
+	title = nd_ara.7.t
+	desc = nd_ara.7.d
+	outcome = neutral
+
+	option = {
+		name = nd_ara.7.a
+	}
+}
+
+# Advance event: the Canal Imperial
+nd_ara.8 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = ARA
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		tag = TKT
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_ara_proyecto_de_pignatelli
+	}
+
+	title = nd_ara.8.t
+	desc = nd_ara.8.d
+	outcome = neutral
+
+	option = {
+		name = nd_ara.8.a
+	}
+}
+
+# Advance event: the sieges of Zaragoza. The fork is what to do with the
+# army: shut it in the city and fight for every house, or keep it in the
+# field and leave the walls to the citizens.
+nd_ara.9 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = ARA
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		tag = TKT
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_ara_los_sitios
+	}
+
+	title = nd_ara.9.t
+	desc = nd_ara.9.d
+	outcome = neutral
+
+	option = {
+		name = nd_ara.9.a
+		add_country_modifier = {
+			modifier = nd_ara_guerra_y_cuchillo
+			years = 10
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_ara.9.b
+		add_country_modifier = {
+			modifier = nd_ara_ejercito_de_reserva
+			years = 10
+			mode = add_and_extend
+		}
+	}
+}
+
+# ===== DESTINY EVENTS =====
+# One history event per destiny advance. fire_only_once is what the engine
+# requires of a history event; nothing below is load bearing beyond a timed
+# modifier. Only the country's own tag is listed: the orchestrator's
+# scripts/sync_history_events.py adds the tags Aragon can go on to.
+
+# Destiny root: the oath to the Fueros
+nd_ara.10 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = ARA
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		tag = TKT
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_ara_destiny
+	}
+
+	title = nd_ara.10.t
+	desc = nd_ara.10.d
+	outcome = neutral
+
+	option = {
+		name = nd_ara.10.a
+	}
+}
+
+# Destiny path A stage 1: the communities of the southern march
+nd_ara.11 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = ARA
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		tag = TKT
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_ara_dest_extremadura
+	}
+
+	title = nd_ara.11.t
+	desc = nd_ara.11.d
+	outcome = neutral
+
+	option = {
+		name = nd_ara.11.a
+	}
+}
+
+# Destiny path A stage 2: the court at Zaragoza. The fork: lean on the
+# city and its Twenty, or on the royal household.
+nd_ara.12 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = ARA
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		tag = TKT
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_ara_dest_corte_en_zaragoza
+	}
+
+	title = nd_ara.12.t
+	desc = nd_ara.12.d
+	outcome = neutral
+
+	option = {
+		name = nd_ara.12.a
+		add_country_modifier = {
+			modifier = nd_ara_dest_privilegio_de_los_veinte
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_ara.12.b
+		add_country_modifier = {
+			modifier = nd_ara_dest_ordinaciones_de_la_casa
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# Destiny path A stage 3: Aragon and Pamplona. The fork: hold the gathered
+# lands by charters of settlement, or by the frontier brotherhoods.
+nd_ara.13 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = ARA
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		tag = TKT
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_ara_dest_aragon_y_pamplona
+	}
+
+	title = nd_ara.13.t
+	desc = nd_ara.13.d
+	outcome = neutral
+
+	option = {
+		name = nd_ara.13.a
+		add_country_modifier = {
+			modifier = nd_ara_dest_cartas_pueblas
+			years = 20
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_ara.13.b
+		add_country_modifier = {
+			modifier = nd_ara_dest_milicia_de_monreal
+			years = 20
+			mode = add_and_extend
+		}
+	}
+}
+
+# Destiny path B stage 1: Sardinia and Corsica
+nd_ara.14 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = ARA
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		tag = TKT
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_ara_dest_cerdena_y_corcega
+	}
+
+	title = nd_ara.14.t
+	desc = nd_ara.14.d
+	outcome = neutral
+
+	option = {
+		name = nd_ara.14.a
+	}
+}
+
+# Destiny path B stage 2: Sicily. The fork: swear the island's chapters,
+# or garrison it with the king's own officers.
+nd_ara.15 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = ARA
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		tag = TKT
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_ara_dest_trinacria
+	}
+
+	title = nd_ara.15.t
+	desc = nd_ara.15.d
+	outcome = neutral
+
+	option = {
+		name = nd_ara.15.a
+		add_country_modifier = {
+			modifier = nd_ara_dest_capitulos_del_reino
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_ara.15.b
+		add_country_modifier = {
+			modifier = nd_ara_dest_castellanos_del_rey
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# Destiny path B stage 3: the Magnanimous. The fork Alfonso V settled by
+# never coming home: keep the court overseas, or bring the king back.
+nd_ara.16 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = ARA
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		tag = TKT
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_ara_dest_el_magnanimo
+	}
+
+	title = nd_ara.16.t
+	desc = nd_ara.16.d
+	outcome = neutral
+
+	option = {
+		name = nd_ara.16.a
+		add_country_modifier = {
+			modifier = nd_ara_dest_corte_en_ultramar
+			years = 20
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_ara.16.b
+		add_country_modifier = {
+			modifier = nd_ara_dest_retorno_del_rey
+			years = 20
+			mode = add_and_extend
+		}
+	}
+}

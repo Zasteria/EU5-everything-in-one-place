@@ -1,0 +1,309 @@
+﻿# Castile (CAS): bureaucracies
+# National Destinies mod
+#
+# Read before choosing subjects (EU5 1.4):
+#   vanilla bureaucracies Castile can hold (bureaucracies/generic.txt, ten of
+#     them, from Confessionalism or the age 4 advance): a board of revenue, a
+#     privy council, an audit bureau, a colonial office, an admiralty, a
+#     foreign ministry, a trade commission, a war council, an ordnance board
+#     and a commissariat. None is repeated here by name or by subject, so no
+#     Almirantazgo and no Contaduria.
+#   vanilla names spa_council_of_castile_bureaucracy for a release to come and
+#     has a decision and a reform for the Council of Castile: no council.
+#   vanilla Castile elsewhere: the Santa Hermandad, the Audiencias, the
+#     masters of the orders and the millones are advances; the Mesta, the
+#     Cortes, the adelantamiento, the merindad, the alarde, the Siete Partidas,
+#     the Ordenamiento de Alcala and the Inquisition are laws; the regimiento,
+#     the ayuntamientos, the caballeros villanos and the Fuero Viejo are
+#     privileges; the Casa de Contratacion and the intendancies are reforms;
+#     the Hermandad de las Marismas is a building (brethren_marsh).
+#   the mod's Spain (99_nd_spa.txt): Consejo Real, Casa de Contratacion,
+#     Consejo de Indias, Mesta, Inquisicion, encomienda, corregimiento.
+#   this country's own tree (advances and buildings in 99_nd_cas.txt): the
+#     concejos, tierras y acostamientos, the salt monopoly, the almojarifazgo,
+#     the alcabala, juros and contadores (with the Contaduria Mayor building),
+#     the corregidores, the positos; the destiny tree has the Real
+#     Chancilleria as a building.
+#
+# What is left, and what only this kingdom had in this form:
+# 1. Alcaldes de Casa y Corte: the judges who travelled with the king and
+#    ruled the ground five leagues around wherever he slept.
+# 2. Alfaqueques: the sworn ransomers who crossed the Granadan frontier to buy
+#    captives back, under an alfaqueque mayor from 1439.
+# 3. Consulado de Burgos: the merchants of Burgos who bought the Mesta's clip
+#    and shipped it to Flanders, a court of their own from 1494.
+# 4. Guardas de Castilla: the standing companies of men-at-arms and jinetes
+#    founded in 1493, paid and mustered by royal inspectors.
+#
+# Estate alignment differs in each: the crown against lords and towns, the
+# frontier lords and countryfolk against the towns, merchants and flock
+# owners against the cloth workers, the crown and the hidalgos against the
+# villages that lodged the companies.
+#
+# Slots. Vanilla gives Castile none on the day it forms (a capital grants one
+# only as a megalopolis, location_ranks/00_default.txt:50). The auto modifier
+# grants 2, half of these four. Vanilla adds one with the age 4 bureaucracy
+# advance and one in age 6, and from Confessionalism its ten generic offices
+# compete for the same slots.
+#
+# No cabinet seat and no character modifier. No key stands in both the funded
+# and the neglected block of one institution. No government power key: every
+# road into Castile is a monarchy, and none of these offices made a king more
+# lawful. All IDs are cas_-prefixed (the last definition of a key wins across
+# files).
+
+# 1. Alcaldes de Casa y Corte
+# Fetched (es.wikipedia, "Sala de Alcaldes de Casa y Corte"): origin in the
+# 13th century; four alcaldes de corte for criminal cases; the Rastro de la
+# Corte reached five leagues around the court (ten from 1803); they judged in
+# the last instance, kept order, and controlled the supply and the prices of
+# food brought in from the country around; suppressed 1834.
+# From memory, not fetched: the Cortes of Zamora of 1274 as the founding
+# ordinance, with its list of casos de corte (suits reserved to the king's
+# judges whatever lord or town held the place). That list is why the lords
+# dislike the office and why the funded side makes a privilege cheaper to
+# take back. Castile's court starts itinerant in vanilla
+# (royal_court_customs_law = itinerant_court_policy): the office is the form
+# that law takes on the ground, and is not the law itself.
+# Unpaid, the alcaldes live off the posturas: the court eats at prices it
+# sets itself and the town that hosts it pays the difference.
+cas_alcaldes_de_corte_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = CAS
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {}
+
+	estates_that_like = {
+		crown_estate
+	}
+	estates_that_dislike = {
+		nobles_estate
+		burghers_estate
+	}
+
+	neutral_modifier = {
+		monthly_political_influence = 0.05
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		revoke_privilege_cost_modifier = -0.1
+		food_purchase_efficiency = 0.15
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		court_spending_efficiency = -0.15
+		burghers_estate_target_satisfaction = medium_permanent_target_satisfaction_penalty
+	}
+}
+
+# 2. Alfaqueques
+# Fetched (es.wikipedia, "Alfaqueque"): the man charged with ransoming
+# Christians held in Muslim lands; the Siete Partidas ask six things of him
+# (truthful, without greed, knowing Arabic, kind, brave, and with property
+# of his own to answer for the money) and have him chosen by twelve good men
+# of the town; an alfaqueque mayor for the Granadan frontier from the later
+# 14th century until 1492; replaced by the Mercedarians in the 16th century.
+# Fetched (es.wikipedia, "Juan Arias de Saavedra"): John II granted him the
+# office of alfaqueque mayor de Castilla in 1439 and his son Fernando held it
+# after him. The two pages disagree on when the office began; the text names
+# the 1439 grant only.
+# From memory, not fetched: that Murcia and Jerez defended their own
+# alfaqueques against the Saavedra, and that the office was abolished in 1620.
+# The first is why the towns dislike it (the choice the Partidas gave to
+# twelve townsmen went to a frontier lord); the second is not used.
+# The gate is the frontier itself: with no Muslim neighbour there is nobody
+# to ransom from, and the office withered after 1492.
+# casualty_pop_losses: the men a campaign loses are not all dead, and the
+# ones in the pens of Granada come home when somebody is paid to fetch them.
+# Unpaid, a man who crosses the frontier freely and speaks both languages
+# sells what he sees, and the villages stop believing anyone will come.
+cas_alfaqueques_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	# a handful of sworn men and their safe conducts, no office and no clerks:
+	# vanilla's light multiplier (0.003, the Bayt al-Mal and the Byzantine set)
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.003
+	}
+
+	potential = {
+		has_or_had_tag = CAS
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		any_neighbor_country = { religion.group = religion_group:muslim }
+	}
+
+	estates_that_like = {
+		nobles_estate
+		peasants_estate
+	}
+	estates_that_dislike = {
+		burghers_estate
+	}
+
+	neutral_modifier = {
+		spy_network_construction = 0.1
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		casualty_pop_losses = -0.05
+		improve_relation_impact = 0.1
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		counter_espionage = -0.2
+		peasants_estate_target_satisfaction = small_permanent_target_satisfaction_penalty
+	}
+}
+
+# 3. Consulado de Burgos
+# Fetched (es.wikipedia, "Consulado de Burgos"): created by Isabella I in
+# 1494 on the model of the Consulate of the Sea, in the place of the
+# Hermandad de las Marismas of 1296; an association of merchants that
+# controlled the export of wool and the import of cloth; its members bought
+# the clip from the owners of the Mesta's flocks, sent it to Laredo or Bilbao
+# for Flanders, and held a monopoly on Flemish textiles entering Castile; it
+# was preceded by the Universidad de Mercaderes of the city.
+# From memory, not fetched: the consuls' own court for suits between
+# merchants, the rival consulate of Bilbao of 1511, and the petition of the
+# Cortes of 1462 that a third of the clip be kept for Castilian looms.
+# The neglected side is that last quarrel: a guild that lives by selling raw
+# wool abroad and Flemish cloth at home has no use for a Castilian weaver.
+# Vanilla's cloth decision (cas_spanish_cloth_industry_decision) is the other
+# side of the same argument.
+# Gate: the city itself. The Hermandad de las Marismas stays vanilla's
+# building; this is the inland guild that took its place.
+cas_consulado_de_burgos_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = CAS
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		owns = location:burgos
+	}
+
+	estates_that_like = {
+		burghers_estate
+		nobles_estate
+	}
+	estates_that_dislike = {
+		peasants_estate
+	}
+
+	neutral_modifier = {
+		global_merchant_capacity_modifier = 0.05
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		export_efficiency = small_trade_efficiency_bonus
+		merchant_maintenance_efficiency = 0.1
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		global_fine_cloth_output_modifier = -0.1
+		estate_enrichment = 0.1
+	}
+}
+
+# 4. Guardas de Castilla
+# Fetched (es.wikipedia, "Guardias Viejas de Castilla"): created by decree in
+# May 1493 as 25 companies of 100, three quarters men-at-arms and one quarter
+# jinetes riding in the Moorish style; 19 companies in 1499 and 36 by 1506;
+# cut after Pavia in 1525 from about 2,900 to about 1,900 men; an ordinance
+# of 13 June 1551 for their government and pay; quartered in Castile,
+# Navarre, Granada and Roussillon; dissolved 28 September 1704.
+# From memory, not fetched: the veedores and contadores del sueldo who took
+# the musters, the lodging of the companies in villages, and the captains
+# who drew pay for men who were not there (plazas muertas). The standing
+# guards of John II and Henry IV before 1493 are from memory too, and are why
+# the office has no date gate.
+# Vanilla's age 3 advance cas_lanzas_de_castilla unlocks the unit these
+# companies were; with it the funded side counts half as much again. The
+# values are written for that case (0.075 and -0.15 at most).
+cas_guardas_de_castilla_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = CAS
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {}
+
+	estates_that_like = {
+		crown_estate
+		nobles_estate
+	}
+	estates_that_dislike = {
+		peasants_estate
+	}
+
+	neutral_modifier = {
+		monthly_army_tradition = 0.02
+	}
+
+	positive_modifier = {
+		scale = {
+			value = scope:maintenance
+			if = {
+				limit = { root ?= { has_advance = cas_lanzas_de_castilla } }
+				multiply = 1.5
+			}
+		}
+		army_light_cavalry_power = 0.05
+		army_heavy_cavalry_maintenance_cost_modifier = -0.1
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		army_maintenance_efficiency = -0.15
+		discipline = -0.025
+	}
+}

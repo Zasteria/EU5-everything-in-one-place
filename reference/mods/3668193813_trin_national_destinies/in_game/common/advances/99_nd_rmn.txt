@@ -91,9 +91,9 @@ nd_rmn_danubian_trade = {
 	requires = merchants_and_trade
 	icon = merchants_and_trade
 	unlock_building = nd_rmn_han_comercial
-	trade_land_efficiency = 0.025
+	trade_range_modifier = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -175,9 +175,9 @@ nd_rmn_calarasi_tradition = {
 	requires = diplomatic_training
 	icon = diplomatic_training
 	unlock_unit = a_nd_rmn_calarasi
-	army_light_cavalry_power = 0.2
+	army_light_cavalry_power = 0.15
 
-	army_heavy_cavalry_power = 0.2
+	army_heavy_cavalry_power = 0.1
 
 	ai_weight = {
 		add = 50
@@ -284,7 +284,7 @@ nd_rmn_pravila = {
 	potential = { has_or_had_tag = RMN }
 	requires = gov_reform_reformation_a
 	icon = gov_reform_reformation_a
-	country_cabinet_efficiency = 0.1
+	change_policy_cost_modifier = -0.1
 	global_monthly_control = 0.002
 }
 
@@ -378,7 +378,7 @@ nd_rmn_war_of_independence = {
 	icon = napoleonic_warfare
 	unlock_unit = a_nd_rmn_dorobanti
 	unlock_levy = levy_nd_rmn_dorobanti
-	land_morale_modifier = 0.15
+	land_morale_modifier = 0.1
 	ai_weight = {
 		add = 50
 	}
@@ -411,7 +411,7 @@ nd_rmn_oil_industry = {
 	requires = industrialization_advance
 	icon = industrialization_advance
 	unlock_building = nd_rmn_rafinarie
-	global_production_efficiency = 0.075
+	global_production_efficiency = 0.0375
 }
 
 # Bucharest: Paris of the East
@@ -431,10 +431,8 @@ nd_rmn_modern_army = {
 	requires = napoleonic_warfare
 	icon = napoleonic_warfare
 	discipline = 0.05
-	army_light_infantry_power = 0.1
-
 	army_heavy_infantry_power = 0.1
-
+	train_general_cost_modifier = -0.1
 }
 
 # ===== DESTINY TREE =====
@@ -445,7 +443,7 @@ nd_rmn_destiny = {
 	potential = { has_or_had_tag = RMN has_variable = nd_rmn_formed has_game_rule = nd_destinies_enabled }
 	allow = { stability >= 75 }
 	icon = crown_power_advance_renaissance
-	global_devastation_recovery = 0.005
+	global_devastation_recovery = 0.0025
 }
 
 # Path A: Shield of Christendom: military frontier
@@ -497,7 +495,7 @@ nd_rmn_dest_restorer = {
 	unlock_building = nd_rmn_citadela_crestina
 	peace_offer_negotiation_power = 0.1
 	global_levy_size_modifier = 0.1
-	prestige_from_land_battle = 0.25
+	prestige_from_land_battle = 0.1
 }
 
 # Path B: Granary of Europe: economic prosperity
@@ -527,7 +525,15 @@ nd_rmn_dest_breadbasket = {
 	allow = {
 		owns = location:ruse
 		gold >= 2000
-		total_development >= 2000
+		# Braila was Wallachia's grain port on the Danube (a free port from 1836).
+		# 7.5 in 1337 (development_estimate.py --explain braila), half as much again.
+		custom_tooltip = {
+			text = nd_rmn_dest_braila_developed_tt
+			location:braila = {
+				owner ?= root
+				development >= 11
+			}
+		}
 	}
 	icon = global_trade_advance
 	global_merchant_power = 0.05
@@ -542,7 +548,15 @@ nd_rmn_dest_paris = {
 	allow = {
 		owns = location:varna
 		gold >= 3000
-		total_development >= 3000
+		# Bucharest grew from a market town into the capital of 1659 and the
+		# "Little Paris" of the 1800s. 20 in 1337 (development_estimate.py), doubled.
+		custom_tooltip = {
+			text = nd_rmn_dest_bucharest_developed_tt
+			location:bucharest = {
+				owner ?= root
+				development >= 40
+			}
+		}
 	}
 	icon = global_trade_advance
 	unlock_building = nd_rmn_bursa_comerciala

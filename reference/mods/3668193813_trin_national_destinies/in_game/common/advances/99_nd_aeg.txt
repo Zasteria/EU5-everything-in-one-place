@@ -82,7 +82,7 @@ nd_aeg_khan_al_khalili = {
 	potential = { has_or_had_tag = AEG }
 	requires = merchants_and_trade
 	unlock_building = nd_aeg_khalili_bazaar
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 }
 
 # Mamluk Lancer Revival: heavy slave-aristocracy cavalry restored
@@ -106,7 +106,7 @@ nd_aeg_damascus_silk = {
 	potential = { has_or_had_tag = AEG }
 	requires = vibrant_court_advance
 	global_silk_output_modifier = 0.1
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }
 
 # Hajj Custodianship: Cairo's sultans as guardians of Mecca and Medina
@@ -153,7 +153,7 @@ nd_aeg_red_sea_trade = {
 	potential = { has_or_had_tag = AEG }
 	requires = merchant_power_from_maritime_discovery_advance
 	unlock_production_method = nd_aeg_khalili_red_sea_imports
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 	global_merchant_power = 0.1
 	global_trade_center_power = 0.05
 }
@@ -165,7 +165,7 @@ nd_aeg_nubian_gold = {
 	potential = { has_or_had_tag = AEG }
 	requires = regulate_court_procedures
 	unlock_building = nd_aeg_nubian_mint
-	tax_income_efficiency = 0.05
+	tax_income_efficiency = 0.03
 }
 
 # Coptic Monastic Continuity: desert monasteries integrated into state
@@ -269,7 +269,7 @@ nd_aeg_pharaonic_administration = {
 	potential = { has_or_had_tag = AEG }
 	requires = absolute_rulership
 	country_cabinet_efficiency = 0.1
-	tax_income_efficiency = 0.05
+	tax_income_efficiency = 0.03
 	global_crown_estate_power = 0.1
 }
 
@@ -291,7 +291,7 @@ nd_aeg_nile_state_irrigation = {
 	potential = { has_or_had_tag = AEG }
 	requires = construction_speed_absolutism
 	global_construction_speed = 0.1
-	global_monthly_development = 0.002
+	global_monthly_development = 0.001
 	global_raw_material_output = 0.05
 }
 
@@ -327,7 +327,7 @@ nd_aeg_suez_ambitions = {
 	icon = urbanization
 	potential = { has_or_had_tag = AEG }
 	requires = urbanization
-	trade_sea_efficiency = 0.05
+	trade_sea_efficiency = 0.2
 	global_merchant_power = 0.1
 	global_construction_speed = 0.1
 }
@@ -353,7 +353,7 @@ nd_aeg_industrial_spring = {
 	potential = { has_or_had_tag = AEG }
 	requires = industrialization_advance
 	global_cotton_output_modifier = 0.15
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 	trade_income = 0.1
 }
 
@@ -393,12 +393,26 @@ nd_aeg_dest_maghreb_reach = {
 		}
 		owns_or_non_sovereign_subject_owns = location:tripoli
 		owns_or_non_sovereign_subject_owns = location:kairouan
-		army_size >= 30
+		# The coast between Cyrenaica and Ifriqiya held, and not its two
+		# cities alone: half of the Tripoli area (24 locations, none the
+		# Mamluks or their vassals hold in 1337).
+		custom_tooltip = {
+			text = nd_aeg_dest_tripolitania_share_tt
+			area:tripolitania_area = {
+				any_location_in_area = {
+					percent >= 0.5
+					owner ?= root
+				}
+			}
+		}
 	}
 	icon = imperial_ambitions
 	land_morale_recovery = 0.02
 	levy_combat_efficiency_modifier = 0.10
-	max_attrition = 0.50
+	# Armies kept in the field across the Libyan desert are resupplied from
+	# the Nile. (This line was `max_attrition = 0.50`, a location modifier
+	# that does nothing in a country advance and would have been a penalty.)
+	army_reinforce_efficiency = 0.1
 }
 
 # Stage 2 (Mesopotamian Eastward Push): claim the lands east of the Levant
@@ -407,10 +421,27 @@ nd_aeg_dest_mesopotamian_push = {
 	requires = nd_aeg_dest_maghreb_reach
 	potential = { has_or_had_tag = AEG has_variable = nd_aeg_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		owns_or_non_sovereign_subject_owns = location:baghdad
 		owns_or_non_sovereign_subject_owns = location:mosul
-		total_development >= 6000
-		army_size >= 50
+		# Baghdad, the city Hulagu broke in 1258, held and rebuilt: half again
+		# above its 1337 value of 18.
+		custom_tooltip = {
+			text = nd_aeg_dest_baghdad_developed_tt
+			location:baghdad = {
+				owner ?= root
+				development >= 27
+			}
+		}
+		# The Tigris valley as a province: half of Arab Iraq (54 locations,
+		# four of them a Mamluk vassal's in 1337, which do not count here).
+		custom_tooltip = {
+			text = nd_aeg_dest_iraq_share_tt
+			area:iraq_arabi_area = {
+				any_location_in_area = {
+					percent >= 0.5
+					owner ?= root
+				}
+			}
+		}
 	}
 	icon = feudalism_advance
 	land_unit_attrition = -0.10
@@ -426,9 +457,21 @@ nd_aeg_dest_pharaonic_empire = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:gonder
 		owns_or_non_sovereign_subject_owns = location:harar
-		army_size >= 75
+		# The Horn frontier is its ports: Massawa on the Red Sea and Zeila
+		# on the Gulf of Aden, neither held by the Mamluks in 1337.
+		owns_or_non_sovereign_subject_owns = location:massawa
+		owns_or_non_sovereign_subject_owns = location:zeila
 		prestige >= 75
-		total_development >= 8000
+		# The highlands behind Gondar and not the city alone: half of them.
+		custom_tooltip = {
+			text = nd_aeg_dest_ethiopia_share_tt
+			area:central_ethiopia_area = {
+				any_location_in_area = {
+					percent >= 0.5
+					owner ?= root
+				}
+			}
+		}
 	}
 	icon = absolutism_agressive_advance
 	unlock_building = nd_aeg_pharaonic_obelisk
@@ -451,11 +494,20 @@ nd_aeg_dest_cairo_culture = {
 			has_variable = nd_aeg_path_b
 		}
 		has_embraced_institution = institution:printing_press
-		own_entire_province = province_definition:alexandria_province
+		# Cairo grown a quarter above its 1337 value of 32. (This line asked
+		# for all of Alexandria province, which the Mamluks hold on day one
+		# and which lists a lake nobody can own.)
+		custom_tooltip = {
+			text = nd_aeg_dest_cairo_developed_tt
+			location:cairo = {
+				owner ?= root
+				development >= 40
+			}
+		}
 		gold >= 1000
 	}
 	icon = patron_of_art
-	institution_growth = 0.10
+	institution_growth = 0.05
 	cultural_influence_modifier = 0.10
 }
 
@@ -465,7 +517,18 @@ nd_aeg_dest_azhar_world = {
 	requires = nd_aeg_dest_cairo_culture
 	potential = { has_or_had_tag = AEG has_variable = nd_aeg_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		has_embraced_institution = institution:scientific_revolution
+		# No later institution: the civilizational path may not wait four ages
+		# longer than the path of conquest. Al-Azhar's standing is measured by
+		# its city, grown by half from the 1337 value of 32, and by the court's
+		# name abroad.
+		custom_tooltip = {
+			text = nd_aeg_dest_cairo_academy_tt
+			location:cairo = {
+				owner ?= root
+				development >= 48
+			}
+		}
+		prestige >= 50
 		capital = {
 			market = {
 				OR = {
@@ -474,7 +537,6 @@ nd_aeg_dest_azhar_world = {
 				}
 			}
 		}
-		total_development >= 6000
 	}
 	icon = enlightened_court
 	max_diplomats = 1
@@ -488,11 +550,20 @@ nd_aeg_dest_suez_canal = {
 	requires = nd_aeg_dest_azhar_world
 	potential = { has_or_had_tag = AEG has_variable = nd_aeg_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		has_embraced_institution = institution:global_trade
-		owns_or_non_sovereign_subject_owns = location:suez
+		# The sea road round Africa is what the canal answers: the New World
+		# institution of the age of discovery, not the later global trade.
+		has_embraced_institution = institution:new_world
+		# The Mamluks hold Suez on day one, so the deed is the port itself:
+		# doubled from its 1337 value of 21.
+		custom_tooltip = {
+			text = nd_aeg_dest_suez_developed_tt
+			location:suez = {
+				owner ?= root
+				development >= 42
+			}
+		}
 		gold >= 3000
 		prestige >= 75
-		total_development >= 8000
 	}
 	icon = urbanization
 	unlock_building = nd_aeg_suez_canal

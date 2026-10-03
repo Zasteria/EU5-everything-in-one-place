@@ -1,0 +1,326 @@
+﻿# ============================================================================
+# Castile (CAS): custom unit types
+# National Destinies mod
+# ============================================================================
+#
+# What is NOT here, because somebody already fields it:
+#   vanilla: the Lanzas de Castilla (the men at arms of the Guardas, age 3),
+#   the Tercio, the Iberian caravels and galleons, and, reserved for the
+#   Iberian DLC, the Iberian Jinetes and the Caballeria de Cuantia
+#   (unit_types/1_uniques_for_age_1_traditions.txt, estate privilege
+#   cas_regimiento). Neither DLC unit is imitated here.
+#   the mod's Spain (99_nd_spa.txt): rodeleros, jinetes, its own tercio, the
+#   Galera Real, the galleon and the marine infantry.
+#
+# What is here is the kingdom's own muster roll from the frontier councils to
+# the provincial regiments: one infantry levy per age, the royal vassals as
+# the noble levy of age 1, and four units a player recruits.
+#
+# Every stat under copy_from is a DELTA added to the template and then to the
+# unit category's own value (common/levies/readme.txt: "EVERY STAT LINE IS
+# ADDITIVE, NEVER AN ASSIGNMENT"). Template totals are quoted for the reader
+# only; none of them is written in a block.
+#
+# The infantry levy is one unit per age because the engine picks the
+# strongest levy again every age and upgrades_to does nothing on a levy. The
+# noble levy has no successor on purpose: from 1493 the Crown paid standing
+# companies instead of stipends, and those are vanilla's Lanzas de Castilla.
+
+# ----------------------------------------------------------------------------
+# Age 1: Milicia Concejil (levy heavy infantry)
+# ----------------------------------------------------------------------------
+# The host of a frontier council: every householder of the town and its
+# villages, mustered by parish behind the council's banner, with lance,
+# shield and iron cap as the fuero lists them. Steady when it fights for its
+# own charter, slow to form up and slower to march away from the harvest.
+# Template a_age_1_traditions_heavy_infantry: max_strength 0.5, combat_power 1.
+a_nd_cas_milicia_concejil = {
+	is_special = yes
+	category = army_heavy_infantry
+	copy_from = a_age_1_traditions_heavy_infantry
+	buildable = no
+	levy = yes
+
+	morale_damage_taken = -0.1
+	strength_damage_taken = -0.05
+	combat_speed = -0.5
+
+	country_potential = {
+		has_or_had_tag = CAS
+	}
+
+	gfx_tags = { medium_tag }
+}
+
+# ----------------------------------------------------------------------------
+# Age 1: Vasallos del Rey (levy heavy cavalry)
+# ----------------------------------------------------------------------------
+# Knights and squires who draw a yearly stipend from the royal rents and owe
+# a fixed number of lances for it, each lance a man in harness on a covered
+# horse. Paid men serve longer and ride better mounts than a baron's
+# following, and the king's book says how many must appear. Armoured as
+# vanilla's mailed knights are (the two damage lines); the paid man's edge is
+# his horse and his practice (combat_power), and his harness is the heavier
+# for it (movement_speed).
+# Template a_age_1_traditions_heavy_cavalry: max_strength 0.2, combat_power 2.6.
+a_nd_cas_vasallos_del_rey = {
+	is_special = yes
+	category = army_heavy_cavalry
+	copy_from = a_age_1_traditions_heavy_cavalry
+	buildable = no
+	levy = yes
+
+	strength_damage_taken = -0.25
+	morale_damage_taken = -0.25
+	combat_power = 0.3
+	initiative = 1
+	movement_speed = -0.25
+
+	combat = {
+		grasslands = 0.1
+		wetlands = -0.1
+	}
+
+	country_potential = {
+		has_or_had_tag = CAS
+	}
+
+	gfx_tags = { heavy_tag }
+}
+
+# ----------------------------------------------------------------------------
+# Age 2: Ballesteros de Nomina (levy light infantry)
+# ----------------------------------------------------------------------------
+# Crossbowmen on the town's roll: named men excused from the common taxes on
+# condition that they keep a crossbow, a quiver and a store of bolts and show
+# them at the muster. One city counted fifteen hundred of them at a single review. They
+# shoot hard and reload slowly.
+# Template a_age_2_renaissance_light_infantry: max_strength 1, combat_power 1.
+a_nd_cas_ballesteros_de_nomina = {
+	is_special = yes
+	category = army_light_infantry
+	copy_from = a_age_2_renaissance_light_infantry
+	buildable = no
+	levy = yes
+
+	max_strength = 0.1
+	strength_damage_done = 0.1
+	morale_damage_done = 0.05
+	initiative = 1
+	combat_speed = -0.5
+
+	country_potential = {
+		has_or_had_tag = CAS
+	}
+
+	gfx_tags = { crossbow_tag light_tag }
+}
+
+# ----------------------------------------------------------------------------
+# Age 2: Galera de Castilla (buildable galley)
+# ----------------------------------------------------------------------------
+# The king's galleys from the yards of Seville, rowed out through the Strait
+# and up to the Channel. At La Rochelle in 1372 they waited for the ebb, then
+# burned an English fleet whose deeper ships sat fast in the shallows. Built
+# to carry crossbowmen and fire, and to cross open water; less handy than a
+# Mediterranean galley at closing a harbour.
+# Template n_age_2_renaissance_galley: speed 4, hull 7, cannons 9, crew 0.06,
+# blockade 0.2.
+n_nd_cas_galera_de_castilla = {
+	is_special = yes
+	category = navy_galley
+	copy_from = n_age_2_renaissance_galley
+	upgrades_to = n_war_galley
+	buildable = yes
+
+	hull_size = 1
+	cannons = 1
+	blockade_capacity = -0.05
+
+	country_potential = {
+		has_or_had_tag = CAS
+	}
+
+	gfx_tags = { mediterranean_galley_tag }
+}
+
+# ----------------------------------------------------------------------------
+# Age 3: Espingarderos (buildable light infantry)
+# ----------------------------------------------------------------------------
+# Handgunners of the war of Granada, hired by the hundred from the towns to
+# shoot defenders off a wall while the bombards worked. The espingarda kills
+# through a shield and frightens horses; it is slow to load and useless in
+# the rain.
+# Template a_age_3_discovery_light_infantry: max_strength 1.5, combat_power 1.
+a_nd_cas_espingarderos = {
+	is_special = yes
+	category = army_light_infantry
+	copy_from = a_age_3_discovery_light_infantry
+	upgrades_to = a_arquebusiers
+	buildable = yes
+
+	strength_damage_done = 0.1
+	morale_damage_done = 0.05
+	initiative = -2
+	combat_speed = -0.5
+
+	country_potential = {
+		has_or_had_tag = CAS
+	}
+
+	gfx_tags = { musket_tag light_tag }
+}
+
+# ----------------------------------------------------------------------------
+# Age 3: Lombardas (buildable artillery)
+# ----------------------------------------------------------------------------
+# The siege train that took Ronda, Malaga and Baza: wrought iron bombards
+# throwing stone balls, hauled over the sierra on roads cut for them by
+# thousands of pioneers. Nothing stood long in front of them and nothing
+# moved more slowly.
+# Template a_age_3_discovery_artillery: max_strength 0.6, combat_power 4,
+# bombard_efficiency 0.15, artillery_barrage 4.
+a_nd_cas_lombardas = {
+	is_special = yes
+	category = army_artillery
+	copy_from = a_age_3_discovery_artillery
+	upgrades_to = a_chambered_cannon
+	buildable = yes
+
+	bombard_efficiency = 0.05
+	movement_speed = -0.25
+
+	country_potential = {
+		has_or_had_tag = CAS
+	}
+}
+
+# ----------------------------------------------------------------------------
+# Age 3: Peones de la Ordenanza (levy heavy infantry)
+# ----------------------------------------------------------------------------
+# The foot of the ordinances of 1496 and 1503: one man in twelve kept on the
+# roll with his arms, a third of them with the long pike, a third with sword
+# and shield and a third with crossbow or espingarda. Drilled a little and
+# paid only when called, they hold a line better than a village levy.
+# Successor of the levies of ages 1 and 2.
+# Template a_age_3_discovery_heavy_infantry: max_strength 1.5, combat_power 1.
+a_nd_cas_peones_de_la_ordenanza = {
+	is_special = yes
+	category = army_heavy_infantry
+	copy_from = a_age_3_discovery_heavy_infantry
+	buildable = no
+	levy = yes
+
+	morale_damage_taken = -0.05
+	movement_speed = -0.25
+
+	country_potential = {
+		has_or_had_tag = CAS
+	}
+
+	gfx_tags = { medium_tag }
+}
+
+# ----------------------------------------------------------------------------
+# Age 4: Milicia General (levy heavy infantry)
+# ----------------------------------------------------------------------------
+# The general militia of the kingdom, ordered in 1598 and again in 1609: one
+# householder in ten enrolled under local captains, pike and arquebus, in
+# return for exemptions from billeting and from arrest for debt. Raised to
+# guard the coasts while the tercios were abroad. Successor of the levy of
+# age 3.
+# Template a_age_4_reformation_heavy_infantry: max_strength 2, combat_power 1.5.
+a_nd_cas_milicia_general = {
+	is_special = yes
+	category = army_heavy_infantry
+	copy_from = a_age_4_reformation_heavy_infantry
+	buildable = no
+	levy = yes
+
+	morale_damage_taken = -0.05
+	movement_speed = -0.25
+
+	country_potential = {
+		has_or_had_tag = CAS
+	}
+
+	gfx_tags = { musket_tag medium_tag }
+}
+
+# ----------------------------------------------------------------------------
+# Age 5: Milicias Provinciales (levy heavy infantry)
+# ----------------------------------------------------------------------------
+# The thirty three provincial regiments of the ordinance of January 1734,
+# raised by lot in the provinces of the Crown of Castile and in no other
+# realm of the monarchy. Each province clothed and armed its own battalion;
+# the men drilled a few days a year and went home. Successor of the levy of
+# age 4.
+# Template a_age_5_absolutism_heavy_infantry: max_strength 2.5, combat_power 2.25.
+a_nd_cas_milicias_provinciales = {
+	is_special = yes
+	category = army_heavy_infantry
+	copy_from = a_age_5_absolutism_heavy_infantry
+	buildable = no
+	levy = yes
+
+	morale_damage_taken = -0.05
+	movement_speed = -0.25
+
+	country_potential = {
+		has_or_had_tag = CAS
+	}
+
+	gfx_tags = { musket_tag medium_tag }
+}
+
+# ----------------------------------------------------------------------------
+# Age 5: Guardias de Infanteria (buildable heavy infantry)
+# ----------------------------------------------------------------------------
+# The foot guards raised in 1704 for the new dynasty: picked men, noble
+# officers, double pay, and the right to stand on the right of the line.
+# They do not give ground and they cost what a household regiment costs to
+# feed and clothe.
+# Template a_age_5_absolutism_heavy_infantry: max_strength 2.5, combat_power 2.25.
+a_nd_cas_guardias_de_infanteria = {
+	is_special = yes
+	category = army_heavy_infantry
+	copy_from = a_age_5_absolutism_heavy_infantry
+	upgrades_to = a_fusiliers
+	buildable = yes
+
+	morale_damage_taken = -0.1
+	morale_damage_done = 0.1
+	supply_weight = 0.25
+
+	country_potential = {
+		has_or_had_tag = CAS
+	}
+
+	gfx_tags = { musket_tag medium_tag }
+}
+
+# ----------------------------------------------------------------------------
+# Age 6: Granaderos Provinciales (levy heavy infantry)
+# ----------------------------------------------------------------------------
+# The reform of 1766 raised the provincial regiments to more than forty and drew
+# their grenadier companies together into standing divisions that served
+# beside the line. The tallest men of each province, kept under arms long
+# enough to be soldiers. Successor of the levy of age 5.
+# Template a_age_6_revolutions_heavy_infantry: max_strength 3, combat_power 3.
+a_nd_cas_granaderos_provinciales = {
+	is_special = yes
+	category = army_heavy_infantry
+	copy_from = a_age_6_revolutions_heavy_infantry
+	buildable = no
+	levy = yes
+
+	strength_damage_done = 0.05
+	morale_damage_taken = -0.05
+	movement_speed = -0.25
+
+	country_potential = {
+		has_or_had_tag = CAS
+	}
+
+	gfx_tags = { musket_tag medium_tag }
+}

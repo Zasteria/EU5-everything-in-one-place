@@ -2,7 +2,11 @@
 # Air (AIR): Custom Building Types
 ##############################
 
-### Caravanserai: trans-Saharan trade waystation ###
+### Red Stone Merchant House: the house of a long-distance trader ###
+# The key keeps its first name. The building was a caravan waystation until
+# 2026-10-02; vanilla gives every Amazigh country that one already
+# (caravan_stop, advance west_african_caravan_stop_advance), so it now tells
+# of the resident merchants of Takedda and Agadez. Effects unchanged.
 nd_air_caravanserai = {
 	is_special = yes
 	is_foreign = no
@@ -34,18 +38,65 @@ nd_air_caravanserai = {
 			salt = 0.05
 			category = building_maintenance
 		}
-
-		nd_air_camel_breeding = {
-			livestock = 0.2
-			wheat = 0.1
-			salt = 0.05
-			category = building_maintenance
-		}
 	}
 	construction_demand = caravanserai_building_construction
 }
 
+### Mehari Stud: riding camels bred in the valleys of the massif ###
+# Produces camels, a raw good, so it is bound to a raw good: land whose own
+# good is livestock. Hills and plateau only: the stud belongs to the massif
+# and its valleys (Assode, Agadez, Kalfou, Garadoume), where the herds are
+# kept between caravans. No vanilla building makes camels, and no location
+# of the Air has them as its raw good (location_templates.txt); camels in
+# the market are what vanilla's camelry asks for (unit_triggers.txt:502).
+# Beside the Tuareg formable's salt cure grounds (nd_trg_salt_cure_grounds,
+# arid salt or livestock land, pack and breeding herds) this stays the
+# highland stud of riding camels: another place and another animal.
+nd_air_mehari_stud = {
+	is_special = yes
+	is_foreign = no
+	pop_type = tribesmen
+	max_levels = 1
+	employment_size = rural_peasant_produce_employment
+	category = rgo_building_category
+	rural_settlement = yes
+	town = no
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_air_camel_mastery
+	}
+
+	location_potential = {
+		raw_material = goods:livestock
+		OR = {
+			topography = hills
+			topography = plateau
+			topography = mountains
+		}
+	}
+
+	unique_production_methods = {
+		nd_air_camel_breeding = {
+			millet = 0.4
+			salt = 0.05
+			produced = camels
+			output = 0.24
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = farm_constructions
+}
+
 ### Inadan Forge: Tuareg smithy producing takouba swords and silver jewelry ###
+# The leather method (key says leather_trade) is told as the sandals and
+# leather boxes of Agadez: the dyed bags and saddle covers are the Tuareg
+# formable's own (nd_trg_dyed_leatherwork), and a country that formed Air
+# and then the Tuareg holds both.
 nd_air_inadan_forge = {
 	is_special = yes
 	is_foreign = no
@@ -87,6 +138,16 @@ nd_air_inadan_forge = {
 			copper = 0.1
 			produced = jewelry
 			output = 0.36
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+
+		nd_air_leather_trade = {
+			livestock = 0.4
+			dyes = 0.1
+			tools = 0.05
+			produced = leather
+			output = 0.46
 			category = guild_input
 			debug_max_profit = guild_profit_margin
 		}
@@ -163,6 +224,18 @@ nd_air_indigo_dyeworks = {
 			category = guild_input
 			debug_max_profit = guild_profit_margin
 		}
+
+		# Natron from the salt pans in the vat, as vanilla's fine cloth guild
+		# takes alum: less dye for each length of cloth.
+		nd_air_salt_processing = {
+			cloth = 0.2
+			dyes = 0.2
+			salt = 0.05
+			produced = fine_cloth
+			output = 0.32
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
 	}
 	construction_demand = guild_construction
 }
@@ -196,13 +269,6 @@ nd_air_salt_depot = {
 			salt = 0.15
 			livestock = 0.1
 			tools = 0.05
-			category = building_maintenance
-		}
-
-		nd_air_salt_processing = {
-			salt = 0.15
-			livestock = 0.05
-			pottery = 0.05
 			category = building_maintenance
 		}
 	}
@@ -313,13 +379,6 @@ nd_air_trade_exchange = {
 		nd_air_exchange_upkeep = {
 			stone = 0.15
 			paper = 0.1
-			tools = 0.05
-			category = building_maintenance
-		}
-
-		nd_air_leather_trade = {
-			livestock = 0.15
-			dyes = 0.1
 			tools = 0.05
 			category = building_maintenance
 		}

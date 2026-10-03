@@ -1,0 +1,315 @@
+﻿# Valencia (VAL): bureaucracies
+# National Destinies mod
+#
+# Read before choosing subjects (EU5 1.4):
+#   vanilla bureaucracies Valencia can hold (bureaucracies/generic.txt, ten of
+#     them, from Confessionalism or the age 4 advance): a board of revenue, a
+#     privy council, an audit bureau, a colonial office, an admiralty, a
+#     foreign ministry, a trade commission, a war council, an ordnance board
+#     and a commissariat. None is repeated by name or by subject, so no
+#     Mestre Racional (an auditor, Valencia's own from 1419) and no council.
+#   vanilla names spa_council_of_aragon_bureaucracy for a release to come.
+#   vanilla Valencia elsewhere: the Furs are a town right
+#     (town_rights/15_iberia.txt:216), the lieutenancy an advance with a
+#     building (so no viceroy), the Consulate of the Sea a law, the Germanies,
+#     the silk guild and the Real Societat Economica its tag advances.
+#   the mod's Catalonia (99_nd_cat.txt), Aragonese Empire (99_nd_cda.txt) and
+#     Aragon (99_nd_ara.txt): the Consell de Cent, the Batllia General, the
+#     vegueries, the Tribunal de Contrafaccions, the royal chancery, the
+#     Generalitat, the Consolat de Mar, the Sommaria, the Real Audiencia and
+#     three Aragonese courts. So no Generalitat of Valencia, no Batlle
+#     General, no Audiencia of 1506, no Junta de Contrafurs, and no jurats
+#     and Consell General (the same city government as the Consell de Cent).
+#   this country's own tree (advances and building_types/99_nd_val.txt): the
+#     Tribunal de les Aigues and its Comuna de Regants, Montesa, the aljames,
+#     the Fabrica de Murs i Valls, the Centenar, the hospital, the coast
+#     guard, the settlement charters, the Col.legi de la Seda, the Cort Ducal.
+#     The Milicia Efectiva of 1597 is left out because the coast guard and
+#     five units already cover the kingdom in arms.
+#
+# What is left are four offices that were Valencian first or Valencian in
+# form, each with a different quarrel:
+# 1. Mustassaf: the city's inspector of weights, prices and streets.
+# 2. Pare d'Orfens: the judge who bound orphans and vagrants to masters.
+# 3. Lligallo: the herders' assembly of the northern mountains.
+# 4. Governacio: the king's governor and his lieutenants beyond the rivers.
+#
+# Estate alignment, on the road the files are written for (a Valencia
+# released from Aragon or formed by a small Catalan monarchy: nobles, clergy,
+# burghers and peasants all present): townsmen and common buyers against the
+# clergy; masters against the poor; herders against the lords; the crown
+# against lords and city alike.
+#
+# No government power key is granted: one road into the tag is a theocracy
+# (Andorra).
+#
+# Slots. Vanilla gives Valencia none on the day it forms (a capital grants one
+# only as a megalopolis, location_ranks/00_default.txt:50). The auto modifier
+# grants 2, half of these four. Vanilla adds one with the age 4 bureaucracy
+# advance and one in age 6, and from Confessionalism its ten generic offices
+# compete for the same slots.
+#
+# No cabinet seat and no character modifier. No key stands in both the funded
+# and the neglected block of one institution. All IDs are val_-prefixed (the
+# last definition of a key wins across files).
+
+# 1. Mustassaf
+# The Christian heir of the muhtasib. The office appears in Valencia soon
+# after the conquest of 1238, before any other town of the Crown had one;
+# Barcelona had its own from 1339 (ca.wikipedia, "Mostassaf"). In Valencia he
+# was chosen each year by lot among the citizens (es.wikipedia,
+# "Instituciones del Reino de Valencia": "Mustacaf", insaculacion). He
+# watched weights, measures and prices, the quality of food, the guilds'
+# work, the cleanliness of streets and the building rules (ca.wikipedia).
+# From memory, not fetched: the Llibre del Mustacaf of Valencia that other
+# towns copied, the end of the office in Valencia with the decree of 1707,
+# and that clerics disputed his right to fine them for what they sold, which
+# is why the clergy is the estate that dislikes him.
+# An office of the city of Valencia: it needs the city.
+# Funded, bread is sold at the posted price and full weight, and the market
+# is one the country round wants to come to. Unpaid, the inspector lives on
+# what sellers give him to look away: false measures, and spoiled stores.
+val_mustassaf_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = VAL
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		owns = location:valencia
+	}
+
+	estates_that_like = {
+		burghers_estate
+		peasants_estate
+	}
+	estates_that_dislike = {
+		clergy_estate
+	}
+
+	neutral_modifier = {
+		global_trade_center_power = 0.05
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		food_purchase_efficiency = 0.1
+		global_non_rural_monthly_prosperity = 0.001
+	}
+
+	# Both are keys where a positive value is the harm.
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		estate_enrichment = 0.2
+		global_food_decay = 0.005
+	}
+}
+
+# 2. Pare d'Orfens
+# On 6 March 1338 Peter the Ceremonious, at the city's request, recognised a
+# curator of orphans and of the destitute in Valencia; the name "pare dels
+# orfens" followed within the century, and in 1407 Martin the Humane made
+# him a judge of minors apart from the criminal justice. He placed orphans
+# and abandoned youths with masters as apprentices and servants, inspected
+# the contracts, and punished the idle with the whip and with expulsion.
+# From 1518 he could hold a minor's wages until majority or marriage. The
+# office spread to Castello (1386), Zaragoza (1475), Tudela (1527), Orihuela
+# (1553) and beyond, became venal and hereditary, was discredited when a
+# holder was convicted of fraud in 1760, and was suppressed by Charles IV in
+# December 1793 (es.wikipedia, "Padre de huerfanos"; ca.wikipedia, "Pare
+# d'orfes", gives 1337 and the pursuit of idlers and beggars).
+# The masters were the guildsmen, so the funded side reads vanilla's guild
+# privilege in the scale, as vanilla's Hisba reads its privilege
+# (bureaucracies/muslim.txt:91-94). Sized for that case: 0.12 and 0.0015
+# with formal guilds, 0.08 and 0.001 without.
+# Funded, the workshops fill with bound apprentices who become artisans.
+# Sold as a living, the office keeps the wages it holds and whips whoever
+# complains, and the poor learn to stay away from the towns.
+val_pare_d_orfens_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = VAL
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {}
+
+	estates_that_like = {
+		burghers_estate
+	}
+	estates_that_dislike = {
+		peasants_estate
+	}
+
+	neutral_modifier = {
+		global_pop_promotion_speed_modifier = 0.05
+	}
+
+	positive_modifier = {
+		scale = {
+			value = scope:maintenance
+			if = {
+				limit = { root ?= { has_estate_privilege = estate_privilege:formal_guilds } }
+				multiply = 1.5
+			}
+		}
+		global_burghers_city_desired_pop = 0.08
+		burghers_estate_satisfaction_recovery = 0.001
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		peasants_estate_target_satisfaction = medium_permanent_target_satisfaction_penalty
+		global_migration_attraction = -0.1
+	}
+}
+
+# 3. Lligallo
+# In 1271 James I allowed the men of Morella to hold a lligallo in their
+# district ("possitis facere ligallum in termino Morelle"): the assembly of
+# the herders, on a fixed day of the year, where every stray beast found in
+# the district was brought and given back to its owner, the statutes were
+# read and the officers chosen (es.wikipedia, "Ligallo"). The word and the
+# custom spread over the north of the kingdom and the lower Ebro. From
+# memory, not fetched: that Castello and other royal towns had their own,
+# that the lligallo judged quarrels between herders and tillers over the
+# drove roads, and that lords and the order of Montesa disputed the towns'
+# herds their free passage and pasture, which is why the nobles dislike it.
+# It is Morella's privilege: it needs Morella.
+# No location of the kingdom has wool or livestock as its raw good, so both
+# keys pay through sheep farms and feed the woollen mills of Alcoi in the
+# country's own tree.
+# An assembly once a year is a light office: upkeep 0.003, as vanilla's
+# Byzantine set and the Bayt al-Mal.
+# Unheld, nobody answers for a herd: it grazes the sown fields, strays are
+# kept by whoever finds them, and the hill villages settle it themselves.
+val_lligallo_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.003
+	}
+
+	potential = {
+		has_or_had_tag = VAL
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		owns = location:morella
+	}
+
+	estates_that_like = {
+		peasants_estate
+	}
+	estates_that_dislike = {
+		nobles_estate
+	}
+
+	neutral_modifier = {
+		global_wool_output_modifier = 0.05
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		global_livestock_output_modifier = 0.1
+		rural_migration_attraction = 0.1
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		global_monthly_food_modifier = -0.05
+		global_max_rural_control = -0.05
+	}
+}
+
+# 4. Governacio
+# The king's governor in the kingdom, the portantveus de general governador,
+# under the regime set by the reforms of 1344. Two governors: one in
+# Valencia, from the Catalan border to Xixona, with lieutenants beyond the
+# Uixo at Castello and beyond the Xuquer at Xativa, and one in Orihuela for
+# the land beyond Xixona. Their powers were of government and above all of
+# justice, and they could raise and lead a host; a governor had to be a
+# native of the kingdom. From the fifteenth century they stood under the
+# lieutenant general and from 1520 under the viceroy, and the Nueva Planta
+# of 1707 replaced them with corregidores (ca.wikipedia, "Governacio de
+# Valencia"; es.wikipedia, "Gobernaciones del Reino de Valencia" and
+# "Instituciones del Reino de Valencia"). From memory, not fetched: that the
+# governor's court took the cases of nobles and the truces of their feuds
+# (the bandos of the Centelles and the Vilaragut around 1400), and that the
+# jurats of Valencia fought his jurisdiction inside the city. Hence lords
+# and townsmen both dislike him.
+# This is not vanilla's lieutenancy (the viceroy, an advance and a building).
+# Funded, a judge of the king sits within reach of every valley, and the
+# south that was Murcian until 1304 is held to the kingdom. Unpaid, the
+# governor is one more chief of a faction, with the king's seal.
+val_governacio_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = VAL
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {}
+
+	estates_that_like = {
+		crown_estate
+	}
+	estates_that_dislike = {
+		nobles_estate
+		burghers_estate
+	}
+
+	neutral_modifier = {
+		global_distance_from_capital_speed_propagation = 0.05
+	}
+
+	# global_separatism is a key where a negative value is the benefit.
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		global_separatism = -0.05
+		stability_investment = 0.05
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		monthly_nobles_estate_rebel_growth = 0.01
+		monthly_political_influence_gain_modifier = -0.1
+	}
+}

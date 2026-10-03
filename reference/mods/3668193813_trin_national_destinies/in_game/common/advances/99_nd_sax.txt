@@ -27,9 +27,9 @@ nd_sax_trade_crossroads = {
 	requires = agriculture_advance
 	icon = lub_hanseatic_coins
 	global_merchant_power = 0.1
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.03
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -73,7 +73,7 @@ nd_sax_guldengroschen = {
 	potential = { has_or_had_tag = SAX }
 	requires = crown_power_advance_renaissance
 	icon = meissner_groschen
-	global_population_growth = 0.002
+	global_population_growth = 0.00025
 	monthly_inflation = -0.001
 }
 
@@ -168,7 +168,7 @@ nd_sax_gewandhaus_tradition = {
 	requires = global_trade_advance
 	icon = saxon_baroque
 	unlock_production_method = nd_sax_saxon_weaving
-	trade_income = 0.15
+	trade_income = 0.1
 }
 
 # === Age 5: Absolutism ===
@@ -235,7 +235,7 @@ nd_sax_constitutional_reforms = {
 	requires = rights_of_man
 	icon = retablissement
 	legislative_efficiency = 0.1
-	global_monthly_literacy = 0.025
+	global_monthly_literacy = 0.02
 }
 
 # Leipzig publishing capital: industrial printing upgrade
@@ -245,7 +245,7 @@ nd_sax_publishing_capital = {
 	requires = urbanization
 	icon = furstenschule
 	unlock_production_method = nd_sax_industrial_printing
-	global_institution_growth_modifier = 0.3
+	global_institution_growth_modifier = 0.2
 }
 
 # Saxon industrialization: textile and machinery
@@ -254,9 +254,9 @@ nd_sax_industrial_revolution = {
 	potential = { has_or_had_tag = SAX }
 	requires = industrialization_advance
 	icon = saxon_industrialization
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.03
+	trade_sea_efficiency = 0.1
 
 	global_construction_speed = 0.1
 }
@@ -295,9 +295,20 @@ nd_sax_dest_printing_revolution = {
 	age = age_1_traditions
 	requires = nd_sax_dest_reformation_cradle
 	potential = { has_or_had_tag = SAX has_variable = nd_sax_formed has_game_rule = nd_destinies_enabled }
+	# Leipzig is the place the presses built: its book fair passed
+	# Frankfurt's in titles from 1632, and the town's printers and publishers
+	# made it the centre of the German book trade. Its 1337 value is 25
+	# (scripts/development_estimate.py --explain leipzig); stage two asks for
+	# half as much again.
 	allow = {
 		has_embraced_institution = institution:printing_press
-		total_development >= 1500
+		custom_tooltip = {
+			text = nd_sax_dest_leipzig_developed_tt
+			location:leipzig = {
+				owner ?= root
+				development >= 38
+			}
+		}
 		prestige >= 50
 	}
 	icon = printing_press_advance
@@ -317,7 +328,7 @@ nd_sax_dest_enlightened_saxony = {
 	}
 	icon = imperial_ambitions
 	unlock_building = nd_sax_aufklarungsschule
-	global_devastation_recovery = 0.005
+	global_devastation_recovery = 0.0025
 	peace_offer_negotiation_power = 0.1
 	subject_loyalty = 5
 }
@@ -360,9 +371,24 @@ nd_sax_dest_european_splendor = {
 	age = age_1_traditions
 	requires = nd_sax_dest_northern_hegemony
 	potential = { has_or_had_tag = SAX has_variable = nd_sax_formed has_game_rule = nd_destinies_enabled }
+	# Dresden is the Florence on the Elbe itself: a residence town of a few
+	# thousand that Augustus the Strong and his son rebuilt in stone (the
+	# Zwinger 1710-1728, the Frauenkirche 1726-1743) into a city of over
+	# 60,000. Its 1337 value is 22 (scripts/development_estimate.py --explain
+	# dresden); stage three asks for twice that.
 	allow = {
 		owns = location:nuremberg
-		total_development >= 2000
+		custom_tooltip = {
+			text = nd_sax_dest_dresden_developed_tt
+			location:dresden = {
+				owner ?= root
+				development >= 44
+			}
+		}
+		# The stage is the reign of Augustus the Strong: it asks for the
+		# country's own advance of that reign (age 5), so that this path
+		# does not end four ages before the other.
+		has_advance = nd_sax_augustan_golden_age
 		gold >= 3000
 		prestige >= 75
 	}

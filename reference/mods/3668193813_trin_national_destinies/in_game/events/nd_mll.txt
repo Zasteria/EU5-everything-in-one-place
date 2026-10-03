@@ -1,0 +1,616 @@
+﻿namespace = nd_mll
+
+# Formation event. It reaches a country by two roads: from form_effect
+# (99_nd_mll.txt) for a Catalan country that took the islands and formed the
+# kingdom by the button, and from the four-yearly marker repair for the
+# Mallorca that is on the map from the first day and never pressed it. The
+# text speaks of a kingdom whose government is styled "the City and
+# Kingdom" and asks which of the two shall weigh more, which is true on
+# both roads; it names no former, no overlord and no conquest.
+nd_mll.1 = {
+	type = country_event
+	title = nd_mll.1.t
+	desc = nd_mll.1.d
+	outcome = neutral
+	# Once per COUNTRY, by its own guard variable. Not fire_only_once: that
+	# is once per campaign (events/readme.txt:62), so an AI that held the tag
+	# first would retire the popup for every later holder. Country variables
+	# die with the country, so a Mallorca that falls and rises again is asked
+	# again.
+	trigger = {
+		NOT = { has_variable = nd_mll_e1_done }
+	}
+	immediate = {
+		hidden_effect = { set_variable = nd_mll_e1_done }
+	}
+
+	# The City: the merchants and jurats of Ciutat de Mallorca govern the
+	# kingdom from inside the walls.
+	option = {
+		name = nd_mll.1.a
+		add_country_modifier = {
+			modifier = nd_mll_ciutat_e_regne
+			years = 20
+			mode = add_and_extend
+		}
+		change_societal_value = {
+			type = aristocracy_vs_plutocracy
+			value = societal_value_minor_move_to_right
+		}
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_mll_formed
+			set_variable = nd_mll_path_a
+		}
+	}
+	# The Part Forana: the villages are given their share of the council
+	# and of the accounts.
+	option = {
+		name = nd_mll.1.b
+		add_country_modifier = {
+			modifier = nd_mll_part_forana
+			years = 20
+			mode = add_and_extend
+		}
+		change_societal_value = {
+			type = individualism_vs_communalism
+			value = societal_value_minor_move_to_right
+		}
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_mll_formed
+			set_variable = nd_mll_path_b
+		}
+	}
+}
+
+# The advance events below name the kingdom's own tag only. Only a tag named
+# in the block is polled (events/readme.txt, dynamic_historical_event);
+# scripts/sync_history_events.py adds the tags of the larger formables a
+# Mallorca can go on to. The has_advance trigger is what keeps the events
+# from every other holder of those tags.
+
+# Advance event: the Contracte Sant of 1405. Keep faith with the creditors,
+# or do what the jurats did in 1425 and stop paying them.
+nd_mll.2 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = MLL
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_mll_contracte_sant
+	}
+
+	title = nd_mll.2.t
+	desc = nd_mll.2.d
+	outcome = neutral
+
+	option = {
+		name = nd_mll.2.a
+		add_country_modifier = {
+			modifier = nd_mll_universal_consignacio
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_mll.2.b
+		add_country_modifier = {
+			modifier = nd_mll_pensions_suspeses
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# Advance event: the Revolta Forana. The fork is how it ends: with the
+# king's Italian mercenaries, or with the accounts opened to the villages.
+nd_mll.3 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = MLL
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_mll_revolta_forana
+	}
+
+	title = nd_mll.3.t
+	desc = nd_mll.3.d
+	outcome = neutral
+
+	option = {
+		name = nd_mll.3.a
+		add_country_modifier = {
+			modifier = nd_mll_saccomanni
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_mll.3.b
+		add_country_modifier = {
+			modifier = nd_mll_revisio_de_comptes
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# Advance event: Soller, 11 May 1561
+nd_mll.4 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = MLL
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_mll_homes_d_armes
+	}
+
+	title = nd_mll.4.t
+	desc = nd_mll.4.d
+	outcome = positive
+
+	option = {
+		name = nd_mll.4.a
+	}
+}
+
+# Advance event: the summer of 1715. Hold the walls for a cause already
+# lost on the mainland, or treat while there is still something to treat
+# for.
+nd_mll.5 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = MLL
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_mll_darrer_reducte
+	}
+
+	title = nd_mll.5.t
+	desc = nd_mll.5.d
+	outcome = neutral
+
+	option = {
+		name = nd_mll.5.a
+		add_country_modifier = {
+			modifier = nd_mll_fins_al_darrer_dia
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_mll.5.b
+		add_country_modifier = {
+			modifier = nd_mll_capitulacio_honrosa
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# Advance event: Barcelo's gunboats before Gibraltar and Algiers
+nd_mll.6 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = MLL
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_mll_llanxes_de_barcelo
+	}
+
+	title = nd_mll.6.t
+	desc = nd_mll.6.d
+	outcome = positive
+
+	option = {
+		name = nd_mll.6.a
+	}
+}
+
+# Advance event: San Diego de Alcala, 16 July 1769
+nd_mll.7 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = MLL
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_mll_missions_de_fra_juniper
+	}
+
+	title = nd_mll.7.t
+	desc = nd_mll.7.d
+	outcome = neutral
+
+	option = {
+		name = nd_mll.7.a
+	}
+}
+
+# ===== DESTINY EVENTS =====
+# One history event per destiny advance. Once per campaign by the engine's
+# own rule for history events; nothing load-bearing lives only in one.
+
+# Root: the kingdom is settled enough to choose its road.
+nd_mll.8 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = MLL
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_mll_destiny
+	}
+
+	title = nd_mll.8.t
+	desc = nd_mll.8.d
+	outcome = neutral
+
+	option = {
+		name = nd_mll.8.a
+	}
+}
+
+# Path A stage 1: the Consolat de Mar.
+nd_mll.9 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = MLL
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_mll_dest_consolat_de_mar
+	}
+
+	title = nd_mll.9.t
+	desc = nd_mll.9.d
+	outcome = neutral
+
+	option = {
+		name = nd_mll.9.a
+	}
+}
+
+# Path B stage 1: the fairs and markets of the villages.
+nd_mll.10 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = MLL
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_mll_dest_fires_i_mercats
+	}
+
+	title = nd_mll.10.t
+	desc = nd_mll.10.d
+	outcome = neutral
+
+	option = {
+		name = nd_mll.10.a
+	}
+}
+
+# Path A stage 2: Bugia. Hold it by treaty with the emir, or by a garrison.
+nd_mll.11 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = MLL
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_mll_dest_consolat_de_bugia
+	}
+
+	title = nd_mll.11.t
+	desc = nd_mll.11.d
+	outcome = neutral
+
+	option = {
+		name = nd_mll.11.a
+		add_country_modifier = {
+			modifier = nd_mll_dest_pau_amb_l_emir
+			years = 15
+			mode = add_and_extend
+		}
+	}
+
+	option = {
+		name = nd_mll.11.b
+		add_country_modifier = {
+			modifier = nd_mll_dest_presidi_de_bugia
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# Path B stage 2: the lesser islands. Each its own council, or one governor for all.
+nd_mll.12 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = MLL
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_mll_dest_illes_menors
+	}
+
+	title = nd_mll.12.t
+	desc = nd_mll.12.d
+	outcome = neutral
+
+	option = {
+		name = nd_mll.12.a
+		add_country_modifier = {
+			modifier = nd_mll_dest_universitats_de_les_illes
+			years = 15
+			mode = add_and_extend
+		}
+	}
+
+	option = {
+		name = nd_mll.12.b
+		add_country_modifier = {
+			modifier = nd_mll_dest_governador_de_les_illes
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# Path A capstone: the Fortunate Isles. Sell the charts, or lock them away.
+nd_mll.13 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = MLL
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_mll_dest_illes_de_la_fortuna
+	}
+
+	title = nd_mll.13.t
+	desc = nd_mll.13.d
+	outcome = neutral
+
+	option = {
+		name = nd_mll.13.a
+		add_country_modifier = {
+			modifier = nd_mll_dest_cartes_per_a_tothom
+			years = 20
+			mode = add_and_extend
+		}
+	}
+
+	option = {
+		name = nd_mll.13.b
+		add_country_modifier = {
+			modifier = nd_mll_dest_cartes_sota_clau
+			years = 20
+			mode = add_and_extend
+		}
+	}
+}
+
+# Path B capstone: a kingdom with no overlord. Keep the villages armed, or send them home.
+nd_mll.14 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = MLL
+		tag = ADU
+		tag = CDA
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_mll_dest_regne_dins_la_mar
+	}
+
+	title = nd_mll.14.t
+	desc = nd_mll.14.d
+	outcome = neutral
+
+	option = {
+		name = nd_mll.14.a
+		add_country_modifier = {
+			modifier = nd_mll_dest_viles_en_armes
+			years = 20
+			mode = add_and_extend
+		}
+	}
+
+	option = {
+		name = nd_mll.14.b
+		add_country_modifier = {
+			modifier = nd_mll_dest_pau_entre_iguals
+			years = 20
+			mode = add_and_extend
+		}
+	}
+}

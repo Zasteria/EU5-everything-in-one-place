@@ -201,7 +201,7 @@ nd_tab_communal_property = {
 	icon = regulate_court_procedures
 
 	unlock_building = nd_tab_brotherhood_treasury
-	tax_income_efficiency = 0.05
+	tax_income_efficiency = 0.03
 }
 
 # Itinerant preachers (kazatelé) recruit peasants, women, burghers into
@@ -439,9 +439,9 @@ nd_tab_dest_silesian_reform = {
 	icon = organized_religion
 
 	global_institution_growth_modifier = 0.15
-	monthly_legitimacy = 0.10
-	monthly_devotion = 0.1
-	monthly_republican_tradition = 0.1
+	# The frontier lands are bound into the republic (the government power
+	# keys that stood here repeated the heritage tree and the formation choice).
+	global_integration_speed_modifier = 0.1
 }
 
 # Stage 2: Reformation export (the chalice meets the Lutheran reform).
@@ -487,8 +487,11 @@ nd_tab_dest_bohemian_synod = {
 # Path B: Communal Republic (civic-pedagogical)
 # ============================================================================
 
-# Stage 1: The internal commune deepens. Meritocracy embraced: elective
-# offices, vernacular literacy as civic norm, communal storehouses.
+# Stage 1: The internal commune deepens: elective offices, vernacular
+# literacy as civic norm, communal storehouses. The town assemblies that
+# keep the Four Articles (the country's own Articulus House, age 2) stand
+# for the elective offices. The institution meritocracy stood here until
+# 2026-10-02: it is born in East Asia and may never reach Bohemia.
 nd_tab_dest_civic_brotherhood = {
 	age = age_1_traditions
 	requires = nd_tab_destiny
@@ -498,26 +501,47 @@ nd_tab_dest_civic_brotherhood = {
 			text = nd_tab_path_b_tt
 			has_variable = nd_tab_path_b
 		}
-		has_embraced_institution = institution:meritocracy
-		total_development >= 500
+		custom_tooltip = {
+			text = nd_tab_dest_articulus_houses_tt
+			any_owned_location = {
+				count >= 3
+				has_building_with_at_least_one_level = nd_tab_articulus_house
+			}
+		}
+		# Tabor was raised in 1420 on a bare hill of the Bechyne district; the
+		# commune's own town, built up from the district's 1337 value of 19.
+		custom_tooltip = {
+			text = nd_tab_dest_bechyne_developed_tt
+			location:bechyne = {
+				owner ?= root
+				development >= 24
+			}
+		}
 		gold >= 1000
 	}
 	icon = legalism_advance
 
-	peasants_estate_target_satisfaction = 0.10
+	peasants_estate_target_satisfaction = 0.04
 	legislative_efficiency = 0.05
 }
 
 # Stage 2: Vernacular Commonwealth (the brotherhood's print culture
 # becomes a continental industry). Renaissance institution, paper presses
-# in every parish, total development beyond the formation core.
+# in every parish, and Kutna Hora (where the Czech Bible of 1489 was
+# printed, on the silver that paid for the wars) built up from 21.
 nd_tab_dest_vernacular_commonwealth = {
 	age = age_1_traditions
 	requires = nd_tab_dest_civic_brotherhood
 	potential = { has_or_had_tag = TAB has_variable = nd_tab_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		has_embraced_institution = institution:renaissance
-		total_development >= 1000
+		custom_tooltip = {
+			text = nd_tab_dest_kutna_hora_developed_tt
+			location:kutna_hora = {
+				owner ?= root
+				development >= 32
+			}
+		}
 		capital = {
 			market = {
 				OR = {
@@ -550,7 +574,7 @@ nd_tab_dest_demokraticky_sjezd = {
 	icon = enlightened_court
 
 	unlock_building = nd_tab_demokraticky_sjezd
-	global_monthly_prosperity = 0.0015
+	global_monthly_prosperity = 0.001
 	monthly_towards_communalism = 0.05
 	monthly_diplomats = 0.10
 }

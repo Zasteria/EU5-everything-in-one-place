@@ -59,7 +59,7 @@ nd_tws_mediterranean_granary = {
 	requires = merchants_and_trade
 	icon = merchants_and_trade
 	unlock_production_method = nd_tws_grain_export
-	global_monthly_food_modifier = 0.1
+	global_monthly_food_modifier = 0.05
 }
 
 # === Age 3: Maritime expansion and Spanish military influence ===
@@ -94,9 +94,9 @@ nd_tws_mezzogiorno_commerce = {
 	requires = merchant_power_from_maritime_discovery_advance
 	icon = merchant_power_from_maritime_discovery_advance
 	global_merchant_power = 0.1
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -108,7 +108,7 @@ nd_tws_galeazza_tradition = {
 	requires = shipyard_advance
 	icon = shipyard_advance
 	unlock_unit = n_nd_tws_galeazza_reale
-	naval_morale_modifier = 0.3
+	naval_morale_modifier = 0.15
 	ai_weight = {
 		add = 50
 	}
@@ -123,6 +123,18 @@ nd_tws_baronial_suppression = {
 	stability_cost_efficiency = 0.1
 }
 
+# The Dogana della Mena delle Pecore (Foggia, founded 1447) at its height
+# under the viceroys: the winter pastures of the Tavoliere reserved for the
+# flocks of the Abruzzi, a fee to the crown on every head.
+nd_tws_dogana_delle_pecore = {
+	age = age_4_reformation
+	potential = { has_or_had_tag = TWS }
+	requires = pop_promotion_speed_age_4
+	icon = pop_promotion_speed_age_4
+	unlock_building = nd_tws_locazione
+	global_wool_output_modifier = 0.1
+}
+
 # === Age 5: Bourbon reforms and industrialization ===
 
 nd_tws_san_leucio_silk = {
@@ -131,7 +143,7 @@ nd_tws_san_leucio_silk = {
 	requires = construction_speed_absolutism
 	icon = construction_speed_absolutism
 	unlock_building = nd_tws_reale_seteria
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }
 
 nd_tws_real_marina = {
@@ -175,6 +187,20 @@ nd_tws_carbonari_legacy = {
 	cultural_tradition_modifier = 0.1
 }
 
+# 1799: Cardinal Ruffo's Armata della Santa Fede, the peasant masses that
+# took the kingdom back from the Parthenopean Republic in four months.
+nd_tws_santa_fede = {
+	age = age_6_revolutions
+	potential = { has_or_had_tag = TWS }
+	requires = napoleonic_warfare
+	icon = napoleonic_warfare
+	unlock_levy = levy_nd_tws_sanfedisti
+	peasants_estate_levy_size = 0.1
+	ai_weight = {
+		add = 50
+	}
+}
+
 # ===== DESTINY TREE =====
 
 nd_tws_destiny = {
@@ -210,7 +236,16 @@ nd_tws_dest_peninsula = {
 	potential = { has_or_had_tag = TWS has_variable = nd_tws_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		owns = location:florence
-		total_development >= 1500
+		# Naples, the capital the Aragonese kings and the Spanish viceroys built
+		# into the largest city of Italy: 38 in 1337 (development_estimate.py
+		# --explain naples), half as much again for a second stage.
+		custom_tooltip = {
+			text = nd_tws_dest_naples_developed_tt
+			location:naples = {
+				owner ?= root
+				development >= 57
+			}
+		}
 		army_size >= 50
 	}
 	icon = feudalism_advance
@@ -270,7 +305,9 @@ nd_tws_dest_ionian_routes = {
 	}
 	icon = global_trade_advance
 	global_trade_center_power = 0.05
-	global_institution_growth_modifier = 0.15
+	# Corfu holds the mouth of the Adriatic: what a fleet's presence in a sea
+	# zone is worth to the merchants behind it.
+	merchant_power_from_maritime_modifier = 0.1
 }
 
 nd_tws_dest_emporium = {
@@ -282,7 +319,15 @@ nd_tws_dest_emporium = {
 		owns = location:cagliari
 		gold >= 3000
 		prestige >= 75
-		total_development >= 2000
+		# Messina, the port of the Strait and of the silk fair: 24 in 1337
+		# (development_estimate.py --explain messina), doubled for a capstone.
+		custom_tooltip = {
+			text = nd_tws_dest_messina_developed_tt
+			location:messina = {
+				owner ?= root
+				development >= 48
+			}
+		}
 	}
 	icon = maritime_advance_age_5
 	unlock_building = nd_tws_fondaco

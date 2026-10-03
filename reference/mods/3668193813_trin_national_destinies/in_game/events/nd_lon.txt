@@ -1,0 +1,557 @@
+﻿namespace = nd_lon
+
+# Formation event: fires from form_effect (99_nd_lon.txt) for a Leonese
+# country that formed the kingdom by the button (on the 1337 map, Asturias),
+# and from the four-yearly marker repair for a Leon that was released or
+# broke away and so never pressed it. The text speaks of a king in Leon
+# again, which is true on both roads, and names no former.
+nd_lon.1 = {
+	type = country_event
+	title = nd_lon.1.t
+	desc = nd_lon.1.d
+	outcome = neutral
+	# Once per COUNTRY, by its own guard variable. Not fire_only_once: that
+	# is once per campaign (events/readme.txt:62), so an AI that held the tag
+	# first would retire the popup for every later holder. Country variables
+	# die with the country, so a Leon that falls and rises again is asked
+	# again.
+	trigger = {
+		NOT = { has_variable = nd_lon_e1_done }
+	}
+	immediate = {
+		hidden_effect = { set_variable = nd_lon_e1_done }
+	}
+
+	# Imperator totius Hispaniae: the crown of the emperors.
+	option = {
+		name = nd_lon.1.a
+		add_country_modifier = {
+			modifier = nd_lon_imperium_totius_hispaniae
+			years = 20
+			mode = add_and_extend
+		}
+		change_societal_value = {
+			type = centralization_vs_decentralization
+			value = societal_value_minor_move_to_left
+		}
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_lon_formed
+			set_variable = nd_lon_path_a
+		}
+	}
+	# The oath of 1188: the kingdom of the Decreta.
+	option = {
+		name = nd_lon.1.b
+		add_country_modifier = {
+			modifier = nd_lon_reino_de_los_decreta
+			years = 20
+			mode = add_and_extend
+		}
+		change_societal_value = {
+			type = centralization_vs_decentralization
+			value = societal_value_minor_move_to_right
+		}
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_lon_formed
+			set_variable = nd_lon_path_b
+		}
+	}
+}
+
+# The advance events below name the kingdom's own tag only. Only a tag named
+# in the block is polled (events/readme.txt, dynamic_historical_event);
+# scripts/sync_history_events.py adds the tags of the larger formables a
+# Leon can go on to. The has_advance trigger is what keeps the events from
+# every other holder of those tags.
+
+# Advance event: the Leyes de Toro. The fork is the entail. Choice A hands
+# over vanilla's own policy (laws/03_estate_laws.txt:82), which vanilla
+# unlocks only through a Spain event (flavor_cas.48); unlock_policy_effect is
+# vanilla's scripted effect for it (scripted_effects/country_effects.txt:126).
+# A Leon that later becomes Spain and meets vanilla's event is offered the
+# same policy again, which changes nothing.
+nd_lon.2 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = LON
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_lon_leyes_de_toro
+	}
+
+	title = nd_lon.2.t
+	desc = nd_lon.2.d
+	outcome = neutral
+
+	option = {
+		name = nd_lon.2.a
+		unlock_policy_effect = {
+			type = leyes_de_toro_policy
+		}
+		add_country_modifier = {
+			modifier = nd_lon_mayorazgos
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_lon.2.b
+		add_country_modifier = {
+			modifier = nd_lon_herencia_partida
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# Advance event: the Comunidades. The fork is who wins.
+nd_lon.3 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = LON
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_lon_comunidades
+	}
+
+	title = nd_lon.3.t
+	desc = nd_lon.3.d
+	outcome = neutral
+
+	option = {
+		name = nd_lon.3.a
+		add_country_modifier = {
+			modifier = nd_lon_ley_perpetua
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_lon.3.b
+		add_country_modifier = {
+			modifier = nd_lon_villalar
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# Advance event: the doctors of money. Either way the masters get their
+# house: both options raise vanilla's School of Salamanca building
+# (event_only_buildings.txt:3700) in Salamanca when the kingdom owns the
+# city, it has grown to a city, and the building is not there yet. Vanilla
+# raises it only through a Castile event (flavor_cas.47), written the same
+# way; the building allows city and megalopolis only, hence the rank test.
+nd_lon.4 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = LON
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_lon_doctores_de_la_moneda
+	}
+
+	title = nd_lon.4.t
+	desc = nd_lon.4.d
+	outcome = positive
+
+	option = {
+		name = nd_lon.4.a
+		add_country_modifier = {
+			modifier = nd_lon_precio_justo
+			years = 15
+			mode = add_and_extend
+		}
+		if = {
+			limit = {
+				owns = location:salamanca
+				location:salamanca = {
+					OR = {
+						location_rank = location_rank:city
+						location_rank = location_rank:megalopolis
+					}
+					NOT = { has_building = building_type:school_of_salamanca }
+				}
+			}
+			location:salamanca = {
+				construct_building = {
+					building_type = building_type:school_of_salamanca
+				}
+			}
+		}
+	}
+	option = {
+		name = nd_lon.4.b
+		add_country_modifier = {
+			modifier = nd_lon_manual_de_confesores
+			years = 15
+			mode = add_and_extend
+		}
+		if = {
+			limit = {
+				owns = location:salamanca
+				location:salamanca = {
+					OR = {
+						location_rank = location_rank:city
+						location_rank = location_rank:megalopolis
+					}
+					NOT = { has_building = building_type:school_of_salamanca }
+				}
+			}
+			location:salamanca = {
+				construct_building = {
+					building_type = building_type:school_of_salamanca
+				}
+			}
+		}
+	}
+}
+
+# Advance event: 25 May 1808. The fork is where the Junta looks for its
+# strength: to the parishes, or across the sea.
+nd_lon.5 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = LON
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_lon_junta_suprema
+	}
+
+	title = nd_lon.5.t
+	desc = nd_lon.5.d
+	outcome = neutral
+
+	option = {
+		name = nd_lon.5.a
+		add_country_modifier = {
+			modifier = nd_lon_junta_soberana
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_lon.5.b
+		add_country_modifier = {
+			modifier = nd_lon_socorro_de_inglaterra
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# ===== DESTINY EVENTS =====
+# One per destiny advance. The root and the first stage of each path only
+# announce; the second and third stages offer two readings of the milestone.
+
+nd_lon.6 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = LON
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_lon_destiny
+	}
+
+	title = nd_lon.6.t
+	desc = nd_lon.6.d
+	outcome = neutral
+
+	option = {
+		name = nd_lon.6.a
+	}
+}
+
+nd_lon.7 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = LON
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_lon_dest_extremadura_leonesa
+	}
+
+	title = nd_lon.7.t
+	desc = nd_lon.7.d
+	outcome = positive
+
+	option = {
+		name = nd_lon.7.a
+	}
+}
+
+nd_lon.8 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = LON
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_lon_dest_heredero_de_toledo
+	}
+
+	title = nd_lon.8.t
+	desc = nd_lon.8.d
+	outcome = neutral
+
+	option = {
+		name = nd_lon.8.a
+		add_country_modifier = {
+			modifier = nd_lon_dest_dos_religiones
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_lon.8.b
+		add_country_modifier = {
+			modifier = nd_lon_dest_rito_romano
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+nd_lon.9 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = LON
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_lon_dest_imperator
+	}
+
+	title = nd_lon.9.t
+	desc = nd_lon.9.d
+	outcome = positive
+
+	option = {
+		name = nd_lon.9.a
+		add_country_modifier = {
+			modifier = nd_lon_dest_homenaje_de_principes
+			years = 20
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_lon.9.b
+		add_country_modifier = {
+			modifier = nd_lon_dest_camino_del_sur
+			years = 20
+			mode = add_and_extend
+		}
+	}
+}
+
+nd_lon.10 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = LON
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_lon_dest_buenos_fueros
+	}
+
+	title = nd_lon.10.t
+	desc = nd_lon.10.d
+	outcome = positive
+
+	option = {
+		name = nd_lon.10.a
+	}
+}
+
+nd_lon.11 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = LON
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_lon_dest_hermandad_de_concejos
+	}
+
+	title = nd_lon.11.t
+	desc = nd_lon.11.d
+	outcome = neutral
+
+	option = {
+		name = nd_lon.11.a
+		add_country_modifier = {
+			modifier = nd_lon_dest_hermandad_jurada
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_lon.11.b
+		add_country_modifier = {
+			modifier = nd_lon_dest_letrados_del_estudio
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+nd_lon.12 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = LON
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_lon_dest_ferias_del_reino
+	}
+
+	title = nd_lon.12.t
+	desc = nd_lon.12.d
+	outcome = positive
+
+	option = {
+		name = nd_lon.12.a
+		add_country_modifier = {
+			modifier = nd_lon_dest_letras_de_cambio
+			years = 20
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_lon.12.b
+		add_country_modifier = {
+			modifier = nd_lon_dest_alcabala_real
+			years = 20
+			mode = add_and_extend
+		}
+	}
+}

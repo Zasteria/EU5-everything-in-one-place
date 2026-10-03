@@ -1,10 +1,35 @@
-﻿REPLACE:CTH_f = {
-	level = 2
-	required_locations_fraction = 0.7
+﻿# 1.4 rewrote Carthage as a level 4 formable (it was level 2): 85% of the
+# same four areas, the Amazigh culture group, and four cities instead of
+# one. The copy follows it, because 1.4 also added a level 2 Tunis that
+# covers most of this territory, and a country can only form something of
+# a strictly higher level: at level 2 neither Tunis nor Algeria could ever
+# form Carthage.
+REPLACE:CTH_f = {
+	level = 4
+	required_locations_fraction = 0.85
 	rule = fantasy
-	
+
+	# DELIBERATE DIFFERENCE FROM VANILLA: vanilla 1.4 admits the Amazigh group
+	# only. Tunisian is added because the city this formable renames and makes
+	# the capital is Tunis, the mod's Carthage content is the Hafsid state's
+	# own (the chancery, the chief qadi at Tunis, the maritime bureau), and
+	# vanilla's `TUN_f` itself defines Tunis as "Tunisian or Eastern Amazigh".
+	# Tunisian sits in the Arabic group, so under vanilla's gate the country
+	# that holds Carthage's own site could never form it. Two countries have
+	# the culture at the start: Tunis and Gafsa. The other Arabic cultures of
+	# the Maghreb stay out, as vanilla intends (user ruling 2026-10-01).
+	potential = {
+		OR = {
+			culture = { has_culture_group = culture_group:amazigh_group }
+			culture = culture:tunisian
+		}
+	}
+
 	allow = {
 		owns = location:tunis
+		owns = location:palermo
+		owns = location:tripoli
+		owns = location:cherchell
 	}
 
 	name = CTH
@@ -39,7 +64,7 @@
 			limit = { country_rank_level < 3 }
 			set_country_rank_effect = { rank = country_rank:rank_kingdom }
 		}
-		add_stability = stability_mild_bonus
+		add_stability = stability_severe_bonus
 		trigger_event_non_silently = nd_cth.1
 	}
 }

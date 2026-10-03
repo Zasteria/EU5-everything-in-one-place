@@ -1,0 +1,644 @@
+﻿# ============================================================================
+# Catalonia (CAT): custom buildings
+# National Destinies mod
+# ============================================================================
+#
+# What is NOT here, because somebody already built it:
+#   vanilla: the Palau de la Generalitat and the Llotja de Mar of Barcelona
+#   (monuments, unique_buildings.txt), the royal shipyard of Barcelona (event
+#   building), the Llotja de la Seda of Valencia, and the Taula de Canvi of
+#   Barcelona as a bank country that an Aragon event creates between 1401 and
+#   1460 (flavor_ara.220).
+#   the Aragonese Empire (99_nd_cda.txt): the Drassanes, the Casa Llotja de
+#   Mar, the Generalitat Hall, the Senyera consulates, the Mediterranean
+#   vineyard and the cotton mill.
+#
+# What is here is the Principality's own ground: its mountain iron, its
+# woollens, its municipal banks, the towns that became streets of Barcelona,
+# the farmstead that Guadalupe set free, its glass, its brandy, its paper and
+# the schools its merchants paid for when the Bourbons took the university
+# away.
+#
+# Every production method is inline, uses the guild margin, and was sized with
+# eu5-profit (output floored, margin 20 percent, cap written as a name).
+
+# ----------------------------------------------------------------------------
+# Farga (age 1; a second method in age 4)
+# ----------------------------------------------------------------------------
+# The Catalan forge: a low hearth blown first by bellows and from the
+# seventeenth century by the trompa, a column of falling water that drags air
+# down with it. It needs ore within mule distance, charcoal from the slope
+# above and a torrent beside it, which is why every farga stood in the
+# Pyrenees or their foothills.
+# location_potential: hill or mountain ground AND iron reaching the local
+# market. Iron is an input here, not the product, so the market form of the
+# gate is the right one: the forge follows the ore, it does not create it. In
+# Catalonia that admits Ripoll and the high valleys and nothing on the plain.
+# Settlement: countryside and town, never a city. A farga is a valley works.
+nd_cat_farga = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = guild_max_level
+	employment_size = generic_peasant_building_employment
+	category = basic_industry_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_cat_fargues_del_pirineu
+	}
+
+	location_potential = {
+		OR = {
+			topography = mountains
+			topography = hills
+		}
+		is_produced_in_location_market = goods:iron
+	}
+
+	unique_production_methods = {
+		# Bar iron drawn into nails, keys and edge tools: the ordinary trade
+		# of Ripoll, whose keys and nails went out by the mule load.
+		# Output 0.78 is exact (1.95 x 1.2 / 3). eu5-profit prints 0.7799 for
+		# these inputs because it floors a binary float; do not copy that back.
+		nd_cat_farga_ferro_i_claus = {
+			iron = 0.5
+			lumber = 0.3
+			produced = tools
+			output = 0.78
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+		# Unlocked by nd_cat_canons_de_ripoll (age 4): the barrel forgers and
+		# lock makers of Ripoll, whose short flintlock, the pedrenyal, armed
+		# bandits and miquelets alike.
+		nd_cat_farga_pedrenyals = {
+			iron = 0.4
+			lumber = 0.2
+			tools = 0.1
+			produced = firearms
+			output = 0.72
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# ----------------------------------------------------------------------------
+# Taula de Canvi (age 2)
+# ----------------------------------------------------------------------------
+# A municipal table of exchange and deposit, owned by the town council and
+# run by citizens it elects: it keeps the town's money and the citizens'
+# deposits, settles debts by transfer in its books, and may lend to the town
+# and to no one else. Barcelona opened the first in 1401; Perpinya, Girona,
+# Tarragona, Vic, Lleida, Cervera and Manresa followed.
+# Not the vanilla Taula: that one is a bank country an Aragon event creates in
+# Barcelona. This is the ordinary Catalan town's own table.
+# allow: a council hall of any tier must stand in the location. The table was
+# an office of the municipality; without a council there is nobody to own it.
+# Settlement: towns and cities. A village has no council and no deposits.
+# capital_country_modifier: in the capital the table is also the changer of
+# the realm's coin, weighing and refusing bad money, which is what lets the
+# mint work harder before prices move.
+nd_cat_taula_de_canvi = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = generic_burgher_employment
+	category = trade_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = generic_town_build_time
+
+	country_potential = {
+		has_advance = nd_cat_banca_municipal
+	}
+
+	allow = {
+		custom_tooltip = {
+			text = nd_cat_taula_needs_council_tt
+			OR = {
+				has_building = building_type:early_council_hall
+				has_building = building_type:council_hall
+				has_building = building_type:modern_council_hall
+			}
+		}
+	}
+
+	modifier = {
+		local_merchant_capacity = 1
+		local_burghers_estate_power = 0.1
+	}
+
+	capital_country_modifier = {
+		minting_inflation_threshold = 0.01
+	}
+
+	unique_production_methods = {
+		nd_cat_taula_de_canvi_maintenance = {
+			paper = 0.1
+			silver = 0.02
+			goods_gold = 0.01
+			category = building_maintenance
+		}
+	}
+	construction_demand = bank_construction
+}
+
+# ----------------------------------------------------------------------------
+# Carrer de Barcelona (age 2)
+# ----------------------------------------------------------------------------
+# Carreratge: a town or village is declared, in law, a street of Barcelona.
+# Its people become citizens of the capital, plead in the capital's courts,
+# pay no tolls where Barcelona pays none, and can never again be sold or
+# pledged to a lord. In return the place marches under the banner of Santa
+# Eulalia when the city's host is called. Igualada, Moia, Granollers, Mataro
+# and dozens more took the bargain from the 1380s onward.
+# location_potential: the Catalonia area only, and never Barcelona itself.
+# Carreratge was an institution of the Principality and of one city; a town
+# in Aragon or Sicily could not be a street of Barcelona.
+# allow: the owner must hold Barcelona. No city, no streets.
+# Settlement: countryside and town, not city. Cities had councils and
+# privileges of their own and did not put themselves under another city's.
+# No local_max_control on purpose: the place gains a patron, not a governor.
+# Upkeep: 0.65 gold a month at base prices (paper 2, cloth 3, weaponry 3):
+# the charter and the pleas carried to the capital's courts, the banner, and
+# most of all the arms of the company the place owes to the city's host,
+# which is the price of the bargain. Owner's ruling of 2026-10-02: 0.5 to 0.8,
+# between the 0.22 it had and vanilla's bailiff at 1.50 (the sixteen vanilla
+# government buildings that can stand in the countryside have a median of
+# 1.65); it grants no control, so it stays under them.
+nd_cat_carrer_de_barcelona = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = estate_burgher_employment
+	category = government_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	build_time = government_build_time
+
+	country_potential = {
+		has_advance = nd_cat_carreratge
+	}
+
+	location_potential = {
+		area = area:catalonia_area
+		NOT = { this = location:barcelona }
+	}
+
+	allow = {
+		custom_tooltip = {
+			text = nd_cat_carreratge_needs_barcelona_tt
+			owner = { owns = location:barcelona }
+		}
+	}
+
+	modifier = {
+		local_nobles_estate_power = -0.25
+		local_burghers_estate_power = 0.25
+		local_market_access = 0.01
+	}
+
+	unique_production_methods = {
+		nd_cat_carreratge_maintenance = {
+			paper = 0.131
+			cloth = 0.066
+			weaponry = 0.131
+			category = building_maintenance
+		}
+	}
+	construction_demand = town_building_construction
+}
+
+# ----------------------------------------------------------------------------
+# Obrador de Paraires (age 2)
+# ----------------------------------------------------------------------------
+# The paraire was the clothier of a Catalan town: he bought the wool, put out
+# the carding, spinning and weaving, fulled and finished the piece, and sent
+# it to the port under the lead seal of the bolla. Middling woollens, sold by
+# the thousand in Sicily, Sardinia, Naples and the Levant.
+# location_potential: wool must reach the local market. Cloth is a made good,
+# so nothing is conjured here; the gate only keeps the workshop where a
+# paraire could actually buy fleeces.
+# Settlement: towns and cities. The trade was organised by urban guilds even
+# when the spinning was done in farmhouses.
+# The alum is the mordant (Catalonia mined its own near Montblanc), the dyes
+# are the finishing that made a drap worth exporting.
+nd_cat_obrador_de_paraires = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	employment_size = guild_employment
+	category = consumer_goods_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_cat_draps_de_la_terra
+	}
+
+	location_potential = {
+		is_produced_in_location_market = goods:wool
+	}
+
+	unique_production_methods = {
+		nd_cat_paraires_draps_de_llana = {
+			wool = 0.8
+			alum = 0.05
+			dyes = 0.05
+			produced = cloth
+			output = 0.94
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# ----------------------------------------------------------------------------
+# Masia (age 3)
+# ----------------------------------------------------------------------------
+# The Catalan farmstead after the Sentence of Guadalupe: a stone house on its
+# own land, held on a perpetual lease that cannot be raised, and passed whole
+# to one heir, the hereu or the pubilla, so that it is never divided. Mixed
+# farming around the house, woodland above it, and younger children sent into
+# the towns with a dowry instead of a field.
+# location_potential: Catalan-majority locations that grow food or keep
+# flocks. The mas is a matter of Catalan civil law (emphyteusis and the single
+# heir), not of soil; outside Catalan custom the same building is just a farm.
+# Settlement: countryside only. One per location: it stands for a pattern of
+# landholding, not for a count of houses.
+nd_cat_masia = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = 1
+	employment_size = generic_peasant_building_employment
+	category = infrastructure_category
+	rural_settlement = yes
+	town = no
+	city = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_cat_mas_i_hereu
+	}
+
+	location_potential = {
+		dominant_culture ?= culture:catalan
+		OR = {
+			raw_material = goods:wheat
+			raw_material = goods:wine
+			raw_material = goods:olives
+			raw_material = goods:fruit
+			raw_material = goods:legumes
+			raw_material = goods:livestock
+			raw_material = goods:wool
+		}
+	}
+
+	modifier = {
+		local_monthly_food_modifier = monthly_food_productivity_weak_bonus
+		local_peasants_estate_power = 0.2
+		local_peasant_enfranchisment = 0.02
+	}
+
+	unique_production_methods = {
+		nd_cat_masia_maintenance = {
+			tools = 0.038
+			lumber = 0.062
+			clay = 0.062
+			category = building_maintenance
+		}
+	}
+	construction_demand = farm_constructions
+}
+
+# ----------------------------------------------------------------------------
+# Forn de Vidre (age 3)
+# ----------------------------------------------------------------------------
+# Barcelona's glasshouses sold enamelled and gilded ware at the glass fair
+# held every New Year's Day, and by 1500 it was being bought in Castile and
+# Rome as the equal of Murano's.
+# location_potential: sand in the local market, the same gate vanilla puts on
+# its own glass guild. Glass is a made good and sand is its body.
+# Settlement: towns and cities. The furnaces were a guild trade inside walls.
+# The alum stands for the fluxes and colouring salts of the enamel work.
+nd_cat_forn_de_vidre = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	employment_size = guild_employment
+	category = basic_industry_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_cat_vidre_catala
+	}
+
+	location_potential = {
+		is_produced_in_location_market = goods:sand
+	}
+
+	unique_production_methods = {
+		nd_cat_vidre_esmaltat = {
+			sand = 0.9
+			lumber = 0.3
+			alum = 0.05
+			produced = glass
+			output = 0.42
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# ----------------------------------------------------------------------------
+# Fassina (age 5)
+# ----------------------------------------------------------------------------
+# A fassina is a brandy still. From the 1680s Dutch and English factors at
+# Reus bought every barrel of aiguardent the Camp de Tarragona could burn out
+# of its thin wine, and the saying went that Reus, Paris and London set the
+# price of spirits.
+# location_potential: vineyard locations only. The wine was too weak to
+# travel, so it was distilled where it was pressed and only the spirit went
+# to the quay at Salou.
+# Settlement: countryside and town, not city. The stills stood among the
+# vines and in the market towns that contracted for them.
+# The lumber is firewood and the staves of the barrel the spirit ships in.
+nd_cat_fassina = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = guild_max_level
+	employment_size = generic_peasant_building_employment
+	category = consumer_goods_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_cat_fenix_de_catalunya
+	}
+
+	location_potential = {
+		raw_material = goods:wine
+	}
+
+	unique_production_methods = {
+		nd_cat_aiguardent_de_reus = {
+			wine = 0.8
+			lumber = 0.15
+			produced = liquor
+			output = 0.876
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# ----------------------------------------------------------------------------
+# Moli Paperer (age 5)
+# ----------------------------------------------------------------------------
+# The paper mills of Capellades and the Anoia valley: rags beaten to pulp by
+# water-driven hammers, sheets dried in the open lofts under the roof. In the
+# eighteenth century they supplied the stamped paper of the Spanish monarchy
+# and its American offices.
+# location_potential: a river. The mill is a water mill and nothing else
+# drives its hammers.
+# Settlement: countryside and town, not city. The mills followed the water
+# up the valleys, away from the streets.
+# The cloth is the rag stock, the lumber the frames and the drying lofts.
+nd_cat_moli_paperer = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = guild_max_level
+	employment_size = generic_peasant_building_employment
+	category = basic_industry_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_cat_molins_paperers
+	}
+
+	location_potential = {
+		has_river = yes
+	}
+
+	unique_production_methods = {
+		nd_cat_paper_de_draps = {
+			cloth = 0.4
+			lumber = 0.1
+			produced = paper
+			output = 0.81
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# ----------------------------------------------------------------------------
+# Escoles de Llotja (age 6)
+# ----------------------------------------------------------------------------
+# After 1714 the Bourbons closed every Catalan university and opened one at
+# Cervera, far from any port. The merchants answered through their own board,
+# the Junta de Comerc, which from 1769 opened free schools in the exchange
+# building: navigation, drawing, chemistry, mechanics, shorthand, economics.
+# Useful knowledge, paid for by trade, taught to anyone who walked in.
+# location_potential: coastal locations. The first school was the school of
+# pilots, and the board that paid for all of them lived off sea trade.
+# Settlement: cities only. One per city: it is an institution, not a row of
+# classrooms. Literacy and institution growth are set at what vanilla's
+# library grants (0.1 and 0.25), which stands in towns as well as cities.
+nd_cat_escoles_de_llotja = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = cultural_employment
+	category = cultural_category
+	rural_settlement = no
+	town = no
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = cultural_building_time
+
+	country_potential = {
+		has_advance = nd_cat_junta_de_comerc
+	}
+
+	location_potential = {
+		is_coastal = yes
+	}
+
+	modifier = {
+		local_monthly_literacy = 0.1
+		local_burghers_max_literacy = 5
+		local_institution_growth_modifier = 0.25
+	}
+
+	unique_production_methods = {
+		nd_cat_escoles_de_llotja_maintenance = {
+			paper = 0.248
+			books = 0.124
+			tools = 0.062
+			category = building_maintenance
+		}
+	}
+	construction_demand = school_construction
+}
+
+# ===== DESTINY BUILDINGS =====
+
+# ----------------------------------------------------------------------------
+# Pobla (destiny, path A capstone)
+# ----------------------------------------------------------------------------
+# A village founded by charter, the carta de poblament: the prince marks out
+# the streets, gives each settler a house plot and fields on easy terms, and
+# names the day by which he must be living there. It is how the house of
+# Barcelona held what it took. James I founded Vila-real in 1274, James II
+# of Mallorca ordered a dozen new villages laid out on the island in 1300,
+# Peter the Ceremonious emptied l'Alguer in 1354 and filled it with Catalans,
+# and after 1609 the lords of Valencia repeopled the Moriscos' valleys the
+# same way, many of them with Mallorcans.
+# Not vanilla's settlement building (rural_buildings.txt), which exists only
+# while a location is nearly empty and removes itself: a pobla stays, draws
+# newcomers, turns them Catalan and clears more ground.
+# location_potential: outside the Catalonia area. The Principality's own
+# charters (Tortosa 1149, Lleida 1150) were given two centuries before the
+# start date; the instrument belongs to the lands the path gathers.
+# Settlement: countryside only, one per location. A pobla is a village; a
+# town has a council and franchises of its own.
+# Values: migration at twice vanilla's university (0.05), assimilation at
+# five times its marketplace (0.01) because this building does nothing else,
+# one size of raw material where vanilla's Portuguese quarter gives three.
+nd_cat_dest_pobla = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = 1
+	employment_size = generic_peasant_building_employment
+	category = infrastructure_category
+	rural_settlement = yes
+	town = no
+	city = no
+	build_time = village_build_time
+
+	country_potential = {
+		has_advance = nd_cat_dest_mata_de_jonc
+	}
+
+	location_potential = {
+		NOT = { area = area:catalonia_area }
+	}
+
+	modifier = {
+		local_migration_attraction = 0.1
+		local_pop_assimilation_speed_modifier = 0.05
+	}
+
+	# Unscaled on purpose: local_max_rgo_size is a whole-number modifier
+	# (decimals = 0), and the modifier block above is multiplied by goods
+	# access, so one size there would round away to nothing whenever the
+	# pobla is short of a tool.
+	raw_modifier = {
+		local_max_rgo_size = 1
+	}
+
+	unique_production_methods = {
+		nd_cat_dest_pobla_maintenance = {
+			tools = 0.05
+			lumber = 0.05
+			stone = 0.03
+			category = building_maintenance
+		}
+	}
+	construction_demand = village_construction
+}
+
+# ----------------------------------------------------------------------------
+# Taula del General (destiny, path B capstone)
+# ----------------------------------------------------------------------------
+# A customs table of the Diputacio. Two officers kept each one, the collidor
+# who took the money and the credencer who wrote a second book to check him,
+# and between them they collected the duty on everything entering or leaving
+# and put the lead seal of the bolla on every piece of cloth. The frontier
+# tables watched cloth, iron, salt, wool and the flocks going up to summer
+# pasture.
+# Not the Taula de Canvi above (a municipal bank) and not the Aragonese
+# Empire's Generalitat Hall (the estates' seat): this is the fiscal network
+# under both, and under path B its money is the state's.
+# location_potential: the Catalonia area only. The General's writ ran in the
+# Principality and the Counties; Aragon and Valencia had Generalitats of
+# their own with their own tables.
+# Settlement: towns and cities, one per location. The tables stood in the
+# head town of each collection district.
+# Values: trade protection as vanilla's toll castle (0.05), half its port
+# authority; merchant power at half a marketplace level; burgher trade as
+# vanilla's merchants' guild (0.1).
+nd_cat_dest_taula_del_general = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = small_burgher_employment
+	category = trade_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = merchant_build_time
+
+	country_potential = {
+		has_advance = nd_cat_dest_lo_general
+	}
+
+	location_potential = {
+		area = area:catalonia_area
+	}
+
+	modifier = {
+		local_trade_protection_factor = 0.05
+		local_merchant_power = 0.5
+		local_trades_per_burgher = 0.1
+	}
+
+	unique_production_methods = {
+		nd_cat_dest_taula_del_general_maintenance = {
+			paper = 0.1
+			lead = 0.05
+			tools = 0.03
+			category = building_maintenance
+		}
+	}
+	construction_demand = town_building_construction
+}

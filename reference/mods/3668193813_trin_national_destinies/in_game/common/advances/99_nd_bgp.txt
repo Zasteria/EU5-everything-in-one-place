@@ -20,8 +20,7 @@ nd_bgp_alpine_toll_mastery = {
 	requires = guilds
 	icon = guilds
 	unlock_building = nd_bgp_col_toll_house
-	trade_land_efficiency = 0.0448
-	trade_sea_efficiency = 0.0448
+	trade_land_efficiency = 0.2
 	global_merchant_power = 0.05
 }
 
@@ -96,8 +95,7 @@ nd_bgp_chateauneuf = {
 	icon = merchants_and_trade
 	unlock_production_method = nd_bgp_papal_vintages
 	global_wine_output_modifier = 0.2
-	trade_land_efficiency = 0.0224
-	trade_sea_efficiency = 0.0224
+	trade_land_efficiency = 0.1
 }
 
 # Grande Saline: Franche-Comte salt industry (unlock Saline building)
@@ -128,7 +126,7 @@ nd_bgp_provencal_galleys = {
 	requires = vibrant_court_advance
 	icon = vibrant_court_advance
 	unlock_unit = n_nd_bgp_provencal_galley
-	navy_galley_power = 0.25
+	navy_galley_power = 0.15
 	global_sailors_modifier = 0.1
 	ai_weight = {
 		add = 50
@@ -161,7 +159,12 @@ nd_bgp_ordonnance_reform = {
 	icon = pike_square
 	unlock_unit = a_nd_bgp_ordonnance_lance
 	discipline = 0.05
-	monthly_army_tradition = 0.05
+	# A permanent company has a fixed establishment and is paid by the roll:
+	# the ordinances of 1471 to 1473 set regular musters, so the duke pays
+	# for the men who are present (vanilla's commonest grant is 0.1). Not
+	# army tradition: Provence's vanilla le_livre_des_tournois grants it in
+	# this age.
+	army_maintenance_efficiency = 0.1
 	ai_weight = {
 		add = 50
 	}
@@ -175,8 +178,8 @@ nd_bgp_rhone_trade_system = {
 	icon = merchant_power_from_maritime_discovery_advance
 	global_merchant_capacity_modifier = 0.1
 	global_merchant_power = 0.1
-	trade_land_efficiency = 0.0224
-	trade_sea_efficiency = 0.0224
+	trade_land_efficiency = 0.1
+	trade_sea_efficiency = 0.1
 }
 
 # Mountain fortress engineering: unlock Bastille Savoyarde
@@ -222,7 +225,7 @@ nd_bgp_silk_introduction = {
 	icon = regulate_court_procedures
 	unlock_building = nd_bgp_silk_workshop
 	global_silk_output_modifier = 0.1
-	global_production_efficiency = 0.0448
+	global_production_efficiency = 0.0224
 }
 
 # ==========================================
@@ -274,8 +277,7 @@ nd_bgp_toll_modernization = {
 	requires = global_trade_advance
 	icon = global_trade_advance
 	tax_income_efficiency = 0.0359
-	trade_land_efficiency = 0.0224
-	trade_sea_efficiency = 0.0224
+	trade_land_efficiency = 0.1
 	minting_income_factor = 0.0897
 }
 
@@ -338,7 +340,7 @@ nd_bgp_fortress_modernization = {
 	icon = construction_speed_absolutism
 	global_defensive = 0.15
 	fort_maintenance_efficiency = 0.1
-	siege_ability = 0.2
+	siege_ability = 0.1
 }
 
 # Wine trade codification: controlled appellations
@@ -347,9 +349,8 @@ nd_bgp_wine_appellations = {
 	potential = { has_or_had_tag = BGP }
 	requires = the_constitution
 	icon = the_constitution
-	global_production_efficiency = 0.0448
-	trade_land_efficiency = 0.0224
-	trade_sea_efficiency = 0.0224
+	global_production_efficiency = 0.0224
+	trade_land_efficiency = 0.1
 	global_monthly_prosperity = 0.001
 }
 
@@ -389,8 +390,8 @@ nd_bgp_modern_viticulture = {
 	requires = industrialization_advance
 	icon = industrialization_advance
 	unlock_building = nd_bgp_grand_domaine
-	global_production_efficiency = 0.0673
-	tax_income_efficiency = 0.0448
+	global_production_efficiency = 0.03365
+	tax_income_efficiency = 0.03
 }
 
 # Constitutional reform: representative governance
@@ -449,7 +450,7 @@ nd_bgp_destiny = {
 	potential = { has_or_had_tag = BGP has_variable = nd_bgp_formed has_game_rule = nd_destinies_enabled }
 	allow = { stability >= 75 }
 	icon = crown_power_advance_renaissance
-	global_devastation_recovery = 0.005
+	global_devastation_recovery = 0.0025
 }
 
 # Path A Stage 1: Rhone Commerce
@@ -485,7 +486,13 @@ nd_bgp_dest_mare_nostrum = {
 	potential = { has_or_had_tag = BGP has_variable = nd_bgp_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		owns = location:genoa
-		total_development >= 1500
+		custom_tooltip = {
+			text = nd_bgp_dest_marseille_developed_tt
+			location:marseille = {
+				owner ?= root
+				development >= 45
+			}
+		}
 		prestige >= 50
 	}
 	icon = global_trade_advance
@@ -507,8 +514,8 @@ nd_bgp_dest_rhone_apex = {
 	icon = maritime_advance_age_5
 	unlock_building = nd_bgp_maison_de_commerce
 	blockade_efficiency = 0.1
-	navy_light_ship_power = 0.15
-	global_population_growth = 0.002
+	navy_light_ship_power = 0.1
+	global_population_growth = 0.00025
 }
 
 # Path B Stage 1: Alpine Mastery
@@ -538,7 +545,15 @@ nd_bgp_dest_piedmont_control = {
 	allow = {
 		owns = location:turin
 		army_size >= 50
-		total_development >= 1500
+		custom_tooltip = {
+			text = nd_bgp_dest_piedmont_share_tt
+			area:piemonte_area = {
+				any_location_in_area = {
+					percent >= 0.5
+					owner ?= root
+				}
+			}
+		}
 	}
 	icon = imperial_ambitions
 	military_tactics = 0.05

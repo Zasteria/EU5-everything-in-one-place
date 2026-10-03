@@ -1,0 +1,50 @@
+﻿# Catalonia (CAT): formation lines
+# National Destinies mod
+#
+# Vanilla 1.4 defines CAT_f with an empty form_effect (level 2, 75% of
+# catalonia_area, Catalan culture, Christian, not for a country that already
+# is CAT), so INJECT is safe: there is nothing of vanilla's to lose. CAT_f is
+# the only vanilla formable that creates the tag CAT
+# (00_formable_countries.txt:720-748).
+#
+# Roads into the tag, and what each one meets here:
+# 1. A Catalan country forms it by the button (Aragon, Andorra, a Catalan
+#    duchy in Greece). form_effect runs: markers, capital, event.
+# 2. Catalonia is released or breaks away. The start setup gives CAT cores on
+#    every location of the area (main_menu/setup/1337/10_countries.txt), so
+#    that country is born as CAT and never passes through this block. The
+#    four-yearly marker repair in 99_nd_on_actions.txt stamps the marker and
+#    delivers nd_cat.1 for it.
+INJECT:CAT_f = {
+	form_effect = {
+		# Formation markers live HERE, not only in the event's options: a
+		# country can be formed by script, and then the popup may never be
+		# answered.
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_cat_formed
+		}
+		# Barcelona was cap i casal, head and hearth of the Principality.
+		# Guarded by ownership: 75% of the area does not have to include it.
+		if = {
+			limit = {
+				owns = location:barcelona
+				NOT = { capital = location:barcelona }
+			}
+			set_capital = location:barcelona
+		}
+		# The price, paid only by a country that was the Crown of Aragon:
+		# choosing the Principality as the state's identity unmakes the union
+		# of equals in which Aragon and Valencia were peers and not provinces.
+		if = {
+			limit = { has_or_had_tag = ARA }
+			add_country_modifier = {
+				modifier = nd_cat_crown_unmade
+				years = 10
+				mode = add_and_extend
+			}
+		}
+		trigger_event_non_silently = nd_cat.1
+		add_stability = stability_mild_bonus
+	}
+}

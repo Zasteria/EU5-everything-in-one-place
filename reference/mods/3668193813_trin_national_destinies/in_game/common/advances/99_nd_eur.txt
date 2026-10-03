@@ -22,9 +22,9 @@ nd_eur_champagne_fairs = {
 	requires = guilds
 	icon = guilds
 	unlock_building = nd_eur_trade_fair
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.03
+	trade_sea_efficiency = 0.1
 
 	global_merchant_power = 0.05
 }
@@ -245,7 +245,7 @@ nd_eur_westphalian_order = {
 	requires = confessional_court
 	icon = confessional_court
 	peace_offer_negotiation_power = 0.1
-	improve_relation_impact = 0.25
+	improve_relation_impact = 0.15
 	casus_belli_creation_speed_modifier = 0.25
 }
 
@@ -278,7 +278,7 @@ nd_eur_mercantilist_manufactures = {
 	requires = global_trade_advance
 	icon = global_trade_advance
 	unlock_building = nd_eur_state_manufactory
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 	global_raw_material_output = 0.1
 }
 
@@ -288,7 +288,7 @@ nd_eur_vauban_fortifications = {
 	potential = { has_or_had_tag = EUR }
 	requires = leader_recruit_cost_advance
 	icon = leader_recruit_cost_advance
-	unlock_production_method = nd_eur_bastion_maintenance
+	unlock_unit = a_nd_eur_ricochet_battery
 	siege_ability = 0.1
 	global_hostile_attrition = 1.0
 }
@@ -397,7 +397,7 @@ nd_eur_perpetual_peace = {
 	icon = the_constitution
 	tolerance_heretic = 1
 	tolerance_heathen = 1
-	global_pop_assimilation_speed_modifier = 0.15
+	global_pop_assimilation_speed_modifier = 0.1
 	stability_cost_efficiency = 0.1
 }
 
@@ -413,7 +413,7 @@ nd_eur_industrial_convergence = {
 	icon = industrialization_advance
 	unlock_building = nd_eur_continental_railway
 	global_construction_speed = 0.1
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }
 
 # Revolutionary citizen army
@@ -494,9 +494,9 @@ nd_eur_destiny = {
 	potential = { has_or_had_tag = EUR has_variable = nd_eur_formed has_game_rule = nd_destinies_enabled }
 	allow = { stability >= 75 }
 	icon = crown_power_advance_renaissance
-	monthly_legitimacy = 0.075
-	monthly_devotion = 0.075
-	monthly_republican_tradition = 0.075
+	# A continent at peace with itself spends less to stay so (vanilla's
+	# advances grant 0.01 to 0.02).
+	stability_investment = 0.02
 }
 
 # --- Path A: Universal Empire ---
@@ -512,7 +512,8 @@ nd_eur_dest_imperium = {
 		}
 		owns_or_non_sovereign_subject_owns = location:constantinople
 		owns_or_non_sovereign_subject_owns = location:jerusalem
-		army_size >= 30
+		# The third of the old seats east and south of Rome.
+		owns_or_non_sovereign_subject_owns = location:alexandria
 	}
 	icon = imperial_ambitions
 	military_tactics = 0.05
@@ -526,6 +527,11 @@ nd_eur_dest_global_reach = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:tenochtitlan
 		owns_or_non_sovereign_subject_owns = location:guangzhou
+		# No standard is planted across two oceans without the fleets of
+		# nd_eur_global_maritime_reach (age 4). The other path waits for the
+		# institutions of the fifth and sixth ages, and this one had no floor
+		# at all (owner's ruling 2026-10-02, scripts/destiny/stage_floors.py).
+		has_advance = nd_eur_global_maritime_reach
 		gold >= 2000
 		prestige >= 50
 	}
@@ -542,7 +548,16 @@ nd_eur_dest_pax_europaea = {
 		owns_or_non_sovereign_subject_owns = location:delhi
 		owns_or_non_sovereign_subject_owns = location:temasek
 		owns_or_non_sovereign_subject_owns = location:habana
-		army_size >= 75
+		# The peace is kept by the army of nd_eur_grande_armee (age 5).
+		has_advance = nd_eur_grande_armee
+		# The arsenals of nd_eur_imperial_arsenal_tradition (age 5) arm it.
+		custom_tooltip = {
+			text = nd_eur_dest_arsenals_tt
+			any_owned_location = {
+				count >= 5
+				has_building = building_type:nd_eur_imperial_arsenal
+			}
+		}
 		prestige >= 75
 	}
 	icon = imperial_ambitions
@@ -614,6 +629,6 @@ nd_eur_dest_eternal_peace = {
 	icon = merchants_and_trade
 	unlock_building = nd_eur_congress_hall
 	prestige_decay = -0.001
-	global_devastation_recovery = 0.005
+	global_devastation_recovery = 0.0025
 	global_estate_target_satisfaction = -0.05
 }

@@ -21,8 +21,14 @@ nd_pun_doab_canal = {
 		has_advance = nd_pun_five_rivers_irrigation
 	}
 
+	# A canal is cut from a river. The upland between the rivers is watered
+	# by the Persian wheel instead (nd_pun_rahat).
+	location_potential = {
+		has_river = yes
+	}
+
 	modifier = {
-		local_monthly_food_modifier = 0.1
+		local_monthly_food_modifier = 0.05
 		local_wheat_output_modifier = 0.1
 		local_population_capacity = 0.5
 	}
@@ -34,22 +40,98 @@ nd_pun_doab_canal = {
 			tools = 0.1
 			category = building_maintenance
 		}
+	}
+	construction_demand = village_construction
+}
 
-		nd_pun_canal_agriculture = {
-			wheat = 0.1
-			lumber = 0.1
-			tools = 0.1
-			category = building_maintenance
-		}
+# Rahat: the Persian wheel well, an ox-turned chain of clay pots over a
+# masonry well, which irrigates land no canal reaches
+nd_pun_rahat = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = 1
+	employment_size = generic_peasant_building_employment
+	category = infrastructure_category
+	# A wheel waters fields, not streets: countryside only.
+	rural_settlement = yes
+	town = no
+	city = no
+	expensive = no
+	build_time = rural_build_time
 
-		nd_pun_persian_wheel = {
-			wheat = 0.1
+	country_potential = {
+		has_advance = nd_pun_persian_wheel_tradition
+	}
+
+	# The wheel is what waters the bar, the dry upland between the rivers.
+	# Where a river is at hand the Doab canal does the work, so the well is
+	# for everywhere else. A lakeside location with no river is included:
+	# the canal cannot be cut there, and without the wheel it would have
+	# neither of the two (user ruling 2026-10-02).
+	location_potential = {
+		NOT = { has_river = yes }
+	}
+
+	modifier = {
+		local_monthly_food_modifier = 0.05
+		local_population_capacity = 0.5
+	}
+
+	unique_production_methods = {
+		nd_pun_rahat_upkeep = {
 			lumber = 0.1
-			tools = 0.1
+			pottery = 0.1
+			livestock = 0.1
 			category = building_maintenance
 		}
 	}
 	construction_demand = village_construction
+}
+
+# Darbar Sahib (the Harmandir): the one temple at Amritsar, with a door on each side
+nd_pun_darbar_sahib = {
+	is_special = yes
+	is_foreign = no
+	pop_type = clergy
+	max_levels = 1
+	employment_size = large_religious_building_employment
+	category = religious_category
+	# One place only (see location_potential), whatever that place has grown
+	# into: Amritsar began as a pool dug on village land.
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = large_religious_building_time
+
+	country_potential = {
+		has_advance = nd_pun_harmandir_sahib
+	}
+
+	# Amritsar was founded in 1577 on the land of the village of Sultanwind,
+	# which is the location the game has for it.
+	location_potential = {
+		this = location:sultanwind
+	}
+
+	modifier = {
+		local_pop_conversion_speed_modifier = 0.15
+		local_migration_attraction = 0.05
+		local_monthly_prosperity = 0.001
+		local_clergy_estate_power = 0.5
+	}
+
+	unique_production_methods = {
+		nd_pun_harmandir_upkeep = {
+			wheat = 0.2
+			stone = 0.1
+			fine_cloth = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = cathedral_construction
 }
 
 # Gurdwara: Sikh temple with community kitchen (langar)
@@ -164,7 +246,7 @@ nd_pun_shawl_karkhana = {
 			wool = 0.25
 			dyes = 0.1
 			produced = fine_cloth
-			output = 0.2049
+			output = 0.205
 			category = guild_input
 			debug_max_profit = guild_profit_margin
 		}
@@ -208,9 +290,9 @@ nd_pun_dharamsala = {
 
 	unique_production_methods = {
 		nd_pun_dharamsala_upkeep = {
-			wheat = 0.1
-			lumber = 0.1
-			incense = 0.05
+			wheat = 0.28
+			lumber = 0.28
+			incense = 0.14
 			category = building_maintenance
 		}
 	}
@@ -249,20 +331,6 @@ nd_pun_khalsa_training_ground = {
 			leather = 0.1
 			category = building_maintenance
 		}
-
-		nd_pun_khalsa_mint = {
-			silver = 0.2
-			copper = 0.1
-			tools = 0.05
-			category = building_maintenance
-		}
-
-		nd_pun_nihang_training = {
-			weaponry = 0.2
-			wheat = 0.1
-			leather = 0.1
-			category = building_maintenance
-		}
 	}
 	construction_demand = soldier_building_construction
 }
@@ -294,9 +362,9 @@ nd_pun_rakhi_post = {
 
 	unique_production_methods = {
 		nd_pun_rakhi_collection = {
-			weaponry = 0.1
-			horses = 0.05
-			leather = 0.05
+			weaponry = 0.117
+			horses = 0.059
+			leather = 0.059
 			category = building_maintenance
 		}
 	}

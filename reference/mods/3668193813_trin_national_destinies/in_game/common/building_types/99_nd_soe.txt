@@ -69,31 +69,20 @@ nd_soe_saharan_caravanserai = {
 			category = building_maintenance
 		}
 
-		nd_soe_salt_caravan = {
-			livestock = 0.2
-			cloth = 0.1
-			salt = 0.1
-			category = building_maintenance
-		}
 
-		nd_soe_manuscript_production = {
-			paper = 0.2
-			dyes = 0.1
-			cloth = 0.05
-			category = building_maintenance
-		}
 
-		nd_soe_horse_breeding = {
-			livestock = 0.15
-			wheat = 0.1
-			salt = 0.05
-			category = building_maintenance
-		}
 	}
 	construction_demand = caravanserai_building_construction
 }
 
-# Niger River Port - Naval and trade hub along the Niger
+# Niger River Port: the landing where the canoes of the river fleet load
+# grain, salt and soldiers. Bound to a river: the map draws the Niger as a
+# river and gives it no water a ship can sail (no sea zone, no lake and no
+# port entry for Gao, Timbuktu, Kabara or Djenne), so until 2026-10-02 the
+# port stood behind is_coastal and built ships where the empire has no shore.
+# It now does what the fleet did on land: it carries the crown's reach and
+# the merchants' goods along the river.
+# Every settlement tier: Kabara, the landing of Timbuktu, is a village.
 nd_soe_niger_port = {
 	is_special = yes
 	is_foreign = no
@@ -101,7 +90,7 @@ nd_soe_niger_port = {
 	max_levels = 1
 	employment_size = dock_employment
 	category = naval_category
-	rural_settlement = no
+	rural_settlement = yes
 	town = yes
 	city = yes
 	megalopolis = yes
@@ -112,21 +101,21 @@ nd_soe_niger_port = {
 	}
 
 	location_potential = {
-		is_coastal = yes
+		has_river = yes
 	}
 
+	# Proximity value is vanilla's own for a waterway work (the pound lock
+	# canal and the bridge both give 0.1).
 	modifier = {
-		local_sailors = 0.01
 		local_merchant_power = 0.05
-		local_repair_speed = 0.01
-		can_build_ships_in_this_location = yes
+		local_distance_from_capital_speed_propagation = 0.1
 	}
 
 	unique_production_methods = {
 		nd_soe_port_upkeep = {
-			lumber = 0.2
-			tar = 0.1
-			tools = 0.1
+			lumber = 0.213
+			tar = 0.107
+			tools = 0.107
 			category = building_maintenance
 		}
 	}
@@ -160,9 +149,9 @@ nd_soe_qadi_court = {
 
 	unique_production_methods = {
 		nd_soe_court_upkeep = {
-			paper = 0.15
-			cloth = 0.1
-			incense = 0.05
+			paper = 0.228
+			cloth = 0.152
+			incense = 0.076
 			category = building_maintenance
 		}
 	}
@@ -188,7 +177,7 @@ nd_soe_imperial_granary = {
 	}
 
 	modifier = {
-		local_monthly_food_modifier = 0.05
+		local_monthly_food_modifier = 0.025
 		local_food_capacity = 100
 		local_population_growth = 0.0005
 	}
@@ -237,12 +226,6 @@ nd_soe_gold_market = {
 			category = building_maintenance
 		}
 
-		nd_soe_gold_refining = {
-			silver = 0.1
-			pottery = 0.1
-			tools = 0.05
-			category = building_maintenance
-		}
 	}
 	construction_demand = guild_construction
 }
@@ -273,9 +256,9 @@ nd_soe_djenne_mosque = {
 
 	unique_production_methods = {
 		nd_soe_mosque_upkeep = {
-			clay = 0.2
-			lumber = 0.1
-			incense = 0.05
+			clay = 0.56
+			lumber = 0.28
+			incense = 0.14
 			category = building_maintenance
 		}
 	}
@@ -308,9 +291,9 @@ nd_soe_muhtasib_office = {
 
 	unique_production_methods = {
 		nd_soe_office_upkeep = {
-			paper = 0.1
-			pottery = 0.05
-			cloth = 0.1
+			paper = 0.2
+			pottery = 0.1
+			cloth = 0.2
 			category = building_maintenance
 		}
 	}
@@ -350,6 +333,174 @@ nd_soe_slave_barracks = {
 		}
 	}
 	construction_demand = soldier_building_construction
+}
+
+# Assay House (age 3, nd_soe_standardized_trade)
+# Gold dust from the south is weighed against the mithqal, melted in
+# crucibles and worked into rings, bars and ornaments of known weight.
+# Vanilla's jewelry guild makes jewelry from gold in the same way.
+# location_potential: a market center. The assayers sit where the market is
+# held, which in the Songhai lands means Timbuktu, Djenne or Gao.
+# No modifier block: a plain producer in vanilla's guild shape.
+nd_soe_assay_house = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	employment_size = guild_employment
+	category = consumer_goods_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_soe_standardized_trade
+	}
+
+	location_potential = {
+		is_market_center = yes
+	}
+
+	unique_production_methods = {
+		nd_soe_gold_refining = {
+			goods_gold = 0.1
+			tools = 0.05
+			produced = jewelry
+			output = 0.228
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# House of Copyists (age 4, nd_soe_timbuktu_manuscripts)
+# Timbuktu's scholars kept paid copyists; a finished book carried the names
+# of the copyist and of the reader who checked it. Bill after vanilla's
+# scriptorium (paper, dyes, leather): the leather is the wallet a Timbuktu
+# book is kept in.
+# No location_potential: paper came across the desert to every town of the
+# Niger bend, and nothing in the bill is tied to the ground.
+# No modifier block: a plain producer in vanilla's guild shape.
+nd_soe_copyists_house = {
+	is_special = yes
+	is_foreign = no
+	pop_type = clergy
+	max_levels = guild_max_level
+	employment_size = religious_building_employment
+	category = consumer_goods_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_soe_timbuktu_manuscripts
+	}
+
+	unique_production_methods = {
+		nd_soe_manuscript_production = {
+			paper = 0.2
+			dyes = 0.05
+			leather = 0.05
+			produced = books
+			output = 0.3
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# Sahel Stud (age 4, nd_soe_pastoral_wealth)
+# Vanilla's horse breeders are closed to this country: their `allow` asks
+# for a mediterranean, continental or oceanic climate
+# (building_types/rural_buildings.txt, horse_breeders), and the Niger bend is
+# arid. This is the Sahel's own stud, on millet instead of wheat.
+# location_potential: vanilla's own gate for a horse breeder, horses
+# produced somewhere in the location's market. Horses are a raw good, so the
+# stud cannot stand where no breeding stock exists.
+# Countryside and town, not city: pasture.
+nd_soe_sahel_stud = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = rural_building_cap
+	employment_size = rural_peasant_produce_employment
+	category = rgo_building_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_soe_pastoral_wealth
+	}
+
+	location_potential = {
+		market ?= {
+			is_produced_in_market = goods:horses
+		}
+	}
+
+	unique_production_methods = {
+		nd_soe_horse_breeding = {
+			millet = 0.5
+			horses = 0.1
+			salt = 0.025
+			produced = horses
+			output = 0.36
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = horse_breeders_construction
+}
+
+# Mud-Brick Town Wall (age 5, nd_soe_sahel_fortifications)
+# The wall of Djenne held Sunni Ali's army for years. Sun-dried brick is
+# cheap and has to be renewed after every rainy season.
+# Town only: a city raises vanilla's city walls (forts.txt, city_walls, which
+# a town cannot build), so this is the wall a town can afford, at half of
+# the city wall's garrison and under its defensiveness.
+# It gives no fort level: it strengthens a fort that stands there.
+nd_soe_banco_wall = {
+	is_special = yes
+	is_foreign = no
+	pop_type = soldiers
+	max_levels = 1
+	employment_size = stockade_employment
+	category = defense_category
+	rural_settlement = no
+	town = yes
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = small_fort_building
+
+	country_potential = {
+		has_advance = nd_soe_sahel_fortifications
+	}
+
+	modifier = {
+		local_garrison_size = 0.5
+		local_defensive = 0.15
+		local_unrest = -0.025
+	}
+
+	unique_production_methods = {
+		nd_soe_banco_wall_upkeep = {
+			clay = 0.2
+			lumber = 0.1
+			weaponry = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = stockade_construction
 }
 
 # ===== DESTINY BUILDINGS =====

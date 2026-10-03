@@ -53,7 +53,6 @@ nd_hen_cumbric_law = {
 	potential = { has_or_had_tag = HEN }
 	requires = legalism_advance
 	icon = legalism_advance
-	unlock_production_method = nd_hen_court_of_justice
 	stability_cost_efficiency = 0.1
 }
 
@@ -75,7 +74,7 @@ nd_hen_brythonic_smiths = {
 	potential = { has_or_had_tag = HEN }
 	requires = merchants_and_trade
 	icon = merchants_and_trade
-	unlock_production_method = nd_hen_forge_work
+	unlock_building = nd_hen_gefail
 	global_weaponry_output_modifier = 0.1
 }
 
@@ -85,10 +84,10 @@ nd_hen_clyde_trade = {
 	potential = { has_or_had_tag = HEN }
 	requires = merchants_and_trade
 	icon = merchants_and_trade
-	unlock_production_method = nd_hen_cattle_tithe
-	trade_land_efficiency = 0.02
+	unlock_building = nd_hen_barcdy
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.02
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -125,7 +124,7 @@ nd_hen_wool_trade = {
 	potential = { has_or_had_tag = HEN }
 	requires = regulate_court_procedures
 	icon = regulate_court_procedures
-	unlock_production_method = nd_hen_wool_weaving
+	unlock_building = nd_hen_pandy
 	global_wool_output_modifier = 0.15
 }
 
@@ -145,7 +144,6 @@ nd_hen_border_strongholds = {
 	potential = { has_or_had_tag = HEN }
 	requires = crown_power_advance_discovery
 	icon = crown_power_advance_discovery
-	unlock_production_method = nd_hen_garrison_upkeep
 	global_hostile_attrition = 0.75
 }
 
@@ -177,7 +175,6 @@ nd_hen_bardic_preservation = {
 	potential = { has_or_had_tag = HEN }
 	requires = confessional_court
 	icon = confessional_court
-	unlock_production_method = nd_hen_bardic_training
 	cultures_capacity = 1
 }
 
@@ -197,6 +194,7 @@ nd_hen_pennine_mines = {
 	potential = { has_or_had_tag = HEN }
 	requires = pop_promotion_speed_age_4
 	icon = pop_promotion_speed_age_4
+	unlock_building = nd_hen_bole_hill
 	global_lead_output_modifier = 0.15
 	global_coal_output_modifier = 0.1
 }
@@ -222,9 +220,9 @@ nd_hen_coastal_trade = {
 	potential = { has_or_had_tag = HEN }
 	requires = maritime_advance_age_5
 	icon = maritime_advance_age_5
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	global_sailors_modifier = 0.15
 }
@@ -245,7 +243,8 @@ nd_hen_northern_industry = {
 	potential = { has_or_had_tag = HEN }
 	requires = construction_speed_absolutism
 	icon = construction_speed_absolutism
-	global_production_efficiency = 0.05
+	unlock_production_method = nd_hen_ironmongery
+	global_production_efficiency = 0.025
 	global_iron_output_modifier = 0.1
 }
 
@@ -315,7 +314,16 @@ nd_hen_dest_cumbric_schools = {
 			text = nd_hen_path_a_tt
 			has_variable = nd_hen_path_a
 		}
-		has_embraced_institution = institution:meritocracy
+		# The schools are the bardic halls of nd_hen_cynfeirdd (age 1). The
+		# institution meritocracy stood here: it is born in East Asia and
+		# may never reach Britain.
+		custom_tooltip = {
+			text = nd_hen_dest_halls_2_tt
+			any_owned_location = {
+				count >= 2
+				has_building = building_type:nd_hen_neuadd_y_beirdd
+			}
+		}
 		capital = {
 			market = {
 				OR = {
@@ -328,7 +336,7 @@ nd_hen_dest_cumbric_schools = {
 	}
 	icon = organized_religion
 	tax_income_efficiency = 0.025
-	global_pop_assimilation_speed_modifier = 0.15
+	global_pop_assimilation_speed_modifier = 0.1
 }
 
 nd_hen_dest_brythonic_union = {
@@ -341,9 +349,10 @@ nd_hen_dest_brythonic_union = {
 		gold >= 2000
 	}
 	icon = imperial_ambitions
-	monthly_legitimacy = 0.075
-	monthly_devotion = 0.075
-	monthly_republican_tradition = 0.075
+	# The Welsh kindreds are taken into the realm as kin, not as a
+	# conquered province. (The government power keys stood here: the
+	# heritage tree grants them.)
+	global_integration_speed_modifier = 0.1
 	global_monthly_prosperity = 0.001
 }
 
@@ -352,14 +361,30 @@ nd_hen_dest_prifysgol = {
 	requires = nd_hen_dest_brythonic_union
 	potential = { has_or_had_tag = HEN has_variable = nd_hen_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		total_development >= 1500
+		# Glasgow, the see of Kentigern, bishop of the Britons of
+		# Strathclyde, and the seat of the university of 1451. 23 in 1337,
+		# doubled.
+		custom_tooltip = {
+			text = nd_hen_dest_glasgow_developed_tt
+			location:glasgow = {
+				owner ?= root
+				development >= 46
+			}
+		}
 		prestige >= 75
-		has_embraced_institution = institution:scientific_revolution
+		# The masters of the university come out of the bardic halls. The
+		# stage before this one waits for the press (Glasgow's university
+		# is of 1451), so nothing here waits for the fifth age and both
+		# paths can end in a similar span.
+		any_owned_location = {
+			count >= 4
+			has_building = building_type:nd_hen_neuadd_y_beirdd
+		}
 	}
 	icon = enlightened_court
 	unlock_building = nd_hen_prifysgol
 	prestige_decay = -0.001
-	global_monthly_development = 0.002
+	global_monthly_development = 0.001
 	global_population_growth = 0.001
 }
 
@@ -375,7 +400,8 @@ nd_hen_dest_london = {
 			has_variable = nd_hen_path_b
 		}
 		owns = location:london
-		army_size >= 30
+		# Lincoln: the old road from York to London runs through it.
+		owns = location:lincoln
 	}
 	icon = feudalism_advance
 	siege_ability = 0.1
@@ -403,7 +429,8 @@ nd_hen_dest_bretagne = {
 	allow = {
 		owns = location:rouen
 		prestige >= 75
-		army_size >= 75
+		# Rennes: the Bretons whose kinship the stage claims.
+		owns = location:rennes
 	}
 	icon = imperial_ambitions
 	unlock_building = nd_hen_caer_ludd

@@ -12,6 +12,17 @@
 # forms (mirrors vanilla decline_of_empire's recently_became_empire guard).
 # Grace was 25 years originally; cut to 10 so the Pragmatic Sanction
 # disaster fires shortly after the 3-event succession chain ends (year 8).
+#
+# LOBBY RULE (2026-10-01, Workshop report 2026-09-21, Darkborne): both
+# can_start blocks read nd_dnm_crises_are_enabled
+# (scripted_triggers/nd_game_rule_triggers.txt), which reads the disasters'
+# own rule, nd_dnm_crises_rule. Until then the disasters gated on
+# nd_dnm_formed alone, so a player who had switched every Danubian
+# situation off in the lobby still got them. A spawn gate read from a
+# lobby rule is vanilla's own idiom (diseases/bubonic_plague.txt:31-37).
+# The gate is on can_start only: a disaster already running in a save is
+# ended by its own exits, never by a rule change, because its on_end pays
+# out the broken-Sanction ending.
 # ==========================================================================
 
 # --------------------------------------------------------------------------
@@ -31,6 +42,10 @@ nd_dnm_nationalities_question = {
 
 	can_start = {
 		tag = DNM
+		custom_tooltip = {
+			text = nd_dnm_disaster_rule_enabled_tt
+			nd_dnm_crises_are_enabled = yes
+		}
 		custom_tooltip = {
 			text = nd_dnm_disaster_formed_tt
 			has_variable = nd_dnm_formed
@@ -165,6 +180,10 @@ nd_dnm_pragmatic_sanction_crisis = {
 
 	can_start = {
 		tag = DNM
+		custom_tooltip = {
+			text = nd_dnm_disaster_rule_enabled_tt
+			nd_dnm_crises_are_enabled = yes
+		}
 		# Wrap the formed / grace variable checks in custom_tooltip so the
 		# trigger breakdown panel reads as gameplay state, not raw vars.
 		custom_tooltip = {
@@ -182,10 +201,27 @@ nd_dnm_pragmatic_sanction_crisis = {
 			# its final step (set by nd_dnm.32 at year 8 post-formation).
 			# Wrapped in custom_tooltip so the trigger breakdown panel shows
 			# friendly text instead of raw variable references.
+			#
+			# trigger_if, not a has_variable sibling (2026-10-01). The
+			# engine builds this block's requirement list for countries
+			# that are not the Monarchy, and a tooltip pass evaluates every
+			# sibling: the has_variable line did not stop the comparison
+			# next to it, which logged three script errors per pass
+			# ("Failed to fetch variable ... not being set", error.log on
+			# 1.3.11 and 1.4). A trigger_if reads its limit first and only
+			# then its body. Vanilla idiom for a comparison on a variable
+			# that may be unset: generic_actions/crusade_actions.txt:80-86
+			# and jihad_actions.txt:50-56; trigger_if inside custom_tooltip:
+			# international_organizations/union.txt:36-52.
 			custom_tooltip = {
 				text = nd_dnm_disaster_chain_primed_tt
-				has_variable = nd_dnm_succession_step
-				var:nd_dnm_succession_step >= 3
+				trigger_if = {
+					limit = { has_variable = nd_dnm_succession_step }
+					var:nd_dnm_succession_step >= 3
+				}
+				trigger_else = {
+					always = no
+				}
 			}
 			# Organic path: still allows the disaster to fire earlier
 			# if the player hits the historical succession conditions.
@@ -210,13 +246,15 @@ nd_dnm_pragmatic_sanction_crisis = {
 	#   - counter >= target  -> on_end sets nd_dnm_ps_upheld, fires nd_dnm.21
 	#   - counter <= floor   -> on_end leaves nd_dnm_ps_upheld unset, fires nd_dnm.22
 	#   - player ceded       -> on_end leaves nd_dnm_ps_upheld unset, fires nd_dnm.22
-	# EU5 polls can_end conditions even for INACTIVE disasters (for tooltip
-	# previews etc), so every var:X comparison must be guarded by has_variable
-	# to avoid runtime "Failed to fetch variable" errors when the disaster
-	# hasn't started yet.
 	# Three deterministic exits, each wrapped in custom_tooltip for the
-	# panel's trigger breakdown. The has_variable guards prevent runtime
-	# fetch errors for non-active disasters (log noise reduction).
+	# panel's trigger breakdown. has_variable next to the comparison is
+	# vanilla's own shape for an end condition on a counter
+	# (situations/council_of_trent.txt:36-41,
+	# scripted_triggers/disaster_triggers.txt:60-69). It is enough here and
+	# was not enough in can_start above, because can_end is read only while
+	# the disaster runs, and on_start sets both counters: five months of
+	# error.log carry the unset-variable error for can_start and never for
+	# these lines.
 	can_end = {
 		OR = {
 			# UPHELD: counter reached the target.

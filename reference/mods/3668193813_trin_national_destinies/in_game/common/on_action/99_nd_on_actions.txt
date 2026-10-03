@@ -31,8 +31,9 @@
 #   * Slot ledger as of 2026-09-10: WE hold monthly_country_pulse.effect
 #     (bootstrap + DNM chain + France unlock + Danube spark watch + AI
 #     formables),
-#     on_four_yearly_check_for_script.on_actions (BYZ achievement) and
-#     on_new_ruler.on_actions (Danube succession checkpoint). Still free:
+#     on_four_yearly_check_for_script.on_actions (BYZ achievement),
+#     on_new_ruler.on_actions (Danube succession checkpoint) and, since
+#     2026-10-01, on_losing_war.on_actions (Danube throne war). Still free:
 #     biyearly_country_pulse.effect, on_country_specific_pulse.{effect,
 #     on_actions}. Re-verify against vanilla after every patch.
 # ==========================================================================
@@ -340,6 +341,79 @@ monthly_country_pulse = {
 					trigger_event_non_silently = { id = nd_tib.1 days = 3 }
 				}
 			}
+			# Tunis (formable added by vanilla in 1.4): the Hafsid sultanate
+			# holds the tag from day one and can never press the form button.
+			# nd_tun_newcomer stays unset here, so the event shows the text
+			# written for the sitting dynasty.
+			if = {
+				limit = {
+					exists = c:TUN
+					NOT = { c:TUN = { has_variable = nd_tun_formed } }
+				}
+				c:TUN = {
+					hidden_effect = {
+						set_variable = nd_formed
+						set_variable = nd_tun_formed
+					}
+					trigger_event_non_silently = { id = nd_tun.1 days = 3 }
+				}
+			}
+			# Aragon, Castile, Portugal and Mallorca (formables added by vanilla in
+			# 1.4): each holds its tag from day one and can never press the form
+			# button. User ruling 2026-10-02: they get the marker and the event in
+			# the first month, as Tunis does, and not from the four-yearly repair.
+			if = {
+				limit = {
+					exists = c:ARA
+					NOT = { c:ARA = { has_variable = nd_ara_formed } }
+				}
+				c:ARA = {
+					hidden_effect = {
+						set_variable = nd_formed
+						set_variable = nd_ara_formed
+					}
+					trigger_event_non_silently = { id = nd_ara.1 days = 3 }
+				}
+			}
+			if = {
+				limit = {
+					exists = c:CAS
+					NOT = { c:CAS = { has_variable = nd_cas_formed } }
+				}
+				c:CAS = {
+					hidden_effect = {
+						set_variable = nd_formed
+						set_variable = nd_cas_formed
+					}
+					trigger_event_non_silently = { id = nd_cas.1 days = 3 }
+				}
+			}
+			if = {
+				limit = {
+					exists = c:POR
+					NOT = { c:POR = { has_variable = nd_por_formed } }
+				}
+				c:POR = {
+					hidden_effect = {
+						set_variable = nd_formed
+						set_variable = nd_por_formed
+					}
+					trigger_event_non_silently = { id = nd_por.1 days = 3 }
+				}
+			}
+			if = {
+				limit = {
+					exists = c:MLL
+					NOT = { c:MLL = { has_variable = nd_mll_formed } }
+				}
+				c:MLL = {
+					hidden_effect = {
+						set_variable = nd_formed
+						set_variable = nd_mll_formed
+					}
+					trigger_event_non_silently = { id = nd_mll.1 days = 3 }
+				}
+			}
 			if = {
 				limit = {
 					exists = c:YUA
@@ -434,9 +508,16 @@ monthly_country_pulse = {
 		# start and the Reich situation's legitimacy exit was unreachable.
 		# Monthly polling suits it better than yearly: each step waits on a
 		# timed variable (years = 2/5/8) and now fires promptly on decay.
+		#
+		# Each step reads nd_dnm_crises_are_enabled (2026-10-01). The chain's
+		# modifiers last until the Pragmatic Sanction disaster ends, so a
+		# chain that ran while that disaster was switched off in the lobby
+		# would leave them on the country for good. Off, the chain waits
+		# and spends no step; turned on again, it resumes where it stood.
 		if = {
 			limit = {
 				tag = DNM
+				nd_dnm_crises_are_enabled = yes
 				has_variable = nd_dnm_formed
 				NOT = { has_variable = nd_dnm_chain_30_pending }
 				NOT = { has_variable = nd_dnm_chain_30_fired }
@@ -447,6 +528,7 @@ monthly_country_pulse = {
 		if = {
 			limit = {
 				tag = DNM
+				nd_dnm_crises_are_enabled = yes
 				has_variable = nd_dnm_chain_30_fired
 				NOT = { has_variable = nd_dnm_chain_31_pending }
 				NOT = { has_variable = nd_dnm_chain_31_fired }
@@ -457,6 +539,7 @@ monthly_country_pulse = {
 		if = {
 			limit = {
 				tag = DNM
+				nd_dnm_crises_are_enabled = yes
 				has_variable = nd_dnm_chain_31_fired
 				NOT = { has_variable = nd_dnm_chain_32_pending }
 				NOT = { has_variable = nd_dnm_chain_32_fired }
@@ -469,8 +552,9 @@ monthly_country_pulse = {
 		# Game-start France never presses a form button, so like BYZ it earns
 		# nd_fra.1 (and with it the bureaucracies and destiny tree) by
 		# achievement, here either of two. Its appanages consolidated: vanilla
-		# flavor_fra.1103 sets enable_centralized_fra_reform permanently
-		# (DHE/flavor_FRA.txt:2953). Or the Hundred Years' War won: vanilla
+		# sets enable_centralized_fra_reform permanently (since 1.4 from the
+		# decision in decisions/flavor_decisions_fra.txt; until 1.3 from the
+		# event flavor_fra.1103). Or the Hundred Years' War won: vanilla
 		# keeps no permanent record of that, only victory_in_the_hyw_modifier
 		# for 20 years (flavor_fra.26), so the win is recorded here while the
 		# modifier is present. Monthly rather than the four-yearly BYZ hook so
@@ -634,62 +718,201 @@ nd_on_four_yearly_check = {
 			c:BYZ = { trigger_event_non_silently = nd_byz.1 }
 		}
 
-		# SCRIPT-FORMED TAG REPAIR (2026-08-08, Workshop report on JAP).
+		# FORMATION MARKER REPAIR, every formable (2026-08-08 for the tags
+		# vanilla forms by script, widened to all of them 2026-10-01).
 		#
-		# Vanilla can create a country WITHOUT the player pressing the
-		# formable button: `form_country = formable_country:X_f` appears at
-		# 25 sites across situations, DHE chains, peace treaties and generic
-		# actions. sengoku.txt forms JAP from the shogunate leader when the
-		# Sengoku Jidai ends; rise_of_the_ottomans forms RUM; flavor chains
-		# form MOL, AYU, TUS and others.
+		# Each formable's content is gated on nd_<tag>_formed, which its
+		# form_effect sets. A country can come to hold the tag by a road that
+		# never runs that form_effect: vanilla's `form_country` from a situation
+		# or flavour chain if that skips it (unconfirmed in a live game), a
+		# country built directly with define_unique_country_tag (Malacca), a
+		# vanilla formable variant the mod has not hooked, another mod's
+		# override, or a save from before the marker lived in form_effect. The
+		# failure is silent and total: every advance gated on the marker stays
+		# locked for the rest of the campaign (Workshop: Japan 2026-08-08, Italy
+		# 2026-09-26). A hand-kept list of the tags already reported only ever
+		# fixes the last report, so the list is generated for every formable.
 		#
-		# The formation markers are now set in each form_effect, which
-		# covers this as long as form_country runs form_effect. That has not
-		# been confirmed against a live game, and the failure is silent and
-		# total: the tag keeps every advance gated on its marker locked
-		# forever, which is exactly what was reported. So this repairs the
-		# state independently, on a cheap four-yearly cadence, for the 13
-		# mod tags vanilla can form by script.
-		#
-		# Self-healing by design: a save already broken by this bug is
-		# repaired within four years of loading. Costs nothing when the
-		# markers are set, because every branch tests for their absence.
-		# The bootstrap block on monthly_country_pulse cannot do this job:
-		# it is wrapped in a global run-once flag, so it fires on the first
-		# pulse of the campaign, centuries before any of these tags exist.
+		# Self-healing: a broken save is repaired within four years of loading.
+		# Costs nothing once the markers are set, because every branch tests for
+		# their absence. Tags with a formation event get it delivered three days
+		# later; the event-formed tags (nd_<tag>.1 is an advance-gated flavour
+		# event, not a formation popup) get the marker alone.
+		# BEGIN GENERATED marker repair (scripts/generate_marker_repair.py)
 		nd_repair_script_formed_effect = { TAG = ADU LTAG = adu }
-		nd_repair_script_formed_effect = { TAG = BNG LTAG = bng }
-		nd_repair_script_formed_effect = { TAG = CHI LTAG = chi }
-		nd_repair_script_formed_effect = { TAG = DLH LTAG = dlh }
-		nd_repair_script_formed_effect = { TAG = GBR LTAG = gbr }
-		nd_repair_script_formed_effect = { TAG = IRE LTAG = ire }
-		nd_repair_script_formed_effect = { TAG = JAP LTAG = jap }
-		nd_repair_script_formed_effect = { TAG = LAT LTAG = lat }
-		nd_repair_script_formed_effect = { TAG = MOL LTAG = mol }
-		nd_repair_script_formed_effect = { TAG = PGR LTAG = pgr }
-		nd_repair_script_formed_effect = { TAG = PRU LTAG = pru }
-		nd_repair_script_formed_effect = { TAG = RUM LTAG = rum }
-		nd_repair_script_formed_effect = { TAG = SWI LTAG = swi }
-		nd_repair_script_formed_effect = { TAG = TUS LTAG = tus }
-
-		# The event-formed tags. Their nd_<tag>.1 is an advance-gated DHE
-		# rather than a formation event, so they take the marker-only
-		# variant: setting the variable is the entire fix, and calling the
-		# DHE would just fail its own trigger.
-		#
-		# Until 2026-08-08 none of these had a formable file at all, so the
-		# only writer of nd_<tag>_formed was that DHE's options, behind an
-		# age-3 advance. The bureaucracy grant in each tag's auto_modifier
-		# reads that variable, so four bureaucracies per tag sat unreachable
-		# for most of a campaign. They now also set the markers in
-		# form_effect; this sweep is the belt to that pair of braces, and for
-		# MLC it is the only thing that works at all.
+		nd_repair_script_formed_effect = { TAG = AEG LTAG = aeg }
+		nd_repair_script_formed_effect = { TAG = AHM LTAG = ahm }
+		nd_repair_script_formed_effect = { TAG = AIA LTAG = aia }
+		nd_repair_script_formed_effect = { TAG = ALG LTAG = alg }
+		nd_repair_script_formed_effect = { TAG = ALM LTAG = alm }
+		nd_repair_script_formed_effect = { TAG = ANV LTAG = anv }
+		nd_repair_script_formed_effect = { TAG = ARA LTAG = ara }
+		nd_repair_script_formed_effect = { TAG = ARC LTAG = arc }
+		nd_repair_script_formed_effect = { TAG = ATE LTAG = ate }
 		nd_repair_script_formed_marker_only = { TAG = AYU LTAG = ayu }
+		nd_repair_script_formed_effect = { TAG = AZT LTAG = azt }
 		nd_repair_script_formed_marker_only = { TAG = BAH LTAG = bah }
+		nd_repair_script_formed_effect = { TAG = BAN LTAG = ban }
+		nd_repair_script_formed_effect = { TAG = BAV LTAG = bav }
+		nd_repair_script_formed_effect = { TAG = BEJ LTAG = bej }
+		nd_repair_script_formed_effect = { TAG = BEL LTAG = bel }
+		nd_repair_script_formed_effect = { TAG = BGP LTAG = bgp }
+		nd_repair_script_formed_effect = { TAG = BNG LTAG = bng }
+		nd_repair_script_formed_effect = { TAG = BNH LTAG = bnh }
+		nd_repair_script_formed_effect = { TAG = BNO LTAG = bno }
+		nd_repair_script_formed_effect = { TAG = BOH LTAG = boh }
+		nd_repair_script_formed_effect = { TAG = CAN LTAG = can }
+		nd_repair_script_formed_effect = { TAG = CAS LTAG = cas }
+		nd_repair_script_formed_effect = { TAG = CAT LTAG = cat }
+		nd_repair_script_formed_effect = { TAG = CDA LTAG = cda }
+		nd_repair_script_formed_effect = { TAG = CEL LTAG = cel }
+		nd_repair_script_formed_effect = { TAG = CHI LTAG = chi }
+		nd_repair_script_formed_effect = { TAG = CPT LTAG = cpt }
+		nd_repair_script_formed_effect = { TAG = CSO LTAG = cso }
+		nd_repair_script_formed_effect = { TAG = CTH LTAG = cth }
 		nd_repair_script_formed_marker_only = { TAG = DAH LTAG = dah }
+		nd_repair_script_formed_effect = { TAG = DAL LTAG = dal }
+		nd_repair_script_formed_effect = { TAG = DEC LTAG = dec }
+		nd_repair_script_formed_effect = { TAG = DLH LTAG = dlh }
+		nd_repair_script_formed_effect = { TAG = DNM LTAG = dnm }
+		nd_repair_script_formed_effect = { TAG = DRD LTAG = drd }
+		nd_repair_script_formed_effect = { TAG = DRR LTAG = drr }
+		nd_repair_script_formed_effect = { TAG = EDO LTAG = edo }
+		nd_repair_script_formed_effect = { TAG = EGY LTAG = egy }
+		nd_repair_script_formed_effect = { TAG = ETH LTAG = eth }
+		nd_repair_script_formed_effect = { TAG = EUR LTAG = eur }
+		nd_repair_script_formed_effect = { TAG = FIN LTAG = fin }
+		nd_repair_script_formed_effect = { TAG = FKN LTAG = fkn }
+		nd_repair_script_formed_effect = { TAG = FRK LTAG = frk }
+		nd_repair_script_formed_effect = { TAG = GBR LTAG = gbr }
+		nd_repair_script_formed_effect = { TAG = GBU LTAG = gbu }
+		nd_repair_script_formed_effect = { TAG = GER LTAG = ger }
+		nd_repair_script_formed_effect = { TAG = GLC LTAG = glc }
+		nd_repair_script_formed_effect = { TAG = GOT LTAG = got }
+		nd_repair_script_formed_effect = { TAG = GRE LTAG = gre }
+		nd_repair_script_formed_effect = { TAG = GUJ LTAG = guj }
+		nd_repair_script_formed_effect = { TAG = HAB LTAG = hab }
+		nd_repair_script_formed_effect = { TAG = HAN LTAG = han }
+		nd_repair_script_formed_effect = { TAG = HAU LTAG = hau }
+		nd_repair_script_formed_effect = { TAG = HEN LTAG = hen }
+		nd_repair_script_formed_effect = { TAG = HIN LTAG = hin }
+		nd_repair_script_formed_effect = { TAG = HOS LTAG = hos }
+		nd_repair_script_formed_effect = { TAG = ILK LTAG = ilk }
+		nd_repair_script_formed_effect = { TAG = ILY LTAG = ily }
+		nd_repair_script_formed_effect = { TAG = INC LTAG = inc }
+		nd_repair_script_formed_effect = { TAG = IRA LTAG = ira }
+		nd_repair_script_formed_effect = { TAG = IRE LTAG = ire }
+		nd_repair_script_formed_effect = { TAG = IRO LTAG = iro }
+		nd_repair_script_formed_effect = { TAG = IRQ LTAG = irq }
+		nd_repair_script_formed_effect = { TAG = ITA LTAG = ita }
+		nd_repair_script_formed_effect = { TAG = JAP LTAG = jap }
+		nd_repair_script_formed_effect = { TAG = KAZ LTAG = kaz }
+		nd_repair_script_formed_effect = { TAG = KBU LTAG = kbu }
+		nd_repair_script_formed_effect = { TAG = KHL LTAG = khl }
+		nd_repair_script_formed_effect = { TAG = KOA LTAG = koa }
+		nd_repair_script_formed_effect = { TAG = KOJ LTAG = koj }
+		nd_repair_script_formed_effect = { TAG = KON LTAG = kon }
+		nd_repair_script_formed_effect = { TAG = KRS LTAG = krs }
+		nd_repair_script_formed_effect = { TAG = KRY LTAG = kry }
+		nd_repair_script_formed_effect = { TAG = KWS LTAG = kws }
+		nd_repair_script_formed_effect = { TAG = LAT LTAG = lat }
+		nd_repair_script_formed_effect = { TAG = LBE LTAG = lbe }
+		nd_repair_script_formed_effect = { TAG = LIV LTAG = liv }
+		nd_repair_script_formed_effect = { TAG = LMB LTAG = lmb }
+		nd_repair_script_formed_effect = { TAG = LON LTAG = lon }
+		nd_repair_script_formed_effect = { TAG = LOT LTAG = lot }
+		nd_repair_script_formed_effect = { TAG = LVA LTAG = lva }
+		nd_repair_script_formed_effect = { TAG = LXA LTAG = lxa }
+		nd_repair_script_formed_effect = { TAG = MAL LTAG = mal }
+		nd_repair_script_formed_effect = { TAG = MAP LTAG = map }
+		nd_repair_script_formed_effect = { TAG = MAY LTAG = may }
+		nd_repair_script_formed_effect = { TAG = MAZ LTAG = maz }
+		nd_repair_script_formed_effect = { TAG = MCA LTAG = mca }
+		nd_repair_script_formed_effect = { TAG = MCH LTAG = mch }
+		nd_repair_script_formed_effect = { TAG = MEX LTAG = mex }
+		nd_repair_script_formed_effect = { TAG = MGE LTAG = mge }
+		nd_repair_script_formed_effect = { TAG = MGO LTAG = mgo }
+		nd_repair_script_formed_effect = { TAG = MHR LTAG = mhr }
+		nd_repair_script_formed_effect = { TAG = MIR LTAG = mir }
 		nd_repair_script_formed_marker_only = { TAG = MLC LTAG = mlc }
+		nd_repair_script_formed_effect = { TAG = MLL LTAG = mll }
+		nd_repair_script_formed_effect = { TAG = MOL LTAG = mol }
+		nd_repair_script_formed_effect = { TAG = MOR LTAG = mor }
+		nd_repair_script_formed_effect = { TAG = MRL LTAG = mrl }
+		nd_repair_script_formed_effect = { TAG = MRO LTAG = mro }
+		nd_repair_script_formed_effect = { TAG = MSA LTAG = msa }
+		nd_repair_script_formed_effect = { TAG = MSI LTAG = msi }
 		nd_repair_script_formed_marker_only = { TAG = MTM LTAG = mtm }
+		nd_repair_script_formed_effect = { TAG = MTP LTAG = mtp }
+		nd_repair_script_formed_effect = { TAG = MUG LTAG = mug }
+		nd_repair_script_formed_effect = { TAG = NED LTAG = ned }
+		nd_repair_script_formed_effect = { TAG = NIN LTAG = nin }
+		nd_repair_script_formed_effect = { TAG = NPL LTAG = npl }
+		nd_repair_script_formed_effect = { TAG = NSE LTAG = nse }
+		nd_repair_script_formed_effect = { TAG = NTR LTAG = ntr }
+		nd_repair_script_formed_effect = { TAG = NUB LTAG = nub }
+		nd_repair_script_formed_effect = { TAG = NUM LTAG = num }
+		nd_repair_script_formed_effect = { TAG = NUS LTAG = nus }
+		nd_repair_script_formed_effect = { TAG = NZO LTAG = nzo }
+		nd_repair_script_formed_effect = { TAG = OCC LTAG = occ }
+		nd_repair_script_formed_effect = { TAG = OUT LTAG = out }
+		nd_repair_script_formed_effect = { TAG = OYE LTAG = oye }
+		nd_repair_script_formed_effect = { TAG = PGR LTAG = pgr }
+		nd_repair_script_formed_effect = { TAG = PLC LTAG = plc }
+		nd_repair_script_formed_effect = { TAG = PNT LTAG = pnt }
+		nd_repair_script_formed_effect = { TAG = POL LTAG = pol }
+		nd_repair_script_formed_effect = { TAG = POM LTAG = pom }
+		nd_repair_script_formed_effect = { TAG = PON LTAG = pon }
+		nd_repair_script_formed_effect = { TAG = POR LTAG = por }
+		nd_repair_script_formed_effect = { TAG = PRU LTAG = pru }
+		nd_repair_script_formed_effect = { TAG = PUE LTAG = pue }
+		nd_repair_script_formed_effect = { TAG = PUN LTAG = pun }
+		nd_repair_script_formed_effect = { TAG = RJP LTAG = rjp }
+		nd_repair_script_formed_effect = { TAG = RMN LTAG = rmn }
+		nd_repair_script_formed_effect = { TAG = RUS LTAG = rus }
+		nd_repair_script_formed_effect = { TAG = RYU LTAG = ryu }
+		nd_repair_script_formed_effect = { TAG = SAR LTAG = sar }
+		nd_repair_script_formed_effect = { TAG = SAX LTAG = sax }
+		nd_repair_script_formed_effect = { TAG = SCA LTAG = sca }
+		nd_repair_script_formed_effect = { TAG = SHA LTAG = sha }
+		nd_repair_script_formed_effect = { TAG = SHL LTAG = shl }
+		nd_repair_script_formed_effect = { TAG = SIA LTAG = sia }
+		nd_repair_script_formed_effect = { TAG = SIL LTAG = sil }
+		nd_repair_script_formed_effect = { TAG = SKO LTAG = sko }
+		nd_repair_script_formed_effect = { TAG = SLO LTAG = slo }
+		nd_repair_script_formed_effect = { TAG = SOE LTAG = soe }
+		nd_repair_script_formed_effect = { TAG = SOI LTAG = soi }
+		nd_repair_script_formed_effect = { TAG = SPA LTAG = spa }
+		nd_repair_script_formed_effect = { TAG = SRP LTAG = sar_piedmont }
+		nd_repair_script_formed_effect = { TAG = SVB LTAG = svb }
+		nd_repair_script_formed_effect = { TAG = SWA LTAG = swa }
+		nd_repair_script_formed_effect = { TAG = SWI LTAG = swi }
+		nd_repair_script_formed_effect = { TAG = TAB LTAG = tab }
+		nd_repair_script_formed_effect = { TAG = TBT LTAG = tbt }
+		nd_repair_script_formed_effect = { TAG = TDR LTAG = tdr }
+		nd_repair_script_formed_effect = { TAG = TGD LTAG = tgd }
+		nd_repair_script_formed_effect = { TAG = THE LTAG = the }
+		nd_repair_script_formed_effect = { TAG = TIB LTAG = tib }
+		nd_repair_script_formed_effect = { TAG = TKT LTAG = tkt }
+		nd_repair_script_formed_effect = { TAG = TRG LTAG = trg }
+		nd_repair_script_formed_effect = { TAG = TUN LTAG = tun }
+		nd_repair_script_formed_effect = { TAG = TUS LTAG = tus }
+		nd_repair_script_formed_effect = { TAG = TWS LTAG = tws }
+		nd_repair_script_formed_effect = { TAG = UKR LTAG = ukr }
+		nd_repair_script_formed_effect = { TAG = USA LTAG = usa }
+		nd_repair_script_formed_effect = { TAG = VAL LTAG = val }
+		nd_repair_script_formed_effect = { TAG = VJN LTAG = vjn }
+		nd_repair_script_formed_effect = { TAG = WES LTAG = wes }
+		nd_repair_script_formed_effect = { TAG = YAV LTAG = yav }
+		nd_repair_script_formed_effect = { TAG = YMP LTAG = ymp }
 		nd_repair_script_formed_marker_only = { TAG = YUA LTAG = yua }
+		# Left out on purpose:
+		#   AIR: the formable sets no tag, so its former cannot be found by one
+		#   BYZ: exists from the start and earns nd_byz.1 by reconquest (the achievement gate above)
+		#   FRA: exists from the start and earns nd_fra.1 by its own unlock on the monthly pulse
+		#   ROM: formed by 2 formables with separate markers (rom, rom_byz); the tag cannot say which
+		#   TUR: the Ottomans hold this tag from the start; Rum is the same tag formed by RUM_f
+		# END GENERATED marker repair
 	}
 }
 
@@ -707,5 +930,25 @@ on_new_ruler = {
 nd_dnb_on_new_ruler = {
 	effect = {
 		nd_dnb_succession_checkpoint = yes
+	}
+}
+
+
+# Succession of the Danube: the end of a war for a crown's throne
+# (scripted_effects/nd_danube_effects.txt, THE THRONE WAR). `on_losing_war`
+# is in the engine's own list (From Code: Yes) and is declared once in
+# vanilla (_hardcoded.txt:1844, field `effect` only), so its `on_actions`
+# field is free. The same field on on_winning_war and on_ending_war is NOT
+# free on 1.4: religious_order_conquest.txt holds both. Vanilla's own
+# effect here reads scope:winner, scope:loser and scope:war and never root
+# (_hardcoded.txt:1846-1866, one of them the outcome of a cb_claim_throne
+# war), and so does ours.
+on_losing_war = {
+	on_actions = { nd_dnb_on_losing_war }
+}
+
+nd_dnb_on_losing_war = {
+	effect = {
+		nd_dnb_on_throne_war_lost = yes
 	}
 }

@@ -1,0 +1,730 @@
+﻿# Castile (CAS): advance tree
+# National Destinies mod
+#
+# Read before designing (EU5 1.4). Vanilla covers Castile more heavily than
+# almost any other country, and all of this is left alone:
+#   vanilla tag and culture advances (advances/country_cas.txt): the
+#     repoblaciones, a land of castles, the Camino de Santiago, the navy, the
+#     royal chronicles, the Santa Hermandad, the masters of the orders, the
+#     audiencias, the New World, the marine infantry, the Armada Real, the
+#     millones, the pasos, the Council of Castile, the Real Academia, the
+#     Canal de Castilla, the royal arsenals and the royal factories.
+#   vanilla Iberian advances (advances/region_iberia.txt): the Reconquista,
+#     the lieutenancy, the caravels and galleons, the Lanzas de Castilla, the
+#     tercio, the viceroyalties, the naval reforms.
+#   vanilla elsewhere: the Mesta is a law with its own decisions, the Siete
+#     Partidas, the Ordenamiento de Alcala, the Laws of Toro and the Nueva
+#     Recopilacion are law policies, the alarde is a levy law policy, the
+#     Cortes and the Comuneros are distribution of power policies, the fueros
+#     are town rights, the caballeros villanos and the regimiento are estate
+#     privileges, the Casa de Contratacion, the Nueva Planta, the intendancy
+#     and the royal factories are reforms, the Order of the Band is a
+#     chivalric order, and flavour events tell the behetrias, Nebrija's
+#     grammar, the Complutense, the School of Salamanca, the arbitristas and
+#     the Catastro of Ensenada. The Iberian DLC reserves the jinetes and the
+#     caballeria de cuantia.
+#   the mod's Spain (99_nd_spa.txt), which a Castile that goes on holds
+#     beside this tree: the Mesta privilege, the military orders, fueros and
+#     Cortes, jinetes, the wool market of Burgos, the fairs of Medina del
+#     Campo, the Catholic Monarchs, rodeleros, the tercio, the economic
+#     societies, the guerrilla.
+#
+# None of that is repeated. What is left is how the kingdom was run and paid
+# for: the frontier councils and their militias, the king's paid vassals, the
+# salt monopoly, the customs of Seville, the chancery's Castilian, the sales
+# tax, the galleys, the town crossbowmen, the colleges, the embassy to Timur,
+# the annuities and the accountants, the handgunners and bombards of Granada,
+# the ordinance foot, the sword makers, the corregidores, the grain banks,
+# the playhouses, the great squares, the general militia, the potters, the
+# survey of the towns, the five guilds, the provincial militia, the foot
+# guards, the novatores, the colonies of the Sierra Morena, the bank of 1782,
+# the provincial grenadiers, the sword factory and the free trade in grain.
+#
+# No key below repeats, in the same age, a key that a vanilla CAS, Castilian
+# or Iberian advance grants (the per-age blocklist printed by
+# scripts/creator_context.py CAS).
+#
+# Stepping stone toward Spain and the Regnum Gothorum: 4 to 6 per age.
+# 31 advances, 24 of them unlocks (77 percent).
+
+# ============================================================================
+# AGE 1: TRADITIONS (5 advances, 4 unlocks)
+# ============================================================================
+
+# Between the Duero and the Tagus the land was held by councils, not lords:
+# a walled town and the villages of its district under one fuero, governed
+# by the householders and bound to march behind the town's banner. Whoever
+# settled under the fuero owed the muster, Frank, Mozarab or Mudejar alike,
+# which is the wrong_culture_levy_size line. Unlocks the Milicia Concejil.
+nd_cas_concejos_de_villa_y_tierra = {
+	age = age_1_traditions
+	potential = { has_or_had_tag = CAS }
+	requires = city_building_advance
+	icon = fortified_towns
+
+	unlock_levy = levy_nd_cas_milicia_concejil
+	wrong_culture_levy_size = 0.1
+
+	ai_weight = { add = 20 }
+}
+
+# The king pays his own knights: a tierra, a yearly sum charged on a named
+# royal rent, for which the holder keeps a fixed number of lances ready, and
+# an acostamiento for a great man's retinue. The royal books list them by
+# name. This advance is about the feudal bargain itself, so it hangs on
+# feudalism_advance on purpose. Unlocks the Vasallos del Rey.
+nd_cas_tierras_y_acostamientos = {
+	age = age_1_traditions
+	potential = { has_or_had_tag = CAS }
+	requires = feudalism_advance
+	icon = bonded_by_loyalty
+
+	unlock_levy = levy_nd_cas_vasallos_del_rey
+	nobles_estate_target_satisfaction = small_permanent_target_satisfaction
+
+	ai_weight = { add = 20 }
+}
+
+# In 1338 Alfonso XI declared every saltworks of the kingdom the Crown's and
+# set a measure of salt each household must buy from the royal stores. The
+# brine springs of Anana and Atienza and the marshes of Cadiz became a
+# revenue. Unlocks the Salinas Reales.
+nd_cas_estanco_de_la_sal = {
+	age = age_1_traditions
+	potential = { has_or_had_tag = CAS }
+	requires = mining_advance
+	icon = salt_monopoly
+
+	unlock_building = nd_cas_salinas_reales
+	global_salt_output_modifier = 0.1
+}
+
+# The almojarifazgo: the customs of the Andalusian ports, taken over with
+# Seville in 1248 together with its Arabic name and its officer, the
+# almojarife. Everything that crosses the quay is weighed and pays.
+# max_tariff is the engine's ceiling on what a market may be charged.
+# Unlocks the Aduana.
+nd_cas_almojarifazgo = {
+	age = age_1_traditions
+	potential = { has_or_had_tag = CAS }
+	requires = trade_advance_age_of_trad
+	icon = port_customs
+
+	unlock_building = nd_cas_aduana
+	max_tariff = 0.05
+}
+
+# Castellano drecho: Alfonso X had his chancery write in Castilian instead
+# of Latin, and corrected the wording of his law books and histories himself
+# so that the language should be "straight". A charter that a merchant and a
+# knight can both read needs no clerk to explain it.
+nd_cas_castellano_drecho = {
+	age = age_1_traditions
+	potential = { has_or_had_tag = CAS }
+	requires = written_alphabet
+	icon = french_language_in_all_courts
+
+	global_burghers_max_literacy = 5
+	global_nobles_max_literacy = 3
+}
+
+# ============================================================================
+# AGE 2: RENAISSANCE (5 advances, 3 unlocks)
+# ============================================================================
+
+# The alcabala: a tax on every sale, granted by the Cortes of Burgos in 1342
+# for three years to pay for the siege of Algeciras, renewed, and in 1393
+# granted for ever. It became the largest revenue of the Crown.
+# (DHE event nd_cas.2)
+nd_cas_alcabala = {
+	age = age_2_renaissance
+	potential = { has_or_had_tag = CAS }
+	requires = law_making_renaissance
+	icon = great_tax_reform
+
+	tax_income_efficiency = medium_tax_income_efficiency_bonus
+}
+
+# The king's galleys in the Channel. At La Rochelle in June 1372 Ambrosio
+# Boccanegra destroyed the Earl of Pembroke's fleet; Fernan Sanchez de Tovar
+# then raided the English coast year after year and burned Gravesend in
+# 1380. Unlocks the Galera de Castilla. (DHE event nd_cas.3)
+nd_cas_galeras_de_castilla = {
+	age = age_2_renaissance
+	potential = { has_or_had_tag = CAS }
+	requires = naval_morale_advance_1
+	icon = first_fleet_of_the_med
+
+	unlock_unit = n_nd_cas_galera_de_castilla
+	navy_galley_power = 0.1
+
+	ai_weight = { add = 20 }
+}
+
+# Each council keeps a roll of crossbowmen, excused from the common taxes for
+# as long as they own the weapon and bring it to the muster. Unlocks the
+# Ballesteros de Nomina.
+nd_cas_ballesteros_de_nomina = {
+	age = age_2_renaissance
+	potential = { has_or_had_tag = CAS }
+	requires = medieval_military
+	icon = dan_levy_recruitment
+
+	unlock_levy = levy_nd_cas_ballesteros_de_nomina
+
+	ai_weight = { add = 20 }
+}
+
+# San Bartolome of Salamanca, founded by Diego de Anaya in 1401: a college
+# within the university, endowed to keep poor graduates at their books.
+# Santa Cruz of Valladolid and San Ildefonso of Alcala followed. Their
+# fellows filled the benches of the royal courts. Unlocks the Colegio Mayor.
+nd_cas_colegios_mayores = {
+	age = age_2_renaissance
+	potential = { has_or_had_tag = CAS }
+	requires = global_clergy_max_literacy_advance
+	icon = prestigious_schools
+
+	unlock_building = nd_cas_colegio_mayor
+}
+
+# In May 1403 Henry III sent Ruy Gonzalez de Clavijo to the court of Timur.
+# He reached Samarkand, was received among the envoys of China and Egypt,
+# and came home in March 1406 with the fullest account of Central Asia any
+# European had written. (DHE event nd_cas.4)
+nd_cas_embajada_a_tamorlan = {
+	age = age_2_renaissance
+	potential = { has_or_had_tag = CAS }
+	requires = late_feudal_relations
+	icon = geo_georgian_embassies
+
+	diplomatic_range_modifier = 0.25
+	monthly_diplomats = 0.05
+}
+
+# ============================================================================
+# AGE 3: DISCOVERY (6 advances, 5 unlocks)
+# ============================================================================
+
+# The juro: an annuity sold by the Crown and charged on a named rent, paid
+# before anything else that rent owes. The Contaduria Mayor de Hacienda keeps
+# the books that make one worth buying, and the Contaduria Mayor de Cuentas
+# audits whoever touched the money. Unlocks the Contaduria Mayor.
+nd_cas_juros_y_contadores = {
+	age = age_3_discovery
+	potential = { has_or_had_tag = CAS }
+	requires = basic_financial_instruments
+	icon = debt_and_loans
+
+	unlock_building = nd_cas_contaduria_mayor
+}
+
+# The towns sent handgunners to the war of Granada by contract, so many
+# espingarderos for so many months. Unlocks the Espingarderos.
+nd_cas_espingarderos = {
+	age = age_3_discovery
+	potential = { has_or_had_tag = CAS }
+	requires = crown_power_advance_discovery
+	icon = study_foreign_gunpowder_techniques
+
+	unlock_unit = a_nd_cas_espingarderos
+
+	ai_weight = { add = 20 }
+}
+
+# The war of Granada was won by siege. Founders from Brittany and Burgundy
+# cast more than two hundred pieces at Ecija; the gunners on the royal roll
+# rose from four in 1479 to ninety one in 1485; pioneers cut roads through
+# the sierra for the carts. Unlocks the Lombardas. (DHE event nd_cas.5)
+nd_cas_tren_de_lombardas = {
+	age = age_3_discovery
+	potential = { has_or_had_tag = CAS }
+	requires = crown_power_advance_discovery
+	icon = artillery_institution_advance
+
+	unlock_unit = a_nd_cas_lombardas
+	siege_ability = 0.1
+
+	ai_weight = { add = 20 }
+}
+
+# The ordinance of 1496 kept one man in twelve on the roll with his arms;
+# that of 1503 sorted the foot into pikes, shields and shot. The councils
+# keep the lists and the Crown pays only when it calls. Unlocks the Peones
+# de la Ordenanza.
+nd_cas_ordenanza_de_1496 = {
+	age = age_3_discovery
+	potential = { has_or_had_tag = CAS }
+	requires = town_rights_aod_advance
+	icon = nambardar_levy
+
+	unlock_levy = levy_nd_cas_peones_de_la_ordenanza
+
+	ai_weight = { add = 20 }
+}
+
+# The sword makers of Toledo: a guild whose examined masters each strike a
+# registered mark on the tang. Unlocks the Espaderia.
+nd_cas_espaderos_de_toledo = {
+	age = age_3_discovery
+	potential = { has_or_had_tag = CAS }
+	requires = regulate_court_procedures
+	icon = tol_toledan_steel
+
+	unlock_building = nd_cas_espaderia
+}
+
+# The corregidor: a royal judge sent to preside over a city council, an
+# outsider to the town, appointed for a short term and audited when he
+# leaves it. The Cortes of Toledo of 1480 placed one in every city of the
+# kingdom.
+nd_cas_corregidores = {
+	age = age_3_discovery
+	potential = { has_or_had_tag = CAS }
+	requires = crown_power_advance_discovery
+	icon = nav_chartered_councils
+
+	global_monthly_urban_control = 0.002
+	global_crown_estate_power = 0.05
+}
+
+# ============================================================================
+# AGE 4: REFORMATION (6 advances, 5 unlocks)
+# ============================================================================
+
+# The village grain bank, given one rule for the whole kingdom by the
+# pragmatic of 1584: three keys, a yearly account, seed lent at sowing and
+# repaid at harvest with a small increase. Unlocks the Posito.
+nd_cas_positos = {
+	age = age_4_reformation
+	potential = { has_or_had_tag = CAS }
+	requires = pop_promotion_speed_age_4
+	icon = dan_danish_agriculture
+
+	unlock_building = nd_cas_posito
+}
+
+# The Corral de la Cruz opened in Madrid in 1579 and the Corral del Principe
+# in 1583, both leased by brotherhoods that kept hospitals on the takings.
+# Unlocks the Corral de Comedias. (DHE event nd_cas.6)
+nd_cas_corrales_de_comedias = {
+	age = age_4_reformation
+	potential = { has_or_had_tag = CAS }
+	requires = pop_promotion_speed_age_4
+	icon = spa_siglo_de_oro
+
+	unlock_building = nd_cas_corral_de_comedias
+}
+
+# Valladolid burned in 1561 and was rebuilt to a plan, with a closed square
+# of uniform arcaded fronts at its centre. Madrid's followed in 1617.
+# Unlocks the Plaza Mayor.
+nd_cas_plazas_mayores = {
+	age = age_4_reformation
+	potential = { has_or_had_tag = CAS }
+	requires = early_modern_administation
+	icon = hai_bustling_towns
+
+	unlock_building = nd_cas_plaza_mayor
+}
+
+# With the tercios in Flanders and Italy the kingdom itself was unguarded.
+# The general militia ordered in 1598 and again in 1609 enrolled the
+# householders under local captains to defend the coasts. Unlocks the
+# Milicia General.
+nd_cas_milicia_general = {
+	age = age_4_reformation
+	potential = { has_or_had_tag = CAS }
+	requires = recruitment_improvements_reformation
+	icon = colonial_militia
+
+	unlock_levy = levy_nd_cas_milicia_general
+
+	ai_weight = { add = 20 }
+}
+
+# Talavera de la Reina: tin glazed earthenware painted in blue and yellow,
+# the ware of every Castilian table and of the walls of the Escorial.
+# Unlocks the Alfar.
+nd_cas_loza_de_talavera = {
+	age = age_4_reformation
+	potential = { has_or_had_tag = CAS }
+	requires = pop_promotion_speed_age_4
+	icon = suk_sukhothai_ceramics
+
+	unlock_building = nd_cas_alfar
+}
+
+# The Relaciones Topograficas: printed questionnaires sent in the 1570s to
+# every town of New Castile, asking its lord, its jurisdiction, its fields,
+# its rivers, its trades and its saints. Some seven hundred places answered.
+# The king reads his kingdom before he governs it.
+nd_cas_relaciones_topograficas = {
+	age = age_4_reformation
+	potential = { has_or_had_tag = CAS }
+	requires = early_modern_administation
+	icon = mapmaking
+
+	global_monthly_control = 0.002
+}
+
+# ============================================================================
+# AGE 5: ABSOLUTISM (4 advances, 3 unlocks)
+# ============================================================================
+
+# The Cinco Gremios Mayores of Madrid, joined in one company in 1667:
+# jewellers, mercers, silk merchants, clothiers and druggists. Suppliers to
+# the court, then farmers of its rents and its bankers. Unlocks the Casa de
+# los Cinco Gremios.
+nd_cas_cinco_gremios_mayores = {
+	age = age_5_absolutism
+	potential = { has_or_had_tag = CAS }
+	requires = absolutist_court
+	icon = guilds
+
+	unlock_building = nd_cas_casa_de_los_cinco_gremios
+}
+
+# The ordinance of 31 January 1734 raised thirty three regiments of militia
+# by lot in the provinces of the Crown of Castile, and in those provinces
+# only. Unlocks the Milicias Provinciales.
+nd_cas_milicias_provinciales = {
+	age = age_5_absolutism
+	potential = { has_or_had_tag = CAS }
+	requires = regiment_reinforcement_speed_absolutism
+	icon = regimental_system
+
+	unlock_levy = levy_nd_cas_milicias_provinciales
+
+	ai_weight = { add = 20 }
+}
+
+# The regiment of foot guards raised in 1704. Unlocks the Guardias de
+# Infanteria.
+nd_cas_guardias_de_infanteria = {
+	age = age_5_absolutism
+	potential = { has_or_had_tag = CAS }
+	requires = absolute_rulership
+	icon = dan_royal_life_guards
+
+	unlock_unit = a_nd_cas_guardias_de_infanteria
+
+	ai_weight = { add = 20 }
+}
+
+# The novatores: physicians and mathematicians who from the 1680s argued,
+# against the faculties, that Spain had fallen behind in the sciences and
+# must read the moderns. The Royal Society of Medicine of Seville was
+# chartered in 1700; Feijoo began his Teatro Critico in 1726.
+nd_cas_novatores = {
+	age = age_5_absolutism
+	potential = { has_or_had_tag = CAS }
+	requires = absolute_rulership
+	icon = schools_of_thought
+
+	research_speed_modifier = 0.05
+	global_institution_growth_modifier = 0.1
+}
+
+# ============================================================================
+# AGE 6: REVOLUTIONS (5 advances, 4 unlocks)
+# ============================================================================
+
+# The charter of 5 July 1767 for the new settlements of the Sierra Morena
+# and Andalusia, drawn up by Campomanes and carried out by Pablo de Olavide.
+# Unlocks the Nueva Poblacion. (DHE event nd_cas.7)
+nd_cas_nuevas_poblaciones = {
+	age = age_6_revolutions
+	potential = { has_or_had_tag = CAS }
+	requires = urbanization
+	icon = zmw_encourage_new_settlements
+
+	unlock_building = nd_cas_nueva_poblacion
+	rural_migration_attraction = 0.1
+}
+
+# The Banco Nacional de San Carlos, chartered on 2 June 1782. Unlocks the
+# Banco de San Carlos. (DHE event nd_cas.8)
+nd_cas_banco_nacional = {
+	age = age_6_revolutions
+	potential = { has_or_had_tag = CAS }
+	requires = the_gold_standard
+	icon = banking_advance
+
+	unlock_building = nd_cas_banco_de_san_carlos
+}
+
+# The reform of 1766 raised the provincial militia to more than forty regiments
+# and formed their grenadier companies into divisions that served beside the
+# line. Unlocks the Granaderos Provinciales.
+nd_cas_granaderos_provinciales = {
+	age = age_6_revolutions
+	potential = { has_or_had_tag = CAS }
+	requires = modern_bureaucracy
+	icon = preobrazhensky_semyonovsky_imperial_guard
+
+	unlock_levy = levy_nd_cas_granaderos_provinciales
+
+	ai_weight = { add = 20 }
+}
+
+# In 1761 Charles III gathered the last sword makers of Toledo into a royal
+# factory working to a pattern for the whole army. Unlocks the royal factory
+# method of the Espaderia.
+nd_cas_real_fabrica_de_espadas = {
+	age = age_6_revolutions
+	potential = { has_or_had_tag = CAS }
+	requires = enlightened_court
+	icon = swedish_steel
+
+	unlock_production_method = nd_cas_espaderia_real_fabrica
+}
+
+# The pragmatic of 11 July 1765 abolished the fixed price of grain and let
+# wheat move and sell freely inside the kingdom. Landowners sowed more; the
+# next bad harvest brought the riots of 1766.
+nd_cas_libre_comercio_de_granos = {
+	age = age_6_revolutions
+	potential = { has_or_had_tag = CAS }
+	requires = joint_stock_companies
+	icon = free_trade
+
+	global_wheat_output_modifier = 0.1
+	monthly_towards_free_trade = societal_value_minor_monthly_move
+}
+
+# ===== DESTINY TREE =====
+# Post-formation objectives. The formation fork is who the king governs
+# through, and each path follows its answer to the end.
+#   Path A (nd_cas_path_a, the king's justice): the Crown rules through the
+#     towns' money and its own judges. One war, the one the towns paid for
+#     (Algeciras and Gibraltar, the Strait), then no land at all: colleges,
+#     Valladolid as the seat of the courts, the corregidores, the treasury.
+#     Its capstone unlocks the Real Chancilleria. Floors: none for stage 1,
+#     the colleges (age 2) for stage 2, the corregidores (age 3) for stage 3.
+#   Path B (nd_cas_path_b, the host of the ricoshombres): the frontier is
+#     the great houses' business. Antequera and Huescar, the kingdom of
+#     Granada, then what the lords took across the water: Melilla and the
+#     islands of lordship. Conquest path with no age floor (vanilla's
+#     colonies advance is of age 1). No building: nothing the lords built on
+#     the frontier is distinct from a castle, which vanilla has.
+# The paths end two ages apart at most (scripts/destiny/stage_floors.py).
+#
+# What the start setup makes of it (main_menu/setup/1337, checked on 1.4):
+#   Algeciras, Gibraltar, Ronda and Marbella are Morocco's (MOR); Melilla too.
+#   Antequera, Huescar, Malaga, Granada and the rest of the Granada area are
+#     Granada's (GRA), a tributary of Castile. A tributary is sovereign, so
+#     its land does not count; a Granada made a vassal does, which is what
+#     Castile tried for two centuries.
+#   The Canary Islands belong to nobody (CNR is a society of pops).
+#   Valladolid is Castile's from day one, so it is asked for only as growth
+#     from its 1337 development of 28 (scripts/development_estimate.py
+#     --explain valladolid): 42 at stage 2 (plus 50 percent), 56 at stage 3
+#     (doubled). History points at the city: the Audiencia sat there for good
+#     from 1442 and the town lived off its lawsuits.
+#
+# Not repeated from elsewhere: vanilla's CAS, Castilian and Iberian advances
+# and its lieutenancy, viceroyalty and supreme court buildings; the heritage
+# tree above; the mod's Spain (Naples, Milan, Antwerp, Rome, Tunis, Palermo,
+# Havana, Tenochtitlan, Manila, Cuzco, Seville's growth, the Escorial and the
+# Real Audiencia) and Al-Andalus (Toledo, Cordoba, Toulouse, Palermo, Fez,
+# Tlemcen, Tunis, Marrakesh, Tripoli, Cairo). No modifier key of Spain's
+# destiny advances is used in an advance here. No location is used by both
+# paths. No kingdom-wide development, no army size, no cabinet seat.
+#
+# Sources read 2026-10-02 (es.wikipedia): "Sitio de Algeciras (1342-1344)",
+# "Real Audiencia y Chancilleria de Valladolid", "Conquista de las islas
+# Canarias", "Toma de Antequera", "Rodrigo Manrique", "Pedro de Estopinan".
+# From memory, not fetched: the Cortes of Toledo of 1480 (the reduction of
+# the juros, the letrado majority on the Council), the toga and capa y espada
+# corregidores, the capitulations of Granada and the repartimientos.
+
+# Alfonso XI was declared of age at fourteen, at Valladolid in 1325, and the
+# regents who had fought each other over him for thirteen years went home.
+# A king who rules in person is the root of both paths.
+nd_cas_destiny = {
+	age = age_1_traditions
+	depth = 0
+	potential = { has_or_had_tag = CAS has_variable = nd_cas_formed has_game_rule = nd_destinies_enabled }
+	allow = { stability >= 75 }
+	icon = crown_rights_laws_advance
+
+	stability_cost_efficiency = 0.1
+}
+
+# ----------------------------------------------------------------------------
+# PATH A: the king's justice (the towns' money and the king's judges)
+# ----------------------------------------------------------------------------
+
+# Stage 1A: the siege of Algeciras, 3 August 1342 to 26 March 1344. The
+# Cortes of Burgos voted the alcabala to pay for it, the Pope and the king of
+# France lent florins, the king pawned his crown, and a Genoese fleet under
+# Egidio Boccanegra shut the harbour and threatened to sail home when its
+# wages ran four months late. Alfonso died of the plague before Gibraltar in
+# 1350. Both towns are Morocco's at the start. The gold is the war chest.
+# (DHE event nd_cas.10)
+nd_cas_dest_cerco_de_algeciras = {
+	age = age_1_traditions
+	requires = nd_cas_destiny
+	potential = { has_or_had_tag = CAS has_variable = nd_cas_formed has_game_rule = nd_destinies_enabled }
+	allow = {
+		custom_tooltip = {
+			text = nd_cas_path_a_tt
+			has_variable = nd_cas_path_a
+		}
+		owns_or_non_sovereign_subject_owns = location:algeciras
+		owns_or_non_sovereign_subject_owns = location:gibraltar
+		gold >= 1000
+	}
+	icon = reconquista_of_the_sea
+
+	total_loan_capacity_modifier = 0.3
+	navy_maintenance_efficiency = 0.1
+}
+
+# Stage 2A: the letrados. Graduates in law, most of them of modest birth,
+# whom the colleges kept at their books and the Crown then put on its
+# benches. Two colleges, as there were by 1484: San Bartolome at Salamanca
+# (1401) and Santa Cruz at Valladolid. Castile starts with a university in
+# each of those towns and the Colegio Mayor (age 2) needs one. Valladolid at
+# 42 development is the town of the Audiencia, fixed there in 1442.
+# (DHE event nd_cas.11, branching)
+nd_cas_dest_los_letrados = {
+	age = age_1_traditions
+	requires = nd_cas_dest_cerco_de_algeciras
+	potential = { has_or_had_tag = CAS has_variable = nd_cas_formed has_game_rule = nd_destinies_enabled }
+	allow = {
+		custom_tooltip = {
+			text = nd_cas_dest_colegios_tt
+			any_owned_location = {
+				count >= 2
+				has_building = building_type:nd_cas_colegio_mayor
+			}
+		}
+		custom_tooltip = {
+			text = nd_cas_dest_valladolid_42_tt
+			location:valladolid = { owner ?= root development >= 42 }
+		}
+		gold >= 2000
+	}
+	icon = spa_school_salamanca
+
+	legislative_efficiency = 0.05
+	court_spending_efficiency = 0.1
+}
+
+# Stage 3A: the Cortes of Toledo, 1480. The Crown took back about half of
+# the rents granted away since 1464, gave the letrados the majority of the
+# Royal Council and sent a corregidor to every city. The corregidores are
+# the heritage advance of age 3; the gold is the treasury the resumption
+# refilled. Unlocks the Real Chancilleria. global_nobles_estate_power is
+# granted as a negative, as vanilla's own advances grant it: less power for
+# the great houses is the reward. (DHE event nd_cas.12, branching)
+nd_cas_dest_cortes_de_toledo = {
+	age = age_1_traditions
+	requires = nd_cas_dest_los_letrados
+	potential = { has_or_had_tag = CAS has_variable = nd_cas_formed has_game_rule = nd_destinies_enabled }
+	allow = {
+		has_advance = nd_cas_corregidores
+		custom_tooltip = {
+			text = nd_cas_dest_valladolid_56_tt
+			location:valladolid = { owner ?= root development >= 56 }
+		}
+		prestige >= 75
+		gold >= 3000
+	}
+	icon = cabinet_laws_advance
+
+	unlock_building = nd_cas_dest_chancilleria
+	global_nobles_estate_power = -0.1
+	monthly_rebel_growth = -0.0005
+	global_pop_promotion_speed_modifier = 0.1
+}
+
+# ----------------------------------------------------------------------------
+# PATH B: the host of the ricoshombres (the frontier and beyond)
+# ----------------------------------------------------------------------------
+
+# Stage 1B: the frontier. Between royal campaigns the war with Granada was
+# the business of the houses that held the march: cavalcades, castles taken
+# by escalade, cattle and captives. Antequera fell on 24 September 1410 to
+# the infante Fernando and the lords who rode with him; Huescar, at the
+# other end of the line, to Rodrigo Manrique in 1434. Both are Granada's at
+# the start. (DHE event nd_cas.13)
+nd_cas_dest_la_frontera = {
+	age = age_1_traditions
+	requires = nd_cas_destiny
+	potential = { has_or_had_tag = CAS has_variable = nd_cas_formed has_game_rule = nd_destinies_enabled }
+	allow = {
+		custom_tooltip = {
+			text = nd_cas_path_b_tt
+			has_variable = nd_cas_path_b
+		}
+		owns_or_non_sovereign_subject_owns = location:antequera
+		owns_or_non_sovereign_subject_owns = location:huescar
+		prestige >= 50
+	}
+	icon = border_raiders
+
+	amount_looted_modifier = 0.33
+	army_movement_speed = 0.05
+}
+
+# Stage 2B: the war of Granada, 1482 to 1492. It began as a lord's feat (the
+# Marquis of Cadiz took Alhama by surprise) and the great houses led its
+# hosts to the end. Malaga fell in 1487, Granada on 2 January 1492. The
+# share measures the stage's own land: 15 of the 20 locations of the Granada
+# area, counting subject land exactly as the location lines do.
+# (DHE event nd_cas.14, branching)
+nd_cas_dest_guerra_de_granada = {
+	age = age_1_traditions
+	requires = nd_cas_dest_la_frontera
+	potential = { has_or_had_tag = CAS has_variable = nd_cas_formed has_game_rule = nd_destinies_enabled }
+	allow = {
+		owns_or_non_sovereign_subject_owns = location:granada
+		owns_or_non_sovereign_subject_owns = location:malaga
+		custom_tooltip = {
+			text = nd_cas_dest_granada_share_tt
+			area:granada_area = {
+				any_location_in_area = {
+					percent >= 0.75
+					root = { owns_or_non_sovereign_subject_owns = prev }
+				}
+			}
+		}
+		gold >= 2000
+	}
+	icon = nav_memories_reconquista
+
+	global_levy_recruitment_speed_modifier = 0.1
+	global_war_score_efficiency = 0.1
+}
+
+# Stage 3B: the islands of lordship. What Castile took beyond the water
+# before 1500 was largely taken by lords. Henry III gave Jean de Bethencourt
+# the right of conquest in 1402; Lanzarote (Teguise), Fuerteventura
+# (Maxorata) and La Gomera (Hipalan) stayed islands of lordship under the
+# Peraza and Herrera while the Crown conquered the other three itself, and
+# those three are left out on purpose. Melilla was occupied on 17 September
+# 1497 by Pedro de Estopinan with the Duke of Medina Sidonia's men. The
+# islands belong to nobody at the start and Melilla is Morocco's.
+# army_tradition_decay is granted as a negative: slower decay is the reward.
+# (DHE event nd_cas.15, branching)
+nd_cas_dest_islas_de_senorio = {
+	age = age_1_traditions
+	requires = nd_cas_dest_guerra_de_granada
+	potential = { has_or_had_tag = CAS has_variable = nd_cas_formed has_game_rule = nd_destinies_enabled }
+	allow = {
+		owns_or_non_sovereign_subject_owns = location:melilla
+		owns_or_non_sovereign_subject_owns = location:teguise
+		owns_or_non_sovereign_subject_owns = location:maxorata
+		owns_or_non_sovereign_subject_owns = location:hipalan
+		prestige >= 75
+	}
+	icon = maj_island_colonies
+
+	subject_loyalty = 5
+	colonial_maintenance_efficiency = 0.2
+	army_tradition_decay = -0.001
+	global_manpower_modifier = 0.1
+}

@@ -79,11 +79,29 @@ qol_cd_register_settings = {
 		item_count = 2
 		is_ordered = 0
 	}
+	# 1.2.0 migration: the estate watchlist was reduced from 8 rows (1.1.x) to the current
+	# 5 (qol_cd_watched_actions). CMF only reconciles list *growth* - identities persisted
+	# by an older version are never pruned, so a save created under the 8-row build keeps
+	# row identities i6/i7/i8 in cmm_list_items_qol__cd_watchlist_estate and the GUI renders
+	# them with dead loc keys. Dropping the initialized marker makes the registration below
+	# run its init branch, which clears the global list and rebuilds exactly the current
+	# identities (i1..i5). Player toggles live in the cmm global map under their i<N> key and
+	# are seeded only when absent, so saved values survive. The i6 guard makes this run once.
+	if = {
+		limit = {
+			has_variable = cmm_list_initialized_qol__cd_watchlist_estate
+			is_target_in_global_variable_list = {
+				name = cmm_list_items_qol__cd_watchlist_estate
+				target = flag:qol__cd_watchlist_estate_i6
+			}
+		}
+		remove_variable = cmm_list_initialized_qol__cd_watchlist_estate
+	}
 	cmm_register_global_settings_list = {
 		mod_id = qol
 		setting_id = cd_watchlist_estate
 		tab_id = cooldowns
-		item_count = 8
+		item_count = 5
 		is_ordered = 0
 	}
 
@@ -248,11 +266,8 @@ qol_cd_handle_cmf_callback = {
 		flag:qol_cd_ready_order_of_chivalry = { cmf_remove_alert = { alert = qol_cd_ready_order_of_chivalry } }
 		flag:qol_cd_ready_ask_for_extra_levies_cooldown = { cmf_remove_alert = { alert = qol_cd_ready_ask_for_extra_levies_cooldown } }
 		flag:qol_cd_ready_extraordinary_taxes_cooldown = { cmf_remove_alert = { alert = qol_cd_ready_extraordinary_taxes_cooldown } }
-		flag:qol_cd_ready_ask_clergy_for_legitimacy_cooldown = { cmf_remove_alert = { alert = qol_cd_ready_ask_clergy_for_legitimacy_cooldown } }
-		flag:qol_cd_ready_ask_nobility_for_diplomats_cooldown = { cmf_remove_alert = { alert = qol_cd_ready_ask_nobility_for_diplomats_cooldown } }
-		flag:qol_cd_ready_ask_burghers_for_loan_cooldown = { cmf_remove_alert = { alert = qol_cd_ready_ask_burghers_for_loan_cooldown } }
-		flag:qol_cd_ready_ask_commoners_for_stability_cooldown = { cmf_remove_alert = { alert = qol_cd_ready_ask_commoners_for_stability_cooldown } }
-		flag:qol_cd_ready_ask_tribes_for_manpower_cooldown = { cmf_remove_alert = { alert = qol_cd_ready_ask_tribes_for_manpower_cooldown } }
+		flag:qol_cd_ready_estate_emergency_favor_cooldown = { cmf_remove_alert = { alert = qol_cd_ready_estate_emergency_favor_cooldown } }
 		flag:qol_cd_ready_call_emergency_parliament_cooldown = { cmf_remove_alert = { alert = qol_cd_ready_call_emergency_parliament_cooldown } }
+		flag:qol_cd_ready_press_estate_private_regiments_cooldown = { cmf_remove_alert = { alert = qol_cd_ready_press_estate_private_regiments_cooldown } }
 	}
 }

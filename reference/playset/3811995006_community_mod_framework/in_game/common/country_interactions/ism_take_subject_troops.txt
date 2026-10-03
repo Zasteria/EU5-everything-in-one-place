@@ -1,0 +1,144 @@
+﻿ism_take_subject_troops = {
+	type = subject
+	category = CATEGORY_SUBJECT_ACTIONS
+	show_message = no
+	show_message_to_target = no
+
+	block_when_at_war = no
+
+	potential = {
+		scope:actor = {
+			at_war = yes
+		}
+	}
+
+	allow = {
+	}
+
+	ai_tick = never
+
+	use_enroute = no
+
+	select_trigger = {
+		looking_for_a = country
+		interaction_source_list = {
+			scope:actor = {
+				every_subject = {
+					add_to_list = source
+				}
+			}
+		}
+		target_flag = recipient
+		name = "choose_country"
+		column = {
+			data = name
+		}
+		visible = {
+			NOR = {
+				country_type = building
+				country_type = pop
+			}
+		}
+		enabled = {
+			subject_loyalty >= MIN_SUBJECT_LOYALTY_FOR_ACTION
+			custom_tooltip = {
+				text = ism_take_subject_troops_shares_war_tt
+				any_current_war = {
+					is_in_war = scope:actor
+				}
+			}
+		}
+	}
+
+	select_trigger = {
+		looking_for_a = unit
+		source = recipient
+		target_flag = target
+		name = "ism_take_subject_troops_choose_unit"
+		none_available_msg_key = "ism_take_subject_troops_no_units"
+		column = {
+			data = name
+		}
+		visible = {
+			is_army = yes
+			NOT = { any_sub_unit = { is_condottieri = yes } }
+			NOT = { any_sub_unit = { is_mercenary = yes } }
+		}
+	}
+
+	effect = {
+		if = {
+			limit = {
+				exists = scope:target
+				exists = scope:recipient
+			}
+			scope:target = {
+				add_unit_modifier = {
+					modifier = ism_taken_from_subject
+					mode = replace
+				}
+			}
+			scope:recipient = {
+				add_to_variable_list = {
+					name = ism_units_taken
+					target = scope:target
+				}
+			}
+			scope:target = {
+				change_unit_owner = scope:actor
+			}
+		}
+		else = {
+			custom_tooltip = ism_take_subject_troops_select_unit
+		}
+	}
+}
+
+ism_return_subject_troops = {
+	type = subject
+	category = CATEGORY_SUBJECT_ACTIONS
+	show_message = no
+	show_message_to_target = no
+
+	block_when_at_war = no
+
+	potential = {
+	}
+
+	allow = {
+	}
+
+	ai_tick = never
+
+	use_enroute = no
+
+	select_trigger = {
+		looking_for_a = country
+		interaction_source_list = {
+			scope:actor = {
+				every_subject = {
+					add_to_list = source
+				}
+			}
+		}
+		target_flag = recipient
+		name = "choose_country"
+		column = {
+			data = name
+		}
+		visible = {
+			has_variable_list = ism_units_taken
+		}
+	}
+
+	effect = {
+		if = {
+			limit = {
+				exists = scope:recipient
+			}
+			scope:recipient = {
+				ism_return_taken_units = { overlord = scope:actor }
+			}
+		}
+	}
+}

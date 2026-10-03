@@ -9,7 +9,7 @@ nd_ger_guild_heritage = {
 	potential = { has_or_had_tag = GER }
 	requires = guilds
 	unlock_building = nd_ger_rathaus
-	global_production_efficiency = 0.0243
+	global_production_efficiency = 0.01215
 }
 
 # Mining Tradition: the Harz and Erzgebirge silver mines that funded German states
@@ -38,8 +38,8 @@ nd_ger_hanseatic_roots = {
 	icon = guilds
 	potential = { has_or_had_tag = GER }
 	requires = guilds
-	trade_land_efficiency = 0.0485
-	trade_sea_efficiency = 0.0485
+	trade_land_efficiency = 0.2
+	trade_sea_efficiency = 0.2
 	global_merchant_capacity_modifier = 0.1
 }
 
@@ -50,7 +50,7 @@ nd_ger_minnesang = {
 	potential = { has_or_had_tag = GER }
 	requires = organized_religion
 	cultural_tradition_modifier = 0.1
-	monthly_prestige = 0.1
+	skill_of_new_artists = 0.1
 }
 
 ############################
@@ -83,6 +83,7 @@ nd_ger_imperial_banking = {
 	icon = merchants_and_trade
 	potential = { has_or_had_tag = GER }
 	requires = merchants_and_trade
+	unlock_production_method = nd_ger_saigerhuette
 	bank_interest = -0.01
 	global_merchant_power = 0.1
 }
@@ -120,8 +121,9 @@ nd_ger_reformation_crucible = {
 	icon = printing_press_advance
 	potential = { has_or_had_tag = GER }
 	requires = printing_press_advance
+	unlock_production_method = nd_ger_flugschriften
 	tolerance_heretic = 1
-	global_institution_growth_modifier = 0.25
+	global_institution_growth_modifier = 0.2
 }
 
 # Arms Manufacture: German expertise in producing firearms and artillery
@@ -266,7 +268,7 @@ nd_ger_aufklarung = {
 	potential = { has_or_had_tag = GER }
 	requires = the_constitution
 	research_speed_modifier = 0.05
-	global_monthly_literacy = 0.025
+	global_monthly_literacy = 0.02
 }
 
 # Prussian Bureaucratic Model: the rational administrative state
@@ -285,6 +287,7 @@ nd_ger_standing_army = {
 	icon = absolutism_agressive_advance
 	potential = { has_or_had_tag = GER }
 	requires = absolutism_agressive_advance
+	unlock_levy = levy_nd_ger_kantonisten
 	global_manpower_modifier = 0.1
 	army_maintenance_efficiency = 0.1
 
@@ -314,9 +317,12 @@ nd_ger_zollverein = {
 	icon = industrialization_advance
 	potential = { has_or_had_tag = GER }
 	requires = industrialization_advance
-	trade_land_efficiency = 0.0243
-	trade_sea_efficiency = 0.0243
-	global_production_efficiency = 0.0485
+	trade_land_efficiency = 0.1
+	trade_sea_efficiency = 0.1
+	# Friedrich List called the customs union and the railway system Siamese
+	# twins. Vanilla's Austrian advance of this age already grants production
+	# efficiency, so the union pays in rails instead.
+	build_railroad_cost_modifier = -0.1
 }
 
 # German Industrialization: the transformation of the Rhineland and Ruhr
@@ -325,6 +331,7 @@ nd_ger_industrialization = {
 	icon = industrialization_advance
 	potential = { has_or_had_tag = GER }
 	requires = industrialization_advance
+	unlock_production_method = nd_ger_kokshochofen
 	global_raw_material_output = 0.1
 	global_construction_speed = 0.1
 }
@@ -336,7 +343,7 @@ nd_ger_humboldtian_education = {
 	potential = { has_or_had_tag = GER }
 	requires = enlightened_court
 	research_speed_modifier = 0.05
-	global_monthly_literacy = 0.025
+	global_monthly_literacy = 0.02
 }
 
 # Realpolitik: Bismarck's pragmatic approach to power politics
@@ -404,6 +411,10 @@ nd_ger_dest_mitteleuropa = {
 		owns_or_non_sovereign_subject_owns = location:krakow
 		army_size >= 75
 		prestige >= 75
+		# The army this stage asks for is the standing army of the canton
+		# system (nd_ger_standing_army, age 5). Without it this path ended
+		# four ages before the other, which waits for industrialization.
+		has_advance = nd_ger_standing_army
 	}
 	icon = imperial_ambitions
 	unlock_building = nd_ger_krupp_stahlwerk
@@ -434,7 +445,7 @@ nd_ger_dest_zollverein = {
 	}
 	icon = merchants_and_trade
 	global_trade_center_power = 0.0971
-	global_population_growth = 0.0015
+	global_population_growth = 0.00025
 }
 
 nd_ger_dest_industrie = {
@@ -443,7 +454,16 @@ nd_ger_dest_industrie = {
 	potential = { has_or_had_tag = GER has_variable = nd_ger_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		has_embraced_institution = institution:industrialization
-		total_development >= 12000
+		# Essen, a village on a coal seam until Krupp cast steel there from
+		# 1811: 19 in 1337 (development_estimate.py --explain essen), half as
+		# much again for a second stage.
+		custom_tooltip = {
+			text = nd_ger_dest_essen_developed_tt
+			location:essen = {
+				owner ?= root
+				development >= 29
+			}
+		}
 		any_market_present_in_country = {
 			OR = {
 				is_produced_in_market = goods:steel
@@ -453,7 +473,7 @@ nd_ger_dest_industrie = {
 	}
 	icon = global_trade_advance
 	trade_income = 0.0728
-	global_devastation_recovery = 0.005
+	global_devastation_recovery = 0.0025
 }
 
 nd_ger_dest_welthandel = {
@@ -464,7 +484,16 @@ nd_ger_dest_welthandel = {
 		gold >= 3000
 		prestige >= 75
 		has_embraced_institution = institution:scientific_revolution
-		total_development >= 16000
+		# Hamburg, the port through which German goods went out to the world:
+		# 29 in 1337 (development_estimate.py --explain hamburg), doubled for
+		# a capstone.
+		custom_tooltip = {
+			text = nd_ger_dest_hamburg_developed_tt
+			location:hamburg = {
+				owner ?= root
+				development >= 58
+			}
+		}
 	}
 	icon = global_trade_advance
 	unlock_building = nd_ger_handelskammer

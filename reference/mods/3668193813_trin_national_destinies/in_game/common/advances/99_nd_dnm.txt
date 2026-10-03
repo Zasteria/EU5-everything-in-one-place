@@ -79,7 +79,7 @@ nd_dnm_danube_staple = {
 	requires = merchants_and_trade
 	icon = merchants_and_trade
 	unlock_building = nd_dnm_donau_stapel
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 }
 
 # ===== AGE 3 : DISCOVERY: the long Turkish war =====
@@ -165,7 +165,10 @@ nd_dnm_kaiserliche_armee = {
 	requires = imperial_ambitions
 	icon = imperial_ambitions
 	unlock_building = nd_dnm_imperial_arsenal
-	global_manpower_modifier = 0.1
+	# A standing army keeps its experience from one campaign to the next
+	# instead of disbanding with the season. (Manpower stood here until
+	# 2026-10-01: Hungary's own age 4 advance already grants it.)
+	monthly_army_tradition = 0.05
 }
 
 # The Erblande Mercantilism: the cameralist development of the
@@ -176,8 +179,8 @@ nd_dnm_erblande_mercantilism = {
 	potential = { has_or_had_tag = DNM }
 	requires = global_trade_advance
 	icon = global_trade_advance
-	global_production_efficiency = 0.05
-	trade_sea_efficiency = 0.03
+	global_production_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 }
 
 # ===== AGE 5 : ABSOLUTISM: the Pragmatic monarchy =====
@@ -224,8 +227,8 @@ nd_dnm_banat_colonization = {
 	potential = { has_or_had_tag = DNM }
 	requires = absolute_rulership
 	icon = absolute_rulership
-	global_monthly_development = 0.002
-	global_devastation_recovery = 0.005
+	global_monthly_development = 0.001
+	global_devastation_recovery = 0.0025
 }
 
 # ===== AGE 6 : REVOLUTIONS: the Gesamtmonarchie under strain =====
@@ -272,7 +275,7 @@ nd_dnm_danube_steam = {
 	requires = industrialization_advance
 	icon = industrialization_advance
 	unlock_building = nd_dnm_danube_steam_yard
-	trade_land_efficiency = 0.04
+	trade_land_efficiency = 0.2
 }
 
 # ==========================================================================
@@ -349,7 +352,18 @@ nd_dnm_dest_sava_line = {
 			text = nd_dnm_amb_sava_tt
 			has_advance = nd_dnm_destiny
 		}
-		owns_or_non_sovereign_subject_owns = location:belgrad
+		# Hungary holds Belgrade on day one, so holding it asks nothing of a
+		# monarchy formed from Hungary. The deed is what the Habsburgs did
+		# with it after 1717: the fortress rebuilt and the town resettled.
+		# 25.5 in 1337, asked to grow by a quarter
+		# (scripts/development_estimate.py).
+		custom_tooltip = {
+			text = nd_dnm_dest_belgrad_developed_tt
+			location:belgrad = {
+				owner ?= root
+				development >= 32
+			}
+		}
 		owns_or_non_sovereign_subject_owns = location:smederevo
 	}
 	icon = feudalism_advance
@@ -358,7 +372,9 @@ nd_dnm_dest_sava_line = {
 }
 
 # A2 : The Drive Into the Balkans: the Grenzer spearhead carried past
-# the rivers into the Ottoman interior: Bosnia, the Morava valley, Sofia.
+# the rivers into the Ottoman interior, on the road of the 1689 offensive:
+# Nis on the Morava, Skopje on the Vardar, Sofia. (Sarajevo stood here;
+# Bosnia is a Hungarian vassal on day one, so it asked nothing.)
 # The small-war doctrine (Kleinkrieg, age 3) must actually be adopted --
 # a cross-age link, so it lives in allow, not requires.
 nd_dnm_dest_balkan_drive = {
@@ -371,7 +387,7 @@ nd_dnm_dest_balkan_drive = {
 			has_advance = nd_dnm_dest_sava_line
 			has_advance = nd_dnm_kleinkrieg
 		}
-		owns_or_non_sovereign_subject_owns = location:vrhbosna
+		owns_or_non_sovereign_subject_owns = location:skopje
 		owns_or_non_sovereign_subject_owns = location:nis
 		owns_or_non_sovereign_subject_owns = location:sredets
 	}
@@ -486,7 +502,7 @@ nd_dnm_dest_total_monarchy = {
 	}
 	icon = crown_power_advance_renaissance
 	unlock_building = nd_dnm_staatskanzlei
-	global_estate_target_satisfaction = 0.05
+	global_estate_target_satisfaction = 0.025
 	monthly_inflation = -0.001
 	bank_interest = -0.01
 }

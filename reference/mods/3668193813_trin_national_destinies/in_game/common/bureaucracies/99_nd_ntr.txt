@@ -1,13 +1,20 @@
 ﻿# National Destinies: Maori (Aotearoa) bureaucracies
 # Five historically-grounded institutions of pre-modern Maori governance, drawn
 # from iwi-hapu-whanau society of the 14th-19th centuries through to the
-# Kingitanga unification of 1858. Auto-modifier grants 2 slots; capital adds 1
-# = 3 total. Player picks 3 of 5. Each bureaucracy reflects a distinct face of
+# Kingitanga unification of 1858. The auto modifier grants 3 slots (half of
+# the five, rounded up; vanilla gives this country none on the day it forms
+# and a capital gives none unless it is a megalopolis), so three of the five
+# can run at once. Each bureaucracy reflects a distinct face of
 # Maori political life: the rangatira chiefly council, the tohunga learning
 # class, the pa fortification system, the muru-utu customary law, and the
 # Kingitanga unifying movement. The set is deliberately tribal-confederal in
-# character (no centralising "imperial bureaucracy"); estate alignment runs
-# nobles/clergy/peasants and resists crown centralisation in most institutions.
+# character (no centralising "imperial bureaucracy").
+# Estates: every Maori pop of the 1337 setup is a tribesman, so the country
+# has the tribes estate and the crown and no other on the day it forms.
+# Each institution is aligned with one of those two on both sides where it
+# has two sides. A second estate is named only where the text is about a
+# class that can appear later (chiefs as nobles, tohunga as clergy, traders
+# as burghers, cultivators as peasants); it counts for nothing until then.
 
 # 1. Rangatiratanga: the rangatira (chief) and ariki (paramount chief) led
 #    the iwi (tribe) and hapu (sub-tribe) by inherited mana and personal
@@ -32,6 +39,7 @@ ntr_rangatiratanga_bureaucracy = {
 	allow = {}
 
 	estates_that_like = {
+		tribes_estate
 		nobles_estate
 	}
 	estates_that_dislike = {
@@ -44,7 +52,7 @@ ntr_rangatiratanga_bureaucracy = {
 
 	positive_modifier = {
 		scale = { value = scope:maintenance }
-		nobles_estate_target_satisfaction = small_permanent_target_satisfaction
+		tribes_estate_target_satisfaction = small_permanent_target_satisfaction
 		global_max_rural_control = 0.03
 		monthly_tribal_cohesion = 0.05
 		monthly_devotion = 0.05
@@ -57,10 +65,9 @@ ntr_rangatiratanga_bureaucracy = {
 			value = 1
 			subtract = scope:maintenance
 		}
-		monthly_legitimacy = -0.05
-		monthly_devotion = -0.05
-		monthly_republican_tradition = -0.05
-		monthly_tribal_cohesion = -0.05
+		# A rangatira who loses mana loses followers: the hapu stop
+		# answering his call to arms and go their own way.
+		tribes_estate_levy_size = -0.25
 		global_separatism = 0.05
 	}
 }
@@ -91,6 +98,7 @@ ntr_tohunga_whare_wananga_bureaucracy = {
 	}
 
 	estates_that_like = {
+		tribes_estate
 		clergy_estate
 	}
 	estates_that_dislike = {
@@ -98,13 +106,15 @@ ntr_tohunga_whare_wananga_bureaucracy = {
 	}
 
 	neutral_modifier = {
-		clergy_estate_target_satisfaction = small_permanent_target_satisfaction
+		tribes_estate_target_satisfaction = small_permanent_target_satisfaction
 	}
 
 	positive_modifier = {
 		scale = { value = scope:maintenance }
 		global_max_literacy = 5
-		cultural_tradition_modifier = 0.10
+		# Tradition itself is granted by Te Reo (vanilla) and the Wharenui
+		# advance. The schools carry it outward to the peoples around them.
+		cultural_influence_modifier = 0.10
 		global_pop_assimilation_speed_modifier = 0.10
 	}
 
@@ -113,7 +123,7 @@ ntr_tohunga_whare_wananga_bureaucracy = {
 			value = 1
 			subtract = scope:maintenance
 		}
-		global_clergy_estate_power = 0.10
+		global_tribes_estate_power = 0.10
 		global_monthly_literacy = -0.005
 	}
 }
@@ -144,10 +154,9 @@ ntr_pa_network_bureaucracy = {
 
 	estates_that_like = {
 		crown_estate
-		nobles_estate
 	}
 	estates_that_dislike = {
-		peasants_estate
+		tribes_estate
 	}
 
 	neutral_modifier = {
@@ -166,7 +175,7 @@ ntr_pa_network_bureaucracy = {
 			value = 1
 			subtract = scope:maintenance
 		}
-		peasants_estate_satisfaction_decay = 0.025
+		tribes_estate_satisfaction_decay = 0.025
 		levy_recovery_modifier = -0.15
 	}
 }
@@ -197,8 +206,8 @@ ntr_muru_me_utu_bureaucracy = {
 	allow = {}
 
 	estates_that_like = {
+		tribes_estate
 		peasants_estate
-		nobles_estate
 	}
 	estates_that_dislike = {
 		crown_estate
@@ -210,9 +219,11 @@ ntr_muru_me_utu_bureaucracy = {
 
 	positive_modifier = {
 		scale = { value = scope:maintenance }
-		peasants_estate_target_satisfaction = small_permanent_target_satisfaction
-		global_population_growth = 0.003
-		global_monthly_food_modifier = 0.05
+		# Muru answers the injury and ends it: a hapu that has taken its
+		# due has no grievance left to nurse.
+		tribes_estate_satisfaction_recovery = 0.001
+		global_population_growth = 0.00025
+		global_monthly_food_modifier = 0.025
 	}
 
 	negative_modifier = {
@@ -259,6 +270,7 @@ ntr_kingitanga_bureaucracy = {
 		crown_estate
 	}
 	estates_that_dislike = {
+		tribes_estate
 		nobles_estate
 	}
 
@@ -281,7 +293,7 @@ ntr_kingitanga_bureaucracy = {
 			value = 1
 			subtract = scope:maintenance
 		}
-		nobles_estate_satisfaction_decay = 0.020
+		tribes_estate_satisfaction_decay = 0.020
 		global_separatism = 0.05
 	}
 }

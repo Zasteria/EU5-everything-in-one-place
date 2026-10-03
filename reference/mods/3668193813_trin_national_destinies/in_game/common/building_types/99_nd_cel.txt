@@ -68,8 +68,62 @@ nd_cel_scriptorium = {
 			lumber = 0.1
 			category = building_maintenance
 		}
+		# Unlocked by nd_cel_language_revival: the scriptures and grammars
+		# set in type in the Celtic tongues (inputs of vanilla's printing
+		# press shop).
+		nd_cel_vernacular_press = {
+			paper = 0.75
+			lead = 0.2
+			tools = 0.03
+			leather = 0.13
+			produced = books
+			output = 0.952
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
 	}
 	construction_demand = library_construction
+}
+
+# Hedge School: a master and his scholars in a barn, a ditch-side cabin or
+# the lee of a hedge, paid in turf and potatoes.
+nd_cel_hedge_school = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = 1
+	employment_size = generic_peasant_building_employment
+	category = cultural_category
+	# A school of the countryside: it kept out of the towns, where the
+	# magistrates were.
+	rural_settlement = yes
+	town = no
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = cultural_building_time
+
+	country_potential = {
+		has_advance = nd_cel_hedge_schools
+	}
+
+	# No location gate: a hedge school needs a master and a hedge. The
+	# values are small because the building can stand in every rural
+	# location (vanilla's own village school grants the same peasant
+	# literacy).
+	modifier = {
+		local_peasants_max_literacy = 1
+		local_monthly_literacy = 0.01
+	}
+
+	unique_production_methods = {
+		nd_cel_hedge_school_upkeep = {
+			paper = 0.263
+			books = 0.175
+			category = building_maintenance
+		}
+	}
+	construction_demand = school_construction
 }
 
 # Rath Market - Celtic cattle fair, trading ground, and place of legal assembly
@@ -103,11 +157,6 @@ nd_cel_rath_market = {
 			salt = 0.05
 			category = building_maintenance
 		}
-		nd_cel_legal_proceedings = {
-			paper = 0.1
-			beeswax = 0.1
-			category = building_maintenance
-		}
 	}
 	construction_demand = village_construction
 }
@@ -139,9 +188,9 @@ nd_cel_teach_ceoil = {
 
 	unique_production_methods = {
 		nd_cel_bardic_upkeep = {
-			livestock = 0.1
-			cloth = 0.1
-			beer = 0.05
+			livestock = 0.191
+			cloth = 0.191
+			beer = 0.096
 			category = building_maintenance
 		}
 	}
@@ -167,7 +216,7 @@ nd_cel_clachan = {
 	}
 
 	modifier = {
-		local_monthly_food_modifier = 0.05
+		local_monthly_food_modifier = 0.025
 		local_population_growth = 0.0005
 	}
 
@@ -179,18 +228,154 @@ nd_cel_clachan = {
 	}
 
 	unique_production_methods = {
+		# Open from the day the clachan is built. The wool method below was
+		# the building's only one and is locked until nd_cel_wool_trade
+		# (an age later), which left the clachan with no method to run.
+		nd_cel_rundale_upkeep = {
+			tools = 0.05
+			lumber = 0.05
+			livestock = 0.05
+			category = building_maintenance
+		}
+		# Unlocked by nd_cel_wool_trade.
 		nd_cel_communal_farming = {
 			livestock = 0.2
 			produced = wool
 			output = 0.144
 			category = guild_input
-			debug_max_profit = guild_profit_margin
+			debug_max_profit = rural_profit_margin
 		}
 	}
 	construction_demand = farm_constructions
 }
-# Profit: livestock 0.2*1.5 = 0.30 input
-# 0.29 * 1.25 = 0.3625 output value -> profit = (0.3625-0.30)/0.30 = 20.8% OK
+
+# Blowing House: the tinners' smelting house on a moorland stream, where
+# black tin is blown to white with charcoal and a water-driven bellows.
+# A plain producer with no modifier block, so it takes the level formula of
+# vanilla's rural producers.
+nd_cel_blowing_house = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = rural_building_cap
+	employment_size = generic_peasant_building_employment
+	category = rgo_building_category
+	# A works of the open moor: rural settlements only.
+	rural_settlement = yes
+	town = no
+	city = no
+	megalopolis = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_cel_cornish_mining
+	}
+
+	# Only on the tin ground itself: the house smelts what the streamers
+	# bring in, it does not make tin where there is none.
+	location_potential = {
+		raw_material = goods:tin
+	}
+
+	unique_production_methods = {
+		# Charcoal and the tools of the stream works are what it consumes.
+		nd_cel_tin_blowing = {
+			lumber = 0.3
+			tools = 0.05
+			produced = tin
+			output = 0.36
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = village_construction
+}
+
+# Pilchard Cellar: the fish palace of a Cornish cove or a Breton press.
+# The catch is laid in salt against the walls for a month, then packed in
+# casks and pressed.
+nd_cel_pilchard_cellar = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = rural_building_cap
+	employment_size = generic_peasant_building_employment
+	category = rgo_building_category
+	# A courtyard above the quay of a fishing cove or a small port, never
+	# in a city.
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_cel_atlantic_fisheries
+	}
+
+	# On the coast, and only where the sea off the location is itself
+	# fished: the cellar cures a catch, it does not make one.
+	location_potential = {
+		is_coastal = yes
+		raw_material = goods:fish
+	}
+
+	unique_production_methods = {
+		# Salt, cask staves and knives (vanilla's fishing village cures
+		# with salt and tools).
+		nd_cel_pilchard_curing = {
+			salt = 0.1
+			lumber = 0.05
+			tools = 0.02
+			produced = fish
+			output = 0.642
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = village_construction
+}
+
+# Beetling Mill: the last stage of Ulster linen. Wooden beetles lifted by
+# a water wheel pound the bleached web for days until it closes and
+# shines.
+nd_cel_beetling_mill = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = guild_max_level
+	employment_size = generic_peasant_building_employment
+	category = consumer_goods_category
+	# A mill on a river beside the bleach greens: countryside and town.
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_cel_linen_industry
+	}
+
+	# The beetles are driven by a water wheel.
+	location_potential = {
+		has_river = yes
+	}
+
+	unique_production_methods = {
+		# Finishing, not weaving: it takes cloth and gives fine cloth, as
+		# vanilla's fine cloth guild does.
+		nd_cel_linen_beetling = {
+			cloth = 0.5
+			tools = 0.02
+			produced = fine_cloth
+			output = 0.312
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = village_construction
+}
 
 # Port Dunan - Celtic coastal harbour/naval base
 nd_cel_port_dunan = {
@@ -260,9 +445,9 @@ nd_cel_brehon_court = {
 
 	unique_production_methods = {
 		nd_cel_formal_jurisprudence = {
-			paper = 0.15
-			beeswax = 0.1
-			cloth = 0.05
+			paper = 0.254
+			beeswax = 0.17
+			cloth = 0.085
 			category = building_maintenance
 		}
 	}

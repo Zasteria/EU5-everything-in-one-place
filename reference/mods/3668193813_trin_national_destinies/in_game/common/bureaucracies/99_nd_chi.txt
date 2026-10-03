@@ -1,6 +1,20 @@
 ﻿###############################################################
 # National Destinies: China (CHI) bureaucracies
-# Seven institutions; player picks 3 (capital + 2 from advance).
+# Seven institutions. The auto modifier grants 3 slots, and the country
+# that carries the tag in 1337 has a megalopolis for a capital (Dadu), which
+# gives the fourth: four of the seven on the day it forms (slot rule of
+# 2026-10-02). A smaller capital gives none. Vanilla's own advance
+# chi_bureaucracy_advance adds one more once researched.
+#
+# Vanilla ships four bureaucracies for the same tag (bureaucracies/
+# china.txt, gate has_or_had_tag = CHI): Central Secretariat, Imperial
+# Censorate, Six Boards and Grand Secretariat. Three blocks here were
+# the same three offices under almost the same names (Six Ministries,
+# Censorate, Grand Secretariat), so every China held each of them twice.
+# They now carry three Ming institutions vanilla does not have: the
+# provincial commissions, the Offices of Scrutiny and the Office of
+# Transmission. Their KEYS are unchanged, because saves and the impact
+# modifier registry refer to them.
 ###############################################################
 
 # Imperial Examination System (Keju): codified by Sui-Tang, intensified by
@@ -38,7 +52,7 @@ chi_keju_examinations_bureaucracy = {
 	positive_modifier = {
 		scale = { value = scope:maintenance }
 		global_burghers_max_literacy = 10
-		global_pop_promotion_speed = 0.05
+		global_pop_promotion_speed = 0.001
 		burghers_estate_target_satisfaction = small_permanent_target_satisfaction
 	}
 
@@ -54,8 +68,14 @@ chi_keju_examinations_bureaucracy = {
 	}
 }
 
-# Six Ministries (Liu Bu): Personnel, Revenue, Rites, War, Justice, Works.
-# The administrative spine of imperial China since the Tang.
+# Three Provincial Commissions (key says six_ministries): in 1376 the
+# Hongwu Emperor abolished the Yuan branch secretariats and split each
+# province between three offices, an administration commission, a
+# surveillance commission and a regional military commission, none
+# subordinate to the others and each answering to a different office in
+# the capital. Vanilla's Six Boards are the ministries themselves (cabinet
+# seats, manpower). This is how those ministries reached the provinces
+# (control, tax), and none of its keys is one of vanilla's.
 chi_six_ministries_bureaucracy = {
 	implementation_price = price:implement_bureaucracy_price
 	maintenance_price = price:maintain_bureaucracy_price
@@ -78,12 +98,12 @@ chi_six_ministries_bureaucracy = {
 	}
 	estates_that_dislike = {}
 
-	# neutral: standardized administration always processes paperwork
+	# neutral: no province has a single master, so the capital decides
 	neutral_modifier = {
 		country_cabinet_efficiency = 0.1
 	}
 
-	# positive: well-funded ministries extend imperial reach
+	# positive: three well-staffed offices in every province extend imperial reach
 	positive_modifier = {
 		scale = { value = scope:maintenance }
 		global_monthly_control = 0.005
@@ -91,7 +111,7 @@ chi_six_ministries_bureaucracy = {
 		tax_income_efficiency = 0.05
 	}
 
-	# negative: ministries become silos squabbling over jurisdiction
+	# negative: the three offices deadlock each other over jurisdiction
 	negative_modifier = {
 		scale = {
 			value = 1
@@ -102,8 +122,15 @@ chi_six_ministries_bureaucracy = {
 	}
 }
 
-# Censorate (Du Cha Yuan): independent oversight bureau policing the bureaucracy.
-# Censors could memorialize the throne directly, even against ministers.
+# Offices of Scrutiny (key says censorate): six small offices, one beside
+# each ministry, whose supervising secretaries read every edict and
+# memorial that passed, kept a copy, could send an edict back unissued,
+# and held the register of deadlines each ministry had to meet. They stood
+# outside the Censorate until the Yongzheng Emperor merged the two in 1723.
+# Vanilla's Imperial Censorate hunts corrupt officials (stability cost,
+# tax). This block used to repeat its stability key. The offices check
+# paper, not men: law made in order, estates that stay content, fewer
+# edicts that have to be undone.
 chi_censorate_bureaucracy = {
 	implementation_price = price:implement_bureaucracy_price
 	maintenance_price = price:maintain_bureaucracy_price
@@ -128,25 +155,26 @@ chi_censorate_bureaucracy = {
 		burghers_estate
 	}
 
-	# neutral: omnipresent surveillance of officials
+	# neutral: every order carries a deadline and a clerk who checks it
 	neutral_modifier = {
-		spy_network_construction = 0.1
+		legislative_efficiency = 0.05
 	}
 
-	# positive: vigorous censorial impeachments keep officials honest
+	# positive: a faulty edict is sent back before it is issued
 	positive_modifier = {
 		scale = { value = scope:maintenance }
 		global_estate_satisfaction_decay = -0.025
-		stability_cost_efficiency = 0.1
+		stability_decay = -0.00025
 	}
 
-	# negative: censors ignored or compromised; provincial officials act with impunity
+	# negative: the secretaries turn their veto on each other's patrons, the
+	# court stalls, and nobody reads what the provinces send
 	negative_modifier = {
 		scale = {
 			value = 1
 			subtract = scope:maintenance
 		}
-		monthly_complacency = 0.05
+		country_cabinet_efficiency = -0.05
 		global_max_control = -0.05
 	}
 }
@@ -200,8 +228,14 @@ chi_hanlin_academy_bureaucracy = {
 	}
 }
 
-# Grand Secretariat (Nei Ge): Yongle (1402+) ad hoc council of Hanlin scholars
-# that grew into the de facto cabinet of the Ming and early Qing courts.
+# Office of Transmission (key says grand_secretariat): founded by the
+# Hongwu Emperor in 1377 to receive every memorial sent to the throne, from
+# provincial officials and from commoners alike, copy it, register it and
+# pass the original up. Vanilla's Grand Secretariat is the inner council
+# that drafted the answers (legitimacy, prestige), and this block shared
+# its name and its loss of legitimacy under neglect. The office of
+# transmission is the other end of the paper: what the provinces say
+# reaches the capital (integration, a seat for the provinces).
 chi_grand_secretariat_bureaucracy = {
 	implementation_price = price:implement_bureaucracy_price
 	maintenance_price = price:maintain_bureaucracy_price
@@ -216,7 +250,7 @@ chi_grand_secretariat_bureaucracy = {
 		has_game_rule = nd_bureaucracies_enabled
 	}
 
-	# Yongle-era institution: capital must be in the metropolitan core
+	# the office sits where the throne sits
 	allow = {
 		owns = location:dadu
 	}
@@ -229,12 +263,14 @@ chi_grand_secretariat_bureaucracy = {
 		nobles_estate
 	}
 
-	# neutral: the Grand Secretaries pre-digest memorials for the emperor
+	# neutral: ministers work from registered, copied memorials
+	# (a country modifier: the character key that stood here did nothing
+	# in a country block)
 	neutral_modifier = {
-		character_cabinet_efficiency = 0.1
+		country_cabinet_efficiency = 0.1
 	}
 
-	# positive: rapid edict drafting, wide imperial reach
+	# positive: every province is heard at court
 	positive_modifier = {
 		scale = { value = scope:maintenance }
 		annexation_speed_modifier = 0.1
@@ -242,16 +278,15 @@ chi_grand_secretariat_bureaucracy = {
 		num_nd_provincial_estates = 1
 	}
 
-	# negative: the Secretariat becomes a vehicle for senior-grand-secretary tyranny
+	# negative: memorials pile up unread or are held back by whoever
+	# controls the office, and the provinces stop expecting an answer
 	negative_modifier = {
 		scale = {
 			value = 1
 			subtract = scope:maintenance
 		}
 		nobles_estate_target_satisfaction = small_permanent_target_satisfaction_penalty
-		monthly_legitimacy = -0.05
-		monthly_devotion = -0.05
-		monthly_republican_tradition = -0.05
+		global_separatism = 0.05
 	}
 }
 
@@ -349,7 +384,7 @@ chi_lifan_yuan_bureaucracy = {
 	positive_modifier = {
 		scale = { value = scope:maintenance }
 		subject_loyalty = 10
-		diplomatic_capacity = 2
+		diplomatic_capacity = 1
 		global_pop_assimilation_speed_modifier = 0.1
 	}
 

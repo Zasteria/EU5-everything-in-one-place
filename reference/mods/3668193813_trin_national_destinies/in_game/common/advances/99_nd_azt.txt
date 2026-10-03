@@ -8,7 +8,7 @@ nd_azt_chinampa_system = {
 	requires = agriculture_advance
 	icon = agriculture_advance
 	unlock_building = nd_azt_chinampa_terrace
-	global_monthly_food_modifier = 0.05
+	global_monthly_food_modifier = 0.025
 }
 
 nd_azt_atlatl_tradition = {
@@ -45,9 +45,9 @@ nd_azt_pochteca_network = {
 	requires = merchants_and_trade
 	icon = merchants_and_trade
 	unlock_building = nd_azt_pochteca_warehouse
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	spy_network_construction = 0.1
 }
@@ -115,7 +115,7 @@ nd_azt_tribute_administration = {
 	potential = { has_or_had_tag = AZT }
 	requires = crown_power_advance_discovery
 	icon = crown_power_advance_discovery
-	tax_income_efficiency = 0.05
+	tax_income_efficiency = 0.03
 	global_crown_estate_power = 0.1
 }
 
@@ -135,9 +135,9 @@ nd_azt_cacao_trade = {
 	icon = merchant_power_from_maritime_discovery_advance
 	unlock_building = nd_azt_tianquiztli
 	global_merchant_capacity_modifier = 0.1
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -260,8 +260,8 @@ nd_azt_trade_modernisation = {
 	potential = { has_or_had_tag = AZT }
 	requires = industrialization_advance
 	icon = industrialization_advance
-	global_production_efficiency = 0.05
-	global_merchant_power = 0.3
+	global_production_efficiency = 0.025
+	global_merchant_power = 0.2
 }
 
 nd_azt_national_identity = {
@@ -311,7 +311,10 @@ nd_azt_dest_chichimecah = {
 		owns_or_non_sovereign_subject_owns = location:guachichil
 		owns_or_non_sovereign_subject_owns = location:acaponeta
 		stability >= 75
-		army_size >= 30
+		# The Mexica held what they won through lords who paid tribute, and
+		# the frontier is held the same way (an army size stood here until
+		# 2026-10-02: the Aztec army is a levy and cannot answer for it).
+		num_subjects >= 2
 	}
 	icon = feudalism_advance
 	siege_ability = 0.1
@@ -325,7 +328,17 @@ nd_azt_dest_fifth_sun = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:cuauhtemallan
 		owns_or_non_sovereign_subject_owns = location:naco
-		army_size >= 50
+		# The highland kingdoms of Guatemala (the Tezulutlan area, where
+		# Cuauhtemallan stands), held by the empire or its subject lords.
+		custom_tooltip = {
+			text = nd_azt_dest_highlands_share_tt
+			area:tezulutlan_area = {
+				any_location_in_area = {
+					percent >= 0.5
+					root = { owns_or_non_sovereign_subject_owns = prev }
+				}
+			}
+		}
 		prestige >= 50
 	}
 	icon = imperial_ambitions
@@ -340,7 +353,9 @@ nd_azt_dest_lords_americas = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:cofitachequi
 		owns_or_non_sovereign_subject_owns = location:cahokia
-		army_size >= 75
+		# A lord of the Americas is a lord over lords. Five is vanilla's own
+		# number for a great Nahua overlord (generic_actions/nahuatl.txt).
+		num_subjects >= 5
 		prestige >= 75
 		gold >= 3000
 	}
@@ -371,11 +386,20 @@ nd_azt_dest_cacao_monopoly = {
 			}
 		}
 		gold >= 1000
-		total_development >= 4000
+		# Tochtepec: the town where the merchants of the twelve guild towns kept
+		# their houses and from which the caravans left for the cacao lands
+		# (Sahagun, book 9). 1337 value 5 (development_estimate.py), +25%.
+		custom_tooltip = {
+			text = nd_azt_dest_tochtepec_developed_tt
+			location:tochtepec = {
+				owner ?= root
+				development >= 6
+			}
+		}
 	}
 	icon = merchants_and_trade
 	global_trade_center_power = 0.1
-	global_monthly_prosperity = 0.0015
+	global_monthly_prosperity = 0.001
 }
 
 nd_azt_dest_great_tianquiztli = {
@@ -390,7 +414,15 @@ nd_azt_dest_great_tianquiztli = {
 			}
 		}
 		gold >= 2000
-		total_development >= 6000
+		# Tenochtitlan holds the market of Tlatelolco, which the stage is about.
+		# 1337 value 16, +50%.
+		custom_tooltip = {
+			text = nd_azt_dest_tenochtitlan_developed_tt
+			location:tenochtitlan = {
+				owner ?= root
+				development >= 24
+			}
+		}
 		has_embraced_institution = institution:banking
 	}
 	icon = global_trade_advance
@@ -406,7 +438,15 @@ nd_azt_dest_merchants_world = {
 		owns_or_non_sovereign_subject_owns = location:habana
 		owns_or_non_sovereign_subject_owns = location:chalchuapa
 		gold >= 3000
-		total_development >= 7500
+		# The merchant guilds were those of twelve towns (Sahagun, book 9): the
+		# stage asks for a merchant house of the empire's own in as many.
+		custom_tooltip = {
+			text = nd_azt_dest_twelve_towns_tt
+			any_owned_location = {
+				count >= 12
+				has_building = building_type:nd_azt_pochteca_warehouse
+			}
+		}
 		prestige >= 75
 	}
 	icon = global_trade_advance

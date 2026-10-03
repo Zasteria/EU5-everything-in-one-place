@@ -1,0 +1,683 @@
+﻿# Catalonia (CAT): advance tree
+# National Destinies mod
+#
+# Read before designing (EU5 1.4):
+#   vanilla tag advances, one per age (advances/culture_catalan.txt):
+#     cat_principatus_cathaloniae, cat_generalitat, cat_remenca,
+#     cat_els_segadors, cat_principat_constitucionalista,
+#     cat_renaixenca_catalana.
+#   vanilla Catalan culture advances, one per age (same file): the maritime
+#     realm, fleet ordinances, Valencian golden age, chartered merchant
+#     companies, constellation cities, Mossos d'Esquadra.
+#   vanilla Iberian advances (advances/region_iberia.txt): almogavars, late
+#     almogavars, Catalan crossbowmen with the sometent levy (DLC), Catalan
+#     galley.
+#   vanilla elsewhere: the Consulate of the Sea is a naval law and a town
+#     right, the Usatges are a town right, the Sindicat Remenca a decision and
+#     privilege, the Taula de Canvi of Barcelona an event bank; the start
+#     setup reserves a Corts Catalanes government reform for the Iberian DLC.
+#   the mod's Aragonese Empire (99_nd_cda.txt), which a country that goes on
+#     from Catalonia holds beside this tree: pactism, the Consolat de Mar, the
+#     Catalan Company, the Catalan Atlas, Caspe, the Drassanes, the Llotja,
+#     the Generalitat Hall, the Renaixenca, the cotton mills.
+#
+# None of that is repeated. What is left is the Principality at ground level:
+# the law that calls every man to defend the land, Barcelona's charter and
+# the towns that joined it as streets, the mountain forge, the woollens, the
+# municipal bank, the estates' own customs, the freed farmstead, the lottery
+# of offices, glass, the miquelets and their successors, the gunmakers of
+# Ripoll, the Generalitat's galleys, brandy, paper, the guild militia, the
+# vote of 1713, the merchants' schools, the Maresme's ships and the men who
+# came back rich from Havana.
+#
+# A country formed from Aragon keeps Aragon's advances. No key below repeats,
+# in the same age, a key that a vanilla CAT, Catalan or ARA advance grants
+# (the per-age blocklist printed by scripts/creator_context.py CAT).
+#
+# Stepping stone toward the Aragonese Empire and Spain: 4 or 5 per age.
+# 25 advances, 16 of them unlocks (64 percent).
+
+# ============================================================================
+# AGE 1: TRADITIONS (4 advances, 1 unlock)
+# ============================================================================
+
+# Princeps namque, the usatge that obliges every man of the land to turn out
+# when the prince is attacked, and the cry that raised them: "Via fora!",
+# bells rung from parish to parish. It works only in defence of the land,
+# which is the point of it. Vanilla's DLC gives the sometent as a levy; this
+# is the law underneath, as speed of muster.
+nd_cat_via_fora = {
+	age = age_1_traditions
+	potential = { has_or_had_tag = CAT }
+	requires = feudalism_advance
+	icon = dan_levy_recruitment
+
+	global_levy_recruitment_speed_modifier = 0.2
+	levy_recovery_modifier = 0.1
+}
+
+# Recognoverunt proceres (1284): Peter the Great confirms the customs of
+# Barcelona in 116 chapters, twenty years after the Council of One Hundred
+# took its lasting form. The capital is governed by its own citizens under
+# its own charter. capital_possible_town_rights is the engine's count of
+# urban rights the capital may hold.
+nd_cat_recognoverunt_proceres = {
+	age = age_1_traditions
+	potential = { has_or_had_tag = CAT }
+	requires = legalism_advance
+	icon = town_rights_advance
+
+	capital_possible_town_rights = 1
+	burghers_estate_target_satisfaction = small_permanent_target_satisfaction
+}
+
+# "Una vegada lo any": the Corts of Barcelona of 1283 bind the prince to call
+# the estates once a year and to make no general law without them. The
+# subsidy, the donatiu, is voted only after grievances are redressed, and is
+# paid because it was voted. (DHE event nd_cat.2)
+nd_cat_una_vegada_lo_any = {
+	age = age_1_traditions
+	potential = { has_or_had_tag = CAT }
+	requires = medieval_administration
+	icon = estates_general
+
+	parliament_base_support = 0.1
+	global_estate_max_tax = 0.1
+}
+
+# The forges of the Pyrenees: ore from the Canigo and the Ripolles, charcoal
+# from the slope, a torrent for the hammers. Unlocks the Farga.
+nd_cat_fargues_del_pirineu = {
+	age = age_1_traditions
+	potential = { has_or_had_tag = CAT }
+	requires = mining_advance
+	icon = slitting_mills
+
+	unlock_building = nd_cat_farga
+	global_iron_output_modifier = 0.1
+}
+
+# ============================================================================
+# AGE 2: RENAISSANCE (4 advances, 3 unlocks)
+# ============================================================================
+
+# The municipal table of exchange: Barcelona, 1401, the first public deposit
+# bank of its kind, and a model the other Catalan towns copied. Unlocks the
+# Taula de Canvi building. monthly_inflation is a key where a negative value
+# is the benefit. (DHE event nd_cat.3, branching)
+nd_cat_banca_municipal = {
+	age = age_2_renaissance
+	potential = { has_or_had_tag = CAT }
+	requires = banking_advance
+	icon = banking_advance
+
+	unlock_building = nd_cat_taula_de_canvi
+	monthly_inflation = -0.001
+}
+
+# Carreratge: from the 1380s towns and villages are made streets of Barcelona in
+# law, sharing its privileges and escaping their lords for good. Unlocks the
+# Carrer de Barcelona building. town_upgrade_cost_modifier is a cost key: a
+# negative value is the benefit.
+nd_cat_carreratge = {
+	age = age_2_renaissance
+	potential = { has_or_had_tag = CAT }
+	requires = crown_power_advance_renaissance
+	icon = hun_strengthened_towns
+
+	unlock_building = nd_cat_carrer_de_barcelona
+	town_upgrade_cost_modifier = -0.05
+}
+
+# Draps de la terra: the country's own woollens. Around 1400 some thirty
+# thousand pieces a year left Catalan ports, and for two generations they
+# outsold Flemish and Italian cloth in Sicily. Unlocks the Obrador de
+# Paraires.
+nd_cat_draps_de_la_terra = {
+	age = age_2_renaissance
+	potential = { has_or_had_tag = CAT }
+	requires = merchants_and_trade
+	icon = flemish_cloth_making
+
+	unlock_building = nd_cat_obrador_de_paraires
+	global_cloth_output_modifier = 0.15
+}
+
+# The dret del General: the duty on everything entering and leaving the
+# Principality, with the bolla on cloth, voted in the 1360s. It is collected
+# by the estates' own Diputacio, at the estates' own customs tables, and it
+# belongs to the estates. So the duty can be set higher than a king could set
+# it, the estates are content, and less of it reaches the prince's treasury:
+# tariff_income is the share of tariff revenue that does, and the negative
+# value is a deliberate cost. max_tariff sits at 0.05 because 0.1 is the top
+# of what vanilla grants in age 2.
+nd_cat_dret_del_general = {
+	age = age_2_renaissance
+	potential = { has_or_had_tag = CAT }
+	requires = renaissance_court
+	icon = port_customs
+
+	max_tariff = 0.05
+	global_estate_target_satisfaction = small_permanent_target_satisfaction
+	tariff_income = -0.05
+}
+
+# ============================================================================
+# AGE 3: DISCOVERY (4 advances, 2 unlocks)
+# ============================================================================
+
+# After the Sentence of Guadalupe (vanilla: cat_remenca) the freed tenant
+# keeps his farm on a perpetual lease and leaves it whole to one heir, the
+# hereu. Unlocks the Masia. global_peasant_enfranchisment is the share of a
+# location's wealth that belongs to its peasants.
+nd_cat_mas_i_hereu = {
+	age = age_3_discovery
+	potential = { has_or_had_tag = CAT }
+	requires = rgo_logistics_discovery
+	icon = terrace_farming
+
+	unlock_building = nd_cat_masia
+	global_peasant_enfranchisment = 0.05
+}
+
+# Insaculacio (the Diputacio in 1493, Barcelona in 1498): the names of every
+# man fit for office go into a bag and a child draws one. No election to buy,
+# no faction to arm.
+# set_cabinet_member_cost_modifier and stability_decay are keys where a
+# negative value is the benefit.
+nd_cat_insaculacio = {
+	age = age_3_discovery
+	potential = { has_or_had_tag = CAT }
+	requires = crown_power_advance_discovery
+	icon = republican_election_law_advance
+
+	set_cabinet_member_cost_modifier = -0.1
+	stability_decay = -0.00025
+}
+
+# The insurance ordinances of Barcelona (1435 to 1484), the oldest insurance
+# code in Europe. They let a Catalan hull be insured for more of its value
+# than a foreign one, which is protection of the home market by other means:
+# global_trade_protection_factor is the pull that keeps a country's own
+# locations in its own market.
+nd_cat_ordinacions_d_assegurances = {
+	age = age_3_discovery
+	potential = { has_or_had_tag = CAT }
+	requires = merchant_power_from_maritime_discovery_advance
+	icon = development_of_maritime_law
+
+	global_trade_protection_factor = 0.1
+	global_merchant_capacity_modifier = 0.05
+}
+
+# Vidre catala: the enamelled glass of Barcelona, sold at the fair of the
+# first of January. Unlocks the Forn de Vidre.
+nd_cat_vidre_catala = {
+	age = age_3_discovery
+	potential = { has_or_had_tag = CAT }
+	requires = regulate_court_procedures
+	icon = guilds
+
+	unlock_building = nd_cat_forn_de_vidre
+	global_glass_output_modifier = 0.1
+}
+
+# ============================================================================
+# AGE 4: REFORMATION (4 advances, 3 unlocks)
+# ============================================================================
+
+# In 1640 the Diputacio raises companies of mountain irregulars to hold the
+# passes: the miquelets. Unlocks the Miquelets levy. land_unit_attrition is a
+# key where a negative value is the benefit. (DHE event nd_cat.4, branching)
+nd_cat_miquelets_de_la_terra = {
+	age = age_4_reformation
+	potential = { has_or_had_tag = CAT }
+	requires = leader_recruit_cost_advance
+	icon = alpine_defensiveness
+
+	unlock_levy = levy_nd_cat_miquelets
+	land_unit_attrition = -0.1
+}
+
+# The barrel forgers and lock makers of Ripoll. Unlocks the firearms method
+# of the Farga (the building is unlocked in age 1).
+nd_cat_canons_de_ripoll = {
+	age = age_4_reformation
+	potential = { has_or_had_tag = CAT }
+	requires = pop_promotion_speed_age_4
+	icon = flintlock_gun
+
+	unlock_production_method = nd_cat_farga_pedrenyals
+	global_firearms_output_modifier = 0.1
+}
+
+# The Corts of 1599 vote a squadron of galleys owned by the Diputacio, to
+# hunt Barbary corsairs off the Catalan coast. Unlocks the Galera del General.
+nd_cat_galeres_del_general = {
+	age = age_4_reformation
+	potential = { has_or_had_tag = CAT }
+	requires = global_trade_advance
+	icon = slave_manned_galleys
+
+	unlock_unit = n_nd_cat_galera_del_general
+	anti_piracy_warfare_modifier = 0.25
+	ai_weight = {
+		add = 30
+	}
+}
+
+# The Visita del General: every three years a tribunal audits the deputies
+# and every officer of the Generalitat, and those found wanting pay it back.
+nd_cat_visita_del_general = {
+	age = age_4_reformation
+	potential = { has_or_had_tag = CAT }
+	requires = gov_reform_reformation_a
+	icon = court_accounting
+
+	court_spending_efficiency = 0.1
+	tax_income_efficiency = small_tax_income_efficiency_bonus
+}
+
+# ============================================================================
+# AGE 5: ABSOLUTISM (5 advances, 4 unlocks)
+# ============================================================================
+
+# Between 1705 and 1714 the miquelets are regimented as fusiliers of the
+# mountain, with volunteer companies around each regiment. Unlocks the
+# buildable Fusellers de Muntanya and the levy that succeeds the miquelets.
+nd_cat_regiments_de_muntanya = {
+	age = age_5_absolutism
+	potential = { has_or_had_tag = CAT }
+	requires = absolutism_agressive_advance
+	icon = hab_expert_mountaineers
+
+	unlock_unit = a_nd_cat_fusellers_de_muntanya
+	unlock_levy = levy_nd_cat_fusellers_voluntaris
+	army_light_infantry_power = 0.05
+	ai_weight = {
+		add = 30
+	}
+}
+
+# The banners of the guilds: each trade of Barcelona musters its own company
+# of the Coronela and stands its own stretch of wall. Unlocks the Coronela
+# levy.
+nd_cat_banderes_dels_gremis = {
+	age = age_5_absolutism
+	potential = { has_or_had_tag = CAT }
+	requires = absolute_rulership
+	icon = fortified_towns
+
+	unlock_levy = levy_nd_cat_coronela
+	global_garrison_growth = 0.01
+}
+
+# Fenix de Catalunya (1683): Narcis Feliu de la Penya's programme for a
+# country that would rise by making and selling, written as the brandy trade
+# of Reus was taking off. Unlocks the Fassina.
+nd_cat_fenix_de_catalunya = {
+	age = age_5_absolutism
+	potential = { has_or_had_tag = CAT }
+	requires = maritime_advance_age_5
+	icon = grand_banquets
+
+	unlock_building = nd_cat_fassina
+	global_liquor_output_modifier = 0.1
+}
+
+# The paper mills of Capellades. Unlocks the Moli Paperer.
+nd_cat_molins_paperers = {
+	age = age_5_absolutism
+	potential = { has_or_had_tag = CAT }
+	requires = construction_speed_absolutism
+	icon = paper_guild_cloth_maintenance_advance
+
+	unlock_building = nd_cat_moli_paperer
+	global_paper_output_modifier = 0.1
+}
+
+# July 1713: abandoned by its allies, the Junta de Bracos votes to defend the
+# Constitutions to the last. A whole society under arms behind its walls.
+# (DHE event nd_cat.5, branching)
+nd_cat_resistencia_a_ultranca = {
+	age = age_5_absolutism
+	potential = { has_or_had_tag = CAT }
+	requires = the_constitution
+	icon = defensive_mentality
+
+	levy_combat_efficiency_modifier = 0.1
+	global_defensive = 0.1
+}
+
+# ============================================================================
+# AGE 6: REVOLUTIONS (4 advances, 3 unlocks)
+# ============================================================================
+
+# The Junta de Comerc (1758) and its free schools in the exchange building,
+# opened because the university had been exiled to Cervera. Unlocks the
+# Escoles de Llotja.
+nd_cat_junta_de_comerc = {
+	age = age_6_revolutions
+	potential = { has_or_had_tag = CAT }
+	requires = enlightened_court
+	icon = prestigious_schools
+
+	unlock_building = nd_cat_escoles_de_llotja
+	global_burghers_max_literacy = 5
+}
+
+# 1778: the American trade is opened to Catalan ports, and the yards of the
+# Maresme launch polacres by the hundred. Unlocks the Pollacra.
+nd_cat_pollacres_del_maresme = {
+	age = age_6_revolutions
+	potential = { has_or_had_tag = CAT }
+	requires = urbanization
+	icon = natural_seamanship
+
+	unlock_unit = n_nd_cat_pollacra
+	trade_sea_efficiency = small_trade_sea_efficiency_bonus
+	ai_weight = {
+		add = 30
+	}
+}
+
+# June 1808: at the pass of El Bruc the sometent and a drummer boy turn back
+# a French column, and the Junta Superior orders forty tercios of miquelets.
+# Unlocks the Tercos de Miquelets levy. (DHE event nd_cat.6)
+nd_cat_timbal_del_bruc = {
+	age = age_6_revolutions
+	potential = { has_or_had_tag = CAT }
+	requires = napoleonic_warfare
+	icon = arm_mountain_armies
+
+	unlock_levy = levy_nd_cat_tercos_de_miquelets
+	global_hostile_attrition = 0.5
+}
+
+# The indians, or americanos: men who went out to Cuba and Puerto Rico as
+# shop boys and came home with capital, which they put into houses, banks,
+# mills and their native towns.
+nd_cat_indians = {
+	age = age_6_revolutions
+	potential = { has_or_had_tag = CAT }
+	requires = industrialization_advance
+	icon = free_merchants
+
+	global_build_buildings_efficiency = 0.2
+	global_monthly_development = 0.001
+}
+
+# ===== DESTINY TREE =====
+# Post-formation objectives, written for the country that realistically holds
+# this tag: a Catalonia that was released or broke away (the start setup gives
+# CAT cores on 28 Catalan locations, 25 of them Aragon's in 1337), an Andorra
+# that grew, or a Catalan duchy come home from Greece. Not a great power
+# changing its name: by the level rule Aragon (ARA_f is level 2 on 1.4)
+# probably cannot press the button at all.
+#
+# What the start setup makes of that (main_menu/setup/1337, checked on 1.4):
+#   Perpinya, Prades, Puigcerda and the Balearics belong to Mallorca (MLL), a
+#     vassal of Aragon (12_diplomacy.txt:243). No former starts with them.
+#   Valencia, the Catalan-speaking strip of Aragon (Fraga 63 percent Catalan,
+#     Benabarre 77, Valderrobres 68 in 06_pops.txt) and Oriola are Aragon's.
+#   Alghero is Genoa's, 15 percent Catalan: Peter the Ceremonious peopled it
+#     with Catalans only in 1354.
+#   Andorra is its own country (ANR), guaranteed by Aragon and by France
+#     (12_diplomacy.txt:247-248), so it is asked for late and may be held as
+#     a subject.
+#
+# The formation fork is where sovereignty rests, and each path follows its
+# answer to the end.
+#   Path A (nd_cat_path_a, the sworn principality): a prince is what joins
+#     lands that keep their own laws. He gathers the countries of the Catalan
+#     tongue one oath at a time: the islands, Valencia, then the last rushes
+#     of Muntaner's bundle. Conquest path. Its capstone unlocks the Pobla.
+#   Path B (nd_cat_path_b, the government of the land): the Diputacio del
+#     General taxes, borrows and keeps accounts. After the Counties, which
+#     its own style names, the only land asked for is Andorra, at the end
+#     and as a subject if the player prefers. The rest is public credit,
+#     municipal banks, Barcelona as a city, the country's woollens and its
+#     law in print. Its capstone unlocks the Taula del General. Each stage
+#     waits on one age and no later: none for stage 1, banking (age 2) for
+#     stage 2, the printing press (age 3, from 1437) for stage 3, so that the
+#     path can end in the same span as path A, which waits on no age at all
+#     (owner's ruling of 2026-10-02; the capstone had asked for manufactories
+#     and brandy stills, both of age 5, and could not end before 1637).
+#
+# Not repeated from elsewhere: vanilla's cat_ advances and Catalan culture
+# advances (culture_catalan.txt), vanilla's lieutenancy, local governor and
+# itinerant court buildings, the Barcelona monuments; the Aragonese Empire's
+# destiny (Greece, the Aegean, Tunis, Alexandria, the Atlantic) and its
+# Generalitat Hall; Occitania's (Cahors, Bordeaux, Bayonne, Navarre, Jaca,
+# Huesca); the Regnum Gothorum's (Beziers, Agde, Lodeve, Nimes, the strait).
+# No location is used by both paths.
+#
+# No kingdom-wide development anywhere. Barcelona's own growth is asked for
+# on path B, from its 1337 value of 30.2 (scripts/development_estimate.py
+# --explain barcelona): 45 at stage 2 (plus 50 percent), 60 at stage 3
+# (doubled). History points at the city: it is the one place in the land
+# whose growth the General's own taxes, bank and port were built to feed.
+
+# The Peace and Truce sworn at Fondarella in 1173 is the first text to name
+# the land by its bounds: from Salses to Tortosa and Lleida. Constitutions
+# made by prince and estates together are the root of both paths, hence the
+# speed of law-making.
+nd_cat_destiny = {
+	age = age_1_traditions
+	depth = 0
+	potential = { has_or_had_tag = CAT has_variable = nd_cat_formed has_game_rule = nd_destinies_enabled }
+	allow = { stability >= 75 }
+	icon = laws
+
+	legislative_efficiency = 0.05
+}
+
+# ----------------------------------------------------------------------------
+# PATH A: the sworn principality (the lands of the Catalan tongue)
+# ----------------------------------------------------------------------------
+
+# Stage 1A: the kingdom in the sea. James I called Mallorca a kingdom in the
+# sea in his own book and then willed it to a younger son; Peter the
+# Ceremonious took it back in 1343 and swore in 1344 that it would never be
+# parted from his crown again. Palma, Ciutadella and Ibiza are one island
+# each. sea_cost_on_distance_from_capital_when_maritime is a cost key: a
+# negative value is the benefit (control reaches further across a sea the
+# country patrols). (DHE event nd_cat.8)
+nd_cat_dest_regne_dins_la_mar = {
+	age = age_1_traditions
+	requires = nd_cat_destiny
+	potential = { has_or_had_tag = CAT has_variable = nd_cat_formed has_game_rule = nd_destinies_enabled }
+	allow = {
+		custom_tooltip = {
+			text = nd_cat_path_a_tt
+			has_variable = nd_cat_path_a
+		}
+		owns_or_non_sovereign_subject_owns = location:palma
+		owns_or_non_sovereign_subject_owns = location:ciudadela_de_menorca
+		owns_or_non_sovereign_subject_owns = location:ibiza
+	}
+	icon = first_fleet_of_the_med
+
+	global_sailors_modifier = 0.1
+	sea_cost_on_distance_from_capital_when_maritime = -0.5
+}
+
+# Stage 2A: the oath at Valencia. The Furs of 1261 bind every prince to come
+# to the city and swear them within a month of his accession. Valencia and
+# Xativa are the kingdom's two first cities; the share measures the stage's
+# own land (17 locations, so 13 of them), counting subject land exactly as
+# the location lines do. It can be met without the far south, which stage 3
+# asks for by name. (DHE event nd_cat.9, branching)
+nd_cat_dest_jurar_els_furs = {
+	age = age_1_traditions
+	requires = nd_cat_dest_regne_dins_la_mar
+	potential = { has_or_had_tag = CAT has_variable = nd_cat_formed has_game_rule = nd_destinies_enabled }
+	allow = {
+		owns_or_non_sovereign_subject_owns = location:valencia
+		owns_or_non_sovereign_subject_owns = location:jativa
+		custom_tooltip = {
+			text = nd_cat_dest_valencia_share_tt
+			area:valencia_area = {
+				any_location_in_area = {
+					percent >= 0.75
+					root = { owns_or_non_sovereign_subject_owns = prev }
+				}
+			}
+		}
+		prestige >= 50
+	}
+	icon = legitimization_of_power_law_advance
+
+	global_integration_speed_modifier = 0.1
+	subject_loyalty = 5
+}
+
+# Stage 3A: the bundle of rushes. Muntaner's parable for the kings of the
+# house of Barcelona: bound with one cord, ten men cannot pull the clump up;
+# unbound, a child of eight pulls it out rush by rush. The last rushes are
+# the Catalan-speaking march of Aragon (Fraga on the Cinca, Benabarre in the
+# Ribagorca, Valderrobres in the Matarranya), Oriola beyond Xixona, which
+# James II added in 1304, and l'Alguer in Sardinia. Unlocks the Pobla.
+# pop_join_rebel_threshold is a key where a negative value is the benefit.
+# (DHE event nd_cat.10, branching)
+nd_cat_dest_mata_de_jonc = {
+	age = age_1_traditions
+	requires = nd_cat_dest_jurar_els_furs
+	potential = { has_or_had_tag = CAT has_variable = nd_cat_formed has_game_rule = nd_destinies_enabled }
+	allow = {
+		owns_or_non_sovereign_subject_owns = location:fraga
+		owns_or_non_sovereign_subject_owns = location:benabarre
+		owns_or_non_sovereign_subject_owns = location:valderrobres
+		owns_or_non_sovereign_subject_owns = location:orihuela
+		owns_or_non_sovereign_subject_owns = location:alghero
+		prestige >= 75
+	}
+	icon = bonded_by_loyalty
+
+	unlock_building = nd_cat_dest_pobla
+	cultural_tradition_modifier = 0.1
+	diplomatic_annexation_efficiency = 0.2
+	pop_join_rebel_threshold = -0.05
+}
+
+# ----------------------------------------------------------------------------
+# PATH B: the government of the land (the General as a state)
+# ----------------------------------------------------------------------------
+
+# Stage 1B: the Principality and the Counties. The Diputacio styled its
+# jurisdiction "the Principality of Catalonia and the Counties of Rossello
+# and Cerdanya", and the war its own government began in 1640 ended, in the
+# treaty of 1659, with the Counties lost. Perpinya and Puigcerda are their
+# two capitals. The gold is the General's chest: it pays its garrisons
+# from its own duties. mountains_proximity_impact is a cost key: a negative
+# value is the benefit. (DHE event nd_cat.11)
+nd_cat_dest_principat_i_comtats = {
+	age = age_1_traditions
+	requires = nd_cat_destiny
+	potential = { has_or_had_tag = CAT has_variable = nd_cat_formed has_game_rule = nd_destinies_enabled }
+	allow = {
+		custom_tooltip = {
+			text = nd_cat_path_b_tt
+			has_variable = nd_cat_path_b
+		}
+		owns_or_non_sovereign_subject_owns = location:perpignan
+		owns_or_non_sovereign_subject_owns = location:puigcerda
+		gold >= 1000
+	}
+	icon = a_fortified_border
+
+	global_wine_output_modifier = 0.1
+	mountains_proximity_impact = -0.2
+}
+
+# Stage 2B: the censals of the General. From the Corts of the 1360s the
+# Diputacio funded itself by selling censals morts: a buyer pays a capital
+# sum and receives a pension for ever, redeemable only when the debtor
+# chooses. The game's government bond is the same instrument (no expiry,
+# interest until redeemed), so the reward is a bond the country can sell two
+# ages before central banks; selling one needs vanilla's banking advance,
+# which the Taula de Canvi already requires. The tables are counted because
+# they were what paid the pensions on the day. (DHE event nd_cat.12,
+# branching)
+nd_cat_dest_censals_del_general = {
+	age = age_1_traditions
+	requires = nd_cat_dest_principat_i_comtats
+	potential = { has_or_had_tag = CAT has_variable = nd_cat_formed has_game_rule = nd_destinies_enabled }
+	allow = {
+		has_embraced_institution = institution:banking
+		custom_tooltip = {
+			text = nd_cat_dest_taules_tt
+			any_owned_location = {
+				count >= 4
+				has_building_with_at_least_one_level = nd_cat_taula_de_canvi
+			}
+		}
+		custom_tooltip = {
+			text = nd_cat_dest_barcelona_45_tt
+			location:barcelona = { owner ?= root development >= 45 }
+		}
+		gold >= 2000
+	}
+	icon = debt_and_loans
+
+	max_bonds = 1
+	total_loan_capacity_modifier = 0.3
+}
+
+# Stage 3B: lo General de Catalunya. The trading state of the fifteenth
+# century, whose rule was to make cloth, sell it and keep the duties.
+#   1422: the Corts' constitution Havents a cor shuts out foreign cloth.
+#   1449: Alfonso the Magnanimous has a programme drawn up (Catalan woollens
+#     favoured, cargoes in the Crown's own ships, more hulls built).
+#   1453: the Busca, the party of merchants and craftsmen, takes the city
+#     government of Barcelona on a programme of a cheaper coin and
+#     protection, against the Biga of honoured citizens and importers of
+#     fine cloth.
+#   1480-1481: the Corts under Ferdinand II vote protection for the country's
+#     trade and industry; in 1497, 1504 and 1506 royal orders put duties on
+#     foreign cloth entering Sicily and Naples.
+#   1484: the Llibre del Consolat de Mar is first printed, at Barcelona
+#     (again in 1494; in Italian in 1519, Castilian in 1539, French in 1577).
+#   1495: the Constitutions are printed, with the Usatges.
+# Sources, read 2026-10-02: Gran Enciclopedia Catalana, entries "la Busca",
+# "la Biga", "Ferran II de Catalunya-Arago", "Llibre del consolat de mar",
+# and its history chapters "La polemica conjuntura del regnat d'Alfons el
+# Magnanim", "L'economia: produir i comerciar", "Cap a una unio de corones";
+# for the Biga's importers es.wikipedia "La Busca y la Biga"; for the 1495
+# printing ca.wikipedia "Constitucions catalanes".
+# The printing press is the institution of that state (age 3, from 1437):
+# its sea law and its Constitutions went to the press within eleven years of
+# each other. The workshops are the Obrador de Paraires (unlocked in age 2),
+# whose cloth the bolla seals; four, as stage 2 asks for four tables, out of
+# seven places in the Principality that start as a town or a city. Andorra
+# is asked for here and not earlier because Aragon and France both guarantee
+# it at the start; a subject Andorra counts. Unlocks the Taula del General.
+# (DHE event nd_cat.13, branching)
+nd_cat_dest_lo_general = {
+	age = age_1_traditions
+	requires = nd_cat_dest_censals_del_general
+	potential = { has_or_had_tag = CAT has_variable = nd_cat_formed has_game_rule = nd_destinies_enabled }
+	allow = {
+		owns_or_non_sovereign_subject_owns = location:andorra_la_vella
+		has_embraced_institution = institution:printing_press
+		custom_tooltip = {
+			text = nd_cat_dest_paraires_tt
+			any_owned_location = {
+				count >= 4
+				has_building_with_at_least_one_level = nd_cat_obrador_de_paraires
+			}
+		}
+		custom_tooltip = {
+			text = nd_cat_dest_barcelona_60_tt
+			location:barcelona = { owner ?= root development >= 60 }
+		}
+		gold >= 3000
+	}
+	icon = custom_union_of_the_rhine
+
+	unlock_building = nd_cat_dest_taula_del_general
+	trade_income = 0.1
+	global_trade_center_power = 0.05
+	global_trades_per_burgher = 0.2
+	global_production_efficiency = medium_production_efficiency_bonus
+}

@@ -13,12 +13,12 @@ python3 tools/refresh.py
 | `3600272327_sakuya` | `sakuya` | 1.6.0 | 1.3.* |
 | `3601047146_glorp_ui` | `glorp.ui` | 10.08.26 | 1.3.* |
 | `3619540530_no_more_becoming_hre` | no metadata | 1.0 | 1.3.10 |
-| `3668193813_trin_national_destinies` | `trin.national_destinies` | 1.3.9 | 1.*.* |
+| `3668193813_trin_national_destinies` | `trin.national_destinies` | 1.4.0 | 1.4.* |
 | `3680208976_sakuya_afterburner` | `sakuya_afterburner` | 1.6.0 | 1.3.* |
-| `3692202776_community_mod_framework` | `community_mod_framework` | 2.4.1 | 1.3.* |
+| `3692202776_community_mod_framework` | `community_mod_framework` | 2.5.0 | 1.4.* |
 | `3736668860_construction_manager` | `romaimperator.construction_manager` | 2.2.12 | 1.3.* |
 | `3742578604_national_mission_trees` | `national_mission_trees` | 0.2 | 1.3.10 |
-| `3784699906_calidad_de_vida_eu5` | `calidad_de_vida_eu5` | 1.1.0 | 1.3.* |
+| `3784699906_calidad_de_vida_eu5` | `calidad_de_vida_eu5` | 1.2.1 | 1.4.* |
 | `3789103426_community_mod_framework_dev` | `community_mod_framework.dev` | 2.4.1 | 1.3.* |
 | `3789151637_romaimperator_construction_manager_dev` | `romaimperator.construction_manager.dev` | 2.3.0 | 1.3.* |
 | `3790151926_bag_glorpui_hints` | `bag.glorpui_hints` | 1.1.0 | 1.3.* |
@@ -34,19 +34,13 @@ compiles from them.
 | Folder | Mod id | Version | Mounts |
 | --- | --- | --- | --- |
 | `3633816300_ogasoptimized` | `ogasoptimized` | 20260627 | in_game, main_menu |
-| `3662193478_faster_universalis` | `faster.universalis` | 1.8.2 | in_game, loading_screen, main_menu |
-| `3662933683_fusm_daily_tick` | `fusm.daily.tick` | 1.3.2 | in_game, loading_screen, main_menu |
-| `3662938575_fusm_hourly_tick` | `fusm.hourly.tick` | 1.3.2 | in_game, loading_screen, main_menu |
-| `3664177503_ludimpbalance_main` | `ludimpbalance.main` | 0.1 | in_game, loading_screen, main_menu |
-| `3677315887_fusm_halfday_tick` | `fusm.halfday.tick` | 1.3.2 | in_game, loading_screen, main_menu |
 | `3696243603_autonomous_diplomats` | `autonomous_diplomats` | 1.5.0 | in_game, main_menu |
-| `3701762814_province_manager` | `province_manager` | 1.7.0 | in_game, main_menu |
 | `3721516330_integration_hotfix` | `Integration Hotfix` | 0.7 | in_game, loading_screen, main_menu |
-| `3765240556_responsive_universalis` | `responsive_universalis` | 1.0.4 | docs, loading_screen, publish, tools |
-| `3765240629_responsive_universalis_aggressive_ticks` | `responsive_universalis_aggressive_ticks` | 1.0.3 | loading_screen |
+| `3765240629_responsive_universalis_aggressive_ticks` | `responsive_universalis_aggressive_ticks` | 1.1.0 | loading_screen |
 | `3779064076_rexbert_buymyart` | `rexbert.buymyart` | 1.0 | in_game |
 | `3780623638_nation_destinies_rus` | `nation_destinies_rus` | 1.3 | main_menu |
-| `3804621893_playmaker_cabinetqueue` | `playmaker.cabinetqueue` | 1 | in_game, main_menu, tools |
+| `3811995006_community_mod_framework` | `community_mod_framework` | 1.0 | in_game, loading_screen, main_menu |
+| `3812518640_glorp_ui_rio` | `glorp.ui.rio` | 03.10.26 | in_game, main_menu |
 
 `reference/game/` holds 4773 files of EU5 itself — `in_game/gui/`, the parts
 of `in_game/common/` the mods here reason about, and the game's own

@@ -125,7 +125,7 @@ nd_num_buffalo_hide_trade = {
 	requires = merchants_and_trade
 	icon = merchants_and_trade
 	unlock_production_method = nd_num_pm_bison_hide_specialization
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 }
 
 nd_num_tekwuniwapi_doctrine = {
@@ -147,7 +147,7 @@ nd_num_comanchero_trade = {
 	requires = trade_through_owned_disc_advance
 	icon = trade_through_owned_disc_advance
 	unlock_building = nd_num_comanchero_post
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 	global_merchant_power = 0.1
 	ai_weight = {
 		add = 30
@@ -218,7 +218,7 @@ nd_num_council_of_comanche_nation = {
 	monthly_republican_tradition = 0.1
 	monthly_tribal_cohesion = 0.1
 	nobles_estate_target_satisfaction = 0.05
-	subject_loyalty = 0.1
+	subject_loyalty = 5
 }
 
 nd_num_llano_estacado = {
@@ -336,7 +336,7 @@ nd_num_borderland_caravan = {
 	potential = { has_or_had_tag = NUM }
 	requires = increase_control_area_advance
 	icon = increase_control_area_advance
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 	global_merchant_capacity_modifier = 0.1
 	global_construction_speed = 0.1
 }
@@ -428,7 +428,10 @@ nd_num_destiny = {
 	potential = { has_or_had_tag = NUM has_variable = nd_num_formed has_game_rule = nd_destinies_enabled }
 	allow = { stability >= 75 }
 	icon = crown_power_advance_renaissance
-	expected_army_size_modifier = 0.05
+	# "The horse empire stands": stability decays more slowly. (This line was
+	# `expected_army_size_modifier = 0.05`, which raises the army the estates
+	# EXPECT of the country, a cost, at a twentieth of vanilla's smallest step.)
+	stability_decay = -0.00025
 }
 
 # ----- Path A: Continental Tribute Empire -----
@@ -444,7 +447,11 @@ nd_num_dest_a1_northern_frontier = {
 		}
 		owns_or_non_sovereign_subject_owns = location:tamaulipeco
 		owns_or_non_sovereign_subject_owns = location:maratine
-		army_size >= 30
+		# No head count of a standing army: the Comanche host is a levy of
+		# the bands until the last age (planner Step 4). The raid south of the
+		# Rio Grande was the work of the mounted warrior, so the stage asks
+		# for him (age 2).
+		has_advance = nd_num_horse_warrior
 	}
 	icon = imperial_ambitions
 	casus_belli_creation_speed_modifier = 0.15
@@ -459,8 +466,20 @@ nd_num_dest_a2_coahuila_dominion = {
 		owns_or_non_sovereign_subject_owns = location:guachichil
 		owns_or_non_sovereign_subject_owns = location:cuencame
 		owns_or_non_sovereign_subject_owns = location:chisos
-		army_size >= 50
-		total_development >= 3500
+		# The long raid as an organised way of war (age 3), in place of a
+		# head count of a levy army.
+		has_advance = nd_num_raider_doctrine
+		# "Dominion" is the land itself: half of the Guachichil country
+		# held by the empire or its subjects.
+		custom_tooltip = {
+			text = nd_num_dest_guachichil_share_tt
+			area:guachichil_area = {
+				any_location_in_area = {
+					percent >= 0.5
+					root = { owns_or_non_sovereign_subject_owns = prev }
+				}
+			}
+		}
 	}
 	icon = feudalism_advance
 	siege_ability = 0.10
@@ -476,7 +495,9 @@ nd_num_dest_a3_continental_hegemony = {
 		owns_or_non_sovereign_subject_owns = location:cuanales
 		owns_or_non_sovereign_subject_owns = location:alazapa
 		owns_or_non_sovereign_subject_owns = location:xumani
-		army_size >= 75
+		# A tribute empire needs its tribute system (age 4), in place of a
+		# head count of a levy army.
+		has_advance = nd_num_tribute_system
 		prestige >= 75
 		gold >= 3000
 	}
@@ -484,11 +505,9 @@ nd_num_dest_a3_continental_hegemony = {
 	unlock_building = nd_num_imperial_bison_council
 	discipline = 0.05
 	assault_ability = 0.10
-	monthly_horde_unity = 0.10
-	monthly_devotion = 0.1
-	monthly_legitimacy = 0.1
-	monthly_republican_tradition = 0.1
-	monthly_tribal_cohesion = 0.1
+	# "The senior power of the continent" (the government power family that
+	# stood here repeated the heritage advances).
+	power_projection = 5
 }
 
 # ----- Path B: Pan-Indigenous Confederation -----
@@ -539,7 +558,16 @@ nd_num_dest_b3_pan_indigenous_confederation = {
 		owns_or_non_sovereign_subject_owns = location:iisaxpuatahcheeaashe
 		owns_or_non_sovereign_subject_owns = location:marapa
 		owns_or_non_sovereign_subject_owns = location:minisose
-		total_development >= 5000
+		# The confederation is made of councils: a council lodge standing in
+		# eight places of the realm (the lodge is the country's own age 1
+		# building, one to a location).
+		custom_tooltip = {
+			text = nd_num_dest_council_lodges_tt
+			any_owned_location = {
+				count >= 8
+				has_building = building_type:nd_num_council_lodge
+			}
+		}
 		prestige >= 75
 		stability >= 75
 	}

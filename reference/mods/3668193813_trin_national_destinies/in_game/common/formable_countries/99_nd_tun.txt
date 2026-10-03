@@ -1,0 +1,58 @@
+﻿# Tunis (TUN_f, vanilla, added in EU5 1.4; creates the country tag TUN).
+# Vanilla's form_effect is empty in the installed 1.4 file
+# (00_formable_countries.txt:5010), so INJECT is safe: there is nothing to lose.
+# TUN_f is the only vanilla formable whose tag is TUN (checked with
+# grep "tag = TUN" on the installed file), so this one block covers every
+# vanilla road to the tag.
+INJECT:TUN_f = {
+	form_effect = {
+		# Formation markers live HERE, not only in the event's options: a
+		# country can be formed by script, and then the popup may never be
+		# answered, leaving every advance gated on the marker unreachable.
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_tun_formed
+			# Read by nd_tun.1 to choose its description: it marks a ruler who
+			# took Tunis and did not inherit it. Running this block is not proof
+			# of that. Vanilla's flavor_tun.16 (events/DHE/flavor_tun.txt:950,
+			# option a) runs form_country = formable_country:TUN_f for a Hafsid
+			# governor whose ruler has just inherited Tunis
+			# (hafsid_succession_unite_two_countries, scripted_effects/
+			# tunis_effects.txt:25), and a Hafsid of Bejaia or Gafsa can also
+			# conquer his way to the name. Both are the old house, so the test
+			# is the dynasty, written as vanilla writes it in
+			# is_hafsid_governor_trigger (scripted_triggers/tunis_triggers.txt:1).
+			# The sitting Hafsids never run this block at all.
+			# Not covered: if another house has replaced the Hafsids in Tunis,
+			# a cadet of THAT house who inherits through flavor_tun.16 reads as
+			# a newcomer. Nothing the form effect can see tells him apart: the
+			# annexed country is gone, and no vanilla form effect reads a scope
+			# saved by its caller, so scope:tun_tag is not relied on here.
+			if = {
+				limit = {
+					NOT = {
+						ruler_or_heir_if_regent ?= {
+							dynasty ?= dynasty:hafsid_dynasty
+						}
+					}
+				}
+				set_variable = nd_tun_newcomer
+			}
+		}
+		# The Hafsid sultanate starts as a kingdom (setup 1337, 10_countries.txt).
+		# The lesser emirates that can also form Tunis (Gabes, Gafsa, the
+		# Djerid, the Tellis) do not, and whoever holds Tunis and three
+		# quarters of Ifriqiya was a sultan in every century of the period.
+		# Empire rank is vanilla's own business: hafsid_caliphate_decision
+		# (decisions/flavor_decisions_tun.txt) raises it, so nothing here does.
+		if = {
+			limit = {
+				nd_can_take_kingdom_rank = yes
+				country_rank_level < 3
+			}
+			set_country_rank_effect = { rank = country_rank:rank_kingdom }
+		}
+		trigger_event_non_silently = nd_tun.1
+		add_stability = stability_mild_bonus
+	}
+}

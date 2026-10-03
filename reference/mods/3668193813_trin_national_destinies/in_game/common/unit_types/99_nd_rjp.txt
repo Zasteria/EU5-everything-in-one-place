@@ -1,17 +1,19 @@
 ﻿# Rajputana Units
 
 # Rajput Sowar: Age 1 feudal cavalry, traditional horse warriors
-# Base age 1 cavalry: max_strength=0.2, combat_power=4
+# Base age 1 cavalry: max_strength=0.2, combat_power=2.6
 a_nd_rjp_rajput_sowar = {
 	is_special = yes
 	category = army_heavy_cavalry
 	copy_from = a_age_1_traditions_heavy_cavalry
-	upgrades_to = a_heavy_cavalrymen
 	buildable = no
 	levy = yes
 
 	morale_damage_done = 0.1
 	strength_damage_done = 0.1
+	morale_damage_taken = -0.25	# levy power, scripts/fix_levy_power.py
+	strength_damage_taken = -0.25	# levy power, scripts/fix_levy_power.py
+	combat_power = 0.12	# levy power, scripts/fix_levy_power.py
 	combat = {
 		desert = 0.1
 		hills = 0.05
@@ -25,7 +27,7 @@ a_nd_rjp_rajput_sowar = {
 }
 
 # Marwari Lancer: Age 3 desert-bred cavalry on Marwari horses
-# Base age 3 cavalry: max_strength=0.6, combat_power=4
+# Base age 3 cavalry: max_strength=0.6, combat_power=2.6
 a_nd_rjp_marwari_lancer = {
 	is_special = yes
 	category = army_light_cavalry
@@ -34,8 +36,12 @@ a_nd_rjp_marwari_lancer = {
 	buildable = yes
 
 	movement_speed = 1
+	# The shock of the charge is the unit's edge. At 0.05 it stood below its
+	# own template in total combat power (1.666 against 1.677).
 	morale_damage_done = 0.1
-	flanking_ability = 0.5
+	flanking_ability = 0.2
+	# The headlong Rajput charge: no thought of withdrawal, and the losses to match.
+	strength_damage_taken = 0.1
 	combat = {
 		desert = 0.15
 	}
@@ -53,12 +59,13 @@ a_nd_rjp_chela_swordsman = {
 	is_special = yes
 	category = army_light_infantry
 	copy_from = a_age_2_renaissance_light_infantry
-	upgrades_to = a_early_arquebusiers
 	buildable = no
 	levy = yes
 
 	morale_damage_taken = -0.1
-	strength_damage_taken = -0.05
+	strength_damage_taken = -0.2	# levy power, scripts/fix_levy_power.py
+	max_strength = 0.2	# levy power, scripts/fix_levy_power.py
+	combat_power = 0.02	# levy power, scripts/fix_levy_power.py
 	combat = {
 		hills = 0.1
 		mountains = 0.05
@@ -71,8 +78,35 @@ a_nd_rjp_chela_swordsman = {
 	gfx_tags = { medium_tag }
 }
 
+# Bhil Archer: Age 3 hill bowmen of the Aravallis, allies of Mewar (levy unit)
+# Base age 3 infantry: max_strength=1.5, combat_power=1
+a_nd_rjp_bhil_archer = {
+	is_special = yes
+	category = army_light_infantry
+	copy_from = a_age_3_discovery_light_infantry
+	buildable = no
+	levy = yes
+
+	initiative = 3	# levy power, scripts/fix_levy_power.py
+	strength_damage_done = 0.1
+	# Bowmen without armour of any kind.
+	strength_damage_taken = 0.1
+	max_strength = 0.3	# levy power, scripts/fix_levy_power.py
+	combat_power = 0.21	# levy power, scripts/fix_levy_power.py
+	combat = {
+		hills = 0.1
+		mountains = 0.1
+	}
+
+	country_potential = {
+		has_or_had_tag = RJP
+	}
+
+	gfx_tags = { light_tag }
+}
+
 # Camel Risala: Age 4 camel cavalry for desert operations
-# Base age 4 cavalry: max_strength=0.8, combat_power=4
+# Base age 4 cavalry: max_strength=0.8, combat_power=2.85
 a_nd_rjp_camel_risala = {
 	is_special = yes
 	category = army_light_cavalry
@@ -80,8 +114,19 @@ a_nd_rjp_camel_risala = {
 	upgrades_to = a_hussars
 	buildable = yes
 
-	movement_speed = 1
+	# Speed, morale shock and initiative are vanilla's own camelry values
+	# (a_light_camelry_4, 3_camel_units.txt:172: 0.2, 0.05 and 5). The
+	# initiative was missing, which left the unit below its own template in
+	# total combat power (2.443 against 2.452) and well below the vanilla
+	# camelry the same country can build.
+	movement_speed = 0.2
+	morale_damage_done = 0.05
+	initiative = 5
+	# Shutarnal: the swivel gun fired from the camel's saddle.
+	strength_damage_done = 0.05
 	supply_weight = -0.25
+	# A camel wheels slowly: poor at turning a flank.
+	flanking_ability = -0.2
 	combat = {
 		desert = 0.15
 	}
@@ -117,7 +162,7 @@ a_nd_rjp_rajput_musketeer = {
 }
 
 # Jodhpur Lancer: Age 6 elite cavalry, heirs of the Rathore tradition
-# Base age 6 cavalry: max_strength=1.2, combat_power=4
+# Base age 6 cavalry: max_strength=1.2, combat_power=3.25
 a_nd_rjp_jodhpur_lancer = {
 	is_special = yes
 	category = army_light_cavalry
@@ -126,10 +171,34 @@ a_nd_rjp_jodhpur_lancer = {
 	levy = yes
 
 	morale_damage_done = 0.1
-	flanking_ability = 0.75
+	# 0.3 is the largest flanking bonus vanilla writes on any unit (Tuareg veiled cavalry).
+	flanking_ability = 0.3
+	# Lance and sabre against rifles: the charge is paid for in men.
+	strength_damage_taken = 0.1
+	max_strength = 1.235	# levy power, scripts/fix_levy_power.py
 	combat = {
 		desert = 0.1
 	}
+
+	country_potential = {
+		has_or_had_tag = RJP
+	}
+
+	gfx_tags = { medium_tag }
+}
+
+# Rajputana Rifles: Age 6 rifle battalions raised from the Rajput clans
+# Base age 6 infantry: max_strength=3.0, combat_power=3
+a_nd_rjp_rajputana_rifles = {
+	is_special = yes
+	category = army_light_infantry
+	copy_from = a_age_6_revolutions_light_infantry
+	buildable = yes
+
+	morale_damage_taken = -0.1
+	initiative = 2
+	# Valour above cover: the clans stand where other riflemen go to ground.
+	strength_damage_taken = 0.1
 
 	country_potential = {
 		has_or_had_tag = RJP

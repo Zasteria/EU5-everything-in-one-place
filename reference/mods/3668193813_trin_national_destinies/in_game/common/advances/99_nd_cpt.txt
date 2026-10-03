@@ -312,7 +312,6 @@ nd_cpt_iltizam_ledgers = {
 	icon = court_accounting
 	potential = { has_or_had_tag = CPT }
 	requires = construction_speed_absolutism
-	unlock_production_method = nd_cpt_diwan_iltizam_ledgers
 	peasants_estate_max_tax = 0.1
 }
 
@@ -366,7 +365,7 @@ nd_cpt_the_coptic_press = {
 	icon = newspapers_advance
 	potential = { has_or_had_tag = CPT }
 	requires = urbanization
-	unlock_production_method = nd_cpt_scalae_press
+	unlock_building = nd_cpt_patriarchal_press
 	research_speed_modifier = 0.1
 }
 
@@ -454,7 +453,7 @@ nd_cpt_dest_qadis_kept = {
 	}
 	icon = a_tolerant_society
 	tolerance_heathen = 1
-	tax_income_efficiency = 0.05
+	tax_income_efficiency = 0.03
 }
 
 # Aydhab, where the Karimi landed pepper out of Aden and the pilgrims crossed
@@ -468,11 +467,19 @@ nd_cpt_dest_pepper_crossing = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:aydhab
 		gold >= 2000
-		total_development >= 1500
+		# The port itself built up: 6 in 1337
+		# (scripts/development_estimate.py), half again for stage two.
+		custom_tooltip = {
+			text = nd_cpt_dest_aydhab_developed_tt
+			location:aydhab = {
+				owner ?= root
+				development >= 9
+			}
+		}
 	}
 	icon = incense_trade_route
 	global_trade_center_power = 0.05
-	trade_sea_efficiency = 0.05
+	trade_sea_efficiency = 0.2
 }
 
 # Capstone. Suakin took the crossing when Aydhab was destroyed, and by then
@@ -488,12 +495,20 @@ nd_cpt_dest_indispensable = {
 		owns_or_non_sovereign_subject_owns = location:suakin
 		gold >= 3000
 		prestige >= 75
-		total_development >= 2000
+		# Suakin grown into the crossing Aydhab was: 5.8 in 1337, doubled
+		# for stage three.
+		custom_tooltip = {
+			text = nd_cpt_dest_suakin_developed_tt
+			location:suakin = {
+				owner ?= root
+				development >= 12
+			}
+		}
 		has_embraced_institution = institution:global_trade
 	}
 	icon = great_tax_reform
 	unlock_building = nd_cpt_diwan_al_ahbas
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 	global_institution_growth_modifier = 0.1
 	burghers_estate_target_satisfaction = 0.05
 }
@@ -536,7 +551,14 @@ nd_cpt_dest_throne_hall_dongola = {
 		owns_or_non_sovereign_subject_owns = location:dongola
 		owns_or_non_sovereign_subject_owns = location:kerma
 		army_size >= 50
-		total_development >= 1500
+		# The throne city rebuilt: 9 in 1337, half again for stage two.
+		custom_tooltip = {
+			text = nd_cpt_dest_dongola_developed_tt
+			location:dongola = {
+				owner ?= root
+				development >= 14
+			}
+		}
 		has_embraced_institution = institution:confessionalism
 	}
 	icon = cas_the_reconquista
@@ -558,7 +580,22 @@ nd_cpt_dest_all_africa = {
 		owns_or_non_sovereign_subject_owns = location:barca
 		army_size >= 75
 		prestige >= 75
-		total_development >= 2000
+		# Held as ground: three quarters of Nubia proper, the country of
+		# the sees between Qasr Ibrim and Dongola.
+		custom_tooltip = {
+			text = nd_cpt_dest_nubia_share_tt
+			area:nubia_proper_area = {
+				any_location_in_area = {
+					percent >= 0.75
+					owner ?= {
+						OR = {
+							this = root
+							is_subject_of = root
+						}
+					}
+				}
+			}
+		}
 	}
 	icon = bos_land_of_many_churches
 	unlock_building = nd_cpt_metropolitan_see

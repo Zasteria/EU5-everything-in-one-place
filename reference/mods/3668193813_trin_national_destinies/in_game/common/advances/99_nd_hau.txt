@@ -41,7 +41,7 @@ nd_hau_sahel_agriculture = {
 	potential = { has_or_had_tag = HAU }
 	requires = agriculture_advance
 	icon = agriculture_advance
-	global_monthly_food_modifier = 0.1
+	global_monthly_food_modifier = 0.05
 }
 
 # Islam arrived through trans-Saharan merchants by the 14th century,
@@ -52,7 +52,7 @@ nd_hau_spread_of_islam = {
 	requires = organized_religion
 	icon = organized_religion
 	tolerance_own = 1
-	global_pop_conversion_speed_modifier = 0.15
+	global_pop_conversion_speed_modifier = 0.1
 }
 
 # The Hausa horse-riding aristocracy developed an equestrian culture
@@ -65,7 +65,7 @@ nd_hau_equestrian_nobility = {
 	army_light_cavalry_power = 0.1
 
 	army_heavy_cavalry_power = 0.1
-
+	unlock_levy = levy_nd_hau_barade
 }
 
 # === AGE 2: RENAISSANCE (5 advances, 3 unlocks) ===
@@ -129,9 +129,9 @@ nd_hau_trans_saharan_links = {
 	potential = { has_or_had_tag = HAU }
 	requires = merchants_and_trade
 	icon = merchants_and_trade
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	trade_range_modifier = 0.2
 }
@@ -179,8 +179,9 @@ nd_hau_artisan_guilds = {
 	potential = { has_or_had_tag = HAU }
 	requires = regulate_court_procedures
 	icon = regulate_court_procedures
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 	global_build_buildings_efficiency = 0.1
+	unlock_production_method = nd_hau_tubali_brickmaking
 }
 
 # Gobir, the northernmost Hausa state, was tasked with defending
@@ -193,6 +194,7 @@ nd_hau_gobir_frontier = {
 	icon = pike_square
 	global_hostile_attrition = 1
 	land_morale_modifier = 0.1
+	unlock_levy = levy_nd_hau_yan_baka
 }
 
 # === AGE 4: REFORMATION (5 advances, 3 unlocks) ===
@@ -219,9 +221,9 @@ nd_hau_leather_trade = {
 	requires = global_trade_advance
 	icon = global_trade_advance
 	unlock_building = nd_hau_majema_tannery
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -232,8 +234,8 @@ nd_hau_market_competition = {
 	potential = { has_or_had_tag = HAU }
 	requires = pop_promotion_speed_age_4
 	icon = pop_promotion_speed_age_4
-	global_trade_center_power = 0.15
-	global_monthly_prosperity = 0.0015
+	global_trade_center_power = 0.1
+	global_monthly_prosperity = 0.001
 }
 
 # The spread of Islamic education created a literate scholarly class
@@ -302,7 +304,7 @@ nd_hau_standing_army = {
 	potential = { has_or_had_tag = HAU }
 	requires = absolutism_agressive_advance
 	icon = absolutism_agressive_advance
-	unlock_production_method = nd_hau_military_provisioning
+	unlock_unit = a_nd_hau_dogarai
 	discipline = 0.05
 }
 
@@ -350,6 +352,7 @@ nd_hau_cultural_resilience = {
 	icon = enlightened_court
 	cultural_tradition_modifier = 0.1
 	monthly_prestige = 0.1
+	unlock_building = nd_hau_durbar_ground
 }
 
 # The expansion of agricultural techniques and management
@@ -359,7 +362,7 @@ nd_hau_sahel_stewardship = {
 	potential = { has_or_had_tag = HAU }
 	requires = urbanization
 	icon = urbanization
-	global_monthly_food_modifier = 0.1
+	global_monthly_food_modifier = 0.05
 	global_population_growth = 0.0003
 }
 
@@ -412,7 +415,15 @@ nd_hau_dest_sword_2 = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:ngazargamu
 		owns_or_non_sovereign_subject_owns = location:oyo_ile
-		army_size >= 50
+		# Tradition has Amina wall every town she took: the walls of
+		# nd_hau_wall_building_tradition (age 1) in four towns.
+		custom_tooltip = {
+			text = nd_hau_dest_walls_4_tt
+			any_owned_location = {
+				count >= 4
+				has_building = building_type:nd_hau_birni_walls
+			}
+		}
 	}
 	icon = imperial_ambitions
 	army_light_infantry_power = 0.1
@@ -430,7 +441,13 @@ nd_hau_dest_sword_3 = {
 		owns_or_non_sovereign_subject_owns = location:timbuktu
 		owns_or_non_sovereign_subject_owns = location:djenne
 		owns_or_non_sovereign_subject_owns = location:benin
-		army_size >= 75
+		custom_tooltip = {
+			text = nd_hau_dest_walls_8_tt
+			any_owned_location = {
+				count >= 8
+				has_building = building_type:nd_hau_birni_walls
+			}
+		}
 		prestige >= 75
 	}
 	icon = feudalism_advance
@@ -474,7 +491,15 @@ nd_hau_dest_caravan_2 = {
 	allow = {
 		gold >= 2000
 		has_embraced_institution = institution:banking
-		total_development >= 500
+		# Katsina became the southern end of the Saharan road under Muhammadu
+		# Korau (c. 1445-93). 1337 value 20 (development_estimate.py), +50%.
+		custom_tooltip = {
+			text = nd_hau_dest_katsina_developed_tt
+			location:katsina = {
+				owner ?= root
+				development >= 30
+			}
+		}
 	}
 	icon = global_trade_advance
 	global_institution_growth_modifier = 0.15
@@ -488,7 +513,15 @@ nd_hau_dest_caravan_3 = {
 	allow = {
 		gold >= 3000
 		prestige >= 75
-		total_development >= 1000
+		# Kano's Kurmi market was laid out by Muhammadu Rumfa (1463-99) and the
+		# city outgrew its walls twice. 1337 value 20 (development_estimate.py), +100%.
+		custom_tooltip = {
+			text = nd_hau_dest_kano_developed_tt
+			location:kano = {
+				owner ?= root
+				development >= 40
+			}
+		}
 		any_market_present_in_country = {
 			OR = {
 				is_produced_in_market = goods:salt
@@ -497,7 +530,7 @@ nd_hau_dest_caravan_3 = {
 		}
 	}
 	icon = merchants_and_trade
-	global_devastation_recovery = 0.005
+	global_devastation_recovery = 0.0025
 	diplomatic_annexation_efficiency = 0.1
 	global_livestock_output_modifier = 0.1
 	unlock_building = nd_hau_fatauci_house

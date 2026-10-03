@@ -1,6 +1,9 @@
 ﻿# === Age 1: Traditions ===
-# Vanilla has: expansive_policies (cultures_capacity), northern_march (build cost)
-# Our additions: Teutonic heritage, amber trade
+# Vanilla has nothing for the tag PRU in this age. A Prussia formed from
+# the Order's lands holds two Teutonic advances (discipline, heavy cavalry),
+# one formed from Brandenburg holds expansive_policies and northern_march.
+# Our additions: Teutonic heritage, amber trade, the Vistula grain trade,
+# the Courts of Arthur
 
 nd_pru_teutonic_heritage = {
 	age = age_1_traditions
@@ -17,21 +20,46 @@ nd_pru_amber_trade = {
 	requires = guilds
 	icon = guilds
 	unlock_building = nd_pru_amber_guild
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 }
 
+# The grain of Prussia, Mazovia and Lithuania came down the Vistula and the
+# Pregel to the quays of the Prussian ports. Rye is millet in the game's goods.
+nd_pru_vistula_grain = {
+	age = age_1_traditions
+	potential = { has_or_had_tag = PRU }
+	requires = agriculture_advance
+	icon = river_trade
+	unlock_building = nd_pru_speicher
+	global_wheat_output_modifier = 0.1
+	global_millet_output_modifier = 0.1
+}
+
+# The merchant patricians of the Prussian towns and their halls
+nd_pru_artushof_towns = {
+	age = age_1_traditions
+	potential = { has_or_had_tag = PRU }
+	requires = legalism_advance
+	icon = hsa_hanseatic_ties
+	unlock_building = nd_pru_artushof
+	global_merchant_capacity_modifier = 0.05
+}
+
 # === Age 2: Renaissance ===
-# Vanilla has: divide_estates (crown power), soldiers_fortune (mercenary cost)
-# Our additions: Junker system, Ordensburg fortress heritage
+# Vanilla has nothing for the tag PRU in this age either (divide_estates and
+# soldiers_fortune are Brandenburg's, the Order's two are levy sizes).
+# Our additions: Junker system, Ordensburg fortress heritage, the Prussian
+# Confederation of 1440, the coinage reform Copernicus drafted
 
 nd_pru_junker_estates = {
 	age = age_2_renaissance
 	potential = { has_or_had_tag = PRU }
 	requires = crown_power_advance_renaissance
 	icon = crown_power_advance_renaissance
+	unlock_building = nd_pru_rittergut
 	nobles_estate_target_satisfaction = 0.025
 	global_manpower_modifier = 0.1
 }
@@ -43,6 +71,29 @@ nd_pru_ordensburg_tradition = {
 	icon = drill_army_advance
 	global_garrison_size_modifier = 0.2
 	global_defensive = 0.1
+}
+
+# The league of towns and gentry against the Order (Marienwerder, 1440). It
+# fought the Thirteen Years' War on the towns' credit: Danzig's money bought
+# Marienburg from the Order's own unpaid companies in 1457.
+nd_pru_prussian_confederation = {
+	age = age_2_renaissance
+	potential = { has_or_had_tag = PRU }
+	requires = renaissance_court
+	icon = estates_general
+	burghers_estate_target_satisfaction = 0.025
+	mercenary_maintenance_efficiency = 0.1
+}
+
+# Copernicus put his treatise on debased coin before the Prussian diet at
+# Graudenz in 1522; the Prussian coinage was reformed on those lines in 1528.
+nd_pru_coinage_reform = {
+	age = age_2_renaissance
+	potential = { has_or_had_tag = PRU }
+	requires = merchants_and_trade
+	icon = standardized_coins
+	minting_inflation_threshold = 0.01
+	monthly_inflation = -0.001
 }
 
 # === Age 3: Discovery ===
@@ -210,10 +261,15 @@ nd_pru_dest_koenig = {
 	age = age_1_traditions
 	requires = nd_pru_dest_krieg
 	potential = { has_or_had_tag = PRU has_variable = nd_pru_formed has_game_rule = nd_destinies_enabled }
+	# The Soldier King's legacy is the canton system of 1733, which is how a
+	# poor kingdom kept such an army: the stage asks for the country's own
+	# advance of that name (age 5). Without it this path could be finished
+	# in the first age while the other waits for the Enlightenment.
 	allow = {
 		owns = location:berlin
 		owns = location:magdeburg
 		owns = location:hanover
+		has_advance = nd_pru_cantonment_system
 		army_size >= 75
 		prestige >= 75
 	}
@@ -244,13 +300,25 @@ nd_pru_dest_pietismus = {
 	global_pop_assimilation_speed_modifier = 0.1
 }
 
+# Gumbinnen is the cameralist state's own showpiece: Prussian Lithuania lost
+# about a third of its people to the plague of 1709-1711, and Frederick
+# William I rebuilt it from here (town rights 1724, the Salzburg exiles
+# settled 1732, seat of a War and Domains Chamber 1736). Its 1337 value is
+# 13.5 (scripts/development_estimate.py --explain gumbinnen); stage two asks
+# for half as much again.
 nd_pru_dest_kameralist = {
 	age = age_1_traditions
 	requires = nd_pru_dest_pietismus
 	potential = { has_or_had_tag = PRU has_variable = nd_pru_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		gold >= 2000
-		total_development >= 500
+		custom_tooltip = {
+			text = nd_pru_dest_gumbinnen_developed_tt
+			location:gumbinnen = {
+				owner ?= root
+				development >= 20
+			}
+		}
 		capital = {
 			market = {
 				OR = {
@@ -265,13 +333,24 @@ nd_pru_dest_kameralist = {
 	global_construction_speed = 0.1
 }
 
+# Koenigsberg is the Prussian Enlightenment's own city: the Albertina
+# (founded 1544), Kant's chair from 1770, Hamann, Herder's student years,
+# and the largest town of the kingdom until Berlin passed it about 1700.
+# Its 1337 value is 21.5 (scripts/development_estimate.py --explain
+# konigsberg); stage three asks for twice that.
 nd_pru_dest_aufklaerung = {
 	age = age_1_traditions
 	requires = nd_pru_dest_kameralist
 	potential = { has_or_had_tag = PRU has_variable = nd_pru_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		owns = location:leipzig
-		total_development >= 1000
+		custom_tooltip = {
+			text = nd_pru_dest_konigsberg_developed_tt
+			location:konigsberg = {
+				owner ?= root
+				development >= 43
+			}
+		}
 		prestige >= 75
 		has_embraced_institution = institution:enlightenment
 	}

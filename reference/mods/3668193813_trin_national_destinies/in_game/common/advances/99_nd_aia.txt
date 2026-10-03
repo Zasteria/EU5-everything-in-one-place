@@ -24,20 +24,23 @@ nd_aia_incense_route = {
 	potential = { has_or_had_tag = AIA }
 	requires = guilds
 	icon = guilds
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	unlock_building = nd_aia_incense_warehouse
 }
 
-# Unlock: Falaj Irrigation building
+# Unlock: the wadi barrage (spate irrigation). The key keeps the word falaj
+# from before 2026-10-02: Oman, one of the roads into Arabia, gets vanilla's
+# own Falaj building (oma_falaj) from its events, so the mod's building tells
+# of the flood barrages of the Tihama and Hadramawt wadis instead.
 nd_aia_falaj_irrigation = {
 	age = age_1_traditions
 	potential = { has_or_had_tag = AIA }
 	requires = agriculture_advance
 	icon = agriculture_advance
-	global_monthly_food_modifier = 0.1
+	global_monthly_food_modifier = 0.05
 	unlock_building = nd_aia_falaj_system
 }
 
@@ -47,7 +50,7 @@ nd_aia_tribal_confederacy = {
 	potential = { has_or_had_tag = AIA }
 	requires = medieval_administration
 	icon = medieval_administration
-	country_cabinet_efficiency = 0.05
+	tribes_estate_target_satisfaction = small_permanent_target_satisfaction
 	global_monthly_control = 0.0015
 }
 
@@ -109,28 +112,25 @@ nd_aia_qadi_courts = {
 	monthly_republican_tradition = 0.05
 }
 
-# Unlock: Date Palm Cultivation PM
+# Unlock: Date Palm Grove building (a producer of fruit)
 nd_aia_date_palm_groves = {
 	age = age_2_renaissance
 	potential = { has_or_had_tag = AIA }
 	requires = vibrant_court_advance
 	icon = vibrant_court_advance
 	global_fruit_output_modifier = 0.2
-	unlock_production_method = nd_aia_date_processing
+	unlock_building = nd_aia_date_grove
 }
 
-# Unlock: Purebred Arabian cavalry (buildable)
+# Modifier-only: the Najdi studs. Arabia's cavalry units are unlocked by
+# other advances; this one unlocks nothing.
 nd_aia_arabian_horse_breeding = {
 	age = age_2_renaissance
 	potential = { has_or_had_tag = AIA }
 	requires = drill_army_advance
 	icon = drill_army_advance
 	army_light_cavalry_power = 0.1
-
 	army_heavy_cavalry_power = 0.1
-
-	ai_weight = {
-	}
 }
 
 # Modifier-only: Sufi mystical tradition
@@ -196,9 +196,9 @@ nd_aia_spice_middlemen = {
 	potential = { has_or_had_tag = AIA }
 	requires = diplomatic_training
 	icon = diplomatic_training
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	global_merchant_capacity_modifier = 0.1
 }
@@ -241,9 +241,9 @@ nd_aia_aden_entrepot = {
 	potential = { has_or_had_tag = AIA }
 	requires = global_trade_advance
 	icon = global_trade_advance
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	unlock_building = nd_aia_entrepot
 }
@@ -316,13 +316,13 @@ nd_aia_arabian_modernization = {
 	global_monthly_literacy = 0.015
 }
 
-# Unlock: Oasis Agriculture PM
+# Unlock: Oasis Agriculture PM (the grove's second, larger harvest)
 nd_aia_oasis_agriculture = {
 	age = age_5_absolutism
 	potential = { has_or_had_tag = AIA }
 	requires = construction_speed_absolutism
 	icon = construction_speed_absolutism
-	global_monthly_food_modifier = 0.1
+	global_monthly_food_modifier = 0.05
 	unlock_production_method = nd_aia_oasis_farming
 }
 
@@ -343,7 +343,7 @@ nd_aia_gulf_patrol = {
 	potential = { has_or_had_tag = AIA }
 	requires = militiamen_advance
 	icon = militiamen_advance
-	global_sailors_modifier = 0.2
+	global_sailors_modifier = 0.1
 	unlock_unit = n_nd_aia_patrol_ship
 	ai_weight = {
 		add = 50
@@ -400,7 +400,7 @@ nd_aia_desert_infrastructure = {
 	requires = industrialization_advance
 	icon = industrialization_advance
 	global_distance_from_capital_speed_propagation = 0.1
-	global_road_building_time = -0.3
+	global_road_building_time = -0.2
 }
 
 # Unlock: Conscript levy
@@ -423,8 +423,8 @@ nd_aia_unified_arab_state = {
 	requires = enlightened_court
 	icon = enlightened_court
 	country_cabinet_efficiency = 0.1
-	cultures_capacity = 3
-	global_integration_speed_modifier = 0.25
+	cultures_capacity = 1.75
+	global_integration_speed_modifier = 0.2
 }
 
 # ===== DESTINY TREE =====
@@ -451,7 +451,9 @@ nd_aia_dest_crescent = {
 		}
 		owns_or_non_sovereign_subject_owns = location:damascus
 		owns_or_non_sovereign_subject_owns = location:baghdad
-		army_size >= 30
+		# Kufa, the camp city the first conquerors of Iraq founded and the
+		# first seat of the Abbasids. No Arabian former holds it in 1337.
+		owns_or_non_sovereign_subject_owns = location:kufa
 	}
 	icon = imperial_ambitions
 	siege_ability = 0.1
@@ -466,7 +468,16 @@ nd_aia_dest_jihad = {
 		owns_or_non_sovereign_subject_owns = location:cairo
 		owns_or_non_sovereign_subject_owns = location:jerusalem
 		prestige >= 50
-		army_size >= 50
+		# Cairo's wealth is the Delta behind it: half of Lower Egypt.
+		custom_tooltip = {
+			text = nd_aia_dest_lower_egypt_share_tt
+			area:lower_egypt_area = {
+				any_location_in_area = {
+					percent >= 0.5
+					owner ?= root
+				}
+			}
+		}
 	}
 	icon = feudalism_advance
 	global_hostile_attrition = 0.5
@@ -482,8 +493,17 @@ nd_aia_dest_caliphate = {
 		owns_or_non_sovereign_subject_owns = location:basra
 		owns_or_non_sovereign_subject_owns = location:mosul
 		gold >= 3000
-		army_size >= 75
 		prestige >= 75
+		# Syria held as a land and not as three cities: half of the Levant.
+		custom_tooltip = {
+			text = nd_aia_dest_levant_share_tt
+			area:levant_area = {
+				any_location_in_area = {
+					percent >= 0.5
+					owner ?= root
+				}
+			}
+		}
 	}
 	icon = organized_religion
 	military_tactics = 0.1
@@ -509,7 +529,7 @@ nd_aia_dest_gulf = {
 	}
 	icon = merchants_and_trade
 	global_trade_center_power = 0.05
-	global_raw_material_output = 0.05
+	max_tariff = 0.05
 }
 
 nd_aia_dest_monsoon = {
@@ -525,7 +545,16 @@ nd_aia_dest_monsoon = {
 			}
 		}
 		gold >= 2000
-		total_development >= 7500
+		# From the 1420s the India fleets came in on the monsoon to Jeddah
+		# instead of Aden, and the town grew on their customs. 7.2 in 1337,
+		# grown by half.
+		custom_tooltip = {
+			text = nd_aia_dest_jeddah_developed_tt
+			location:jeddah = {
+				owner ?= root
+				development >= 11
+			}
+		}
 	}
 	icon = global_trade_advance
 	global_institution_growth_modifier = 0.15
@@ -537,11 +566,28 @@ nd_aia_dest_crossroads = {
 	requires = nd_aia_dest_monsoon
 	potential = { has_or_had_tag = AIA has_variable = nd_aia_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		owns_or_non_sovereign_subject_owns = location:adan
-		has_embraced_institution = institution:global_trade
+		# Aden is the Yemeni former's own on day one, so the stage asks for
+		# what is done there: 14 in 1337, doubled.
+		custom_tooltip = {
+			text = nd_aia_dest_adan_developed_tt
+			location:adan = {
+				owner ?= root
+				development >= 28
+			}
+		}
+		# The pepper of Malabar, landed at Aden and carried on to Egypt, is
+		# what made Arabia the hinge of the trade. This stands where the
+		# institution global_trade stood: that one waits for the fourth age,
+		# while the other path can be finished in the first (owner's ruling
+		# 2026-10-02, scripts/destiny/stage_floors.py).
+		any_market_present_in_country = {
+			OR = {
+				is_produced_in_market = goods:pepper
+				is_traded_in_market = goods:pepper
+			}
+		}
 		gold >= 3000
 		prestige >= 75
-		total_development >= 9500
 	}
 	icon = maritime_advance_age_5
 	trade_income = 0.1

@@ -33,17 +33,9 @@ nd_tgd_caravanserai = {
 			lumber = 0.1
 			category = building_maintenance
 		}
-		nd_tgd_sogdian_merchant_quarter = {
-			silk = 0.1
-			incense = 0.1
-			horses = 0.1
-			category = building_maintenance
-		}
 	}
 	construction_demand = caravanserai_building_construction
 }
-# Sogdian merchant quarter: maintenance PM (caravanserai is trade building, not production)
-# silk 0.1 + incense 0.1 + horses 0.1: trade goods for Silk Road merchants
 
 # Tang Sancai Kiln: tri-color glazed ceramic production
 nd_tgd_sancai_kiln = {
@@ -203,22 +195,50 @@ nd_tgd_hanlin_academy = {
 
 	unique_production_methods = {
 		nd_tgd_academy_upkeep = {
-			paper = 0.15
-			books = 0.1
-			silk = 0.05
+			paper = 0.197
+			books = 0.132
+			silk = 0.066
 			category = building_maintenance
-		}
-		nd_tgd_printing_workshop = {
-			paper = 0.2
-			lumber = 0.1
-			dyes = 0.05
-			category = building_maintenance
-			potential = { has_advance = nd_tgd_woodblock_printing }
 		}
 	}
 	construction_demand = library_construction
 }
-# Printing workshop: maintenance PM (Hanlin Academy is cultural building, not production)
+
+# Woodblock Print Shop: carved pear and jujube blocks, paper and ink made into books.
+# No location_potential: a town workshop that buys paper, timber and ink in the market
+# and makes a produced good, as vanilla's scriptorium does, which has none either.
+nd_tgd_woodblock_printshop = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = guild_employment
+	category = consumer_goods_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_tgd_woodblock_printing
+	}
+
+	unique_production_methods = {
+		nd_tgd_woodblock_printing_pm = {
+			paper = 0.3
+			lumber = 0.1
+			dyes = 0.05
+			produced = books
+			output = 0.38
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+# paper 0.3*2.0 + lumber 0.1*1.5 + dyes 0.05*4.0 = 0.95. 0.95*1.20/3.0 = 0.38. 20% profit.
 
 # Silk Weaving Workshop: luxury textile production
 nd_tgd_silk_workshop = {
@@ -253,10 +273,21 @@ nd_tgd_silk_workshop = {
 			category = guild_input
 			debug_max_profit = guild_profit_margin
 		}
+		nd_tgd_steam_filature = {
+			silk = 0.5
+			dyes = 0.1
+			coal = 0.1
+			produced = fine_cloth
+			output = 0.52
+			category = guild_input
+			potential = { has_advance = nd_tgd_industrial_silk }
+			debug_max_profit = guild_profit_margin
+		}
 	}
 	construction_demand = guild_construction
 }
 # silk 0.2*4.0 + dyes 0.1*4.0 = 1.20. 1.20*1.20/6.0 = 0.24. 20% profit.
+# Steam filature: silk 0.5*4.0 + dyes 0.1*4.0 + coal 0.1*2.0 = 2.60. 2.60*1.20/6.0 = 0.52. 20% profit.
 
 # Tang Relay Station: imperial courier and postal system
 nd_tgd_relay_station = {
@@ -293,23 +324,29 @@ nd_tgd_relay_station = {
 	construction_demand = village_construction
 }
 
-# Tea Processing House: tea production and trade
+# Tea Processing House: leaf is steamed and pressed into bricks for the
+# frontier horse trade. The game has one good for tea, so the house makes
+# no good of its own: it buys leaf and gives its town merchant power.
+# (Its method once made liquor from tea.) Filed as a trade building since
+# 2026-10-02: it makes nothing and serves a market, like the canal warehouse
+# below. Its bill of 0.6 gold a month stands between the low end (0.2) and
+# the median (0.95) of vanilla's 43 upkeep-only trade buildings.
 nd_tgd_tea_house = {
 	is_special = yes
 	is_foreign = no
 	pop_type = burghers
 	max_levels = 1
-	employment_size = guild_employment
-	category = basic_industry_category
-	# Not rural: this is a workshop, not a field. A per-location
-	# bonus buildable in everything you own is a realm-wide bonus
-	# wearing a local label, and vanilla keeps industry in towns.
+	employment_size = trade_employment
+	category = trade_category
+	# Not rural: a per-location bonus buildable in everything you own
+	# is a realm-wide bonus wearing a local label, and vanilla keeps
+	# its market buildings in towns.
 	rural_settlement = no
 	town = yes
 	city = yes
 	megalopolis = yes
 	expensive = yes
-	build_time = guild_build_time
+	build_time = trade_post_build_time
 
 	country_potential = {
 		has_advance = nd_tgd_tea_horse_trade
@@ -322,18 +359,13 @@ nd_tgd_tea_house = {
 
 	unique_production_methods = {
 		nd_tgd_tea_processing = {
-			tea = 0.3
+			tea = 0.15
 			lumber = 0.1
-			produced = liquor
-			output = 0.5039
-			category = guild_input
-			debug_max_profit = guild_profit_margin
+			category = building_maintenance
 		}
 	}
-	construction_demand = guild_construction
+	construction_demand = warehouse_construction
 }
-# Tea processing: tea 0.3*3.0 + lumber 0.1*1.5 = 1.05
-# 1.05*1.20/2.5 = 0.504 -> use 0.50 (liquor@2.5 = 1.25, profit = 1.25/1.05 - 1 = 19.0%)
 
 # Gunpowder Foundry: fire arrows and incendiary weapons
 nd_tgd_gunpowder_foundry = {
@@ -440,9 +472,9 @@ nd_tgd_examination_hall = {
 
 	unique_production_methods = {
 		nd_tgd_examination_upkeep = {
-			paper = 0.2
-			books = 0.1
-			cloth = 0.1
+			paper = 0.22
+			books = 0.11
+			cloth = 0.11
 			category = building_maintenance
 		}
 	}

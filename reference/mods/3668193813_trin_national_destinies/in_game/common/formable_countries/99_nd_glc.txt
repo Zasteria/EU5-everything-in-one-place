@@ -1,0 +1,57 @@
+﻿# Galicia (GLC): formation lines
+# National Destinies mod
+#
+# Vanilla 1.4 defines GLC_f with an empty form_effect (level 2, 75% of
+# galicia_area, Galician culture, Christian, not for a country that already
+# is GLC), so INJECT is safe: there is nothing of vanilla's to lose. GLC_f is
+# the only vanilla formable that creates the tag GLC
+# (00_formable_countries.txt:748-771).
+#
+# Roads into the tag, and what each one meets here:
+# 1. Galicia is released or breaks away. The start setup gives GLC cores on
+#    all 23 locations of the area and no land
+#    (main_menu/setup/1337/10_countries.txt:14823), so that country is born
+#    as GLC, a kingdom with its capital at Santiago, and never passes through
+#    this block. The four-yearly marker repair in 99_nd_on_actions.txt stamps
+#    the marker and delivers nd_glc.1 for it. This is the likeliest Galicia,
+#    and the event is written so that it reads right for it.
+# 2. A country of Galician culture that is not itself a level 2 tag takes the
+#    land and forms it by the button. Nobody is Galician on day one, so this
+#    is a country that changed its primary culture. form_effect runs:
+#    markers, rank, capital, event.
+# Castile holds all 23 locations in 1337, but it carries the tag of a level 2
+# formable (CAS_f) and is Castilian: shut out twice over
+# (formable_countries/readme.txt:2). Nothing here speaks to it.
+INJECT:GLC_f = {
+	form_effect = {
+		# Formation markers live HERE, not only in the event's options: a
+		# country can be formed by script, and then the popup may never be
+		# answered.
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_glc_formed
+		}
+		# Galicia was a kingdom in title from 910 to 1833, and vanilla's own
+		# released GLC starts at that rank. nd_can_take_kingdom_rank is false
+		# only where the engine itself would refuse the rank.
+		if = {
+			limit = {
+				nd_can_take_kingdom_rank = yes
+				country_rank_level < 3
+			}
+			set_country_rank_effect = { rank = country_rank:rank_kingdom }
+		}
+		# Santiago is the capital vanilla gives the released kingdom. Guarded
+		# by ownership: 75% of the area does not have to include it. The
+		# second formation choice moves the seat to A Coruna.
+		if = {
+			limit = {
+				owns = location:santiago_compostela
+				NOT = { capital = location:santiago_compostela }
+			}
+			set_capital = location:santiago_compostela
+		}
+		trigger_event_non_silently = nd_glc.1
+		add_stability = stability_mild_bonus
+	}
+}

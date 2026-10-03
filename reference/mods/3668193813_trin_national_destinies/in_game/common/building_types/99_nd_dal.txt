@@ -40,31 +40,15 @@ nd_dal_fondaco = {
 			cloth = 0.1
 			category = building_maintenance
 		}
-		nd_dal_salt_trade = {
-			salt = 0.2
-			fish = 0.1
-			category = building_maintenance
-		}
-		nd_dal_fine_cloth_trade = {
-			dyes = 0.1
-			cloth = 0.1
-			category = building_maintenance
-		}
-		nd_dal_customs_registry = {
-			paper = 0.15
-			dyes = 0.05
-			category = building_maintenance
-		}
-		nd_dal_maritime_provisioning = {
-			tar = 0.15
-			lumber = 0.1
-			category = building_maintenance
-		}
 	}
 	construction_demand = fondaco_construction
 }
 
-# Lazaretto: Quarantine facility (Dubrovnik pioneered quarantine in 1377)
+# Hospital of Mercy: the foundling hospital Ragusa opened in 1432, beside the
+# almshouse of 1347 and the physicians the commune salaried from 1301.
+# The key keeps its first name: until 2026-10-02 this was a lazaretto, which
+# vanilla 1.4 gives Ragusa as an advance (rag_the_lazzaretto_system) and every
+# country as a building (lazaretto). Its effect is unchanged.
 nd_dal_lazaretto = {
 	is_special = yes
 	is_foreign = no
@@ -97,22 +81,19 @@ nd_dal_lazaretto = {
 
 	unique_production_methods = {
 		nd_dal_lazaretto_maintenance = {
-			stone = 0.15
-			lumber = 0.1
-			medicaments = 0.1
-			category = building_maintenance
-		}
-		nd_dal_apothecary_service = {
-			olives = 0.2
-			wine = 0.1
-			cloth = 0.05
+			stone = 0.413
+			lumber = 0.275
+			medicaments = 0.275
 			category = building_maintenance
 		}
 	}
 	construction_demand = port_building_construction
 }
 
-# Ragusan Academy: center of learning and scholarship
+# General School of Zadar: the Dominican studium generale, open from 1396
+# to 1807. The key keeps its first name: until
+# 2026-10-02 this was a Ragusan literary academy, which vanilla 1.4 tells in
+# dalmatian_the_accademia_degli_oziosi. Its effect is unchanged.
 nd_dal_academy = {
 	is_special = yes
 	is_foreign = no
@@ -140,16 +121,20 @@ nd_dal_academy = {
 
 	unique_production_methods = {
 		nd_dal_academy_maintenance = {
-			paper = 0.15
-			books = 0.1
-			beeswax = 0.05
+			paper = 0.225
+			books = 0.15
+			beeswax = 0.075
 			category = building_maintenance
 		}
 	}
 	construction_demand = academy_construction
 }
 
-# Maritime Insurance House: financial innovation in trade risk management
+# Brotherhood Hall: the house of a citizens' brotherhood (the Antunini and
+# the Lazarini of Ragusa), where merchants shut out of the noble councils
+# lend to one another and take shares in ships. The key keeps its first name:
+# until 2026-10-02 this was a maritime insurance house, which vanilla 1.4
+# tells in rag_the_ragusan_maritime_insurance_code. Its effect is unchanged.
 nd_dal_insurance_house = {
 	is_special = yes
 	is_foreign = no
@@ -188,6 +173,174 @@ nd_dal_insurance_house = {
 		}
 	}
 	construction_demand = guild_construction
+}
+
+# Solana: the commune's own salt pans. Those of Ston, bought with the
+# peninsula in 1333, brought the Republic 15,900 ducats a year.
+# One works to a place, sized like one level of vanilla's salt collector,
+# and fed with timber and tools where the collector burns clay.
+nd_dal_solana = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = 1
+	startup_ramp_target = rural_startup_ramp_target
+	employment_size = rural_peasant_produce_employment
+	category = rgo_building_category
+	# Pans lie on the flats outside a town's walls, never inside a great city.
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_dal_adriatic_salt_routes
+	}
+
+	# Sea salt: only on a shore whose own good is salt.
+	location_potential = {
+		is_coastal = yes
+		raw_material = goods:salt
+	}
+
+	unique_production_methods = {
+		nd_dal_salt_panning = {
+			lumber = 0.4
+			tools = 0.15
+			produced = salt
+			output = 0.315
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = farm_constructions
+}
+
+# Friars' Pharmacy: the pharmacy the Friars Minor of Ragusa have kept open
+# to the townspeople since 1317. Its remedies are made of what the coast
+# grows (oil, wine, wax), where vanilla's apothecary uses game and flax.
+# A plain producer with no modifier block, so it takes the guild formula.
+nd_dal_friars_pharmacy = {
+	is_special = yes
+	is_foreign = no
+	pop_type = clergy
+	max_levels = guild_max_level
+	startup_ramp_target = guild_startup_ramp_target
+	employment_size = clergy_medical_employment
+	category = basic_industry_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_dal_pharmacy_tradition
+	}
+
+	# The herbs have to be at hand: sage and the like are what the islands
+	# sell (Pag's own good is medicaments).
+	location_potential = {
+		is_produced_in_location_market = goods:medicaments
+	}
+
+	unique_production_methods = {
+		nd_dal_friars_remedies = {
+			olives = 0.4
+			wine = 0.2
+			beeswax = 0.1
+			produced = medicaments
+			output = 1.2
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# Cloth Works of Pile: the looms and the dye house outside the Pile gate,
+# where Pietro Pantella of Piacenza set up the Republic's cloth trade in
+# the fifteenth century.
+# A plain producer with no modifier block, so it takes the guild formula.
+nd_dal_pile_cloth_works = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	startup_ramp_target = guild_startup_ramp_target
+	employment_size = guild_employment
+	category = consumer_goods_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_dal_silk_and_dye_trade
+	}
+
+	# The wool has to be at hand (vanilla's glass guild asks the same of sand).
+	location_potential = {
+		is_produced_in_location_market = goods:wool
+	}
+
+	unique_production_methods = {
+		nd_dal_cloth_dyeing = {
+			wool = 0.8
+			dyes = 0.1
+			produced = fine_cloth
+			output = 0.48
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# Lanterna: a harbour light. The first on this coast was lit at Savudrija in
+# Istria in 1818. A ship that can find the harbour mouth at night lands its
+# cargo more cheaply, and the coast is watched from the tower.
+nd_dal_lanterna = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = 1
+	employment_size = tiny_rural_peasant_produce_employment
+	category = infrastructure_category
+	# A light stands on a cape as well as on a city's mole: every rank.
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = infrastructure_build_time
+
+	country_potential = {
+		has_advance = nd_dal_port_modernization
+	}
+
+	location_potential = {
+		is_port = yes
+	}
+
+	modifier = {
+		# Vanilla's rural harbour buildings give 0.02 to 0.05, its docks 0.1 and more.
+		harbor_suitability = 0.05
+		# Vanilla's fishing village gives 0.01, its coastal forts 0.15 and 0.3.
+		local_maritime_presence = 0.05
+	}
+
+	unique_production_methods = {
+		nd_dal_lanterna_maintenance = {
+			stone = 0.1
+			glass = 0.05
+			olives = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = port_building_construction
 }
 
 # ===== DESTINY BUILDINGS =====
@@ -233,7 +386,9 @@ nd_dal_consulate = {
 	construction_demand = guild_construction
 }
 
-# Dalmatian Arsenal: Path B capstone building
+# Mariners' Confraternity: Path B capstone building. The key keeps its first
+# name: as the Dalmatian Arsenal it stood beside vanilla's
+# rag_the_arsenal_expansion, which tells of the Ragusan yards.
 nd_dal_arsenal = {
 	is_special = yes
 	is_foreign = no

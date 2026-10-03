@@ -1,0 +1,642 @@
+﻿namespace = nd_tun
+
+# ============================================================
+# Formation event. Fires from TUN_f's form_effect, and is also delivered to
+# a country that already holds the tag (the Hafsids at the 1337 start).
+# So it has two descriptions: one for a ruler who took Tunis and did not
+# inherit it, and one for the house that already sits there. The first is
+# marked by nd_tun_newcomer, which TUN_f's form_effect sets only when the
+# ruler is not of the Hafsid dynasty (formable_countries/99_nd_tun.txt).
+# The second is the default. It is read by the Hafsids at the start, who
+# never run the form effect, by a Hafsid governor whom vanilla's
+# flavor_tun.16 turns into TUN when his ruler inherits the capital (that
+# event calls form_country, so the form effect does run for him), and by a
+# Hafsid of Bejaia or Gafsa who forms Tunis by conquest.
+# The choice is the one every ruler of Tunis faced until the Husaynids: who
+# holds the interior. Vanilla's own Tunis content (the Emirism event, the
+# Ifriqiya Reunited decision) reads centralization, and each option moves it:
+# the tribes' road pushes away from that decision, the customs road toward it.
+# ============================================================
+nd_tun.1 = {
+	type = country_event
+	title = nd_tun.1.t
+	desc = {
+		first_valid = {
+			triggered_desc = {
+				trigger = { has_variable = nd_tun_newcomer }
+				desc = nd_tun.1.d_newcomer
+			}
+			triggered_desc = {
+				desc = nd_tun.1.d
+			}
+		}
+	}
+	outcome = neutral
+	# Once per COUNTRY, by its own guard variable. Not fire_only_once: that
+	# is once per campaign (events/readme.txt:62), and the Hafsids, who hold
+	# the tag from day one, would retire the popup for every later former.
+	trigger = {
+		NOT = { has_variable = nd_tun_e1_done }
+	}
+	immediate = {
+		hidden_effect = { set_variable = nd_tun_e1_done }
+	}
+
+	# Path A: the sultan of the tribes.
+	option = {
+		name = nd_tun.1.a
+		add_country_modifier = {
+			modifier = nd_tun_sultan_of_the_tribes
+			years = 20
+			mode = add_and_extend
+		}
+		change_societal_value = {
+			type = centralization_vs_decentralization
+			value = societal_value_move_to_right
+		}
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_tun_formed
+			set_variable = nd_tun_path_a
+		}
+	}
+	# Path B: the master of the customs house. Revoking the grants costs
+	# stability at once, as it cost Abu al-Abbas a decade of revolts.
+	option = {
+		name = nd_tun.1.b
+		add_country_modifier = {
+			modifier = nd_tun_master_of_the_customs_house
+			years = 20
+			mode = add_and_extend
+		}
+		change_societal_value = {
+			type = centralization_vs_decentralization
+			value = societal_value_move_to_left
+		}
+		add_stability = stability_mild_penalty
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_tun_formed
+			set_variable = nd_tun_path_b
+		}
+	}
+}
+
+# DHE: the Zaytuna under Ibn Arafa.
+nd_tun.2 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = TUN
+		tag = ALM
+		tag = CTH
+		tag = EUR
+		tag = KHL
+		tag = KOA
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_tun_zaytuna_of_ibn_arafa
+	}
+
+	title = nd_tun.2.t
+	desc = nd_tun.2.d
+	outcome = neutral
+
+	option = {
+		name = nd_tun.2.a
+	}
+}
+
+# DHE: 1534 to 1574, the Emperor or the Sultan.
+nd_tun.3 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = TUN
+		tag = ALM
+		tag = CTH
+		tag = EUR
+		tag = KHL
+		tag = KOA
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_tun_between_emperor_and_sultan
+	}
+
+	title = nd_tun.3.t
+	desc = nd_tun.3.d
+	outcome = neutral
+
+	option = {
+		name = nd_tun.3.a
+		add_country_modifier = {
+			modifier = nd_tun_shadow_of_the_emperor
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_tun.3.b
+		add_country_modifier = {
+			modifier = nd_tun_regency_of_the_sultan
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# DHE: 1591, the revolt of the deys.
+nd_tun.4 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = TUN
+		tag = ALM
+		tag = CTH
+		tag = EUR
+		tag = KHL
+		tag = KOA
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_tun_revolt_of_the_deys
+	}
+
+	title = nd_tun.4.t
+	desc = nd_tun.4.d
+	outcome = neutral
+
+	option = {
+		name = nd_tun.4.a
+		add_country_modifier = {
+			modifier = nd_tun_rule_of_the_deys
+			years = 15
+			mode = add_and_extend
+		}
+		change_societal_value = {
+			type = centralization_vs_decentralization
+			value = societal_value_minor_move_to_right
+		}
+	}
+	option = {
+		name = nd_tun.4.b
+		add_country_modifier = {
+			modifier = nd_tun_bey_of_the_camp
+			years = 15
+			mode = add_and_extend
+		}
+		change_societal_value = {
+			type = centralization_vs_decentralization
+			value = societal_value_minor_move_to_left
+		}
+	}
+}
+
+# DHE: 1609, the Moriscos arrive.
+nd_tun.5 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = TUN
+		tag = ALM
+		tag = CTH
+		tag = EUR
+		tag = KHL
+		tag = KOA
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_tun_morisco_settlement
+	}
+
+	title = nd_tun.5.t
+	desc = nd_tun.5.d
+	outcome = positive
+
+	option = {
+		name = nd_tun.5.a
+	}
+}
+
+# DHE: Hammuda Pasha and the janissary revolt of 1811.
+nd_tun.6 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = TUN
+		tag = ALM
+		tag = CTH
+		tag = EUR
+		tag = KHL
+		tag = KOA
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_tun_hammuda_pasha
+	}
+
+	title = nd_tun.6.t
+	desc = nd_tun.6.d
+	outcome = neutral
+
+	option = {
+		name = nd_tun.6.a
+		add_country_modifier = {
+			modifier = nd_tun_sons_of_the_country
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_tun.6.b
+		add_country_modifier = {
+			modifier = nd_tun_pardoned_ojak
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# DHE: 1816 to 1819, the end of the corso.
+nd_tun.7 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = TUN
+		tag = ALM
+		tag = CTH
+		tag = EUR
+		tag = KHL
+		tag = KOA
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_tun_end_of_the_corso
+	}
+
+	title = nd_tun.7.t
+	desc = nd_tun.7.d
+	outcome = neutral
+
+	option = {
+		name = nd_tun.7.a
+		add_country_modifier = {
+			modifier = nd_tun_flag_of_commerce
+			years = 15
+			mode = add_and_extend
+		}
+		change_societal_value = {
+			type = mercantilism_vs_free_trade
+			value = societal_value_minor_move_to_right
+		}
+	}
+	option = {
+		name = nd_tun.7.b
+		add_country_modifier = {
+			modifier = nd_tun_last_cruise
+			years = 15
+			mode = add_and_extend
+		}
+		change_societal_value = {
+			type = belligerent_vs_conciliatory
+			value = societal_value_minor_move_to_left
+		}
+	}
+}
+
+# ===== DESTINY EVENTS =====
+# One DHE per destiny advance. The root and the two stage 1 events are
+# acknowledgements. The stage 2 and stage 3 events offer two readings of the
+# same milestone, each a timed modifier (15 years at stage 2, 20 at stage 3).
+# fire_only_once is kept because the engine requires it on a
+# dynamic_historical_event (PROMPT_TEMPLATE.md, "Once Means Once Per
+# Country"): it is once per campaign, so a second country that takes the tag
+# after the Hafsids have passed a stage keeps the advance and its unlock and
+# misses only the popup and its timed modifier.
+
+# Root: the destiny opens.
+nd_tun.8 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = TUN
+		tag = ALM
+		tag = CTH
+		tag = EUR
+		tag = KHL
+		tag = KOA
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_tun_destiny
+	}
+
+	title = nd_tun.8.t
+	desc = nd_tun.8.d
+	outcome = neutral
+
+	option = {
+		name = nd_tun.8.a
+	}
+}
+
+# Path A, stage 1: the Zab and Ghadames.
+nd_tun.9 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = TUN
+		tag = ALM
+		tag = CTH
+		tag = EUR
+		tag = KHL
+		tag = KOA
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_tun_dest_lords_of_the_zab
+	}
+
+	title = nd_tun.9.t
+	desc = nd_tun.9.d
+	outcome = positive
+
+	option = {
+		name = nd_tun.9.a
+	}
+}
+
+# Path A, stage 2: the steppe at peace, and what to do with its horsemen.
+nd_tun.10 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = TUN
+		tag = ALM
+		tag = CTH
+		tag = EUR
+		tag = KHL
+		tag = KOA
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_tun_dest_peace_of_the_steppe
+	}
+
+	title = nd_tun.10.t
+	desc = nd_tun.10.d
+	outcome = neutral
+
+	option = {
+		name = nd_tun.10.a
+		add_country_modifier = {
+			modifier = nd_tun_dest_riders_beyond_the_frontier
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_tun.10.b
+		add_country_modifier = {
+			modifier = nd_tun_dest_flocks_of_the_steppe
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# Path A, stage 3: Tlemcen submits. A client on its throne, or the march west.
+nd_tun.11 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = TUN
+		tag = ALM
+		tag = CTH
+		tag = EUR
+		tag = KHL
+		tag = KOA
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_tun_dest_homage_of_the_west
+	}
+
+	title = nd_tun.11.t
+	desc = nd_tun.11.d
+	outcome = positive
+
+	option = {
+		name = nd_tun.11.a
+		add_country_modifier = {
+			modifier = nd_tun_dest_throne_held_from_tunis
+			years = 20
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_tun.11.b
+		add_country_modifier = {
+			modifier = nd_tun_dest_camp_in_the_west
+			years = 20
+			mode = add_and_extend
+		}
+	}
+}
+
+# Path B, stage 1: the sultan's own governors in Tripoli and Djerba.
+nd_tun.12 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = TUN
+		tag = ALM
+		tag = CTH
+		tag = EUR
+		tag = KHL
+		tag = KOA
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_tun_dest_grants_revoked
+	}
+
+	title = nd_tun.12.t
+	desc = nd_tun.12.d
+	outcome = positive
+
+	option = {
+		name = nd_tun.12.a
+	}
+}
+
+# Path B, stage 2: the paid guard, and who serves in it.
+nd_tun.13 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = TUN
+		tag = ALM
+		tag = CTH
+		tag = EUR
+		tag = KHL
+		tag = KOA
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_tun_dest_guard_of_the_sea_gate
+	}
+
+	title = nd_tun.13.t
+	desc = nd_tun.13.d
+	outcome = neutral
+
+	option = {
+		name = nd_tun.13.a
+		add_country_modifier = {
+			modifier = nd_tun_dest_frankish_militia
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_tun.13.b
+		add_country_modifier = {
+			modifier = nd_tun_dest_freedmen_of_the_palace
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# Path B, stage 3: the narrow sea is held. Hunt on it, or rent it out.
+nd_tun.14 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = TUN
+		tag = ALM
+		tag = CTH
+		tag = EUR
+		tag = KHL
+		tag = KOA
+		tag = OUT
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_tun_dest_corsair_sea
+	}
+
+	title = nd_tun.14.t
+	desc = nd_tun.14.d
+	outcome = positive
+
+	option = {
+		name = nd_tun.14.a
+		add_country_modifier = {
+			modifier = nd_tun_dest_licensed_corso
+			years = 20
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_tun.14.b
+		add_country_modifier = {
+			modifier = nd_tun_dest_price_of_peace
+			years = 20
+			mode = add_and_extend
+		}
+	}
+}

@@ -50,7 +50,7 @@ nd_irq_nahrawan_breach = {
 	requires = agriculture_advance
 	icon = extensive_canal_works
 	unlock_building = nd_irq_nahrawan_headworks
-	global_monthly_development = 0.002
+	global_monthly_development = 0.001
 }
 
 # The date palm is the tree that grows where an orchard cannot: saline ground,
@@ -194,7 +194,7 @@ nd_irq_ubulla_roadstead = {
 	requires = merchant_power_from_maritime_discovery_advance
 	icon = port_customs
 	unlock_building = nd_irq_ubulla_wharf
-	trade_sea_efficiency = 0.04
+	trade_sea_efficiency = 0.2
 }
 
 # The ghurab, the raven: the oared gun-vessel of the Gulf, shallow enough for
@@ -251,7 +251,7 @@ nd_irq_muqasama_assessment = {
 	potential = { has_or_had_tag = IRQ }
 	requires = regulate_court_procedures
 	icon = fra_reformation_of_taxation
-	global_devastation_recovery = 0.005
+	global_devastation_recovery = 0.0025
 	tax_income_efficiency = 0.03
 }
 
@@ -293,7 +293,7 @@ nd_irq_desert_crossing = {
 	potential = { has_or_had_tag = IRQ }
 	requires = road_advance_1
 	icon = crossroads_of_commerce
-	trade_land_efficiency = 0.04
+	trade_land_efficiency = 0.2
 	global_supply_limit_modifier = 0.1
 }
 
@@ -319,7 +319,7 @@ nd_irq_bitumen_of_hit = {
 	potential = { has_or_had_tag = IRQ }
 	requires = slitting_mills
 	icon = efficient_mining
-	unlock_production_method = nd_irq_wharf_bitumen_caulking
+	unlock_building = nd_irq_qir_pits
 	global_naval_supplies_output_modifier = 0.2
 }
 
@@ -379,7 +379,7 @@ nd_irq_basra_customs_farm = {
 	requires = central_bank_advance
 	icon = genoese_banking_traditions
 	global_trade_center_power = 0.05
-	trade_sea_efficiency = 0.03
+	trade_sea_efficiency = 0.1
 }
 
 # The teaching circles moved from Karbala to Najaf and settled there, and the
@@ -421,7 +421,7 @@ nd_irq_zawra_press = {
 	potential = { has_or_had_tag = IRQ }
 	requires = enlightenment_advance
 	icon = newspapers_advance
-	unlock_production_method = nd_irq_warraqin_press
+	unlock_building = nd_irq_vilayet_press
 	global_institution_growth_modifier = 0.1
 	cultural_tradition_modifier = 0.15
 }
@@ -435,8 +435,8 @@ nd_irq_river_steamers = {
 	potential = { has_or_had_tag = IRQ }
 	requires = industrialization_advance
 	icon = industrialization_advance
-	trade_land_efficiency = 0.04
-	global_production_efficiency = 0.05
+	trade_land_efficiency = 0.2
+	global_production_efficiency = 0.025
 }
 
 # Conscription reached Iraq with the reforms, and the tribes answered it with
@@ -489,7 +489,7 @@ nd_irq_destiny = {
 	potential = { has_or_had_tag = IRQ has_variable = nd_irq_formed has_game_rule = nd_destinies_enabled }
 	allow = { stability >= 75 }
 	icon = valley_irrigation
-	global_monthly_food_modifier = 0.1
+	global_monthly_food_modifier = 0.05
 }
 
 # ============================================================
@@ -523,7 +523,7 @@ nd_irq_dest_hulwan_gate = {
 # Stage 2: the western wing. Aleppo and Damascus were the other half of the
 # caliphate and the only road to the sea that does not run through somebody
 # else's strait. Holding them costs more than taking them, which is why the
-# development threshold sits here.
+# stage asks for half of the Levant as well as its two capitals.
 nd_irq_dest_western_wing = {
 	age = age_1_traditions
 	requires = nd_irq_dest_hulwan_gate
@@ -531,7 +531,20 @@ nd_irq_dest_western_wing = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:aleppo
 		owns_or_non_sovereign_subject_owns = location:damascus
-		total_development >= 1500
+		custom_tooltip = {
+			text = nd_irq_dest_levant_share_tt
+			area:levant_area = {
+				any_location_in_area = {
+					percent >= 0.5
+					owner ?= {
+						OR = {
+							this = root
+							is_subject_of = root
+						}
+					}
+				}
+			}
+		}
 	}
 	icon = conquerors_legacy
 	diplomatic_annexation_efficiency = 0.2
@@ -592,7 +605,15 @@ nd_irq_dest_maragha_instruments = {
 		}
 		owns_or_non_sovereign_subject_owns = location:maragheh
 		has_embraced_institution = institution:renaissance
-		total_development >= 1000
+		# The town under the observatory hill: 13 in 1337
+		# (scripts/development_estimate.py), a quarter more for stage one.
+		custom_tooltip = {
+			text = nd_irq_dest_maragha_developed_tt
+			location:maragheh = {
+				owner ?= root
+				development >= 16
+			}
+		}
 	}
 	icon = source_of_knowledge
 	global_burghers_max_literacy = 7.5
@@ -603,13 +624,22 @@ nd_irq_dest_maragha_instruments = {
 # turning a wheel's circle into a pump's straight push, and the Sasanian weirs
 # at Shushtar that have lifted the Karun for a thousand years. The heritage
 # tree taxes water by how it is raised; this is the advance that raises it.
+# These are machines of the ninth to thirteenth centuries, so the stage asks
+# for the country's own head-works (an advance of the first age) standing on
+# three canals, not for an institution of the fifth age.
 nd_irq_dest_ingenious_devices = {
 	age = age_1_traditions
 	requires = nd_irq_dest_maragha_instruments
 	potential = { has_or_had_tag = IRQ has_variable = nd_irq_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:shushtar
-		has_embraced_institution = institution:manufactories
+		custom_tooltip = {
+			text = nd_irq_dest_three_headworks_tt
+			any_owned_location = {
+				count >= 3
+				has_building = building_type:nd_irq_nahrawan_headworks
+			}
+		}
 		gold >= 2000
 	}
 	icon = swiss_clockwork
@@ -621,16 +651,24 @@ nd_irq_dest_ingenious_devices = {
 # Stage 3: the tables. Samarkand holds the paper mills that came west after
 # Talas and Ulugh Beg's sextant, sunk in a trench forty metres long. A zij is
 # computed for one latitude and lies politely everywhere else, so the capstone
-# is not the capture but the recomputation for Baghdad's own sky.
+# is not the capture but the recomputation for Baghdad's own sky: the
+# Mustansiriya standing in a Baghdad built up to twice its 1337 value (18).
+# Ulugh Beg's tables are of 1437, so no later institution is asked.
 nd_irq_dest_corrected_tables = {
 	age = age_1_traditions
 	requires = nd_irq_dest_ingenious_devices
 	potential = { has_or_had_tag = IRQ has_variable = nd_irq_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:samarkand
-		has_embraced_institution = institution:scientific_revolution
 		gold >= 3000
-		total_development >= 2000
+		custom_tooltip = {
+			text = nd_irq_dest_baghdad_school_tt
+			location:baghdad = {
+				owner ?= root
+				development >= 36
+				has_building = building_type:nd_irq_mustansiriya
+			}
+		}
 	}
 	icon = julian_calendar
 	unlock_building = nd_irq_marsad

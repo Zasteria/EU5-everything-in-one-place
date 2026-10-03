@@ -50,13 +50,14 @@ nd_byz_pronoia_system = {
 	potential = { has_or_had_tag = BYZ }
 	requires = drill_army_advance
 	icon = drill_army_advance
+	unlock_levy = levy_nd_byz_pronoiarioi
 	army_light_cavalry_power = 0.1
 
 	army_heavy_cavalry_power = 0.1
 
-	army_light_cavalry_maintenance_cost_modifier = -0.3
+	army_light_cavalry_maintenance_cost_modifier = -0.25
 
-	army_heavy_cavalry_maintenance_cost_modifier = -0.3
+	army_heavy_cavalry_maintenance_cost_modifier = -0.25
 
 	nobles_estate_target_satisfaction = 0.05
 }
@@ -138,12 +139,12 @@ nd_byz_book_of_the_eparch = {
 	potential = { has_or_had_tag = BYZ }
 	requires = global_trade_advance
 	icon = global_trade_advance
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	global_merchant_power = 0.1
-	global_trade_center_power = 0.15
+	global_trade_center_power = 0.1
 }
 
 # Hippodrome Tradition: unlocks the hippodrome building.
@@ -208,7 +209,6 @@ nd_byz_neo_byzantine_enlightenment = {
 	# research bump on top of it.
 	global_institution_growth_modifier = 0.2
 	global_monthly_literacy = 0.02
-	global_institution_growth_modifier = 0.2
 }
 
 # Imperial Naval Modernization: a surviving Byzantine Empire would
@@ -219,6 +219,7 @@ nd_byz_imperial_naval_modernization = {
 	potential = { has_or_had_tag = BYZ }
 	requires = napoleonic_warfare
 	icon = napoleonic_warfare
+	unlock_unit = n_nd_byz_pyrpolikon
 	naval_morale_modifier = 0.15
 	global_sailors_modifier = 0.15
 	global_maritime_presence_modifier = 0.15
@@ -303,7 +304,10 @@ nd_byz_dest_ecumene = {
 			text = nd_byz_path_b_tt
 			has_variable = nd_byz_path_b
 		}
-		owns_or_non_sovereign_subject_owns = location:thessaloniki
+		# Ohrid: the archbishopric Basil II set over the Bulgarian lands in 1018,
+		# in Serbian hands in 1337. Thessaloniki stood here and is the former's
+		# on day one.
+		owns_or_non_sovereign_subject_owns = location:ohrid
 		owns_or_non_sovereign_subject_owns = location:jerusalem
 		gold >= 1000
 	}
@@ -328,7 +332,16 @@ nd_byz_dest_commonwealth = {
 			}
 		}
 		prestige >= 50
-		total_development >= 12500
+		# Thessaloniki, the second city, whose fair of Saint Demetrius drew the
+		# merchants of the Slavic lands: 24.8 in 1337
+		# (scripts/development_estimate.py --explain thessaloniki), grown by half.
+		custom_tooltip = {
+			text = nd_byz_dest_thessaloniki_developed_tt
+			location:thessaloniki = {
+				owner ?= root
+				development >= 37
+			}
+		}
 	}
 	icon = merchants_and_trade
 	global_monthly_prosperity = 0.001
@@ -342,7 +355,15 @@ nd_byz_dest_new_rome = {
 	potential = { has_or_had_tag = BYZ has_variable = nd_byz_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		has_embraced_institution = institution:printing_press
-		total_development >= 16500
+		# Constantinople held a fraction of its old people in 1337, with fields
+		# inside the walls: 31 by the estimate, to be doubled.
+		custom_tooltip = {
+			text = nd_byz_dest_constantinople_developed_tt
+			location:constantinople = {
+				owner ?= root
+				development >= 62
+			}
+		}
 		prestige >= 75
 		gold >= 3000
 	}
@@ -350,7 +371,7 @@ nd_byz_dest_new_rome = {
 	unlock_building = nd_byz_patriarchal_academy
 	global_pop_assimilation_speed_modifier = 0.1
 	monthly_navy_tradition = 0.1
-	cultural_influence_modifier = 0.1
+	skill_of_new_artists = 0.1
 }
 
 # --- PATH C: THE HELLENIC RENAISSANCE ---
@@ -387,13 +408,20 @@ nd_byz_dest_academy = {
 	potential = { has_or_had_tag = BYZ has_variable = nd_byz_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		has_embraced_institution = institution:renaissance
-		owns_or_non_sovereign_subject_owns = location:athens
+		# Athens was a small ducal town under the Catalans in 1337: 29 by the
+		# estimate, grown by half for the city of the schools.
+		custom_tooltip = {
+			text = nd_byz_dest_athens_developed_tt
+			location:athens = {
+				owner ?= root
+				development >= 44
+			}
+		}
 		owns_or_non_sovereign_subject_owns = location:smyrna
 		prestige >= 50
-		total_development >= 12500
 	}
 	icon = merchants_and_trade
-	global_life_expectancy = 5
+	global_life_expectancy = 4
 	monthly_diplomats = 0.1
 }
 
@@ -405,7 +433,10 @@ nd_byz_dest_apotheosis = {
 	allow = {
 		has_embraced_institution = institution:printing_press
 		owns_or_non_sovereign_subject_owns = location:athens
-		owns_or_non_sovereign_subject_owns = location:constantinople
+		# Olympia: vanilla's Hellenic holy site of the games stands in
+		# Pontikokastro (holy_sites/hellenism.txt), Achaean land in 1337.
+		# Constantinople stood here and is the former's on day one.
+		owns_or_non_sovereign_subject_owns = location:pontikokastro
 		prestige >= 75
 		gold >= 3000
 	}
@@ -415,5 +446,5 @@ nd_byz_dest_apotheosis = {
 	monthly_devotion = 0.1
 	monthly_republican_tradition = 0.1
 	clergy_estate_max_tax = 0.2
-	global_estate_target_satisfaction = 0.05
+	global_estate_target_satisfaction = 0.025
 }

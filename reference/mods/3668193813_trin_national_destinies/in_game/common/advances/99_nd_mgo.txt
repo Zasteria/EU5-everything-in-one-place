@@ -64,10 +64,11 @@ nd_mgo_chinggisid_lineage = {
 	potential = { has_or_had_tag = MGO }
 	requires = nd_mgo_wolf_hunt_drills
 	icon = feudalism_advance
-	monthly_horde_unity = 0.05
-	monthly_devotion = 0.05
-	monthly_legitimacy = 0.05
-	monthly_republican_tradition = 0.05
+	# Blood right as the bar to breakaway rule: no lord without it can hold
+	# a following. The legitimacy itself is vanilla's own age 1 advance for
+	# the Yuan and the Chagatai (successors_of_genghis_khan,
+	# chg_legacy_of_chagatai), so it is not granted a second time here.
+	global_separatism = -0.05
 	monthly_prestige = 0.1
 }
 
@@ -102,9 +103,9 @@ nd_mgo_trans_steppe_trade = {
 	requires = merchants_and_trade
 	icon = merchants_and_trade
 	unlock_building = nd_mgo_steppe_trading_post
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -122,7 +123,7 @@ nd_mgo_composite_bow_mastery = {
 	potential = { has_or_had_tag = MGO }
 	requires = recruitment_improvements_renaissance
 	icon = recruitment_improvements_renaissance
-	unlock_production_method = nd_mgo_bow_craft_method
+	unlock_building = nd_mgo_bowyers_camp
 	army_light_infantry_power = 0.1
 
 	army_heavy_infantry_power = 0.1
@@ -147,7 +148,7 @@ nd_mgo_hide_processing = {
 	global_raw_material_output = 0.1
 }
 
-# ===== AGE 3: DISCOVERY (7 advances, 4 unlock) =====
+# ===== AGE 3: DISCOVERY (7 advances, 3 unlock) =====
 
 nd_mgo_dayan_khan_restoration = {
 	age = age_3_discovery
@@ -190,7 +191,9 @@ nd_mgo_caravan_routes = {
 	potential = { has_or_had_tag = MGO }
 	requires = merchant_power_from_maritime_discovery_advance
 	icon = merchant_power_from_maritime_discovery_advance
-	unlock_production_method = nd_mgo_caravan_tolls
+	# The toll method that stood here produced nothing (it was a second upkeep
+	# bill of the trading post), and a toll is a levy on trade, not a thing to
+	# build: the advance keeps its modifier alone.
 	global_merchant_power = 0.1
 }
 
@@ -248,9 +251,9 @@ nd_mgo_ming_border_markets = {
 	requires = global_trade_advance
 	icon = global_trade_advance
 	unlock_building = nd_mgo_border_market
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -259,7 +262,10 @@ nd_mgo_imperial_guard_reform = {
 	potential = { has_or_had_tag = MGO }
 	requires = nd_mgo_keshig_tradition
 	icon = leader_recruit_cost_advance
-	monthly_army_tradition = 0.05
+	# Trained to fight mounted and on foot, the guard shifts between the
+	# sections of a battle faster. (Army tradition stood here: the Yuan's own
+	# age 4 advance grand_military_parades grants it.)
+	combat_speed_modifier = 0.1
 	discipline = 0.05
 }
 
@@ -311,7 +317,7 @@ nd_mgo_steppe_artillery = {
 	requires = construction_speed_absolutism
 	icon = construction_speed_absolutism
 	army_artillery_power = 0.1
-	siege_ability = 0.2
+	siege_ability = 0.1
 }
 
 nd_mgo_jebtsundamba_line = {
@@ -352,7 +358,7 @@ nd_mgo_steppe_modernization = {
 	requires = industrialization_advance
 	icon = industrialization_advance
 	unlock_building = nd_mgo_felt_manufactory
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }
 
 nd_mgo_mongolian_renaissance = {
@@ -372,7 +378,7 @@ nd_mgo_national_cavalry_reform = {
 	unlock_unit = a_nd_mgo_modern_cavalry
 	army_light_cavalry_power = 0.15
 
-	army_heavy_cavalry_power = 0.15
+	army_heavy_cavalry_power = 0.1
 
 	ai_weight = { add = 50 }
 }
@@ -415,10 +421,10 @@ nd_mgo_destiny = {
 	potential = { has_or_had_tag = MGO has_variable = nd_mgo_formed has_game_rule = nd_destinies_enabled }
 	allow = { stability >= 75 }
 	icon = crown_power_advance_renaissance
-	monthly_legitimacy = 0.1
-	monthly_devotion = 0.1
-	monthly_horde_unity = 0.1
-	monthly_republican_tradition = 0.1
+	# A reunited steppe holds together: stability decays more slowly. The
+	# government power family stood here and repeated both the heritage
+	# tree and the formation choice.
+	stability_decay = -0.00025
 }
 
 # --- Path A: The Great Yuan Restoration ---
@@ -434,7 +440,10 @@ nd_mgo_dest_yuan_return = {
 		}
 		owns_or_non_sovereign_subject_owns = location:dadu
 		owns_or_non_sovereign_subject_owns = location:datong_datong
-		army_size >= 30
+		# Shangdu, the summer capital the court fled to in 1368. It stands in
+		# place of an army size test: a horde's army is its levy, and no file
+		# says whether a raised levy counts toward army_size.
+		owns_or_non_sovereign_subject_owns = location:shangdu
 		stability >= 75
 	}
 	icon = imperial_ambitions
@@ -449,7 +458,7 @@ nd_mgo_dest_mandate_reclaimed = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:shenyang
 		owns_or_non_sovereign_subject_owns = location:lanzhou
-		army_size >= 50
+		prestige >= 50
 		gold >= 2000
 	}
 	icon = imperial_ambitions
@@ -465,14 +474,14 @@ nd_mgo_dest_great_yuan = {
 		owns_or_non_sovereign_subject_owns = location:kaifeng
 		owns_or_non_sovereign_subject_owns = location:hangzhou
 		owns_or_non_sovereign_subject_owns = location:kashgar
-		army_size >= 75
+		gold >= 3000
 		prestige >= 75
 	}
 	icon = imperial_ambitions
 	unlock_building = nd_mgo_yuan_imperial_palace
 	power_projection = 5
 	peace_offer_negotiation_power = 0.1
-	global_devastation_recovery = 0.005
+	global_devastation_recovery = 0.0025
 }
 
 # --- Path B: The Dharma Realm ---
@@ -511,7 +520,7 @@ nd_mgo_dest_sangha_realm = {
 		}
 	}
 	icon = organized_religion
-	tax_income_efficiency = 0.05
+	tax_income_efficiency = 0.03
 	global_pop_assimilation_speed_modifier = 0.1
 }
 
@@ -521,7 +530,16 @@ nd_mgo_dest_eternal_dharma = {
 	potential = { has_or_had_tag = MGO has_variable = nd_mgo_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		has_embraced_institution = institution:printing_press
-		total_development >= 5500
+		# Karakorum: Abadai Khan raised Erdene Zuu on the ruins of the old
+		# capital in 1585 with its stones, and the town grew again round the
+		# monastery. 1337 value 3 (development_estimate.py), doubled.
+		custom_tooltip = {
+			text = nd_mgo_dest_karakorum_developed_tt
+			location:karakorum = {
+				owner ?= root
+				development >= 6
+			}
+		}
 		prestige >= 75
 		gold >= 3000
 	}

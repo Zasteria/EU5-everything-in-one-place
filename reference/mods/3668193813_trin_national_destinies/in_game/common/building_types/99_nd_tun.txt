@@ -1,0 +1,533 @@
+﻿# Tunis (TUN): custom buildings.
+#
+# What the same country can already build, so nothing here repeats it:
+# vanilla gives every Muslim country the madrasa and the funduq, the Maghrebi
+# group the fortress granary and the palm irrigation, and everyone the
+# hospital, the dock and shipyard, the cloth, fine cloth and pottery guilds.
+# Carthage and the Almohads, which a Tunisian country can go on to form, add
+# a shipyard, a citadel, an emporium, two funduqs, a ribat and a minaret.
+# So there is no shipyard, fort, market or inn below. Each building here is
+# tied to a place or a population that only this country's land has.
+
+# ============================================================
+# Ma'sara: the olive press of the Sahel.
+# The Sahel from Sousse to Sfax was one olive grove, and its oil was the
+# country's staple export from Hafsid times to the beys.
+# Every settlement tier on purpose: the gate is the grove itself. Only a
+# location whose raw material is olives may build one (13 of the 115
+# locations of the Tunis and Tripolitania areas), and Sousse and Mahdia
+# pressed their oil inside the walls.
+# An enhancer and not a producer, on purpose. It has the shape of vanilla's
+# windmill, sawmill and local smelters (rural_buildings.txt): one level,
+# rural_peasant_enhance_employment, an upkeep-only method and an output
+# modifier on the raw good the land already yields. The game has no oil good
+# for a press to make, so a producing method could only make olives a second
+# time on top of the modifier.
+# ============================================================
+nd_tun_olive_press = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = 1
+	employment_size = rural_peasant_enhance_employment
+	category = infrastructure_category
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_tun_sahel_olive_groves
+	}
+
+	location_potential = {
+		raw_material = goods:olives
+	}
+
+	modifier = {
+		# Vanilla's one-level enhancers: the sawmill 0.2, the windmill and the
+		# local smelters 0.1. Its plantations (0.1) and the Fulani cattle pen
+		# (0.2) grant theirs per level and have several levels (the pen's cap
+		# starts at 3, building_caps.txt:774). One level here.
+		local_olives_output_modifier = 0.2
+	}
+
+	unique_production_methods = {
+		nd_tun_olive_press_maintenance = {
+			lumber = 0.1
+			stone = 0.05
+			pottery = 0.1
+			tools = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = village_construction
+}
+
+# ============================================================
+# The Zaytuna: the mosque and university of Tunis.
+# One building in one place. It stands in Tunis and nowhere else, and its
+# country-wide half (capital_country_modifier) pays only while Tunis is the
+# capital, as it was for every dynasty that ruled the country.
+# Vanilla's al_azhar_madrasa is the model for the numbers: literacy 5 and
+# 0.1 a month, tradition 0.2, research 0.05. The Zaytuna pushes toward
+# jurisprudence where al-Azhar pushes toward innovation: it was the western
+# seat of the Maliki school, and its imam could face down a sultan.
+# ============================================================
+nd_tun_zaytuna = {
+	is_special = yes
+	is_foreign = no
+	pop_type = clergy
+	max_levels = 1
+	employment_size = large_religious_building_employment
+	category = religious_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = large_religious_building_time
+
+	country_potential = {
+		has_advance = nd_tun_zaytuna_of_ibn_arafa
+	}
+
+	location_potential = {
+		this = location:tunis
+	}
+
+	modifier = {
+		local_clergy_max_literacy = 10
+		local_monthly_literacy = 0.1
+		local_cultural_tradition = 0.2
+	}
+
+	capital_country_modifier = {
+		research_speed_modifier = 0.05
+		monthly_towards_jurisprudence = societal_value_minor_monthly_move
+	}
+
+	unique_production_methods = {
+		nd_tun_zaytuna_maintenance = {
+			paper = 0.3
+			books = 0.1
+			cloth = 0.2
+			beeswax = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = library_construction
+}
+
+# ============================================================
+# Coral Fishery of Marsa al-Kharaz.
+# Vanilla writes the red coral of Tabarka as the raw material gems (Tabarka
+# and Jijel are the two gem locations of the Tunis area, both on the reef
+# coast). The fishery is bound to that: gems as the raw material AND a coast.
+# Every settlement tier, because the reef decides where it can stand.
+# An enhancer like the olive press above: its method is upkeep only and the
+# modifier lifts the gems the location already yields. The Coral Souk below
+# is the producer of the pair (gems in, jewelry out).
+# ============================================================
+nd_tun_coral_fishery = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = 1
+	employment_size = rural_peasant_enhance_employment
+	category = infrastructure_category
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_tun_coral_of_marsa_al_kharaz
+	}
+
+	location_potential = {
+		raw_material = goods:gems
+		is_coastal = yes
+	}
+
+	modifier = {
+		local_gems_output_modifier = 0.2
+		local_maritime_presence = 0.05
+	}
+
+	unique_production_methods = {
+		nd_tun_coral_fishery_maintenance = {
+			lumber = 0.1
+			naval_supplies = 0.05
+			fiber_crops = 0.05
+			tools = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = village_construction
+}
+
+# ============================================================
+# Zawiya: the marabout's lodge on the steppe.
+# A saint's tomb, a hostel and a court of arbitration in one. The Hafsid
+# sultans founded them along the roads, and the tribes of the interior took
+# their quarrels, and in time their sons, to the shaykh who kept one.
+# Bound to the tribes: only a location that holds tribesmen may build one.
+# That is the whole point of the building (it settles tribesmen), and it
+# keeps it out of the Sahel and the cities of the coast. Every settlement
+# tier, because the tribes' land is mostly countryside and a few steppe towns.
+# It has a price the player should feel: every tribesman it turns into a
+# peasant is one fewer for the Ku'ub and Makhzen levies, which draw tribesmen.
+# Muslim owners only, as vanilla's madrasa.
+# ============================================================
+nd_tun_zawiya = {
+	is_special = yes
+	is_foreign = no
+	pop_type = clergy
+	max_levels = 1
+	employment_size = religious_building_employment
+	category = religious_category
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = religious_building_time
+
+	country_potential = {
+		has_advance = nd_tun_marabouts_of_the_steppe
+		religion ?= {
+			group = religion_group:muslim
+		}
+	}
+
+	location_potential = {
+		any_pop = {
+			pop_type = pop_type:tribesmen
+		}
+	}
+
+	modifier = {
+		# Vanilla: madrasa and great_madrasa 0.1 tribal promotion, ribat -0.05 unrest.
+		local_tribal_promotion = 0.1
+		local_unrest = -0.05
+	}
+
+	unique_production_methods = {
+		nd_tun_zawiya_maintenance = {
+			wheat = 0.114
+			cloth = 0.057
+			beeswax = 0.023
+			category = building_maintenance
+		}
+	}
+	construction_demand = town_building_construction
+}
+
+# ============================================================
+# Chechia Workshop: the red felt cap of Tunis.
+# The Moriscos expelled from Spain in 1609 brought the craft, and by the
+# eighteenth century the chaouachis were the richest guild of the country,
+# selling from Algiers to Constantinople. Wool in, fulled and dyed caps out.
+# No location gate: a guild that buys wool and dye in the market and makes a
+# produced good, exactly as vanilla's fine cloth guild does. Town and city
+# only, because the chaouachis were an urban corporation, and two levels,
+# because this adds to the vanilla guild's capacity and must not replace it.
+# Outputs from eu5-profit at the guild margin (20%):
+#   wool 0.8, dyes 0.1 gives 0.48; wool 1.0, dyes 0.15, alum 0.05 gives 0.65.
+# Both recomputed in exact decimals at the 1.4 prices in common/goods (wool
+# 2.5, dyes 4, alum 3, fine cloth 6): cost 2.4 and 3.25, margin 20% each.
+# The unlocked method is a real step up and not a second upkeep: 35% more
+# caps and 35% more profit from the same workers, at the price of needing
+# alum. A vanilla fine cloth guild level makes 0.6 to 0.9 over its two slots.
+# ============================================================
+nd_tun_chechia_workshop = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 2
+	startup_ramp_target = guild_startup_ramp_target
+	employment_size = guild_employment
+	category = consumer_goods_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_tun_morisco_settlement
+	}
+
+	unique_production_methods = {
+		nd_tun_chechia_felting = {
+			wool = 0.8
+			dyes = 0.1
+			produced = fine_cloth
+			output = 0.48
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+		nd_tun_chechia_zaghouan_dyeing = {
+			# unlocked by nd_tun_souk_of_the_chaouachis: fulled at the mills
+			# of El Battan, mordanted with alum and dyed at Zaghouan
+			wool = 1.0
+			dyes = 0.15
+			alum = 0.05
+			produced = fine_cloth
+			output = 0.65
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	custom_tags = { guild }
+	construction_demand = guild_construction
+}
+
+# ============================================================
+# Bagnio: the captives' prison of a corsair port.
+# Tunis had about a dozen. The captives rowed the galleys, careened the hulls and
+# waited for the Redemptionist friars to buy them out.
+# Worked by slaves, so it does nothing in a port that holds none: the building
+# needs captives, and the Maghrebi slave raids of vanilla bring them.
+# Ports only (allow), slavery must be legal (allow and remove_if, as vanilla's
+# slave_market), town and city only, one level.
+# Five hundred captives a bagnio (employment 0.5): Tunis itself starts with
+# under a thousand slaves, so a larger one would stand half empty.
+# Sailors: the engine caps flat sailors per employed pop and logs it only
+# when a game loads. Vanilla's dock grants 0.016 per 1.0 of employment, and
+# this keeps to that ratio (0.008 at 0.5).
+# ============================================================
+nd_tun_bagnio = {
+	is_special = yes
+	is_foreign = no
+	pop_type = slaves
+	max_levels = 1
+	employment_size = 0.5
+	category = naval_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = medium_port_building_time
+
+	country_potential = {
+		has_advance = nd_tun_bagnios_and_redemption
+	}
+
+	location_potential = {
+		is_coastal = yes
+	}
+
+	allow = {
+		is_port = yes
+		scope:actor = {
+			has_slavery = yes
+		}
+	}
+
+	remove_if = {
+		scope:actor = {
+			has_slavery = no
+		}
+	}
+
+	modifier = {
+		local_sailors = 0.008
+		local_repair_speed = 0.02
+		local_slave_pop_satisfaction = -0.025
+	}
+
+	unique_production_methods = {
+		nd_tun_bagnio_maintenance = {
+			wheat = 0.262
+			cloth = 0.066
+			lumber = 0.131
+			tools = 0.066
+			category = building_maintenance
+		}
+	}
+	construction_demand = port_building_construction
+}
+
+# ============================================================
+# Corsair Lagoon: the armateurs' harbour, after Porto Farina.
+# Not a shipyard (vanilla's dock and Carthage's Punic shipyard build ships).
+# This is where privately owned corsair ships wintered behind the forts and
+# were fitted out for the season, the owners being the notables of the port.
+# So it raises the navy levy of the place (vanilla's fishing boat levy, and
+# the Barbary fustas that the notables of a Maghrebi port own, both of which
+# every country has without an unlock) and gives the fleet a refuge.
+# Vanilla's one use of the navy levy modifier is 1.0 (cinque_port, England
+# only and placed by event). Half of that here, since this can be built in
+# every port the country holds. Ports only, town and city only, one level.
+# ============================================================
+nd_tun_corsair_lagoon = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = military_support_employment
+	category = naval_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = medium_port_building_time
+
+	country_potential = {
+		has_advance = nd_tun_porto_farina
+	}
+
+	location_potential = {
+		is_coastal = yes
+	}
+
+	allow = {
+		is_port = yes
+	}
+
+	modifier = {
+		local_navy_levy_size_modifier = 0.5
+		local_maritime_presence = 0.1
+		local_repair_speed = 0.03
+		harbor_suitability = 0.1
+	}
+
+	unique_production_methods = {
+		nd_tun_corsair_lagoon_maintenance = {
+			tar = 0.107
+			naval_supplies = 0.107
+			lumber = 0.107
+			cloth = 0.054
+			category = building_maintenance
+		}
+	}
+	construction_demand = port_building_construction
+}
+
+# ===== DESTINY BUILDINGS =====
+
+# ============================================================
+# Qubbat Asarak: the pavilion of audience (path A capstone).
+# Al-Mustansir raised it in the citadel of Tunis in 1253: a great dome at the
+# head of a wide stair, where the sultan reviewed his horsemen, received
+# embassies and renewed the grants of the tribes' shaykhs each year.
+# One building in one place, like the Zaytuna above: it stands in Tunis, and
+# its country-wide half pays only while Tunis is the capital.
+# Not a palace of the vanilla kind (royal_garden grants diplomatic capacity,
+# cultural influence and prestige): this one is where vassals do homage, so
+# its country line is subject loyalty, at the value vanilla's advances grant.
+# Town and city both, because a sacked Tunis can fall to town rank and the
+# pavilion must stay buildable; the place gate does the restricting.
+# ============================================================
+nd_tun_dest_qubbat_asarak = {
+	is_special = yes
+	is_foreign = no
+	pop_type = nobles
+	max_levels = 1
+	employment_size = noble_cultural_employment
+	category = government_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = large_capital_build_time
+
+	country_potential = {
+		has_advance = nd_tun_dest_homage_of_the_west
+	}
+
+	location_potential = {
+		this = location:tunis
+	}
+
+	modifier = {
+		local_crown_estate_power = 0.25
+		local_cultural_influence = 0.25
+		local_unrest = -0.05
+	}
+
+	capital_country_modifier = {
+		subject_loyalty = 5
+		monthly_prestige = 0.05
+	}
+
+	unique_production_methods = {
+		nd_tun_dest_qubbat_asarak_maintenance = {
+			# robes of honour, gift horses and the diplomas of the grants
+			fine_cloth = 0.1
+			horses = 0.1
+			paper = 0.1
+			furniture = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = prestige_building_construction
+}
+
+# ============================================================
+# Coral Souk: the reef's coral worked at home (path B capstone).
+# The heritage Coral Fishery lifts the raw coral (vanilla writes it as the raw
+# material gems). This is the next step, which the Hafsids mostly left to
+# Trapani and Genoa: the branches cut, drilled and polished into beads for
+# Cairo and the Sudan. The geographers already describe such a market at
+# Marsa al-Kharaz.
+# Same shape as vanilla's pounamou_carver (unique_buildings.txt:1): gems in,
+# jewelry out, allowed where the market produces gems. A coast is asked as
+# well, so it stays on the coral shore. Town and city only: the carvers were
+# townsmen. One level, because the supply of coral is the limit.
+# Output from eu5-profit at the guild margin (20%):
+#   gems 0.2, tools 0.05 gives jewelry 0.228.
+# Recomputed in exact decimals at the 1.4 prices (gems 4, tools 3, jewelry 5):
+# cost 0.95, margin 20%.
+# ============================================================
+nd_tun_dest_coral_souk = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	startup_ramp_target = guild_startup_ramp_target
+	employment_size = guild_employment
+	category = consumer_goods_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_tun_dest_corsair_sea
+	}
+
+	location_potential = {
+		is_coastal = yes
+	}
+
+	allow = {
+		market = {
+			is_produced_in_market = goods:gems
+		}
+	}
+
+	modifier = {
+		local_merchant_power = 0.25
+		local_trades_per_burgher = 0.1
+	}
+
+	unique_production_methods = {
+		nd_tun_dest_coral_carving = {
+			gems = 0.2
+			tools = 0.05
+			produced = jewelry
+			output = 0.228
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	custom_tags = { guild }
+	construction_demand = guild_construction
+}

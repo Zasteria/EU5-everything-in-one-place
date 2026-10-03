@@ -26,9 +26,9 @@ nd_msi_nabas_court = {
 
 	unique_production_methods = {
 		nd_msi_court_maintenance = {
-			livestock = 0.2
-			cloth = 0.1
-			paper = 0.05
+			livestock = 0.315
+			cloth = 0.158
+			paper = 0.079
 			category = building_maintenance
 		}
 	}
@@ -57,7 +57,7 @@ nd_msi_earth_shrine = {
 	modifier = {
 		local_peasants_estate_power = 0.5
 		local_pop_conversion_speed_modifier = -0.1
-		local_monthly_food_modifier = 0.05
+		local_monthly_food_modifier = 0.025
 		local_cultural_tradition = 0.5
 	}
 
@@ -73,6 +73,9 @@ nd_msi_earth_shrine = {
 }
 
 # Mossi Forge - Military-industrial building representing the feared blacksmith lineages
+# Only where the Mossi are the dominant culture: the smiths are a caste of
+# their own lineages and wards, and do not travel with a conquest. No
+# resource gate, because the forge works iron it buys.
 nd_msi_forge = {
 	is_special = yes
 	is_foreign = no
@@ -100,14 +103,8 @@ nd_msi_forge = {
 		can_recruit_regiment_in_this_location = yes
 	}
 
-	# Requires a real supply of dyes: the formable's own
-	# territory has no source of it, so this is bound to the
-	# location's market rather than to the soil. Without a gate
-	# the building conjures the good anywhere the owner holds.
 	location_potential = {
-		market ?= {
-			is_produced_in_market = goods:dyes
-		}
+		dominant_culture = culture:mossi
 	}
 
 	unique_production_methods = {
@@ -117,36 +114,7 @@ nd_msi_forge = {
 			produced = tools
 			output = 0.18
 			category = guild_input
-			debug_max_profit = guild_profit_margin
-		}
-
-		nd_msi_dolo_brewing = {
-			millet = 0.2
-			produced = beer
-			output = 0.12
-			category = guild_input
-			debug_max_profit = guild_profit_margin
-		}
-
-		nd_msi_millet_processing = {
-			millet = 0.1
-			pottery = 0.05
-			category = building_maintenance
-		}
-
-		nd_msi_indigo_processing = {
-			lumber = 0.1
-			tools = 0.1
-			produced = dyes
-			output = 0.135
-			category = guild_input
-			debug_max_profit = guild_profit_margin
-		}
-
-		nd_msi_village_defense = {
-			lumber = 0.1
-			stone = 0.1
-			category = building_maintenance
+			debug_max_profit = rural_profit_margin
 		}
 	}
 	construction_demand = guild_construction
@@ -181,37 +149,9 @@ nd_msi_caravanserai = {
 	unique_production_methods = {
 		nd_msi_caravanserai_upkeep = {
 			livestock = 0.1
-			wheat = 0.1
-			category = building_maintenance
-		}
-	
-		nd_msi_horse_breeding = {
-			horses = 0.1
-			livestock = 0.15
-			category = building_maintenance
-		}
-	
-		nd_msi_gold_trade = {
-			silver = 0.1
-			paper = 0.05
-			category = building_maintenance
-		}
-	
-		nd_msi_salt_distribution = {
-			salt = 0.1
-			pottery = 0.05
-			category = building_maintenance
-		}
-	
-		nd_msi_mask_carving = {
-			lumber = 0.1
-			dyes = 0.1
-			category = building_maintenance
-		}
-	
-		nd_msi_export_cotton = {
-			cotton = 0.15
-			cloth = 0.1
+			millet = 0.1
+			salt = 0.05
+			cloth = 0.05
 			category = building_maintenance
 		}
 	}
@@ -255,8 +195,200 @@ nd_msi_weaving_house = {
 			category = guild_input
 			debug_max_profit = guild_profit_margin
 		}
+
+		# Unlocked by nd_msi_indigo_dyeing. The strips go through the dye
+		# pits and come out as the dark blue cloth that sells as a luxury.
+		nd_msi_indigo_processing = {
+			cotton = 0.3
+			dyes = 0.2
+			produced = fine_cloth
+			output = 0.34
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+
+		# Unlocked by nd_msi_cotton_exports. Plain strip cloth in bulk, for
+		# the caravans.
+		nd_msi_export_cotton = {
+			cotton = 0.5
+			dyes = 0.1
+			produced = cloth
+			output = 0.76
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+
+		# Unlocked by nd_msi_industrial_weaving.
+		nd_msi_power_looms = {
+			cotton = 1.0
+			dyes = 0.15
+			produced = cloth
+			output = 1.44
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
 	}
 	construction_demand = guild_construction
+}
+
+# Zai Fields: planting pits dug into crusted ground before the rains
+# Countryside only, and only on dry land whose own good is a food (hot
+# semi-arid or arid climate: 15 of the 47 locations, the north of the
+# country). Vanilla's irrigation needs a river or a lake; the pits are how
+# land with neither is farmed, and they give the same bonus.
+nd_msi_zai_fields = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = 1
+	employment_size = generic_peasant_building_employment
+	category = infrastructure_category
+	rural_settlement = yes
+	town = no
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = infrastructure_build_time
+
+	country_potential = {
+		has_advance = nd_msi_volta_agriculture
+	}
+
+	location_potential = {
+		OR = {
+			climate = hot_semi_arid
+			climate = arid
+		}
+		raw_material ?= { is_food = yes }
+	}
+
+	modifier = {
+		local_monthly_food_modifier = monthly_food_productivity_weak_bonus
+	}
+
+	unique_production_methods = {
+		nd_msi_zai_upkeep = {
+			tools = 0.1
+			livestock = 0.15
+			category = building_maintenance
+		}
+	}
+	construction_demand = village_construction
+}
+
+# Horse Stud: the herds the cavalry is mounted from
+# Countryside only, and only where the land's own good is horses (6 of the
+# 47 locations). Vanilla's horse breeders need a temperate climate, which no
+# Mossi land has; this is how the country breeds its own.
+nd_msi_horse_stud = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = 2
+	employment_size = rural_peasant_produce_employment
+	category = rgo_building_category
+	rural_settlement = yes
+	town = no
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_msi_horse_rearing
+	}
+
+	location_potential = {
+		raw_material = goods:horses
+	}
+
+	unique_production_methods = {
+		nd_msi_horse_breeding = {
+			horses = 0.15
+			millet = 0.5
+			produced = horses
+			output = 0.38
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = farm_constructions
+}
+
+# Dolo House: where millet beer is brewed for market days and funerals
+# Countryside and town, never a city: dolo is brewed in the compound and
+# sold in the village. No resource gate, because it brews millet it buys.
+nd_msi_dolo_house = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = 2
+	employment_size = rural_peasant_produce_employment
+	category = consumer_goods_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_msi_dolo_tradition
+	}
+
+	unique_production_methods = {
+		nd_msi_dolo_brewing = {
+			millet = 0.4
+			lumber = 0.1
+			pottery = 0.05
+			produced = beer
+			output = 0.36
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = village_construction
+}
+
+# Kimse Roogo: the ancestor house of a lineage, where its masks are kept
+# Countryside and town, and only where the Mossi are the dominant culture:
+# the masks belong to the lineages of the land and appear at their funerals.
+nd_msi_kimse_roogo = {
+	is_special = yes
+	is_foreign = no
+	pop_type = clergy
+	max_levels = 1
+	employment_size = religious_building_employment
+	category = cultural_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = religious_building_time
+
+	country_potential = {
+		has_advance = nd_msi_mask_artistry
+	}
+
+	location_potential = {
+		dominant_culture = culture:mossi
+	}
+
+	modifier = {
+		local_unrest = -0.05
+		local_cultural_tradition = 0.1
+	}
+
+	unique_production_methods = {
+		nd_msi_kimse_roogo_upkeep = {
+			lumber = 0.212
+			dyes = 0.106
+			fiber_crops = 0.106
+			category = building_maintenance
+		}
+	}
+	construction_demand = village_construction
 }
 
 # ===== DESTINY BUILDINGS =====

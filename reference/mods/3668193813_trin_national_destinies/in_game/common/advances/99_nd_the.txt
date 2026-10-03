@@ -66,7 +66,7 @@ nd_the_assize_of_the_two_rites = {
 	potential = { has_or_had_tag = THE }
 	requires = legalism_advance
 	icon = greek_rite
-	tolerance_heretic = 2
+	tolerance_heretic = 1
 	cultures_capacity = 1
 }
 
@@ -144,7 +144,9 @@ nd_the_sea_relieved_city = {
 	requires = vibrant_court_advance
 	icon = hol_sailors
 	global_supply_limit_modifier = 0.1
-	naval_morale_modifier = 0.15
+	# Grain bought abroad and shipped in: what a province pays when it has to
+	# buy its food (vanilla grants 0.1 to 0.2 in advances).
+	food_purchase_efficiency = 0.1
 }
 
 # ==========================================================
@@ -182,7 +184,9 @@ nd_the_union_of_florence = {
 	requires = diplomatic_training
 	icon = church_councils
 	global_institution_growth_modifier = 0.2
-	global_pop_conversion_speed_modifier = 0.1
+	# The Union was Rome's project, and a Latin king who enforces it is owed
+	# for it (the formable requires a Catholic ruler; vanilla grants 25 and 50).
+	papal_relations = 25
 }
 
 # Cupellation: the lead is driven off in the hearth and the silver stays
@@ -311,7 +315,7 @@ nd_the_free_port_of_the_gulf = {
 	potential = { has_or_had_tag = THE }
 	requires = urbanization
 	icon = hamburg_port_cities
-	trade_sea_efficiency = 0.05
+	trade_sea_efficiency = 0.2
 	global_maritime_presence_modifier = 0.2
 }
 
@@ -334,7 +338,7 @@ nd_the_goldsmiths_of_the_gulf = {
 	potential = { has_or_had_tag = THE }
 	requires = enlightened_court
 	icon = kor_korean_artisanry
-	unlock_production_method = nd_the_filigree_work
+	unlock_building = nd_the_chrysochoeion
 }
 
 # ===== DESTINY TREE =====
@@ -360,9 +364,9 @@ nd_the_destiny = {
 	potential = { has_or_had_tag = THE has_variable = nd_the_formed has_game_rule = nd_destinies_enabled }
 	allow = { stability >= 75 }
 	icon = crown_power_advance_renaissance
-	monthly_legitimacy = 0.1
-	monthly_devotion = 0.1
-	monthly_republican_tradition = 0.1
+	# A realm that came through the Zealot decade is harder to shake a second
+	# time. 0.1 is vanilla's typical advance value for this key.
+	stability_cost_efficiency = 0.1
 }
 
 # === Path A: the fief and the sword ===
@@ -385,7 +389,10 @@ nd_the_dest_marches = {
 		stability >= 75
 		owns_or_non_sovereign_subject_owns = location:prosek
 		owns_or_non_sovereign_subject_owns = location:melnik
-		army_size >= 30
+		# Strumica lies in the valley between the two rocks. (The army size
+		# objectives of this path went 2026-10-02: the kingdom fights with a
+		# feudal levy, and no file says whether raised levies count.)
+		owns_or_non_sovereign_subject_owns = location:strumica
 	}
 	icon = hai_frontier_march
 	global_manpower_modifier = 0.1
@@ -403,11 +410,14 @@ nd_the_dest_epirus = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:ioannina
 		owns_or_non_sovereign_subject_owns = location:arta
-		army_size >= 50
+		# Demetrios Chomatenos, archbishop of Ohrid, crowned Theodore when the
+		# metropolitan of Thessalonica would not.
+		owns_or_non_sovereign_subject_owns = location:ohrid
 		prestige >= 50
 	}
 	icon = conquerors_legacy
-	land_morale_modifier = 0.1
+	# Epirus is a standing claim, not a new quarrel.
+	casus_belli_creation_speed_modifier = 0.15
 	siege_ability = 0.1
 }
 
@@ -464,7 +474,8 @@ nd_the_dest_lemnos = {
 		}
 	}
 	icon = overseas_trade
-	navy_galley_power = 0.1
+	# Lemnos is an alum location on the map (location_templates.txt).
+	global_alum_output_modifier = 0.1
 	monthly_towards_plutocracy = 0.05
 }
 
@@ -495,14 +506,24 @@ nd_the_dest_maona = {
 	requires = nd_the_dest_negroponte
 	potential = { has_or_had_tag = THE has_variable = nd_the_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		owns_or_non_sovereign_subject_owns = location:chios
-		has_embraced_institution = institution:global_trade
+		# The Maona is of 1346, so the stage waits for no later age (both paths
+		# end in a similar span, owner's ruling 2026-10-02). What the company did
+		# was build the island up: the walled mastic villages and the estates of
+		# the Kampos. 15.2 in 1337 (development_estimate.py --explain chios), doubled.
+		custom_tooltip = {
+			text = nd_the_dest_chios_developed_tt
+			location:chios = {
+				owner ?= root
+				development >= 30
+			}
+		}
 		gold >= 3000
 		stability >= 75
 	}
 	icon = distant_trade_ventures
 	unlock_building = nd_the_kommerkion_house
-	global_monthly_development = 0.002
-	global_population_growth = 0.002
-	monthly_navy_tradition = 0.075
+	global_monthly_development = 0.001
+	global_population_growth = 0.00025
+	# The mastic of Chios is the map's medicaments (location_templates.txt).
+	global_medicaments_output_modifier = 0.1
 }

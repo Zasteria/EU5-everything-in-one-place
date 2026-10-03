@@ -126,8 +126,8 @@ nd_got_pyrenean_closures = {
 
 	unlock_building = nd_got_clausurae
 
-	global_defensive = 0.1
-	global_garrison_size_modifier = 0.1
+	global_fort_build_buildings_efficiency = 0.1
+	fort_limit_modifier = 0.1
 }
 
 # The royal goldsmiths: the Treasure of Guarrazar, buried outside Toledo in
@@ -145,7 +145,7 @@ nd_got_aurifex_regis = {
 	unlock_building = nd_got_aurifex
 
 	global_jewelry_output_modifier = 0.1
-	monthly_prestige = 0.1
+	skill_of_new_artists = 0.1
 }
 
 # ============================================================================
@@ -167,7 +167,7 @@ nd_got_charity_of_masona = {
 	unlock_building = nd_got_xenodochium
 
 	global_population_growth = 0.001
-	global_estate_target_satisfaction = 0.03
+	global_estate_target_satisfaction = 0.025
 }
 
 # The regal coinage: from about 575 Leovigild put his own name on the
@@ -200,7 +200,9 @@ nd_got_fuero_charter = {
 	requires = subject_integration
 	icon = foreign_cultural_law_advance
 
-	global_integration_speed_modifier = 0.2
+	# A fuero is a town's founding grant, so the charter pays there. Integration
+	# speed went to Castile's own audiencias advance in 1.4 (country_cas.txt:263).
+	town_upgrade_cost_modifier = -0.1
 	global_pop_assimilation_speed_modifier = 0.1
 }
 
@@ -236,7 +238,8 @@ nd_got_littera_toletana = {
 
 	global_monthly_literacy = 0.01
 	research_speed_modifier = 0.05
-	cultural_tradition_modifier = 0.1
+	# The scriptoria that kept the hand alive: codices, not sentiment.
+	global_books_output_modifier = 0.1
 }
 
 # ============================================================================
@@ -345,7 +348,7 @@ nd_got_toledan_goldwork = {
 
 	unlock_production_method = nd_got_pm_opus_interrasile
 
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 	monthly_prestige = 0.1
 }
 
@@ -407,7 +410,7 @@ nd_got_narbonne_staple = {
 	requires = global_trade_advance
 	icon = crossroads_of_commerce
 
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 	global_trade_center_power = 0.05
 }
 
@@ -427,8 +430,7 @@ nd_got_national_jurisprudence = {
 
 	unlock_building = nd_got_catedra_del_fuero
 
-	legislative_efficiency = 0.1
-	global_monthly_literacy = 0.02
+	change_policy_cost_modifier = -0.1
 }
 
 # The unction: Wamba was anointed by Quiricus of Toledo on 19 September 672,
@@ -459,7 +461,7 @@ nd_got_primatial_chancery = {
 	icon = church_guidance
 
 	global_pop_conversion_speed_modifier = 0.1
-	tolerance_own = 1
+	clergy_estate_satisfaction_recovery = 0.001
 }
 
 # The royal retinue: the gardingi did not disappear, they were re-established
@@ -506,7 +508,7 @@ nd_got_civil_code = {
 	requires = rights_of_man
 	icon = peasants_rights_laws_advance
 
-	global_pop_assimilation_speed_modifier = 0.2
+	global_pop_assimilation_speed_modifier = 0.1
 	global_separatism = -0.05
 }
 
@@ -645,27 +647,38 @@ nd_got_dest_fiscus_publicus = {
 # conferred by an assembly out of a written code is held on the code's terms
 # and can be lost on them. The capstone of this path is bought with law,
 # treasury and growth rather than with an army, which is the whole point of
-# choosing it over the Gothic name.
+# choosing it over the Gothic name. The growth is asked of Toledo, the urbs
+# regia where the councils sat: 26 in 1337 (scripts/development_estimate.py),
+# doubled for stage three. The letters are the printing press (the code set
+# in type so every court reads one text), an institution of the third age,
+# so this path ends within two ages of the other.
 nd_got_dest_rex_sub_lege = {
 	age = age_1_traditions
 	requires = nd_got_dest_fiscus_publicus
 	potential = { has_or_had_tag = GOT has_variable = nd_got_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		has_embraced_institution = institution:enlightenment
+		has_embraced_institution = institution:printing_press
 		gold >= 3000
-		total_development >= 10000
+		custom_tooltip = {
+			text = nd_got_dest_toledo_developed_tt
+			location:toledo = {
+				owner ?= root
+				development >= 52
+			}
+		}
 		prestige >= 75
 		stability >= 75
 	}
 	icon = pal_a_just_ruler
 
 	# A crown that is a legal person absorbs other crowns as offices, keeps its
-	# subjects by law rather than by garrison, and builds because the revenue it
-	# spends was never anyone's private purse.
+	# subjects by law rather than by garrison, is cheaper to keep steady because
+	# the realm obeys the office and not the man, and builds its cities because
+	# the revenue it spends was never anyone's private purse.
 	diplomatic_annexation_efficiency = 0.2
 	subject_loyalty = 5
-	global_monthly_prosperity = 0.001
-	global_build_buildings_efficiency = 0.2
+	stability_cost_efficiency = 0.1
+	global_urban_build_buildings_efficiency = 0.2
 }
 
 # ----------------------------------------------------------------------------
@@ -746,6 +759,6 @@ nd_got_dest_gutthiuda = {
 	discipline = 0.05
 	# Mangup held five months against the Ottomans in 1475. Getting into it is
 	# the last act of the path.
-	siege_ability = 0.1
+	assault_ability = 0.1
 	global_war_score_efficiency = 0.1
 }

@@ -25,7 +25,7 @@ nd_slo_mining_privilege = {
 	requires = guilds
 	icon = guilds
 	unlock_building = nd_slo_banska_mines
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }
 
 # Unlock: Salas building
@@ -35,7 +35,7 @@ nd_slo_valasi_herding = {
 	requires = agriculture_advance
 	icon = agriculture_advance
 	unlock_building = nd_slo_salas
-	global_monthly_food_modifier = 0.05
+	global_monthly_food_modifier = 0.025
 }
 
 # Modifier: Hungarian royal charter towns
@@ -44,9 +44,9 @@ nd_slo_royal_charter_towns = {
 	potential = { has_or_had_tag = SLO }
 	requires = legalism_advance
 	icon = legalism_advance
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	global_monthly_development = 0.001
 }
@@ -96,9 +96,9 @@ nd_slo_kremnica_tradition = {
 	requires = merchants_and_trade
 	icon = merchants_and_trade
 	unlock_building = nd_slo_kremnica_mint
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.03
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -109,7 +109,7 @@ nd_slo_thurzo_fugger = {
 	requires = patron_of_art
 	icon = patron_of_art
 	global_raw_material_output = 0.1
-	tax_income_efficiency = 0.05
+	tax_income_efficiency = 0.03
 }
 
 # Unlock: Wool Processing PM on Salas (Vlach textile tradition)
@@ -175,13 +175,12 @@ nd_slo_pressburg_coronation = {
 	monthly_republican_tradition = 0.1
 }
 
-# Unlock: Frontier Provisions PM on Watchtower + Ottoman frontier defense
+# Modifier: Ottoman frontier defense
 nd_slo_ottoman_frontier = {
 	age = age_3_discovery
 	potential = { has_or_had_tag = SLO }
 	requires = diplomatic_training
 	icon = diplomatic_training
-	unlock_production_method = nd_slo_frontier_provisions
 	global_defensive = 0.1
 	global_hostile_attrition = 1
 }
@@ -213,18 +212,20 @@ nd_slo_trnava_university = {
 	potential = { has_or_had_tag = SLO }
 	requires = pop_promotion_speed_age_3
 	icon = pop_promotion_speed_age_3
-	global_monthly_literacy = 0.01
-	research_speed_modifier = 0.05
+	# A Jesuit foundation: it trains priests first, and it is the engine of the Catholic recovery of Upper Hungary.
+	global_clergy_max_literacy = 5
+	global_pop_conversion_speed_modifier = 0.1
 }
 
 ### Age 4: Reformation ###
 
-# Event: Kuruc revolt
+# Event: Kuruc revolt. Unlock: Talpasi levy
 nd_slo_kuruc_revolt = {
 	age = age_4_reformation
 	potential = { has_or_had_tag = SLO }
 	requires = leader_recruit_cost_advance
 	icon = leader_recruit_cost_advance
+	unlock_levy = levy_nd_slo_talpasi
 	land_morale_modifier = 0.1
 	army_movement_speed = 0.1
 }
@@ -247,9 +248,9 @@ nd_slo_carpathian_economy = {
 	icon = global_trade_advance
 	unlock_production_method = nd_slo_bryndza_making
 	unlock_production_method = nd_slo_ducat_minting
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -311,13 +312,13 @@ nd_slo_professional_regiments = {
 	}
 }
 
-# Unlock: Mineral Surveys PM on Mining Academy + Theresian Reforms
+# Unlock: Holic Majolica building + Theresian Reforms
 nd_slo_theresian_reforms = {
 	age = age_5_absolutism
 	potential = { has_or_had_tag = SLO }
 	requires = absolute_rulership
 	icon = absolute_rulership
-	unlock_production_method = nd_slo_mineral_surveys
+	unlock_building = nd_slo_holic_majolica
 	legislative_efficiency = 0.1
 	tax_income_efficiency = 0.03
 }
@@ -332,13 +333,13 @@ nd_slo_iron_industry = {
 	global_iron_output_modifier = 0.05
 }
 
-# Unlock: Academy instruction PM
+# Unlock: Tajch building (the reservoirs the mining school's first professor laid out)
 nd_slo_technical_education = {
 	age = age_5_absolutism
 	potential = { has_or_had_tag = SLO }
 	requires = nd_slo_stiavnica_academy
 	icon = construction_speed_absolutism
-	unlock_production_method = nd_slo_academy_instruction
+	unlock_building = nd_slo_tajch
 	global_monthly_literacy = 0.02
 }
 
@@ -374,12 +375,13 @@ nd_slo_matica_slovenska = {
 	cultural_tradition_modifier = 0.1
 }
 
-# Modifier: 1848 Volunteer Corps
+# Unlock: Slovak Volunteers levy (1848 Volunteer Corps)
 nd_slo_volunteer_corps = {
 	age = age_6_revolutions
 	potential = { has_or_had_tag = SLO }
 	requires = napoleonic_warfare
 	icon = napoleonic_warfare
+	unlock_levy = levy_nd_slo_dobrovolnici
 	discipline = 0.05
 	land_morale_modifier = 0.1
 }
@@ -400,7 +402,7 @@ nd_slo_mining_industrialization = {
 	potential = { has_or_had_tag = SLO }
 	requires = industrialization_advance
 	icon = industrialization_advance
-	global_production_efficiency = 0.1
+	global_production_efficiency = 0.05
 	global_construction_speed = 0.1
 }
 
@@ -467,13 +469,22 @@ nd_slo_dest_montanistica = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:nuremberg
 		owns_or_non_sovereign_subject_owns = location:wroclaw
-		total_development >= 1000
+		# Kremnica: the mint town and the seat of the chamber counts of the mining
+		# towns. 15 in 1337 (development_estimate.py --explain kremnica), doubled.
+		custom_tooltip = {
+			text = nd_slo_dest_kremnica_developed_tt
+			location:kremnica = {
+				owner ?= root
+				development >= 30
+			}
+		}
 		prestige >= 75
 		gold >= 3000
 	}
 	icon = crown_power_advance_renaissance
 	unlock_building = nd_slo_dest_bergamt
-	country_cabinet_efficiency = 0.05
+	# Mining science lets the mines go deeper. Vanilla's advances grant 0.1 most often.
+	global_max_rgo_size_modifier = 0.1
 	diplomatic_capacity = 1
 	cultures_capacity = 1
 }
@@ -522,7 +533,16 @@ nd_slo_dest_carpathian_wall = {
 		owns_or_non_sovereign_subject_owns = location:vienna
 		army_size >= 75
 		prestige >= 75
-		total_development >= 1000
+		# Pressburg became the capital of Royal Hungary, seat of its diet and
+		# crown, because Buda was Turkish. 26 in 1337 (development_estimate.py
+		# --explain bratislava), doubled.
+		custom_tooltip = {
+			text = nd_slo_dest_pressburg_developed_tt
+			location:bratislava = {
+				owner ?= root
+				development >= 52
+			}
+		}
 	}
 	icon = imperial_ambitions
 	unlock_building = nd_slo_dest_krajina_fortress

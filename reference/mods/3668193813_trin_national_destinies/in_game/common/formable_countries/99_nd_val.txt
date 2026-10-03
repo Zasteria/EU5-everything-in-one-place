@@ -1,0 +1,57 @@
+﻿# Valencia (VAL): formation lines
+# National Destinies mod
+#
+# Vanilla 1.4 defines VAL_f with an empty form_effect (level 2, 75% of
+# valencia_area, Catalan culture, Christian, not for a country that already
+# is VAL), so INJECT is safe: there is nothing of vanilla's to lose. VAL_f is
+# the only vanilla formable that creates the tag VAL
+# (00_formable_countries.txt:935-963).
+#
+# Roads into the tag, and what each one meets here:
+# 1. Valencia is released or breaks away. The start setup gives VAL cores on
+#    all seventeen locations of the area and no land
+#    (main_menu/setup/1337/10_countries.txt:14431), so that country is born
+#    as VAL and never passes through this block. The four-yearly marker
+#    repair in 99_nd_on_actions.txt stamps the marker and delivers nd_val.1
+#    for it. This is the likeliest Valencia, and the event is written so
+#    that it reads right for it.
+# 2. A Catalan country that is not itself a level 2 tag takes the land and
+#    forms it by the button: Andorra, or one of the Catalan duchies in Greece
+#    (Athens, Neopatras, Salona). form_effect runs: markers, rank, capital,
+#    event.
+# Aragon holds all seventeen locations in 1337 and Mallorca is Catalan too,
+# but both carry the tag of a level 2 formable and are shut out by the level
+# rule (formable_countries/readme.txt:2). Nothing here speaks to them.
+INJECT:VAL_f = {
+	form_effect = {
+		# Formation markers live HERE, not only in the event's options: a
+		# country can be formed by script, and then the popup may never be
+		# answered.
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_val_formed
+		}
+		# James I made the conquest a kingdom of its own in 1238 and it kept
+		# the title until 1707. nd_can_take_kingdom_rank is false only where
+		# the engine itself would refuse the rank.
+		if = {
+			limit = {
+				nd_can_take_kingdom_rank = yes
+				country_rank_level < 3
+			}
+			set_country_rank_effect = { rank = country_rank:rank_kingdom }
+		}
+		# The city was cap i casal of the kingdom, and the kingdom took its
+		# name from the city. Guarded by ownership: 75% of the area does not
+		# have to include it.
+		if = {
+			limit = {
+				owns = location:valencia
+				NOT = { capital = location:valencia }
+			}
+			set_capital = location:valencia
+		}
+		trigger_event_non_silently = nd_val.1
+		add_stability = stability_mild_bonus
+	}
+}

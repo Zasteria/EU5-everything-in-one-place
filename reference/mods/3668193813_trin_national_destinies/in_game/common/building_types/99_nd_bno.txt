@@ -63,36 +63,7 @@ nd_bno_camphor_post = {
 		nd_bno_camphor_processing = {
 			lumber = 0.1
 			incense = 0.05
-			category = building_maintenance
-		}
-
-		nd_bno_forest_products_pm = {
-			lumber = 0.1
-			beeswax = 0.05
-			category = building_maintenance
-		}
-
-		nd_bno_ironwood_processing_pm = {
-			lumber = 0.1
-			tools = 0.05
-			category = building_maintenance
-		}
-
-		nd_bno_sago_processing_pm = {
-			lumber = 0.1
-			millet = 0.05
-			category = building_maintenance
-		}
-
-		nd_bno_birds_nest_pm = {
-			wild_game = 0.1
 			pottery = 0.05
-			category = building_maintenance
-		}
-
-		nd_bno_prahu_yard_pm = {
-			lumber = 0.15
-			tar = 0.1
 			category = building_maintenance
 		}
 	}
@@ -124,14 +95,14 @@ nd_bno_diamond_workshop = {
 		local_burghers_estate_power = 0.5
 	}
 
-	# Requires a real supply of gems: the formable's own
-	# territory has no source of it, so this is bound to the
-	# location's market rather than to the soil. Without a gate
-	# the building conjures the good anywhere the owner holds.
+	# Borneo's diamonds are washed from the same river gravels as its gold:
+	# Landak (Ngabang), Sambas, Cempaka by Martapura. The map gives those
+	# gravels as gold and gives the island no gems at all, so a gate on gems
+	# in the market left the workshop with nowhere to stand in Borneo
+	# (register row P131). It stands where the location's own raw material
+	# is gold.
 	location_potential = {
-		market ?= {
-			is_produced_in_market = goods:gems
-		}
+		raw_material = goods:goods_gold
 	}
 
 	unique_production_methods = {
@@ -139,24 +110,22 @@ nd_bno_diamond_workshop = {
 			lumber = 0.15
 			pottery = 0.1
 			produced = gems
-			output = 0.0974
+			output = 0.0975
 			category = guild_input
-			debug_max_profit = guild_profit_margin
+			debug_max_profit = rural_profit_margin
 		}
 
-		nd_bno_beeswax_processing_pm = {
-			beeswax = 0.15
-			tools = 0.05
-			category = building_maintenance
-		}
-
+		# Sized to the rural margin like the other two methods. It stood at
+		# output 0.15 with no profit cap, six times its cost, while the
+		# building could not be built; now that it can be, that is a mint.
 		nd_bno_gold_panning_pm = {
-			lumber = 0.1
+			lumber = 0.2
+			tools = 0.1
 			pottery = 0.05
 			produced = goods_gold
-			output = 0.15
+			output = 0.0975
 			category = guild_input
-			debug_max_profit = -1
+			debug_max_profit = rural_profit_margin
 		}
 
 		nd_bno_antimony_smelting_pm = {
@@ -165,7 +134,7 @@ nd_bno_diamond_workshop = {
 			produced = tools
 			output = 0.21
 			category = guild_input
-			debug_max_profit = guild_profit_margin
+			debug_max_profit = rural_profit_margin
 		}
 	}
 	construction_demand = guild_construction
@@ -190,7 +159,7 @@ nd_bno_pepper_estate = {
 	}
 
 	modifier = {
-		local_monthly_food_modifier = 0.05
+		local_monthly_food_modifier = 0.025
 		local_production_efficiency = small_production_efficiency_bonus
 		local_pop_promotion_speed = 0.002
 	}
@@ -206,12 +175,15 @@ nd_bno_pepper_estate = {
 	}
 
 	unique_production_methods = {
+		# Sized to the rural margin. It stood at output 0.15 on a little
+		# timber with no profit cap, five times its cost.
 		nd_bno_pepper_cultivation = {
-			lumber = 0.1
+			lumber = 0.2
+			tools = 0.1
 			produced = pepper
-			output = 0.15
+			output = 0.144
 			category = guild_input
-			debug_max_profit = -1
+			debug_max_profit = rural_profit_margin
 		}
 	}
 	construction_demand = farm_constructions
@@ -252,6 +224,300 @@ nd_bno_sultanate_mosque = {
 		}
 	}
 	construction_demand = school_construction
+}
+
+# Mandau Forge (age 1, nd_bno_jungle_ironworking)
+# Upriver smiths smelted their own ore and forged the mandau from it. The
+# best old blades were called mantikei, after a Ngaju village in the south,
+# and Kenyah smiths on the upper Kayan sold blades down to the coast.
+# location_potential: iron has to be produced in the location's market. Iron
+# is the input here, so the market form of the gate is the right one: the
+# forge follows the ore, it does not create it. Borneo's own ore is a single
+# location in the south.
+# Settlement: countryside and town, never a city. This is a longhouse craft.
+nd_bno_mandau_forge = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = guild_max_level
+	employment_size = guild_employment
+	category = weapons_industry_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_bno_jungle_ironworking
+	}
+
+	location_potential = {
+		market ?= {
+			is_produced_in_market = goods:iron
+		}
+	}
+
+	unique_production_methods = {
+		nd_bno_mandau_forging = {
+			iron = 0.3
+			lumber = 0.2
+			produced = weaponry
+			output = 0.48
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# Kubu (age 2, nd_bno_island_fortification)
+# A stockade of ironwood posts at a river mouth or on a headland, with a few
+# swivel guns behind it: how a Bornean ruler held the door to his river.
+# location_potential: a coast or a river. A kubu guards water traffic, and
+# away from navigable water it has nothing to guard.
+# Settlement: countryside and town. A city is defended by other means.
+# No fort_level: it delays a landing and stiffens the garrison, it does not
+# stand a siege (the Ironwood Fortress of the destiny tree does that).
+nd_bno_kubu = {
+	is_special = yes
+	is_foreign = no
+	pop_type = soldiers
+	max_levels = 1
+	employment_size = stockade_employment
+	category = defense_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	build_time = small_fort_building
+
+	country_potential = {
+		has_advance = nd_bno_island_fortification
+	}
+
+	location_potential = {
+		OR = {
+			is_coastal = yes
+			has_river = yes
+		}
+	}
+
+	modifier = {
+		local_garrison_size = 0.1
+		hostile_disembark_time_modifier = 0.5
+	}
+
+	unique_production_methods = {
+		nd_bno_kubu_upkeep = {
+			lumber = 0.2
+			cannons = 0.05
+			weaponry = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = stockade_construction
+}
+
+# Lantaka Foundry (age 3, nd_bno_sulu_sea_dominance)
+# Brunei's brass founders cast the swivel guns that armed the war prahus of
+# the archipelago. The small ones passed from hand to hand as money: a fine,
+# a debt or a bride price could be settled in guns.
+# location_potential: the coast. The founders worked in the water villages
+# and their guns went out by sea, as armament and as currency.
+# Settlement: town and city. Casting brass is an urban guild.
+nd_bno_lantaka_foundry = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	employment_size = guild_employment
+	category = weapons_industry_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_bno_sulu_sea_dominance
+	}
+
+	location_potential = {
+		is_coastal = yes
+	}
+
+	unique_production_methods = {
+		nd_bno_lantaka_casting = {
+			copper = 0.3
+			tin = 0.1
+			lumber = 0.1
+			produced = cannons
+			output = 0.375
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# Tapang Grove (age 1, nd_bno_forest_product_trade)
+# The tapang is the honey tree of the Bornean forest: a smooth grey trunk
+# with the combs hanging from its high branches. Collectors climb at night
+# on pegs driven into the trunk and smoke the bees off with a torch.
+# location_potential: the location's own raw material is beeswax. Beeswax is
+# a raw good, so the grove stands only where the bee trees are.
+nd_bno_tapang_grove = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = rural_building_cap
+	employment_size = generic_peasant_building_employment
+	category = rgo_building_category
+	rural_settlement = yes
+	town = no
+	city = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_bno_forest_product_trade
+	}
+
+	location_potential = {
+		raw_material = goods:beeswax
+	}
+
+	unique_production_methods = {
+		nd_bno_beeswax_processing_pm = {
+			lumber = 0.2
+			tools = 0.05
+			produced = beeswax
+			output = 0.27
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = village_construction
+}
+
+# Kampong Ayer (age 2, nd_bno_brunei_thalassocracy)
+# The water village: houses on ironwood piles over the estuary, joined by
+# plank walks, with the market held in boats. Pigafetta saw Brunei so in 1521.
+# location_potential: a port. The village is built over tidal water.
+# Settlement: towns and cities. It is the town itself, not a hamlet.
+nd_bno_water_village = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = generic_burgher_employment
+	category = infrastructure_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = no
+	build_time = infrastructure_build_time
+
+	country_potential = {
+		has_advance = nd_bno_brunei_thalassocracy
+	}
+
+	location_potential = {
+		is_port = yes
+	}
+
+	modifier = {
+		local_population_capacity = 0.5
+		local_migration_attraction = 0.1
+	}
+
+	unique_production_methods = {
+		nd_bno_water_village_upkeep = {
+			lumber = 0.2
+			fish = 0.1
+			tar = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = village_construction
+}
+
+# Rattan Works (age 3, nd_bno_rattan_ironwood_exports)
+# Rattan cane is cut in the forest, split and woven into the mats, baskets
+# and cane work that went out through the river ports. The frames are ironwood.
+# location_potential: jungle. Rattan is a climbing palm of standing
+# rainforest. Vanilla's furniture guild is a town trade open to everyone; this
+# is the upriver craft, in the countryside and the small towns.
+nd_bno_rattan_works = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = guild_max_level
+	employment_size = generic_peasant_building_employment
+	category = consumer_goods_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_bno_rattan_ironwood_exports
+	}
+
+	location_potential = {
+		vegetation = jungle
+	}
+
+	unique_production_methods = {
+		nd_bno_rattan_weaving_pm = {
+			lumber = 0.5
+			tools = 0.05
+			produced = furniture
+			output = 0.36
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# Nest Cave (age 5, nd_bno_borneo_interior_roads)
+# The limestone caves where swiftlets build nests of hardened saliva. The
+# nests are cut from the roof on rattan ladders and bamboo poles and sold to
+# China as a tonic and a delicacy.
+# location_potential: the location's own raw material is medicaments, which
+# is what the game calls such produce. A raw good, so the cave works only
+# where the map puts it.
+nd_bno_nest_cave = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = rural_building_cap
+	employment_size = generic_peasant_building_employment
+	category = rgo_building_category
+	rural_settlement = yes
+	town = no
+	city = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_bno_borneo_interior_roads
+	}
+
+	location_potential = {
+		raw_material = goods:medicaments
+	}
+
+	unique_production_methods = {
+		nd_bno_birds_nest_pm = {
+			lumber = 0.2
+			tools = 0.05
+			produced = medicaments
+			output = 0.54
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = village_construction
 }
 
 # ===== DESTINY BUILDINGS =====

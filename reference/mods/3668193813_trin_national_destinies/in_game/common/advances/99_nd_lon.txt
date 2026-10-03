@@ -1,0 +1,634 @@
+﻿# Leon (LON): advance tree
+# National Destinies mod
+#
+# Read before designing (EU5 1.4):
+#   vanilla tag advances, one or two per age (advances/culture_leonese.txt):
+#     lon_kingdom_from_oviedo, lon_order_of_santiago, lon_canada_leonesa,
+#     lon_cortes_de_leon, lon_frontier_expansion, lon_tierra_de_campos,
+#     lon_adelantado_mayor_de_leon, lon_maragato_arrieros,
+#     lon_bierzo_vineyards, lon_real_casa_moneda, lon_leonese_collieries,
+#     lon_modern_brigades.
+#   vanilla Leonese culture advances, one per age (same file): the Asturian
+#     inheritance, Gothic art, the pendon morado, the textile industry, the
+#     provincial academies, the industrial revival.
+#   vanilla Asturias (ATU) advances, which a Leon formed from Asturias keeps:
+#     the cradle of the Reconquista, Cantabrian fisheries, the mountain
+#     fastness, cider orchards, the coal basin, steel works.
+#   vanilla elsewhere: the Fuero Juzgo is a town right open to LON
+#     (town_rights/15_iberia.txt:36); the Leyes de Toro are a policy that a
+#     Spain event unlocks (laws/03_estate_laws.txt:82, flavor_cas.48); the
+#     School of Salamanca is an event building that a Castile event raises
+#     (event_only_buildings.txt:3700, flavor_cas.47) and a Spain advance
+#     (spa_school_salamanca: research and diplomatic capacity). A Leonese
+#     owner of Toro and Salamanca gets neither event, so this tree's own
+#     events hand over the same vanilla policy and the same vanilla building
+#     instead of writing second ones.
+#   the mod's Spain (99_nd_spa.txt): the Mesta, the military orders, fueros
+#     and Cortes, the jinete, Medina del Campo, the tercio. The mod's Regnum
+#     Gothorum (99_nd_got.txt): the Liber Iudiciorum, the Hispanic rite.
+#     The mod's Castile (99_nd_cas.txt): concejo militias, the alcabala,
+#     colegios mayores, positos, plazas mayores, provincial militias.
+#
+# None of that is repeated. What is left is the kingdom at ground level and
+# on its own terms: the charter of 1017, the kings in San Isidoro, the
+# Frankish boroughs of the pilgrim road, the mountain foot, the Estudio, the
+# village assembly called by the bell, the summer pastures, the heir's
+# Principality and its Junta, the knights of the pear tree, the entail, the
+# presses, the Comunidades, the doctors of money, Menendez's galleons, maize
+# and the raised granary, the dry ports and the forts of the Portuguese
+# border, linen, Feijoo's cell in Oviedo, the forges, Jovellanos's institute
+# and his report, the shot foundry at Trubia, the Junta that declared war on
+# Napoleon and the lancers of the Salamanca oak pasture.
+#
+# No key below repeats, in the same age, a key that a vanilla LON, Leonese,
+# ATU or Iberian advance grants (the per-age blocklist printed by
+# scripts/creator_context.py LON), on the formed road or the released one.
+#
+# Stepping stone toward the Regnum Gothorum and Spain: 4 or 5 per age.
+# 26 advances, 15 of them unlocks (58 percent).
+
+# ============================================================================
+# AGE 1: TRADITIONS (5 advances, 3 unlocks)
+# ============================================================================
+
+# The Fuero of 1017: Alfonso V and the full court in the cathedral of Leon,
+# 48 precepts, twenty for the whole kingdom and twenty-eight for the city.
+# The market held in peace every Wednesday, the house no officer may enter,
+# dues lightened for the craftsman who comes to settle. The Fuero Juzgo
+# itself is vanilla's town right; this is the settlers' charter beside it,
+# so it pays in people who come and townsmen who stay content.
+nd_lon_fuero_de_leon = {
+	age = age_1_traditions
+	potential = { has_or_had_tag = LON }
+	requires = codified_laws
+	icon = laws
+
+	global_migration_attraction = 0.1
+	burghers_estate_target_satisfaction = small_permanent_target_satisfaction
+}
+
+# The royal pantheon in the narthex of San Isidoro: eleven kings, a dozen
+# queens and the painted vault above them. Unlocks the Panteon de los Reyes,
+# which stands only in the city of Leon.
+nd_lon_reyes_en_san_isidoro = {
+	age = age_1_traditions
+	potential = { has_or_had_tag = LON }
+	requires = organized_religion
+	icon = monarchy_royal_court_advance
+
+	unlock_building = nd_lon_panteon_real
+}
+
+# The French Way crosses the kingdom from Sahagun to the pass of O Cebreiro,
+# and along it the kings planted boroughs of foreign settlers with their own
+# law: Sahagun's charter of 1085, the vico francorum of Leon, Villafranca del
+# Bierzo, the town of the Franks. Unlocks the Burgo de Francos.
+# trade_land_efficiency is trade range over land; vanilla's advances grant
+# 0.05 to 0.4 through named steps, and this is the second lowest.
+nd_lon_camino_frances = {
+	age = age_1_traditions
+	potential = { has_or_had_tag = LON }
+	requires = trade_advance_age_of_trad
+	icon = catholic_pilgrimages
+
+	unlock_building = nd_lon_burgo_de_francos
+	trade_land_efficiency = small_trade_land_efficiency_bonus
+}
+
+# The foot of the mountain concejos, Asturian and Leonese: a spear, two or
+# three throwing darts, a hide shield and no armour to speak of. Unlocks the
+# Peones de la Montana levy. On agriculture_advance, not feudalism_advance:
+# these are herdsmen called out by their valley, not a lord's tenants.
+# global_hostile_attrition: an army that enters the passes is bled by them.
+nd_lon_gente_de_la_montana = {
+	age = age_1_traditions
+	potential = { has_or_had_tag = LON }
+	requires = agriculture_advance
+	icon = arm_mountain_armies
+
+	unlock_levy = levy_nd_lon_peones_montaneses
+	global_hostile_attrition = 1
+}
+
+# The Estudio of Salamanca: founded by Alfonso IX of Leon in 1218, the first
+# in the peninsula to last, confirmed by Alexander IV in 1255 with the right
+# to teach everywhere. Canonists for the Church and jurists for the crown.
+nd_lon_estudio_salmantino = {
+	age = age_1_traditions
+	potential = { has_or_had_tag = LON }
+	requires = scholasticism
+	icon = wandering_scholars
+
+	global_clergy_max_literacy = 5
+	global_nobles_max_literacy = 5
+}
+
+# ============================================================================
+# AGE 2: RENAISSANCE (4 advances, 3 unlocks)
+# ============================================================================
+
+# Concejo abierto: every householder of the village, called by the bell to
+# the church porch, voting on the pasture, the water, the wood and the days
+# of common labour each house owes. Unlocks the Casa de Concejo.
+nd_lon_concejo_abierto = {
+	age = age_2_renaissance
+	potential = { has_or_had_tag = LON }
+	requires = law_making_renaissance
+	icon = deliberative_council
+
+	unlock_building = nd_lon_casa_de_concejo
+	peasants_estate_target_satisfaction = small_permanent_target_satisfaction
+}
+
+# The vaqueiros de alzada and the mountain concejos drive the cattle up to
+# the high pastures at the end of spring and down again before the snow.
+# Unlocks the Brana. No output modifier beside it: vanilla's own Leon grants
+# livestock in this age (lon_canada_leonesa).
+nd_lon_branas_y_puertos = {
+	age = age_2_renaissance
+	potential = { has_or_had_tag = LON }
+	requires = food_advance_renaissance
+	icon = zmw_experienced_cattle_herder
+
+	unlock_building = nd_lon_brana
+}
+
+# 1388: the heir of the crown is made Prince of Asturias, and the land where
+# the kingdom began becomes the heir's own, so that no great house can hold
+# it against the king again. A succession with a place to stand is cheaper
+# to keep steady.
+nd_lon_principado_de_asturias = {
+	age = age_2_renaissance
+	potential = { has_or_had_tag = LON }
+	requires = late_feudal_relations
+	icon = consolidate_the_royal_domain
+
+	stability_cost_efficiency = 0.2
+}
+
+# The brethren of San Julian del Pereiro, a Leonese order from its first day
+# (the Coa valley, 1168 to 1172, under Fernando II), who took the name of
+# Alcantara after Alfonso IX gave them the bridge town in 1218. Unlocks the
+# Freires de Alcantara. Vanilla's Leon has the Order of Santiago as infantry
+# and siege; this is the other order, on horseback.
+nd_lon_caballeros_de_alcantara = {
+	age = age_2_renaissance
+	potential = { has_or_had_tag = LON }
+	requires = medieval_military
+	icon = pap_legacy_of_the_military_orders
+
+	unlock_unit = a_nd_lon_freires_de_alcantara
+	army_heavy_cavalry_power = 0.1
+}
+
+# ============================================================================
+# AGE 3: DISCOVERY (4 advances, 1 unlock)
+# ============================================================================
+
+# The Junta General of the Principality: first sat on 16 November 1444 with
+# the proctors of sixteen concejos, later of fifty-eight, in the chapter
+# house of Oviedo cathedral. It votes what the land will pay and sends a
+# standing deputation to see that it is spent as voted.
+nd_lon_junta_general = {
+	age = age_3_discovery
+	potential = { has_or_had_tag = LON }
+	requires = crown_power_advance_discovery
+	icon = nav_chartered_councils
+
+	global_estate_max_tax = 0.1
+	parliament_base_support = 0.05
+}
+
+# The eighty-three laws given at Toro on 7 March 1505: which law prevails
+# when two disagree, and the mayorazgo, the entail that keeps a great house
+# whole under its eldest son. (DHE event nd_lon.2, which unlocks vanilla's
+# own Leyes de Toro policy; the vanilla event that does so fires for Spain
+# alone.)
+nd_lon_leyes_de_toro = {
+	age = age_3_discovery
+	potential = { has_or_had_tag = LON }
+	requires = regulate_court_procedures
+	icon = nobles_rights_laws_advance
+
+	nobles_estate_target_satisfaction = small_permanent_target_satisfaction
+	legislative_efficiency = 0.1
+}
+
+# Salamanca had a press by about 1480, and in August 1492 an unnamed printer
+# there set Nebrija's grammar of Castilian, the first of any modern tongue.
+# A university town prints for its own lecture halls. On
+# printing_press_advance on purpose: this advance is the press.
+nd_lon_prensas_de_salamanca = {
+	age = age_3_discovery
+	potential = { has_or_had_tag = LON }
+	requires = printing_press_advance
+	icon = ven_printing_industry
+
+	global_books_output_modifier = 0.1
+	global_monthly_literacy = 0.01
+}
+
+# 1520: Zamora, Toro, Salamanca and Leon send proctors to the Santa Junta,
+# and the bishop of Zamora, Antonio de Acuna, takes the field with a company
+# of armed priests. Unlocks the Milicia Comunera levy.
+# levy_combat_efficiency_modifier is how well levy regiments fight.
+# (DHE event nd_lon.3, branching)
+nd_lon_comunidades = {
+	age = age_3_discovery
+	potential = { has_or_had_tag = LON }
+	requires = town_rights_aod_advance
+	icon = fortified_towns
+
+	unlock_levy = levy_nd_lon_milicia_comunera
+	levy_combat_efficiency_modifier = 0.1
+}
+
+# ============================================================================
+# AGE 4: REFORMATION (4 advances, 2 unlocks)
+# ============================================================================
+
+# The Salamanca masters on money: Azpilcueta's commentary on exchange (1556)
+# says coin is worth less where coin is plentiful, and Mercado and Molina
+# reason out the just price from what buyers will freely give. Vanilla's
+# Spain has the School as research and diplomacy (spa_school_salamanca);
+# this is the part vanilla leaves out, the theory of prices, so it pays in
+# steadier coin and cheaper imports. monthly_inflation is a key where a
+# negative value is the benefit. (DHE event nd_lon.4, branching; the event
+# raises vanilla's School of Salamanca building, which otherwise only a
+# Castile event can.)
+nd_lon_doctores_de_la_moneda = {
+	age = age_4_reformation
+	potential = { has_or_had_tag = LON }
+	requires = early_modern_administation
+	icon = spa_school_salamanca
+
+	monthly_inflation = -0.001
+	import_efficiency = tiny_trade_efficiency_bonus
+}
+
+# Pedro Menendez de Aviles, nine times captain general of the Indies fleet,
+# designs in 1561 a class of twelve galleons of 230 tons, long, low and
+# fitted for oars: the Twelve Apostles. Unlocks the Galeoncete.
+nd_lon_galeones_agalerados = {
+	age = age_4_reformation
+	potential = { has_or_had_tag = LON }
+	requires = naval_morale_advance_3
+	icon = nav_shipbuiling_experts
+
+	unlock_unit = n_nd_lon_galeoncete
+	navy_light_ship_power = 0.1
+}
+
+# In 1605 Gonzalo Mendez de Cancio comes home to Asturias from the
+# governorship of Florida with two chests of maize. Within two generations
+# it is the bread of the wet north, and the raised granary grows a gallery
+# to dry the cobs. Unlocks the Horreo.
+nd_lon_maiz_y_horreos = {
+	age = age_4_reformation
+	potential = { has_or_had_tag = LON }
+	requires = pop_promotion_speed_age_4
+	icon = food_advance_renaissance
+
+	unlock_building = nd_lon_horreo
+	global_population_growth = 0.0002
+}
+
+# The dry ports: the customs houses on the land border with Portugal, at
+# Ciudad Rodrigo, Zamora, Alcanices and Puebla de Sanabria, along a frontier
+# drawn at Alcanices in 1297 and hardly moved since. Trade range over land,
+# the same named step as the pilgrim road three centuries earlier.
+nd_lon_puertos_secos = {
+	age = age_4_reformation
+	potential = { has_or_had_tag = LON }
+	requires = crown_power_advance_reformation
+	icon = port_customs
+
+	trade_land_efficiency = small_trade_land_efficiency_bonus
+}
+
+# ============================================================================
+# AGE 5: ABSOLUTISM (4 advances, 2 unlocks)
+# ============================================================================
+
+# The Portuguese war of 1640 to 1668 turns the quiet border into a front:
+# Ciudad Rodrigo is refortified, the Fuerte de la Concepcion goes up facing
+# Almeida, and the Principality raises a tercio of its own for the border.
+# Unlocks the Tercio del Principado.
+nd_lon_plazas_de_la_raya = {
+	age = age_5_absolutism
+	potential = { has_or_had_tag = LON }
+	requires = regiment_reinforcement_speed_absolutism
+	icon = military_border
+
+	unlock_unit = a_nd_lon_tercio_del_principado
+	global_garrison_size_modifier = 0.1
+}
+
+# Flax from the irrigated plain of the Orbigo and the Paramo, retted in the
+# river, spun in every kitchen through the winter, and from the middle of
+# the eighteenth century woven for the crown's account as well. Unlocks the
+# Fabrica de Lienzos.
+nd_lon_lienzos_del_reino = {
+	age = age_5_absolutism
+	potential = { has_or_had_tag = LON }
+	requires = absolute_rulership
+	icon = fla_cloth
+
+	unlock_building = nd_lon_fabrica_de_lienzos
+	global_fiber_crops_output_modifier = 0.1
+}
+
+# Benito Jeronimo Feijoo, Benedictine, professor at Oviedo from 1709, writes
+# the Teatro critico universal (1726 to 1740) from his cell in San Vicente:
+# eight volumes against vulgar errors, read from Lima to Naples.
+nd_lon_teatro_critico = {
+	age = age_5_absolutism
+	potential = { has_or_had_tag = LON }
+	requires = absolutist_court
+	icon = spa_spanish_enlightenment
+
+	global_institution_growth_modifier = 0.2
+	global_burghers_max_literacy = 10
+}
+
+# The forges and tilt hammers of El Bierzo and the Asturian valleys: ore from
+# the hill, charcoal from the chestnut and oak, a leat to drive the hammer.
+# Bar iron, ploughshares, nails and scythes for the plain.
+nd_lon_ferrerias_y_mazos = {
+	age = age_5_absolutism
+	potential = { has_or_had_tag = LON }
+	requires = construction_speed_absolutism
+	icon = a_mining_heritage
+
+	global_tools_output_modifier = 0.1
+}
+
+# ============================================================================
+# AGE 6: REVOLUTIONS (5 advances, 4 unlocks)
+# ============================================================================
+
+# The Real Instituto Asturiano de Nautica y Mineralogia, opened by Jovellanos
+# on 7 January 1794: mathematics, drawing, navigation, chemistry and the
+# working of mines, for the sons of a province that has coal and a coast.
+# Unlocks the Instituto Asturiano.
+nd_lon_real_instituto = {
+	age = age_6_revolutions
+	potential = { has_or_had_tag = LON }
+	requires = enlightened_court
+	icon = imperial_school_of_naval_engineering
+
+	unlock_building = nd_lon_instituto_asturiano
+	global_laborers_max_literacy = 5
+}
+
+# 1794: with the foundries of Navarre overrun by the French, the crown moves
+# its shot casting to the meeting of the Trubia and the Nalon, where iron,
+# timber and coal lie within a day's haul, and its musket makers from the
+# Basque valleys to Oviedo. Unlocks the Real Fabrica de Trubia.
+nd_lon_municiones_de_trubia = {
+	age = age_6_revolutions
+	potential = { has_or_had_tag = LON }
+	requires = modern_bureaucracy
+	icon = artillery_institution_advance
+
+	unlock_building = nd_lon_fabrica_de_trubia
+	global_cannons_output_modifier = 0.1
+}
+
+# 25 May 1808: the Junta General, sitting by its old rules in Oviedo,
+# declares itself sovereign, declares war on Napoleon and sends two envoys
+# to London. Unlocks the Alarma levy. (DHE event nd_lon.5, branching)
+nd_lon_junta_suprema = {
+	age = age_6_revolutions
+	potential = { has_or_had_tag = LON }
+	requires = government_size_revolutions
+	icon = national_assemblies_advance
+
+	unlock_levy = levy_nd_lon_alarma
+	global_levy_size_modifier = 0.1
+}
+
+# Julian Sanchez, El Charro, of Munoz near Salamanca: twelve lancers in
+# 1808, two hundred in 1809, a regiment and then a brigade riding with
+# Wellington by 1811. Unlocks the Lanceros Charros.
+nd_lon_lanceros_de_don_julian = {
+	age = age_6_revolutions
+	potential = { has_or_had_tag = LON }
+	requires = crown_power_advance_revolutions
+	icon = skilled_cavalry_raids
+
+	unlock_unit = a_nd_lon_lanceros_charros
+	army_light_cavalry_power = 0.1
+}
+
+# Jovellanos's report on the agrarian law (1795): let land be bought, sold
+# and enclosed, and the plough will find it. The cost key is one where a
+# negative value is the benefit.
+nd_lon_ley_agraria = {
+	age = age_6_revolutions
+	potential = { has_or_had_tag = LON }
+	requires = urbanization
+	icon = dan_danish_agriculture
+
+	expand_rgo_farming_cost_modifier = -0.1
+	global_max_rgo_size_modifier = 0.1
+}
+
+# ===== DESTINY TREE =====
+#
+# Two answers to what a king of Leon is, as the formation event asks it.
+# Path A, the crown of the emperors: the Leonese Extremadura Alfonso IX took
+# in 1229 and 1230, then Toledo and Burgos (the old capital the kings of Leon
+# called themselves heirs of, and the county that broke away), then Cordoba
+# and Baeza with two princes doing homage, as in 1135. Conquest and vassals.
+# Path B, the kingdom of the Decreta: boroughs on the pilgrim road and the
+# royal city grown, then the village councils and the Estudio of Salamanca,
+# then the fair towns of the Tierra de Campos. Buildings, growth and trade.
+# No objective is a place inside the Leon area by ownership alone: a Leon
+# released by Castile may hold all of it on the first day.
+# Earliest ages (scripts/destiny/stage_floors.py): A 1 1 1, B 1 2 3.
+
+nd_lon_destiny = {
+	age = age_1_traditions
+	depth = 0
+	potential = { has_or_had_tag = LON has_variable = nd_lon_formed has_game_rule = nd_destinies_enabled }
+	allow = { stability >= 75 }
+	icon = frequent_councils
+
+	global_estate_satisfaction_recovery = 0.001
+}
+
+# --- Path A: the crown of the emperors ---
+
+nd_lon_dest_extremadura_leonesa = {
+	age = age_1_traditions
+	requires = nd_lon_destiny
+	potential = { has_or_had_tag = LON has_variable = nd_lon_formed has_game_rule = nd_destinies_enabled }
+	allow = {
+		custom_tooltip = {
+			text = nd_lon_path_a_tt
+			has_variable = nd_lon_path_a
+		}
+		owns_or_non_sovereign_subject_owns = location:caceres
+		owns_or_non_sovereign_subject_owns = location:merida
+		owns_or_non_sovereign_subject_owns = location:badajoz
+		prestige >= 50
+	}
+	icon = settle_the_frontier_advance
+
+	regiment_recruit_speed = 0.1
+	assault_ability = 0.1
+}
+
+nd_lon_dest_heredero_de_toledo = {
+	age = age_1_traditions
+	requires = nd_lon_dest_extremadura_leonesa
+	potential = { has_or_had_tag = LON has_variable = nd_lon_formed has_game_rule = nd_destinies_enabled }
+	allow = {
+		owns_or_non_sovereign_subject_owns = location:toledo
+		owns_or_non_sovereign_subject_owns = location:burgos
+		gold >= 2000
+		prestige >= 50
+	}
+	icon = tnk_imperial_legacy
+
+	antagonism_received_modifier = -0.1
+	tolerance_heathen = 1
+}
+
+# No building: nothing was built for the empire of 1135. It was a court, a
+# coronation and a list of princes who knelt, and it ended with the man. The
+# reward is what such a crown does: vassals that pay and can be absorbed.
+nd_lon_dest_imperator = {
+	age = age_1_traditions
+	requires = nd_lon_dest_heredero_de_toledo
+	potential = { has_or_had_tag = LON has_variable = nd_lon_formed has_game_rule = nd_destinies_enabled }
+	allow = {
+		owns_or_non_sovereign_subject_owns = location:cordoba
+		owns_or_non_sovereign_subject_owns = location:baeza
+		custom_tooltip = {
+			text = nd_lon_dest_dos_principes_tt
+			num_subjects >= 2
+		}
+		gold >= 3000
+		prestige >= 75
+	}
+	icon = lat_emperor_latins_advance
+
+	subject_income_modifier = 0.05
+	diplomatic_annexation_efficiency = 0.2
+	annexation_speed_modifier = 0.2
+	prestige_from_land_battle = 0.1
+}
+
+# --- Path B: the kingdom of the Decreta ---
+
+# Leon's development is 21 in 1337 (scripts/development_estimate.py
+# --explain leon); 26 is a quarter more.
+nd_lon_dest_buenos_fueros = {
+	age = age_1_traditions
+	requires = nd_lon_destiny
+	potential = { has_or_had_tag = LON has_variable = nd_lon_formed has_game_rule = nd_destinies_enabled }
+	allow = {
+		custom_tooltip = {
+			text = nd_lon_path_b_tt
+			has_variable = nd_lon_path_b
+		}
+		custom_tooltip = {
+			text = nd_lon_dest_tres_burgos_tt
+			any_owned_location = {
+				count >= 3
+				has_building_with_at_least_one_level = nd_lon_burgo_de_francos
+			}
+		}
+		custom_tooltip = {
+			text = nd_lon_dest_leon_26_tt
+			location:leon = {
+				owner ?= root
+				development >= 26
+			}
+		}
+		gold >= 1000
+	}
+	icon = town_rights_advance
+
+	town_upgrade_cost_modifier = -0.1
+	global_non_rural_monthly_prosperity = 0.001
+}
+
+# Salamanca's development is 22 in 1337; 33 is half as much again. The
+# university is vanilla's own building (university_advance, age 2), and the
+# council house is the heritage tree's (nd_lon_concejo_abierto, age 2).
+nd_lon_dest_hermandad_de_concejos = {
+	age = age_1_traditions
+	requires = nd_lon_dest_buenos_fueros
+	potential = { has_or_had_tag = LON has_variable = nd_lon_formed has_game_rule = nd_destinies_enabled }
+	allow = {
+		custom_tooltip = {
+			text = nd_lon_dest_cinco_concejos_tt
+			any_owned_location = {
+				count >= 5
+				has_building_with_at_least_one_level = nd_lon_casa_de_concejo
+			}
+		}
+		custom_tooltip = {
+			text = nd_lon_dest_estudio_tt
+			location:salamanca = {
+				owner ?= root
+				has_building_with_at_least_one_level = university
+				OR = {
+					location_rank ?= location_rank:city
+					location_rank ?= location_rank:megalopolis
+				}
+			}
+		}
+		custom_tooltip = {
+			text = nd_lon_dest_salamanca_33_tt
+			location:salamanca = {
+				owner ?= root
+				development >= 33
+			}
+		}
+		gold >= 2000
+	}
+	icon = hun_strengthened_towns
+
+	research_speed_modifier = 0.05
+	global_peasants_max_literacy = 5
+}
+
+# Leon at 42 is twice its 1337 development. The two Medinas lie in the
+# Castile area, outside the kingdom's own land.
+nd_lon_dest_ferias_del_reino = {
+	age = age_1_traditions
+	requires = nd_lon_dest_hermandad_de_concejos
+	potential = { has_or_had_tag = LON has_variable = nd_lon_formed has_game_rule = nd_destinies_enabled }
+	allow = {
+		owns_or_non_sovereign_subject_owns = location:medina_de_rioseco
+		owns_or_non_sovereign_subject_owns = location:medina_del_campo
+		has_embraced_institution = institution:printing_press
+		capital = {
+			market = {
+				OR = {
+					is_produced_in_market = goods:fine_cloth
+					is_traded_in_market = goods:fine_cloth
+				}
+			}
+		}
+		custom_tooltip = {
+			text = nd_lon_dest_leon_42_tt
+			location:leon = {
+				owner ?= root
+				development >= 42
+			}
+		}
+		gold >= 3000
+		prestige >= 75
+	}
+	icon = free_merchants
+
+	unlock_building = nd_lon_dest_feria_general
+	merchant_maintenance_efficiency = 0.2
+	tax_income_efficiency = small_tax_income_efficiency_bonus
+	global_wool_output_modifier = 0.1
+}

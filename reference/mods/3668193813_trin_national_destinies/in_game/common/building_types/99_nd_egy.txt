@@ -18,7 +18,7 @@ nd_egy_irrigation_works = {
 	}
 
 	modifier = {
-		local_monthly_food_modifier = 0.1
+		local_monthly_food_modifier = 0.05
 		local_population_capacity = 0.5
 		local_wheat_output_modifier = 0.1
 	}
@@ -30,22 +30,101 @@ nd_egy_irrigation_works = {
 			tools = 0.05
 			category = building_maintenance
 		}
+	}
+	construction_demand = farm_constructions
+}
 
+# Sugar Press: the ox-turned presses and boiling houses of the cane
+# country of Upper Egypt. A plain producer with no modifier block, in
+# vanilla's shape for a rural producer. Unlocked by nd_egy_sugar_processing.
+nd_egy_sugar_press = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = rural_building_cap
+	employment_size = rural_peasant_produce_employment
+	category = rgo_building_category
+	# Presses stood in the cane villages and the river towns that shipped
+	# the loaves north; none in a city.
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_egy_sugar_processing
+	}
+
+	# Only where the land itself grows cane (EU5's sugar is the cane).
+	location_potential = {
+		raw_material = goods:sugar
+	}
+
+	unique_production_methods = {
+		# Inputs are what the pressing and boiling consume: firewood, the
+		# clay cones the loaves set in, tools, and the oxen at the press.
 		nd_egy_sugar_refining = {
-			lumber = 0.1
-			pottery = 0.1
+			lumber = 0.2
+			pottery = 0.15
 			tools = 0.05
+			livestock = 0.1
+			produced = sugar
+			output = 0.3
 			category = building_maintenance
-		}
-
-		nd_egy_corvee_labor = {
-			lumber = 0.1
-			stone = 0.1
-			tools = 0.05
-			category = building_maintenance
+			debug_max_profit = rural_profit_margin
 		}
 	}
 	construction_demand = farm_constructions
+}
+
+# Summer Canal: a canal cut deep enough to carry water at low Nile, so
+# that the summer crops can be watered. Dug and cleared every year by
+# the corvee. Unlocked by nd_egy_corvee_system.
+nd_egy_summer_canal = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = 1
+	employment_size = generic_peasant_building_employment
+	category = infrastructure_category
+	# A work of the fields and the river towns, not of a city.
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = infrastructure_build_time
+
+	country_potential = {
+		has_advance = nd_egy_corvee_system
+	}
+
+	# A canal needs a river to draw from.
+	location_potential = {
+		has_river = yes
+	}
+
+	modifier = {
+		# The summer crops (vanilla's plantations and windmill give the
+		# same 0.1 for one crop each). Nothing where none of them grows.
+		local_cotton_output_modifier = 0.1
+		local_sugar_output_modifier = 0.1
+		local_rice_output_modifier = 0.1
+		# The men were taken from their villages for the digging.
+		local_unrest = 0.02
+	}
+
+	unique_production_methods = {
+		nd_egy_summer_canal_dredging = {
+			tools = 0.1
+			lumber = 0.1
+			livestock = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = pound_lock_canal_infrastructure_construction
 }
 
 # Wikala: urban caravanserai for long-distance trade
@@ -80,15 +159,52 @@ nd_egy_wikala = {
 			salt = 0.05
 			category = building_maintenance
 		}
-
-		nd_egy_cotton_processing = {
-			cloth = 0.2
-			dyes = 0.1
-			tools = 0.05
-			category = building_maintenance
-		}
 	}
 	construction_demand = caravanserai_building_construction
+}
+
+# Weaving Hall: a hall of looms in a Delta town, where cotton is spun,
+# woven and finished. A plain producer with no modifier block, in the
+# shape of vanilla's guilds. Unlocked by nd_egy_cotton_cultivation.
+nd_egy_weaving_hall = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	employment_size = guild_employment
+	category = consumer_goods_category
+	# Looms need a town's craftsmen: the tiers of vanilla's cloth guild.
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = no
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_egy_cotton_cultivation
+	}
+
+	# Only where the market itself grows cotton, as vanilla binds its
+	# glassworks to sand (production_glass.txt).
+	location_potential = {
+		is_produced_in_location_market = goods:cotton
+	}
+
+	unique_production_methods = {
+		# Fine cloth is a produced good and cotton its raw input. Vanilla
+		# makes cloth from cotton and fine cloth from cloth, silk or wool;
+		# this is the long-staple thread woven fine in one step.
+		nd_egy_cotton_processing = {
+			cotton = 0.7
+			dyes = 0.1
+			produced = fine_cloth
+			output = 0.5
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
 }
 
 # Mamluk Barracks: slave soldier training compound
@@ -331,7 +447,7 @@ nd_egy_state_factory = {
 	}
 
 	modifier = {
-		local_production_efficiency = 0.05
+		local_production_efficiency = 0.025
 		local_pop_promotion_speed = 0.002
 		local_burghers_max_literacy = 10
 	}

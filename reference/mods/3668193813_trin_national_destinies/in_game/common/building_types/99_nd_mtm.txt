@@ -21,7 +21,7 @@ nd_mtm_sawah_terrace = {
 
 	modifier = {
 		local_rice_output_modifier = 0.1
-		local_monthly_food_modifier = 0.05
+		local_monthly_food_modifier = 0.025
 		local_population_growth = 0.0005
 	}
 
@@ -29,12 +29,6 @@ nd_mtm_sawah_terrace = {
 		nd_mtm_sawah_maintenance = {
 			lumber = 0.1
 			stone = 0.05
-			tools = 0.05
-			category = building_maintenance
-		}
-		nd_mtm_expanded_irrigation = {
-			lumber = 0.15
-			stone = 0.1
 			tools = 0.05
 			category = building_maintenance
 		}
@@ -109,9 +103,9 @@ nd_mtm_kraton_palace = {
 
 	unique_production_methods = {
 		nd_mtm_palace_upkeep = {
-			lumber = 0.3
-			stone = 0.2
-			cloth = 0.1
+			lumber = 0.348
+			stone = 0.232
+			cloth = 0.116
 			category = building_maintenance
 		}
 	}
@@ -212,14 +206,53 @@ nd_mtm_pesantren = {
 			cloth = 0.05
 			category = building_maintenance
 		}
-		nd_mtm_kyai_instruction = {
-			paper = 0.15
-			rice = 0.15
-			books = 0.05
-			category = building_maintenance
-		}
 	}
 	construction_demand = school_construction
+}
+
+# Dluwang Works: bark paper for the pesantren's books. The inner bark of the
+# paper mulberry is soaked, beaten thin with a pounder, dried on banana leaf
+# and smoothed with a shell. From the late sixteenth century it was the
+# favoured sheet for Javanese Islamic writing, because it takes Pegon script
+# better than palm leaf; it is also called Ponorogo paper.
+# location_potential: a location that has a pesantren. The sheets were made
+# for the schools' copyists.
+# Settlement: countryside and towns, where the schools themselves stand. A
+# garden craft of village households, hence laborers and a level cap that
+# follows the school's own two levels.
+nd_mtm_dluwang_works = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = 2
+	employment_size = rural_peasant_produce_employment
+	category = basic_industry_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_mtm_pesantren_expansion
+	}
+
+	location_potential = {
+		has_building = building_type:nd_mtm_pesantren
+	}
+
+	unique_production_methods = {
+		nd_mtm_dluwang_beating = {
+			fiber_crops = 0.4
+			lumber = 0.1
+			produced = paper
+			output = 0.57
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = village_construction
 }
 
 # Benteng fort: Javanese inland fortification
@@ -278,7 +311,7 @@ nd_mtm_lumbung_granary = {
 	}
 
 	modifier = {
-		local_monthly_food_modifier = 0.1
+		local_monthly_food_modifier = 0.05
 		local_food_capacity = 100
 	}
 
@@ -320,9 +353,9 @@ nd_mtm_pendopo_hall = {
 
 	unique_production_methods = {
 		nd_mtm_pendopo_upkeep = {
-			lumber = 0.2
-			cloth = 0.1
-			incense = 0.05
+			lumber = 0.29
+			cloth = 0.145
+			incense = 0.073
 			category = building_maintenance
 		}
 	}
@@ -353,14 +386,14 @@ nd_mtm_plantation_complex = {
 		local_laborers_desired_pop = 0.1
 	}
 
-	# Requires a real supply of sugar: the formable's own
-	# territory has no source of it, so this is bound to the
-	# location's market rather than to the soil. Without a gate
-	# the building conjures the good anywhere the owner holds.
+	# location_potential: the location's own raw material is sugar, as
+	# vanilla's sugar_plantation asks (plantation_buildings.txt). Java has
+	# cane land of its own (Cibuaya and Sadeng in java_area; Lalan and
+	# Pontianak across the straits), so the estate is bound to the soil
+	# and not to the market. Without a gate the building conjures the
+	# good anywhere the owner holds.
 	location_potential = {
-		market ?= {
-			is_produced_in_market = goods:sugar
-		}
+		raw_material = goods:sugar
 	}
 
 	unique_production_methods = {
@@ -370,8 +403,50 @@ nd_mtm_plantation_complex = {
 			produced = sugar
 			output = 0.12
 			category = guild_input
-			debug_max_profit = guild_profit_margin
+			debug_max_profit = rural_profit_margin
 		}
 	}
 	construction_demand = plantation_construction
+}
+
+# Blandong Teak Yard. Under the blandong system the villages beside the teak
+# forests owed felled teak and were freed of other taxes in return; the
+# timber went down to the shipyards of Rembang and Jepara.
+# location_potential: the location's own raw material is lumber. The yard
+# squares what is felled around it, so it stands only on timber land.
+# Settlement: countryside only. The work was done where the trees stood.
+nd_mtm_blandong_yard = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = guild_max_level
+	employment_size = rural_peasant_produce_employment
+	category = basic_industry_category
+	rural_settlement = yes
+	town = no
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_mtm_teak_exploitation
+	}
+
+	location_potential = {
+		raw_material = goods:lumber
+	}
+
+	unique_production_methods = {
+		nd_mtm_ship_timber_squaring = {
+			lumber = 0.6
+			livestock = 0.1
+			tools = 0.05
+			produced = naval_supplies
+			output = 0.48
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = village_construction
 }

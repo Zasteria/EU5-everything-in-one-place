@@ -33,9 +33,7 @@ nd_eth_aksumite_heritage = {
 	potential = { has_or_had_tag = ETH }
 	requires = legalism_advance
 	icon = legalism_advance
-	monthly_republican_tradition = 0.1
-	monthly_devotion = 0.1
-	monthly_legitimacy = 0.1
+	minting_income_factor = 0.1
 	cultural_tradition_modifier = 0.1
 }
 
@@ -46,7 +44,7 @@ nd_eth_tej_production = {
 	requires = agriculture_advance
 	icon = agriculture_advance
 	unlock_building = nd_eth_tej_bet
-	global_production_efficiency = 0.025
+	global_production_efficiency = 0.0125
 }
 
 # Amba Fortification: Mesa-top mountain fortress traditions
@@ -69,9 +67,9 @@ nd_eth_amole_trade_network = {
 	requires = merchants_and_trade
 	icon = merchants_and_trade
 	unlock_building = nd_eth_amole_market
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	global_salt_output_modifier = 0.15
 }
@@ -114,7 +112,7 @@ nd_eth_shamma_tradition = {
 	potential = { has_or_had_tag = ETH }
 	requires = vibrant_court_advance
 	icon = vibrant_court_advance
-	unlock_production_method = nd_eth_shamma_weaving
+	unlock_building = nd_eth_shamma_looms
 	global_cloth_output_modifier = 0.1
 }
 
@@ -127,9 +125,9 @@ nd_eth_red_sea_trade = {
 	requires = merchant_power_from_maritime_discovery_advance
 	icon = merchant_power_from_maritime_discovery_advance
 	global_merchant_power = 0.1
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -149,7 +147,7 @@ nd_eth_portuguese_alliance = {
 	potential = { has_or_had_tag = ETH }
 	requires = diplomatic_training
 	icon = diplomatic_training
-	subject_loyalty = 6
+	subject_loyalty = 5
 	diplomatic_annexation_efficiency = 0.15
 }
 
@@ -172,8 +170,8 @@ nd_eth_danakil_route = {
 	potential = { has_or_had_tag = ETH }
 	requires = regulate_court_procedures
 	icon = regulate_court_procedures
-	unlock_production_method = nd_eth_danakil_extraction
-	tax_income_efficiency = 0.05
+	unlock_building = nd_eth_amole_cuttings
+	tax_income_efficiency = 0.03
 }
 
 # === AGE 4: REFORMATION ===
@@ -185,8 +183,7 @@ nd_eth_gondarine_splendor = {
 	requires = imperial_ambitions
 	icon = imperial_ambitions
 	unlock_building = nd_eth_fasil_ghebbi
-	global_monthly_prosperity = 0.0015
-	unlock_production_method = nd_eth_rock_hewn_masonry
+	global_monthly_prosperity = 0.001
 }
 
 # Chewa Imperial Guard: Elite household cavalry of the Negusa Nagast
@@ -282,7 +279,7 @@ nd_eth_manuscript_school = {
 	requires = maritime_advance_age_5
 	icon = maritime_advance_age_5
 	research_speed_modifier = 0.05
-	global_monthly_literacy = 0.025
+	global_monthly_literacy = 0.02
 }
 
 # === AGE 6: REVOLUTIONS ===
@@ -330,7 +327,7 @@ nd_eth_destiny = {
 	potential = { has_or_had_tag = ETH has_variable = nd_eth_formed has_game_rule = nd_destinies_enabled }
 	allow = { stability >= 75 }
 	icon = crown_power_advance_renaissance
-	global_devastation_recovery = 0.005
+	global_devastation_recovery = 0.0025
 }
 
 # --- Path A: Sword of Zion ---
@@ -424,10 +421,18 @@ nd_eth_dest_gold_routes = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:mogadishu
 		has_embraced_institution = institution:banking
-		total_development >= 1500
+		# Gondar, where the caravans of Sennar, Massawa and the gold country
+		# of the south-west met. 1337 value 16, half as much again.
+		custom_tooltip = {
+			text = nd_eth_dest_gondar_market_tt
+			location:gonder = {
+				owner ?= root
+				development >= 24
+			}
+		}
 	}
 	icon = global_trade_advance
-	global_monthly_development = 0.002
+	global_monthly_development = 0.001
 	global_institution_growth_modifier = 0.1
 }
 
@@ -437,11 +442,28 @@ nd_eth_dest_crown_nile = {
 	potential = { has_or_had_tag = ETH has_variable = nd_eth_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:cairo
-		total_development >= 2000
-		has_embraced_institution = institution:global_trade
+		# The capital of Fasilides and his heirs. 1337 value 16, doubled.
+		custom_tooltip = {
+			text = nd_eth_dest_gondar_capital_tt
+			location:gonder = {
+				owner ?= root
+				development >= 32
+			}
+		}
+		# The spices of India in the capital's market, and no institution of
+		# a later age: the other path can be finished in the first age, and
+		# the two must end within two ages of each other (ruling 2026-10-02).
+		capital ?= {
+			market ?= {
+				OR = {
+					is_produced_in_market = goods:pepper
+					is_traded_in_market = goods:pepper
+				}
+			}
+		}
 	}
 	icon = maritime_advance_age_5
-	global_population_growth = 0.0015
+	global_population_growth = 0.00025
 	power_projection = 5
 	government_size = 1
 	unlock_building = nd_eth_house_of_aksumite_learning

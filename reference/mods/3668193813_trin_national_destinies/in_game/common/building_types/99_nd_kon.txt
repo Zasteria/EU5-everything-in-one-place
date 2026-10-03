@@ -37,6 +37,17 @@ nd_kon_iron_forge = {
 			category = guild_input
 			debug_max_profit = guild_profit_margin
 		}
+
+		# The smiths who work iron also draw and cast copper. It lives in
+		# the forge so that the copper trade advance (age 2) can unlock it:
+		# a method cannot be unlocked before its building exists.
+		nd_kon_copper_working = {
+			copper = 0.2
+			produced = jewelry
+			output = 0.144
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
 	}
 	construction_demand = early_soldier_building_construction
 }
@@ -149,20 +160,142 @@ nd_kon_cloth_market = {
 			dyes = 0.1
 			category = building_maintenance
 		}
+	}
+	construction_demand = guild_construction
+}
 
+# Mpusu Looms: the raffia weaving of the eastern provinces
+# The cloths of Kongo were woven from the leaf fibre of the raffia palm on
+# upright looms, cut into pile and embroidered. Duarte Pacheco Pereira
+# (c. 1506) and Pigafetta (1591) set them beside velvet, damask and satin, and
+# bundles of them (libongo) passed as money. The weaving belt lay in the east,
+# in Mbata and the lands of Kongo dia Nlaza, where the palms grew.
+# location_potential: raffia fibre must be grown in the local market. Fine
+# cloth is a made good, so nothing is conjured; the gate keeps the looms in
+# palm country (four locations of the kingdom's own land grow fibre crops).
+# Settlement: countryside and town, never a city. Weaving was household work
+# of villages and of the small mbanza towns, not a city guild.
+# No modifier block, so the level formula of the guild tier multiplies nothing.
+nd_kon_raffia_looms = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = guild_max_level
+	employment_size = generic_peasant_building_employment
+	category = consumer_goods_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_kon_raffia_weaving
+	}
+
+	location_potential = {
+		is_produced_in_location_market = goods:fiber_crops
+	}
+
+	unique_production_methods = {
+		# The building's only method: no advance has to unlock it.
+		# eu5-profit -i "fiber_crops=0.8,dyes=0.05" -o fine_cloth (20%).
 		nd_kon_raffia_cloth_production = {
-			cloth = 0.15
-			dyes = 0.1
-			category = building_maintenance
-		}
-
-		nd_kon_ivory_processing = {
-			ivory = 0.15
-			tools = 0.05
-			category = building_maintenance
+			fiber_crops = 0.8
+			dyes = 0.05
+			produced = fine_cloth
+			output = 0.36
+			category = guild_input
+			debug_max_profit = rural_profit_margin
 		}
 	}
 	construction_demand = guild_construction
+}
+
+# Ivory Carvers: the horn and bracelet carvers of the mbanza towns
+# Kongo carvers cut side-blown horns (mpungi), bracelets and lidded boxes from
+# tusks brought down from the interior, in the same interlace as the raffia
+# cloths. Horns of this work were in the Medici collection by 1553.
+# location_potential: ivory must be taken in the local market (twelve
+# locations of the kingdom's own land hunt it). Jewelry is a made good and the
+# tusk is its body; vanilla's jewelry guild works ivory the same way.
+# Settlement: towns and cities. The carvers worked for the court and the
+# provincial governors, who sat in the mbanza.
+# No modifier block, so the level formula of the guild tier multiplies nothing.
+nd_kon_ivory_carvers = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	employment_size = guild_employment
+	category = consumer_goods_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_kon_ivory_export
+	}
+
+	location_potential = {
+		is_produced_in_location_market = goods:ivory
+	}
+
+	unique_production_methods = {
+		# The building's only method: no advance has to unlock it.
+		# eu5-profit -i "ivory=0.2,tools=0.05" -o jewelry (20%).
+		nd_kon_ivory_processing = {
+			ivory = 0.2
+			tools = 0.05
+			produced = jewelry
+			output = 0.228
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# School of the Mestres: the royal school Afonso I founded at Mbanza Kongo
+# about 1509 and its branches in the provincial capitals, taught by
+# Kongolese lay teachers (mestres) of noble birth. It taught the sons of the
+# nobility and nobody else, which is why it raises their literacy alone.
+nd_kon_mestre_school = {
+	is_special = yes
+	is_foreign = no
+	pop_type = nobles
+	max_levels = 1
+	employment_size = noble_cultural_employment
+	category = cultural_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = cultural_building_time
+
+	country_potential = {
+		has_advance = nd_kon_royal_school
+	}
+
+	# No location gate beyond the settlement tiers: the schools followed the
+	# provincial governors, and every governor sat in a town (mbanza).
+
+	modifier = {
+		local_nobles_max_literacy = 5
+		local_monthly_literacy = 0.1
+	}
+
+	unique_production_methods = {
+		nd_kon_mestre_school_upkeep = {
+			paper = 0.263
+			cloth = 0.132
+			beeswax = 0.066
+			category = building_maintenance
+		}
+	}
+	construction_demand = school_construction
 }
 
 # Jesuit College: Catholic educational institution
@@ -194,9 +327,9 @@ nd_kon_jesuit_college = {
 
 	unique_production_methods = {
 		nd_kon_college_upkeep = {
-			paper = 0.2
-			books = 0.1
-			cloth = 0.1
+			paper = 0.21
+			books = 0.105
+			cloth = 0.105
 			category = building_maintenance
 		}
 	}
@@ -263,7 +396,7 @@ nd_kon_antonine_shrine = {
 
 	modifier = {
 		local_unrest = -0.05
-		local_cultural_tradition = 0.5
+		local_cultural_tradition = 0.25
 		local_peasants_estate_power = 0.25
 	}
 
@@ -318,15 +451,7 @@ nd_kon_palm_oil_press = {
 			produced = medicaments
 			output = 0.30
 			category = guild_input
-			debug_max_profit = guild_profit_margin
-		}
-
-		nd_kon_copper_working = {
-			copper = 0.2
-			produced = jewelry
-			output = 0.144
-			category = guild_input
-			debug_max_profit = guild_profit_margin
+			debug_max_profit = rural_profit_margin
 		}
 	}
 	construction_demand = manufactory_construction
@@ -363,9 +488,9 @@ nd_kon_embassy_house = {
 
 	unique_production_methods = {
 		nd_kon_embassy_maintenance = {
-			paper = 0.15
-			fine_cloth = 0.1
-			furniture = 0.1
+			paper = 0.157
+			fine_cloth = 0.105
+			furniture = 0.105
 			category = building_maintenance
 		}
 	}

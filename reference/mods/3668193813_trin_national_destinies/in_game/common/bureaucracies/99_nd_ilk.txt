@@ -3,17 +3,27 @@
 #
 # Six historically grounded institutions of the Mongol Ilkhanate
 # (1256-1335) and its Persianate-Mongol institutional fusion.
-# The auto-modifier grants 2 slots; the capital adds 1 = 3
-# effective. Player picks 3 of 6.
+# The auto modifier grants 3 slots, so the country can run half
+# of its six on the day it forms. The capital gives none (only a
+# megalopolis does), and no road into the Ilkhanate is certain
+# to arrive under sharia law.
 #
 # 1. Yarghu (Mongol customary-law tribunal under yarghuchi judges)
 # 2. Sahib-Divan (Persian chief-vizierate; Rashid al-Din)
 # 3. Ghazan's Tax Cadaster (1295-1304 land census and reform)
-# 4. Diwan al-Mazalim (Ghazan's mixed-jurisdiction grievance court)
+# 4. Court of the Friday Mosque (Ghazan's joint bench of qadi and Mongol
+#    secretary; key ilk_mazalim_bureaucracy)
 # 5. Maragha Observatory (Hulagu/Tusi astronomical complex, 1259)
 # 6. Keshig (palace household-guard and bureaucratic seedbed)
 #
 # All IDs are tag-prefixed (ilk_) to avoid id collisions.
+#
+# Vanilla 1.4 ships a generic Mazalim Court for every Muslim country
+# (bureaucracies/muslim.txt). Block 4 needs a Sunni ruler, so whoever can
+# switch it on also holds vanilla's. It therefore carries what was
+# particular to the Ilkhanate, a bench where Mongol and Muslim law sat
+# together, and none of the vanilla court's keys. Its KEY is unchanged,
+# because saves and the impact modifier registry refer to it.
 ###############################################################
 
 
@@ -119,7 +129,7 @@ ilk_sahib_divan_bureaucracy = {
 	# positive: the divans run smoothly; revenue flows; literacy spreads
 	positive_modifier = {
 		scale = { value = scope:maintenance }
-		tax_income_efficiency = 0.10
+		tax_income_efficiency = 0.05
 		global_burghers_max_literacy = 10
 		annexation_speed_modifier = 0.10
 	}
@@ -180,9 +190,9 @@ ilk_tax_cadaster_bureaucracy = {
 	# positive: standardized rates, controlled exactions, recovering countryside
 	positive_modifier = {
 		scale = { value = scope:maintenance }
-		global_monthly_prosperity = 0.002
-		tax_income_efficiency = 0.10
-		global_population_growth = 0.003
+		global_monthly_prosperity = 0.001
+		tax_income_efficiency = 0.05
+		global_population_growth = 0.00025
 	}
 
 	# negative: registers go stale, noyan exactions creep back, peasants flee
@@ -197,13 +207,17 @@ ilk_tax_cadaster_bureaucracy = {
 }
 
 # =====================================================================
-# 4. Diwan al-Mazalim: the grievance court reorganized by Ghazan Khan
-#    in 1303, by which mixed Mongol-Muslim cases and difficult appeals
-#    were heard twice a month in the Friday mosque. The bench gathered
-#    shaikhs, qadis, sayyids, betikchis (Mongol secretaries) and ulama
-#    to issue rulings grounded in sharia but enforceable on Mongol
-#    litigants. The mazalim made royal justice visible to the urban
-#    population and bridged the yarghu/sharia divide.
+# 4. Court of the Friday Mosque: the joint bench Ghazan Khan ordered in
+#    1303. Cases between a Mongol and a Muslim, and appeals no single
+#    court could settle, were heard twice a month in the Friday mosque by
+#    qadis, sayyids, shaikhs and ulama sitting with the betikchis (Mongol
+#    secretaries). The ruling rested on sharia and bound the Mongol party
+#    as well. Rashid al-Din files it under the mazalim, and that is where
+#    the resemblance to vanilla's Mazalim Court ends: that court is the
+#    sovereign hearing complaints against his officials (legitimacy,
+#    control, nobles resentful). This one is two legal orders made to
+#    give one answer (two peoples cheaper to hold in one state, the towns
+#    given recourse against the soldiery).
 # =====================================================================
 ilk_mazalim_bureaucracy = {
 	implementation_price = price:implement_bureaucracy_price
@@ -225,35 +239,37 @@ ilk_mazalim_bureaucracy = {
 
 	estates_that_like = {
 		clergy_estate
-		peasants_estate
+		burghers_estate
 	}
 	estates_that_dislike = {
 		nobles_estate
 	}
 
-	# neutral: a permanent royal grievance court is a constant in urban life
+	# neutral: a standing bench in every Friday mosque
 	neutral_modifier = {
 		num_nd_provincial_estates = 1
 	}
 
-	# positive: justice reaches the streets, control rises, faith is satisfied
+	# positive: conquerors and conquered answer to one bench, so keeping
+	# both peoples inside one state costs less ("Accepted Culture
+	# Maintenance Cost": the cultural capacity each accepted culture takes
+	# up), the townsmen recover faster from a grievance, and a quarrel
+	# settled once stays settled
 	positive_modifier = {
 		scale = { value = scope:maintenance }
-		global_max_urban_control = 0.03
-		monthly_devotion = 0.05
-		monthly_horde_unity = 0.05
-		monthly_legitimacy = 0.05
-		monthly_republican_tradition = 0.05
+		accepted_culture_maintenance_cost_modifier = -0.10
+		burghers_estate_satisfaction_recovery = 0.001
 		stability_decay = -0.00025
 	}
 
-	# negative: noyans grow restive at being subjected to qadi rulings
+	# negative: the bench stops sitting, each side goes back to its own
+	# court, and the townsman has no one to hear him against a soldier
 	negative_modifier = {
 		scale = {
 			value = 1
 			subtract = scope:maintenance
 		}
-		nobles_estate_satisfaction_decay = 0.020
+		burghers_estate_satisfaction_decay = 0.020
 		global_separatism = 0.05
 	}
 }

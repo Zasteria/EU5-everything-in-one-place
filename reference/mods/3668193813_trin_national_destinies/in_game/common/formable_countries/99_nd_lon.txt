@@ -1,0 +1,59 @@
+﻿# Leon (LON): formation lines
+# National Destinies mod
+#
+# Vanilla 1.4 defines LON_f with an empty form_effect (level 2, 75% of
+# leon_area, Leonese culture, Christian, not for a country that already is
+# LON), so INJECT is safe: there is nothing of vanilla's to lose. LON_f is
+# the only vanilla formable that creates the tag LON
+# (00_formable_countries.txt:776-803).
+#
+# Roads into the tag, and what each one meets here:
+# 1. Leon is released or breaks away. The start setup gives LON cores on the
+#    whole area and on Leonese Extremadura, and no land
+#    (main_menu/setup/1337/10_countries.txt:14731), so that country is born
+#    as LON and never passes through this block. The four-yearly marker
+#    repair in 99_nd_on_actions.txt stamps the marker and delivers nd_lon.1
+#    for it. This is the likeliest Leon, and the event reads right for it.
+# 2. A Leonese country that carries no level 2 tag takes the land and forms
+#    it by the button. On the 1337 map that is Asturias (ATU), which the
+#    setup also lists without land (cores on the eight Asturian locations,
+#    capital Oviedo). form_effect runs: markers, rank, capital, event.
+# Castile holds 35 of the 42 locations in 1337, but it is Castilian and
+# carries the tag of a level 2 formable, so both the culture gate and the
+# level rule (formable_countries/readme.txt:2) shut it out. Nothing here
+# speaks to it.
+INJECT:LON_f = {
+	form_effect = {
+		# Formation markers live HERE, not only in the event's options: a
+		# country can be formed by script, and then the popup may never be
+		# answered.
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_lon_formed
+		}
+		# Leon was a kingdom from 910 and kept the title, quartered with
+		# Castile's, until 1833. nd_can_take_kingdom_rank is false only where
+		# the engine itself would refuse the rank.
+		if = {
+			limit = {
+				nd_can_take_kingdom_rank = yes
+				country_rank_level < 3
+			}
+			set_country_rank_effect = { rank = country_rank:rank_kingdom }
+		}
+		# The price of the crown, paid by the road that comes over the
+		# passes: the court leaves Oviedo for the city on the plain, as it
+		# did when Alfonso III's sons divided his realm in 910 and Ordono II
+		# settled the royal seat there. Guarded by ownership: 75% of the
+		# area does not have to include the city.
+		if = {
+			limit = {
+				owns = location:leon
+				NOT = { capital = location:leon }
+			}
+			set_capital = location:leon
+		}
+		trigger_event_non_silently = nd_lon.1
+		add_stability = stability_mild_bonus
+	}
+}

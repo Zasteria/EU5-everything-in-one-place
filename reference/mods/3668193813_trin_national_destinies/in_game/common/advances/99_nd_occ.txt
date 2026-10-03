@@ -92,7 +92,7 @@ nd_occ_cartas_de_bastida = {
 	icon = fortified_towns
 
 	unlock_building = nd_occ_bastida
-	global_population_growth = 0.002
+	global_population_growth = 0.00025
 	global_monthly_development = 0.001
 }
 
@@ -107,7 +107,7 @@ nd_occ_dreit_escrich = {
 	icon = legalism_advance
 
 	global_integration_speed_modifier = 0.2
-	global_separatism = -0.1
+	global_separatism = -0.05
 }
 
 # Bidaus: the light foot of the Pyrenean slope, Gascon and Navarrese, armed
@@ -372,7 +372,7 @@ nd_occ_lies_e_passarias = {
 	requires = formalized_relations
 	icon = mountain_roads
 
-	global_devastation_recovery = 0.005
+	global_devastation_recovery = 0.0025
 	global_supply_limit_modifier = 0.1
 }
 
@@ -450,7 +450,7 @@ nd_occ_escalas_del_levant = {
 	requires = trade_envoys
 	icon = merchants_and_trade
 
-	trade_sea_efficiency = 0.04
+	trade_sea_efficiency = 0.2
 	global_merchant_capacity_modifier = 0.15
 }
 
@@ -500,8 +500,8 @@ nd_occ_junccion_dels_dos_mars = {
 	icon = extensive_canal_works
 
 	unlock_building = nd_occ_canal_de_las_doas_mars
-	global_trade_through_owned_territory_efficiency = 0.15
-	trade_land_efficiency = 0.04
+	trade_sea_efficiency = 0.10
+	trade_land_efficiency = 0.2
 }
 
 # The royal manufactures of Languedoc wove londrins seconds, a broadcloth cut
@@ -677,8 +677,8 @@ nd_occ_camin_de_ferre = {
 	icon = railroad_advance
 
 	global_monthly_development = 0.001
-	global_production_efficiency = 0.1
-	trade_land_efficiency = 0.03
+	global_production_efficiency = 0.05
+	trade_land_efficiency = 0.1
 }
 
 # Public instruction. A country whose legal language was legislated out of
@@ -751,9 +751,14 @@ nd_occ_dest_caorsins = {
 			text = nd_occ_path_a_tt
 			has_variable = nd_occ_path_a
 		}
-		owns_or_non_sovereign_subject_owns = location:cahors
+		custom_tooltip = {
+			text = nd_occ_dest_cahors_developed_tt
+			location:cahors = {
+				owner ?= root
+				development >= 26
+			}
+		}
 		has_embraced_institution = institution:banking
-		total_development >= 500
 	}
 	icon = banking_advance
 
@@ -772,7 +777,9 @@ nd_occ_dest_privilegi = {
 	potential = { has_or_had_tag = OCC has_variable = nd_occ_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:bordeaux
-		has_embraced_institution = institution:global_trade
+		# The New World (age 3), not global trade (age 4): the other path has
+		# no age floor, and the two must end within two ages of each other.
+		has_embraced_institution = institution:new_world
 		gold >= 2000
 	}
 	icon = atlantic_trade_routes
@@ -794,7 +801,15 @@ nd_occ_dest_pacte_general = {
 		owns_or_non_sovereign_subject_owns = location:limoges
 		owns_or_non_sovereign_subject_owns = location:aurillac
 		gold >= 3000
-		total_development >= 1000
+		custom_tooltip = {
+			text = nd_occ_dest_auvergne_share_tt
+			area:auvergne_area = {
+				any_location_in_area = {
+					percent >= 0.6
+					root = { owns_or_non_sovereign_subject_owns = prev }
+				}
+			}
+		}
 	}
 	icon = swiss_oath_of_rutli
 

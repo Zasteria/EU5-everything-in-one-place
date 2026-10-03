@@ -130,9 +130,9 @@ nd_chi_canal_mastery = {
 	requires = crown_power_advance_discovery
 	icon = crown_power_advance_discovery
 
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.03
+	trade_sea_efficiency = 0.1
 
 	global_distance_from_capital_speed_propagation = 0.1
 }
@@ -196,7 +196,7 @@ nd_chi_canton_system = {
 	icon = maritime_advance_age_5
 
 	unlock_production_method = nd_chi_canton_export
-	trade_income = 0.15
+	trade_income = 0.1
 	global_merchant_power = 0.1
 }
 
@@ -253,9 +253,9 @@ nd_chi_maritime_customs = {
 	requires = urbanization
 	icon = urbanization
 
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.03
+	trade_sea_efficiency = 0.1
 
 	monthly_inflation = -0.001
 }
@@ -268,7 +268,7 @@ nd_chi_reform_spirit = {
 	icon = rights_of_man
 
 	global_institution_growth_modifier = 0.2
-	global_monthly_prosperity = 0.0015
+	global_monthly_prosperity = 0.001
 }
 
 # ===== DESTINY TREE =====
@@ -279,9 +279,7 @@ nd_chi_destiny = {
 	potential = { has_or_had_tag = CHI has_variable = nd_chi_formed has_game_rule = nd_destinies_enabled }
 	allow = { stability >= 75 }
 	icon = crown_power_advance_renaissance
-	monthly_legitimacy = 0.1
-	monthly_devotion = 0.1
-	monthly_republican_tradition = 0.1
+	stability_decay = -0.00025
 }
 
 # === Path A: Mandate of Heaven (Continental Supremacy) ===
@@ -296,12 +294,15 @@ nd_chi_dest_pacify = {
 			text = nd_chi_path_a_tt
 			has_variable = nd_chi_path_a
 		}
-		owns_or_non_sovereign_subject_owns = location:karakorum
+		# Dali in Yunnan (taken by the Ming in 1381) and Thang Long (held
+		# from 1407 to 1427): the southern frontier. Karakorum stood here,
+		# and the country that carries the tag in 1337 holds it already.
+		owns_or_non_sovereign_subject_owns = location:taihe_dali
 		owns_or_non_sovereign_subject_owns = location:thang_long
 		gold >= 1000
 	}
 	icon = feudalism_advance
-	global_separatism = -0.1
+	global_separatism = -0.05
 	global_integration_speed_modifier = 0.1
 }
 
@@ -311,9 +312,20 @@ nd_chi_dest_nine_prov = {
 	requires = nd_chi_dest_pacify
 	potential = { has_or_had_tag = CHI has_variable = nd_chi_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		owns_or_non_sovereign_subject_owns = location:lhasa
+		# Kashgar, the far end of the Western Regions. Lhasa stood here,
+		# and Tibet is a vassal of the throne on day one.
+		owns_or_non_sovereign_subject_owns = location:kashgar
 		owns_or_non_sovereign_subject_owns = location:samarkand
-		total_development >= 30000
+		# Shangyuan is Nanjing, which the Hongwu Emperor built into the
+		# largest city of its day. 41.5 in 1337, raised by half for a
+		# second stage.
+		custom_tooltip = {
+			text = nd_chi_dest_nanjing_developed_tt
+			location:shangyuan = {
+				owner ?= root
+				development >= 62
+			}
+		}
 		army_size >= 50
 	}
 	icon = imperial_ambitions
@@ -328,9 +340,21 @@ nd_chi_dest_all_under = {
 	potential = { has_or_had_tag = CHI has_variable = nd_chi_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:delhi
-		owns_or_non_sovereign_subject_owns = location:karakorum
-		owns_or_non_sovereign_subject_owns = location:samarkand
-		total_development >= 40000
+		# Almaliq on the Ili: the seat of the Chagatai khans, and the land
+		# the Qianlong Emperor took in 1757. Karakorum and Samarkand stood
+		# here: the first is held on day one, the second is asked for one
+		# stage earlier.
+		owns_or_non_sovereign_subject_owns = location:almaliq
+		# Dadu is Beijing, rebuilt by the Yongle Emperor from 1406 with the
+		# Forbidden City this stage unlocks. 45 in 1337, doubled for a
+		# third stage.
+		custom_tooltip = {
+			text = nd_chi_dest_dadu_developed_tt
+			location:dadu = {
+				owner ?= root
+				development >= 90
+			}
+		}
 		prestige >= 75
 		army_size >= 75
 	}
@@ -399,5 +423,5 @@ nd_chi_dest_dragon_shore = {
 	unlock_building = nd_chi_treasure_wharf
 	naval_damage_done = 0.05
 	exploration_mission_speed_modifier = 0.2
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }

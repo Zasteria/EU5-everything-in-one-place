@@ -48,7 +48,7 @@ nd_mug_persian_admin = {
 	potential = { has_or_had_tag = MUG }
 	requires = legalism_advance
 	country_cabinet_efficiency = 0.05
-	stability_investment = tiny_stability_investment
+	global_bureaucracy_maintenance_efficiency = 0.04
 }
 
 # Sufi Devotional Tradition: the spiritual thread connecting Mughals to Indian Islam
@@ -85,7 +85,7 @@ nd_mug_karkhana_tradition = {
 	potential = { has_or_had_tag = MUG }
 	requires = merchants_and_trade
 	unlock_building = nd_mug_karkhana
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }
 
 # Mansabdari System Origins: hierarchical rank-based military administration
@@ -167,7 +167,7 @@ nd_mug_revenue_reforms = {
 	potential = { has_or_had_tag = MUG }
 	requires = crown_power_advance_discovery
 	unlock_building = nd_mug_zarb_khana
-	tax_income_efficiency = 0.05
+	tax_income_efficiency = 0.03
 	global_crown_estate_power = 0.1
 }
 
@@ -188,14 +188,15 @@ nd_mug_grand_trunk_road = {
 	potential = { has_or_had_tag = MUG }
 	requires = merchant_power_from_maritime_discovery_advance
 	unlock_building = nd_mug_sarai
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	global_distance_from_capital_speed_propagation = 0.1
 }
 
 # Dhaka Muslin: the legendary fine textile industry
+# Unlock: Muslin Weaving PM (fine cloth from cotton, in the Imperial Karkhana)
 nd_mug_dhaka_muslin = {
 	age = age_3_discovery
 	icon = regulate_court_procedures
@@ -237,7 +238,7 @@ nd_mug_mughal_engineering = {
 	potential = { has_or_had_tag = MUG }
 	requires = construction_speed_absolutism
 	global_construction_speed = 0.1
-	global_defensive = 0.25
+	global_defensive = 0.2
 }
 
 # Jharokha-i-Darshan: imperial audience ceremony reinforcing loyalty
@@ -270,6 +271,8 @@ nd_mug_banduqchi_reforms = {
 }
 
 # Mughal Textile Empire: industrial-scale textile production
+# Unlock: Silk Brocade PM (fine cloth from silk and silver thread, in the
+# Imperial Karkhana)
 nd_mug_textile_empire = {
 	age = age_6_revolutions
 	icon = industrialization_advance
@@ -297,7 +300,7 @@ nd_mug_renaissance_of_letters = {
 	icon = enlightened_court
 	potential = { has_or_had_tag = MUG }
 	requires = enlightened_court
-	global_monthly_literacy = 0.025
+	global_monthly_literacy = 0.02
 	num_possible_artists = 1
 }
 
@@ -309,9 +312,9 @@ nd_mug_indigo_opium_trade = {
 	requires = urbanization
 	global_dyes_output_modifier = 0.1
 	global_raw_material_output = 0.1
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -356,7 +359,17 @@ nd_mug_dest_bengal = {
 		owns_or_non_sovereign_subject_owns = location:sonargaon
 		owns_or_non_sovereign_subject_owns = location:chittagong
 		army_size >= 50
-		total_development >= 6000
+		# The stage is the conquest of Bengal, so it asks for Bengal: half
+		# of the area's locations, the two named places among them.
+		custom_tooltip = {
+			text = nd_mug_dest_bengal_share_tt
+			area:bengal_area = {
+				any_location_in_area = {
+					percent >= 0.5
+					root = { owns_or_non_sovereign_subject_owns = prev }
+				}
+			}
+		}
 	}
 	icon = imperial_ambitions
 	global_levy_size_modifier = 0.1
@@ -417,7 +430,16 @@ nd_mug_dest_workshop = {
 	potential = { has_or_had_tag = MUG has_variable = nd_mug_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		has_embraced_institution = institution:banking
-		total_development >= 6000
+		# Agra: Akbar's capital, where he built the fort from 1565 and the
+		# imperial workshops stood. A rural place of development 36 in 1337, half as much
+		# again.
+		custom_tooltip = {
+			text = nd_mug_dest_agra_developed_tt
+			location:agra = {
+				owner ?= root
+				development >= 54
+			}
+		}
 		gold >= 2000
 	}
 	icon = global_trade_advance
@@ -433,13 +455,21 @@ nd_mug_dest_padshah = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:madurai
 		owns_or_non_sovereign_subject_owns = location:kozhikode
-		total_development >= 8000
+		# Delhi: Shah Jahan's new city, Shahjahanabad, was built from 1639.
+		# Development 41 in 1337, doubled.
+		custom_tooltip = {
+			text = nd_mug_dest_delhi_developed_tt
+			location:delhi = {
+				owner ?= root
+				development >= 82
+			}
+		}
 		prestige >= 75
 		gold >= 3000
 	}
 	icon = crown_power_advance_renaissance
 	unlock_building = nd_mug_diwan_i_am
 	improve_relation_impact = 0.15
-	prestige_decay = -0.002
+	prestige_decay = -0.001
 	subject_loyalty = 5
 }

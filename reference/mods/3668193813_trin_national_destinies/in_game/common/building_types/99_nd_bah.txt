@@ -55,15 +55,16 @@ nd_bah_darbar_hall = {
 	}
 
 	modifier = {
-		local_cultural_tradition = 0.5
+		local_cultural_tradition = 0.25
 		local_nobles_estate_power = 0.5
 		local_max_literacy = 2
 	}
 
 	unique_production_methods = {
 		nd_bah_darbar_upkeep = {
-			silk = 0.1
-			dyes = 0.1
+			silk = 0.119
+			dyes = 0.119
+			incense = 0.06
 			category = building_maintenance
 		}
 	}
@@ -97,8 +98,9 @@ nd_bah_taraf_office = {
 
 	unique_production_methods = {
 		nd_bah_taraf_upkeep = {
-			paper = 0.1
-			cloth = 0.1
+			paper = 0.184
+			cloth = 0.184
+			beeswax = 0.092
 			category = building_maintenance
 		}
 	}
@@ -133,8 +135,8 @@ nd_bah_madrasa = {
 
 	unique_production_methods = {
 		nd_bah_madrasa_upkeep = {
-			paper = 0.2
-			books = 0.1
+			paper = 0.3
+			books = 0.15
 			category = building_maintenance
 		}
 	}
@@ -214,44 +216,150 @@ nd_bah_bandargah = {
 			naval_supplies = 0.1
 			category = building_maintenance
 		}
-	
-		nd_bah_horse_import_pm = {
-			horses = 0.2
-			livestock = 0.1
-			category = building_maintenance
-		}
-	
-		nd_bah_bidriware_pm = {
-			copper = 0.2
-			silver = 0.1
-			category = building_maintenance
-		}
-	
-		nd_bah_caravan_pm = {
-			horses = 0.1
-			livestock = 0.1
-			category = building_maintenance
-		}
-	
-		nd_bah_textile_pm = {
-			wool = 0.2
-			dyes = 0.1
-			category = building_maintenance
-		}
-	
-		nd_bah_diamond_pm = {
-			iron = 0.1
-			tools = 0.05
-			category = building_maintenance
-		}
-	
-		nd_bah_cotton_mill_pm = {
-			cloth = 0.3
-			dyes = 0.1
+	}
+	construction_demand = port_building_construction
+}
+
+# Sarai: roadside rest house (Age 2, trade)
+# A walled court with a well, a mosque and stabling, a day's march from the
+# next, on the roads that climb from the Konkan ports to Gulbarga and Bidar.
+# location_potential: inland, with a road to the capital. The coast has the
+# Bandargah; a sarai off the road system lodged nobody.
+# Settlement: countryside and towns. The stages fell where the day's march
+# ended, mostly in open country; a city has its own markets and lodgings.
+nd_bah_sarai = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = trade_employment
+	category = trade_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = trade_post_build_time
+
+	country_potential = {
+		has_advance = nd_bah_caravanserai_network
+	}
+
+	location_potential = {
+		is_coastal = no
+		has_road_to_capital = yes
+	}
+
+	modifier = {
+		local_market_access = 0.01
+		local_monthly_control = 0.001
+	}
+
+	unique_production_methods = {
+		nd_bah_sarai_upkeep = {
+			livestock = 0.15
+			lumber = 0.1
+			cloth = 0.05
 			category = building_maintenance
 		}
 	}
-	construction_demand = port_building_construction
+	construction_demand = kontor_construction
+}
+
+# Himroo Looms: cotton and silk brocade (Age 3, production)
+# Himroo is the Deccan's own cloth: a cotton warp under a silk weft, woven
+# to look like the gold brocades of Persia at a fraction of the price. The
+# weavers came south with the Tughluq court to Daulatabad and stayed when it
+# went back.
+# location_potential: cotton must reach the local market. Fine cloth is a
+# made good, so nothing is conjured; the gate keeps the looms on the black
+# cotton soil the craft grew up on.
+# Settlement: towns and cities. A court craft sold through bazaars.
+# No modifier block, so the building takes the level formula of its tier.
+nd_bah_himroo_looms = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	employment_size = guild_employment
+	category = consumer_goods_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_bah_deccan_textiles
+	}
+
+	location_potential = {
+		is_produced_in_location_market = goods:cotton
+	}
+
+	unique_production_methods = {
+		nd_bah_textile_pm = {
+			cotton = 0.4
+			silk = 0.2
+			produced = fine_cloth
+			output = 0.4
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+
+		nd_bah_cotton_mill_pm = {
+			cotton = 1.2
+			dyes = 0.1
+			tools = 0.05
+			produced = cloth
+			output = 1.66
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# Diamond Diggings: the alluvial pits of Golconda (Age 4, extraction)
+# Shallow pits sunk into the river gravels; the gravel is carried out in
+# baskets, washed, dried and picked over by hand.
+# location_potential: the location's own raw material is gems. This is an
+# extraction site and stands only on the diamond gravels.
+# Settlement: every tier. The gate above already admits a handful of places,
+# and Golconda itself is a town from the start.
+nd_bah_diamond_diggings = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = rural_building_cap
+	employment_size = rural_peasant_produce_employment
+	category = rgo_building_category
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_bah_diamond_mines
+	}
+
+	location_potential = {
+		raw_material = goods:gems
+	}
+
+	unique_production_methods = {
+		nd_bah_diamond_pm = {
+			tools = 0.15
+			lumber = 0.2
+			livestock = 0.1
+			produced = gems
+			output = 0.27
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = village_construction
 }
 
 # Bastion: Gunpowder-era polygon fort (Age 3, defense)
@@ -316,8 +424,9 @@ nd_bah_revenue_office = {
 
 	unique_production_methods = {
 		nd_bah_revenue_upkeep = {
-			paper = 0.1
-			cloth = 0.05
+			paper = 0.2
+			cloth = 0.1
+			dyes = 0.1
 			category = building_maintenance
 		}
 	}
@@ -344,7 +453,7 @@ nd_bah_baoli = {
 	}
 
 	modifier = {
-		local_monthly_food_modifier = 0.1
+		local_monthly_food_modifier = 0.05
 		local_population_growth = 0.0005
 		local_monthly_prosperity = 0.001
 	}
@@ -353,6 +462,7 @@ nd_bah_baoli = {
 		nd_bah_baoli_upkeep = {
 			stone = 0.15
 			tools = 0.1
+			lumber = 0.1
 			category = building_maintenance
 		}
 	}

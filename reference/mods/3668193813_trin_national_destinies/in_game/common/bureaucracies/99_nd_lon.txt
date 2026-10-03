@@ -1,0 +1,323 @@
+﻿# Leon (LON): bureaucracies
+# National Destinies mod
+#
+# Read before choosing subjects (EU5 1.4):
+#   vanilla bureaucracies Leon can hold (bureaucracies/generic.txt, ten of
+#     them, from Confessionalism or the age 4 advance): a board of revenue, a
+#     privy council, an audit bureau, a colonial office, an admiralty, a
+#     foreign ministry, a trade commission, a war council, an ordnance board
+#     and a commissariat. None is repeated here by name or by subject.
+#   vanilla Leon elsewhere: the Cortes de Leon are a reform it starts with
+#     (lon_cortes_de_leon_reform) and an advance; the Adelantado Mayor de
+#     Leon, the Order of Santiago, the Real Casa de Moneda, the canada, the
+#     Maragato carriers and the pendon morado are advances; the Fuero Juzgo
+#     is a town right; the Leyes de Toro are a policy and the School of
+#     Salamanca a building. So no adelantado and no merino (the same office
+#     under its older name), no mint, no Cortes, no court of the Fuero Juzgo.
+#   the mod's Castile (99_nd_cas.txt): Alcaldes de Casa y Corte, Alfaqueques,
+#     Consulado de Burgos, Guardas de Castilla. The mod's Spain: Mesta,
+#     Corregimiento, Consejo Real, Casa de Contratacion. The mod's Aragon:
+#     Sobrejunterias, Real Audiencia.
+#   this country's own tree (99_nd_lon.txt): the Fuero of 1017, the pantheon,
+#     the Frankish boroughs, the Estudio, the concejo abierto, the branas, the
+#     Principality and its Junta General, Alcantara, the Leyes de Toro, the
+#     presses, the Comunidades, the doctors of money, the dry ports, the
+#     border forts, the Junta of 1808. Buildings: Panteon de los Reyes, Burgo
+#     de Francos, Casa de Concejo, Brana, Horreo, Fabrica de Lienzos,
+#     Instituto Asturiano, Fabrica de Trubia, Feria General.
+#
+# What is left, and what this kingdom had in its own name:
+# 1. Notaria Mayor de Leon: the kingdom's own notary in the royal chancery,
+#    kept apart from Castile's after the crowns were joined.
+# 2. Moneda Forera: the hearth tax voted at Benavente in 1202 against the
+#    king's promise not to debase the coin, with its seven-yearly rolls of
+#    who pays and who is exempt.
+# 3. Audiencia Escolastica: the court of the scholastic of Salamanca, judge
+#    of every member of the Estudio.
+# 4. Tenencia de las Torres de Leon: the wardenship of the royal towers of
+#    the city, held at the king's pleasure.
+#
+# Estates. Both roads into the tag (a released Leon, Asturias) are Leonese
+# Catholic monarchies with the same starting laws; the territory has all four
+# estates on day one (882 thousand pops: peasants, burghers, clergy, nobles).
+# The four offices align differently: crown and towns against the lords;
+# lords and clergy against the countryfolk; clergy against the towns; crown
+# and lords against the towns.
+#
+# Slots. Vanilla gives Leon none on the day it forms (a capital grants one
+# only as a megalopolis, location_ranks/00_default.txt:50; Leon is a town).
+# The auto modifier grants 2, half of these four. Vanilla adds one with the
+# age 4 bureaucracy advance and one in age 6, and from Confessionalism its
+# ten generic offices compete for the same slots.
+#
+# No cabinet seat and no character modifier. No key stands in both the funded
+# and the neglected block of one institution. No government power key: none
+# of these offices made a king more lawful. All IDs are lon_-prefixed.
+#
+# Dropped after research: the Juicio del Libro (the appeal court of Leon that
+# judged by the Fuero Juzgo). No page fetched this session describes it, and
+# its law book is vanilla's town right.
+
+# 1. Notaria Mayor de Leon
+# Fetched (es.wikipedia, "Notario mayor del reino (corona de Castilla)"): one
+# notario mayor each for Castile, Leon, Toledo and Andalusia; counted among
+# the officers of the crown's written administration beside the chancellor;
+# in 1431, under John II, a notario mayor drew 98,400 maravedis a year.
+# Fetched (es.wikipedia, "Notaria mayor de Andalucia"): created by Alfonso X
+# in 1252 together with those of Castile and Leon; later tied by inheritance
+# to one noble house.
+# From memory, not fetched: that the notary of Leon checked and registered
+# the charters issued for the kingdom, and that the towns of Leon asked in
+# the Cortes for officers who were natives of the kingdom. The second is why
+# the towns like the office. The lords dislike it for what it does when it
+# works (a grant that is written, registered and can be looked up is harder
+# to stretch) and profit when it does not: the fetched fate of the Andalusian
+# notary, an heirloom of one house, is the neglected side here.
+lon_notaria_mayor_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = LON
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {}
+
+	estates_that_like = {
+		crown_estate
+		burghers_estate
+	}
+	estates_that_dislike = {
+		nobles_estate
+	}
+
+	neutral_modifier = {
+		legislative_efficiency = 0.05
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		monthly_political_influence_gain_modifier = 0.1
+		change_policy_cost_modifier = -0.1
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		estate_enrichment = 0.1
+		global_nobles_estate_power = 0.1
+	}
+}
+
+# 2. Moneda Forera
+# Fetched (es.wikipedia, "Moneda forera"): first set as a tribute at the
+# Cortes of Benavente in 1202, one maravedi a year from every free man for
+# seven years, against the king's undertaking not to break the coin (mint it
+# with less metal); canons and knights exempt; it became a tax on commoners
+# with at least 120 maravedis of property, collected in the first and last
+# year of each seven; for it the Padrones de Moneda Forera listed every
+# householder as payer or as exempt hidalgo, redrawn every seven years; the
+# yield dwindled to almost nothing and the tax was ended in 1724. The page's
+# bibliography has a study of these rolls as a source for Asturias.
+# From memory, not fetched: that in Asturias and the Leonese mountains most
+# householders were entered as hidalgos, and that the rolls were the proof
+# of nobility a family produced in court. Both are why the neglected side is
+# a roll on which nobody pays.
+# minting_inflation_threshold is how much a country can mint before the coin
+# inflates (vanilla's minting office gives 0.02; its median grant is 0.01).
+# The lords' levy on the funded side: the exemption was for those who serve
+# in arms, and the roll is the list of who owes that service.
+# Vanilla's Leon has a mint as an advance (lon_real_casa_moneda: interest and
+# court spending) and this tree has the Salamanca doctors on prices; neither
+# is the bargain of 1202 or its register.
+lon_moneda_forera_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	# a roll redrawn by each council once in seven years, no standing office:
+	# vanilla's light multiplier (0.003, the Bayt al-Mal and the Byzantine set)
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.003
+	}
+
+	potential = {
+		has_or_had_tag = LON
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {}
+
+	estates_that_like = {
+		nobles_estate
+		clergy_estate
+	}
+	estates_that_dislike = {
+		peasants_estate
+	}
+
+	neutral_modifier = {
+		minting_inflation_threshold = 0.01
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		peasants_estate_max_tax = 0.05
+		nobles_estate_levy_size = 0.15
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		monthly_inflation = 0.002
+		tax_income_efficiency = small_tax_income_efficiency_penalty
+	}
+}
+
+# 3. Audiencia Escolastica
+# Fetched (es.wikipedia, "Universidad de Salamanca"): the scholastic
+# (maestrescuela) of the cathedral school is on record in 1174; Alfonso IX
+# made the schools a Estudio General in 1218; Alexander IV's licence to teach
+# everywhere in 1255; the constitutions of Martin V in 1422; a corporation
+# independent of the city and of the chapter, jealous of its privileges,
+# with its own rules "and even its own penal institutions".
+# Fetched (es.wikipedia, "Maestrescuela"): the maestrescuela was chancellor
+# of the university at Salamanca. Fetched (es.wikipedia, search result for
+# "Padre Putas"): "the maestrescuela and judge of the Estudio". Fetched
+# (es.wikipedia, "Archivo Historico de la Universidad de Salamanca"): the
+# Audiencia Escolastica is one of the four bodies whose papers make up the
+# university's archive.
+# From memory, not fetched: that the 1422 constitutions are what gave the
+# scholastic his jurisdiction over students, masters and their servants in
+# civil and criminal suits, that the court had its own gaol, and the quarrels
+# with the city's justice over students taken at night. The text names no
+# date for the court itself.
+# This tree's age 1 advance on the Estudio raises what clergy and nobles can
+# learn, and vanilla's School of Salamanca is a building; this is the court
+# that kept the scholars out of the town's hands. With the advance the funded
+# side counts half as much again; the values are written for that case
+# (0.06 and 0.15 at most).
+# Gate: the city itself.
+lon_audiencia_escolastica_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = LON
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		owns = location:salamanca
+	}
+
+	estates_that_like = {
+		clergy_estate
+	}
+	estates_that_dislike = {
+		burghers_estate
+	}
+
+	neutral_modifier = {
+		non_rural_migration_attraction = 0.05
+	}
+
+	positive_modifier = {
+		scale = {
+			value = scope:maintenance
+			if = {
+				limit = { root ?= { has_advance = nd_lon_estudio_salmantino } }
+				multiply = 1.5
+			}
+		}
+		research_speed_modifier = 0.04
+		global_institution_growth_modifier = 0.1
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		burghers_estate_target_satisfaction = medium_permanent_target_satisfaction_penalty
+		global_monthly_urban_control = -0.003
+	}
+}
+
+# 4. Tenencia de las Torres de Leon
+# Fetched (es.wikipedia, "Adelantado mayor de Leon"): the list of holders
+# names men who were also "tenente de las torres de Leon": Gutier Suarez de
+# Meneses (1261 to 1269, tenente of the city and of the towers), Rodrigo
+# Rodriguez Osorio (1273 to 1277), Manrique Gil (1278 to 1279) and Pedro
+# Nunez de Guzman (1337 to 1339), so the wardenship stands on the first day
+# of the game. Before Alfonso X the kingdom had only tenentes and merinos.
+# From memory, not fetched: that a tenencia was held at the king's pleasure
+# under homage to hand the place back on demand, that the warden drew a
+# yearly sum for the garrison, and that in the fifteenth century the towers
+# stayed for generations in one house (the Quinones) against the city's
+# protests until the crown took them back. The text names no house.
+# This is the keep of the royal city and not the adelantado, whom vanilla
+# has as an advance (lon_adelantado_mayor_de_leon: diplomats and tax).
+# Unpaid, the warden keeps the pay of men who are not on the wall and does
+# not answer when the king asks for the keys.
+# Gate: the city itself.
+lon_torres_de_leon_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = LON
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		owns = location:leon
+	}
+
+	estates_that_like = {
+		crown_estate
+		nobles_estate
+	}
+	estates_that_dislike = {
+		burghers_estate
+	}
+
+	neutral_modifier = {
+		global_defensive = 0.05
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		global_garrison_growth = 0.01
+		global_fort_build_buildings_efficiency = 0.15
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		fort_maintenance_efficiency = -0.2
+		monthly_nobles_estate_rebel_growth = 0.01
+	}
+}

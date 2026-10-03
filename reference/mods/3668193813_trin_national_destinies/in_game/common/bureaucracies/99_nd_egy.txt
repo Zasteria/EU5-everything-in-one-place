@@ -1,13 +1,29 @@
 ﻿# National Destinies: Egyptian bureaucracies
 # 7 historically-grounded institutions of the Mamluk and post-Mamluk Egyptian
-# state. Auto-modifier grants 2 slots; capital adds 1 = 3 total. Player picks
-# 3 of 7. Spans Bahri/Burji Mamluk diwans, Fatimid-rooted al-Azhar, the
+# state. The auto modifier grants 4 slots: half of the seven, rounded up.
+# The formable asks nothing of the former's religion, so no slot from
+# sharia law is certain, and a capital grants one only as a megalopolis.
+# The player runs 4 of 7. Spans Bahri/Burji Mamluk diwans, Fatimid-rooted al-Azhar, the
 # Coptic fiscal clerical class, and the Khedival Nizam of Muhammad Ali.
+#
+# Vanilla 1.4 ships generic Islamic bureaucracies for every Muslim country
+# (bureaucracies/muslim.txt). The Egypt formable has no religion gate, but
+# a Muslim Egypt, which is the usual one, holds them beside these. Two
+# blocks here carried a vanilla office: the army register (vanilla's Diwan
+# al-Jund) and the market inspector (vanilla's Hisba). Each now carries
+# what the Mamluks did with that office that nobody else did. Their KEYS
+# are unchanged, because saves and the impact modifier registry refer to
+# them.
 
-# 1. Diwan al-Jaysh: the Army Bureau, the central administrative organ of
-#    the Mamluk state. Drew up the iqta rolls, issued manashir (diplomas of
-#    appointment), and produced the muster registers (jara'id) that fixed
-#    every amir's revenue assignment and contingent obligation.
+# 1. Rawk al-Nasiri (key says diwan_al_jaysh): the Army Bureau's great
+#    work. Between 1313 and 1325, in Egypt in 1315, al-Nasir Muhammad had
+#    every village surveyed and every grant reassigned. The sultan's share
+#    of the land rose from 4 parts in 24 to 10, the amirs' grants shrank
+#    and were scattered, and a crowd of petty market taxes was abolished.
+#    Vanilla's Diwan al-Jund is the register that pays and musters
+#    (manpower, army tradition), and this block used to share the army
+#    tradition key. The survey is the opposite motion: the crown taking
+#    land back from its own officers.
 egy_diwan_al_jaysh_bureaucracy = {
 	implementation_price = price:implement_bureaucracy_price
 	maintenance_price = price:maintain_bureaucracy_price
@@ -25,24 +41,28 @@ egy_diwan_al_jaysh_bureaucracy = {
 	allow = {}
 
 	estates_that_like = {
-		nobles_estate
 		crown_estate
+		burghers_estate
 	}
 	estates_that_dislike = {
-		peasants_estate
+		nobles_estate
 	}
 
+	# While the register stands, the amirs' grants lie scattered across the
+	# country and none holds a province together (vanilla grants or takes
+	# 0.1 to 0.25 of an estate's power).
 	neutral_modifier = {
+		global_nobles_estate_power = -0.10
 		government_size = 1
-	
-		country_cabinet_efficiency = -0.10
-}
+	}
 
+	# Funded: grants are sized to the contingent each must field, the
+	# sultan holds ten parts in twenty-four, the market taxes stay abolished.
 	positive_modifier = {
 		scale = { value = scope:maintenance }
 		global_levy_size_modifier = 0.10
-		monthly_army_tradition = 0.05
-		annexation_speed_modifier = 0.10
+		global_crown_estate_power = 0.10
+		burghers_estate_target_satisfaction = small_permanent_target_satisfaction
 	}
 
 	negative_modifier = {
@@ -89,7 +109,7 @@ egy_iqta_system_bureaucracy = {
 
 	positive_modifier = {
 		scale = { value = scope:maintenance }
-		nobles_estate_levy_size = 1
+		nobles_estate_levy_size = 0.5
 		global_nobles_estate_power = 0.10
 	}
 
@@ -293,7 +313,7 @@ egy_diwan_al_aqbat_bureaucracy = {
 
 	positive_modifier = {
 		scale = { value = scope:maintenance }
-		tax_income_efficiency = 0.10
+		tax_income_efficiency = 0.05
 		global_max_literacy = 5
 	}
 
@@ -309,12 +329,12 @@ egy_diwan_al_aqbat_bureaucracy = {
 	}
 }
 
-# 7. Muhtasib of Cairo: the market inspector charged with enforcing
-#    accurate weights, fair prices, and public morals in the bazaars and
-#    streets of the Mamluk capital. The hisba manuals codified the office's
-#    duties; in practice the muhtasib of Cairo was one of the most powerful
-#    civic offices in the realm, since regulating the world's largest urban
-#    market was the difference between calm and bread riots.
+# 7. Bread Price of Cairo (key says muhtasib): vanilla's Hisba is the
+#    market inspector everywhere (production, selling, burghers resentful).
+#    In Cairo the office meant one thing above the rest, the price of grain
+#    and bread in a city of half a million, and the crowd held the
+#    inspector to account for it (1394). The historian al-Maqrizi held the
+#    office from 1399. No key here is one of vanilla's.
 egy_muhtasib_bureaucracy = {
 	implementation_price = price:implement_bureaucracy_price
 	maintenance_price = price:maintain_bureaucracy_price

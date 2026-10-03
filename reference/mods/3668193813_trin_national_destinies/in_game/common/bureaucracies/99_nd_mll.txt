@@ -1,0 +1,311 @@
+﻿# Mallorca (MLL): bureaucracies
+# National Destinies mod
+#
+# Read before choosing subjects (EU5 1.4):
+#   vanilla bureaucracies Mallorca can hold (bureaucracies/generic.txt, ten of
+#     them, from Confessionalism or the age 4 advance): a board of revenue, a
+#     privy council, an audit bureau, a colonial office, an admiralty, a
+#     foreign ministry, a trade commission, a war council, an ordnance board
+#     and a commissariat. None is repeated by name or by subject, so no
+#     Procuracio Reial (the king's revenue office) and no Curia de la
+#     Governacio.
+#   vanilla Mallorca elsewhere: the Leges Palatinae are a policy of the legal
+#     code (laws/01_legal_system.txt), the Pearl of the Mediterranean a reform
+#     (government_reforms/country_specific.txt:4611), Sa Llotja a monument
+#     (building_types/unique_buildings.txt:4294), the Consolat de Mar a
+#     privilege the country starts with, the lieutenancy an advance with a
+#     building, the coast towers and the Carta de Franquesa tag advances.
+#   the mod's Catalonia, Aragonese Empire, Aragon and Valencia (99_nd_cat.txt,
+#     99_nd_cda.txt, 99_nd_ara.txt, 99_nd_val.txt): the Consell de Cent, the
+#     Batllia General, the vegueries, the Tribunal de Contrafaccions, the
+#     chancery, the Generalitat, the Consolat de Mar, the Sommaria, the Real
+#     Audiencia, three Aragonese courts, the Mustassaf, the Pare d'Orfens, the
+#     Lligallo and the Governacio. So no mostassaf, no veguer de fora, no
+#     Audiencia of 1571, no governor.
+#   this country's own tree (advances and building_types/99_nd_mll.txt): the
+#     Sindicat de Fora and its house, the Contracte Sant and the Universal
+#     Consignacio, the signal towers, the Estudi General, the Consolat de Mar
+#     and the island governors of the destiny tree. None is rewritten here.
+#
+# What is left are four bodies of the Universitat de la Ciutat e Regne:
+# 1. Gran i General Consell: the assembly of city and villages.
+# 2. Juraria: the six jurats who govern city and kingdom.
+# 3. Morberia: the health board that holds ships at Portopi.
+# 4. Col.legi de la Mercaderia: the merchants' college that keeps the harbour.
+#
+# Estate alignment, on the main road (Mallorca itself, a monarchy with all
+# four estates): villages and townsmen against the king's officers; the city
+# against the villages; the island at large against the shipping interest;
+# merchants against the knights their college shuts out.
+#
+# No government power key is granted: one road into the tag is a theocracy
+# (Andorra).
+#
+# Slots. Vanilla gives Mallorca none on the day it forms (a capital grants one
+# only as a megalopolis, location_ranks/00_default.txt:50). The auto modifier
+# grants 2, half of these four. Vanilla adds one with the age 4 bureaucracy
+# advance and one in age 6, and from Confessionalism its ten generic offices
+# compete for the same slots.
+#
+# No cabinet seat and no character modifier. No key stands in both the funded
+# and the neglected block of one institution. All IDs are mll_-prefixed.
+#
+# Sources, fetched 2026-10-02 through the ca.wikipedia API: "Gran i General
+# Consell", "Jurats de la Ciutat i Regne de Mallorca", "Morberia", "Col.legi
+# de la Mercaderia de Mallorca", "Institucions del Regne de Mallorca",
+# "Procuracio Reial de Mallorca". What rests on memory is marked below.
+
+# 1. Gran i General Consell
+# Created with the jurats on 7 July 1249 and abolished on 22 July 1718. At
+# first the jurats' advisers; by Sancho's arbitral sentence of 19 June 1315
+# the villages got fixed seats and a voice over public spending, and the
+# council's decisions bound the jurats. Mallorca never had Corts: this
+# assembly voted the kingdom's own taxes, saw to the wheat supply and sent
+# syndics abroad. After 1447 it had 84 members, 56 of the city and 28 of the
+# Part Forana; 72 from 1614. For most of its life a decision needed two
+# thirds of the members, "which made decisions difficult" (ca.wikipedia).
+# The crown is the estate that dislikes it: the article describes kings and
+# viceroys reserving the choice of councillors (1373) and vetoing names.
+# Funded, the villages consent to the talles they have seen voted and
+# accounted for. Unpaid, nobody comes, the quorum fails and nothing passes.
+mll_gran_i_general_consell_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = MLL
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {}
+
+	estates_that_like = {
+		peasants_estate
+		burghers_estate
+	}
+	estates_that_dislike = {
+		crown_estate
+	}
+
+	neutral_modifier = {
+		monthly_political_influence = 0.05
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		peasants_estate_max_tax = 0.1
+		peasants_estate_satisfaction_recovery = 0.002
+	}
+
+	# Both are keys where a positive value is the harm.
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		parliament_request_issue_support_needed = 0.1
+		change_policy_cost_modifier = 0.2
+	}
+}
+
+# 2. Juraria
+# Six jurats, licensed by James I on 7 July 1249: after 1382 a knight (the
+# jurat en cap), two citizens, two merchants and one artisan, for one year,
+# unpaid and unable to refuse. They sat in the Sala de la Juraria on the
+# Placa de Cort. Their first duty was to defend the franchises against the
+# king's officers; they ran the Universitat's money, the wheat supply, the
+# defences and the hospitals. Chosen by co-optation, then by a run of royal
+# pragmatics, and from 1447 to 1718 by lot from sacks of approved names
+# (sort i sac), which lasted, the article says, because filling the sacks
+# was cheaper than paying the king for a new regime.
+# The villages are the estate that dislikes them: the city's magistrates
+# governed the whole island, which is what the Revolta Forana of 1450 was
+# about (the country's own advance nd_mll_revolta_forana).
+# An office of the City of Mallorca: it needs Palma.
+# Funded, wheat is bought in time and the city is held. Unpaid, the bandols
+# fill the sacks, the taxes are farmed to friends and the villages stop
+# obeying.
+mll_juraria_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = MLL
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		owns = location:palma
+	}
+
+	estates_that_like = {
+		burghers_estate
+	}
+	estates_that_dislike = {
+		peasants_estate
+	}
+
+	neutral_modifier = {
+		global_burghers_estate_power = 0.1
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		food_purchase_efficiency = 0.15
+		global_monthly_urban_control = 0.002
+	}
+
+	# The control ceiling may fall freely (the project's cap binds grants
+	# only); estate_enrichment is a key where a positive value is the harm.
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		global_max_rural_control = -0.05
+		estate_enrichment = 0.2
+	}
+}
+
+# 3. Morberia
+# Created by the Gran i General Consell in 1467, with statutes from 1475: a
+# standing commission of morbers without whose leave no ship could land
+# people or goods. Crews under suspicion kept quarantine, first in the
+# towers of Portopi; a lazaretto was agreed in 1497; a Junta Superior de
+# Sanitat replaced the board in 1718 (ca.wikipedia, "Morberia"). The
+# epidemics of 1475, 1481 and 1493 are what made it permanent
+# (ca.wikipedia, "Historia de Mallorca").
+# From memory, not fetched: that the physician Lluc Colomines wrote the
+# statutes of 1475, and that shipmasters and merchants were the ones who
+# resented the delays, which is why the burghers are the estate that
+# dislikes it.
+# The quarantine was kept in the towers of Portopi, so the funded side reads
+# the country's own advance for those towers in the scale, as vanilla's
+# Barid reads an advance (bureaucracies/muslim.txt). Sized for that case:
+# 0.00009 with the towers, 0.00006 without.
+# 0.003, a light institution: a commission of a few men and a tower.
+# Funded, the sickness stays on the ships. Unpaid, the morbers sell their
+# leave and hold whoever will not pay, and the harbour empties.
+mll_morberia_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.003
+	}
+
+	potential = {
+		has_or_had_tag = MLL
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {}
+
+	estates_that_like = {
+		peasants_estate
+		clergy_estate
+	}
+	estates_that_dislike = {
+		burghers_estate
+	}
+
+	neutral_modifier = {
+		global_disease_resistance = 0.05
+	}
+
+	positive_modifier = {
+		scale = {
+			value = scope:maintenance
+			if = {
+				limit = { root ?= { has_advance = nd_mll_senyals_de_portopi } }
+				multiply = 1.5
+			}
+		}
+		global_population_growth = 0.00006
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		global_merchant_capacity_modifier = -0.15
+		burghers_estate_target_satisfaction = medium_permanent_target_satisfaction_penalty
+	}
+}
+
+# 4. Col.legi de la Mercaderia
+# Approved in principle by John I in 1394, with a first rule of 11 May 1403
+# and a royal ordinance of Martin the Humane in 1409 that gave it a duty on
+# goods in transit, the diner de la mercaderia. Two defenedors de la
+# mercaderia, a clavari and a council of twenty merchants kept the mole of
+# the city and the harbour of Portopi; the books of the diner del moll show
+# the money going to harbour works and defensive towers. From 1454 its
+# officers were drawn by sort i sac. Knights and donzells were shut out, and
+# some gave up their rank to hold the office. It lost its taxes with the
+# Nova Planta and lasted until 1800 (ca.wikipedia).
+# It is not the Consolat de Mar (a court, and vanilla's privilege) and not
+# Sa Llotja (its hall, and vanilla's monument): this is the body that taxed
+# cargo to keep the port.
+# From memory, not fetched: that the same dues armed ships against corsairs
+# (the victigal del mar of its account books suggests it).
+# The mole is Palma's: it needs the city.
+# Funded, the mole is sound, the roads are watched and trade costs less to
+# carry. Unpaid, the dues are farmed, the harbour silts and corsairs lie
+# off the bay.
+mll_collegi_de_la_mercaderia_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = MLL
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		owns = location:palma
+	}
+
+	estates_that_like = {
+		burghers_estate
+	}
+	estates_that_dislike = {
+		nobles_estate
+	}
+
+	neutral_modifier = {
+		global_trade_protection_factor = 0.05
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		global_maritime_presence_modifier = 0.1
+		merchant_maintenance_efficiency = 0.1
+	}
+
+	# global_pirate_spawn_chance is a key where a positive value is the harm.
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		global_pirate_spawn_chance = 0.25
+		navy_repair_efficiency = -0.2
+	}
+}

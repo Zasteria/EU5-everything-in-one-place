@@ -25,9 +25,9 @@ nd_mca_salt_trade_mastery = {
 	requires = guilds
 	icon = guilds
 	unlock_building = nd_mca_salt_works
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -37,7 +37,7 @@ nd_mca_terraced_agriculture = {
 	requires = agriculture_advance
 	icon = agriculture_advance
 	unlock_building = nd_mca_highland_terrace
-	global_monthly_food_modifier = 0.1
+	global_monthly_food_modifier = 0.05
 }
 
 nd_mca_sugamuxi_tradition = {
@@ -169,10 +169,10 @@ nd_mca_salt_currency_system = {
 	potential = { has_or_had_tag = MCA }
 	requires = merchant_power_from_maritime_discovery_advance
 	icon = merchant_power_from_maritime_discovery_advance
-	unlock_production_method = nd_mca_salt_curing
-	trade_land_efficiency = 0.025
+	unlock_production_method = nd_mca_salt_loaf_boiling
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -207,7 +207,7 @@ nd_mca_highland_resistance = {
 	potential = { has_or_had_tag = MCA }
 	requires = confessional_court
 	icon = confessional_court
-	global_hostile_attrition = 1.25
+	global_hostile_attrition = 1
 	land_unit_attrition = -0.1
 }
 
@@ -248,7 +248,7 @@ nd_mca_muisca_endurance = {
 	potential = { has_or_had_tag = MCA }
 	requires = absolutism_agressive_advance
 	icon = absolutism_agressive_advance
-	land_morale_modifier = 0.15
+	land_morale_modifier = 0.1
 	monthly_army_tradition = 0.05
 }
 
@@ -290,7 +290,7 @@ nd_mca_muisca_national_identity = {
 	requires = enlightened_court
 	icon = enlightened_court
 	cultural_tradition_modifier = 0.15
-	global_monthly_literacy = 0.025
+	global_monthly_literacy = 0.02
 }
 
 nd_mca_modern_confederation = {
@@ -364,7 +364,7 @@ nd_mca_dest_markets_of_gold = {
 		gold >= 2000
 	}
 	icon = global_trade_advance
-	global_monthly_development = 0.002
+	global_monthly_development = 0.001
 	tax_income_efficiency = 0.025
 }
 
@@ -374,7 +374,16 @@ nd_mca_dest_golden_kingdom = {
 	potential = { has_or_had_tag = MCA has_variable = nd_mca_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:panama
-		total_development >= 1500
+		# Funza is the Zipa's seat of Bacata, which grew into the capital
+		# of the highlands. It stands at 3 in 1337 (development_estimate.py
+		# --explain funza); the capstone asks for double.
+		custom_tooltip = {
+			text = nd_mca_dest_funza_developed_tt
+			location:funza = {
+				owner ?= root
+				development >= 6
+			}
+		}
 		prestige >= 75
 	}
 	icon = crown_power_advance_renaissance
@@ -397,7 +406,7 @@ nd_mca_dest_tairona_war = {
 		}
 		owns_or_non_sovereign_subject_owns = location:teyuna
 		owns_or_non_sovereign_subject_owns = location:zenues
-		army_size >= 30
+		owns_or_non_sovereign_subject_owns = location:chayrama
 	}
 	icon = feudalism_advance
 	siege_ability = 0.1
@@ -411,7 +420,7 @@ nd_mca_dest_mountain_dominion = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:caracas
 		owns_or_non_sovereign_subject_owns = location:coro
-		army_size >= 50
+		owns_or_non_sovereign_subject_owns = location:marakaaya
 	}
 	icon = imperial_ambitions
 	global_garrison_size_modifier = 0.1
@@ -424,12 +433,23 @@ nd_mca_dest_andean_hegemony = {
 	potential = { has_or_had_tag = MCA has_variable = nd_mca_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:qusqu
-		total_development >= 1500
+		# The stage is the conquest of the Inca heartland, so it asks for a
+		# share of the area Cusco stands in (14 locations) and not for a sum
+		# over the whole realm.
+		custom_tooltip = {
+			text = nd_mca_dest_acamama_share_tt
+			area:acamama_area = {
+				any_location_in_area = {
+					percent >= 0.5
+					root = { owns_or_non_sovereign_subject_owns = prev }
+				}
+			}
+		}
 		prestige >= 75
 	}
 	icon = imperial_ambitions
 	unlock_building = nd_mca_tundama_citadel
 	army_reinforce_efficiency = 0.05
-	global_devastation_recovery = 0.005
+	global_devastation_recovery = 0.0025
 	expected_army_size_modifier = 0.1
 }

@@ -1,0 +1,310 @@
+﻿# National Destinies: Tunis (TUN) bureaucracies.
+# Four institutions, one for each power a ruler of Tunis could lean on: the
+# Almohad shaykhs, the palace household, the freedmen sent out as governors,
+# and the merchant families who farmed the revenue. The auto modifier grants
+# 1 slot (main_menu/common/auto_modifiers/99_nd_tun.txt).
+#
+# The Hafsids hold the tag from 1337, so three of the four are Hafsid offices
+# a sitting sultan could found on day one, and the fourth (the farms) runs
+# from the Hafsid coral lease of 1446 to the beys.
+#
+# What is deliberately NOT here, because the same country already has it:
+#   Vanilla 1.4, every Muslim country (bureaucracies/muslim.txt): the Bayt
+#     al-Mal, the Hisba, the Mazalim court, the Diwan al-Insha, the Barid,
+#     the Diwan al-Hajj, the Diwan al-Jund and the Shurta. Hence no treasury
+#     (the Hafsid sahib al-ashghal), no market inspector, no amins of the
+#     souks, no police of the capital (which is what the dey became under
+#     the Husaynids).
+#   Vanilla's Tunis content: the mahalla is the unit ability tun_tax_raid
+#     ("Have our mahalla raid", unit_abilities_l_english.yml:60), the princely
+#     governors are the reform tun_strong_familial_governors, and farming of
+#     the LAND tax is the law policy efficient_tax_farming (laws/
+#     00_religious.txt:16), which the Hafsids start with.
+#   Carthage (99_nd_cth.txt), which a Tunisian country may form later: the
+#     Andalusi secretaries, the qadi al-jama'a, the maritime customs bureau,
+#     the ribat network, the corsair captains' guild.
+#   The Almohads (99_nd_alm.txt): the talaba, the council of the shaykhs
+#     (levy size, general skill, land morale, noble satisfaction), the office
+#     of the 'alama, the mint. Block 1 below is the Hafsid office set over
+#     those shaykhs and grants none of that council's keys.
+#   This country's own advances and events (99_nd_tun.txt, nd_tun.txt): the
+#     iqta of the Ku'ub, the souks, the Zaytuna, the deys and their ojak, the
+#     Zwawa, the makhzen tribes.
+#
+# Vanilla's Tunis content reads centralization_vs_decentralization (the
+# Hafsids start at 75, templates/hafsid_state.txt; the governors reform is
+# locked above -50, the Ifriqiya Reunited decision asks -25 or lower), and
+# aristocracy_vs_plutocracy starts at -50. Three blocks move one of the two.
+#
+# Values: vanilla's own scale on 1.4 (VANILLA_REFERENCE.md, "Advance Modifier
+# Ranges", and a count of every vanilla site of each key on 2026-10-01).
+
+# 1. Shaykh al-Muwahhidin, the Chief of the Almohads. Abu Zakariya (1229 to
+#    1249) created the post: the ruler's deputy, to whom every Almohad shaykh
+#    answered. Ibn Khaldun (Muqaddima, III.32) calls him the wazir of the
+#    Hafsids, who "appointed and dismissed officials, led the army and
+#    conducted its wars". Ibn al-Lihyani held it from 1295, ran the army and
+#    foreign affairs, and took the throne himself in 1311. Ibn Tafragin, an
+#    Almohad shaykh, set a boy of thirteen on the throne in 1350 and ruled in
+#    his name for fourteen years.
+#    Working: the Almohad companies muster (noble levies), the army keeps its
+#    experience, and a succession the shaykhs have sworn to is harder to
+#    contest. Starved: the kingmaker is his own candidate.
+#    Allow: the shaykhs sat in the Kasbah of Tunis, the citadel the Almohads
+#    laid out. Its mosque (Abu Zakariya, 1230 to 1233) was at first reserved
+#    to those who lived inside it.
+#    Estates: the Almohad shaykhs are the nobles. The Andalusi secretaries
+#    who took the pen and the purse from them are the burghers.
+tun_shaykh_al_muwahhidin_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.003
+	}
+
+	potential = {
+		has_or_had_tag = TUN
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		owns = location:tunis
+	}
+
+	estates_that_like = {
+		nobles_estate
+	}
+	estates_that_dislike = {
+		burghers_estate
+	}
+
+	neutral_modifier = {
+		monthly_towards_aristocracy = societal_value_minor_monthly_move
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		nobles_estate_levy_size = 0.3
+		army_tradition_decay = -0.001
+		monthly_pretender_rebel_growth = -0.005
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		global_nobles_estate_power = 0.2
+		monthly_nobles_estate_rebel_growth = 0.005
+	}
+}
+
+# 2. The Hijaba, the office of the hajib. Ibn Khaldun (Muqaddima, III.32)
+#    describes its rise under the Hafsids: first the steward of the ruler's
+#    household, in charge of "salaries, allowances, garments, kitchen and
+#    stable expenditures"; then, as the sultans withdrew from view, the one
+#    door between the ruler and everyone else; at last holder of "the sword"
+#    and of counsel as well. Ibn Tafragin took it in 1343. Ibn Khaldun held
+#    it himself at Bejaia in 1365. Abu al-Abbas (1370 to 1394) abolished it
+#    "and handled all his affairs himself".
+#    Vanilla already calls a Tunisian head of cabinet the Hajib
+#    (customizable_localization/00_customizable_localization.txt:444), so the
+#    neutral effect makes that promotion cheaper, as the office of the
+#    eristavi does for Georgia (laws/02_distribution_of_power.txt:405).
+#    Working: the household is run to account and the court's business goes
+#    through one hand. Starved: the door closes on the sultan, and the hajibs
+#    of the governor princes follow the example of the one in the capital.
+#    Estates: the office was the career of the secretarial families, many of
+#    them Andalusi (burghers), and it was taken from the Almohad shaykhs.
+tun_hijaba_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.003
+	}
+
+	potential = {
+		has_or_had_tag = TUN
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {}
+
+	estates_that_like = {
+		burghers_estate
+	}
+	estates_that_dislike = {
+		nobles_estate
+	}
+
+	neutral_modifier = {
+		head_of_cabinet_promotion_cost_modifier = -0.33
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		court_spending_efficiency = 0.1
+		monthly_political_influence_gain_modifier = 0.1
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		global_crown_estate_power = -0.1
+		subject_loyalty = -10
+	}
+}
+
+# 3. The freedman qaids. Uthman (1435 to 1488) "refrained from giving high
+#    office to fellow Hafsid dynasts and generally appointed royal retainers,
+#    often renegade Europeans, as qaids or provincial governors". Bejaia went
+#    from the sultan's cousins to such a qaid in 1452. Men outside the
+#    dynasty were no safer for it: the minister Nabil ibn Abi Qattaya, who
+#    had dominated the court early in the reign and whom the Italians called
+#    "the first after the king", was put to death in 1453 and his wealth
+#    confiscated. The source calls him a minister, not a provincial qaid.
+#    Source for all three: the English Wikipedia article "Abu 'Amr 'Uthman",
+#    which cites R. Brunschvig, "La Berbérie orientale sous les Hafsides",
+#    1940, pp. 245 to 247 (read 2026-10-01; Brunschvig itself was not read).
+#    That these men were freed slaves: "Christian captives of the pirates who
+#    were not ransomed were sold as slaves. The men amongst them were
+#    liberated when they became Muslim and found employment in the state,
+#    especially in the army. In the fifteenth century some of them held
+#    important offices, including the governorships of the provinces" (J.
+#    Abun-Nasr, A History of the Maghrib in the Islamic Period, 1987, p. 131,
+#    citing Brunschvig 1940, pp. 245 and 259 to 260; read 2026-10-02 in Google
+#    Books snippets). Freedman and renegade are the same men.
+#    The beys did the same with their mamluks: Yusuf Sahib al-Tabi, a
+#    Moldavian mamluk bought at Constantinople in 1777, at thirteen, by Baccar
+#    Djellouli of Sfax and given to the prince Hammuda in 1781, kept the seal
+#    from 1782 and placed his own qaids across the country. He was struck
+#    down before the Bardo on 15 September 1814 and died of it on 23 January
+#    1815. (French and English Wikipedia, "Youssef Saheb Ettabaâ", the French
+#    citing Ibn Abi Dhiaf; read 2026-10-02. The English says he was
+#    "manumitted" in 1777, the French "racheté", bought: a boy given to a
+#    prince four years later was not yet free, so this file says bought.)
+#    This is the opposite of vanilla's reform tun_strong_familial_governors,
+#    which costs the country a quarter of its land proximity
+#    (land_cost_on_distance_from_capital_speed_propagation = -0.25). A man
+#    who owns nothing the sultan did not give him carries the capital's writ
+#    where a prince did not, so the funded effect is that same key, and the
+#    drift is toward the centralization vanilla's Tunis decisions ask for.
+#    Starved: the qaid keeps what he collects and the tribes find the forts
+#    of the interior unpaid.
+#    Allow: the household such men were raised in is vanilla's own advance
+#    hafsid_ghulam (advances/region_maghreb.txt:225, age 1, the tag TUN).
+#    Estates: the crown gains what the princes and shaykhs (nobles) and the
+#    chiefs of the interior (tribes) lose.
+tun_freedman_qaids_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.003
+	}
+
+	potential = {
+		has_or_had_tag = TUN
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		has_advance = hafsid_ghulam
+	}
+
+	estates_that_like = {
+		crown_estate
+	}
+	estates_that_dislike = {
+		nobles_estate
+		tribes_estate
+	}
+
+	neutral_modifier = {
+		global_nobles_estate_power = -0.1
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		land_cost_on_distance_from_capital_speed_propagation = 0.1
+		monthly_towards_centralization = societal_value_monthly_move
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		global_max_rural_control = -0.05
+		monthly_tribes_estate_rebel_growth = 0.005
+	}
+}
+
+# 4. The lizma, the farm of a revenue. What was farmed in Tunis was not the
+#    land tax (vanilla's law has that) but everything else: the customs of a
+#    port, the hides, the salt, the tobacco, the provisioning of the army,
+#    and the caidates themselves. The Hafsids leased the coral of Tabarka to
+#    a Barcelona merchant in 1446 and to Genoese from 1451 (sources in the
+#    comment above nd_tun_coral_of_marsa_al_kharaz, advances/99_nd_tun.txt).
+#    Under the beys the farmers were native merchant houses
+#    who were governors and shipowners at once, the qaid-lazzams: the
+#    Djellouli of Sfax from the 1600s, the Ben Ayed of Djerba from 1756.
+#    Yusuf Sahib al-Tabi rebuilt the farms around his own clients from 1783
+#    (French Wikipedia, "Youssef Saheb Ettabaâ": between 1783 and 1815 "il
+#    modifie le fermage" and settles families of qaids who depend on him).
+#    Working: the farmer pays before he collects, so more of the duties
+#    charged on goods reaches the treasury (tariff_income is the share that
+#    does; the base is 0.1, auto_modifiers/country.txt:30), and the state
+#    can borrow against next year's farms. Starved: nobody checks the bids,
+#    the farms pass from father to son, the country is squeezed, and the
+#    farmers lend the bey his own money at interest.
+#    Estates: the farmers are burghers. The peasants pay.
+tun_lizma_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.003
+	}
+
+	potential = {
+		has_or_had_tag = TUN
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {}
+
+	estates_that_like = {
+		burghers_estate
+	}
+	estates_that_dislike = {
+		peasants_estate
+	}
+
+	neutral_modifier = {
+		monthly_towards_plutocracy = societal_value_minor_monthly_move
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		tariff_income = 0.1
+		total_loan_capacity_modifier = 0.3
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		global_prosperity_decay = 0.005
+		bank_interest = 0.02
+	}
+}

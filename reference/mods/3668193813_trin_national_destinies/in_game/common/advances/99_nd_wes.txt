@@ -8,9 +8,9 @@ nd_wes_hellweg_salt_trade = {
 	requires = guilds
 	icon = guilds
 	unlock_building = nd_wes_hellweg_saltworks
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.03
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -140,7 +140,7 @@ nd_wes_linen_industry = {
 	requires = pop_promotion_speed_age_4
 	icon = pop_promotion_speed_age_4
 	unlock_building = nd_wes_linen_house
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }
 
 nd_wes_kreistruppen_obligation = {
@@ -222,7 +222,7 @@ nd_wes_industrial_awakening = {
 	requires = industrialization_advance
 	icon = industrialization_advance
 	unlock_production_method = nd_wes_pm_industrial_steel
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 	global_construction_speed = 0.15
 }
 
@@ -284,7 +284,15 @@ nd_wes_dest_balance = {
 	potential = { has_or_had_tag = WES has_variable = nd_wes_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:the_hague
-		total_development >= 500
+		# Muenster, seat of the peace congress of 1643 to 1648: 21.5 in 1337
+		# (scripts/development_estimate.py --explain munster), half as much again for a second stage.
+		custom_tooltip = {
+			text = nd_wes_dest_munster_developed_tt
+			location:munster = {
+				owner ?= root
+				development >= 32
+			}
+		}
 		gold >= 2000
 	}
 	icon = global_trade_advance
@@ -298,7 +306,10 @@ nd_wes_dest_eternal_peace = {
 	potential = { has_or_had_tag = WES has_variable = nd_wes_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:geneve
-		has_embraced_institution = institution:scientific_revolution
+		# The peace itself, not the science of a later age: the country's own
+		# age 4 advance, so this path ends within two ages of the other
+		# (owner's ruling 2026-10-02, scripts/destiny/stage_floors.py).
+		has_advance = nd_wes_peace_of_westphalia
 		prestige >= 75
 		gold >= 3000
 	}
@@ -306,9 +317,7 @@ nd_wes_dest_eternal_peace = {
 	unlock_building = nd_wes_friedenssaal
 	subject_loyalty = 5
 	global_population_growth = 0.001
-	monthly_republican_tradition = 0.05
-	monthly_devotion = 0.05
-	monthly_legitimacy = 0.05
+	improve_relation_impact = 0.15
 }
 
 # --- Path B: Red Earth Justice ---
@@ -338,6 +347,9 @@ nd_wes_dest_landfriede = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:frankfurt
 		owns_or_non_sovereign_subject_owns = location:brunswick
+		# The Circle is what enforced the public peace: its assembly (age 2)
+		# must sit before the stage can be taken.
+		has_advance = nd_wes_circle_assembly
 		army_size >= 50
 	}
 	icon = feudalism_advance

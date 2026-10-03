@@ -8,7 +8,7 @@ nd_can_fur_trade_foundations = {
 	icon = merchant_power_from_maritime_discovery_advance
 	unlock_building = nd_can_trading_post
 	global_fur_output_modifier = 0.15
-	global_merchant_capacity_modifier = 0.25
+	global_merchant_capacity_modifier = 0.1
 }
 
 # Coureurs des Bois: unlicensed wilderness traders and scouts
@@ -31,7 +31,7 @@ nd_can_grand_banks = {
 	potential = { has_or_had_tag = CAN }
 	requires = pike_square
 	icon = pike_square
-	unlock_production_method = nd_can_cod_curing
+	unlock_building = nd_can_fishing_stage
 	global_fish_output_modifier = 0.15
 	global_sailors_modifier = 0.1
 }
@@ -55,8 +55,8 @@ nd_can_seigneurial_system = {
 	potential = { has_or_had_tag = CAN }
 	requires = crown_power_advance_discovery
 	icon = crown_power_advance_discovery
-	tax_income_efficiency = 0.05
-	global_monthly_food_modifier = 0.1
+	tax_income_efficiency = 0.03
+	global_monthly_food_modifier = 0.05
 	global_crown_estate_power = 0.1
 }
 
@@ -78,8 +78,9 @@ nd_can_hudsons_bay = {
 	potential = { has_or_had_tag = CAN }
 	requires = global_trade_advance
 	icon = global_trade_advance
+	unlock_unit = n_nd_can_york_boat
 	global_merchant_capacity_modifier = 0.15
-	trade_income = 0.15
+	trade_income = 0.1
 	global_fur_output_modifier = 0.15
 }
 
@@ -172,6 +173,7 @@ nd_can_war_of_1812 = {
 	potential = { has_or_had_tag = CAN }
 	requires = the_constitution
 	icon = the_constitution
+	unlock_levy = levy_nd_can_embodied_militia
 	global_hostile_attrition = 1
 	monthly_war_exhaustion = -0.04
 }
@@ -185,7 +187,9 @@ nd_can_timber_barons = {
 	unlock_building = nd_can_timber_slide
 	global_lumber_output_modifier = 0.2
 	global_raw_material_output = 0.15
-	unlock_production_method = nd_can_potash_production
+	# The potash method that stood here was a second upkeep bill of the
+	# timber slide. The game has no good for potash, so it could not be made
+	# to produce: the advance unlocks the slide and no method.
 }
 
 # Provincial Marine: Great Lakes naval force
@@ -209,9 +213,9 @@ nd_can_rideau_canals = {
 	icon = construction_speed_absolutism
 	unlock_building = nd_can_canal_lock
 	global_construction_speed = 0.1
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -255,8 +259,12 @@ nd_can_national_policy = {
 	potential = { has_or_had_tag = CAN }
 	requires = industrialization_advance
 	icon = industrialization_advance
-	unlock_production_method = nd_can_maple_sugar
-	global_production_efficiency = 0.05
+	# Manufacturing behind the tariff wall: the farm implement works. (The
+	# maple sugar method it unlocked before was an upkeep bill of the fur
+	# trading post and made nothing; sugar is a raw good of cane land and
+	# cannot be made in a forest.)
+	unlock_building = nd_can_implement_works
+	global_production_efficiency = 0.025
 	global_build_buildings_efficiency = 0.1
 }
 
@@ -266,8 +274,8 @@ nd_can_pacific_railway = {
 	potential = { has_or_had_tag = CAN }
 	requires = industrialization_advance
 	icon = industrialization_advance
-	global_distance_from_capital_speed_propagation = 0.15
-	colonial_migration_size_modifier = 0.4
+	global_distance_from_capital_speed_propagation = 0.1
+	colonial_migration_size_modifier = 0.25
 	global_monthly_development = 0.001
 }
 
@@ -292,7 +300,7 @@ nd_can_wheat_boom = {
 	icon = urbanization
 	global_wheat_output_modifier = 0.25
 	global_population_growth = 0.0003
-	global_monthly_food_modifier = 0.1
+	global_monthly_food_modifier = 0.05
 }
 
 # Bicultural Compromise: French-English accommodation
@@ -302,7 +310,7 @@ nd_can_bicultural_compromise = {
 	requires = enlightened_court
 	icon = enlightened_court
 	tolerance_heretic = 1
-	cultures_capacity = 3
+	cultures_capacity = 1.75
 	cultural_tradition_modifier = 0.15
 }
 
@@ -349,7 +357,17 @@ nd_can_dest_klondike = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:klondike
 		prestige >= 50
-		total_development >= 14000
+		# The stage is about the gold. A development bar on the Klondike
+		# itself has nothing to grow from (its 1337 value is 0,
+		# development_estimate.py), so the test is the good: the gold of the
+		# Yukon (Mayo, in the Klondike's own province, yields it) reaching a
+		# Canadian market.
+		any_market_present_in_country = {
+			OR = {
+				is_produced_in_market = goods:goods_gold
+				is_traded_in_market = goods:goods_gold
+			}
+		}
 	}
 	icon = imperial_ambitions
 	global_monthly_prosperity = 0.001
@@ -429,7 +447,23 @@ nd_can_dest_emporium = {
 		}
 		prestige >= 75
 		gold >= 3000
-		total_development >= 18500
+		# Montreal (Hochelaga): the counting house of the fur trade, seat of
+		# the North West Company and of the Bank of Montreal (1817), the port
+		# the Lachine Canal (1825) opened to the lakes. Its 1337 value is 0,
+		# so a development bar has nothing to grow from: the test is that the
+		# place has become a city or the center of a market (vanilla's own
+		# form, advances/country_yem.txt port_of_aden).
+		custom_tooltip = {
+			text = nd_can_dest_montreal_grown_tt
+			location:hochelaga = {
+				owner ?= root
+				OR = {
+					location_rank ?= location_rank:city
+					location_rank ?= location_rank:megalopolis
+					is_market_center = yes
+				}
+			}
+		}
 	}
 	icon = global_trade_advance
 	unlock_building = nd_can_commercial_exchange

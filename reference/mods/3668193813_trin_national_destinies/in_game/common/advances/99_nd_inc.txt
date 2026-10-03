@@ -8,7 +8,10 @@ nd_inc_qhapaq_nan = {
 	icon = feudalism_advance
 	unlock_levy = levy_nd_inc_runa_infantry
 	global_levy_size_modifier = 0.1
-	mountains_proximity_impact = -0.4
+	# Control carries further along a road (the game's own name: Proximity Cost
+	# through Roads; base 20, vanilla's Roman roads grant -2). The mountain
+	# crossing itself is vanilla's inc_vertical_economy in this age.
+	road_cost_on_distance_from_capital = -2
 	ai_weight = {
 		add = 50
 	}
@@ -68,7 +71,7 @@ nd_inc_waru_waru = {
 	potential = { has_or_had_tag = INC }
 	requires = merchants_and_trade
 	icon = merchants_and_trade
-	global_monthly_food_modifier = 0.1
+	global_monthly_food_modifier = 0.05
 	global_population_growth = 0.0002
 }
 
@@ -139,7 +142,7 @@ nd_inc_vilcabamba_resistance = {
 	potential = { has_or_had_tag = INC }
 	requires = confessional_court
 	icon = confessional_court
-	global_hostile_attrition = 1.25
+	global_hostile_attrition = 1
 	land_morale_modifier = 0.1
 }
 
@@ -185,7 +188,6 @@ nd_inc_inca_road_renewal = {
 	potential = { has_or_had_tag = INC }
 	requires = pop_promotion_speed_age_4
 	icon = pop_promotion_speed_age_4
-	unlock_production_method = nd_inc_terrace_intensification
 	army_movement_speed = 0.1
 	global_road_building_time = -0.1
 }
@@ -213,7 +215,7 @@ nd_inc_andean_textile_trade = {
 	icon = construction_speed_absolutism
 	unlock_building = nd_inc_textile_obraje
 	global_cloth_output_modifier = 0.2
-	unlock_production_method = nd_inc_road_maintenance
+	unlock_production_method = nd_inc_awasqa_weaving
 }
 
 # Tupac Amaru legacy: rebellion and indigenous sovereignty (DHE event)
@@ -222,6 +224,7 @@ nd_inc_tupac_amaru_legacy = {
 	potential = { has_or_had_tag = INC }
 	requires = absolute_rulership
 	icon = absolute_rulership
+	unlock_levy = levy_nd_inc_tupamaros
 	global_manpower_modifier = 0.1
 	monthly_prestige = 0.1
 }
@@ -233,7 +236,7 @@ nd_inc_andean_terrace_renewal = {
 	requires = construction_speed_absolutism
 	icon = construction_speed_absolutism
 	global_potato_output_modifier = 0.2
-	global_monthly_food_modifier = 0.1
+	global_monthly_food_modifier = 0.05
 }
 
 # Mountain artillery: highland gun emplacements
@@ -243,7 +246,7 @@ nd_inc_mountain_artillery = {
 	requires = absolutism_agressive_advance
 	icon = absolutism_agressive_advance
 	army_artillery_power = 0.1
-	global_defensive = 0.25
+	global_defensive = 0.2
 }
 
 # Apu governance: sacred mountain governance tradition
@@ -292,7 +295,7 @@ nd_inc_industrial_andes = {
 	requires = industrialization_advance
 	icon = industrialization_advance
 	unlock_production_method = nd_inc_andean_smelting
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }
 
 # Inti Raymi revival: cultural and religious renaissance
@@ -311,7 +314,7 @@ nd_inc_modern_chasqui = {
 	potential = { has_or_had_tag = INC }
 	requires = urbanization
 	icon = urbanization
-	global_distance_from_capital_speed_propagation = 0.15
+	global_distance_from_capital_speed_propagation = 0.1
 	diplomatic_reputation = 2
 }
 
@@ -350,7 +353,17 @@ nd_inc_dest_coast = {
 		}
 		owns_or_non_sovereign_subject_owns = location:chan_chan
 		owns_or_non_sovereign_subject_owns = location:arequipa
-		army_size >= 30
+		# The Inca army was a labour levy fed from the state's stores on the
+		# march: the storehouses of nd_inc_qullqa_logistics (age 2) in three
+		# places. An army size stood here until 2026-10-02: a levy host
+		# cannot answer for it.
+		custom_tooltip = {
+			text = nd_inc_dest_qullqa_3_tt
+			any_owned_location = {
+				count >= 3
+				has_building_with_at_least_one_level = nd_inc_imperial_qullqa
+			}
+		}
 	}
 	icon = feudalism_advance
 	siege_ability = 0.1
@@ -364,8 +377,26 @@ nd_inc_dest_quarters = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:quito
 		owns_or_non_sovereign_subject_owns = location:tiwanaku
-		army_size >= 50
-		total_development >= 1500
+		# The road to Quito is a road of storehouses (an army size stood
+		# here until 2026-10-02).
+		custom_tooltip = {
+			text = nd_inc_dest_qullqa_6_tt
+			any_owned_location = {
+				count >= 6
+				has_building_with_at_least_one_level = nd_inc_imperial_qullqa
+			}
+		}
+		# Willkawaman (Vilcashuaman): the centre Pachacuti and Tupac Yupanqui
+		# built on the royal road, which Cieza de Leon calls the middle of the
+		# realm, as far from Quito as from Chile. 1337 value 6.5
+		# (development_estimate.py), +50%.
+		custom_tooltip = {
+			text = nd_inc_dest_willkawaman_developed_tt
+			location:willkawaman = {
+				owner ?= root
+				development >= 10
+			}
+		}
 	}
 	icon = imperial_ambitions
 	amount_looted_modifier = 0.2
@@ -382,6 +413,10 @@ nd_inc_dest_tawantin = {
 		owns_or_non_sovereign_subject_owns = location:chuqiyapu
 		prestige >= 75
 		gold >= 3000
+		# The realm from Tumbes to Arica was the one Pachacuti's order made
+		# governable. An age 3 advance of the country's own, so that this path
+		# does not end three ages before the other (ruling 2026-10-02).
+		has_advance = nd_inc_pachacuti_reforms
 	}
 	icon = imperial_ambitions
 	unlock_building = nd_inc_inti_huasi_wamani
@@ -414,16 +449,27 @@ nd_inc_dest_quipu = {
 		}
 	}
 	icon = merchants_and_trade
-	global_monthly_prosperity = 0.002
+	global_monthly_prosperity = 0.001
 	global_institution_growth_modifier = 0.1
 }
 
+# Displayed as "The Provincial Capitals" (the key keeps its first name: the
+# tampu is vanilla's tambo, which the Inca hold from tambo_advance).
 nd_inc_dest_tampu = {
 	age = age_1_traditions
 	requires = nd_inc_dest_quipu
 	potential = { has_or_had_tag = INC has_variable = nd_inc_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		total_development >= 1500
+		# Hatun Xauxa: the provincial capital of the Mantaro valley, whose
+		# hillsides carried the largest storehouse complex of the realm.
+		# 1337 value 8.5, +50%.
+		custom_tooltip = {
+			text = nd_inc_dest_hatun_xauxa_developed_tt
+			location:hatun_xauxa = {
+				owner ?= root
+				development >= 13
+			}
+		}
 		prestige >= 50
 		has_embraced_institution = institution:professional_armies
 	}
@@ -439,7 +485,15 @@ nd_inc_dest_suyu = {
 	allow = {
 		has_embraced_institution = institution:scientific_revolution
 		gold >= 3000
-		total_development >= 2000
+		# Qusqu: the navel of the four suyus, which Pachacuti rebuilt in stone.
+		# 1337 value 4, doubled.
+		custom_tooltip = {
+			text = nd_inc_dest_qusqu_developed_tt
+			location:qusqu = {
+				owner ?= root
+				development >= 8
+			}
+		}
 		any_market_present_in_country = {
 			OR = {
 				is_produced_in_market = goods:goods_gold

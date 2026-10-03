@@ -38,9 +38,8 @@ nd_sil_oder_commerce = {
 	potential = { has_or_had_tag = SIL }
 	requires = guilds
 	icon = guilds
-	trade_land_efficiency = 0.05
+	trade_land_efficiency = 0.2
 
-	trade_sea_efficiency = 0.05
 
 	global_merchant_power = 0.05
 }
@@ -97,16 +96,17 @@ nd_sil_urban_militia = {
 	}
 }
 
-# 8. Breslau Emporium: commercial hub
+# 8. Breslau Emporium: commercial hub; unlocks the Schweidnitz brewhouse,
+# whose beer the council sold in the cellar under Breslau's town hall
 nd_sil_breslau_emporium = {
 	age = age_2_renaissance
 	potential = { has_or_had_tag = SIL }
 	requires = merchants_and_trade
 	icon = merchants_and_trade
+	unlock_building = nd_sil_brewhouse
 	global_merchant_capacity_modifier = 0.1
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
 
 }
 
@@ -154,15 +154,14 @@ nd_sil_oder_trade_tradition = {
 	global_merchant_power = 0.1
 }
 
-# 13. Silesian Landsknechte: unlocks buildable infantry
+# 13. Silesian Landsknechte: discipline. No unit of the mod's: vanilla's
+# landsknechte advance gives every German culture the unit itself.
 nd_sil_landsknechte_tradition = {
 	age = age_3_discovery
 	potential = { has_or_had_tag = SIL }
 	requires = pike_square
 	icon = pike_square
 	discipline = 0.05
-	ai_weight = {
-	}
 }
 
 # 14. Three Crown Diplomacy: Silesia between Poland, Bohemia, HRE
@@ -215,17 +214,17 @@ nd_sil_mountain_jaegers = {
 	}
 }
 
-# 18. Linen Export Boom: unlocks beer brewing PM (proto-industrial diversification)
+# 18. Linen Export Boom: the merchants of the mountain valleys; unlocks the
+# Sudeten glass hut, whose cut glass went out with the linen
 nd_sil_linen_export_boom = {
 	age = age_4_reformation
 	potential = { has_or_had_tag = SIL }
 	requires = global_trade_advance
 	icon = global_trade_advance
-	unlock_production_method = nd_sil_beer_brewing
-	global_production_efficiency = 0.05
-	trade_land_efficiency = 0.025
+	unlock_building = nd_sil_glass_hut
+	global_production_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
 
 }
 
@@ -245,6 +244,7 @@ nd_sil_religious_coexistence = {
 	potential = { has_or_had_tag = SIL }
 	requires = pop_promotion_speed_age_4
 	icon = pop_promotion_speed_age_4
+	unlock_building = nd_sil_friedenskirche
 	tolerance_own = 1
 	tolerance_heretic = 1
 	cultures_capacity = 1
@@ -277,13 +277,12 @@ nd_sil_fusilier_tradition = {
 	}
 }
 
-# 23. Breslau University: unlocks glass making PM
+# 23. Breslau University: the Leopoldina of 1702
 nd_sil_breslau_university = {
 	age = age_5_absolutism
 	potential = { has_or_had_tag = SIL }
 	requires = the_constitution
 	icon = the_constitution
-	unlock_production_method = nd_sil_glassmaking
 	research_speed_modifier = 0.05
 	global_institution_growth_modifier = 0.2
 }
@@ -304,10 +303,10 @@ nd_sil_linen_monopoly = {
 	potential = { has_or_had_tag = SIL }
 	requires = maritime_advance_age_5
 	icon = maritime_advance_age_5
+	unlock_production_method = nd_sil_schleierleinen
 	global_cloth_output_modifier = 0.2
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
 
 }
 
@@ -322,7 +321,7 @@ nd_sil_industrial_silesia = {
 	requires = industrialization_advance
 	icon = industrialization_advance
 	unlock_building = nd_sil_mechanized_mill
-	global_production_efficiency = 0.1
+	global_production_efficiency = 0.05
 }
 
 # 27. Weavers' Revolt: social upheaval + DHE event
@@ -332,7 +331,7 @@ nd_sil_weavers_revolt = {
 	requires = rights_of_man
 	icon = rights_of_man
 	global_estate_target_satisfaction = 0.025
-	global_monthly_prosperity = 0.0015
+	global_monthly_prosperity = 0.001
 }
 
 # 28. Silesian Iron and Steel: heavy industry
@@ -467,7 +466,7 @@ nd_sil_dest_industry_2 = {
 	}
 	icon = global_trade_advance
 	global_sailors_modifier = 0.1
-	global_population_growth = 0.002
+	global_population_growth = 0.00025
 }
 
 nd_sil_dest_industry_3 = {
@@ -476,7 +475,18 @@ nd_sil_dest_industry_3 = {
 	potential = { has_or_had_tag = SIL has_variable = nd_sil_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		owns = location:leipzig
-		total_development >= 1000
+		# Breslau is the place the linen, the fairs and later the works
+		# built up: a town of the Bohemian crown in 1337, the second city
+		# of the Prussian kingdom by the end. 1337 value 26
+		# (scripts/development_estimate.py --explain wroclaw), doubled for
+		# a third stage.
+		custom_tooltip = {
+			text = nd_sil_dest_wroclaw_developed_tt
+			location:wroclaw = {
+				owner ?= root
+				development >= 52
+			}
+		}
 		gold >= 3000
 		capital = {
 			market = {
@@ -491,5 +501,5 @@ nd_sil_dest_industry_3 = {
 	unlock_building = nd_sil_trade_hall
 	monthly_towards_capital_economy = 0.1
 	monthly_towards_plutocracy = 0.1
-	global_devastation_recovery = 0.005
+	global_devastation_recovery = 0.0025
 }

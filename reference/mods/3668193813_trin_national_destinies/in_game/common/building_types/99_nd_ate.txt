@@ -30,33 +30,6 @@ nd_ate_gold_treasury = {
 			tools = 0.05
 			category = building_maintenance
 		}
-
-		nd_ate_gold_dust_weighing = {
-			copper = 0.1
-			paper = 0.05
-			tools = 0.05
-			category = building_maintenance
-		}
-
-		nd_ate_craft_villages = {
-			lumber = 0.1
-			dyes = 0.1
-			clay = 0.1
-			category = building_maintenance
-		}
-
-		nd_ate_gold_refining_process = {
-			copper = 0.1
-			lumber = 0.1
-			tools = 0.05
-			category = building_maintenance
-		}
-
-		nd_ate_goldweight_minting = {
-			copper = 0.15
-			tools = 0.05
-			category = building_maintenance
-		}
 	}
 	construction_demand = guild_construction
 }
@@ -83,14 +56,14 @@ nd_ate_asante_shrine = {
 	modifier = {
 		local_clergy_estate_power = 0.5
 		local_unrest = -0.03
-		local_cultural_tradition = 0.5
+		local_cultural_tradition = 0.25
 	}
 
 	unique_production_methods = {
 		nd_ate_shrine_upkeep = {
-			lumber = 0.1
-			clay = 0.05
-			beeswax = 0.05
+			lumber = 0.12
+			clay = 0.06
+			beeswax = 0.06
 			category = building_maintenance
 		}
 	}
@@ -124,9 +97,9 @@ nd_ate_stool_house = {
 
 	unique_production_methods = {
 		nd_ate_stool_house_maintenance = {
-			lumber = 0.1
-			pottery = 0.1
-			cloth = 0.05
+			lumber = 0.275
+			pottery = 0.275
+			cloth = 0.138
 			category = building_maintenance
 		}
 	}
@@ -212,9 +185,9 @@ nd_ate_palace_complex = {
 
 	unique_production_methods = {
 		nd_ate_palace_upkeep = {
-			lumber = 0.2
-			pottery = 0.1
-			cloth = 0.1
+			lumber = 0.358
+			pottery = 0.179
+			cloth = 0.179
 			category = building_maintenance
 		}
 	}
@@ -285,9 +258,9 @@ nd_ate_asokwafo_academy = {
 
 	unique_production_methods = {
 		nd_ate_academy_maintenance = {
-			paper = 0.1
-			books = 0.05
-			cloth = 0.05
+			paper = 0.21
+			books = 0.105
+			cloth = 0.105
 			category = building_maintenance
 		}
 	}
@@ -314,7 +287,7 @@ nd_ate_royal_mausoleum = {
 	}
 
 	modifier = {
-		local_cultural_tradition = 1
+		local_cultural_tradition = 0.25
 		local_unrest = -0.05
 		local_clergy_estate_power = 0.5
 	}
@@ -366,7 +339,8 @@ nd_ate_trade_road_station = {
 	construction_demand = bridge_construction
 }
 
-# Cocoa Plantation: cash crop plantation for export
+# Kola Grove: the kola of the forest, sold north to the Hausa caravans.
+# The key keeps its first name (it was a cocoa plantation until 2026-10-02).
 nd_ate_cocoa_plantation = {
 	is_special = yes
 	is_foreign = no
@@ -386,36 +360,53 @@ nd_ate_cocoa_plantation = {
 
 	modifier = {
 		local_production_efficiency = small_production_efficiency_bonus
-		local_monthly_food_modifier = 0.05
+		local_monthly_food_modifier = 0.025
 		local_laborers_desired_pop = 0.1
 	}
 
-	# Requires a real supply of cocoa: the formable's own
-	# territory has no source of it, so this is bound to the
-	# location's market rather than to the soil. Without a gate
-	# the building conjures the good anywhere the owner holds.
+	# Kola grows wild and tended in the forest belt; the game has no kola
+	# good, and medicaments (the good of Yeji and Hulagan in the formable's
+	# own land) stands for it, as it does for Oyo's kola grove. The gate is
+	# the land the tree grows on (tropical jungle or forest, 29 of the 33
+	# locations of the Akan and Gold Coast areas) in a market where the
+	# good is grown or sold. Until 2026-10-02 the building made cocoa, a
+	# crop that reached the Gold Coast in 1879, after the game's years.
 	location_potential = {
+		climate = tropical
+		OR = {
+			vegetation = jungle
+			vegetation = forest
+		}
 		market ?= {
-			is_produced_in_market = goods:cocoa
+			OR = {
+				is_produced_in_market = goods:medicaments
+				is_traded_in_market = goods:medicaments
+			}
 		}
 	}
 
 	unique_production_methods = {
+		# Outputs from eu5-profit at the rural margin (20 percent).
+		# Picking: timber for the drying racks and tools for the harvest.
 		nd_ate_cocoa_cultivation = {
-			lumber = 0.1
-			produced = cocoa
-			output = 0.15
+			lumber = 0.3
+			tools = 0.1
+			produced = medicaments
+			output = 0.9
 			category = guild_input
-			debug_max_profit = -1
+			debug_max_profit = rural_profit_margin
 		}
 
+		# Packing for the road north: baskets and wrapping leaves (fiber
+		# crops) and pots that keep the nuts moist as far as Salaga.
 		nd_ate_cocoa_processing = {
-			lumber = 0.1
-			tools = 0.05
-			produced = cocoa
-			output = 0.20
+			fiber_crops = 0.3
+			pottery = 0.2
+			tools = 0.1
+			produced = medicaments
+			output = 1.32
 			category = guild_input
-			debug_max_profit = -1
+			debug_max_profit = rural_profit_margin
 		}
 	}
 	construction_demand = plantation_construction
@@ -463,6 +454,75 @@ nd_ate_abrafoo_foundry = {
 			output = 0.144
 			category = guild_input
 			debug_max_profit = guild_profit_margin
+		}
+
+		# Unlocked by nd_ate_goldweight_standards: the brass abrammuo, cast
+		# to one standard, are the measuring tools of every Akan market.
+		nd_ate_goldweight_minting = {
+			copper = 0.15
+			tin = 0.05
+			produced = tools
+			output = 0.22
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+
+		# Unlocked by nd_ate_gold_refining: refined dust worked into
+		# regalia by the goldsmiths (vanilla's jewelry guild makes jewelry
+		# from gold the same way).
+		nd_ate_gold_refining_process = {
+			goods_gold = 0.1
+			tools = 0.05
+			produced = jewelry
+			output = 0.228
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# Craft Village: the villages around Kumasi that each kept one craft for
+# the court (Pankrono pottery, Ahwiaa wood carving).
+# Settlement: countryside and towns. These were villages, and stayed so.
+# No location gate: pottery and carved stools are made goods, and the clay
+# and timber they are made of are the gate. One level and no modifier
+# block: the building is its product.
+nd_ate_craft_village = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = 1
+	employment_size = guild_employment
+	category = consumer_goods_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_ate_craft_specialization
+	}
+
+	unique_production_methods = {
+		nd_ate_pankrono_pottery = {
+			clay = 0.3
+			lumber = 0.05
+			produced = pottery
+			output = 0.27
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+
+		nd_ate_ahwiaa_carving = {
+			lumber = 0.3
+			tools = 0.05
+			produced = furniture
+			output = 0.24
+			category = guild_input
+			debug_max_profit = rural_profit_margin
 		}
 	}
 	construction_demand = guild_construction

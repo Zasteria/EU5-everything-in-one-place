@@ -32,13 +32,16 @@ nd_nzo_salt_wells = {
 	}
 
 	unique_production_methods = {
+		# Output at the rural margin (0.2 x 1.2 / 4). It stood at 0.15 with the
+		# cap switched off, three times what the inputs pay for, and above
+		# the crown method an advance unlocks later.
 		nd_nzo_salt_processing_pm = {
 			lumber = 0.1
 			clay = 0.1
 			produced = salt
-			output = 0.15
+			output = 0.06
 			category = guild_input
-			debug_max_profit = -1
+			debug_max_profit = rural_profit_margin
 		}
 
 		nd_nzo_crown_salt_pm = {
@@ -47,7 +50,7 @@ nd_nzo_salt_wells = {
 			produced = salt
 			output = 0.105
 			category = guild_input
-			debug_max_profit = guild_profit_margin
+			debug_max_profit = rural_profit_margin
 		}
 	}
 	construction_demand = village_construction
@@ -74,7 +77,7 @@ nd_nzo_chongsheng_monastery = {
 	}
 
 	modifier = {
-		local_cultural_tradition = 1
+		local_cultural_tradition = 0.25
 		local_cultural_influence = 0.5
 		local_clergy_estate_power = 0.5
 		local_monthly_literacy = 0.05
@@ -87,14 +90,6 @@ nd_nzo_chongsheng_monastery = {
 			lumber = 0.15
 			beeswax = 0.05
 			paper = 0.1
-			category = building_maintenance
-		}
-
-		nd_nzo_devotional_crafts_pm = {
-			incense = 0.1
-			silver = 0.05
-			beeswax = 0.05
-			cloth = 0.05
 			category = building_maintenance
 		}
 	}
@@ -140,7 +135,7 @@ nd_nzo_copper_smelter = {
 			produced = copper
 			output = 0.16
 			category = guild_input
-			debug_max_profit = guild_profit_margin
+			debug_max_profit = rural_profit_margin
 		}
 	
 	}
@@ -179,27 +174,6 @@ nd_nzo_caravanserai = {
 			wheat = 0.1
 			salt = 0.05
 			leather = 0.05
-			category = building_maintenance
-		}
-
-		nd_nzo_bai_tiedye_pm = {
-			cloth = 0.1
-			dyes = 0.1
-			fiber_crops = 0.05
-			category = building_maintenance
-		}
-
-		nd_nzo_tea_brick_pm = {
-			tea = 0.1
-			tools = 0.05
-			paper = 0.05
-			category = building_maintenance
-		}
-
-		nd_nzo_bai_painting_pm = {
-			paper = 0.1
-			dyes = 0.1
-			beeswax = 0.05
 			category = building_maintenance
 		}
 	}
@@ -241,6 +215,54 @@ nd_nzo_lacquer_armory = {
 		}
 	}
 	construction_demand = soldier_building_construction
+}
+
+# Dragon Pass Fort: a walled barrier across a mountain defile, after the
+# Dragon Head and Dragon Tail passes that closed the Dali plain.
+# Every settlement tier is allowed on purpose: a pass is where the road is,
+# town or no town. The terrain gate is the restriction: no pass without
+# mountains, hills or a plateau edge.
+nd_nzo_dragon_pass_fort = {
+	is_special = yes
+	is_foreign = no
+	pop_type = soldiers
+	max_levels = 1
+	employment_size = castle_employment
+	category = defense_category
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = soldier_building
+
+	country_potential = {
+		has_advance = nd_nzo_highland_fortification
+	}
+
+	location_potential = {
+		OR = {
+			topography = mountains
+			topography = hills
+			topography = plateau
+		}
+	}
+
+	modifier = {
+		local_defensive = 0.25
+		local_garrison_size = 0.1
+		local_hostile_attrition = 0.5
+	}
+
+	unique_production_methods = {
+		nd_nzo_pass_garrison_pm = {
+			stone = 0.2
+			lumber = 0.1
+			weaponry = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = castle_construction
 }
 
 # Pu'er Tea Warehouse: storing and aging the famous Yunnan tea
@@ -300,7 +322,7 @@ nd_nzo_azhali_temple = {
 	}
 
 	modifier = {
-		local_cultural_tradition = 0.5
+		local_cultural_tradition = 0.25
 		local_clergy_estate_power = 0.25
 		local_unrest = -0.05
 		local_pop_conversion_speed = 0.01
@@ -311,13 +333,6 @@ nd_nzo_azhali_temple = {
 			incense = 0.1
 			beeswax = 0.05
 			cloth = 0.05
-			category = building_maintenance
-		}
-
-		nd_nzo_marble_working_pm = {
-			stone = 0.15
-			tools = 0.05
-			lumber = 0.05
 			category = building_maintenance
 		}
 	}
@@ -356,7 +371,7 @@ nd_nzo_silver_workshop = {
 			silver = 0.15
 			lumber = 0.05
 			produced = jewelry
-			output = 0.2339
+			output = 0.234
 			category = guild_input
 			debug_max_profit = guild_profit_margin
 		}
@@ -367,8 +382,147 @@ nd_nzo_silver_workshop = {
 			category = guild_input
 			debug_max_profit = guild_profit_margin
 		}
+		# Unlocked by nd_nzo_avalokitesvara_devotion (age 4). The Acuoye
+		# Guanyin, the slender gilt bronze image of Avalokitesvara that only
+		# Nanzhao and Dali cast, made by the lost-wax method. It lets the
+		# workshop run on Yunnan's copper in place of silver; vanilla's
+		# jewelry guild makes jewelry from copper as well.
+		nd_nzo_guanyin_casting_pm = {
+			copper = 0.3
+			beeswax = 0.05
+			produced = jewelry
+			output = 0.24
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
 	}
 	construction_demand = guild_construction
+}
+
+# Bai Tie-Dye Workshop (age 1, nd_nzo_bai_weaving)
+# Cloth is bound with thread, dipped in the indigo vat and untied into white
+# patterns on blue. Vanilla's fine cloth guild makes the same good from cloth
+# and dyes.
+# location_potential: Bai country. The craft is a household trade of the Bai
+# towns around Lake Erhai and travels with the people, not with a resource.
+# No modifier block: a plain producer in vanilla's guild shape.
+nd_nzo_tiedye_workshop = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	employment_size = guild_employment
+	category = consumer_goods_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_nzo_bai_weaving
+	}
+
+	location_potential = {
+		dominant_culture ?= culture:bai_culture
+	}
+
+	unique_production_methods = {
+		nd_nzo_bai_tiedye_pm = {
+			cloth = 0.2
+			dyes = 0.05
+			produced = fine_cloth
+			output = 0.16
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# Cangshan Marble Quarry (age 3, nd_nzo_dali_marble_craft)
+# The veined marble of the Cangshan range above Dali, cut for building
+# stone and for the picture slabs set into screens and furniture.
+# location_potential: the location's own raw material is marble. Two
+# locations of the formable's land qualify (Taihe and Lushan), so the
+# quarry is rare by design.
+# Every settlement tier, as vanilla's stone quarry: Taihe is a city and the
+# quarries stand on the slope above it.
+# Bill modelled on vanilla's stone quarry (tools, lumber).
+nd_nzo_marble_quarry = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = rural_building_cap
+	employment_size = rural_peasant_produce_employment
+	category = rgo_building_category
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_nzo_dali_marble_craft
+	}
+
+	location_potential = {
+		raw_material = goods:marble
+	}
+
+	unique_production_methods = {
+		nd_nzo_marble_working_pm = {
+			tools = 0.1
+			lumber = 0.1
+			produced = marble
+			output = 0.108
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = village_construction
+}
+
+# Tea Mountain Garden (age 5, nd_nzo_tea_trade_expansion)
+# The old tea groves of southern Yunnan, where the leaf was steamed, pressed
+# into bricks and cakes, wrapped and sent out with the caravans.
+# location_potential: the location's own raw material is tea (17 locations
+# of the formable's land). Countryside only: a tea mountain is not a town.
+# Vanilla has no tea producer to copy a bill from, so the bill is what the
+# work consumes: firewood for steaming, paper wrappers, tools and presses.
+nd_nzo_tea_mountain = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = rural_building_cap
+	employment_size = rural_peasant_produce_employment
+	category = rgo_building_category
+	rural_settlement = yes
+	town = no
+	city = no
+	megalopolis = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_nzo_tea_trade_expansion
+	}
+
+	location_potential = {
+		raw_material = goods:tea
+	}
+
+	unique_production_methods = {
+		nd_nzo_tea_brick_pm = {
+			lumber = 0.1
+			paper = 0.05
+			tools = 0.05
+			produced = tea
+			output = 0.16
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = village_construction
 }
 
 # ===== DESTINY BUILDINGS =====

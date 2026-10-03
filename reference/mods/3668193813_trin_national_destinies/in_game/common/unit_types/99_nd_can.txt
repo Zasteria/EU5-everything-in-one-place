@@ -51,7 +51,6 @@ a_nd_can_milice = {
 	is_special = yes
 	category = army_heavy_infantry
 	copy_from = a_age_4_reformation_heavy_infantry
-	upgrades_to = a_musketeers
 	buildable = no
 	levy = yes
 
@@ -68,6 +67,31 @@ a_nd_can_milice = {
 	max_strength = 0.2
 }
 
+# Select Embodied Militia: Age 5 levy infantry
+# The successor of the Milice: men drawn by ballot from the parish militia
+# rolls in 1812 and embodied for a term in drilled line battalions.
+a_nd_can_embodied_militia = {
+	is_special = yes
+	category = army_heavy_infantry
+	copy_from = a_age_5_absolutism_heavy_infantry
+	buildable = no
+	levy = yes
+
+	# Delta on a_age_5_absolutism_heavy_infantry. Balloted men serving out a
+	# term on their own frontier hold their ground; nothing else is changed,
+	# the line drill is the template's own.
+	morale_damage_taken = -0.05
+	combat = {
+		forest = 0.10
+	}
+
+	country_potential = {
+		has_or_had_tag = CAN
+	}
+
+	gfx_tags = { medium_tag }
+}
+
 # Canadian Voltigeurs: Age 5 light infantry
 # Elite light infantry, skirmishers excelling at irregular warfare
 # Base inf template: max_strength=2.5, combat_power=2.25
@@ -78,9 +102,14 @@ a_nd_can_voltigeurs = {
 	upgrades_to = a_sharpshooters
 	buildable = yes
 
-	# Skirmisher elite: fast, high initiative, forest fighters
-	movement_speed = 1
-	initiative = 3.5
+	# Deltas on a_age_5_absolutism_light_infantry (strength 2.5). The corps
+	# was one provincial battalion of a few hundred volunteers, so a regiment
+	# is a sixth smaller than a line one: that is what the skirmishing costs.
+	# Initiative 3 is vanilla's top step for light foot (a_late_longbowmen);
+	# the morale damage is Chateauguay, where bugles sounded from the woods
+	# made 300 men pass for an army.
+	max_strength = -0.4
+	initiative = 3
 	morale_damage_done = 0.1
 	strength_damage_taken = -0.05
 	combat = {
@@ -96,17 +125,28 @@ a_nd_can_voltigeurs = {
 
 # Northwest Mounted Police: Age 6 cavalry
 # Frontier law enforcement mounted force
-# Base cav template: max_strength=1.2, combat_power=4
+# Base cav template: max_strength=1.2, combat_power=3.25
 a_nd_can_mounted_police = {
 	is_special = yes
 	category = army_light_cavalry
 	copy_from = a_age_6_revolutions_light_cavalry
 	buildable = yes
 
-	# Frontier patrol: fast, good at suppressing unrest, reduced attrition
+	# Deltas on a_age_6_revolutions_light_cavalry (strength 1.2). The force
+	# that made the March West of 1874 (275 men over 1,300 km): it travels
+	# far and loses little on the way, and it is a constabulary of a few
+	# hundred, so a regiment is a sixth smaller than line cavalry.
+	# attrition_loss -0.25 cancels the cavalry category's extra attrition,
+	# the same number vanilla gives a_gurkha.
+	# With a sixth of the men gone the unit fought worse than the cavalry it
+	# copies (total combat power 3.669 against 4.194). What a picked
+	# constabulary has is steadiness: it does not break and it breaks
+	# others. Morale damage taken -0.1 and done +0.1 put it at 4.271.
+	max_strength = -0.2
 	movement_speed = 0.15
-	attrition_loss = -0.5
+	attrition_loss = -0.25
 	morale_damage_done = 0.1
+	morale_damage_taken = -0.1
 
 	country_potential = {
 		has_or_had_tag = CAN
@@ -128,11 +168,42 @@ n_nd_can_canot_du_maitre = {
 	# Trade canoe: faster and roomier than the template's transport, but a
 	# bark hull with no guns. Deltas on n_age_3_discovery_transport
 	# (speed 6.5, hull 15, cannons 5, transport 0.75, crew 0.06).
-	movement_speed = 1
-	transport_capacity = 0.25
+	# Load stands at vanilla's largest for a transport (0.1, n_kabang;
+	# ruling of 2026-10-02, it was 0.25). The canoe's own edge is speed: an
+	# express canoe outran anything else on the rivers.
+	movement_speed = 1.5
+	transport_capacity = 0.1
 	hull_size = -5
 	cannons = -5
 	crew_size = -0.01
+
+	country_potential = {
+		has_or_had_tag = CAN
+	}
+
+	gfx_tags = { medium_tag }
+}
+
+# York Boat: Age 4 transport
+# The Hudson's Bay Company's inland freight boat, built by Orkney boatwrights
+# from 1749: a clinker hull carrying twice a canoe's load, too heavy to
+# portage quickly and never armed.
+n_nd_can_york_boat = {
+	is_special = yes
+	category = navy_transport
+	copy_from = n_age_4_reformation_transport
+	upgrades_to = n_merchantman
+	buildable = yes
+
+	# Deltas on n_age_4_reformation_transport (speed 7, hull 18, cannons 6,
+	# transport 1.0, crew 0.07): more freight on fewer hands, in an open
+	# boat with no guns. Load stands at vanilla's largest for a transport
+	# (0.1, n_kabang; ruling of 2026-10-02, it was 0.25); the boat's own
+	# edge is its small crew, six or eight tripmen to a boat.
+	transport_capacity = 0.1
+	crew_size = -0.023
+	hull_size = -4
+	cannons = -6
 
 	country_potential = {
 		has_or_had_tag = CAN

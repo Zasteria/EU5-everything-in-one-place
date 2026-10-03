@@ -101,9 +101,9 @@ nd_ukr_mohyla_academy = {
 
 	unique_production_methods = {
 		nd_ukr_academy_operations = {
-			paper = 0.15
-			books = 0.05
-			glass = 0.05
+			paper = 0.263
+			books = 0.088
+			glass = 0.088
 			category = building_maintenance
 		}
 	}
@@ -130,17 +130,28 @@ nd_ukr_chernozem_estate = {
 
 	modifier = {
 		local_wheat_output_modifier = 0.15
-		local_monthly_food_modifier = 0.1
+		local_monthly_food_modifier = 0.05
 		local_population_growth = 0.0005
 	}
 
 	unique_production_methods = {
+		# The estate's own bill, open from the day the estate is. Until
+		# 2026-10-02 the brewing below was the estate's only method and it
+		# opens three ages after the building (nd_ukr_grain_export), which
+		# left the estate with no method at all in between.
+		nd_ukr_estate_upkeep = {
+			tools = 0.05
+			livestock = 0.05
+			lumber = 0.05
+			category = building_maintenance
+		}
+		# Unlocked by nd_ukr_grain_export.
 		nd_ukr_grain_processing = {
 			wheat = 0.3
 			produced = beer
 			output = 0.18
 			category = guild_input
-			debug_max_profit = guild_profit_margin
+			debug_max_profit = rural_profit_margin
 		}
 	}
 	construction_demand = farm_constructions
@@ -238,7 +249,7 @@ nd_ukr_sloboda = {
 
 	modifier = {
 		local_population_growth = 0.0005
-		local_monthly_food_modifier = 0.05
+		local_monthly_food_modifier = 0.025
 		local_migration_attraction = 0.05
 		local_unrest = -0.03
 	}
@@ -293,6 +304,94 @@ nd_ukr_medovarnia = {
 		}
 	}
 	construction_demand = workshop_construction
+}
+
+# Brotherhood Press: the printing house of an Orthodox lay brotherhood
+# (the Dormition Brotherhood of Lviv printed from 1591). Unlocked by
+# nd_ukr_orthodox_brotherhoods.
+# A plain producer with no modifier block; two levels so a town's press
+# stays a brotherhood's shop and not an industry.
+nd_ukr_brotherhood_press = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 2
+	employment_size = guild_employment
+	category = consumer_goods_category
+	# A press needs a town's craftsmen: the same tiers as vanilla's scriptorium.
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = no
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_ukr_orthodox_brotherhoods
+	}
+
+	# The presses were the brotherhoods' own and stood beside their schools.
+	allow = {
+		has_building = building_type:nd_ukr_brotherhood_school
+	}
+
+	unique_production_methods = {
+		# Books are a produced good made from paper, as in vanilla's
+		# scriptorium (paper, dyes, lumber) and printing shop (paper, lead).
+		# Lead is the cast type, dyes the red ink of the church rubrics.
+		nd_ukr_church_slavonic_printing = {
+			paper = 0.2
+			lead = 0.05
+			dyes = 0.05
+			produced = books
+			output = 0.28
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# Kobzar Guild: the brotherhood of blind singers, with its elected elder,
+# its secret speech and its lamp kept before an icon in the parish church.
+# Unlocked by nd_ukr_kobzar_tradition.
+nd_ukr_kobzar_guild = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = cultural_employment
+	category = cultural_category
+	# The guilds gathered at fairs and parish churches of the market towns:
+	# the same tiers as vanilla's theater, one level.
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = no
+	build_time = cultural_building_time
+
+	country_potential = {
+		has_advance = nd_ukr_kobzar_tradition
+	}
+
+	modifier = {
+		# Vanilla's theater gives 0.2.
+		local_cultural_tradition = 0.2
+		# The dumy were sung in the people's own tongue (vanilla's
+		# marketplace gives the same 0.01).
+		local_pop_assimilation_speed_modifier = 0.01
+	}
+
+	unique_production_methods = {
+		nd_ukr_kobzar_guild_upkeep = {
+			lumber = 0.263
+			beeswax = 0.132
+			cloth = 0.132
+			category = building_maintenance
+		}
+	}
+	construction_demand = theater_construction
 }
 
 # ===== DESTINY BUILDINGS =====

@@ -1,0 +1,311 @@
+﻿# Galicia (GLC): bureaucracies
+# National Destinies mod
+#
+# Read before choosing subjects (EU5 1.4):
+#   vanilla bureaucracies Galicia can hold (bureaucracies/generic.txt, ten of
+#     them, from Confessionalism or the age 4 advance): a board of revenue, a
+#     privy council, an audit bureau, a colonial office, an admiralty, a
+#     foreign ministry, a trade commission, a war council, an ordnance board
+#     and a commissariat. None is repeated here by name or by subject.
+#   vanilla Galicia elsewhere: the Junta General (glc_junta_general), the
+#     foros as a source of land and trade (galician_foros), the Irmandinos,
+#     the Camino, the cathedral, the Armada de Galicia and the Atlantic walls
+#     are advances. So no Xunta do Reino here.
+#   the mod's Castile, Leon, Portugal, Aragon and Spain (99_nd_cas.txt and
+#     its neighbours): no alcaldes, no notary, no hearth tax, no corregidor,
+#     no audiencia, no consulado. Leon's planner left the adelantado of Leon
+#     alone because vanilla gives it to Leon as an advance; vanilla gives
+#     Galicia no adelantado, and the office of Galicia was a separate one.
+#   this country's own tree (99_nd_glc.txt): the Voto de Santiago, the
+#     Pertigueiro Maior, the Santa Irmandade, the Estudo Vello, the Real
+#     Audiencia, the Departamento Maritimo and the Correos Maritimos are
+#     advances; Confraria de Mareantes, Casa da Especiaria, Pazo, Torre do
+#     Senor, Reais Estaleiros and Real Consulado are buildings. None of
+#     their keys or names is reused.
+#
+# The four:
+# 1. Adiantado Maior do Reino de Galicia: the king's deputy in the kingdom,
+#    who summons its counts and knights and keeps its peace.
+# 2. Foros de Tres Voces: the long lease that carried four fifths of the
+#    tilled land, as a contract kept to its terms.
+# 3. Alfolins do Sal: the king's salt stores in the ports, on which the
+#    salting of the sardine depends.
+# 4. Real Padroado do Grande Hospital: the royal patronage of the pilgrim
+#    hospital of Santiago, endowed in 1499.
+#
+# Estates. The one road the context script models is a Galicia born with the
+# tag (released from Castile): a Galician Catholic monarchy on legitimacy.
+# The territory has all four estates on day one (417 thousand pops: peasants,
+# burghers, clergy, nobles). The four align differently: crown and lords
+# against the towns; clergy and countryfolk against the lords; crown and
+# countryfolk against the clergy; crown against the towns.
+#
+# Slots. Vanilla gives Galicia none on the day it forms (a capital grants
+# one only as a megalopolis, location_ranks/00_default.txt:50; Santiago is a
+# town). The auto modifier grants 2, half of these four. Vanilla adds one
+# with the age 4 bureaucracy advance and one in age 6, and from
+# Confessionalism its ten generic offices compete for the same slots.
+#
+# No cabinet seat and no character modifier. No key stands in both the
+# funded and the neglected block of one institution. No religion-bound key.
+# All IDs are glc_-prefixed.
+#
+# Dropped after research: the monastic coutos (the immune jurisdictions of
+# Oseira, Celanova, Samos and the rest). The pages fetched this session name
+# single coutos and say nothing of how one was governed, so the institution
+# would have rested on memory alone. The Xunta do Reino (1528 to 1834) is
+# vanilla's advance. The Hermandad de las Marismas was Cantabrian and Basque,
+# not Galician.
+
+# 1. Adiantado Maior do Reino de Galicia
+# Fetched (gl.wikipedia, "Adiantado maior do Reino de Galicia"): set up by
+# Alfonso X in 1263 in place of the meirino maior; held military powers and
+# could call out the troops of the counts and knights of the kingdom; judged
+# and governed in the king's name and kept public order; entitled to "copa"
+# and "xantar" and to dues from his judgments; the Cortes of Valladolid of
+# 1312 set royal alcaldes beside the adelantados and those of Palencia of
+# 1313 asked for the meirinos back; replaced in the 15th century by the
+# Governor and Captain General. Pai Gomez Charino was one.
+# Fetched (es.wikipedia, "Adelantado mayor de Galicia"): the list of
+# holders, among them the Castro lords of Lemos (1260, 1265) and Pedro Ruiz
+# Sarmiento, lord of Ribadavia (1372 to 1382).
+# From memory, not fetched: that the Cortes spoke for the towns. It is why
+# the towns dislike the office: his table and his dues fell on them.
+glc_adiantado_maior_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = GLC
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {}
+
+	estates_that_like = {
+		crown_estate
+		nobles_estate
+	}
+	estates_that_dislike = {
+		burghers_estate
+	}
+
+	neutral_modifier = {
+		global_levy_recruitment_speed_modifier = 0.1
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		nobles_estate_levy_size = 0.15
+		global_monthly_control = 0.001
+	}
+
+	# Left to itself the office is one great house's heirloom, and its dues
+	# are taken from the towns without the justice they paid for.
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		global_nobles_estate_power = 0.2
+		burghers_estate_target_satisfaction = large_permanent_target_satisfaction_penalty
+	}
+}
+
+# 2. Foros de Tres Voces
+# Fetched (gl.wikipedia, "Foro (contrato)"): a long lease by which Church and
+# gentry cede the use of land for a rent; the grantor keeps the direct
+# dominion and the tenant the useful one; the term settled at three voices
+# (three tenants' lives) or three kings' lives and 29 years; the land
+# returns at the end and the lord pays for the improvements; first seen in
+# Cistercian charters at the end of the 12th century; four fifths of the
+# tilled area by 19th century reckoning; the archbishop of Santiago in 1537
+# held that land let by lives is better worked and not abandoned; gentry who
+# took foros from the Church sublet them to the tillers (the subforo); the
+# monasteries and the house of Altamira sued in the Audiencia to evict, and
+# the provision of May 1763 suspended every such suit.
+# Vanilla's advance galician_foros gives estate size and merchant upkeep;
+# this is the contract kept to its terms, and it grants neither.
+# The lords of the middle rank dislike it for what it does when it works: a
+# foro that returns on its day ends the sublease they live on.
+glc_foros_de_tres_voces_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = GLC
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {}
+
+	estates_that_like = {
+		clergy_estate
+		peasants_estate
+	}
+	estates_that_dislike = {
+		nobles_estate
+	}
+
+	neutral_modifier = {
+		global_population_capacity_modifier = 0.05
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		expand_rgo_farming_cost_modifier = -0.1
+		clergy_estate_max_tax = 0.05
+	}
+
+	# Nobody reads the charters: the middlemen sublet and sublet again, the
+	# rent stops with them, and the holdings shrink until the young leave.
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		estate_enrichment = 0.15
+		rural_migration_attraction = -0.2
+	}
+}
+
+# 3. Alfolins do Sal
+# Fetched (es.wikipedia, "Renta de salinas"): the crown's sole right to make
+# and sell salt; the salt went to stores that kept the Arabic name alfolies,
+# from which each town drew the quantity assigned to it; the taxpayers
+# complained without result in the Cortes of 1318, 1345 and 1351; nobody
+# might buy elsewhere than from the king's stores or bring salt in from
+# abroad.
+# Fetched (gl.wikipedia, "Bouzas, Vigo", "A Moureira, Pontevedra", "Praza
+# do Peirao", "Pontedeume"): alfolins in the Galician ports, Bouzas granted
+# one by the bishop of Tui in 1501; salt named as essential to keeping the
+# sardine, and salting houses beside the alfolins of Pontevedra.
+# From memory, not fetched: that Galicia makes little salt and ships it in
+# from Portugal, Andalusia and Brittany. It is why the funded store is paid
+# in import efficiency.
+# Light upkeep (0.003, vanilla's figure for the Bayt al-Mal): storehouses
+# and a keeper in each port, no court and no staff of clerks.
+glc_alfolins_do_sal_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.003
+	}
+
+	potential = {
+		has_or_had_tag = GLC
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		num_of_ports > 0
+	}
+
+	estates_that_like = {
+		crown_estate
+	}
+	estates_that_dislike = {
+		burghers_estate
+	}
+
+	# Each town takes its assigned measure at the king's price.
+	neutral_modifier = {
+		burghers_estate_max_tax = 0.05
+	}
+
+	# global_food_decay: the base value is 0.005 (auto_modifiers/country.txt:113);
+	# a stocked store takes a third off it.
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		global_fish_output_modifier = 0.05
+		global_food_decay = -0.0015
+		import_efficiency = 0.02
+	}
+
+	# Empty stores: salt comes in by night past the keeper, the rent is not
+	# paid, and the catch that cannot be salted is not sold abroad.
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		tax_income_efficiency = -0.03
+		export_efficiency = -0.03
+	}
+}
+
+# 4. Real Padroado do Grande Hospital
+# Fetched (gl.wikipedia, "Hospital Real de Santiago de Compostela"): the
+# Catholic Monarchs found the sick pilgrims of Santiago ill served on their
+# visit; on 3 May 1499 they empowered Diego de Muros, dean of the chapter,
+# to build; they set up a Real Padroado in 1499 and endowed it with a third
+# of the rents of the Voto de Santiago of the kingdom of Granada; work began
+# in 1501; a pilgrim showing the compostela was lodged free for three days;
+# constitutions of Charles V in 1524 named it the Grande Hospital Real; most
+# of those it served came from Santiago and the country round; it lost its
+# rents with the end of the patronage and the disentailments.
+# From memory, not fetched: that the house answered to the king's
+# administrator and not to the archbishop. With the fetched endowment (rents
+# of the Voto that the chapter would otherwise hold) it is why the clergy
+# dislike it.
+# The advance nd_glc_voto_de_santiago is the tribute itself; this is the
+# house the crown built on a share of it.
+glc_real_padroado_do_hospital_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = GLC
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		owns = location:santiago_compostela
+	}
+
+	estates_that_like = {
+		crown_estate
+		peasants_estate
+	}
+	estates_that_dislike = {
+		clergy_estate
+	}
+
+	neutral_modifier = {
+		global_disease_resistance = 0.05
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		global_life_expectancy = 1
+		peasants_estate_satisfaction_recovery = 0.002
+	}
+
+	# The rents are farmed out, the wards empty, and the chapter goes to law
+	# for the share of the Voto it never stopped calling its own.
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		global_clergy_estate_power = 0.2
+		monthly_prestige = -0.1
+	}
+}

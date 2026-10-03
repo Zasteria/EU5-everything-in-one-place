@@ -1,50 +1,38 @@
-﻿# Responsive Universalis - Aggressive Ticks (optional tier)
-# Loads after the main mod's zz_ file (last filename wins), overriding only HOUR_TICK.
+﻿# Responsive Universalis - Faster Speeds (the add-on formerly called Aggressive Ticks)
+# Target: EU5 1.4.x. Every override lists the vanilla value.
 #
-# 12 = 2 sim ticks per game-day (vanilla 12/day, main mod 4/day) -> maximum reduction
-# of per-tick overhead. Trade-off: combat phases (5h), hourly morale and event checks
-# resolve in 12-hour chunks - noticeably coarser than vanilla pacing.
-# Works standalone too, but it is meant to be enabled together with Responsive Universalis.
+# On game 1.3 this add-on set 12 hour simulation ticks. Game 1.4 removed the
+# tick-length define (NGame.HOUR_TICK): ticks are daily and fixed in the
+# engine, so that job is gone. What can still be tuned is how long the game
+# WAITS per daily tick at each speed. This add-on halves that wait for
+# speeds 1 to 4. Speed 5 has no wait in vanilla (the vanilla comment on the
+# key says "last entry is uncapped"), it already runs as fast as the
+# computer allows and stays the same.
+#
+# Measured in game 2026-10-02 at speed 2, same start, same machine: a day
+# took 1.02 s in vanilla (table value 1.0) and 0.55 s with this file (table
+# value 0.5). That is 1.84 times faster, a little under double because
+# computing each day takes time too.
+#
+# The 1.3 version of this file is in git tag all-mods-for-game-1.3.11.
 
 NGame = {
-	HOUR_TICK = 12	# vanilla 2, main mod 6
-}
+	# wall-clock seconds per daily tick, one entry per game speed
+	GAME_SPEED_TICKS = {
+		1.0		# speed 1, vanilla 2.0
+		0.5		# speed 2, vanilla 1.0
+		0.25	# speed 3, vanilla 0.5
+		0.1		# speed 4, vanilla 0.2
+		0.0		# speed 5, vanilla 0.0 (uncapped)
+	}
 
-NUnit = {
-	# 12 hour ticks = 2 ticks/day = 6x fewer than vanilla. Movement is
-	# per tick (see main mod), so compensate 6x to keep vanilla pacing.
-	ARMY_MOVEMENT_SPEED = 0.78	# vanilla 0.13
-	NAVY_MOVEMENT_SPEED = 3.0	# vanilla 0.5
+	# Vanilla: 2. The speed step the game sets by itself when a war starts
+	# in multiplayer. Whether the engine counts this value from 0 or from 1
+	# is not known (its own log counts speeds from 0). It does not matter
+	# here: for the first steps our table is the vanilla table moved one
+	# step (our step N waits as long as vanilla step N+1), so one step lower
+	# keeps multiplayer wars at the vanilla real-time pace under either
+	# reading. Raising the real pace at war declaration was the desync
+	# trigger in July 2026. Not tested in multiplayer.
+	GAME_SPEED_FOR_MULTI_PLAYERS_WARS = 1
 }
-
-# Combat compensation (added v1.0.3). Combat advances a FIXED 2 hours per
-# tick (vanilla HOUR_TICK hardcoded in CombatHourlyUpdate - proven by dice
-# cadence measurement 2026-08-19 and independently confirmed by Faster
-# Universalis' duration formula). At 2 ticks/day combat gets 4 processing
-# hours per calendar day instead of vanilla 24, so uncompensated battles
-# run ~6x longer in calendar time. Scale the per-processing-hour rates x6
-# so battles pace and bleed at vanilla calendar rates. Every changed value
-# below is live in Faster Universalis (23k subs), so engine acceptance is
-# proven; the arithmetic is ours.
-NCombat = {
-	# Dice phase every 1 processing hour instead of 5: 4 phases/calendar
-	# day vs vanilla 4.8 (closest integer; a float 0.833 would be exact
-	# but float acceptance here is unproven - not worth the risk for 17%)
-	HOURS_PER_PHASE = 1	# vanilla 5
-	# Passive morale drain per processing hour x6 = vanilla drain per day
-	COMBAT_HOURLY_MORALE_TICK = 0.06	# vanilla 0.01
-	# Strength casualties per processing hour x6 = vanilla losses per day
-	# (battles now END at vanilla pace, so without this total casualties
-	# would drop 6x)
-	COMBAT_DAMAGE_MULT = 0.06	# vanilla 0.01
-	# Minimum durations are processing hours: 4/day now, so 4 = 1 day and
-	# 12 = 3 days, same real-time minimums as vanilla (24 and 72 at 24/day)
-	MINIMUM_COMBAT_DURATION = 4	# vanilla 24
-	MINIMUM_NAVAL_COMBAT_DURATION = 12	# vanilla 72
-	# Naval bombard cadence scaled with the phase cadence
-	BOMBARD_HOURS = 1	# vanilla 5
-}
-# NOT compensated (deliberate): the INITIATIVE_* family (reserve armies
-# joining battles) checks per tick, so joins are probabilistically rarer
-# at 2 ticks/day. Semantics unmeasured by us; Faster Universalis ships
-# empirical boosts (0.45/0.09/0.45/0.04) if complaints ever warrant it.

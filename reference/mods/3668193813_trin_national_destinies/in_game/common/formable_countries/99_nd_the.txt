@@ -91,3 +91,70 @@ REPLACE:THE_f = {
 		add_stability = stability_mild_bonus
 	}
 }
+
+# Vanilla's second road to the same country (half the territory, for Achaea
+# or a claimant flagged by its own events). Hooked so that road also carries
+# the mod's formation lines. Its level stays vanilla's 1: the raise to 2
+# above was argued for the main road only.
+REPLACE:THE_REDUCED_REQUIREMENTS_f = {
+	level = 1
+	required_locations_fraction = 0.50
+	rule = plausible
+	capital_required = no
+	potential = {
+		NOT = { country_exists = c:THE }
+		NOT = { tag = LAT }
+		is_frankokratia_state = yes
+		OR = {
+			has_variable = halved_cost_to_form_thesslonica
+			tag = ACH
+		}
+		NOT = { current_age_or_later = { age = age_3_discovery } }
+	}
+	allow = {
+		NOT = { country_exists = c:THE }
+		owns = location:thessaloniki
+		religion = religion:catholic
+		OR = {
+			culture = { has_culture_group = culture_group:french_group }
+			culture = { has_culture_group = culture_group:iberian_group }
+			culture = { has_culture_group = culture_group:italian_group }
+		}
+		OR = {
+			current_age = age_1_traditions
+			current_age = age_2_renaissance
+		}	
+	}
+	
+	name = THE
+	flag = THE
+	adjective = THE_ADJ
+	tag = THE
+	color = map_THE
+
+	provinces = {
+		neopatras_province
+		thessaly_province
+		upper_macedonia_province
+		central_macedonia_province
+		chalkidiki_province
+		lower_macedonia_province
+	}
+	form_effect = {
+		# Formation markers live HERE, not only in the event's options.
+		# A country can be formed by script (vanilla forms JAP from the
+		# sengoku situation), and then the popup may never be answered,
+		# leaving every advance gated on this variable unreachable.
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_the_formed
+		}
+		trigger_event_non_silently = nd_the.1
+		add_stability = stability_mild_bonus
+
+		if = {
+			limit = { country_rank_level < 3 }
+			set_country_rank_effect = { rank = country_rank:rank_kingdom }
+		}			
+	}
+}

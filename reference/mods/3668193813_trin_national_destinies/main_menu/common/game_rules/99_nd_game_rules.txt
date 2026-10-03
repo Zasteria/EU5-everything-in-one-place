@@ -68,8 +68,8 @@ nd_ai_formables_rule = {
 # Empire's answer is the point of breaking with the Reich: it is meant to
 # cost something. Off = the break still sweeps the realm out of the Empire
 # and still grants imperial rank, but no situation follows; both Danubian
-# disasters keep running, because they gate on nd_dnm_formed rather than
-# on the situation.
+# disasters keep running, because they gate on nd_dnm_formed and on a rule
+# of their own (nd_dnm_crises_rule below), never on the situation.
 #
 # THIS IS NOT THE AI SWITCH (2026-08-25 correction). It shipped in 1.3.6 as
 # the answer to Sharkseant's Workshop request for a way to keep the AI from
@@ -130,6 +130,39 @@ nd_danube_succession_rule = {
 	}
 
 	nd_danube_succession_disabled = {
+		flag = flavour_rule
+	}
+}
+
+# The Danubian Monarchy's two disasters (2026-10-01, Workshop report
+# 2026-09-21: every Danubian rule switched off, and a disaster still came).
+# Enabled by default, which is what every campaign had before this rule
+# existed. A rule of its own, and not a second meaning for
+# nd_reich_reaction_rule: that rule's description promises that the
+# disasters and the succession question are untouched by it, and a player
+# may want the Empire silent and the Monarchy's own troubles kept.
+#
+# Disabled switches off four things, all through the
+# nd_dnm_crises_are_enabled scripted trigger: the can_start of both
+# disasters (disasters/99_nd_dnm.txt), the three steps of the succession
+# question (on_action/99_nd_on_actions.txt), and the forewarning event
+# nd_dnm.48. The succession question goes with the disasters because its
+# modifiers last until the Pragmatic Sanction disaster ends; with that
+# disaster off they would never be removed.
+#
+# The rule is read when something would START. A disaster already running
+# is ended by its own exits, never by this rule, because its ending pays
+# out the broken Sanction result. Modifiers a succession question step has
+# already applied in a save stay when the rule is switched off afterwards.
+nd_dnm_crises_rule = {
+	default = nd_dnm_crises_enabled
+
+	nd_dnm_crises_enabled = {
+		flag = nd_dnm_crises_enabled
+		flag = flavour_rule
+	}
+
+	nd_dnm_crises_disabled = {
 		flag = flavour_rule
 	}
 }

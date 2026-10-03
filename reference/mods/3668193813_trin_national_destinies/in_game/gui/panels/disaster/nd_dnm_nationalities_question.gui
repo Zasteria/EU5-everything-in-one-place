@@ -1,0 +1,55 @@
+﻿# Disaster panel for nd_dnm_nationalities_question.
+#
+# Same cause as its sibling nd_dnm_pragmatic_sanction_crisis.gui: the
+# engine looks the panel up by file name, the mod shipped none, and the
+# three exits of this disaster are actions drawn only inside the panel.
+#
+# The three actions (break the leagues, offer the compromise, concede the
+# crowns) need no block here: the shared template's disaster_card_actions
+# lists them (shared/cards.gui, bound to DisasterView.GetActions).
+#
+# No counter card. The reassertion exit compares home region control with
+# a target, and only the target is a variable: control itself has no gui
+# accessor confirmed in the 1.4 data types, so it is not shown. The action
+# states the requirement in its own tooltip.
+#
+# Modelled on vanilla decline_of_empire.gui (the disaster this one was
+# built on), reform_society.gui and crisis_of_the_chinese_dynasty.gui.
+disaster_panel = {
+
+	##################################### END REQUIREMENTS #####################################
+
+	blockoverride "disaster_secondary_tab" {
+		margin_top = 10
+		spacing = 5
+		disaster_card_expandable = {
+			blockoverride "header_button_onclick" {
+				onclick = "[LateralView.Vars.Toggle( 'requirements_toggled' )]"
+			}
+			blockoverride "header_text" {
+				text = "END_REQUIREMENTS"
+			}
+			blockoverride "header_icon" {
+				texture = "gfx/interface/icons/disasters/end_requirements_green.dds"
+			}
+			blockoverride "bottom_content" {
+				TooltipRequirementsList = {
+					textcontext = "[DisasterView.GetDisaster.GetType.GetEndConditions]"
+				}
+			}
+			blockoverride "bottom_content_onclick" {
+				visible = "[LateralView.Vars.Exists( 'requirements_toggled' )]"
+			}
+			blockoverride "icon_replace_visible_yes" {
+				visible = "[LateralView.Vars.Exists( 'requirements_toggled' )]"
+			}
+			blockoverride "icon_replace_visible_not" {
+				visible = "[Not(LateralView.Vars.Exists( 'requirements_toggled' ))]"
+			}
+		}
+	}
+
+	##################################### SUBHEADER #####################################
+
+	blockoverride "disaster_main_content_subheader" {}
+}

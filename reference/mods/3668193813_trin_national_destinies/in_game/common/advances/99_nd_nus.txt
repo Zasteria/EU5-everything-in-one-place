@@ -24,7 +24,7 @@ nd_nus_sawah_irrigation = {
 	requires = agriculture_advance
 	icon = agriculture_advance
 	unlock_building = nd_nus_sawah
-	global_monthly_food_modifier = 0.05
+	global_monthly_food_modifier = 0.025
 }
 
 # Ancient spice knowledge: early cultivation and trade of cloves, nutmeg, pepper
@@ -33,9 +33,9 @@ nd_nus_spice_knowledge = {
 	potential = { has_or_had_tag = NUS }
 	requires = guilds
 	icon = guilds
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	global_raw_material_output = 0.1
 }
@@ -75,7 +75,9 @@ nd_nus_majapahit_golden_age = {
 	requires = crown_power_advance_renaissance
 	icon = crown_power_advance_renaissance
 	global_crown_estate_power = 0.1
-	monthly_prestige = 0.1
+	# The Palapa oath: one realm from Sumatra to the eastern isles. Vanilla's
+	# Majapahit advance of this age already grants prestige.
+	global_separatism = -0.05
 	stability_cost_efficiency = 0.1
 }
 
@@ -157,10 +159,9 @@ nd_nus_spice_monopoly = {
 	requires = regulate_court_procedures
 	icon = regulate_court_procedures
 	unlock_building = nd_nus_gudang_rempah
-	trade_land_efficiency = 0.03
-
-	trade_sea_efficiency = 0.03
-
+	# Holding the only clove islands in the world is an output, not a reach:
+	# vanilla's own advance for the tag grants the trade range at this age.
+	global_cloves_output_modifier = 0.2
 	global_merchant_power = 0.1
 }
 
@@ -222,8 +223,8 @@ nd_nus_pepper_exports = {
 	potential = { has_or_had_tag = NUS }
 	requires = global_trade_advance
 	icon = global_trade_advance
-	global_production_efficiency = 0.05
-	trade_income = 0.15
+	global_production_efficiency = 0.025
+	trade_income = 0.1
 }
 
 # Wayang and court arts: shadow puppetry as statecraft and cultural unity
@@ -258,7 +259,7 @@ nd_nus_sultan_agung_campaigns = {
 	requires = absolutism_agressive_advance
 	icon = absolutism_agressive_advance
 	land_morale_modifier = 0.1
-	siege_ability = 0.2
+	siege_ability = 0.1
 	monthly_army_tradition = 0.05
 }
 
@@ -318,7 +319,7 @@ nd_nus_archipelagic_awakening = {
 	requires = enlightened_court
 	icon = enlightened_court
 	research_speed_modifier = 0.05
-	global_monthly_literacy = 0.025
+	global_monthly_literacy = 0.02
 	cultures_capacity = 2
 }
 
@@ -328,7 +329,7 @@ nd_nus_spice_industrialization = {
 	potential = { has_or_had_tag = NUS }
 	requires = industrialization_advance
 	icon = industrialization_advance
-	global_production_efficiency = 0.075
+	global_production_efficiency = 0.0375
 	global_raw_material_output = 0.15
 }
 
@@ -349,8 +350,8 @@ nd_nus_gotong_royong = {
 	potential = { has_or_had_tag = NUS }
 	requires = rights_of_man
 	icon = rights_of_man
-	global_estate_target_satisfaction = 0.03
-	global_monthly_prosperity = 0.0015
+	global_estate_target_satisfaction = 0.025
+	global_monthly_prosperity = 0.001
 	global_population_growth = 0.0003
 }
 
@@ -455,7 +456,17 @@ nd_nus_dest_emporium = {
 	potential = { has_or_had_tag = NUS has_variable = nd_nus_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		gold >= 2000
-		total_development >= 14500
+		# Gresik, the port of the eastern spice fleets, which Tome Pires
+		# called the jewel of Java among trading ports. 25.5 in 1337
+		# (scripts/development_estimate.py --explain gresik), raised by half
+		# for a second stage.
+		custom_tooltip = {
+			text = nd_nus_dest_gresik_developed_tt
+			location:gresik = {
+				owner ?= root
+				development >= 38
+			}
+		}
 		has_embraced_institution = institution:banking
 	}
 	icon = global_trade_advance
@@ -470,7 +481,16 @@ nd_nus_dest_bumi_rempah = {
 	allow = {
 		gold >= 3000
 		prestige >= 75
-		total_development >= 19500
+		# Gowa, the harbour of Makassar, where the spice trade gathered once
+		# Malacca was closed to it. 20.2 in 1337 (scripts/development_estimate.py
+		# --explain gowa), doubled for a third stage.
+		custom_tooltip = {
+			text = nd_nus_dest_gowa_developed_tt
+			location:gowa = {
+				owner ?= root
+				development >= 40
+			}
+		}
 		capital = {
 			market = {
 				OR = {

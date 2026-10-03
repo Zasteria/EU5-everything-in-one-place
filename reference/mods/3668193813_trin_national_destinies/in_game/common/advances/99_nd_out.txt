@@ -36,7 +36,7 @@ nd_out_rais_and_dragoman = {
 
 	unlock_building = nd_out_rais_house
 	global_monthly_control = 0.002
-	global_separatism = -0.1
+	global_separatism = -0.05
 }
 
 # The capitation on non-Latin subjects, inherited from the Fatimid and
@@ -76,7 +76,7 @@ nd_out_rent_not_labour = {
 	requires = peasant_connections_advance
 	icon = peasants_rights_laws_advance
 
-	global_population_growth = 0.002
+	global_population_growth = 0.00025
 	monthly_towards_free_subjects = societal_value_minor_monthly_move
 	global_levy_size_modifier = -0.05
 }
@@ -121,7 +121,7 @@ nd_out_darb_al_hajj = {
 
 	unlock_building = nd_out_hajj_station
 	global_supply_limit_modifier = 0.1
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 }
 
 # An empire with capitals at Jerusalem, Cairo, Baghdad and Aden moves on
@@ -169,7 +169,7 @@ nd_out_communes_of_the_ports = {
 	requires = renaissance_city_rights
 	icon = port_customs
 
-	trade_sea_efficiency = 0.04
+	trade_sea_efficiency = 0.2
 	global_merchant_capacity_modifier = 0.15
 	tax_income_efficiency = -0.03
 }
@@ -292,15 +292,16 @@ nd_out_grove_of_matariya = {
 }
 
 # The customs of the narrow sea: a tariff assessed at Suez, Qusayr and the
-# Gate of Tears on a trade the crown protects rather than owns.
+# Gate of Tears on a trade the crown protects rather than owns. The custom
+# house stands only at those three landings.
 nd_out_customs_of_the_narrow_sea = {
 	age = age_4_reformation
 	potential = { has_or_had_tag = OUT }
 	requires = global_trade_advance
 	icon = red_sea_trade
 
-	unlock_production_method = nd_out_karim_convoy
-	trade_sea_efficiency = 0.03
+	unlock_building = nd_out_customs_of_the_strait
+	trade_sea_efficiency = 0.1
 }
 
 # A karim was a convoy. The crown's escort sails with the pepper fleet and
@@ -342,7 +343,11 @@ nd_out_cabinet_of_many_tongues = {
 	icon = divide_estates
 
 	country_cabinet_efficiency = 0.1
-	cultures_capacity = 1
+	# With the ra'is, the dragoman, the qadi and the bishop eligible, a seat
+	# at the table is cheaper to fill (vanilla grants -0.1 or -0.2). Not
+	# cultures_capacity, which Jerusalem's vanilla latinate_integration
+	# grants in this age.
+	set_cabinet_member_cost_modifier = -0.1
 }
 
 # Acre declared free: no duty on transit, on the theory that the empire
@@ -365,7 +370,6 @@ nd_out_markets_of_the_road = {
 	requires = increase_control_area_advance
 	icon = jewels_of_the_desert
 
-	unlock_production_method = nd_out_station_market
 	land_unit_attrition = -0.1
 }
 
@@ -421,15 +425,16 @@ nd_out_the_outremerins = {
 }
 
 # Steam on the Red Sea. The convoy that took a season now takes a fortnight,
-# and the Karimi houses become an agency of the crown.
+# and the Karimi houses become an agency of the crown. The Bombay to Suez
+# steam service opened in 1830 with the Hugh Lindsay, coaling at Aden.
 nd_out_agency_of_steam = {
 	age = age_6_revolutions
 	potential = { has_or_had_tag = OUT }
 	requires = industrialization_advance
 	icon = crossroads_of_commerce
 
-	unlock_production_method = nd_out_steam_agency
-	global_production_efficiency = 0.05
+	unlock_unit = n_nd_out_steam_packet
+	global_production_efficiency = 0.025
 }
 
 # The Fonde keeps a register instead of a memory: contracts, weights,
@@ -440,7 +445,6 @@ nd_out_registry_of_the_fonde = {
 	requires = modern_bureaucracy
 	icon = great_tax_reform
 
-	unlock_production_method = nd_out_fonde_registry
 	global_monthly_control = 0.002
 }
 
@@ -455,7 +459,7 @@ nd_out_registry_of_the_fonde = {
 # church outside the realm, prints in every script the guarantee is written
 # in, and pays for all of it twice over: in service it will never be owed, and
 # in standing it will never have in Christendom. Its objectives are
-# development, learning and two jurisdictional seats, not a war map.
+# learning, two built up cities and two jurisdictional seats, not a war map.
 #
 # Path B, Custodian of the Sanctuaries, is the fiscal answer. The crown owns
 # the sea that the pilgrimage and the pepper both cross, from the African
@@ -497,7 +501,15 @@ nd_out_dest_assises_in_armenian = {
 		}
 		owns_or_non_sovereign_subject_owns = location:sis
 		owns_or_non_sovereign_subject_owns = location:tarsus
-		total_development >= 5000
+		# Sis, seat of the catholicos and of the Armenian court: 20 in 1337,
+		# asked to grow by a quarter (scripts/development_estimate.py).
+		custom_tooltip = {
+			text = nd_out_dest_sis_developed_tt
+			location:sis = {
+				owner ?= root
+				development >= 25
+			}
+		}
 	}
 	icon = laws
 
@@ -517,7 +529,15 @@ nd_out_dest_six_scripts = {
 	potential = { has_or_had_tag = OUT has_variable = nd_out_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		has_embraced_institution = institution:printing_press
-		total_development >= 7500
+		# Acre, where the Livre was written and the first press stands: 28.8
+		# in 1337, asked to grow by half.
+		custom_tooltip = {
+			text = nd_out_dest_acre_developed_tt
+			location:acre = {
+				owner ?= root
+				development >= 43
+			}
+		}
 		gold >= 2000
 	}
 	icon = ven_printing_industry
@@ -538,8 +558,18 @@ nd_out_dest_charter_of_the_nations = {
 	potential = { has_or_had_tag = OUT has_variable = nd_out_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:soltaniyeh
-		has_embraced_institution = institution:enlightenment
-		total_development >= 10000
+		# A charter of worship for every community is the question of the
+		# confessional age, answered the other way. Enlightenment stood here
+		# and held this path three ages behind the other.
+		has_embraced_institution = institution:confessionalism
+		# Acre, the capital the quarters stand in: twice its 1337 value.
+		custom_tooltip = {
+			text = nd_out_dest_acre_doubled_tt
+			location:acre = {
+				owner ?= root
+				development >= 58
+			}
+		}
 		prestige >= 75
 	}
 	icon = hun_realm_of_many_religions
@@ -606,6 +636,9 @@ nd_out_dest_pepper_and_bread = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:kozhikode
 		owns_or_non_sovereign_subject_owns = location:diu
+		# Factors on the pepper coast are the business of the age of global
+		# trade, and keep this path from closing in the first age.
+		has_embraced_institution = institution:global_trade
 		any_market_present_in_country = {
 			OR = {
 				is_produced_in_market = goods:pepper

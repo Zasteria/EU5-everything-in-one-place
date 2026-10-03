@@ -33,12 +33,6 @@ nd_maz_grod = {
 			tools = 0.05
 			category = building_maintenance
 		}
-		nd_maz_rye_cultivation = {
-			wheat = 0.2
-			livestock = 0.1
-			tools = 0.05
-			category = building_maintenance
-		}
 	}
 	construction_demand = stockade_construction
 }
@@ -75,20 +69,55 @@ nd_maz_vistula_wharf = {
 			salt = 0.05
 			category = building_maintenance
 		}
-		nd_maz_timber_rafting = {
-			lumber = 0.15
-			tools = 0.05
-			fiber_crops = 0.05
-			category = building_maintenance
-		}
-		nd_maz_market_trade = {
-			cloth = 0.1
-			pottery = 0.1
-			salt = 0.05
-			category = building_maintenance
-		}
 	}
 	construction_demand = warehouse_construction
+}
+
+### Binduga (Age 3): riverside timber yard where rafts are bound
+# A binduga is the bank where felled timber was hauled, sorted and lashed
+# into rafts for the float to Gdansk: masts, spars, staves and the pitch
+# that went with them. Mazovia's came down the Narew and the Bug.
+# location_potential: a river bank AND lumber reaching the local market.
+# Lumber is an input here, not the product, so the market form of the gate
+# is the right one: the yard follows the forest, it does not create it.
+# Settlement: countryside and town, never a city. The yards lay below the
+# forests, upstream of the towns the rafts passed.
+nd_maz_binduga = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = guild_max_level
+	employment_size = generic_peasant_building_employment
+	category = basic_industry_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_maz_timber_rafting_advance
+	}
+
+	location_potential = {
+		has_river = yes
+		is_produced_in_location_market = goods:lumber
+	}
+
+	unique_production_methods = {
+		# Logs dressed into masts and spars, lashed with hemp and shipped
+		# with barrels of pitch. Vanilla's coastal boatyard makes 0.5 from
+		# lumber 0.5 and tar 0.25; this yard buys less pitch and makes less.
+		nd_maz_timber_rafting = {
+			lumber = 0.5
+			tar = 0.1
+			fiber_crops = 0.1
+			produced = naval_supplies
+			output = 0.46
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = guild_construction
 }
 
 ### Mazovian Kancelaria (Age 3): ducal chancellery, administrative building
@@ -118,15 +147,9 @@ nd_maz_kancelaria = {
 
 	unique_production_methods = {
 		nd_maz_chancellery_costs = {
-			paper = 0.2
-			cloth = 0.1
-			beeswax = 0.05
-			category = building_maintenance
-		}
-		nd_maz_sejm_records = {
-			paper = 0.2
-			books = 0.1
-			cloth = 0.05
+			paper = 0.313
+			cloth = 0.157
+			beeswax = 0.079
 			category = building_maintenance
 		}
 	}
@@ -193,20 +216,14 @@ nd_maz_szlachta_manor = {
 
 
 
-		local_monthly_food_modifier = 0.05
+		local_monthly_food_modifier = 0.025
 	}
 
 	unique_production_methods = {
 		nd_maz_manor_upkeep = {
-			wheat = 0.1
-			livestock = 0.1
-			tools = 0.05
-			category = building_maintenance
-		}
-		nd_maz_mead_brewing = {
-			wheat = 0.1
-			beeswax = 0.2
-			pottery = 0.05
+			wheat = 0.213
+			livestock = 0.213
+			tools = 0.107
 			category = building_maintenance
 		}
 	}
@@ -249,6 +266,52 @@ nd_maz_printing_house = {
 		}
 	}
 	construction_demand = school_construction
+}
+
+### Zyrardow Linen Works (Age 6): mechanical flax spinning
+# Philippe de Girard built the first flax spinning machines; the works the
+# Lubienski brothers set up for them at Marymont moved in 1833 to Ruda
+# Guzowska west of Warsaw, and the settlement around it took his name.
+# The linen is sold bleached, so the method burns coal and buys no dyes
+# (vanilla's flax manufactory method takes fiber_crops 2.1865 and dyes for
+# an output of 2).
+# location_potential: a river AND flax reaching the local market. Flax is
+# an input, so the market form of the gate is the right one; Mazovia grows
+# none of its own and bought it from Lithuania and Prussia.
+# Settlement: town and above. A factory settlement, never a village works.
+nd_maz_linen_works = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = manufactory_max_level
+	startup_ramp_target = manufactory_startup_ramp_target
+	category = consumer_goods_category
+	employment_size = manufactory_employment
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = manufactory_build_time
+
+	country_potential = {
+		has_advance = nd_maz_industrial_vistula
+	}
+
+	location_potential = {
+		has_river = yes
+		is_produced_in_location_market = goods:fiber_crops
+	}
+
+	unique_production_methods = {
+		nd_maz_linen_spinning = {
+			fiber_crops = 2.0
+			coal = 0.25
+			produced = cloth
+			output = 1.95
+			category = manufactory_input
+			debug_max_profit = manufactory_profit_margin
+		}
+	}
+	construction_demand = manufactory_construction
 }
 
 # ===== DESTINY BUILDINGS =====

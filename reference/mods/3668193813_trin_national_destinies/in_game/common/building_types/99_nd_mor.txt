@@ -1,4 +1,7 @@
-﻿# Marinid Madrasa: theological school with zellige decoration, boosting literacy and cultural tradition
+﻿# Shown as "Khizana", the endowed manuscript library (Abu Inan's at the Qarawiyyin,
+# 1349). Vanilla gives every Muslim country the generic madrasa building and Morocco
+# the advance mor_marinid_madrasas and the Bou Inania monument, so this one is not a
+# school: it raises literacy and tradition, which the generic madrasa does not. Key kept for saves.
 nd_mor_marinid_madrasa = {
 	is_special = yes
 	is_foreign = no
@@ -26,10 +29,10 @@ nd_mor_marinid_madrasa = {
 
 	unique_production_methods = {
 		nd_mor_madrasa_upkeep = {
-			stone = 0.1
-			paper = 0.15
-			books = 0.1
-			beeswax = 0.05
+			stone = 0.132
+			paper = 0.197
+			books = 0.132
+			beeswax = 0.066
 			category = building_maintenance
 		}
 	}
@@ -108,13 +111,6 @@ nd_mor_funduq = {
 			cloth = 0.05
 			category = building_maintenance
 		}
-
-		nd_mor_zellige_workshop = {
-			clay = 0.2
-			dyes = 0.1
-			tools = 0.05
-			category = building_maintenance
-		}
 	}
 	construction_demand = funduq_building_construction
 }
@@ -139,7 +135,7 @@ nd_mor_imperial_granary = {
 	}
 
 	modifier = {
-		local_monthly_food_modifier = 0.1
+		local_monthly_food_modifier = 0.05
 		local_food_capacity = 100
 		local_garrison_growth = 0.005
 	}
@@ -193,14 +189,6 @@ nd_mor_corsair_harbor = {
 			tools = 0.05
 			category = building_maintenance
 		}
-
-		nd_mor_arms_workshop = {
-			iron = 0.2
-			lumber = 0.1
-			coal = 0.1
-			tools = 0.05
-			category = building_maintenance
-		}
 	}
 	construction_demand = port_building_construction
 }
@@ -225,14 +213,16 @@ nd_mor_sugar_press = {
 
 	modifier = {
 		local_production_efficiency = small_production_efficiency_bonus
-		local_monthly_food_modifier = 0.05
+		local_monthly_food_modifier = 0.025
 	}
 
-	# Extraction is bound to the resource: you cannot mine, tap or
-	# harvest sugar where there is none. Without this the building
-	# is a free resource generator in every location the owner holds.
+	# Bound to cane land as vanilla binds its sugar plantation
+	# (plantation_buildings.txt:15): the mill crushes the cane grown in
+	# its own location, with lumber to boil the juice and tools for the
+	# wheels. A market test let it make sugar in any location of a market
+	# that had some.
 	location_potential = {
-		is_produced_in_location_market = goods:sugar
+		raw_material = goods:sugar
 	}
 
 	unique_production_methods = {
@@ -248,16 +238,130 @@ nd_mor_sugar_press = {
 			produced = sugar
 			output = 0.12
 			category = guild_input
-			debug_max_profit = guild_profit_margin
+			debug_max_profit = rural_profit_margin
 		}
 	}
 	construction_demand = plantation_construction
 }
 
 
+# Zellige Kilns (age 2, nd_mor_zellige_craft)
+# The tile makers' yards of Fez: squares of the grey Fez clay are fired,
+# dipped in a tin and lead glaze, fired again, and then cut by hand with a
+# sharpened hammer into the small shapes of the mosaic.
+# No location_potential, and that is deliberate: pottery is a made good, the
+# clay, the colours and the lead for the glaze are bought on the market, and
+# those inputs are the gate.
+# Settlement: town and city. The kilns stood at the edge of the medina.
+# No modifier block, so the level formula of the guild tier multiplies nothing.
+nd_mor_zellige_kiln = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	employment_size = guild_employment
+	category = consumer_goods_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_mor_zellige_craft
+	}
+
+	unique_production_methods = {
+		# The building's only method: no advance has to unlock it.
+		# eu5-profit -i "clay=0.4,dyes=0.05,lead=0.05" -o pottery (20%).
+		nd_mor_zellige_workshop = {
+			clay = 0.4
+			dyes = 0.05
+			lead = 0.05
+			produced = pottery
+			output = 0.6
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# Moukahla Workshop (age 3, nd_mor_metalworking; a second method in age 5
+# and a third in age 6)
+# The gunsmiths' street. Andalusi exiles carried the craft to Tetouan and
+# the Sous copied it at Taroudant: barrel forgers, lock makers and stock
+# carvers each doing one part of the moukahla, the long musket with the
+# snaphaunce lock that Morocco went on making into the nineteenth century.
+# No location_potential, and that is deliberate: nothing here comes out of
+# the ground. Iron, wood and tools are bought on the market and those inputs
+# are the gate. The trade stood in any town with a souk.
+# Settlement: town and city, never the countryside. A gun is the work of
+# several guilds side by side.
+nd_mor_moukahla_workshop = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	employment_size = guild_employment
+	category = weapons_industry_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_mor_metalworking
+	}
+
+	unique_production_methods = {
+		nd_mor_moukahla_gunsmithing = {
+			iron = 0.25
+			lumber = 0.15
+			tools = 0.05
+			produced = firearms
+			output = 0.45
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+		# Unlocked by nd_mor_corsair_fleet (age 5): the same street turns to
+		# blades for the Sultan's ships, above all the nimcha, the short
+		# sabre of the corsairs. Vanilla's weapon smith burns coal with wood
+		# and tools the same way. Output from eu5-profit at the guild margin.
+		nd_mor_arms_workshop = {
+			iron = 0.25
+			lumber = 0.15
+			coal = 0.1
+			tools = 0.05
+			produced = weaponry
+			output = 0.53
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+		# Unlocked by nd_mor_industrial_stirrings (age 6): forges fired
+		# with coal and boring benches on the European pattern.
+		nd_mor_european_style_workshop = {
+			iron = 0.3
+			lumber = 0.15
+			coal = 0.1
+			tools = 0.1
+			produced = firearms
+			output = 0.65
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+
 # ===== DESTINY BUILDINGS =====
 
-# Dar al-Makhzen: Caliphal Palace (Path A capstone)
+# Caliphal Library (Path A capstone; the key keeps its old name for saved
+# games). Vanilla 1.4 ships the Dar al-Makhzen of Fez, the sultan's palace, as a
+# monument (unique_buildings.txt:5750), so this is the caliph's library and
+# school of secretaries, which is what its grants and its upkeep describe.
 nd_mor_dar_al_makhzen = {
 	is_special = yes
 	is_foreign = no
@@ -285,10 +389,10 @@ nd_mor_dar_al_makhzen = {
 
 	unique_production_methods = {
 		nd_mor_makhzen_upkeep = {
-			stone = 0.15
-			paper = 0.1
-			books = 0.1
-			cloth = 0.05
+			stone = 0.235
+			paper = 0.157
+			books = 0.157
+			cloth = 0.079
 			category = building_maintenance
 		}
 	}

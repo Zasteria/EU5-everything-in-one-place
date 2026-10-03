@@ -1,0 +1,225 @@
+﻿##############################
+# Tuareg (TRG): Custom Unit Types
+#
+# Every stat line is a DELTA on the copied age template plus the category
+# value (common/levies/readme.txt, "EVERY STAT LINE IS ADDITIVE").
+#
+# The confederation's eleven locations hold tribesmen and almost nothing
+# else at the start (main_menu/setup/1337/06_pops.txt), and vanilla gives
+# tribesmen one levy that never scales (a_tribesmen, power 0.469) plus
+# tribal camelry (0.678) only where the market produces camels, which no
+# market of the central Sahara does. So the levy ladder here is built on
+# tribesmen. The age 1 rung sits above tribal camelry. From age 2 a
+# tribesmen levy is placed by what peasants raise in that age, at 1.12 to
+# 1.30 times it (owner's ruling 2026-10-02): 1.408 at age 3
+# (levy_a_matchlock_levy), 5.28 at age 5 (levy_a_militiamen).
+##############################
+
+### Age 1: Ettebel Riders, levy camel riders of one drum group (power 0.786) ###
+a_nd_trg_ettebel_riders = {
+	is_special = yes
+	category = army_light_cavalry
+	copy_from = a_age_1_traditions_light_cavalry
+	buildable = no
+	levy = yes
+
+	# Template: max_strength 0.2, combat_power 2.6. Same shape as vanilla's
+	# tribal camelry (initiative and a morale edge) with a few more riders.
+	initiative = 5
+	morale_damage_done = 0.1
+	max_strength = 0.03
+	movement_speed = 0.2
+
+	impact = {
+		desert = -0.75
+		arid = -0.5
+	}
+	combat = {
+		desert = 0.15
+		arid = 0.10
+	}
+
+	country_potential = {
+		has_or_had_tag = TRG
+	}
+
+	gfx_tags = { camel_tag medium_tag }
+}
+
+### Age 1: Agher Shieldmen, buildable noble foot (power 0.558) ###
+a_nd_trg_agher_shieldmen = {
+	is_special = yes
+	category = army_heavy_infantry
+	copy_from = a_age_1_traditions_heavy_infantry
+	upgrades_to = a_men_at_arms
+	buildable = yes
+
+	# Template: max_strength 0.5, combat_power 1. The white oryx shield turns
+	# blades and the iron lance breaks a line, but the noble caste is small:
+	# fewer men to a regiment is the price.
+	strength_damage_taken = -0.1
+	morale_damage_done = 0.1
+	max_strength = -0.05
+
+	combat = {
+		desert = 0.10
+	}
+
+	country_potential = {
+		has_or_had_tag = TRG
+	}
+
+	gfx_tags = { medium_tag }
+}
+
+### Age 3: Kel Ulli Lancers, levy of the armed vassal tribes (power 1.781) ###
+a_nd_trg_kel_ulli_lancers = {
+	is_special = yes
+	category = army_light_cavalry
+	copy_from = a_age_3_discovery_light_cavalry
+	buildable = no
+	levy = yes
+
+	# Template: max_strength 0.6, combat_power 2.6, power 1.677. The vassals
+	# ride with iron lances of their own: harder hitting than the old drum
+	# riders, slower to the charge. The lance is the edge and is kept whole.
+	# Power 1.781 is 1.265 times what peasants raise at age 3 (1.4079; the
+	# band is 1.12 to 1.30). Until 2026-10-02 it stood at 1.56 times (2.192)
+	# with initiative +3, morale damage +0.05 and 0.03 more riders. The lance
+	# alone on the template stands at 1.32 times, above the band, so the
+	# charge pays for it. Initiative -3 would give 1.740, under the 1.752 of
+	# vanilla's horde levy (levy_steppe_horde).
+	initiative = -2
+	strength_damage_done = 0.1
+	movement_speed = 0.2
+
+	impact = {
+		desert = -0.75
+		arid = -0.5
+	}
+	combat = {
+		desert = 0.15
+		arid = 0.10
+	}
+
+	country_potential = {
+		has_or_had_tag = TRG
+	}
+
+	gfx_tags = { camel_tag medium_tag }
+}
+
+### Age 3: Salt Caravan Train, buildable camel supply column ###
+a_nd_trg_salt_caravan_train = {
+	is_special = yes
+	category = army_auxiliary
+	copy_from = a_age_3_discovery_auxiliary
+	upgrades_to = a_baggage_train
+	buildable = yes
+
+	# Vanilla's camel train is an age 1 unit that upgrades into carts. This
+	# one keeps the army on pack camels: it carries more and crosses sand
+	# faster than a cart column, and the beasts eat more than oxen do.
+	movement_speed = 0.3
+	food_storage_per_strength = 1000
+	food_consumption_per_strength = 0.05
+
+	impact = {
+		desert = -0.75
+		arid = -0.5
+	}
+
+	maintenance_demand = camel_auxiliary_maintenance
+	construction_demand = camel_auxiliary_construction
+
+	country_potential = {
+		has_or_had_tag = TRG
+	}
+
+	gfx_tags = { auxiliary_tag medium_tag camel_auxiliary_tag }
+}
+
+### Age 5: Tademekkat Host, levy of the river confederations (power 6.573) ###
+a_nd_trg_tademekkat_host = {
+	is_special = yes
+	category = army_light_cavalry
+	copy_from = a_age_5_absolutism_light_cavalry
+	buildable = no
+	levy = yes
+
+	# Template: max_strength 1.0, combat_power 3.25. The host that broke the
+	# Pashalik of Timbuktu at Toya: many riders who win by enveloping, and
+	# who have no armour against the muskets they ride around.
+	initiative = 5
+	morale_damage_done = 0.05
+	flanking_ability = 0.2
+	max_strength = 0.615	# levy power, scripts/fix_levy_power.py
+	strength_damage_taken = 0.05
+	movement_speed = 0.2
+
+	impact = {
+		desert = -0.75
+		arid = -0.5
+	}
+	combat = {
+		desert = 0.15
+		arid = 0.10
+	}
+
+	country_potential = {
+		has_or_had_tag = TRG
+	}
+
+	gfx_tags = { camel_tag medium_tag }
+}
+
+### Age 5: Iwellemmedan Horsemen, buildable Sahel cavalry (power 3.930) ###
+a_nd_trg_iwellemmedan_horsemen = {
+	is_special = yes
+	category = army_light_cavalry
+	copy_from = a_age_5_absolutism_light_cavalry
+	upgrades_to = a_light_dragoons
+	buildable = yes
+
+	# Template: max_strength 1.0, combat_power 3.25. The southern Tuareg of
+	# the Azawagh fought on horses, not camels: quick to turn a flank on the
+	# open Sahel, unarmoured against a volley.
+	flanking_ability = 0.3
+	morale_damage_done = 0.1
+	strength_damage_taken = 0.05
+	movement_speed = 0.5
+
+	combat = {
+		sparse = 0.15
+		grasslands = 0.10
+		forest = -0.15
+	}
+
+	country_potential = {
+		has_or_had_tag = TRG
+	}
+
+	gfx_tags = { medium_tag }
+}
+
+### Age 6: Ineslemen Mujahidin, levy of the clerical tribes (power 10.503) ###
+a_nd_trg_ineslemen_mujahidin = {
+	is_special = yes
+	category = army_heavy_infantry
+	copy_from = a_age_6_revolutions_heavy_infantry
+	buildable = no
+	levy = yes
+
+	# Template: max_strength 3, combat_power 3. Men who never carried arms
+	# before the preaching of al-Jilani: they do not break, and they are
+	# badly armed.
+	morale_damage_taken = -0.15
+	morale_damage_done = 0.1
+	strength_damage_done = -0.1
+
+	country_potential = {
+		has_or_had_tag = TRG
+	}
+
+	gfx_tags = { medium_tag }
+}

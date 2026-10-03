@@ -1,0 +1,296 @@
+﻿# National Destinies: Algiers (ALG) bureaucracies.
+#
+# Four institutions of the Regency of Algiers (1516 to 1830). The auto
+# modifier grants 1 slot and the capital 1, so a country holds 2 of the 4.
+#
+#   1. Divan of the Ojaq: the council of the Janissary corps
+#   2. Dannush of the Beys: the tribute convoys of the three provinces
+#   3. Makhzen Tribes: tax exempt tribes that rode and collected for the state
+#   4. Wakil al-Kharj of the Marine: steward of the arsenal, the prizes and
+#      the stores the treaty powers paid
+#
+# What was left out and why:
+#   Vanilla 1.4 gives every Muslim country a Bayt al-Mal, a Hisba, a Mazalim
+#   court, a Diwan al-Insha, a Barid, a Diwan al-Hajj, a Diwan al-Jund and a
+#   Shurta (bureaucracies/muslim.txt), and every country ten generic boards
+#   (generic.txt). So no treasury (the khaznaji), no bayt al-malji, no market
+#   inspector, no police chief (the mezouar) and no pay office stands here.
+#   The Divan below is the corps governing itself and choosing the ruler,
+#   which vanilla's Diwan al-Jund (a muster and pay office: manpower, food)
+#   is not. The Wakil al-Kharj is a storekeeper and prize registrar, which
+#   vanilla's Admiralty Board (tradition, morale, fleet upkeep) is not.
+#   Carthage and the Almohads, which Algiers can go on to form, keep the
+#   corsair captains' guild, the Hafsid maritime customs, the chief Maliki
+#   judge, the ribats, the chancery and the mint (99_nd_cth.txt,
+#   99_nd_alm.txt). None of those subjects is repeated.
+#   The destiny tree's Khalifa's Seat is the Emir's provincial governor and
+#   hands out proximity and control. The Dannush is the older, opposite
+#   arrangement (the governor travels to the capital and answers for his
+#   province there) and hands out neither.
+#   Vanilla's Algerian advances name the ojaq (a unit), the makhzen tribes
+#   (light cavalry power, government power, tribal cohesion), the deylik
+#   (cabinet and court spending efficiency), the consuls (diplomatic
+#   capacity and reputation) and the Thaalibid sultanate (tax efficiency
+#   and separatism). No block below grants a key any of the thirteen tag
+#   advances or the six culture advances grants (advances/country_alg.txt,
+#   region_maghreb.txt).
+
+# 1. Divan of the Ojaq.
+#    About sixty senior officers of the Janissary corps under the Agha of the
+#    Two Moons, who presided for two lunar months and then left the corps.
+#    Promotion went by seniority alone, about one rank every three years. The
+#    Divan took the government from the pasha in 1659 and chose the dey from
+#    1689. Ali Khodja broke the corps in 1817.
+#    Soldiers are pops of the peasants estate in this game; the officers who
+#    sat in the Divan were the ruling caste, so the nobles like it. The ruler
+#    it made and unmade does not.
+alg_diwan_of_the_ojaq_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	# The pay of the corps was the largest single charge on the state.
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = ALG
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	# No council of the ojaq without the ojaq: vanilla's advance for the
+	# Janissaries of Algiers (advances/region_maghreb.txt), which itself
+	# grants only the unit.
+	allow = {
+		has_advance = algiers_ojaq_janissaries
+	}
+
+	estates_that_like = {
+		nobles_estate
+	}
+	estates_that_dislike = {
+		crown_estate
+	}
+
+	# Men who rise by years of service stay in the ranks, and the corps
+	# keeps what it has learned. Vanilla grants this key at -0.001 in 21 of
+	# its 32 uses.
+	neutral_modifier = {
+		army_tradition_decay = -0.001
+	}
+
+	# The ojaq were heavy foot (a_algiers_ojaq_janissaries copies the heavy
+	# infantry template), a small, closed and well paid corps.
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		army_heavy_infantry_power = 0.1
+		monthly_towards_quality = societal_value_monthly_move
+	}
+
+	# Pay in arrears: the kettles are overturned, the barracks name their
+	# own man, and the ruler is their prisoner. An old council is worse to
+	# starve than a new one. Entrenchment runs 0 to 100, so it is divided.
+	negative_modifier = {
+		scale = {
+			value = 1
+			add = { value = scope:entrenchment divide = 100 }
+			multiply = { value = 1 subtract = scope:maintenance }
+		}
+		monthly_nobles_estate_rebel_growth = 0.005
+		global_crown_estate_power = -0.1
+	}
+}
+
+# 2. Dannush of the Beys.
+#    The tribute of Constantine, Titteri and the West, carried to Algiers
+#    twice a year by each bey's lieutenant and from time to time by the bey
+#    in person, with fixed gifts for every officer of the state. A bey who
+#    came late or short lost his post.
+#    The officers who lived on the gifts like it, and so does the ruler. The
+#    villages and tribes whose harvests and herds made up the convoy do not.
+alg_dannush_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	# A journey and a ceremony, with no standing staff.
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.002
+	}
+
+	potential = {
+		has_or_had_tag = ALG
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {}
+
+	estates_that_like = {
+		crown_estate
+		nobles_estate
+	}
+	estates_that_dislike = {
+		peasants_estate
+		tribes_estate
+	}
+
+	# A governor who must appear before the ruler is a servant of the
+	# capital, whatever he is at home.
+	neutral_modifier = {
+		monthly_towards_centralization = societal_value_minor_monthly_move
+	}
+
+	# A bey who must fill the convoy presses the villages of his province
+	# harder than the capital could, and every office holder in Algiers
+	# takes his living from the ruler's hand. Vanilla's laws and advances
+	# raise the peasants' maximum tax by 0.05 to 0.1 and crown power most
+	# often by 0.1. Tax efficiency and separatism would be the plain keys
+	# here, and vanilla's alg_thaalibid_sultanate already grants both.
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		peasants_estate_max_tax = 0.05
+		global_crown_estate_power = 0.1
+	}
+
+	# The convoys stop. The beys keep the tribute and the country behind
+	# the mountains stops answering, and the officers of the capital, who
+	# lived on the gifts, look for someone to blame.
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		global_max_rural_control = -0.05
+		nobles_estate_satisfaction_decay = 0.02
+	}
+}
+
+# 3. Makhzen Tribes.
+#    The Douair and Zmala of the plain of Oran, the Abid and others: groups
+#    settled on state land, often made up of men of every origin, who paid
+#    only the Quranic tithe and in return rode to war, escorted the tax
+#    columns and collected from the subject tribes (the rayah). Thirty
+#    thousand horsemen in wartime, against some four thousand Janissaries
+#    by 1800 (twelve thousand at the corps' height around 1600). The Emir
+#    Abd al-Qadir abolished the distinction; the Douair and Zmala went
+#    over to the French in 1835.
+#    Vanilla's advance algerian_makhzen_tribes grants light cavalry power,
+#    government power and tribal cohesion. Nothing here repeats it: this is
+#    the bargain itself (exemption for service) and who is asked to serve.
+alg_makhzen_tribes_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	# The price is paid in tax forgone (the neutral block), not in coin.
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.002
+	}
+
+	potential = {
+		has_or_had_tag = ALG
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {}
+
+	estates_that_like = {
+		tribes_estate
+	}
+	estates_that_dislike = {
+		peasants_estate
+	}
+
+	# The exemption: the tribes cannot be taxed as high while the bargain
+	# stands. A cost, charged whether the riders are kept in hand or not.
+	neutral_modifier = {
+		tribes_estate_max_tax = -0.1
+	}
+
+	# The service: more riders from the tribes, and riders from peoples
+	# the state does not count as its own. Vanilla grants the first key at
+	# 0.25 to 1 and the second mostly at 0.1.
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		tribes_estate_levy_size = 0.25
+		wrong_culture_levy_size = 0.1
+	}
+
+	# Riders nobody watches collect for themselves. The subject villages
+	# are stripped, and the tribes that hold the roads decide whom they
+	# serve.
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		peasants_estate_satisfaction_decay = 0.02
+		global_tribes_estate_power = 0.25
+	}
+}
+
+# 4. Wakil al-Kharj of the Marine.
+#    One of the five great officers of the dey: keeper of the arsenal and
+#    its stores, of the harbour and its dues, and of the register in which
+#    every prize was entered and the state's share set aside before the
+#    sale. He received the consuls, and the masts, cordage, powder and guns
+#    the northern powers paid for peace went into his storehouses.
+#    The captains whose prizes he taxed, and whose hunting grounds each new
+#    treaty closed, are the burghers here.
+alg_wakil_al_kharj_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = ALG
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	# The office sat at the harbour gate of Algiers, beside the arsenal
+	# and the mole.
+	allow = {
+		owns = location:algiers
+	}
+
+	estates_that_like = {
+		crown_estate
+	}
+	estates_that_dislike = {
+		burghers_estate
+	}
+
+	# Anchorage and harbour dues on every merchant ship. 0.05 is the
+	# smallest step vanilla grants this key at.
+	neutral_modifier = {
+		max_tariff = 0.05
+	}
+
+	# Full storehouses: the cruisers (light ships, as both Algerian ship
+	# units are) cost less to keep at sea and refit there from what they
+	# carry. Vanilla grants light ship upkeep at -0.2 to -0.25 and repair
+	# at sea at 0.01 to 0.025.
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		navy_light_ship_maintenance_cost_modifier = -0.1
+		ship_repair_at_sea = 0.01
+	}
+
+	# The stores are sold off, the passes are not honoured and the
+	# presents stop. Every flag treats the city as an enemy, and a ship
+	# that comes home damaged waits for timber. Vanilla grants repair
+	# efficiency at 0.2 in 8 of its 11 uses.
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		antagonism_received_modifier = 0.1
+		navy_repair_efficiency = -0.2
+	}
+}

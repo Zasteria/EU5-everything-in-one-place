@@ -1,0 +1,59 @@
+﻿# Mallorca (MLL): formation lines
+# National Destinies mod
+#
+# Vanilla 1.4 defines MLL_f with an empty form_effect (level 2, 75% of
+# balearics_area, Catalan culture, Christian, not for a country that already
+# is MLL), so INJECT is safe: there is nothing of vanilla's to lose. MLL_f is
+# the only vanilla formable that creates the tag MLL
+# (00_formable_countries.txt:804-828).
+#
+# Roads into the tag, and what each one meets here:
+# 1. Mallorca itself. It is on the map on day one as a kingdom and a vassal
+#    of Aragon, holding all five locations of the area and Roussillon,
+#    Cerdanya and Montpellier besides
+#    (main_menu/setup/1337/10_countries.txt:14452, 12_diplomacy.txt:243). It
+#    carries the tag already and never passes through this block. The
+#    four-yearly marker repair in 99_nd_on_actions.txt stamps the marker and
+#    delivers nd_mll.1 for it. This is by far the likeliest Mallorca, and the
+#    event is written so that it reads right for it.
+# 2. A Catalan country that is not itself a level 2 tag takes the islands
+#    and forms the kingdom by the button: Andorra, or one of the Catalan
+#    duchies in Greece (Athens, Neopatras, Salona). form_effect runs:
+#    markers, rank, capital, event.
+# Aragon is the overlord and Catalonia and Valencia are Catalan too, but all
+# three carry the tag of a level 2 formable and are shut out by the level
+# rule (formable_countries/readme.txt:2). Nothing here speaks to them.
+INJECT:MLL_f = {
+	form_effect = {
+		# Formation markers live HERE, not only in the event's options: a
+		# country can be formed by script, and then the popup may never be
+		# answered.
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_mll_formed
+		}
+		# James I willed the islands to a younger son as a kingdom of their
+		# own in 1276, and the title outlived the dynasty until 1715.
+		# nd_can_take_kingdom_rank is false only where the engine itself
+		# would refuse the rank.
+		if = {
+			limit = {
+				nd_can_take_kingdom_rank = yes
+				country_rank_level < 3
+			}
+			set_country_rank_effect = { rank = country_rank:rank_kingdom }
+		}
+		# The capital was called simply Ciutat de Mallorca, and the kingdom's
+		# government was styled "the City and Kingdom". Guarded by ownership:
+		# 75% of five locations does not have to include it.
+		if = {
+			limit = {
+				owns = location:palma
+				NOT = { capital = location:palma }
+			}
+			set_capital = location:palma
+		}
+		trigger_event_non_silently = nd_mll.1
+		add_stability = stability_mild_bonus
+	}
+}

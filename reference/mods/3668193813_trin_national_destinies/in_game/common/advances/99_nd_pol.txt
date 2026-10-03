@@ -44,7 +44,7 @@ nd_pol_sukiennice_trade = {
 
 # === Age 3: Discovery ===
 # Vanilla has: council_of_three_lands, polish_renaissance (2 advances)
-# Filling: Crown border defense force
+# Filling: Crown border defense force, royal privateers
 
 nd_pol_obrona_potoczna = {
 	age = age_3_discovery
@@ -52,10 +52,28 @@ nd_pol_obrona_potoczna = {
 	requires = pike_square
 	icon = pike_square
 	unlock_unit = a_nd_pol_obrona_potoczna
-	army_light_cavalry_power = 0.2
+	army_light_cavalry_power = 0.15
 
-	army_heavy_cavalry_power = 0.2
+	army_heavy_cavalry_power = 0.1
 
+	ai_weight = {
+		add = 50
+	}
+}
+
+# Straz Morska: the Sea Guard of Sigismund Augustus. From 1560 the king gave
+# letters of marque to captains who stopped ships bound for Muscovite Narva,
+# and in 1568 he set a Maritime Commission over them, the first Polish
+# admiralty.
+nd_pol_straz_morska = {
+	age = age_3_discovery
+	potential = { has_or_had_tag = POL }
+	requires = merchant_power_from_maritime_discovery_advance
+	icon = letters_of_marque
+	unlock_unit = n_nd_pol_kaper
+	# Closing Narva was the Sea Guard's whole purpose. Vanilla grants 0.1
+	# to 0.5 of this key, 0.1 and 0.25 most often.
+	blockade_efficiency = 0.25
 	ai_weight = {
 		add = 50
 	}
@@ -79,7 +97,7 @@ nd_pol_vistula_flotilla = {
 	potential = { has_or_had_tag = POL }
 	requires = maritime_advance_age_5
 	icon = maritime_advance_age_5
-	global_sailors_modifier = 0.2
+	global_sailors_modifier = 0.1
 	ship_build_speed = 0.2
 }
 
@@ -91,9 +109,9 @@ nd_pol_destiny = {
 	potential = { has_or_had_tag = POL has_variable = nd_pol_formed has_game_rule = nd_destinies_enabled }
 	allow = { stability >= 75 }
 	icon = crown_power_advance_renaissance
-	monthly_legitimacy = 0.1
-	monthly_devotion = 0.1
-	monthly_republican_tradition = 0.1
+	# The Crown as a body that holds every Piast land: the Mazovian dukes and
+	# the other vassals keep to it.
+	subject_loyalty = 5
 }
 
 # --- Path A: Rzeczpospolita (Commonwealth of Nobles) ---
@@ -120,9 +138,9 @@ nd_pol_dest_sejm = {
 	}
 	icon = crown_power_advance_renaissance
 	tolerance_own = 1
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.03
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -131,7 +149,7 @@ nd_pol_dest_confederation = {
 	requires = nd_pol_dest_sejm
 	potential = { has_or_had_tag = POL has_variable = nd_pol_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		owns = location:gdansk
+		owns_or_non_sovereign_subject_owns = location:gdansk
 		has_embraced_institution = institution:printing_press
 		gold >= 2000
 	}
@@ -145,9 +163,18 @@ nd_pol_dest_republic = {
 	requires = nd_pol_dest_confederation
 	potential = { has_or_had_tag = POL has_variable = nd_pol_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		owns = location:vilnius
+		owns_or_non_sovereign_subject_owns = location:vilnius
 		has_embraced_institution = institution:global_trade
-		total_development >= 2500
+		# Warsaw: incorporated with Mazovia in 1526, seat of the Sejm from 1569,
+		# of the royal elections from 1573, of the court from 1596. 21 in 1337
+		# (scripts/development_estimate.py --explain warsaw), doubled for a capstone.
+		custom_tooltip = {
+			text = nd_pol_dest_warsaw_developed_tt
+			location:warsaw = {
+				owner ?= root
+				development >= 42
+			}
+		}
 		prestige >= 75
 	}
 	icon = global_trade_advance
@@ -168,8 +195,8 @@ nd_pol_dest_silesia = {
 			text = nd_pol_path_b_tt
 			has_variable = nd_pol_path_b
 		}
-		owns = location:wroclaw
-		owns = location:opole
+		owns_or_non_sovereign_subject_owns = location:wroclaw
+		owns_or_non_sovereign_subject_owns = location:opole
 		army_size >= 30
 	}
 	icon = feudalism_advance
@@ -182,8 +209,13 @@ nd_pol_dest_eastern_march = {
 	requires = nd_pol_dest_silesia
 	potential = { has_or_had_tag = POL has_variable = nd_pol_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		owns = location:lviv
-		owns = location:smolensk
+		owns_or_non_sovereign_subject_owns = location:lviv
+		owns_or_non_sovereign_subject_owns = location:smolensk
+		# The standing frontier force of about 1500 is what held the east: the
+		# country's own age 3 advance gives this path a floor, so the two
+		# paths end within two ages of each other (owner's ruling 2026-10-02,
+		# scripts/destiny/stage_floors.py).
+		has_advance = nd_pol_obrona_potoczna
 		army_size >= 50
 		gold >= 2000
 	}
@@ -197,9 +229,18 @@ nd_pol_dest_piast_crown = {
 	requires = nd_pol_dest_eastern_march
 	potential = { has_or_had_tag = POL has_variable = nd_pol_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		owns = location:konigsberg
-		owns = location:kyiv
-		total_development >= 2500
+		owns_or_non_sovereign_subject_owns = location:konigsberg
+		owns_or_non_sovereign_subject_owns = location:kyiv
+		# Krakow, the coronation city, with the Wawel rebuilt by the last
+		# Jagiellons: 25.5 in 1337
+		# (scripts/development_estimate.py --explain krakow), doubled for a capstone.
+		custom_tooltip = {
+			text = nd_pol_dest_krakow_developed_tt
+			location:krakow = {
+				owner ?= root
+				development >= 51
+			}
+		}
 		prestige >= 75
 		army_size >= 75
 	}

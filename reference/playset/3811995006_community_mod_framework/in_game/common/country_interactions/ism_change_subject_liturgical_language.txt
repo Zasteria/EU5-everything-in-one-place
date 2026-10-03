@@ -1,0 +1,58 @@
+﻿ism_change_subject_liturgical_language = {
+	type = subject
+	category = CATEGORY_SUBJECT_ACTIONS
+	show_message = no
+	show_message_to_target = no
+
+	potential = {
+	}
+
+	allow = {
+	}
+
+	select_trigger = {
+		looking_for_a = country
+		interaction_source_list = {
+			scope:actor = {
+				every_subject = {
+					add_to_list = source
+				}
+			}
+		}
+		target_flag = recipient
+		name = "choose_country"
+		column = {
+			data = name
+		}
+		visible = {
+			NOT = { liturgical_language = scope:actor.liturgical_language }
+		}
+        enabled = {
+			trigger_if = {
+				limit = {
+					OR = {
+						has_reform = government_reform:papacy_reform
+						has_reform = government_reform:kingdom_of_god_reform
+					}
+					liturgical_language = language:latin_language
+				}
+				always = no
+			}
+			subject_loyalty >= MIN_SUBJECT_LOYALTY_FOR_ACTION
+			liberty_desire < MAX_SUBJECT_LIBERTY_DESIRE_FOR_ACTION
+		}
+	}
+
+	effect = {
+		scope:recipient = {
+			set_liturgical_language = scope:actor.liturgical_dialect
+			add_country_modifier = {
+				modifier = ism_forced_us_to_use_their_liturgical_language
+				years = 50
+				mode = add_and_extend
+			}
+		}
+
+	}
+
+}

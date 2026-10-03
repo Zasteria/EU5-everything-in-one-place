@@ -27,20 +27,111 @@ nd_hab_hofkammer = {
 
 	unique_production_methods = {
 		nd_hab_hofkammer_administration = {
-			paper = 0.2
-			books = 0.1
-			fine_cloth = 0.05
-			category = building_maintenance
-		}
-
-		nd_hab_mining_operations = {
-			silver = 0.2
-			copper = 0.1
-			tools = 0.1
+			paper = 0.22
+			books = 0.11
+			fine_cloth = 0.055
 			category = building_maintenance
 		}
 	}
 	construction_demand = school_construction
+}
+
+# Schmelzhuette: a copper and silver smelting works. The one at Brixlegg is
+# recorded from 1463 and was the Tyrolean prince's own from 1504; it took the
+# fahlore of Schwaz, which holds copper and silver together. The roasted
+# copper is melted with lead (Bleiberg above Villach supplied it), the lead
+# carries the silver off and is burned away on the hearth.
+nd_hab_schmelzhuette = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = 1
+	employment_size = guild_employment
+	category = basic_industry_category
+	# A smelter stood in the valley below the mine, at a village or a market
+	# town (Brixlegg, Jenbach, Rattenberg), never in a city.
+	rural_settlement = yes
+	town = yes
+	city = no
+	expensive = no
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_hab_schwaz_silver
+	}
+
+	# The works stand at the ore: a location whose own raw good is silver or
+	# copper (vanilla's mercury_patio is bound to silver and gold the same
+	# way). Schwaz qualifies once vanilla's event has opened its mine.
+	location_potential = {
+		OR = {
+			raw_material = goods:silver
+			raw_material = goods:copper
+		}
+	}
+
+	unique_production_methods = {
+		# The silver is in the copper ore to begin with: this refines a metal
+		# the ore already holds, and the lead is spent doing it.
+		nd_hab_silver_parting = {
+			copper = 0.3
+			lead = 0.15
+			lumber = 0.1
+			produced = silver
+			output = 0.27
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# Pfannhaus: the ducal pan house of the Kammergut, where brine led down
+# from the salt mountain is boiled dry over wood fires. The forests around
+# it were reserved for the pans by ducal ordinance.
+nd_hab_pfannhaus = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = 1
+	employment_size = guild_employment
+	category = basic_industry_category
+	# A pan house stood at the brine, in a village or a market town
+	# (Hallstatt, Aussee, Gmunden), never in a city.
+	rural_settlement = yes
+	town = yes
+	city = no
+	expensive = no
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_hab_kammergut
+	}
+
+	# Brine is boiled where the salt mountain is: the location's own raw
+	# good (vanilla's windmill is bound to its grain the same way), not salt
+	# that merely reaches its market. Gmunden, Hallein and Salzburg qualify.
+	location_potential = {
+		raw_material = goods:salt
+	}
+
+	# Kammergut means chamber property: the works belong to the prince.
+	# Vanilla's tax_assessor gives 0.25 of this key.
+	modifier = {
+		local_crown_estate_power = 0.1
+	}
+
+	unique_production_methods = {
+		nd_hab_brine_boiling = {
+			lumber = 0.3
+			tools = 0.05
+			produced = salt
+			output = 0.18
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = guild_construction
 }
 
 # Festungsbaukunst: Habsburg star fort / defensive fortification

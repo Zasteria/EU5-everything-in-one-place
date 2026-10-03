@@ -52,9 +52,9 @@ nd_tib_tea_horse_road = {
 	icon = trade_caravans
 
 	unlock_building = nd_tib_tea_horse_post
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.03
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -106,7 +106,7 @@ nd_tib_salt_monopoly = {
 
 	unlock_building = nd_tib_salt_warehouse
 	global_salt_output_modifier = 0.15
-	tax_income_efficiency = 0.05
+	tax_income_efficiency = 0.03
 }
 
 # Sectarian wars: military hardening
@@ -160,7 +160,7 @@ nd_tib_khampa_cavalry = {
 	unlock_unit = a_nd_tib_khampa_horsemen
 	army_light_cavalry_power = 0.15
 
-	army_heavy_cavalry_power = 0.15
+	army_heavy_cavalry_power = 0.1
 
 	army_light_cavalry_build_cost_modifier = -0.1
 
@@ -222,9 +222,9 @@ nd_tib_tibetan_coinage = {
 	icon = banking_advance
 
 	minting_income_factor = 0.1
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	bank_interest = -0.01
 }
@@ -263,7 +263,7 @@ nd_tib_desi_regency = {
 	requires = absolute_rulership
 	icon = smooth_administration
 
-	country_cabinet_efficiency = 0.15
+	country_cabinet_efficiency = 0.1
 	spy_network_construction = 0.2
 	stability_cost_efficiency = 0.1
 }
@@ -290,7 +290,7 @@ nd_tib_plateau_horsemen = {
 	unlock_unit = a_nd_tib_plateau_riders
 	army_light_cavalry_power = 0.15
 
-	army_heavy_cavalry_power = 0.15
+	army_heavy_cavalry_power = 0.1
 
 	army_movement_speed = 0.1
 
@@ -307,9 +307,9 @@ nd_tib_luxury_exports = {
 	icon = trade_caravans
 
 	global_silk_output_modifier = 0.1
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	global_merchant_capacity_modifier = 0.1
 }
@@ -350,9 +350,9 @@ nd_tib_standing_army = {
 
 	unlock_unit = a_nd_tib_regulars
 	discipline = 0.05
-	army_light_infantry_power = 0.15
+	army_light_infantry_power = 0.1
 
-	army_heavy_infantry_power = 0.15
+	army_heavy_infantry_power = 0.1
 
 
 	ai_weight = {
@@ -369,7 +369,7 @@ nd_tib_communal_traditions = {
 
 	unlock_building = nd_tib_communal_granary
 	global_population_growth = 0.0003
-	global_monthly_food_modifier = 0.1
+	global_monthly_food_modifier = 0.05
 }
 
 # Dharma preservation
@@ -391,12 +391,12 @@ nd_tib_plateau_trade_network = {
 	requires = industrialization_advance
 	icon = trade_caravans
 
-	global_merchant_power = 0.3
-	trade_land_efficiency = 0.03
+	global_merchant_power = 0.2
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.03
+	trade_sea_efficiency = 0.1
 
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }
 
 # ===== DESTINY TREE =====
@@ -433,17 +433,34 @@ nd_tib_dest_lhasa_settlement = {
 			text = nd_tib_path_a_tt
 			has_variable = nd_tib_path_a
 		}
-		owns = location:lhasa
-		owns = location:shigatse
+		# In 1337 the government sits at Sakya (start setup, `capital =
+		# sakya`) and holds Lhasa and Shigatse already, so owning them asks
+		# nothing. The settlement of 1642 made Lhasa the seat of the state.
+		custom_tooltip = {
+			text = nd_tib_dest_lhasa_capital_tt
+			capital ?= location:lhasa
+		}
+		# Shigatse grew around Tashilhunpo (founded 1447), the seat of the
+		# second hierarch. 11.5 in 1337, raised by a quarter for a first
+		# stage.
+		custom_tooltip = {
+			text = nd_tib_dest_shigatse_developed_tt
+			location:shigatse = {
+				owner ?= root
+				development >= 14
+			}
+		}
 		stability >= 75
 	}
 	icon = organized_religion
 	# Lhasa and Shigatse under one administration is administrative reach,
 	# not religious influence: that pool exists only for a religion carrying
 	# `has_religious_influence` (the Christian family plus mayan and
-	# hellenism), and a Tibetan-culture Tibet is Buddhist.
-	global_monthly_control = 0.002
-	global_estate_target_satisfaction = 0.025
+	# hellenism), and a Tibetan-culture Tibet is Buddhist. Reach is written
+	# as proximity, and the end of three centuries of sectarian war as
+	# cheaper stability.
+	global_distance_from_capital_speed_propagation = 0.1
+	stability_investment = 0.02
 }
 
 nd_tib_dest_dzong_magistracy = {
@@ -451,14 +468,22 @@ nd_tib_dest_dzong_magistracy = {
 	requires = nd_tib_dest_lhasa_settlement
 	potential = { has_or_had_tag = TIB has_variable = nd_tib_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		owns = location:gyantse
+		# Gyantse: its dzong was raised in 1390 and the town became the
+		# third of Tibet. 6 in 1337, raised by half for a second stage.
+		custom_tooltip = {
+			text = nd_tib_dest_gyantse_developed_tt
+			location:gyantse = {
+				owner ?= root
+				development >= 9
+			}
+		}
 		owns = location:chamdo
-		gold >= 1500
+		gold >= 2000
 		stability >= 75
 	}
 	icon = feudalism_advance
 	fort_maintenance_efficiency = 0.1
-	global_estate_satisfaction_recovery = 0.05
+	global_estate_satisfaction_recovery = 0.003
 }
 
 nd_tib_dest_monlam_chenmo = {
@@ -466,22 +491,29 @@ nd_tib_dest_monlam_chenmo = {
 	requires = nd_tib_dest_dzong_magistracy
 	potential = { has_or_had_tag = TIB has_variable = nd_tib_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		owns = location:sakya
+		# Lhasa is where the festival is held and what the Ganden Phodrang
+		# built: 15 in 1337, doubled for a third stage.
+		custom_tooltip = {
+			text = nd_tib_dest_lhasa_developed_tt
+			location:lhasa = {
+				owner ?= root
+				development >= 30
+			}
+		}
 		owns = location:derge
 		prestige >= 75
-		gold >= 2500
+		gold >= 3000
 	}
 	icon = crown_power_advance_renaissance
 	unlock_building = nd_tib_monlam_pavilion
-	# Twenty thousand monks in the Jokhang precinct and a Drepung abbot
-	# holding the capital for three weeks is the sangha's standing inside
-	# the state, priced as clergy satisfaction at vanilla's medium step
-	# (0.05, `default_values.txt:928`). The religious influence ceiling that
-	# stood here is gated on `has_religious_influence`, which no Buddhist
-	# religion carries.
-	clergy_estate_target_satisfaction = 0.05
-	global_pop_assimilation_speed = 0.1
-	global_estate_target_satisfaction = 0.025
+	# Twenty thousand monks in the Jokhang precinct: room for more clergy
+	# in every location (vanilla's Buddhist and theocratic advances grant
+	# this key at 0.01 and 0.02). The religious influence ceiling that
+	# stood here first is gated on `has_religious_influence`, which no
+	# Buddhist religion carries.
+	global_clergy_desired_pop = 0.01
+	global_pop_assimilation_speed_modifier = 0.1
+	cultural_influence_modifier = 0.1
 }
 
 # === Path B: The Dharma Kings ===
@@ -499,13 +531,27 @@ nd_tib_dest_tsenpo_restored = {
 		# a location shared by both makes the branch choice partly free.
 		# The tsenpo line came out of the Yarlung valley, so the imperial
 		# restoration starts where the dynasty did: Nedong, the seat in
-		# the Yarlung valley.
-		owns = location:nedong
+		# the Yarlung valley. The main former holds Nedong on day one, so
+		# the stage asks for the seat to be built: a town or larger
+		# (vanilla's own shape, advances/country_yem.txt, port_of_aden).
+		custom_tooltip = {
+			text = nd_tib_dest_nedong_town_tt
+			location:nedong = {
+				owner ?= root
+				OR = {
+					location_rank ?= location_rank:town
+					location_rank ?= location_rank:city
+					location_rank ?= location_rank:megalopolis
+				}
+			}
+		}
 		owns = location:dartsedo
-		army_size >= 25
+		# Tibet starts as a vassal of the Yuan (12_diplomacy.txt). A tsenpo
+		# has no overlord. No army_size here: the plateau's army is a levy.
+		is_subject = no
 	}
 	icon = horse_riding_advance
-	land_morale_recovery = 0.1
+	land_morale_recovery = 0.04
 	regiment_recruit_speed = 0.1
 }
 
@@ -516,8 +562,7 @@ nd_tib_dest_plateau_marches = {
 	allow = {
 		owns = location:leh
 		owns = location:kathmandu
-		army_size >= 40
-		gold >= 1500
+		gold >= 2000
 	}
 	icon = arduous_terrain
 	siege_ability = 0.1
@@ -533,8 +578,9 @@ nd_tib_dest_bod_chen_po = {
 		# Yarlung empire actually held from 786 to 848.
 		owns = location:shazhou
 		owns = location:ganzhou
-		army_size >= 60
 		prestige >= 75
+		# The corridor was held for its tolls.
+		gold >= 3000
 	}
 	icon = imperial_ambitions
 	unlock_building = nd_tib_tsenpo_citadel

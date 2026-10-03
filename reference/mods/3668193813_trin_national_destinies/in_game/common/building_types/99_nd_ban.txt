@@ -29,25 +29,6 @@ nd_ban_pepper_gudang = {
 			pottery = 0.05
 			category = building_maintenance
 		}
-
-		nd_ban_pepper_processing = {
-			dyes = 0.1
-			fiber_crops = 0.1
-			tools = 0.05
-			category = building_maintenance
-		}
-
-		nd_ban_pepper_grading = {
-			cloth = 0.1
-			pottery = 0.1
-			category = building_maintenance
-		}
-
-		nd_ban_lampung_cultivation = {
-			lumber = 0.2
-			tools = 0.1
-			category = building_maintenance
-		}
 	}
 	construction_demand = warehouse_construction
 }
@@ -145,7 +126,7 @@ nd_ban_grand_mosque = {
 	modifier = {
 		local_clergy_estate_power = 1
 		local_pop_conversion_speed = 0.02
-		local_cultural_tradition = 1
+		local_cultural_tradition = 0.25
 		local_clergy_max_literacy = 5
 	}
 
@@ -215,6 +196,11 @@ nd_ban_coastal_bastion = {
 		has_advance = nd_ban_port_fortification
 	}
 
+	# A harbour work: it stands on the shore or it does nothing.
+	location_potential = {
+		is_coastal = yes
+	}
+
 	modifier = {
 		local_garrison_size = 0.15
 		local_defensive = 0.25
@@ -250,6 +236,11 @@ nd_ban_coastal_battery = {
 
 	country_potential = {
 		has_advance = nd_ban_coastal_defense
+	}
+
+	# A harbour work: it stands on the shore or it does nothing.
+	location_potential = {
+		is_coastal = yes
 	}
 
 	modifier = {
@@ -308,15 +299,175 @@ nd_ban_modern_harbor = {
 			tools = 0.1
 			category = building_maintenance
 		}
-	
-		nd_ban_industrial_processing = {
+	}
+	construction_demand = port_building_construction
+}
+
+# Pepper Garden (age 3, nd_ban_lampung_plantations)
+# The kebun lada of Lampung and the Banten hills. The sultan's charters bound
+# every household to keep five hundred vines, trained up living dadap trees.
+# location_potential: the location's own raw material is pepper. Pepper is a
+# raw good, so the garden stands only where the vine grows.
+nd_ban_pepper_garden = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = rural_building_cap
+	employment_size = generic_peasant_building_employment
+	category = rgo_building_category
+	rural_settlement = yes
+	town = no
+	city = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_ban_lampung_plantations
+	}
+
+	location_potential = {
+		raw_material = goods:pepper
+	}
+
+	unique_production_methods = {
+		nd_ban_lampung_cultivation = {
 			lumber = 0.2
-			naval_supplies = 0.1
 			tools = 0.1
+			produced = pepper
+			output = 0.144
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = farm_constructions
+}
+
+# Daluang House (age 3, nd_ban_manuscript_tradition)
+# Daluang is the bark paper of western Java: the inner bark of the saeh tree,
+# soaked and beaten out with a grooved bronze mallet. Bantenese chronicles
+# and legal texts were written on it.
+# location_potential: forest or woodland, where the saeh is cut. Settlement:
+# countryside and town. The beaters worked in the villages, not in the port.
+nd_ban_daluang_house = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = guild_max_level
+	employment_size = generic_peasant_building_employment
+	category = basic_industry_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_ban_manuscript_tradition
+	}
+
+	location_potential = {
+		OR = {
+			vegetation = forest
+			vegetation = jungle
+			vegetation = woods
+		}
+	}
+
+	unique_production_methods = {
+		nd_ban_daluang_beating = {
+			lumber = 0.4
+			tools = 0.05
+			produced = paper
+			output = 0.45
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# Tirtayasa Canal (age 4, nd_ban_ageng_tirtayasa)
+# The canals Sultan Ageng had dug across the coastal plain east of Banten in
+# the 1660s and 1670s. New rice land and coconut groves were opened along
+# them and settlers were moved in. He took his name, Tirtayasa, from the works.
+# location_potential: a river to draw from and land that grows food. Vanilla's
+# irrigation raises what the fields yield; this opens more fields and brings
+# people to them. Settlement: countryside and town, where there is land to open.
+nd_ban_tirtayasa_canal = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = 1
+	employment_size = generic_peasant_building_employment
+	category = infrastructure_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	expensive = no
+	build_time = infrastructure_build_time
+
+	country_potential = {
+		has_advance = nd_ban_ageng_tirtayasa
+	}
+
+	location_potential = {
+		has_river = yes
+		raw_material ?= { is_food = yes }
+	}
+
+	modifier = {
+		local_max_rgo_size_modifier = 0.1
+		local_migration_attraction = 0.1
+	}
+
+	unique_production_methods = {
+		nd_ban_canal_upkeep = {
+			lumber = 0.1
+			stone = 0.1
+			tools = 0.05
 			category = building_maintenance
 		}
 	}
-	construction_demand = port_building_construction
+	construction_demand = village_construction
+}
+
+# Kepandean (age 4, nd_ban_anti_monopoly)
+# The smiths' quarter of Banten (pande: smith). Bronze guns for the walls and
+# the fleet were cast here beside those bought from the English and the Danes.
+# location_potential: the shore. Banten had no copper or tin of its own; both
+# came in by sea, and the guns went onto walls and ships. Settlement: towns
+# and cities.
+nd_ban_kepandean = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	employment_size = guild_employment
+	category = weapons_industry_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_ban_anti_monopoly
+	}
+
+	location_potential = {
+		is_coastal = yes
+	}
+
+	unique_production_methods = {
+		nd_ban_gun_founding = {
+			copper = 0.3
+			tin = 0.06
+			lumber = 0.1
+			produced = cannons
+			output = 0.351
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
 }
 
 # ===== DESTINY BUILDINGS =====

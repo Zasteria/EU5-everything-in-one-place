@@ -1,0 +1,194 @@
+﻿# Tunis (TUN): custom unit types.
+# Every stat line under copy_from is ADDED to the template and to the
+# category's own value (common/levies/readme.txt, EU5 1.4). Nothing below
+# restates a template number.
+#
+# What the same country already fields, so nothing here repeats it:
+# vanilla gives the tag the Hafsid Ghulam (heavy infantry, age 1), and the
+# Maghrebi group the Tuareg veiled cavalry (age 2), Andalusi arquebusiers and
+# galiots (age 3), xebecs and the Sub-Saharan musketeer corps (age 4), camelry
+# in every age and the Barbary fusta levy. Carthage and the Almohads, which a
+# Tunisian country can go on to form, hold levies in ages 1 to 3 on soldiers,
+# peasants and nobles. The three levies here are therefore on tribesmen
+# (ages 1 and 6) and on soldiers in age 4, where neither has one.
+
+# Ku'ub Horsemen: levy twin, tribesmen only, age 1.
+# The Ku'ub were the leading clan of the Banu Sulaym, the Arab tribe the
+# Hafsids paid in iqta land for cavalry service.
+# Template a_age_1_traditions_light_cavalry: max_strength 0.2, combat_power 2.6,
+# total combat power 0.5591. The tribesmen baseline is a_tribesmen at 0.4693,
+# which never scales, so this levy is raised until the Makhzen Horse of age 6
+# takes its place. No upgrades_to: the field does nothing on a levy unit.
+a_nd_tun_kuub_horsemen = {
+	is_special = yes
+	category = army_light_cavalry
+	copy_from = a_age_1_traditions_light_cavalry
+	buildable = no
+	levy = yes
+
+	initiative = 1
+	movement_speed = 0.5
+	max_strength = 0.055	# levy power, scripts/fix_levy_power.py
+
+	combat = {
+		sparse = 0.10
+		mountains = -0.10
+	}
+
+	country_potential = {
+		has_or_had_tag = TUN
+	}
+
+	gfx_tags = { spear_tag light_tag }
+}
+
+# Loud of the Lesser Syrtis: buildable transport, age 2.
+# The flat-bottomed lateen boat of Kerkennah, Sfax and Djerba, built for the
+# shallows of the Gulf of Gabes where a keeled ship grounds.
+# Template n_age_2_renaissance_transport: speed 6, hull 12, cannons 4,
+# transport_capacity 0.5, crew 0.05. The lines below make it a quarter
+# faster, a quarter lighter in the hull and a fifth smaller in the hold.
+n_nd_tun_loud = {
+	is_special = yes
+	category = navy_transport
+	copy_from = n_age_2_renaissance_transport
+	upgrades_to = n_flute
+	buildable = yes
+
+	movement_speed = 1.5
+	hull_size = -3
+	transport_capacity = -0.1
+	crew_size = -0.01
+
+	country_potential = {
+		has_or_had_tag = TUN
+	}
+}
+
+# Ojak of Tunis: levy twin, soldiers only, age 4.
+# The Turkish garrison Sinan Pasha left in 1574: forty companies under their
+# deys, the men who made and unmade the rulers of Tunis after 1591.
+# Template a_age_4_reformation_heavy_infantry: max_strength 2, combat_power 1.5,
+# total 3.0750. The soldiers baseline at age 4 is a_flintlock_levy at 2.8158.
+# It has no successor on purpose: from age 5 vanilla's militiamen (5.2796)
+# out-power it and soldiers raise those instead. That is the history. The
+# ojak was a spent force by the eighteenth century and was broken in 1811.
+# No upgrades_to either: the field does nothing on a levy unit (levy readme).
+a_nd_tun_ojak = {
+	is_special = yes
+	category = army_heavy_infantry
+	copy_from = a_age_4_reformation_heavy_infantry
+	buildable = no
+	levy = yes
+
+	morale_damage_done = 0.05
+	strength_damage_taken = -0.05
+
+	country_potential = {
+		has_or_had_tag = TUN
+	}
+
+	gfx_tags = { musket_tag medium_tag }
+}
+
+# Renegade Bertone: buildable light ship, age 4.
+# The armed round ship the English and Dutch renegades brought to Tunis from
+# 1606: square rig, high sides, more guns than a galley and no oars.
+# Template n_age_4_reformation_light_ship: speed 12, hull 10, cannons 12.
+# The lines below add a third more guns and a stouter hull and take one
+# point of speed: slower than a pinnace, and it hits harder.
+n_nd_tun_bertone = {
+	is_special = yes
+	category = navy_light_ship
+	copy_from = n_age_4_reformation_light_ship
+	upgrades_to = n_frigate
+	buildable = yes
+
+	cannons = 4
+	hull_size = 2
+	movement_speed = -1
+
+	country_potential = {
+		has_or_had_tag = TUN
+	}
+}
+
+# Zwawa Companies: buildable light infantry, age 5.
+# Kabyle mountaineers hired by the beys as a counterweight to the Turkish
+# ojak. Marksmen at home on broken ground, paid by the season.
+# Template a_age_5_absolutism_light_infantry: max_strength 2.5, combat_power 2.25.
+# The category gives light infantry strength_damage_done -0.1; the +0.1 here
+# brings their fire level with line infantry. They break sooner in a long fight.
+a_nd_tun_zwawa = {
+	is_special = yes
+	category = army_light_infantry
+	copy_from = a_age_5_absolutism_light_infantry
+	upgrades_to = a_sharpshooters
+	buildable = yes
+
+	strength_damage_done = 0.10
+	initiative = 1
+	morale_damage_taken = 0.05
+
+	combat = {
+		mountains = 0.15
+		hills = 0.10
+	}
+
+	country_potential = {
+		has_or_had_tag = TUN
+	}
+
+	gfx_tags = { musket_tag light_tag }
+}
+
+# Makhzen Horse: levy twin, tribesmen only, age 6.
+# The qaba'il makhzaniyya, the tribes (the Drid first among them) that rode
+# with the bey's camp and paid no tax for it.
+# Template a_age_6_revolutions_light_cavalry: max_strength 1.2, combat_power 3.25,
+# total 4.1936. It must out-power this country's own earlier tribesmen levy
+# (the Ku'ub Horsemen), which it does several times over.
+a_nd_tun_makhzen_horse = {
+	is_special = yes
+	category = army_light_cavalry
+	copy_from = a_age_6_revolutions_light_cavalry
+	buildable = no
+	levy = yes
+
+	initiative = 1
+	flanking_ability = 0.1
+	max_strength = 1.4	# levy power, scripts/fix_levy_power.py
+
+	combat = {
+		sparse = 0.10
+		mountains = -0.10
+	}
+
+	country_potential = {
+		has_or_had_tag = TUN
+	}
+
+	gfx_tags = { spear_tag light_tag }
+}
+
+# Bardo Nizami: buildable heavy infantry, age 6.
+# The regular battalions Husayn Bey raised in 1831 on the Ottoman and French
+# model: drilled, uniformed, and costly to keep in the field.
+# Template a_age_6_revolutions_heavy_infantry: max_strength 3, combat_power 3.
+# Age 6 is the last age, so there is nothing for it to upgrade to.
+a_nd_tun_nizami = {
+	is_special = yes
+	category = army_heavy_infantry
+	copy_from = a_age_6_revolutions_heavy_infantry
+	buildable = yes
+
+	morale_damage_taken = -0.05
+	strength_damage_done = 0.05
+	supply_weight = 0.1
+
+	country_potential = {
+		has_or_had_tag = TUN
+	}
+
+	gfx_tags = { musket_tag medium_tag }
+}

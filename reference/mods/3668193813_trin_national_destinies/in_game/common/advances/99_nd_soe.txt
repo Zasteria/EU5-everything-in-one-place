@@ -12,7 +12,7 @@ nd_soe_niger_origins = {
 	potential = { has_or_had_tag = SOE }
 	requires = agriculture_advance
 	icon = agriculture_advance
-	global_monthly_food_modifier = 0.1
+	global_monthly_food_modifier = 0.05
 	global_population_growth = 0.0005
 }
 
@@ -25,21 +25,23 @@ nd_soe_noble_horsemen = {
 	unlock_unit = a_nd_soe_noble_cavalry
 	army_light_cavalry_power = 0.15
 
-	army_heavy_cavalry_power = 0.15
+	army_heavy_cavalry_power = 0.1
 
 	ai_weight = {
 		add = 50
 	}
 }
 
-# Niger River fleet - war canoe tradition under the Hi-Koy
+# Niger River fleet - war canoe tradition under the Hi-Koy. The grant was sailors until 2026-10-02:
+# an inland empire has no use for them. The canoes carry the army's supply along the river, so the
+# grant is the distance an army can stand from its supply (0.1 is vanilla's commonest value for the key).
 nd_soe_niger_fleet = {
 	age = age_1_traditions
 	potential = { has_or_had_tag = SOE }
 	requires = ship_building_advance
 	icon = ship_building_advance
 	unlock_building = nd_soe_niger_port
-	global_sailors_modifier = 0.1
+	army_logistics_distance_modifier = 0.1
 }
 
 # Early Islamic contact through trans-Saharan trade
@@ -70,7 +72,6 @@ nd_soe_niger_agriculture = {
 	potential = { has_or_had_tag = SOE }
 	requires = agriculture_advance
 	icon = agriculture_advance
-	unlock_production_method = nd_soe_salt_caravan
 	global_raw_material_output = 0.05
 }
 
@@ -81,9 +82,8 @@ nd_soe_caravan_routes = {
 	requires = guilds
 	icon = guilds
 	unlock_building = nd_soe_saharan_caravanserai
-	trade_land_efficiency = 0.05
+	trade_land_efficiency = 0.2
 
-	trade_sea_efficiency = 0.05
 
 }
 
@@ -110,8 +110,12 @@ nd_soe_hikoy_command = {
 	potential = { has_or_had_tag = SOE }
 	requires = merchants_and_trade
 	icon = merchants_and_trade
+	# The war canoe is a ship and the map gives the Niger no water to sail:
+	# it can be built only once the empire holds a sea coast. So the advance
+	# also pays on land, where the fleet carried and fed the Askia's armies
+	# (galley power stood here until 2026-10-02 and paid an inland empire nothing).
 	unlock_unit = n_nd_soe_war_canoe
-	navy_galley_power = 0.25
+	supply_depot_capacity = 500
 	ai_weight = {
 		add = 50
 	}
@@ -156,7 +160,10 @@ nd_soe_gold_salt_monopoly = {
 	requires = patron_of_art
 	icon = patron_of_art
 	unlock_building = nd_soe_gold_market
-	global_merchant_power = 0.1
+	# Sitting astride the exchange means setting its price: a higher cap on
+	# the tariffs of Songhai's own markets. Merchant power is vanilla's
+	# gold_to_salt_trade in this age.
+	max_tariff = 0.05
 }
 
 # The Hajj of Askia Muhammad to Mecca (1496-97)
@@ -209,10 +216,9 @@ nd_soe_standardized_trade = {
 	potential = { has_or_had_tag = SOE }
 	requires = merchant_power_from_maritime_discovery_advance
 	icon = merchant_power_from_maritime_discovery_advance
-	unlock_production_method = nd_soe_gold_refining
-	trade_land_efficiency = 0.03
+	unlock_building = nd_soe_assay_house
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.03
 
 }
 
@@ -262,7 +268,7 @@ nd_soe_timbuktu_manuscripts = {
 	potential = { has_or_had_tag = SOE }
 	requires = confessional_court
 	icon = confessional_court
-	unlock_production_method = nd_soe_manuscript_production
+	unlock_building = nd_soe_copyists_house
 	global_monthly_literacy = 0.015
 	cultural_tradition_modifier = 0.1
 }
@@ -306,9 +312,9 @@ nd_soe_pastoral_wealth = {
 	potential = { has_or_had_tag = SOE }
 	requires = pop_promotion_speed_age_4
 	icon = pop_promotion_speed_age_4
-	unlock_production_method = nd_soe_horse_breeding
+	unlock_building = nd_soe_sahel_stud
 	global_livestock_output_modifier = 0.15
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }
 
 # Islamic jurisprudence - the Maliki school across the Sahel
@@ -317,7 +323,11 @@ nd_soe_maliki_jurisprudence = {
 	potential = { has_or_had_tag = SOE }
 	requires = imperial_ambitions
 	icon = imperial_ambitions
-	tolerance_own = 1
+	# One law for Songhai, Tuareg, Fulani and Mande alike: peoples the crown
+	# accepts cost less to keep. Tolerance is vanilla's sharia in this age.
+	# (The discount on inviting scholars of one's own school pays only
+	# Muslim countries, so it is not used here.)
+	accepted_culture_maintenance_cost_modifier = -0.1
 	global_pop_conversion_speed_modifier = 0.1
 }
 
@@ -328,7 +338,7 @@ nd_soe_imperial_diversity = {
 	requires = confessional_court
 	icon = confessional_court
 	cultures_capacity = 1
-	global_integration_speed_modifier = 0.25
+	global_integration_speed_modifier = 0.2
 }
 
 ###############################################
@@ -341,7 +351,7 @@ nd_soe_sahel_resilience = {
 	potential = { has_or_had_tag = SOE }
 	requires = the_constitution
 	icon = the_constitution
-	global_devastation_recovery = 0.0075
+	global_devastation_recovery = 0.0025
 	global_separatism = -0.05
 }
 
@@ -351,9 +361,10 @@ nd_soe_niger_commerce = {
 	potential = { has_or_had_tag = SOE }
 	requires = maritime_advance_age_5
 	icon = maritime_advance_age_5
-	trade_land_efficiency = 0.025
+	# River cargoes sold on to forest and desert markets fetch more. The
+	# land trade itself is vanilla's trans_sahara_trade in this age.
+	export_efficiency = 0.02
 
-	trade_sea_efficiency = 0.025
 
 	global_merchant_power = 0.1
 }
@@ -364,6 +375,7 @@ nd_soe_sahel_fortifications = {
 	potential = { has_or_had_tag = SOE }
 	requires = construction_speed_absolutism
 	icon = construction_speed_absolutism
+	unlock_building = nd_soe_banco_wall
 	global_defensive = 0.15
 	global_garrison_size_modifier = 0.2
 }
@@ -422,8 +434,8 @@ nd_soe_modern_agriculture = {
 	potential = { has_or_had_tag = SOE }
 	requires = industrialization_advance
 	icon = industrialization_advance
-	global_production_efficiency = 0.05
-	global_monthly_food_modifier = 0.1
+	global_production_efficiency = 0.025
+	global_monthly_food_modifier = 0.05
 }
 
 # Trans-Saharan trade network modernization
@@ -432,9 +444,8 @@ nd_soe_modern_trade = {
 	potential = { has_or_had_tag = SOE }
 	requires = urbanization
 	icon = urbanization
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.03
 
 	global_construction_speed = 0.1
 }
@@ -445,7 +456,9 @@ nd_soe_modern_army = {
 	potential = { has_or_had_tag = SOE }
 	requires = napoleonic_warfare
 	icon = napoleonic_warfare
-	discipline = 0.05
+	# Depots and a replacement system: regiments fill their ranks faster.
+	# Discipline is vanilla's modernization_of_the_military in this age.
+	regiment_reinforcement_speed = 0.1
 	army_light_infantry_power = 0.1
 
 	army_heavy_infantry_power = 0.1
@@ -512,7 +525,15 @@ nd_soe_dest_hausa_conquest = {
 		owns_or_non_sovereign_subject_owns = location:kano
 		owns_or_non_sovereign_subject_owns = location:katsina
 		owns_or_non_sovereign_subject_owns = location:ngazargamu
-		army_size >= 50
+		# The river fleet carried the armies that went east (an army size
+		# stood here until 2026-10-02: a levy host cannot answer for it).
+		custom_tooltip = {
+			text = nd_soe_dest_river_ports_tt
+			any_owned_location = {
+				count >= 3
+				has_building_with_at_least_one_level = nd_soe_niger_port
+			}
+		}
 	}
 	icon = imperial_ambitions
 	army_reinforce_efficiency = 0.1
@@ -527,7 +548,23 @@ nd_soe_dest_sahel_hegemony = {
 		owns_or_non_sovereign_subject_owns = location:kumasi
 		owns_or_non_sovereign_subject_owns = location:bono_manso
 		owns_or_non_sovereign_subject_owns = location:sokoto
-		army_size >= 75
+		# Hegemony is Hausaland held, by the empire or its subject kings, and
+		# no longer a count of men under arms.
+		custom_tooltip = {
+			text = nd_soe_dest_hausaland_share_tt
+			area:north_hausa_area = {
+				any_location_in_area = {
+					percent >= 0.5
+					root = { owns_or_non_sovereign_subject_owns = prev }
+				}
+			}
+			area:south_hausa_area = {
+				any_location_in_area = {
+					percent >= 0.5
+					root = { owns_or_non_sovereign_subject_owns = prev }
+				}
+			}
+		}
 		prestige >= 75
 	}
 	icon = feudalism_advance
@@ -568,7 +605,16 @@ nd_soe_dest_islamic_learning = {
 	potential = { has_or_had_tag = SOE has_variable = nd_soe_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		has_embraced_institution = institution:banking
-		total_development >= 2500
+		# Timbuktu stands at 10 in 1337 (development_estimate.py --explain
+		# timbuktu); stage two asks for half as much again. Under the Askias
+		# the city of Sankore grew into the largest of the Niger bend.
+		custom_tooltip = {
+			text = nd_soe_dest_timbuktu_developed_tt
+			location:timbuktu = {
+				owner ?= root
+				development >= 15
+			}
+		}
 		prestige >= 50
 	}
 	icon = organized_religion
@@ -582,7 +628,15 @@ nd_soe_dest_beacon_of_africa = {
 	potential = { has_or_had_tag = SOE has_variable = nd_soe_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		has_embraced_institution = institution:printing_press
-		total_development >= 3500
+		# Gao, the capital of the Askias, stands at 9 in 1337; the capstone
+		# asks for double.
+		custom_tooltip = {
+			text = nd_soe_dest_gao_developed_tt
+			location:gao = {
+				owner ?= root
+				development >= 18
+			}
+		}
 		gold >= 3000
 		prestige >= 75
 	}

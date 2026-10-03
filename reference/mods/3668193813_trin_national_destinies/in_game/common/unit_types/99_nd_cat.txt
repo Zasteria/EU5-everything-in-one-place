@@ -1,0 +1,230 @@
+﻿# ============================================================================
+# Catalonia (CAT): custom unit types
+# National Destinies mod
+# ============================================================================
+#
+# Vanilla already arms the Catalans of ages 1 and 2: the almogavar levies
+# (levy_a_almogavars, levy_a_late_almogavars), the Catalan crossbowmen and the
+# Catalan galley, and it reserves the sometent for the levy its Iberian DLC
+# will add (advances/region_iberia.txt, ara_catalan_crossbowmen). Nothing
+# here repeats those. This file starts where vanilla stops, in 1640: the
+# miquelets, their regimented successors, the guild militia of Barcelona, the
+# galley squadron of the Generalitat and the merchant sail of the Maresme.
+#
+# Every stat under copy_from is a DELTA added to the template and then to the
+# unit category's own value (common/levies/readme.txt: "EVERY STAT LINE IS
+# ADDITIVE, NEVER AN ASSIGNMENT"). Template totals are quoted for the reader
+# only; none of them is written in a block.
+#
+# The miquelet line is one levy per age (4, 5, 6) because the engine picks
+# the strongest levy again every age and upgrades_to does nothing on a levy.
+# The Coronela has no successor on purpose: the Nueva Planta abolished it in
+# 1714, so in age 6 the burghers fall back to vanilla's conscripts.
+
+# ----------------------------------------------------------------------------
+# Age 4: Miquelets (levy light infantry)
+# ----------------------------------------------------------------------------
+# Mountain irregulars raised by the Diputacio in 1640: an escopeta, two
+# pistols, a dagger, rope sandals and no baggage. Deadly on a hillside and in
+# an ambush, unreliable when asked to stand in the open, where they break
+# sooner than drilled foot (the morale_damage_taken line is that weakness).
+# Template a_age_4_reformation_light_infantry: max_strength 2, combat_power 1.5.
+a_nd_cat_miquelets = {
+	is_special = yes
+	category = army_light_infantry
+	copy_from = a_age_4_reformation_light_infantry
+	buildable = no
+	levy = yes
+
+	initiative = 2
+	strength_damage_done = 0.1
+	morale_damage_done = 0.09	# levy power, scripts/fix_levy_power.py
+	morale_damage_taken = 0.05
+
+	combat = {
+		mountains = 0.15
+		hills = 0.15
+		woods = 0.1
+	}
+
+	country_potential = {
+		has_or_had_tag = CAT
+	}
+
+	gfx_tags = { musket_tag light_tag }
+}
+
+# ----------------------------------------------------------------------------
+# Age 4: Galera del General (buildable galley)
+# ----------------------------------------------------------------------------
+# The Corts of 1599 voted a squadron of galleys owned and paid by the
+# Diputacio del General, not by the king, to clear the coast of Barbary
+# corsairs; it cruised from 1608 to 1623. A coast guard, not a battle fleet:
+# quick off the mark and good at running down raiders, poor at holding a
+# blockade far from home.
+# Template n_age_4_reformation_galley: speed 4.25, hull 10, cannons 16,
+# crew 0.09, blockade 0.4. The galley category adds anti_piracy_warfare 0.2.
+n_nd_cat_galera_del_general = {
+	is_special = yes
+	category = navy_galley
+	copy_from = n_age_4_reformation_galley
+	upgrades_to = n_xebec
+	buildable = yes
+
+	anti_piracy_warfare = 0.2
+	movement_speed = 0.5
+	cannons = 2
+	blockade_capacity = -0.1
+
+	country_potential = {
+		has_or_had_tag = CAT
+	}
+
+	gfx_tags = { mediterranean_galley_tag }
+}
+
+# ----------------------------------------------------------------------------
+# Age 5: Fusellers de Muntanya (buildable light infantry)
+# ----------------------------------------------------------------------------
+# The miquelets put on a regimental footing between 1705 and 1714: colonels,
+# companies, a muster roll and the same men. They shoot better than line
+# infantry and hold a slope against twice their number; in a firefight on
+# level ground their loose order costs them (strength_damage_taken).
+# Template a_age_5_absolutism_light_infantry: max_strength 2.5, combat_power 2.25.
+a_nd_cat_fusellers_de_muntanya = {
+	is_special = yes
+	category = army_light_infantry
+	copy_from = a_age_5_absolutism_light_infantry
+	upgrades_to = a_sharpshooters
+	buildable = yes
+
+	initiative = 2
+	strength_damage_done = 0.1
+	strength_damage_taken = 0.1
+
+	combat = {
+		mountains = 0.15
+		hills = 0.15
+	}
+
+	country_potential = {
+		has_or_had_tag = CAT
+	}
+
+	gfx_tags = { musket_tag light_tag }
+}
+
+# ----------------------------------------------------------------------------
+# Age 5: Fusellers Voluntaris (levy light infantry)
+# ----------------------------------------------------------------------------
+# The levy-only twin of the mountain fusiliers: the volunteer companies that
+# gathered around every regiment of 1705 to 1714 and kept fighting in the
+# hills after Barcelona fell. Successor of the miquelet levy of age 4.
+# Template a_age_5_absolutism_light_infantry: max_strength 2.5, combat_power 2.25.
+a_nd_cat_fusellers_voluntaris = {
+	is_special = yes
+	category = army_light_infantry
+	copy_from = a_age_5_absolutism_light_infantry
+	buildable = no
+	levy = yes
+
+	initiative = 2
+	strength_damage_done = 0.1
+	morale_damage_done = 0.05
+	morale_damage_taken = 0.05
+
+	combat = {
+		mountains = 0.15
+		hills = 0.15
+		woods = 0.1
+	}
+
+	country_potential = {
+		has_or_had_tag = CAT
+	}
+
+	gfx_tags = { musket_tag light_tag }
+}
+
+# ----------------------------------------------------------------------------
+# Age 5: Coronela (levy heavy infantry)
+# ----------------------------------------------------------------------------
+# The guild militia of Barcelona: six battalions of tailors, tanners,
+# notaries, stevedores and students, each company under its trade's banner
+# and all of them under the Conseller en Cap as colonel. They fight for their
+# own walls and do not break on them; they are also shopkeepers, and will not
+# march far from the shop (movement_speed).
+# Template a_age_5_absolutism_heavy_infantry: max_strength 2.5, combat_power 2.25.
+a_nd_cat_coronela = {
+	is_special = yes
+	category = army_heavy_infantry
+	copy_from = a_age_5_absolutism_heavy_infantry
+	buildable = no
+	levy = yes
+
+	morale_damage_taken = -0.19	# levy power, scripts/fix_levy_power.py
+	movement_speed = -0.25
+
+	country_potential = {
+		has_or_had_tag = CAT
+	}
+
+	gfx_tags = { musket_tag medium_tag }
+}
+
+# ----------------------------------------------------------------------------
+# Age 6: Tercos de Miquelets (levy light infantry)
+# ----------------------------------------------------------------------------
+# In 1808 the Junta Superior of Catalonia ordered forty tercios of miquelets
+# raised against the French occupation. Same hills, same trade, a better
+# musket. Successor of the levies of ages 4 and 5.
+# Template a_age_6_revolutions_light_infantry: max_strength 3, combat_power 3.
+a_nd_cat_tercos_de_miquelets = {
+	is_special = yes
+	category = army_light_infantry
+	copy_from = a_age_6_revolutions_light_infantry
+	buildable = no
+	levy = yes
+
+	initiative = 4	# levy power, scripts/fix_levy_power.py
+	strength_damage_done = 0.1
+	morale_damage_done = 0.05
+	morale_damage_taken = 0.05
+
+	combat = {
+		mountains = 0.15
+		hills = 0.15
+		woods = 0.1
+	}
+
+	country_potential = {
+		has_or_had_tag = CAT
+	}
+
+	gfx_tags = { musket_tag light_tag }
+}
+
+# ----------------------------------------------------------------------------
+# Age 6: Pollacra (buildable light ship)
+# ----------------------------------------------------------------------------
+# The polacre of the Maresme yards at Arenys, Canet and Mataro: the trader
+# that carried brandy and printed cloth to Havana after the ports were opened
+# to the American trade in 1778, and sailed under a letter of marque when
+# there was a war on. Fast and roomy, built as a merchantman and gunned like
+# one. Age 6 is the last age, so there is no upgrade target.
+# Template n_age_6_revolutions_light_ship: speed 14, hull 20, cannons 25,
+# crew 0.125, blockade 3.
+n_nd_cat_pollacra = {
+	is_special = yes
+	category = navy_light_ship
+	copy_from = n_age_6_revolutions_light_ship
+	buildable = yes
+
+	movement_speed = 1
+	hull_size = 2
+	cannons = -6
+
+	country_potential = {
+		has_or_had_tag = CAT
+	}
+}

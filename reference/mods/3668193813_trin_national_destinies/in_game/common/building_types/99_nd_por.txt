@@ -1,0 +1,633 @@
+﻿# ============================================================================
+# Portugal (POR): custom buildings
+# National Destinies mod
+# ============================================================================
+#
+# What is NOT here, because vanilla already built it:
+#   the Feitoria (por_feitoria, unlocked by por_feitorias), the Tower of
+#   Belem and the Ribeira das Naus of Lisbon (event buildings), the Casa da
+#   India (a government reform and a decision), the Estudo Geral of Coimbra
+#   and Lisbon (a law), the Jesuit college, the viceroyalty and the
+#   lieutenancy, and the generic sugar plantation of the colonies.
+# What is NOT here, because the mod's Spain already holds it for a country
+#   that goes on from Portugal (99_nd_spa.txt): the colonial mission, the
+#   house of trade, the victualling yard, the mint and the royal foundry.
+#
+# What is here is the kingdom's own ground: the king's pine forest behind the
+# dunes, the merchants' common purse, the tower that keeps the crown's
+# parchments, the cane mill of the islands, the house of mercy in every town,
+# the walled terraces of the Douro, the tile kilns, the royal factories and
+# the school that taught merchants to keep books.
+#
+# Every production method is inline and was sized with eu5-profit (output
+# floored, margin equal to the named target, cap written as a name). A
+# producer that can stand in the countryside names rural_profit_margin.
+
+# ----------------------------------------------------------------------------
+# Pinhal do Rei (age 1)
+# ----------------------------------------------------------------------------
+# The King's Pinewood: maritime pine sown behind the dunes of Leiria under
+# Afonso III to stop the sand, enlarged by Dinis, and kept as a crown forest
+# with its own wardens. It gave the yards of the Tagus their planking, masts,
+# pitch and tar for five hundred years.
+# location_potential: the location's own raw material is lumber AND it lies
+# on the coast. A royal pinewood is a standing forest, not a workshop, so it
+# goes where the trees are; and its whole worth is that timber and pitch can
+# be floated to a shipyard, so an inland forest does not qualify. In the
+# kingdom of 1337 that is Leiria and little else.
+# Settlement: countryside and small town, never a city. A forest is not a
+# street.
+# No modifier block, so the per-location level formula of vanilla's rural
+# producers is safe here.
+nd_por_pinhal_do_rei = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = rural_building_cap
+	employment_size = tiny_rural_peasant_produce_employment
+	category = basic_industry_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_por_pinhal_de_leiria
+	}
+
+	location_potential = {
+		raw_material = goods:lumber
+		is_coastal = yes
+	}
+
+	unique_production_methods = {
+		# Planking, spars and pitch made ready for the yards: the pine is
+		# felled and squared, the stumps and resin burned down for tar.
+		nd_por_pinhal_aprestos_navais = {
+			lumber = 1.0
+			tools = 0.1
+			tar = 0.3
+			produced = naval_supplies
+			output = 0.96
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# ----------------------------------------------------------------------------
+# Casa da Bolsa (age 1)
+# ----------------------------------------------------------------------------
+# The common purse of the merchants. On 10 May 1293 King Dinis confirmed the
+# fund the traders of the realm had agreed among themselves: every ship
+# loading for Flanders, England or France paid a levy by tonnage into a
+# chest, and the chest paid for lawsuits, ransoms and losses abroad. In 1380
+# Fernando I turned the same idea into the Companhia das Naus: every decked
+# ship above fifty tuns registered, two per cent of each freight paid in,
+# and a lost hull replaced out of the purse kept at Lisbon and at Porto.
+# location_potential and allow: vanilla's port authority pattern. The purse
+# insured ships, so it stands where ships load.
+# Settlement: towns and cities. The chest was kept by the merchants of a
+# chartered port, not by a fishing hamlet.
+# Upkeep: 1.2 gold a month at base prices (paper 2, naval supplies 3,
+# cloth 3), between vanilla's merchants' quarters (1.1) and port authority
+# (1.75 a level): ledgers, and the cordage and canvas the fund replaces.
+nd_por_casa_da_bolsa = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = generic_burgher_employment
+	category = trade_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = trade_post_build_time
+
+	country_potential = {
+		has_advance = nd_por_bolsa_dos_mercadores
+	}
+
+	location_potential = {
+		is_coastal = yes
+	}
+
+	allow = {
+		is_port = yes
+	}
+
+	modifier = {
+		local_trade_protection_factor = 0.05
+		local_merchant_power = 0.25
+		local_merchant_capacity = 0.25
+	}
+
+	unique_production_methods = {
+		nd_por_casa_da_bolsa_maintenance = {
+			paper = 0.3
+			naval_supplies = 0.15
+			cloth = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = town_building_construction
+}
+
+# ----------------------------------------------------------------------------
+# Torre do Tombo (age 2)
+# ----------------------------------------------------------------------------
+# The Tower of the Register: one of the towers of the castle of Lisbon, where
+# from the 1370s the crown kept the books of its chancery, its treaties, the
+# charters of every town and the proofs of what was the king's. Its keeper,
+# the guarda-mor, was also the chronicler of the realm: Fernao Lopes held
+# both offices from 1418.
+# location_potential and allow: the capital, and one in the realm. It is the
+# crown's own archive; a second one is a contradiction.
+# Settlement: town or city, whatever the capital is.
+# capital_country_modifier: a crown that can produce the parchment wins its
+# case against a baron or a bishop (crown power), and laws are drafted by men
+# who can look up the last one (legislative efficiency).
+# Upkeep: 1.65 gold a month at base prices (paper 2, books 3, beeswax 2,
+# leather 3): above vanilla's counting house (1.25), the nearest building of
+# its kind that any town may hold.
+nd_por_torre_do_tombo = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = generic_burgher_employment
+	category = government_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = government_build_time
+
+	country_potential = {
+		has_advance = nd_por_guarda_mor_da_torre
+	}
+
+	location_potential = {
+		counts_as_capital = yes
+	}
+
+	allow = {
+		is_capital = yes
+		country_has_no_other_copy_of_building = { type = nd_por_torre_do_tombo }
+	}
+
+	modifier = {
+		local_monthly_literacy = 0.05
+	}
+
+	capital_country_modifier = {
+		global_crown_estate_power = 0.05
+		legislative_efficiency = 0.05
+	}
+
+	unique_production_methods = {
+		nd_por_torre_do_tombo_maintenance = {
+			paper = 0.4
+			books = 0.2
+			beeswax = 0.05
+			leather = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = library_construction
+}
+
+# ----------------------------------------------------------------------------
+# Engenho (age 3; a second method in age 4)
+# ----------------------------------------------------------------------------
+# The cane mill: rollers turned by oxen or by a water wheel, a boiling house
+# with its row of copper kettles, a purging house where the loaves drain
+# white. Madeira had them from the 1450s and had passed Cyprus by the 1490s;
+# Sao Tome and then Pernambuco and Bahia copied Madeira.
+# Not vanilla's sugar plantation: that one is the colonial estate worked by
+# slaves and stands only overseas or in a colonial subject. The engenho is
+# the mill itself, worked by hired hands, and may stand in any cane country
+# its owner holds, the home islands included.
+# location_potential: strict form, the location's own raw material is sugar.
+# The mill makes a raw good, and cane cannot be carted far before it sours.
+# Settlement: countryside and small town. The mill stands among the canes.
+nd_por_engenho = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = rural_building_cap
+	employment_size = rural_peasant_produce_employment
+	category = rgo_building_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_por_engenhos_da_madeira
+	}
+
+	location_potential = {
+		raw_material = goods:sugar
+	}
+
+	unique_production_methods = {
+		# Milling and boiling: the upkeep of extraction. Firewood for the
+		# kettles (the reason Madeira, "the wooded isle", was stripped bare),
+		# oxen for the rollers and the carts, copper and iron work.
+		nd_por_engenho_acucar = {
+			tools = 0.24
+			lumber = 0.9
+			livestock = 0.3
+			produced = sugar
+			output = 1.008
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+		# Unlocked by nd_por_aguardente_de_cana (age 4): the still beside
+		# the boiling house, fed with skimmings and molasses. Cane brandy
+		# was the wage of the mill hands and the currency of the Angola
+		# trade.
+		nd_por_engenho_aguardente = {
+			sugar = 0.6
+			lumber = 0.2
+			pottery = 0.1
+			produced = liquor
+			output = 1.056
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = plantation_construction
+}
+
+# ----------------------------------------------------------------------------
+# Santa Casa da Misericordia (age 3)
+# ----------------------------------------------------------------------------
+# The Holy House of Mercy: a lay brotherhood under the crown's protection,
+# founded in Lisbon by Queen Leonor in 1498 and bound to the fourteen works
+# of mercy. It runs the hospital, feeds prisoners, buries the poor, raises
+# foundlings and dowers orphan girls, and is governed by brothers of the
+# first and second condition in equal number, gentlemen and craftsmen. Within
+# a generation there was one in every town of the kingdom, and then in Goa,
+# Macau, Olinda, Luanda and Nagasaki.
+# No location_potential on purpose: the Misericordia was the one institution
+# every Portuguese town had, from Braganca to Macau, whatever its size or
+# wealth. That is what set it apart from the hospital, which vanilla gates on
+# development. The cost of that reach is paid in the numbers below: each is
+# a fraction of the vanilla hospital's.
+# Settlement: towns and cities. A brotherhood needs a town's worth of
+# brothers.
+# Upkeep: 0.8 gold a month at base prices (medicaments 1, cloth 3, wheat 1,
+# wine 2, paper 2), just above the vanilla hospital (0.75): physic, shrouds
+# and shirts, the prisoners' bread and wine, and the brotherhood's books.
+nd_por_misericordia = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = clergy_medical_employment
+	category = infrastructure_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = generic_town_build_time
+
+	country_potential = {
+		has_advance = nd_por_irmandade_da_misericordia
+	}
+
+	modifier = {
+		local_disease_resistance = 0.05
+		local_life_expectancy = 2
+		local_unrest = -0.02
+	}
+
+	unique_production_methods = {
+		nd_por_misericordia_maintenance = {
+			medicaments = 0.1
+			cloth = 0.1
+			wheat = 0.2
+			wine = 0.05
+			paper = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = town_building_construction
+}
+
+# ----------------------------------------------------------------------------
+# Quinta (age 5)
+# ----------------------------------------------------------------------------
+# The wine estate of the upper Douro: a house, a press and a hillside cut
+# into socalcos, narrow terraces held up by dry walls of schist, each one
+# carried up the slope on men's backs. The wine goes down the river by rabelo
+# boat to the lodges at Gaia.
+# location_potential: strict form, the location's own raw material is wine,
+# AND the ground is hill or mountain. The estate makes a raw good; and the
+# terrace is the point of it, so a vineyard on flat land is just vanilla's
+# vineyard. In the kingdom that is Lamego and the Douro valley.
+# Settlement: countryside only.
+nd_por_quinta = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = rural_building_cap
+	employment_size = rural_peasant_produce_employment
+	category = rgo_building_category
+	rural_settlement = yes
+	town = no
+	city = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_por_socalcos_do_douro
+	}
+
+	location_potential = {
+		raw_material = goods:wine
+		OR = {
+			topography = hills
+			topography = mountains
+		}
+	}
+
+	unique_production_methods = {
+		# The upkeep of a terraced vineyard: mattocks and pruning knives,
+		# stakes and cask staves, and the stone to mend the walls after
+		# every winter.
+		nd_por_quinta_vinha_em_socalcos = {
+			tools = 0.18
+			lumber = 0.5
+			masonry = 0.35
+			produced = wine
+			output = 0.984
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = farm_constructions
+}
+
+# ----------------------------------------------------------------------------
+# Olaria de Azulejo (age 5)
+# ----------------------------------------------------------------------------
+# The tile kiln. Tin-glazed earthenware painted in cobalt blue on white, in
+# panels that cover a whole church wall or a palace stair: saints, hunts,
+# sea fights, the fables of La Fontaine. The potters of Lisbon and Coimbra
+# learned the glaze from Seville and Antwerp and the blue from Delft and
+# China, and by 1700 were shipping crates of tiles to Bahia and Goa.
+# location_potential: clay must reach the local market. Fine ware is a made
+# good, so nothing is conjured; the gate keeps the kiln where a potter could
+# dig or buy his clay.
+# Settlement: towns and cities. The kilns worked to order for churches,
+# convents and town houses.
+# Tin is the white glaze, dyes the cobalt, lumber the kiln's firing.
+nd_por_olaria_de_azulejo = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	employment_size = guild_employment
+	category = consumer_goods_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_por_azulejaria
+	}
+
+	location_potential = {
+		is_produced_in_location_market = goods:clay
+	}
+
+	unique_production_methods = {
+		nd_por_olaria_faianca_e_azulejo = {
+			clay = 2.0
+			tin = 0.25
+			dyes = 0.1
+			lumber = 0.3
+			produced = porcelain
+			output = 0.94
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# ----------------------------------------------------------------------------
+# Real Fabrica (age 6)
+# ----------------------------------------------------------------------------
+# A royal factory: a works set up or taken over by the crown, housed in one
+# building, given a monopoly, a tax exemption and foreign masters, and told
+# to replace an import. The silk works of the Rato in Lisbon (1734), the
+# woollen works of Covilha and Portalegre (1764, 1772) and the glass works of
+# Marinha Grande, which William Stephens took over in 1769 with a royal loan
+# and the right to cut his fuel in the King's Pinewood.
+# location_potential: wool, silk or lumber must reach the local market. The
+# crown planted each works beside its material or its fuel: wool in the
+# Serra da Estrela, firewood at Marinha Grande, raw silk landed at Lisbon.
+# A town with none of the three has nothing for a royal factory to work.
+# Settlement: towns and cities.
+# Manufactory tier, as vanilla's own manufactories: no modifier block, the
+# level formula and the 30 per cent margin of that tier.
+nd_por_real_fabrica = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = manufactory_max_level
+	employment_size = manufactory_employment
+	category = consumer_goods_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = manufactory_build_time
+
+	country_potential = {
+		has_advance = nd_por_reais_fabricas
+	}
+
+	location_potential = {
+		OR = {
+			is_produced_in_location_market = goods:wool
+			is_produced_in_location_market = goods:silk
+			is_produced_in_location_market = goods:lumber
+		}
+	}
+
+	unique_production_methods = {
+		# Covilha and Portalegre: army cloth and baize from the flocks of the
+		# Serra da Estrela.
+		nd_por_real_fabrica_de_panos = {
+			wool = 1.5
+			dyes = 0.1
+			tools = 0.05
+			produced = cloth
+			output = 1.8633
+			category = manufactory_input
+			debug_max_profit = manufactory_profit_margin
+		}
+		# Marinha Grande: window glass and crystal, fired with pine from the
+		# royal forest.
+		nd_por_real_fabrica_de_vidros = {
+			sand = 1.5
+			lumber = 0.8
+			tools = 0.05
+			produced = glass
+			output = 0.91
+			category = manufactory_input
+			debug_max_profit = manufactory_profit_margin
+		}
+		# The Rato: damasks and velvets for the court and for Brazil.
+		nd_por_real_fabrica_das_sedas = {
+			silk = 0.9
+			dyes = 0.1
+			tools = 0.05
+			produced = fine_cloth
+			output = 0.8991
+			category = manufactory_input
+			debug_max_profit = manufactory_profit_margin
+		}
+	}
+	construction_demand = manufactory_construction
+}
+
+# ----------------------------------------------------------------------------
+# Aula do Comercio (age 6)
+# ----------------------------------------------------------------------------
+# The School of Commerce, opened in Lisbon in 1759 by the Junta do Comercio:
+# a three-year course in arithmetic, weights and measures of the trading
+# nations, exchange, insurance and bookkeeping by double entry, taught at the
+# state's expense to the sons of merchants. Its graduates were preferred for
+# the customs, the treasury and the chartered companies.
+# location_potential: a market center. The school existed to staff counting
+# houses, and a town that is not the seat of a market has none to staff.
+# Settlement: cities only. Lisbon had it from 1759 and Porto from 1803;
+# nothing smaller ever did.
+# Upkeep: 1.35 gold a month at base prices (paper 2, books 3, glass 3),
+# above vanilla's library (1.1) and below its university (2.6).
+nd_por_aula_do_comercio = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = cultural_employment
+	category = cultural_category
+	rural_settlement = no
+	town = no
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = cultural_building_time
+
+	country_potential = {
+		has_advance = nd_por_junta_do_comercio
+	}
+
+	location_potential = {
+		is_market_center = yes
+	}
+
+	modifier = {
+		local_burghers_max_literacy = 2.5
+		local_monthly_literacy = 0.05
+		local_trades_per_burgher = 0.25
+	}
+
+	unique_production_methods = {
+		nd_por_aula_do_comercio_maintenance = {
+			paper = 0.3
+			books = 0.2
+			glass = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = school_construction
+}
+
+# ===== DESTINY BUILDINGS =====
+
+# ----------------------------------------------------------------------------
+# Paco da Ribeira (destiny, path B capstone)
+# ----------------------------------------------------------------------------
+# The Palace on the Riverbank. From 1498 Manuel I left the old castle on the
+# hill of Lisbon and built his house on the quay itself, beside the
+# shipyard, with the Casa da India and its pepper stores inside its walls.
+# The court had moved in within a few years. A king who could watch the
+# India fleet unload from his own windows was a new kind of king, and
+# Francis I of France called him the grocer king for it. The earthquake of
+# 1 November 1755 destroyed it and it was never rebuilt.
+# Not vanilla's royal court (cabinet and crown power, any monarchy's
+# capital), not its Ribeira das Naus (the shipyard next door, an event
+# building), not the Casa da India (a reform and a decision) and not the
+# heritage tree's Torre do Tombo (the archive in the castle the king left).
+# location_potential and allow: the capital, on the coast, one in the realm.
+# The whole point of the palace is that it stands on the waterfront; a
+# capital inland has no riverbank to move the court down to.
+# Settlement: town or city, whatever the capital is; never the countryside.
+# modifier: merchants gather where the king lodges over the warehouse.
+# Half of vanilla's merchants' guild (1 and 1), in one location.
+# capital_country_modifier: prestige as vanilla's royal garden (0.05) and
+# the selling margin of vanilla's Porto Pisano (the tiny named step).
+# Upkeep: 2.2 gold a month at base prices, a court's bill (paper 2, fine
+# cloth 6, furniture 3, glass 3).
+nd_por_dest_paco_da_ribeira = {
+	is_special = yes
+	is_foreign = no
+	pop_type = nobles
+	max_levels = 1
+	employment_size = normal_noble_employment
+	category = government_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = large_capital_build_time
+
+	country_potential = {
+		has_advance = nd_por_dest_estado_da_india
+	}
+
+	location_potential = {
+		counts_as_capital = yes
+		is_coastal = yes
+	}
+
+	allow = {
+		is_capital = yes
+		country_has_no_other_copy_of_building = { type = nd_por_dest_paco_da_ribeira }
+	}
+
+	modifier = {
+		local_merchant_power = 0.5
+		local_merchant_capacity = 0.5
+	}
+
+	capital_country_modifier = {
+		monthly_prestige = 0.05
+		selling_efficiency = tiny_selling_efficiency_bonus
+	}
+
+	unique_production_methods = {
+		nd_por_dest_paco_da_ribeira_maintenance = {
+			paper = 0.2
+			fine_cloth = 0.2
+			furniture = 0.1
+			glass = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = prestige_building_construction
+}

@@ -77,9 +77,20 @@ DNM_f = {
 	# Protestant Danubian Monarchy is now a legitimate outcome; the
 	# confessional content stays where it belongs, gated per feature (the
 	# Reformationskommission bureaucracy still requires Catholic).
+	# The ruler test is written with `?=` on both links (2026-10-01). This
+	# block is read for every country, and a country with no ruler, or a
+	# ruler of no dynasty, made the plain form log "ruler returned an
+	# invalid object" and "dynasty returned an invalid object" (error.log,
+	# 12 lines per load). Vanilla's shape for the same test in a block read
+	# by every country: government_reforms/steppe_horde.txt:9-12, and for
+	# this dynasty scripted_triggers/international_organization_triggers.txt
+	# :863-866.
 	potential = {
 		OR = {
-			ruler = { dynasty = dynasty:habsburg_dynasty }
+			ruler ?= {
+				has_dynasty = yes
+				dynasty ?= dynasty:habsburg_dynasty
+			}
 			has_or_had_tag = HAB
 			has_or_had_tag = HUN
 			has_or_had_tag = BOH

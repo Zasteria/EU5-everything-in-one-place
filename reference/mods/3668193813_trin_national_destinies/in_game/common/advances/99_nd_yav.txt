@@ -56,9 +56,9 @@ nd_yav_indus_trade = {
 	requires = guilds
 	icon = guilds
 	unlock_building = nd_yav_agora_bazaar
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.03
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -151,10 +151,9 @@ nd_yav_syncretic_markets = {
 	potential = { has_or_had_tag = YAV }
 	requires = merchant_power_from_maritime_discovery_advance
 	icon = merchant_power_from_maritime_discovery_advance
-	unlock_production_method = nd_yav_market_operations
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.03
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -281,7 +280,7 @@ nd_yav_grand_vihara_network = {
 	potential = { has_or_had_tag = YAV }
 	requires = maritime_advance_age_5
 	icon = maritime_advance_age_5
-	unlock_production_method = nd_yav_vihara_scriptorium
+	unlock_building = nd_yav_bark_scriptorium
 	global_institution_growth_modifier = 0.15
 }
 
@@ -304,11 +303,15 @@ nd_yav_modern_phalanx = {
 	potential = { has_or_had_tag = YAV }
 	requires = napoleonic_warfare
 	icon = napoleonic_warfare
+	unlock_unit = a_nd_yav_line_phalangites
 	army_light_infantry_power = 0.1
 
 	army_heavy_infantry_power = 0.1
 
 	discipline = 0.05
+	ai_weight = {
+		add = 50
+	}
 }
 
 # Industrial crossroads: leveraging geographic position for modern trade
@@ -317,7 +320,7 @@ nd_yav_industrial_crossroads = {
 	potential = { has_or_had_tag = YAV }
 	requires = industrialization_advance
 	icon = industrialization_advance
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 	global_construction_speed = 0.1
 }
 
@@ -327,7 +330,7 @@ nd_yav_yavana_legacy = {
 	potential = { has_or_had_tag = YAV }
 	requires = crown_power_advance_revolutions
 	icon = crown_power_advance_revolutions
-	unlock_production_method = nd_yav_philosophical_academy
+	unlock_production_method = nd_yav_philosophical_press
 	monthly_prestige = 0.1
 	cultural_influence_modifier = 0.15
 }
@@ -361,7 +364,10 @@ nd_yav_dest_bactrian_march = {
 		}
 		owns_or_non_sovereign_subject_owns = location:balkh
 		owns_or_non_sovereign_subject_owns = location:herat
-		army_size >= 30
+		# Termez, where a Greek fortress kept the crossing of the Oxus. (The
+		# army size objectives of this path went 2026-10-02: the phalanx is a
+		# levy, and no file says whether raised levies count.)
+		owns_or_non_sovereign_subject_owns = location:termez
 	}
 	icon = feudalism_advance
 	siege_ability = 0.1
@@ -375,7 +381,8 @@ nd_yav_dest_sarissa_empire = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:samarkand
 		owns_or_non_sovereign_subject_owns = location:delhi
-		army_size >= 50
+		# Khujand, Alexandria Eschate: the farthest of Alexander's cities.
+		owns_or_non_sovereign_subject_owns = location:khujand
 		prestige >= 50
 	}
 	icon = imperial_ambitions
@@ -390,7 +397,8 @@ nd_yav_dest_alexanders_dream = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:varanasi
 		owns_or_non_sovereign_subject_owns = location:patna
-		army_size >= 75
+		# Ayodhya, the Saketa that Patanjali says the Yavana besieged.
+		owns_or_non_sovereign_subject_owns = location:ayodhya
 		gold >= 3000
 		prestige >= 75
 	}
@@ -414,10 +422,18 @@ nd_yav_dest_bamiyan_light = {
 		}
 		owns_or_non_sovereign_subject_owns = location:bamyan
 		gold >= 1000
-		has_embraced_institution = institution:meritocracy
+		# Stands where the institution meritocracy stood until 2026-10-02:
+		# that one is born in East Asia and may never reach the Indus.
+		custom_tooltip = {
+			text = nd_yav_dest_three_viharas_tt
+			any_owned_location = {
+				count >= 3
+				has_building = building_type:nd_yav_gandhara_vihara
+			}
+		}
 	}
 	icon = organized_religion
-	global_monthly_development = 0.002
+	global_monthly_development = 0.001
 	improve_relation_impact = 0.1
 }
 
@@ -434,7 +450,13 @@ nd_yav_dest_silk_dharma = {
 				}
 			}
 		}
-		total_development >= 3500
+		custom_tooltip = {
+			text = nd_yav_dest_taxila_developed_tt
+			location:rawalpindi = {
+				owner ?= root
+				development >= 45
+			}
+		}
 		gold >= 2000
 	}
 	icon = merchants_and_trade
@@ -447,15 +469,20 @@ nd_yav_dest_universal_light = {
 	requires = nd_yav_dest_silk_dharma
 	potential = { has_or_had_tag = YAV has_variable = nd_yav_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		owns_or_non_sovereign_subject_owns = location:mathura
+		custom_tooltip = {
+			text = nd_yav_dest_mathura_developed_tt
+			location:mathura = {
+				owner ?= root
+				development >= 64
+			}
+		}
 		owns_or_non_sovereign_subject_owns = location:ujjain
 		prestige >= 75
-		total_development >= 5000
 		has_embraced_institution = institution:banking
 	}
 	icon = enlightened_court
 	unlock_building = nd_yav_mahasanghika_university
 	global_raw_material_output = 0.05
 	global_crown_estate_power = 0.1
-	global_devastation_recovery = 0.005
+	global_devastation_recovery = 0.0025
 }

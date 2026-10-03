@@ -13,6 +13,19 @@ nd_hab_privilegium_maius = {
 	diplomatic_reputation = 1
 }
 
+# The ducal salt monopoly of the Kammergut: Hallstatt (reorganised by Queen
+# Elisabeth in 1311, nhm.at/hallstatt/en/site/1311_until_today), Aussee, and
+# the later salt office at Gmunden.
+nd_hab_kammergut = {
+	age = age_1_traditions
+	potential = { has_or_had_tag = HAB }
+	requires = guilds
+	icon = salt_monopoly
+	unlock_building = nd_hab_pfannhaus
+	# Vanilla's salt advances grant 0.1 or 0.2 (markets_for_salt, salt_monopoly).
+	global_salt_output_modifier = 0.1
+}
+
 # === Age 2: Renaissance ===
 # Vanilla has 3 (mountaineers, marriage policy, noble_society_tyrol)
 # Gap: Hofkammer fiscal institution, early mining wealth
@@ -26,12 +39,17 @@ nd_hab_hofkammer_tradition = {
 	tax_income_efficiency = 0.03
 }
 
+# The mine at Schwaz is vanilla's (events flavor_hab.1200 and 1201 turn the
+# location to silver and place schwaz_mine). This advance is what stood
+# beside it: the smelting works where the silver was parted from the copper
+# ore. The one at Brixlegg is recorded from 1463 (founded under Ludwig the
+# Rich of Bavaria-Landshut) and came to the Habsburgs with Rattenberg in 1504.
 nd_hab_schwaz_silver = {
 	age = age_2_renaissance
 	potential = { has_or_had_tag = HAB }
 	requires = merchants_and_trade
 	icon = merchants_and_trade
-	unlock_production_method = nd_hab_mining_operations
+	unlock_building = nd_hab_schmelzhuette
 	global_silver_output_modifier = 0.15
 }
 
@@ -44,8 +62,12 @@ nd_hab_landsknechte = {
 	potential = { has_or_had_tag = HAB }
 	requires = pike_square
 	icon = pike_square
-	ai_weight = {
-	}
+	# The unit itself is vanilla's (culture_group_german.txt: `landsknechte`
+	# unlocks a_landsknechte and pays the owner when foreigners hire). This
+	# advance is the Habsburg side of it: companies raised by imperial patent
+	# in the hereditary lands are larger. It shipped with no payload from the
+	# 2026-02-25 de-duplication until a Workshop report (2026-08-10).
+	global_mercenaries_modifier = 0.25
 }
 
 nd_hab_festungsbau = {
@@ -167,17 +189,29 @@ nd_hab_dest_burgundia = {
 	age = age_1_traditions
 	requires = nd_hab_dest_corona
 	potential = { has_or_had_tag = HAB has_variable = nd_hab_formed has_game_rule = nd_destinies_enabled }
+	# Antwerp is the Habsburg Netherlands' own boom: about 40,000 people when
+	# Philip the Fair inherited, about 100,000 under Charles V, the staple of
+	# Portuguese spice and English cloth. Its 1337 value is 32.8
+	# (scripts/development_estimate.py --explain antwerp); stage two asks
+	# for half as much again. Ghent, where Charles V was born in 1500, stands
+	# for the cities of Flanders the stage's text names.
 	allow = {
-		owns = location:antwerp
+		custom_tooltip = {
+			text = nd_hab_dest_antwerp_developed_tt
+			location:antwerp = {
+				owner ?= root
+				development >= 49
+			}
+		}
+		owns = location:ghent
 		gold >= 2000
-		total_development >= 1000
 	}
 	icon = merchants_and_trade
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.03
+	trade_sea_efficiency = 0.1
 
-	global_monthly_prosperity = 0.002
+	global_monthly_prosperity = 0.001
 }
 
 nd_hab_dest_monarchia = {
@@ -238,9 +272,20 @@ nd_hab_dest_bollwerk = {
 	age = age_1_traditions
 	requires = nd_hab_dest_feldzug
 	potential = { has_or_had_tag = HAB has_variable = nd_hab_formed has_game_rule = nd_destinies_enabled }
+	# Karlovac is the frontier's own town: Archduke Charles of Inner Austria
+	# had it built from nothing in 1579 as a six-pointed star fortress and
+	# the seat of the Croatian generalate. Its 1337 value is 14
+	# (scripts/development_estimate.py --explain karlovac); stage three asks
+	# for twice that.
 	allow = {
 		owns = location:zagreb
-		total_development >= 1000
+		custom_tooltip = {
+			text = nd_hab_dest_karlovac_developed_tt
+			location:karlovac = {
+				owner ?= root
+				development >= 28
+			}
+		}
 		army_size >= 75
 		prestige >= 75
 	}

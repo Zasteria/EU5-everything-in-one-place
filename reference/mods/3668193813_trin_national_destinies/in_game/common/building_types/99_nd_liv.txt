@@ -70,23 +70,113 @@ nd_liv_kontor = {
 			cloth = 0.1
 			category = building_maintenance
 		}
-		nd_liv_timber_trade = {
-			lumber = 0.2
-			tar = 0.1
-			category = building_maintenance
-		}
-		nd_liv_flax_processing = {
-			cloth = 0.15
-			tools = 0.05
-			category = building_maintenance
-		}
-		nd_liv_fur_processing = {
-			fur = 0.2
-			salt = 0.05
-			category = building_maintenance
-		}
 	}
 	construction_demand = kontor_construction
+}
+
+# Packhaus: a merchant's packing house on the quay
+# The goods of the hinterland came down the Daugava as they were cut and
+# pulled; they were made fit for the sea in the port: masts dressed and
+# sorted by the sworn graders, pitch barrelled, flax heckled and spun, furs
+# dressed and baled.
+# location_potential: a port. The work is done where the sea ships load,
+# so the house stands in Riga, Reval, Pernau or Windau and not inland.
+# Settlement: town and above. A merchant's house, never a village works.
+nd_liv_packhaus = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	employment_size = guild_employment
+	category = basic_industry_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_liv_baltic_timber
+	}
+
+	location_potential = {
+		is_port = yes
+	}
+
+	unique_production_methods = {
+		# Masts, spars and pitch. Vanilla's coastal boatyard makes 0.5 from
+		# lumber 0.5 and tar 0.25.
+		nd_liv_timber_trade = {
+			lumber = 0.6
+			tar = 0.2
+			produced = naval_supplies
+			output = 0.52
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+		# Unlocked by nd_liv_flax_industry (age 2). Vanilla's cloth guild
+		# makes 0.8 from fiber_crops 1.
+		nd_liv_flax_processing = {
+			fiber_crops = 0.9
+			tools = 0.05
+			produced = cloth
+			output = 0.78
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+		# Unlocked by nd_liv_fur_trade (age 3). Vanilla's fur trim makes
+		# 0.2 from fur 0.5; the salt cures the pelts for the voyage.
+		nd_liv_fur_processing = {
+			fur = 0.5
+			salt = 0.05
+			produced = fine_cloth
+			output = 0.24
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# Forest apiary: tree hive beekeeping
+# Hives were cut into living pines and oaks, each tree under its keeper's
+# mark; the wax was the peasant's due and the merchant's export.
+# location_potential: land whose own good is beeswax. The building makes a
+# raw good, so it stands only where the bees are; its inputs are the upkeep
+# of the hives (tools, timber for the hive logs), not another raw good.
+# Settlement: countryside only. The hives are in the forest.
+nd_liv_forest_apiary = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = rural_building_cap
+	employment_size = rural_peasant_produce_employment
+	category = rgo_building_category
+	rural_settlement = yes
+	town = no
+	city = no
+	megalopolis = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_liv_wax_trade
+	}
+
+	location_potential = {
+		raw_material = goods:beeswax
+	}
+
+	unique_production_methods = {
+		nd_liv_wax_processing = {
+			tools = 0.1
+			lumber = 0.2
+			produced = beeswax
+			output = 0.36
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = basic_construction_needs
 }
 
 # Domschule: Cathedral school, center of German learning in the Baltic
@@ -145,8 +235,10 @@ nd_liv_windau_werft = {
 		has_advance = nd_liv_courland_navy
 	}
 
+	# A yard that builds ships needs a harbor: vanilla gates its whole dock
+	# ladder on is_port (building_types/port_buildings.txt).
 	location_potential = {
-		is_coastal = yes
+		is_port = yes
 	}
 
 	modifier = {
@@ -161,12 +253,6 @@ nd_liv_windau_werft = {
 			lumber = 0.3
 			naval_supplies = 0.15
 			tar = 0.1
-			category = building_maintenance
-		}
-		nd_liv_colonial_trade = {
-			naval_supplies = 0.15
-			cloth = 0.1
-			paper = 0.05
 			category = building_maintenance
 		}
 	}
@@ -193,7 +279,7 @@ nd_liv_bernsteinkammer = {
 	}
 
 	modifier = {
-		local_production_efficiency = 0.05
+		local_production_efficiency = 0.025
 		local_burghers_estate_power = 0.5
 		local_monthly_prosperity = 0.001
 	}
@@ -207,10 +293,17 @@ nd_liv_bernsteinkammer = {
 			category = guild_input
 			debug_max_profit = guild_profit_margin
 		}
-		nd_liv_wax_processing = {
-			beeswax = 0.2
+		# Unlocked by nd_liv_amber_route (age 5): amber turned on the lathe
+		# and set in silver, for caskets, cups and altar pieces. A dearer
+		# bill than plain carving and more jewelry for it.
+		nd_liv_amber_turning = {
+			amber = 0.15
 			tools = 0.05
-			category = building_maintenance
+			silver = 0.02
+			produced = jewelry
+			output = 0.2088
+			category = guild_input
+			debug_max_profit = guild_profit_margin
 		}
 	}
 	construction_demand = workshop_construction
@@ -308,7 +401,7 @@ nd_liv_dampfsagewerk = {
 
 	modifier = {
 		local_lumber_output_modifier = 0.2
-		local_production_efficiency = 0.05
+		local_production_efficiency = 0.025
 		local_pop_promotion_speed = 0.002
 	}
 
@@ -330,6 +423,56 @@ nd_liv_dampfsagewerk = {
 		}
 	}
 	construction_demand = mill_construction
+}
+
+# Eisenhammer: ducal water-powered ironworks of Courland
+# Rural and town tiers only, on purpose: Duke Jacob's hammer mills stood on
+# country streams (Baldone, Eckau, Angern), not in the cities. The river gate
+# is the water wheel that drives the hammer and the bellows.
+nd_liv_eisenhammer = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = 1
+	employment_size = manufactory_employment
+	category = weapons_industry_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	expensive = yes
+	build_time = manufactory_build_time
+
+	country_potential = {
+		has_advance = nd_liv_kettler_manufactures
+	}
+
+	location_potential = {
+		has_river = yes
+	}
+
+	unique_production_methods = {
+		nd_liv_musket_forging = {
+			iron = 0.3
+			lumber = 0.2
+			tools = 0.05
+			produced = firearms
+			output = 0.54
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+
+		nd_liv_cannon_founding = {
+			iron = 0.4
+			lumber = 0.2
+			tools = 0.05
+			produced = cannons
+			output = 0.495
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = manufactory_construction
 }
 
 # ===== DESTINY BUILDINGS =====

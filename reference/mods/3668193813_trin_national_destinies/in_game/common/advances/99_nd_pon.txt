@@ -84,8 +84,8 @@ nd_pon_pontic_emporia = {
 	potential = { has_or_had_tag = PON }
 	requires = guilds
 	unlock_building = nd_pon_pontic_funduq
-	trade_land_efficiency = 0.025
-	burghers_estate_target_satisfaction = 0.1
+	trade_land_efficiency = 0.1
+	burghers_estate_target_satisfaction = 0.05
 }
 
 # ===== AGE 2: RENAISSANCE =====
@@ -143,7 +143,10 @@ nd_pon_pontic_vernacular = {
 	icon = patron_of_art
 	potential = { has_or_had_tag = PON }
 	requires = patron_of_art
-	cultural_tradition_modifier = 0.15
+	# A written vernacular gives the court its own chroniclers (Panaretos
+	# wrote the chronicle of the Grand Komnenoi in it). Cultural tradition
+	# is vanilla's tre_princes_of_the_lazes in this age.
+	num_possible_artists = 1
 	global_monthly_literacy = 0.01
 }
 
@@ -182,7 +185,7 @@ nd_pon_pontic_triangle = {
 	icon = printing_press_advance
 	potential = { has_or_had_tag = PON }
 	requires = printing_press_advance
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 	global_merchant_capacity_modifier = 0.1
 }
 
@@ -194,10 +197,13 @@ nd_pon_autocephaly = {
 	icon = printing_press_advance
 	potential = { has_or_had_tag = PON }
 	requires = printing_press_advance
-	tolerance_own = 1
-	monthly_devotion = 0.1
-	monthly_legitimacy = 0.1
-	monthly_republican_tradition = 0.1
+	# A church whose head sits in Trebizond is consecrated by the emperor's
+	# leave: the clergy lose weight against the crown (vanilla writes the
+	# same -0.1 in religion_shinto.txt). Tolerance and the ruler's authority
+	# are vanilla's tre_trapezuntine_monasteries and tre_byzantine_birthright
+	# in this age. The game's own discount on founding an autocephalous
+	# patriarchate pays only eastern churches, so it is not used here.
+	global_clergy_estate_power = -0.1
 	global_pop_conversion_speed_modifier = 0.1
 }
 
@@ -274,8 +280,8 @@ nd_pon_pontic_factors = {
 	potential = { has_or_had_tag = PON }
 	requires = global_trade_advance
 	unlock_building = nd_pon_pontic_bank_house
-	global_merchant_power = 0.1
-	trade_sea_efficiency = 0.025
+	# Merchant power is vanilla's tre_terminus_of_the_silk_road in this age.
+	trade_sea_efficiency = 0.1
 }
 
 # ===== AGE 5: ABSOLUTISM =====
@@ -330,7 +336,7 @@ nd_pon_pontic_roads = {
 	potential = { has_or_had_tag = PON }
 	requires = construction_speed_absolutism
 	global_construction_speed = 0.1
-	global_monthly_development = 0.002
+	global_monthly_development = 0.001
 }
 
 # Pontic naval upgrade: unlocks the n_galiot regional ship that
@@ -370,7 +376,7 @@ nd_pon_pontic_industry = {
 	potential = { has_or_had_tag = PON }
 	requires = industrialization_advance
 	unlock_building = nd_pon_argyria_refining_works
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 	global_silver_output_modifier = 0.1
 }
 
@@ -397,8 +403,12 @@ nd_pon_pontic_mining_revival = {
 	icon = industrialization_advance
 	potential = { has_or_had_tag = PON }
 	requires = industrialization_advance
-	global_raw_material_output = 0.05
-	global_production_efficiency = 0.05
+	# The metals the text names, of which Pontus holds three locations
+	# each. Raw output across the board is vanilla's
+	# tre_trapezuntine_endurance in this age.
+	global_iron_output_modifier = 0.1
+	global_copper_output_modifier = 0.1
+	global_production_efficiency = 0.025
 }
 
 # ==========================================================================
@@ -453,12 +463,27 @@ nd_pon_dest_aegean_strategos = {
 		owns_or_non_sovereign_subject_owns = location:smyrna
 		owns_or_non_sovereign_subject_owns = location:chios
 		owns_or_non_sovereign_subject_owns = location:edirne
-		army_size >= 50
-		total_development >= 1000
+		# A strategos holds a frontier with its own horse: the Trapezitai of
+		# the country's age 2 advance. An army size stood here; Pontus fights
+		# with levies, and nobody knows whether a raised levy counts for it
+		# (owner's ruling 2026-10-02).
+		has_advance = nd_pon_trapezitai_levy
+		# Smyrna, the Aegean port the Laskarid emperors rebuilt as their
+		# naval base: 29 in 1337, asked to grow by half
+		# (scripts/development_estimate.py).
+		custom_tooltip = {
+			text = nd_pon_dest_smyrna_developed_tt
+			location:smyrna = {
+				owner ?= root
+				development >= 44
+			}
+		}
 	}
 	icon = imperial_ambitions
 	army_light_cavalry_power = 0.1
-	monthly_army_tradition = 0.05
+	# A strategos keeps a theme's army in the field at the theme's cost.
+	# Army tradition is vanilla's tre_komnenos_legacy in this age.
+	army_maintenance_efficiency = 0.1
 }
 
 # Stage 3: New Rome restored. The Komnenian basileus returns from
@@ -473,7 +498,17 @@ nd_pon_dest_nea_rhomaion = {
 		owns_or_non_sovereign_subject_owns = location:constantinople
 		owns_or_non_sovereign_subject_owns = location:thessaloniki
 		owns_or_non_sovereign_subject_owns = location:athens
-		army_size >= 75
+		# Constantinople stood half empty inside its walls in the last Roman
+		# centuries; a restored New Rome is a city filled again. 31 in 1337
+		# (scripts/development_estimate.py --explain constantinople), doubled
+		# for a capstone. An army size stood here (owner's ruling 2026-10-02).
+		custom_tooltip = {
+			text = nd_pon_dest_constantinople_developed_tt
+			location:constantinople = {
+				owner ?= root
+				development >= 62
+			}
+		}
 		prestige >= 75
 		gold >= 3000
 	}
@@ -547,8 +582,19 @@ nd_pon_dest_council_of_faithful = {
 		owns_or_non_sovereign_subject_owns = location:sukhumi
 		owns_or_non_sovereign_subject_owns = location:batumi
 		owns_or_non_sovereign_subject_owns = location:poti_caucasus
-		has_embraced_institution = institution:global_trade
-		total_development >= 1000
+		# Trebizond gave the Renaissance Bessarion and George of Trebizond;
+		# a council of the learned Greek diaspora is theirs. Global trade
+		# stood here and held this path three ages behind the other.
+		has_embraced_institution = institution:renaissance
+		# Trebizond, the seat of the council and the end of the Tabriz
+		# road: 22.2 in 1337, asked to double.
+		custom_tooltip = {
+			text = nd_pon_dest_trebizond_developed_tt
+			location:trebizond = {
+				owner ?= root
+				development >= 44
+			}
+		}
 		gold >= 3000
 	}
 	icon = global_trade_advance

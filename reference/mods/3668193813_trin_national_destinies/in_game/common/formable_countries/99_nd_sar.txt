@@ -1,4 +1,9 @@
-﻿REPLACE:SAR_f = {
+﻿# One deliberate difference from vanilla: the fraction is 0.9, not 0.85
+# (2026-05-07, tightened with the other small level 2 formables so a single
+# island is not formed with a seventh of it still foreign). Everything else
+# follows vanilla, which since 1.3.11 reserves this formable for Sardinian
+# culture; the Savoyard road is SAR_piedmont_f.
+REPLACE:SAR_f = {
 
 	level = 2
 	required_locations_fraction = 0.9
@@ -7,7 +12,7 @@
 	capital_required = no
 
 	potential = {
-		culture = { has_culture_group = culture_group:italian_group }
+		culture = culture:sardinian
 	}
 
 	allow = {
@@ -17,7 +22,7 @@
 	flag = SAR
 	adjective = SAR_ADJ
 	tag = SAR
-	color = map_sardinia
+	color = map_sardinian
 
 	areas = {
 		sardinia_area
@@ -31,7 +36,12 @@
 			set_variable = nd_formed
 			set_variable = nd_sar_formed
 		}
-		set_country_rank_effect = { rank = country_rank:rank_kingdom }
+		if = {
+			# Vanilla tests Reich membership alone; this trigger also honours the
+			# rank game rules (scripted_triggers/nd_game_rule_triggers.txt).
+			limit = { nd_can_take_kingdom_rank = yes }
+			set_country_rank_effect = { rank = country_rank:rank_kingdom }
+		}
 		trigger_event_non_silently = nd_sar.1
 		add_stability = stability_mild_bonus
 	}

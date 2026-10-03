@@ -31,19 +31,27 @@ nd_kbu_natron_works = {
 	}
 
 	unique_production_methods = {
+		# Output at the rural margin (0.2 x 1.2 / 4). It stood at 0.15 with the
+		# cap switched off, three times what the clay pays for.
 		nd_kbu_natron_processing_pm = {
 			clay = 0.4
 			produced = salt
-			output = 0.15
+			output = 0.06
 			category = guild_input
-			debug_max_profit = -1
+			debug_max_profit = rural_profit_margin
 		}
 
+		# Unlocked by nd_kbu_natron_monopoly (age 5). The brine of the pans
+		# is run into moulds cut from palm trunks and dried into cones and
+		# cakes that a camel can carry. Vanilla's salt collector makes salt
+		# from clay as well; the building's gate on salt covers this method.
 		nd_kbu_natron_export_pm = {
-			salt = 0.15
-			pottery = 0.1
-			tools = 0.1
-			category = building_maintenance
+			clay = 0.4
+			lumber = 0.2
+			produced = salt
+			output = 0.15
+			category = guild_input
+			debug_max_profit = rural_profit_margin
 		}
 	}
 	construction_demand = village_construction
@@ -123,38 +131,18 @@ nd_kbu_caravan_depot = {
 			category = building_maintenance
 		}
 
-		nd_kbu_islamic_court_pm = {
-			paper = 0.15
-			cloth = 0.1
-			incense = 0.05
-			category = building_maintenance
-		}
 
-		nd_kbu_kola_trade_pm = {
-			cloth = 0.15
-			salt = 0.1
-			incense = 0.05
-			category = building_maintenance
-		}
 
-		nd_kbu_kukawa_trade_pm = {
-			cloth = 0.15
-			livestock = 0.1
-			salt = 0.1
-			category = building_maintenance
-		}
 
-		nd_kbu_modern_trade_pm = {
-			lumber = 0.15
-			stone = 0.1
-			tools = 0.1
-			category = building_maintenance
-		}
 	}
 	construction_demand = kontor_construction
 }
 
-# Quranic school (madrasa): religious/education building
+# Sangaya: the Kanuri boarding school of the Quran, where pupils live with a
+# master and write on wooden slates. The key keeps its first name: vanilla
+# gives every Muslim country a generic madrasa (religion_buildings.txt), so
+# this building tells of the lower school beside it. Towns and cities: a
+# master of renown gathered his pupils where alms could feed them.
 nd_kbu_madrasa = {
 	is_special = yes
 	is_foreign = no
@@ -182,7 +170,8 @@ nd_kbu_madrasa = {
 
 	unique_production_methods = {
 		nd_kbu_quran_instruction_pm = {
-			paper = 0.2
+			# slates and their frames, cloth, and wax for the night lessons
+			lumber = 0.25
 			cloth = 0.1
 			beeswax = 0.05
 			category = building_maintenance
@@ -225,11 +214,26 @@ nd_kbu_cotton_weaving = {
 			category = guild_input
 			debug_max_profit = guild_profit_margin
 		}
+		# Unlocked by nd_kbu_standardized_measures (age 3). Gabaga: narrow
+		# undyed cotton strips of a fixed width, which passed as money in
+		# the markets of Bornu. Less cloth than the dyed method and no dyes
+		# needed (vanilla's cloth guild weaves plain cotton the same way).
+		nd_kbu_gabaga_strip_pm = {
+			cotton = 0.5
+			produced = cloth
+			output = 0.6
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
 	}
 	construction_demand = workshop_construction
 }
 
-# Walled city: defense building
+# Royal Brick Enclosure: the mai's own quarter, walled in fired red brick
+# inside a city's earthen rampart (Birni Gazargamo, Gambaru). The key keeps
+# the older name: as a plain walled city it was vanilla's city_walls again.
+# Cities only, one level, as the rule for a building that raises control asks
+# (0.1 is the cap for a city-only building).
 nd_kbu_walled_city = {
 	is_special = yes
 	is_foreign = no
@@ -341,14 +345,92 @@ nd_kbu_war_camp = {
 			category = building_maintenance
 		}
 
-		nd_kbu_scorched_earth_pm = {
-			weaponry = 0.2
-			livestock = 0.1
-			lumber = 0.1
+	}
+	construction_demand = soldier_building_construction
+}
+
+# Lake Chad Fish Camp (age 1, nd_kbu_lake_chad_fisheries)
+# Fish from the lake is smoked and dried and carried far inland.
+# location_potential: the location's own raw material is fish (the three
+# lake shore locations of the formable's land). Vanilla's fishing village
+# asks for a sea coast and cannot stand on the lake.
+# Bill after vanilla's fishing method (salt), with wood for the smoke.
+nd_kbu_fish_camp = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = rural_building_cap
+	employment_size = rural_peasant_produce_employment
+	category = rgo_building_category
+	rural_settlement = yes
+	town = no
+	city = no
+	megalopolis = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_kbu_lake_chad_fisheries
+	}
+
+	location_potential = {
+		raw_material = goods:fish
+	}
+
+	unique_production_methods = {
+		nd_kbu_fish_drying_pm = {
+			salt = 0.1
+			lumber = 0.05
+			produced = fish
+			output = 0.57
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = village_construction
+}
+
+# Dendal (age 6, nd_kbu_kukawa_metropolis)
+# The broad avenue of a Kanuri capital, running from the gate to the
+# ruler's palace: the court rode it every morning and the market spilled
+# along it. location_potential: the capital only, because the dendal is
+# the approach to the ruler's own house.
+nd_kbu_dendal = {
+	is_special = yes
+	is_foreign = no
+	pop_type = nobles
+	max_levels = 1
+	employment_size = generic_burgher_employment
+	category = government_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = government_build_time
+
+	country_potential = {
+		has_advance = nd_kbu_kukawa_metropolis
+	}
+
+	location_potential = {
+		is_capital = yes
+	}
+
+	modifier = {
+		local_crown_estate_power = 0.25
+		local_monthly_prosperity = 0.001
+		local_migration_attraction = 0.05
+	}
+
+	unique_production_methods = {
+		nd_kbu_dendal_upkeep = {
+			horses = 0.092
+			cloth = 0.184
+			livestock = 0.184
 			category = building_maintenance
 		}
 	}
-	construction_demand = soldier_building_construction
+	construction_demand = capital_building_construction
 }
 
 # ===== DESTINY BUILDINGS =====

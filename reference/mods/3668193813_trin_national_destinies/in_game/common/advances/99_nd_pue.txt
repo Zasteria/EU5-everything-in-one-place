@@ -39,8 +39,7 @@ nd_pue_acequia_irrigation = {
 	requires = agriculture_advance
 	icon = agriculture_advance
 	unlock_building = nd_pue_granary
-	unlock_production_method = nd_pue_acequia_method
-	global_monthly_food_modifier = 0.05
+	global_monthly_food_modifier = 0.025
 }
 
 # Kiva as center of religious and political life
@@ -60,9 +59,9 @@ nd_pue_turquoise_trade = {
 	requires = guilds
 	icon = guilds
 	unlock_building = nd_pue_turquoise_workshop
-	trade_land_efficiency = 0.05
+	trade_land_efficiency = 0.2
 
-	trade_sea_efficiency = 0.05
+	trade_sea_efficiency = 0.2
 
 }
 
@@ -117,7 +116,7 @@ nd_pue_waffle_gardens = {
 	potential = { has_or_had_tag = PUE }
 	requires = vibrant_court_advance
 	icon = vibrant_court_advance
-	unlock_production_method = nd_pue_waffle_garden
+	unlock_building = nd_pue_waffle_garden
 	global_maize_output_modifier = 0.2
 }
 
@@ -251,7 +250,9 @@ nd_pue_horse_adoption = {
 	potential = { has_or_had_tag = PUE }
 	requires = gov_reform_reformation_a
 	icon = gov_reform_reformation_a
-	unlock_production_method = nd_pue_herbal_medicine
+	# The herds the Spanish left in 1680 were bred and traded on to the
+	# plains: the thing the advance gives is the herd.
+	unlock_building = nd_pue_horse_herd
 	army_light_cavalry_power = 0.1
 
 	army_heavy_cavalry_power = 0.1
@@ -274,11 +275,11 @@ nd_pue_trade_restoration = {
 	potential = { has_or_had_tag = PUE }
 	requires = global_trade_advance
 	icon = global_trade_advance
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
-	global_monthly_prosperity = 0.0015
+	global_monthly_prosperity = 0.001
 }
 
 # === AGE 5: ABSOLUTISM ===
@@ -310,10 +311,11 @@ nd_pue_advanced_irrigation = {
 	requires = construction_speed_absolutism
 	icon = construction_speed_absolutism
 	global_population_growth = 0.0003
-	global_monthly_food_modifier = 0.1
+	global_monthly_food_modifier = 0.05
 }
 
-# Pueblo artistic renaissance: new pottery styles, silverwork
+# Pueblo artistic renaissance: new pottery styles, shell and turquoise inlay
+# (the method key nd_pue_silverwork keeps its old name for saves)
 nd_pue_artistic_renaissance = {
 	age = age_5_absolutism
 	potential = { has_or_had_tag = PUE }
@@ -374,17 +376,18 @@ nd_pue_cultural_preservation = {
 	tolerance_own = 1
 }
 
-# Modern Pueblo economy
+# Shown as Peace with the Comanche (1786) and the trade it opened. Key kept
+# for saves.
 nd_pue_modern_economy = {
 	age = age_6_revolutions
 	potential = { has_or_had_tag = PUE }
 	requires = industrialization_advance
 	icon = industrialization_advance
 	unlock_production_method = nd_pue_modern_crafts
-	global_production_efficiency = 0.05
-	trade_land_efficiency = 0.025
+	global_production_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -414,6 +417,7 @@ nd_pue_standing_army = {
 	potential = { has_or_had_tag = PUE }
 	requires = napoleonic_warfare
 	icon = napoleonic_warfare
+	unlock_unit = a_nd_pue_war_captains_company
 	discipline = 0.05
 	army_light_infantry_power = 0.1
 
@@ -448,7 +452,16 @@ nd_pue_dest_warpath = {
 		}
 		owns_or_non_sovereign_subject_owns = location:dinetah
 		owns_or_non_sovereign_subject_owns = location:natahende
-		army_size >= 30
+		# A border is secured by walls. An army size stood here; the pueblos
+		# fight with levies, and nobody knows whether a raised levy counts
+		# for it (owner's ruling 2026-10-02).
+		custom_tooltip = {
+			text = nd_pue_dest_fortresses_tt
+			any_owned_location = {
+				count >= 3
+				has_building = building_type:nd_pue_fortress
+			}
+		}
 	}
 	icon = feudalism_advance
 	fort_limit_modifier = 0.15
@@ -466,12 +479,14 @@ nd_pue_dest_warchiefs = {
 		# hwalbay_province.
 		owns_or_non_sovereign_subject_owns = location:havasubaaja
 		owns_or_non_sovereign_subject_owns = location:tucumcari
-		army_size >= 50
+		# The war chiefs' host is every pueblo's own men, enrolled by the
+		# country's age 2 advance.
+		has_advance = nd_pue_communal_militia
 		prestige >= 50
 	}
 	icon = imperial_ambitions
 	food_consumption_modifier = -0.1
-	army_light_infantry_build_cost_modifier = -0.15
+	army_light_infantry_build_cost_modifier = -0.1
 
 	army_heavy_infantry_build_cost_modifier = -0.15
 
@@ -486,7 +501,16 @@ nd_pue_dest_turquoise_eagle = {
 		owns_or_non_sovereign_subject_owns = location:kwatsaan
 		owns_or_non_sovereign_subject_owns = location:akimel_oodham
 		owns_or_non_sovereign_subject_owns = location:mah_hom
-		army_size >= 75
+		# Land this wide is held by signal, not by numbers: the watchtowers
+		# of the country's age 3 advance, which is also the age the other
+		# path's capstone waits for.
+		custom_tooltip = {
+			text = nd_pue_dest_watchtowers_tt
+			any_owned_location = {
+				count >= 5
+				has_building = building_type:nd_pue_watchtower
+			}
+		}
 		prestige >= 75
 	}
 	icon = feudalism_advance

@@ -23,7 +23,7 @@ nd_kws_coral_mosque = {
 
 	modifier = {
 		local_clergy_estate_power = 0.5
-		local_cultural_tradition = 0.5
+		local_cultural_tradition = 0.25
 		local_pop_conversion_speed = 0.01
 		local_monthly_literacy = 0.05
 	}
@@ -72,13 +72,6 @@ nd_kws_funduq = {
 			pottery = 0.05
 			category = building_maintenance
 		}
-	
-		nd_kws_ivory_carving_pm = {
-			wild_game = 0.15
-			dyes = 0.1
-			tools = 0.05
-			category = building_maintenance
-		}
 	}
 	construction_demand = funduq_building_construction
 }
@@ -120,13 +113,6 @@ nd_kws_swahili_dockyard = {
 			lumber = 0.2
 			naval_supplies = 0.15
 			tools = 0.1
-			category = building_maintenance
-		}
-
-		nd_kws_monsoon_sailing_pm = {
-			naval_supplies = 0.15
-			lumber = 0.1
-			tar = 0.05
 			category = building_maintenance
 		}
 	}
@@ -280,9 +266,9 @@ nd_kws_customs_house = {
 
 	unique_production_methods = {
 		nd_kws_customs_upkeep = {
-			paper = 0.1
-			cloth = 0.1
-			furniture = 0.1
+			paper = 0.138
+			cloth = 0.138
+			furniture = 0.138
 			category = building_maintenance
 		}
 	}
@@ -317,13 +303,161 @@ nd_kws_swahili_academy = {
 
 	unique_production_methods = {
 		nd_kws_academy_upkeep = {
-			paper = 0.15
-			dyes = 0.1
-			books = 0.05
+			paper = 0.186
+			dyes = 0.124
+			books = 0.062
 			category = building_maintenance
 		}
 	}
 	construction_demand = school_construction
+}
+
+# Ivory Workshop (age 1, nd_kws_ivory_trade; a second method in age 5)
+# Tusks came down from the interior to the coastal towns and were sawn,
+# turned and carved there: the side-blown siwa horns of the Swahili courts,
+# combs, bangles, and hilts for the daggers of Arabia.
+# Ivory carving was a method of the funduq until 2026-10-01, written as
+# upkeep (game, dyes and tools in, nothing out). It is a workshop's
+# production now, with ivory as its input, as vanilla's jewelry guild has it.
+# location_potential: ivory has to be produced in the location's market.
+# Ivory is the input, so the market form of the gate is the right one: the
+# carvers follow the tusks. Two locations of Kilwa's own territory yield it.
+# Settlement: town and city. The carvers worked where the ships loaded.
+nd_kws_ivory_workshop = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	employment_size = guild_employment
+	category = consumer_goods_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_kws_ivory_trade
+	}
+
+	location_potential = {
+		market ?= {
+			is_produced_in_market = goods:ivory
+		}
+	}
+
+	unique_production_methods = {
+		nd_kws_ivory_carving_pm = {
+			ivory = 0.2
+			tools = 0.05
+			produced = jewelry
+			output = 0.228
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+		# Unlocked by nd_kws_revived_gold_routes (age 5): ivory set with
+		# the gold of the southern routes.
+		nd_kws_gold_mounted_ivory_pm = {
+			ivory = 0.2
+			goods_gold = 0.05
+			tools = 0.05
+			produced = jewelry
+			output = 0.324
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# Stone House (age 4, nd_kws_stone_town_expansion)
+# The coral rag house of a patrician family, roofed on mangrove poles. Only
+# the patricians might build in stone, and the house was the institution of
+# the trade: a visiting merchant lodged as the guest of the family that
+# brokered his cargo, and the porcelain in the wall niches showed its credit.
+# location_potential: the coast. Coral rag is cut from the reef and the
+# stone towns all stand on the shore or on the islands.
+# Settlement: town and city. A stone house is what makes a stone town.
+nd_kws_stone_house = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = generic_burgher_employment
+	category = trade_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = generic_town_build_time
+
+	country_potential = {
+		has_advance = nd_kws_stone_town_expansion
+	}
+
+	location_potential = {
+		is_coastal = yes
+	}
+
+	modifier = {
+		local_burghers_estate_power = 0.25
+		local_cultural_influence = 0.25
+		local_migration_attraction = 0.05
+	}
+
+	unique_production_methods = {
+		nd_kws_stone_house_upkeep = {
+			stone = 0.1
+			lumber = 0.1
+			porcelain = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = town_building_construction
+}
+
+# Kutchi Merchant House (age 6, nd_kws_kutchi_financiers)
+# Bhatia and Khoja merchants from Kutch settled in the ports of the coast in
+# the later eighteenth century. They advanced cloth, beads and coin to the
+# caravans going inland and took the ivory in payment on their return.
+# location_potential: the coast. These houses stood in the ports, beside the
+# customs and the anchorage their credit depended on.
+# Settlement: town and city.
+nd_kws_kutchi_house = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = generic_burgher_employment
+	category = trade_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = bank_office_build_time
+
+	country_potential = {
+		has_advance = nd_kws_kutchi_financiers
+	}
+
+	location_potential = {
+		is_coastal = yes
+	}
+
+	modifier = {
+		local_merchant_capacity = 1
+		local_burghers_estate_power = 0.25
+	}
+
+	unique_production_methods = {
+		nd_kws_kutchi_house_upkeep = {
+			paper = 0.1
+			cloth = 0.1
+			silver = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = bank_construction
 }
 
 # ===== DESTINY BUILDINGS =====

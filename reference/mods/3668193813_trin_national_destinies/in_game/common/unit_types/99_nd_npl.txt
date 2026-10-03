@@ -8,7 +8,6 @@ a_nd_npl_khas_warrior = {
 	is_special = yes
 	category = army_heavy_infantry
 	copy_from = a_age_1_traditions_heavy_infantry
-	upgrades_to = a_men_at_arms
 	buildable = no
 	levy = yes
 
@@ -36,9 +35,13 @@ a_nd_npl_gorkhali_sipahi = {
 	upgrades_to = a_arquebusiers
 	buildable = yes
 
+	# Hill men on the march keep the pace of light horse (category speed
+	# 2.5, plus this). It stood at +1.25 until 2026-10-02, faster than any
+	# vanilla unit; the rest of the edge is now that they open the fight.
 	morale_damage_done = 0.1
 	strength_damage_taken = -0.1
-	movement_speed = 1.25
+	movement_speed = 0.5
+	initiative = 1
 
 	combat = {
 		mountains = 0.15
@@ -58,13 +61,17 @@ a_nd_npl_khukuri_skirmisher = {
 	is_special = yes
 	category = army_light_infantry
 	copy_from = a_age_4_reformation_light_infantry
-	upgrades_to = a_hunters
 	buildable = no
 	levy = yes
 
-	strength_damage_done = 0.15
+	# Each stat at or under vanilla's largest for light infantry (flanking
+	# +0.25 a_caterans, strength damage +0.1 a_longbowmen); flanking stood
+	# at +0.75 and strength damage at +0.15 until 2026-10-02.
+	# Raiders who close with the blade wear no armour.
+	strength_damage_done = 0.1
 	morale_damage_done = 0.1
-	flanking_ability = 0.75
+	flanking_ability = 0.25
+	strength_damage_taken = 0.05
 
 	combat = {
 		mountains = 0.15
@@ -77,6 +84,36 @@ a_nd_npl_khukuri_skirmisher = {
 	}
 
 	gfx_tags = { medium_tag }
+}
+
+# Yak Caravan: Age 3 buildable supply train. The pack trains of the salt
+# trade (yaks and crossbreeds above, sheep and goats with saddlebags below)
+# carrying an army's food over passes no cart can cross.
+# Template a_age_3_discovery_auxiliary; the auxiliary category moves at 2.0
+# and stores 3000 food per strength. More carried, less slowed by mountain
+# and hill (impact is the terrain's effect on movement, unit_types/readme.txt
+# line 22; vanilla's elephant train writes jungle = -0.25), slower on any
+# ground.
+a_nd_npl_yak_caravan = {
+	is_special = yes
+	category = army_auxiliary
+	copy_from = a_age_3_discovery_auxiliary
+	upgrades_to = a_baggage_train
+	buildable = yes
+
+	food_storage_per_strength = 500
+	movement_speed = -0.2
+
+	impact = {
+		mountains = -0.5
+		hills = -0.25
+	}
+
+	country_potential = {
+		has_or_had_tag = NPL
+	}
+
+	gfx_tags = { auxiliary_tag medium_tag }
 }
 
 # Gorkha Rifleman: Age 5 buildable infantry. The modernized mountain infantry.

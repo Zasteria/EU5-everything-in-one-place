@@ -1,8 +1,9 @@
 ﻿# National Destinies: North Sea Empire bureaucracies
 # 7 historically-grounded institutions of Cnut the Great's Anglo-Scandinavian
 # state, plausibly revivable as the federal apparatus of a thalassocratic
-# revival linking the British Isles and Scandinavia. Auto-modifier grants
-# 3 slots; capital adds 1 = 4 total. Player picks 4 of 7.
+# revival linking the British Isles and Scandinavia. The auto modifier
+# grants 4 slots (a capital gives one only as a megalopolis), so four of the
+# seven can run on the day the empire forms.
 #
 # Scope rationale: 7 sits inside the spec's 6-7 default. The Anglo-Danish
 # state at its 1018-1035 peak documented institutions across central
@@ -11,9 +12,9 @@
 # named institutions before any cuts. Choice ratio 4-of-7 keeps each pick
 # meaningful while reflecting the breadth of the historical apparatus.
 #
-# Candidate cuts: Things & lawspeakers (covered by existing nd_nse_thingstead
-# building + nd_nse_lawspeaker_council production method, so a bureaucracy
-# would duplicate hooks already in heritage advances).
+# Candidate cuts: Things & lawspeakers (covered by the nd_nse_thingstead
+# building and the Great Thing advance, so a bureaucracy would duplicate
+# hooks already in heritage advances).
 
 # 1. The Hird and Witherlogh: the housecarl corps of Cnut, a standing
 #    royal household force of 3,000-4,000 retained from 1018 (when 40 ships
@@ -44,6 +45,14 @@ nse_hird_witherlogh_bureaucracy = {
 		nobles_estate
 	}
 
+	# The king's captains came out of the hird: stallers and housecarl
+	# commanders trained in the household, not in an earl's following.
+	# train_general_ability takes whole numbers; vanilla's one grant is 25,
+	# in the funded block of Byzantium's magister militum (byz.txt:503).
+	neutral_modifier = {
+		train_general_ability = 10
+	}
+
 	positive_modifier = {
 		scale = { value = scope:maintenance }
 		discipline = 0.025
@@ -56,7 +65,7 @@ nse_hird_witherlogh_bureaucracy = {
 			value = 1
 			subtract = scope:maintenance
 		}
-		monthly_complacency = 0.01
+		army_tradition_decay = 0.0005
 		nobles_estate_satisfaction_decay = 0.015
 	}
 }
@@ -90,15 +99,17 @@ nse_heregeld_bureaucracy = {
 		peasants_estate
 	}
 
+	# The heregeld was raised to pay the lithsmen, the crews of the standing
+	# fleet Cnut kept after 1018, and was dropped in 1051 when the last
+	# ships were paid off.
 	neutral_modifier = {
+		navy_maintenance_efficiency = 0.05
 		government_size = 1
-	
-		country_cabinet_efficiency = -0.10
-}
+	}
 
 	positive_modifier = {
 		scale = { value = scope:maintenance }
-		tax_income_efficiency = 0.10
+		tax_income_efficiency = 0.05
 		global_levy_recruitment_speed_modifier = 0.15
 	}
 
@@ -249,8 +260,11 @@ nse_skipreida_leidang_bureaucracy = {
 		nobles_estate
 	}
 
+	# The leidang is a ship levy: each district answers with a ship and
+	# its crew. 0.2 is what vanilla's burghers levies policy grants
+	# (laws/01_military_laws.txt).
 	neutral_modifier = {
-		monthly_navy_tradition = 0.03
+		global_navy_levy_size_modifier = 0.2
 	}
 
 	positive_modifier = {

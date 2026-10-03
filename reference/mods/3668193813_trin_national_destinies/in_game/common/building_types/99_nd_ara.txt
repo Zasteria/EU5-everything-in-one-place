@@ -1,0 +1,627 @@
+﻿# ============================================================================
+# Aragon (ARA): custom buildings
+# National Destinies mod
+# ============================================================================
+#
+# What is NOT here, because somebody already built it:
+#   vanilla: the sheep farm, the mason, the pottery and weapon guilds, the
+#   printing shop, the library, the art school, irrigation and the pound lock
+#   canal are open to everyone; the Justicia de Aragon is an estate
+#   privilege, the Fuero de Aragon a town right, the Diputacion a tag advance.
+#   the mod's Aragonese Empire, Catalonia, Spain and Al-Andalus: the Llotja,
+#   the Generalitat Hall, the Almudin, the Drassanes, the Mesta sheepwalk,
+#   the Farga, the Taula de Canvi, the Masia, the acequia, the lustreware
+#   kiln of Al-Andalus.
+#
+# What is here is the inland kingdom's own ground: the meeting house of the
+# village communities, the stock breeders' brotherhood, the Mudejar kiln,
+# the saffron field, the alabaster carvers, the swordsmiths, the Justicia's
+# prison, a collector's cabinet and Pignatelli's canal.
+#
+# Every production method is inline and was sized with eu5-profit (margin 20
+# percent, cap written as a name).
+
+# ----------------------------------------------------------------------------
+# Casa de la Comunidad (age 1)
+# ----------------------------------------------------------------------------
+# The house where the villages of a community met in plega general, kept
+# their chest and their charters, and mustered their companies. The
+# community was the villages WITHOUT the town: Calatayud, Daroca, Teruel and
+# Albarracin never belonged to the communities that bore their names.
+# location_potential: Aragonese-majority locations. The communities were an
+# institution of the kingdom's own southern march and of its fueros; a
+# conquered Castilian or Catalan district has no plega to house.
+# Settlement: countryside and town, never a city, for the reason above.
+# No local_max_control on purpose: the villages governed themselves, the king
+# gained soldiers and lost nothing, and the lords lost their say.
+# Upkeep: 1.2 gold a month at base prices (paper 2, weaponry 3, leather 3,
+# wheat 1), most of it the arms and rations of the companies the villages owed
+# the frontier. Below vanilla's bailiff at 1.50 because it grants no control.
+nd_ara_casa_de_la_comunidad = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = 1
+	employment_size = estate_peasants_employment
+	category = government_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	build_time = government_build_time
+
+	country_potential = {
+		has_advance = nd_ara_comunidades_de_aldeas
+	}
+
+	location_potential = {
+		dominant_culture ?= culture:aragonese
+	}
+
+	modifier = {
+		local_peasants_estate_power = 0.25
+		local_nobles_estate_power = -0.25
+		local_levy_size_modifier = 0.1
+	}
+
+	unique_production_methods = {
+		nd_ara_casa_de_la_comunidad_maintenance = {
+			paper = 0.15
+			weaponry = 0.15
+			leather = 0.1
+			wheat = 0.15
+			category = building_maintenance
+		}
+	}
+	construction_demand = town_building_construction
+}
+
+# ----------------------------------------------------------------------------
+# Ligallo (age 1)
+# ----------------------------------------------------------------------------
+# The stock breeders' brotherhood of an Aragonese town: it kept the brand
+# book, returned strays, hired the shepherds for the summer drive to the
+# Pyrenees and tried rustlers before its own judge. Zaragoza's was the Casa
+# de Ganaderos; Teruel, Daroca, Calatayud and Caspe had ligallos.
+# Not a second sheep farm: it produces nothing itself. It makes the flocks
+# that are already there worth more.
+# location_potential: the location's own raw material is wool or livestock.
+# A brotherhood of breeders needs breeders.
+# Settlement: countryside only, one per location. The flocks are out there.
+# Upkeep: salt for the flocks (a breeder's first privilege was cheap salt),
+# shears and hurdles.
+nd_ara_ligallo = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = 1
+	employment_size = generic_peasant_building_employment
+	category = rgo_building_category
+	rural_settlement = yes
+	town = no
+	city = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_ara_casa_de_ganaderos
+	}
+
+	location_potential = {
+		OR = {
+			raw_material = goods:wool
+			raw_material = goods:livestock
+		}
+	}
+
+	modifier = {
+		local_wool_output_modifier = 0.15
+		local_livestock_output_modifier = 0.15
+	}
+
+	unique_production_methods = {
+		nd_ara_ligallo_maintenance = {
+			salt = 0.05
+			tools = 0.05
+			lumber = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = farm_constructions
+}
+
+# ----------------------------------------------------------------------------
+# Alfar Mudejar (age 1; a second method in age 4)
+# ----------------------------------------------------------------------------
+# A Mudejar kiln yard: brick for walls and towers, and the green and purple
+# glazed tile that is set into them. In the sixteenth century the same yards,
+# now Morisco, turn to the gilt lustreware of Muel.
+# No location gate, and that is deliberate: brick and pottery are made goods,
+# so nothing is conjured, clay is bought on the market like any other input,
+# and a kiln stands wherever a town is building.
+# Settlement: towns and cities. The yards stood in the Moorish quarter, at
+# the edge of the walls.
+# The lead is the glaze. It is what vanilla's mason and pottery guild do not
+# use, and Calatayud mines it.
+nd_ara_alfar_mudejar = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = guild_max_level
+	employment_size = guild_employment
+	category = basic_industry_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_ara_alarifes_mudejares
+	}
+
+	unique_production_methods = {
+		# Brick and glazed tile for the builders.
+		nd_ara_alfar_ladrillo_y_azulejo = {
+			clay = 0.6
+			lumber = 0.1
+			lead = 0.05
+			produced = masonry
+			output = 0.66
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+		# Unlocked by nd_ara_vasallos_moriscos (age 4): tin and lead glazed
+		# tableware with a gold lustre, in the manner of Muel.
+		nd_ara_alfar_loza_de_muel = {
+			clay = 0.8
+			lumber = 0.15
+			lead = 0.05
+			produced = pottery
+			output = 0.87
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# ----------------------------------------------------------------------------
+# Azafranal (age 2)
+# ----------------------------------------------------------------------------
+# A saffron field and its drying floor. The crocus flowers for two weeks in
+# October; every flower is picked before noon, its three threads pulled by
+# hand the same night, and the threads toasted over embers in a sieve.
+# location_potential: the location's own raw material is saffron (strict
+# form). Saffron is a raw good, and this building may only add to a crop
+# that is already in the ground: in the kingdom that is Zaragoza, Sarinena
+# and Alfambra.
+# Settlement: countryside only, sized like any rural producer.
+# Rural shape (building_maintenance with produced and the rural margin), as
+# vanilla writes its own rural producers. The lumber is the charcoal of the
+# toasting floor.
+nd_ara_azafranal = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = rural_building_cap
+	employment_size = rural_peasant_produce_employment
+	category = rgo_building_category
+	rural_settlement = yes
+	town = no
+	city = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_ara_azafran_de_aragon
+	}
+
+	location_potential = {
+		raw_material = goods:saffron
+	}
+
+	unique_production_methods = {
+		nd_ara_azafranal_rosa_del_azafran = {
+			lumber = 0.3
+			tools = 0.1
+			produced = saffron
+			output = 0.18
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = farm_constructions
+}
+
+# ----------------------------------------------------------------------------
+# Taller de Alabastro (age 3)
+# ----------------------------------------------------------------------------
+# A carvers' workshop in the manner of Forment's at Zaragoza: a master, a
+# dozen journeymen and apprentices, blocks carted up from the quarries of the
+# lower Ebro, and altarpieces contracted years ahead by chapters and
+# confraternities across the kingdom.
+# location_potential: marble (the game's good for carving stone, alabaster
+# included) must reach the local market. The stone is an input here and not
+# the product, so the market form of the gate is the right one.
+# Settlement: towns and cities, one per location.
+# Upkeep 1.1 gold a month at base prices (marble 5, tools 3, lumber 1.5), the
+# same as vanilla's library.
+nd_ara_taller_de_alabastro = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = cultural_employment
+	category = cultural_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = cultural_building_time
+
+	country_potential = {
+		has_advance = nd_ara_alabastro_del_ebro
+	}
+
+	location_potential = {
+		is_produced_in_location_market = goods:marble
+	}
+
+	modifier = {
+		local_cultural_tradition = 0.2
+		local_cultural_influence = 0.1
+	}
+
+	unique_production_methods = {
+		nd_ara_taller_de_alabastro_maintenance = {
+			marble = 0.1
+			tools = 0.1
+			lumber = 0.2
+			category = building_maintenance
+		}
+	}
+	construction_demand = library_construction
+}
+
+# ----------------------------------------------------------------------------
+# Espaderia (age 3)
+# ----------------------------------------------------------------------------
+# A swordsmiths' street: forgers, grinders, hilt makers and scabbard makers,
+# each a separate trade, working bar iron from Albarracin and the Moncayo
+# into blades that carried the maker's mark across Spain.
+# location_potential: iron must reach the local market. Weaponry is a made
+# good, so the gate only keeps the forges where a smith could buy his bar.
+# Settlement: towns and cities.
+# Unlike vanilla's weapon guild this works raw iron directly and buys no
+# tools; the coal is charcoal, the leather is grips and scabbards.
+nd_ara_espaderia = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	employment_size = guild_employment
+	category = weapons_industry_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_ara_espadas_del_perrillo
+	}
+
+	location_potential = {
+		is_produced_in_location_market = goods:iron
+	}
+
+	unique_production_methods = {
+		nd_ara_espaderia_hojas_del_perrillo = {
+			iron = 0.4
+			coal = 0.2
+			leather = 0.05
+			produced = weaponry
+			output = 0.7
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# ----------------------------------------------------------------------------
+# Carcel de Manifestados (age 4)
+# ----------------------------------------------------------------------------
+# The Justicia's prison at Zaragoza. A prisoner who had himself "manifested"
+# was taken from the king's gaol and lodged here, where no royal officer
+# could put him to the question, until a lawful sentence was produced.
+# One in the country, in the capital: there was one Justicia and one such
+# prison (the gate is vanilla's own capital-building idiom, art_school).
+# Not gated on the vanilla privilege justicia_de_aragon: that privilege is
+# unlocked by an event a country may never get or may refuse, and the
+# building would then be a dead unlock.
+# It is a bargain and not a gift: every estate rests easier, and the crown's
+# own hand is weaker everywhere (global_crown_estate_power is negative on
+# purpose).
+# Upkeep 1.3 gold a month at base prices: the court's paper and law books,
+# the prisoners' keep, the guard's arms.
+nd_ara_carcel_de_manifestados = {
+	is_special = yes
+	is_foreign = no
+	pop_type = soldiers
+	max_levels = 1
+	employment_size = tiny_soldier_employment
+	category = government_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = government_build_time
+
+	country_potential = {
+		has_advance = nd_ara_derecho_de_manifestacion
+	}
+
+	location_potential = {
+		counts_as_capital = yes
+	}
+
+	allow = {
+		is_capital = yes
+		country_has_no_other_copy_of_building = { type = nd_ara_carcel_de_manifestados }
+	}
+
+	remove_if = {
+		is_no_longer_capital = yes
+	}
+
+	modifier = {
+		local_unrest = -0.05
+	}
+
+	capital_country_modifier = {
+		global_estate_target_satisfaction = small_permanent_target_satisfaction
+		global_crown_estate_power = -0.05
+	}
+
+	unique_production_methods = {
+		nd_ara_carcel_de_manifestados_maintenance = {
+			paper = 0.2
+			books = 0.1
+			cloth = 0.1
+			weaponry = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = town_building_construction
+}
+
+# ----------------------------------------------------------------------------
+# Gabinete de Curiosidades (age 5)
+# ----------------------------------------------------------------------------
+# A learned gentleman's collection opened to visitors, as Lastanosa's was at
+# Huesca: books and manuscripts, coins and medals, armour, shells, fossils,
+# lenses and clocks, with a garden of foreign plants behind the house.
+# allow: a library must stand in the location. A cabinet is what grows up
+# round a library in a town that already reads.
+# Settlement: towns and cities, one per location. Lastanosa's stood in a
+# town of four thousand.
+# Upkeep 1.35 gold a month at base prices (books 3, glass 3, paper 2,
+# jewelry 5), a little over vanilla's library. Jewelry stands at 0.05, the
+# amount vanilla's own collectors' houses take (venetian_palaces_maintenance,
+# qalat_al_mashwar_maintenance); it was 0.02 until 2026-10-02.
+nd_ara_gabinete_de_curiosidades = {
+	is_special = yes
+	is_foreign = no
+	pop_type = nobles
+	max_levels = 1
+	employment_size = noble_cultural_employment
+	category = cultural_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = large_cultural_building_time
+
+	country_potential = {
+		has_advance = nd_ara_circulo_de_lastanosa
+	}
+
+	allow = {
+		custom_tooltip = {
+			text = nd_ara_gabinete_needs_library_tt
+			has_building = building_type:library
+		}
+	}
+
+	modifier = {
+		local_nobles_max_literacy = 5
+		local_cultural_influence = 0.2
+		local_institution_growth_modifier = 0.25
+	}
+
+	unique_production_methods = {
+		nd_ara_gabinete_de_curiosidades_maintenance = {
+			books = 0.2
+			glass = 0.1
+			paper = 0.1
+			jewelry = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = library_construction
+}
+
+# ----------------------------------------------------------------------------
+# Canal Imperial (age 6)
+# ----------------------------------------------------------------------------
+# A reach of Pignatelli's canal: a masonry channel along the right bank of
+# the Ebro with its locks, aqueducts and almenaras, watering the fields
+# below it and carrying grain barges to the city's wharf.
+# location_potential: flat ground on a river. A canal of this kind is led
+# off a river along the contour of its plain; in the kingdom that is the
+# Ebro, the Cinca and the lower Jalon.
+# Settlement: every tier, one per location. It passes through villages and
+# ends at a city quay.
+# Beside vanilla's irrigation and pound lock canal, and not in their place:
+# those are open to everyone long before age 6. This one adds what a
+# navigable irrigation canal adds, a little of everything.
+# Upkeep 0.8 gold a month at base prices: masonry for the banks, tools and
+# timber for the lock gates.
+nd_ara_canal_imperial = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = 1
+	employment_size = generic_peasant_building_employment
+	category = infrastructure_category
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = infrastructure_build_time
+
+	country_potential = {
+		has_advance = nd_ara_proyecto_de_pignatelli
+	}
+
+	location_potential = {
+		has_river = yes
+		topography = flatland
+	}
+
+	modifier = {
+		local_monthly_food_modifier = monthly_food_productivity_weak_bonus
+		local_population_capacity_modifier = 0.025
+		local_market_access = 0.01
+	}
+
+	unique_production_methods = {
+		nd_ara_canal_imperial_maintenance = {
+			masonry = 0.2
+			tools = 0.1
+			lumber = 0.2
+			category = building_maintenance
+		}
+	}
+	construction_demand = pound_lock_canal_infrastructure_construction
+}
+
+# ===== DESTINY BUILDINGS =====
+
+# ----------------------------------------------------------------------------
+# Real Palacio de la Aljaferia (destiny, path A capstone)
+# ----------------------------------------------------------------------------
+# The palace of the Banu Hud outside the walls of Zaragoza (most of it built
+# between 1065 and 1081), the residence of the kings of Aragon from the
+# conquest of 1118. The coronation procession to La Seo set out from it.
+# Peter the Ceremonious enlarged it from 1336 and built the chapel of San
+# Martin; Mudejar masters raised a second palace over the first for the
+# Catholic Monarchs between 1488 and 1495, with the throne room.
+# Not the heritage tree's Carcel de Manifestados (the Justicia's prison, in
+# whatever location is the capital) and not vanilla's lieutenancy (which may
+# not stand in a capital at all): this is the king's own house, and there is
+# one Aljaferia.
+# location_potential: Zaragoza and nowhere else, the idiom vanilla uses for
+# its Moscow and Constantinople buildings.
+# Settlement: Zaragoza is a town in 1337 and the stage asks it to grow, so
+# every urban rank is open; the countryside is not, a palace needs a court.
+# Values: crown power as vanilla's tax assessor (0.25), tradition at half its
+# opera house (0.5), garrison as its stockade (0.1): the Aljaferia was a
+# fortress before it was a palace and a barracks after.
+nd_ara_dest_aljaferia = {
+	is_special = yes
+	is_foreign = no
+	pop_type = nobles
+	max_levels = 1
+	employment_size = normal_noble_employment
+	category = government_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = large_capital_build_time
+
+	country_potential = {
+		has_advance = nd_ara_dest_aragon_y_pamplona
+	}
+
+	location_potential = {
+		this = location:zaragoza
+	}
+
+	modifier = {
+		local_crown_estate_power = 0.25
+		local_cultural_tradition = 0.25
+		local_garrison_size = 0.1
+	}
+
+	unique_production_methods = {
+		nd_ara_dest_aljaferia_maintenance = {
+			paper = 0.1
+			fine_cloth = 0.1
+			furniture = 0.1
+			masonry = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = prestige_building_construction
+}
+
+# ----------------------------------------------------------------------------
+# Castillo Aragones (destiny, path B capstone)
+# ----------------------------------------------------------------------------
+# A royal sea castle with a castellan and garrison of the king's own choosing,
+# set over the harbour of a town in one of the overseas realms. When the
+# Doria rock of Castelgenovese fell in 1448 it was renamed Castillo Aragones,
+# and the name stuck to the castles of the house from Sardinia to Ischia and
+# the Apulian ports.
+# Not vanilla's viceroyalty or lieutenancy (government seats, crown power and
+# proximity) and not a fort level: it holds one harbour town for the king.
+# location_potential: on the coast and outside Iberia. In the peninsula the
+# crown's towns kept their own walls under their own fueros and would not
+# have borne a royal castellan; overseas the castle was the crown.
+# Settlement: towns and cities, one per location. It commands a harbour.
+# Values: garrison, defence and unrest exactly as vanilla's stockade (0.1,
+# and -0.05) with defence well under its 0.25. Reach inside Aragon's own
+# area is nil: the area has no coast.
+nd_ara_dest_castillo_aragones = {
+	is_special = yes
+	is_foreign = no
+	pop_type = soldiers
+	max_levels = 1
+	employment_size = tiny_soldier_employment
+	category = defense_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = small_fort_building
+
+	country_potential = {
+		has_advance = nd_ara_dest_el_magnanimo
+	}
+
+	location_potential = {
+		is_coastal = yes
+		NOT = { region = region:iberia_region }
+	}
+
+	modifier = {
+		local_garrison_size = 0.1
+		local_defensive = 0.1
+		local_unrest = -0.05
+	}
+
+	unique_production_methods = {
+		nd_ara_dest_castillo_aragones_maintenance = {
+			weaponry = 0.1
+			stone = 0.1
+			tools = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = castle_construction
+}

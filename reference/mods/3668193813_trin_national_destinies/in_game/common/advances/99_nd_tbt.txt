@@ -57,7 +57,6 @@ nd_tbt_yungdrung_bon = {
 	requires = organized_religion
 	icon = organized_religion
 	unlock_building = nd_tbt_bon_sanctuary
-	tolerance_own = 1
 	monthly_devotion = 0.05
 	monthly_legitimacy = 0.05
 	monthly_republican_tradition = 0.05
@@ -70,8 +69,9 @@ nd_tbt_yak_wool_weaving = {
 	requires = guilds
 	icon = guilds
 	unlock_building = nd_tbt_nambu_workshop
-	global_wool_output_modifier = 0.1
-	global_livestock_output_modifier = 0.1
+	# The woven nambu, not the fleece: Tibet's own age 1 advance the_yak
+	# already raises wool and livestock.
+	global_cloth_output_modifier = 0.1
 }
 
 # Unlock: Imperial Scriptorium (DHE event)
@@ -99,7 +99,6 @@ nd_tbt_samye_synthesis = {
 	unlock_building = nd_tbt_samye_monastery
 	cultural_tradition_modifier = 0.1
 	research_speed_modifier = 0.05
-	global_institution_growth_modifier = 0.2
 }
 
 # Modifier: Tarim Basin garrisons (DHE event)
@@ -121,20 +120,20 @@ nd_tbt_chama_trade = {
 	requires = merchants_and_trade
 	icon = merchants_and_trade
 	unlock_building = nd_tbt_chama_caravanserai
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	global_horses_output_modifier = 0.1
 }
 
-# Unlock: tantric translation PM (in Samye)
+# Unlock: Imperial Press (block-print editions, books)
 nd_tbt_translation_bureau = {
 	age = age_2_renaissance
 	potential = { has_or_had_tag = TBT }
 	requires = vibrant_court_advance
 	icon = vibrant_court_advance
-	unlock_production_method = nd_tbt_tantric_translation_pm
+	unlock_building = nd_tbt_imperial_press
 	research_speed_modifier = 0.05
 	global_monthly_literacy = 0.01
 }
@@ -206,13 +205,13 @@ nd_tbt_khams_riders = {
 	}
 }
 
-# Unlock: brick tea PM (in chama caravanserai)
+# Unlock: Brick Tea Press (tea, on tea land)
 nd_tbt_butter_tea_economy = {
 	age = age_3_discovery
 	potential = { has_or_had_tag = TBT }
 	requires = regulate_court_procedures
 	icon = regulate_court_procedures
-	unlock_production_method = nd_tbt_brick_tea_pm
+	unlock_building = nd_tbt_brick_tea_press
 	global_tea_output_modifier = 0.1
 	global_monthly_prosperity = 0.001
 }
@@ -270,13 +269,13 @@ nd_tbt_himalayan_isolation_doctrine = {
 	monthly_war_exhaustion = -0.02
 }
 
-# Modifier: state-Buddhist religious reform
+# Unlock: Imperial Scripture Edition (books, in the Imperial Press)
 nd_tbt_state_buddhism_reform = {
 	age = age_4_reformation
 	potential = { has_or_had_tag = TBT }
 	requires = confessional_court
 	icon = confessional_court
-	unlock_production_method = nd_tbt_thangka_workshop_pm
+	unlock_production_method = nd_tbt_press_scripture_pm
 	tolerance_own = 1
 	global_pop_conversion_speed_modifier = 0.1
 	monthly_devotion = 0.1
@@ -386,7 +385,7 @@ nd_tbt_mountain_engineering = {
 	potential = { has_or_had_tag = TBT }
 	requires = nd_tbt_lhasa_grand_assembly
 	icon = construction_speed_absolutism
-	global_monthly_development = 0.002
+	global_monthly_development = 0.001
 	global_construction_speed = 0.1
 	global_build_buildings_efficiency = 0.05
 	allow_children = no
@@ -408,13 +407,13 @@ nd_tbt_modern_imperial_military = {
 	army_movement_speed = 0.05
 }
 
-# Unlock: modern press PM (in scriptorium)
+# Unlock: Modern State Press (books, in the Imperial Press)
 nd_tbt_state_printing_press = {
 	age = age_6_revolutions
 	potential = { has_or_had_tag = TBT }
 	requires = enlightened_court
 	icon = enlightened_court
-	unlock_production_method = nd_tbt_modern_press_pm
+	unlock_production_method = nd_tbt_press_modern_pm
 	global_monthly_literacy = 0.02
 	research_speed_modifier = 0.1
 }
@@ -425,7 +424,7 @@ nd_tbt_himalayan_industry = {
 	potential = { has_or_had_tag = TBT }
 	requires = industrialization_advance
 	icon = industrialization_advance
-	global_production_efficiency = 0.075
+	global_production_efficiency = 0.0375
 	global_raw_material_output = 0.1
 	global_construction_speed = 0.1
 }
@@ -533,7 +532,16 @@ nd_tbt_dest_hexi_corridor = {
 		owns_or_non_sovereign_subject_owns = location:chengdu
 		owns_or_non_sovereign_subject_owns = location:xining
 		army_size >= 50
-		total_development >= 5000
+		# Dunhuang (Shazhou) under Tibetan rule, 786 to 848: the garrison
+		# town became a copying centre of the imperial sutra projects.
+		# 1337 value 14 (development_estimate.py --explain shazhou), stage 2 = +50%.
+		custom_tooltip = {
+			text = nd_tbt_dest_shazhou_developed_tt
+			location:shazhou = {
+				owner ?= root
+				development >= 21
+			}
+		}
 	}
 	icon = feudalism_advance
 	expected_army_size_modifier = 0.10
@@ -588,7 +596,7 @@ nd_tbt_dest_pala_heartland = {
 	}
 	icon = organized_religion
 	prestige_decay = -0.001
-	tolerance_heretic = 1
+	global_heathen_pop_conversion_speed_modifier = 0.10
 }
 
 # Stage 2: Bengali sangha and the Great Translation
@@ -603,7 +611,20 @@ nd_tbt_dest_bengali_sangha = {
 		owns_or_non_sovereign_subject_owns = location:sonargaon
 		owns_or_non_sovereign_subject_owns = location:monghyr
 		has_embraced_institution = institution:printing_press
-		total_development >= 5000
+		# Samye, the translation university of 779, is a mountain village
+		# in 1337 (development 3): the stage asks for it to be built up
+		# into a town again, which a development number that low cannot say.
+		custom_tooltip = {
+			text = nd_tbt_dest_samye_town_tt
+			location:samye = {
+				owner ?= root
+				OR = {
+					location_rank ?= location_rank:town
+					location_rank ?= location_rank:city
+					location_rank ?= location_rank:megalopolis
+				}
+			}
+		}
 	}
 	icon = patron_of_art
 	cultures_capacity = 1
@@ -629,5 +650,5 @@ nd_tbt_dest_dharma_imperium = {
 	unlock_building = nd_tbt_great_translation_house
 	monthly_karma = 0.10
 	global_disease_resistance = 0.05
-	diplomatic_capacity_modifier = 0.20
+	diplomatic_capacity_modifier = 0.15
 }

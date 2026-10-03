@@ -1,14 +1,24 @@
 ﻿# ==========================================
 # Carthage (CTH): Advance Tree
-# 10 vanilla tag advances, stepping stone
-# 4-5 per age, fill gaps vanilla misses:
+# 6 vanilla tag advances since 1.4 (one per age, country_cth.txt), plus
+# the Amazigh group and Maghreb advances every country that can form
+# Carthage holds (country_tle.txt, region_maghreb.txt). Level 4 since 1.4,
+# still a step below Rome (level 5).
+# 4 per age, fill gaps vanilla misses:
 # religion/culture, fortifications, units,
 # industrial buildings, governance
+#
+# No key below repeats a key of vanilla's six Carthage advances, and none
+# repeats a key the Amazigh group or Maghreb advances grant in the same age.
+# The validator's overlap check cannot see vanilla values written as named
+# constants (medium_trade_land_efficiency_bonus), so check those by hand.
 # ==========================================
 
 # === AGE 1: TRADITIONS ===
 
-# Vanilla covers: merchant capacity, olives output
+# Vanilla covers: merchant capacity and mercenary upkeep (cth_merchant_legacy),
+# trade over land (the_sahel_trade), literacy and research (city_of_scholars),
+# culture capacity and wool (tamazight)
 # We add: religion, sacred band, fortification, purple dye
 
 nd_cth_tophet_cult = {
@@ -17,7 +27,6 @@ nd_cth_tophet_cult = {
 	requires = organized_religion
 	icon = organized_religion
 	unlock_building = nd_cth_tophet
-	tolerance_own = 1
 	monthly_devotion = 0.1
 	monthly_legitimacy = 0.1
 	monthly_republican_tradition = 0.1
@@ -41,10 +50,11 @@ nd_cth_tyrian_purple = {
 	requires = guilds
 	icon = guilds
 	unlock_building = nd_cth_dye_works
-	trade_land_efficiency = 0.025
-
-	trade_sea_efficiency = 0.025
-
+	# Murex dye itself. Land trade efficiency stood here until 1.4, when
+	# vanilla's the_sahel_trade began granting it in this same age to every
+	# country whose first capital is in the Maghreb.
+	global_dyes_output_modifier = 0.1
+	trade_sea_efficiency = 0.1
 }
 
 nd_cth_triple_wall = {
@@ -58,9 +68,15 @@ nd_cth_triple_wall = {
 
 # === AGE 2: RENAISSANCE ===
 
-# Vanilla covers: mercenary maintenance, ship build speed, sailors
-# We add: cothon docks/shipyard, cavalry, glasswork, governance
+# Vanilla covers: the cothon harbour itself, with ship build speed and
+# sailors (cth_cothons), production efficiency (hispano_moresque_style),
+# land trade (trans_saharan_trade), heavy infantry and manpower (slave_soldiers)
+# We add: the shipwrights' method with shipyard and war galley, cavalry,
+# glasswork, governance
 
+# The key still says cothon, because saves, the shipyard building and
+# event nd_cth.3 refer to it. The subject is the shipwrights' method (hulls
+# built from lettered parts), since vanilla's cth_cothons is the harbour.
 nd_cth_cothon_docks = {
 	age = age_2_renaissance
 	potential = { has_or_had_tag = CTH }
@@ -94,7 +110,10 @@ nd_cth_phoenician_glass = {
 	requires = patron_of_art
 	icon = patron_of_art
 	unlock_building = nd_cth_glassworks
-	global_production_efficiency = 0.05
+	# Glass itself. General production efficiency stood here until 1.4, when
+	# vanilla's hispano_moresque_style began granting it in this same age,
+	# behind the same prerequisite, to every Amazigh or Maghrebi country.
+	global_glass_output_modifier = 0.15
 }
 
 nd_cth_council_of_elders = {
@@ -108,8 +127,9 @@ nd_cth_council_of_elders = {
 
 # === AGE 3: DISCOVERY ===
 
-# Vanilla covers: exploration cost, colonial range
-# We add: libyan infantry, naval rams/quinquereme, literacy, diplomacy+emporium
+# Vanilla covers: exploration (cth_legacy_of_hannon), forts and defence
+# (amazigh_group_igherman), navy tradition and light ships (rais_of_the_navy)
+# We add: libyan infantry, naval rams/quinquereme, Punic books, diplomacy+emporium
 
 nd_cth_libyan_infantry_reforms = {
 	age = age_3_discovery
@@ -144,8 +164,10 @@ nd_cth_punic_literacy = {
 	potential = { has_or_had_tag = CTH }
 	requires = printing_press_advance
 	icon = printing_press_advance
-	global_monthly_literacy = 0.015
-	research_speed_modifier = 0.05
+	# Books in Punic off the press this advance requires. Literacy and
+	# research stood here until 1.4, when vanilla's city_of_scholars (the
+	# same two keys) opened to every Amazigh or Maghrebi country.
+	global_books_output_modifier = 0.2
 	cultural_tradition_modifier = 0.1
 }
 
@@ -161,7 +183,9 @@ nd_cth_carthaginian_diplomacy = {
 
 # === AGE 4: REFORMATION ===
 
-# Vanilla covers: wine output, trade efficiency, galiot unlock
+# Vanilla covers: colonial range and exports (cth_punic_global_trade),
+# diplomatic capacity and range (amazigh_group_taqbilt_solidarity), xebec,
+# galiot and musketeer unlocks
 # We add: trade monopoly, naval dominance, urban planning, mercenary+fondouk
 
 nd_cth_royal_purple_monopoly = {
@@ -171,7 +195,9 @@ nd_cth_royal_purple_monopoly = {
 	icon = global_trade_advance
 	global_raw_material_output = 0.1
 	global_merchant_power = 0.1
-	global_merchant_capacity_modifier = 0.1
+	# The purple cloth the dye works make. Merchant capacity stood here, the
+	# same key at the same value as vanilla's cth_merchant_legacy.
+	global_fine_cloth_output_modifier = 0.15
 }
 
 nd_cth_mediterranean_dominance = {
@@ -181,7 +207,10 @@ nd_cth_mediterranean_dominance = {
 	icon = leader_recruit_cost_advance
 	navy_galley_power = 0.15
 	blockade_efficiency = 0.1
-	monthly_navy_tradition = 0.15
+	# "Navy Initiative": who strikes first in a sea battle, which is what
+	# seamanship and galley tactics decide. Navy tradition stood here, one
+	# age after vanilla's rais_of_the_navy grants it.
+	navy_initiative = 0.2
 }
 
 nd_cth_punic_urban_planning = {
@@ -206,7 +235,8 @@ nd_cth_mercenary_reforms = {
 
 # === AGE 5: ABSOLUTISM ===
 
-# Vanilla covers: sufet rule (republic, republican tradition, stability)
+# Vanilla covers: sufet rule (republics only: government power, stability),
+# army speed and levy muster (amazigh_group_levy_traditions)
 # We add: military reform, Barcid naval legacy, institutional growth, siege engineering
 
 nd_cth_punic_military_reform = {
@@ -228,8 +258,11 @@ nd_cth_barcid_legacy = {
 	requires = maritime_advance_age_5
 	icon = maritime_advance_age_5
 	global_maritime_presence_modifier = 0.15
-	global_sailors_modifier = 0.15
-	monthly_navy_tradition = 0.15
+	# Hamilcar raided the Italian coast from Sicily for six years and his
+	# house ran a second Carthage in Iberia: reach, not crews. Sailors stood
+	# here, the key vanilla's cth_cothons grants.
+	naval_range_modifier = 0.1
+	monthly_navy_tradition = 0.1
 }
 
 nd_cth_punic_institutions = {
@@ -253,7 +286,8 @@ nd_cth_siege_engineering = {
 
 # === AGE 6: REVOLUTIONS ===
 
-# Vanilla has nothing in age 6 for CTH
+# Vanilla covers: olive and wine output (cth_breadbasket_of_rome), cultural
+# influence and maximum literacy (amazigh_group_tifinagh_revival)
 # We add: constitutional reform + suffete court, cultural renaissance, modern navy, industrial base
 
 nd_cth_punic_constitution = {
@@ -283,7 +317,9 @@ nd_cth_modern_punic_fleet = {
 	icon = napoleonic_warfare
 	navy_heavy_ship_power = 0.15
 	naval_morale_modifier = 0.1
-	global_sailors_modifier = 0.2
+	# Modern yards refit a ship for less gold and fewer sailors. Sailors
+	# stood here at the value vanilla's cth_cothons already grants.
+	navy_repair_efficiency = 0.2
 }
 
 nd_cth_neo_punic_industry = {
@@ -291,7 +327,7 @@ nd_cth_neo_punic_industry = {
 	potential = { has_or_had_tag = CTH }
 	requires = industrialization_advance
 	icon = industrialization_advance
-	global_production_efficiency = 0.075
+	global_production_efficiency = 0.0375
 	global_raw_material_output = 0.1
 	global_monthly_development = 0.001
 }
@@ -304,9 +340,9 @@ nd_cth_destiny = {
 	potential = { has_or_had_tag = CTH has_variable = nd_cth_formed has_game_rule = nd_destinies_enabled }
 	allow = { stability >= 75 }
 	icon = crown_power_advance_renaissance
-	monthly_republican_tradition = 0.05
-	monthly_devotion = 0.05
-	monthly_legitimacy = 0.05
+	# Government power stood here. The Tophet cult above grants the same
+	# family, and so does vanilla's cth_sufet_rule since 1.4.
+	monthly_prestige = 0.1
 }
 
 # --- Path A: Thalassocratic Destiny ---
@@ -354,11 +390,23 @@ nd_cth_dest_mare_nostrum = {
 		owns_or_non_sovereign_subject_owns = location:alexandria
 		owns_or_non_sovereign_subject_owns = location:candia
 		prestige >= 75
-		total_development >= 3500
+		# Carthage itself (the location is Tunis): 31 in 1337
+		# (scripts/development_estimate.py --explain tunis), to be doubled. The
+		# ancient city was the largest of the western Mediterranean.
+		custom_tooltip = {
+			text = nd_cth_dest_carthage_developed_tt
+			location:tunis = {
+				owner ?= root
+				development >= 62
+			}
+		}
 	}
 	icon = maritime_advance_age_5
-	tax_income_efficiency = 0.05
-	colonial_range_modifier = 0.15
+	tax_income_efficiency = 0.03
+	# A sea ringed by Punic harbours is home water everywhere: a bonus to
+	# fleets fighting next to owned shores. Colonial range stood here, the
+	# key vanilla's cth_punic_global_trade grants.
+	own_coast_naval_combat_bonus = 0.1
 	prestige_decay = -0.001
 	unlock_building = nd_cth_dest_cothon_emporium
 }
@@ -409,7 +457,17 @@ nd_cth_dest_hannibal_ante_portas = {
 		owns_or_non_sovereign_subject_owns = location:naples
 		army_size >= 75
 		prestige >= 75
-		total_development >= 3500
+		# Campania: after Cannae, Capua and most of the south went over to
+		# Hannibal. Half of the area's fifteen locations, subjects' land counted.
+		custom_tooltip = {
+			text = nd_cth_dest_campania_share_tt
+			area:campania_area = {
+				any_location_in_area = {
+					percent >= 0.5
+					root = { owns_or_non_sovereign_subject_owns = prev }
+				}
+			}
+		}
 	}
 	icon = imperial_ambitions
 	monthly_army_tradition = 0.05

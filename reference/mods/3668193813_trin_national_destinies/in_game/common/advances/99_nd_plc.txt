@@ -17,9 +17,9 @@ nd_plc_amber_trade = {
 	requires = guilds
 	icon = guilds
 	unlock_building = nd_plc_amber_workshop
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -40,7 +40,13 @@ nd_plc_multi_faith_roots = {
 	potential = { has_or_had_tag = PLC }
 	requires = organized_religion
 	icon = organized_religion
-	tolerance_heathen = 1
+	# Communities that hold a charter of protection have no cause to rise
+	# over their faith (-0.01 is what vanilla's two advances on this key
+	# grant, country_bos.txt:165 and country_SMO.txt:19). Not
+	# tolerance_heathen, which Poland's vanilla statute_of_kalisz and
+	# Lithuania's land_of_many_religions grant in this age, and not
+	# tolerance_heretic, which the Lithuanian one grants too.
+	monthly_religious_rebel_growth = -0.01
 	cultures_capacity = 1
 }
 
@@ -82,7 +88,7 @@ nd_plc_pospolite_reforms = {
 	potential = { has_or_had_tag = PLC }
 	requires = drill_army_advance
 	icon = drill_army_advance
-	nobles_estate_levy_size = 1
+	nobles_estate_levy_size = 0.5
 	global_levy_size_modifier = 0.1
 }
 
@@ -130,8 +136,8 @@ nd_plc_lipka_tatars = {
 	requires = diplomatic_training
 	icon = diplomatic_training
 	unlock_levy = levy_nd_plc_lipka_tatar
-	army_light_cavalry_power = 0.2
-	tolerance_heathen = 1.25
+	army_light_cavalry_power = 0.15
+	tolerance_heathen = 1
 }
 
 # Vistula grain trade: the Baltic grain corridor
@@ -141,9 +147,9 @@ nd_plc_vistula_trade = {
 	requires = merchant_power_from_maritime_discovery_advance
 	icon = merchant_power_from_maritime_discovery_advance
 	global_merchant_power = 0.1
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -216,7 +222,7 @@ nd_plc_gdansk_trade = {
 	requires = global_trade_advance
 	icon = global_trade_advance
 	unlock_building = nd_plc_spichrz
-	trade_income = 0.15
+	trade_income = 0.1
 	global_merchant_capacity_modifier = 0.1
 }
 
@@ -241,8 +247,8 @@ nd_plc_sarmatism = {
 	icon = construction_speed_absolutism
 	cultural_tradition_modifier = 0.15
 	monthly_prestige = 0.1
-	army_heavy_cavalry_power = 0.15
-	land_morale_modifier = 0.15
+	army_heavy_cavalry_power = 0.1
+	land_morale_modifier = 0.1
 }
 
 # Commonwealth tolerance: refuge of the persecuted
@@ -251,9 +257,10 @@ nd_plc_refuge_of_nations = {
 	potential = { has_or_had_tag = PLC }
 	requires = absolutism_agressive_advance
 	icon = absolutism_agressive_advance
+	unlock_building = nd_plc_oledry
 	cultures_capacity = 2
 	global_pop_assimilation_speed_modifier = 0.1
-	tolerance_heretic = 1.25
+	tolerance_heretic = 1
 }
 
 # Lithuanian Tribunal: separate legal system
@@ -286,7 +293,8 @@ nd_plc_national_uprising = {
 	potential = { has_or_had_tag = PLC }
 	requires = napoleonic_warfare
 	icon = napoleonic_warfare
-	land_morale_modifier = 0.15
+	unlock_levy = levy_nd_plc_kosynierzy
+	land_morale_modifier = 0.1
 	global_manpower_modifier = 0.15
 	monthly_war_exhaustion = -0.05
 }
@@ -298,7 +306,7 @@ nd_plc_economic_reform = {
 	requires = industrialization_advance
 	icon = industrialization_advance
 	unlock_building = nd_plc_manufaktura
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 	global_construction_speed = 0.1
 }
 
@@ -340,8 +348,12 @@ nd_plc_dest_sejm_ascendant = {
 		gold >= 1000
 	}
 	icon = merchants_and_trade
-	tax_income_efficiency = 0.05
-	global_monthly_prosperity = 0.001
+	tax_income_efficiency = 0.03
+	# The stage asks for banking and a full treasury: the republic's credit
+	# grows (5 a month is what vanilla gives its banking cultures, the
+	# Tuscans, Ligurians and Catalans). Not prosperity, which Poland's
+	# vanilla land_of_promise grants in the same age.
+	monthly_loan_capacity_investment = 5
 }
 
 nd_plc_dest_breadbasket = {
@@ -349,7 +361,17 @@ nd_plc_dest_breadbasket = {
 	requires = nd_plc_dest_sejm_ascendant
 	potential = { has_or_had_tag = PLC has_variable = nd_plc_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		total_development >= 5500
+		# Gdansk is the port the grain went out through. It grew from a
+		# Teutonic harbour into the Commonwealth's largest city on that
+		# trade. 1337 value 25.8 (scripts/development_estimate.py
+		# --explain gdansk), raised by half for a second stage.
+		custom_tooltip = {
+			text = nd_plc_dest_gdansk_developed_tt
+			location:gdansk = {
+				owner ?= root
+				development >= 39
+			}
+		}
 		gold >= 2000
 		capital = {
 			market = {
@@ -362,7 +384,7 @@ nd_plc_dest_breadbasket = {
 	}
 	icon = agriculture_advance
 	global_trade_center_power = 0.05
-	global_monthly_development = 0.003
+	global_monthly_development = 0.001
 }
 
 nd_plc_dest_republic_of_nations = {
@@ -371,7 +393,17 @@ nd_plc_dest_republic_of_nations = {
 	potential = { has_or_had_tag = PLC has_variable = nd_plc_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		has_embraced_institution = institution:enlightenment
-		total_development >= 7500
+		# Warsaw was a Mazovian river town in 1337 and the seat of the Sejm,
+		# the court and the Constitution of 1791 by the end. 1337 value 21
+		# (scripts/development_estimate.py --explain warsaw), doubled for
+		# a third stage.
+		custom_tooltip = {
+			text = nd_plc_dest_warsaw_developed_tt
+			location:warsaw = {
+				owner ?= root
+				development >= 42
+			}
+		}
 		gold >= 3000
 		prestige >= 75
 	}
@@ -395,7 +427,9 @@ nd_plc_dest_eastern_march = {
 		}
 		owns = location:smolensk
 		owns = location:kyiv
-		army_size >= 30
+		# The third city of the eastern frontier: the Commonwealth held
+		# Smolensk and Chernihiv together from 1618.
+		owns = location:chernihiv
 	}
 	icon = feudalism_advance
 	siege_ability = 0.1
@@ -409,7 +443,15 @@ nd_plc_dest_black_sea_reach = {
 	allow = {
 		owns = location:kaffa
 		owns = location:kamianets_podilskyi
-		army_size >= 50
+		# The steppe frontier was held from magnate strongholds: the
+		# zamek of nd_plc_magnate_fortifications (age 4) in four places.
+		custom_tooltip = {
+			text = nd_plc_dest_zamek_4_tt
+			any_owned_location = {
+				count >= 4
+				has_building = building_type:nd_plc_zamek
+			}
+		}
 		gold >= 2000
 	}
 	icon = imperial_ambitions
@@ -424,8 +466,20 @@ nd_plc_dest_bulwark_of_christendom = {
 	allow = {
 		owns = location:moscow
 		owns = location:constantinople
-		army_size >= 75
+		custom_tooltip = {
+			text = nd_plc_dest_zamek_8_tt
+			any_owned_location = {
+				count >= 8
+				has_building = building_type:nd_plc_zamek
+			}
+		}
 		prestige >= 75
+		# Sarmatism (age 5) is the creed that made the szlachta call their
+		# republic the rampart of the faith. Without it this path could be
+		# finished in the first age while the Golden Liberty path waits for
+		# the Enlightenment (owner's ruling 2026-10-02: both paths end
+		# within two ages of each other; scripts/destiny/stage_floors.py).
+		has_advance = nd_plc_sarmatism
 	}
 	icon = imperial_ambitions
 	unlock_building = nd_plc_hetman_arsenal

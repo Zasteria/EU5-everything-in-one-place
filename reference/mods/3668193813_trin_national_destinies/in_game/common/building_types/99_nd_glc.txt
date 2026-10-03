@@ -1,0 +1,598 @@
+﻿# ============================================================================
+# Galicia (GLC): custom buildings
+# National Destinies mod
+# ============================================================================
+#
+# What is NOT here, because somebody already built it:
+#   vanilla: the Tower of Hercules (a monument at A Coruna), the cathedral,
+#   the fishing village, the dock ladder from dock to naval base, the mason,
+#   the winery, the jewelry guild, the stockade and the castle.
+#   Leon (99_nd_lon.txt): the Frankish borough of the pilgrim road, the
+#   raised granary, the linen works, the summer pasture.
+#   Spain, Castile, Portugal, Valencia: the purveyor's yard, the royal salt
+#   works, the king's pine wood, the hemp walk, the coast tower.
+#
+# What is here is the kingdom's own ground: the jet and badge workshop at
+# the cathedral door, the mariners' confraternity and its seine, the wine
+# priory of a monastery, the tower of a lord (which the brotherhood of 1467
+# can pull down for good), the House of Spices, the pazo, the granite
+# masons' yard, the royal dockyards and the works of Sargadelos.
+#
+# Every production method is inline, names the margin of its tier, and was
+# sized with eu5-profit (cap written as a name, never switched off).
+
+# ----------------------------------------------------------------------------
+# Obradoiro de Acibeche (age 1)
+# ----------------------------------------------------------------------------
+# A workshop of the Acibecheria, the street on the north side of the
+# cathedral of Santiago: jet from the Asturian coast carved into scallop
+# shells, figures of the Apostle and hands closed in a fist against the evil
+# eye, set in silver; and beside it the concheiros, casting the pilgrim's
+# badge in tin. The guild refused soft jet that would crack under the knife.
+# Jet is not a trade good: the silver is the setting and the tin the badge.
+# allow: a cathedral must stand in the location. The trade lived off the
+# people who came to a shrine and sold at its door; without one it is
+# vanilla's jewelry guild and no more.
+# Settlement: towns and cities. A plain producer with no modifier block, so
+# it takes the guild level formula as vanilla's jewelry guild does.
+nd_glc_obradoiro_de_acibeche = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	startup_ramp_target = guild_startup_ramp_target
+	employment_size = guild_employment
+	category = consumer_goods_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_glc_acibecheiros_e_concheiros
+	}
+
+	allow = {
+		custom_tooltip = {
+			text = nd_glc_acibeche_needs_cathedral_tt
+			has_building = building_type:cathedral
+		}
+	}
+
+	unique_production_methods = {
+		nd_glc_acibeche_e_prata = {
+			silver = 0.5
+			tin = 0.2
+			tools = 0.05
+			produced = jewelry
+			output = 0.852
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# ----------------------------------------------------------------------------
+# Confraria de Mareantes (age 2; a second method in age 6)
+# ----------------------------------------------------------------------------
+# The mariners' confraternity of a fishing town, under the patronage of the
+# Corpo Santo: it owns the great seine in shares, says who may shoot it and
+# when, keeps the lamp of the chapel and buries its dead. The mariners of
+# Pontevedra paid for the church of Santa Maria a Maior out of the sardine.
+# location_potential: the shore (is_coastal, vanilla's own gate for the
+# fishing village) in a market where fish is landed. The strict form
+# (raw_material = fish) would shut out Pontevedra itself, whose raw material
+# on this map is salt, so the market form is used.
+# Settlement: countryside and town, never a city. The mariners lived in a
+# quarter of their own outside the walls, the Moureira; a city's waterfront
+# belongs to its merchants.
+# Vanilla's rural shape: building_maintenance with produced, output and the
+# rural margin. The salt is the cure, the lumber the boats, the fiber the
+# net.
+nd_glc_confraria_de_mareantes = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = rural_building_cap
+	startup_ramp_target = rural_startup_ramp_target
+	employment_size = rural_peasant_produce_employment
+	category = rgo_building_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_glc_cerco_dos_mareantes
+	}
+
+	location_potential = {
+		is_coastal = yes
+		is_produced_in_location_market = goods:fish
+	}
+
+	unique_production_methods = {
+		# The cerco: the confraternity's own seine, shot from the boats of
+		# the whole quarter, and the catch salted in open tubs.
+		nd_glc_cerco_real = {
+			salt = 0.1
+			lumber = 0.1
+			fiber_crops = 0.05
+			produced = fish
+			output = 0.78
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+		# Unlocked by nd_glc_fomentadores_da_salga (age 6): the Catalan
+		# way. The sardine is packed in salt in casks and pressed under
+		# weighted beams until the oil runs out, and it keeps for a year.
+		# More salt, more casks, the ironwork of the press, twice the fish.
+		nd_glc_salga_de_prensa = {
+			salt = 0.25
+			lumber = 0.15
+			tools = 0.03
+			produced = fish
+			output = 1.578
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = farm_constructions
+}
+
+# ----------------------------------------------------------------------------
+# Priorado Vinateiro (age 2)
+# ----------------------------------------------------------------------------
+# A wine priory: two or three monks sent down from Oseira, Melon, San Clodio
+# or Celanova to a house among the vines, with a press, a cellar and the
+# tenants who work the terraces for a share. The wine goes up to the abbey
+# and down the river to the ships.
+# location_potential: the location's own raw material must be wine (the
+# strict form). The priory follows the vine and cannot conjure it; in the
+# kingdom that is Ourense and Monforte de Lemos.
+# Settlement: countryside and town, never a city. A priory stood in its
+# vineyard.
+# The inputs are the upkeep of the work: stakes, casks and the vine
+# dresser's knife. Vanilla's rural shape.
+nd_glc_priorado_vinateiro = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = rural_building_cap
+	startup_ramp_target = rural_startup_ramp_target
+	employment_size = rural_peasant_produce_employment
+	category = rgo_building_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_glc_vino_do_ribeiro
+	}
+
+	location_potential = {
+		raw_material = goods:wine
+	}
+
+	unique_production_methods = {
+		nd_glc_vino_do_priorado = {
+			lumber = 0.2
+			tools = 0.05
+			produced = wine
+			output = 0.27
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = farm_constructions
+}
+
+# ----------------------------------------------------------------------------
+# Torre do Senor (age 2)
+# ----------------------------------------------------------------------------
+# The tower house of a Galician lord: a square keep of granite on a rock, a
+# handful of squires and crossbowmen, and the right to make every tenant in
+# sight of it carry stone, mount guard and pay. It gives the nobles a grip
+# on the district and men for the host, and the district hates it (the
+# positive local_unrest is a deliberate cost).
+# It is not a fort: no fort level and no zone of control. Vanilla's stockade
+# and castle are the fortresses; this is a lordship in stone.
+# country_potential and remove_if: the Santa Irmandade can pull every tower
+# in the kingdom down and forbid their rebuilding (event nd_glc.3, which
+# sets nd_glc_torres_prohibidas). The towers then fall and can never be
+# raised again.
+# No location_potential on purpose: a lord's tower stood wherever a lord had
+# tenants, on the coast and inland alike (the brotherhood counted some 130).
+# The settlement flags are the gate: countryside and town, never a city,
+# where the lord kept a house and not a keep.
+# Upkeep 1.15 at base prices (stone 1, weaponry 3, horses 3, wine 2) against
+# vanilla's peel tower at 1.00 and castle at 0.60.
+nd_glc_torre_do_senor = {
+	is_special = yes
+	is_foreign = no
+	pop_type = soldiers
+	max_levels = 1
+	employment_size = stockade_employment
+	category = defense_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	expensive = yes
+	build_time = small_fort_building
+
+	country_potential = {
+		has_advance = nd_glc_fernan_perez_o_boo
+		NOT = { has_variable = nd_glc_torres_prohibidas }
+	}
+
+	remove_if = {
+		location.owner ?= { has_variable = nd_glc_torres_prohibidas }
+	}
+
+	modifier = {
+		local_nobles_estate_power = 0.5
+		local_garrison_size = 0.1
+		local_levy_size_modifier = 0.1
+		local_unrest = 0.03
+	}
+
+	unique_production_methods = {
+		nd_glc_torre_do_senor_maintenance = {
+			stone = 0.2
+			weaponry = 0.2
+			horses = 0.05
+			wine = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = peel_towers_construction
+}
+
+# ----------------------------------------------------------------------------
+# Casa da Especiaria (age 3)
+# ----------------------------------------------------------------------------
+# The House of Spices: a factor, a treasurer and an accountant of the Crown
+# in a port of the north, with a warehouse for the cloves and the right to
+# fit out the fleets that fetch them. Charles V founded it at A Coruna in
+# 1522 because the port was safe and nearer to Flanders than Seville was.
+# One for the whole country (allow): it was a single royal office.
+# location_potential and allow: vanilla's port authority pattern, the shore
+# to be seen and a port to be built (trade_buildings.txt:204-210).
+# Settlement: towns and cities. A royal office sat in a walled port.
+# Upkeep 2.20 at base prices (paper 2, naval supplies 3, cloth 3, tools 3)
+# against vanilla's port authority at 1.75.
+nd_glc_casa_da_especiaria = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = trade_employment
+	category = trade_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = trade_post_build_time
+
+	country_potential = {
+		has_advance = nd_glc_trato_da_especiaria
+	}
+
+	location_potential = {
+		is_coastal = yes
+	}
+
+	allow = {
+		is_port = yes
+		country_has_no_other_copy_of_building = { type = nd_glc_casa_da_especiaria }
+	}
+
+	modifier = {
+		local_merchant_capacity = 1
+		local_merchant_power = 0.5
+		local_trades_per_burgher = 0.25
+	}
+
+	unique_production_methods = {
+		nd_glc_casa_da_especiaria_maintenance = {
+			paper = 0.5
+			naval_supplies = 0.25
+			cloth = 0.1
+			tools = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = warehouse_construction
+}
+
+# ----------------------------------------------------------------------------
+# Pazo (age 5)
+# ----------------------------------------------------------------------------
+# The country house of a fidalgo: granite, an outside stair, a coat of arms
+# over the door, a chapel, a dovecote, a cypress and a walled garden. The
+# family holds the land in foro from a monastery and lets it again to the
+# men who work it, and sees that they work it. The district yields more and
+# its peasants answer to the house (the negative enfranchisement is a
+# deliberate cost).
+# No location_potential on purpose: the settlement flag is the gate. A pazo
+# is by definition a house in the country, and there was one in every valley
+# from the Mino to the Eo.
+# Upkeep 1.10 at base prices (stone 1, furniture 3, wine 2, cloth 3), just
+# above the cheapest tenth of vanilla's cultural buildings (1.05): a
+# gentleman's house in the country, not a palace.
+nd_glc_pazo = {
+	is_special = yes
+	is_foreign = no
+	pop_type = nobles
+	max_levels = 1
+	employment_size = noble_cultural_employment
+	category = cultural_category
+	rural_settlement = yes
+	town = no
+	city = no
+	build_time = cultural_building_time
+
+	country_potential = {
+		has_advance = nd_glc_fidalguia_dos_pazos
+	}
+
+	modifier = {
+		local_nobles_estate_power = 0.25
+		local_raw_material_output = 0.05
+		local_peasant_enfranchisment = -0.02
+	}
+
+	unique_production_methods = {
+		nd_glc_pazo_maintenance = {
+			stone = 0.2
+			furniture = 0.1
+			wine = 0.15
+			cloth = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = village_construction
+}
+
+# ----------------------------------------------------------------------------
+# Obradoiro de Canteiros (age 5)
+# ----------------------------------------------------------------------------
+# A yard of granite masons: the stone comes down from the quarry in the
+# rough and leaves as ashlar, mouldings, balusters and the flat plates of
+# the Compostelan Baroque. The canteiros of Pontevedra and the Terra de
+# Montes worked from Lisbon to Madrid and spoke a trade jargon among
+# themselves.
+# location_potential: stone must reach the local market. Masonry is a made
+# good, so nothing is conjured here; the gate keeps the yard where there is
+# stone to cut.
+# Settlement: towns and cities, where the building was. A plain producer
+# with no modifier block, so it takes the guild level formula.
+nd_glc_obradoiro_de_canteiros = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = guild_max_level
+	startup_ramp_target = guild_startup_ramp_target
+	employment_size = guild_employment
+	category = basic_industry_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_glc_barroco_compostelan
+	}
+
+	location_potential = {
+		is_produced_in_location_market = goods:stone
+	}
+
+	unique_production_methods = {
+		nd_glc_canteria_de_gra = {
+			stone = 0.6
+			tools = 0.05
+			produced = masonry
+			output = 0.9
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# ----------------------------------------------------------------------------
+# Reais Estaleiros (age 5)
+# ----------------------------------------------------------------------------
+# The royal dockyards of a maritime department: slips side by side, a mast
+# pond, rope walk, forges and stores inside one wall, and a workforce of
+# thousands living at its gate. Ferrol was a fishing village before 1726.
+# It stands BESIDE vanilla's dock ladder and replaces none of it: more
+# slips, faster building and repair. It grants no right to build ships of
+# its own, so a port with no dock gains nothing from it.
+# One for the whole country (allow): a department had one arsenal.
+# location_potential: is_port, the trigger vanilla's own dock ladder uses.
+# Settlement: towns and cities, as vanilla's docks.
+# Upkeep 3.95 at base prices (tar 2, naval supplies 3, tools 3, lumber 1.5,
+# iron 3) against vanilla's dry dock at 3.80, whose two slips it matches.
+nd_glc_reais_estaleiros = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = 1
+	employment_size = dry_dock_employment
+	category = naval_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = large_port_building_time
+
+	country_potential = {
+		has_advance = nd_glc_departamento_maritimo
+	}
+
+	location_potential = {
+		is_port = yes
+	}
+
+	allow = {
+		country_has_no_other_copy_of_building = { type = nd_glc_reais_estaleiros }
+	}
+
+	modifier = {
+		max_ships_built_at_same_time = 2
+		local_ship_build_speed = 0.25
+		local_repair_speed = 0.04
+		local_sailors = 0.03
+	}
+
+	unique_production_methods = {
+		nd_glc_reais_estaleiros_maintenance = {
+			tar = 0.4
+			naval_supplies = 0.3
+			tools = 0.4
+			lumber = 0.5
+			iron = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = port_building_construction
+}
+
+# ----------------------------------------------------------------------------
+# Real Fabrica de Sargadelos (age 6)
+# ----------------------------------------------------------------------------
+# A blast furnace and a pottery in one wooded parish: ore from the hill,
+# charcoal from the oak woods, a dammed stream for the bellows and white
+# clay from the next valley. Cooking pots and shot first, then a fine
+# earthenware printed from copper plates.
+# location_potential: the location's own raw material must be iron or clay.
+# The works stood on its ore and its kaolin; in the kingdom that is Viveiro,
+# Navia de Suarna and Ribadavia. Tools and pottery are made goods, so
+# nothing is conjured.
+# Settlement: countryside and town, never a city. It was built in a rural
+# parish for the wood and the water. Because it can stand in the
+# countryside its methods name the rural margin, as vanilla's mason does.
+# A plain producer with no modifier block, so it takes a level formula.
+nd_glc_fabrica_de_sargadelos = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = guild_max_level
+	startup_ramp_target = rural_startup_ramp_target
+	employment_size = advanced_peasant_building_employment
+	category = consumer_goods_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_glc_ferro_e_louza
+	}
+
+	location_potential = {
+		OR = {
+			raw_material = goods:iron
+			raw_material = goods:clay
+		}
+	}
+
+	unique_production_methods = {
+		# The furnace: cast iron pots, grates and tools. The lumber is the
+		# charcoal.
+		nd_glc_sargadelos_ferro_coado = {
+			iron = 0.4
+			lumber = 0.4
+			coal = 0.1
+			produced = tools
+			output = 0.8
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+		# The pottery of 1806: fine white earthenware, glazed with lead and
+		# decorated by transfer.
+		nd_glc_sargadelos_louza_fina = {
+			clay = 1.0
+			coal = 0.2
+			tools = 0.1
+			lead = 0.05
+			produced = pottery
+			output = 1.56
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# ===== DESTINY BUILDINGS =====
+
+# ----------------------------------------------------------------------------
+# Real Consulado (destiny, path B capstone)
+# ----------------------------------------------------------------------------
+# The merchants' own court and board: a prior and two consuls who judge
+# suits of trade without lawyers, keep a school of navigation for pilots
+# and a library open to the town. A Coruna was given one in 1785; a
+# Galicia that kept the clove trade would have had it two centuries sooner.
+# location_potential and allow: the shore and a port, as the Casa da
+# Especiaria above, and one for the whole country: it was a single court.
+# Settlement: cities only. A consulado was chartered to a city with enough
+# merchants to elect it, never to a market town.
+# Not the Casa da Especiaria: that is a Crown warehouse that adds merchant
+# capacity; this is the merchants' own body, and what it adds is their
+# weight in the market and their schooling.
+# Upkeep: paper and books for the court and the library, naval supplies
+# and tools for the school's instruments, cloth for the hall.
+nd_glc_dest_real_consulado = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = trade_employment
+	category = trade_category
+	rural_settlement = no
+	town = no
+	city = yes
+	megalopolis = yes
+	build_time = trade_post_build_time
+
+	country_potential = {
+		has_advance = nd_glc_dest_illas_do_cravo
+	}
+
+	location_potential = {
+		is_coastal = yes
+	}
+
+	allow = {
+		is_port = yes
+		country_has_no_other_copy_of_building = { type = nd_glc_dest_real_consulado }
+	}
+
+	modifier = {
+		local_merchant_power = 1
+		local_trade_center_power = 0.1
+		local_burghers_max_literacy = 5
+		local_burghers_estate_power = 0.1
+	}
+
+	unique_production_methods = {
+		nd_glc_dest_real_consulado_maintenance = {
+			paper = 0.2
+			books = 0.1
+			naval_supplies = 0.1
+			cloth = 0.1
+			tools = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = warehouse_construction
+}

@@ -1,0 +1,96 @@
+﻿# ==========================================================================
+# THE SUCCESSION OF THE DANUBE: the throne taken at the peace table.
+#
+# A war for a crown's throne is fought on vanilla's cb_claim_throne, and
+# its own peace term (the engine's "installing <character> as ruler") says
+# nothing about who leads the union it makes. When the loser already leads
+# a union, the winner comes out its junior (see THE THRONE WAR in
+# scripted_effects/nd_danube_effects.txt). This treaty writes the answer
+# in: the winner forces the union and is its senior partner. Where the
+# loser led a union, its other members are brought along, as vanilla does
+# when seniority changes hands by war (assume_union_senority.txt:30-51);
+# the engine's term seats one king on one throne and leaves them behind.
+#
+# Modelled on vanilla's two scripted throne treaties:
+#   assume_union_senority.txt:11-52  potential by casus belli, the loser's
+#                                    old union members carried along,
+#                                    force_union, set_senior_partner
+#   claim_french_throne.txt:43-45    the loser's capital in the winner's
+#                                    hands
+#   claim_french_throne.txt:72-79    policy and status after the call
+#                                    (inside nd_dnb_take_seniority)
+#
+# Offered only between two free crowns while the question is open, to the
+# side that declared the claim. A captive crown (a subject, or a junior
+# under an outside senior) is left to the engine's term: forcing a union
+# on it would reach into its master's union. The settlement in
+# nd_danube_effects.txt covers that road and the engine's term in general.
+# ==========================================================================
+peace_nd_dnb_take_the_crown = {
+	cost = {
+		add = {
+			desc = "DIPLOREASON_BASE"
+			value = 80
+		}
+	}
+
+	base_antagonism = 10
+	antagonism_type = antagonism_assume_union_senority
+
+	potential = {
+		has_global_variable = nd_dnb_active
+		scope:war = {
+			is_no_cb_war = no
+			casus_belli ?= casus_belli:cb_claim_throne
+			attacker_leader ?= scope:winner
+			defender_leader ?= scope:loser
+		}
+		scope:winner ?= {
+			nd_dnb_crown_independent = yes
+		}
+		scope:loser ?= {
+			nd_dnb_crown_independent = yes
+		}
+	}
+
+	allow = {
+		scope:loser = {
+			capital ?= { controller = scope:winner }
+		}
+	}
+
+	effect = {
+		scope:loser = {
+			if = {
+				limit = {
+					exists = union
+					union = { country_is_senior_partner = { country = scope:loser } }
+				}
+				union = {
+					every_international_organization_member = {
+						limit = {
+							NOT = { this = scope:loser }
+							NOT = { this = scope:winner }
+						}
+						add_to_list = nd_dnb_old_union_members
+					}
+				}
+			}
+		}
+		scope:winner = {
+			if = {
+				limit = { NOT = { in_union_with = scope:loser } }
+				force_union = scope:loser
+			}
+			nd_dnb_take_seniority = yes
+		}
+		every_in_list = {
+			list = nd_dnb_old_union_members
+			scope:winner = { force_union = prev }
+		}
+	}
+
+	ai_desire = {
+		value = 1000
+	}
+}

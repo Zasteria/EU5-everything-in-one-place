@@ -70,9 +70,9 @@ nd_mge_ortaq_partnerships = {
 	requires = merchants_and_trade
 	icon = merchants_and_trade
 	unlock_building = nd_mge_ortaq_house
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -110,7 +110,6 @@ nd_mge_silk_road_protection = {
 	potential = { has_or_had_tag = MGE }
 	requires = nd_mge_ortaq_partnerships
 	icon = merchants_and_trade
-	unlock_production_method = nd_mge_caravan_tolls
 	global_merchant_power = 0.1
 }
 
@@ -130,7 +129,6 @@ nd_mge_pax_mongolica_trade = {
 	potential = { has_or_had_tag = MGE }
 	requires = merchant_power_from_maritime_discovery_advance
 	icon = merchant_power_from_maritime_discovery_advance
-	unlock_production_method = nd_mge_silk_road_exchange
 	trade_income = 0.1
 }
 
@@ -255,7 +253,7 @@ nd_mge_steppe_modernization = {
 	potential = { has_or_had_tag = MGE }
 	requires = industrialization_advance
 	icon = industrialization_advance
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 	global_construction_speed = 0.1
 }
 
@@ -280,10 +278,10 @@ nd_mge_destiny = {
 	potential = { has_or_had_tag = MGE has_variable = nd_mge_formed has_game_rule = nd_destinies_enabled }
 	allow = { stability >= 75 }
 	icon = crown_power_advance_renaissance
-	monthly_horde_unity = 0.05
-	monthly_devotion = 0.05
-	monthly_legitimacy = 0.05
-	monthly_republican_tradition = 0.05
+	# The empire risen again weighs on every neighbour. The government power
+	# family that stood here repeated the vanilla advance of the Yuan and
+	# the Chagatai (successors_of_genghis_khan, chg_legacy_of_chagatai).
+	power_projection = 5
 }
 
 nd_mge_dest_western_ride = {
@@ -297,10 +295,12 @@ nd_mge_dest_western_ride = {
 		}
 		owns_or_non_sovereign_subject_owns = location:baghdad
 		owns_or_non_sovereign_subject_owns = location:damascus
-		army_size >= 30
+		# No army_size in this path: the empire's army is the horde levy.
 	}
 	icon = imperial_ambitions
-	global_manpower_modifier = 0.1
+	# Hulagu took Baghdad by storm in thirteen days. Manpower stood here and
+	# repeated the Golden Horde's own vanilla advance (glh_kipchak_khanate).
+	assault_ability = 0.1
 	amount_looted_modifier = 0.25
 }
 
@@ -311,7 +311,6 @@ nd_mge_dest_southern_campaign = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:delhi
 		owns_or_non_sovereign_subject_owns = location:lahore
-		army_size >= 50
 		gold >= 2000
 	}
 	icon = imperial_ambitions
@@ -328,14 +327,13 @@ nd_mge_dest_four_seas = {
 		owns_or_non_sovereign_subject_owns = location:cairo
 		owns_or_non_sovereign_subject_owns = location:buda
 		prestige >= 75
-		army_size >= 75
 	}
 	icon = imperial_ambitions
 	unlock_building = nd_mge_war_camp
 	global_war_score_efficiency = 0.05
 
 	land_morale_recovery = 0.01
-	global_devastation_recovery = 0.005
+	global_devastation_recovery = 0.0025
 }
 
 nd_mge_dest_silk_renewed = {
@@ -368,15 +366,22 @@ nd_mge_dest_exchange_civs = {
 	requires = nd_mge_dest_silk_renewed
 	potential = { has_or_had_tag = MGE has_variable = nd_mge_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		total_development >= 66500
+		# Tabriz: the capital of the Ilkhans, where Rashid al-Din kept
+		# Persian, Chinese and Frankish scholars at work on one history of
+		# the world. 19 in 1337, raised by half for a second stage.
+		custom_tooltip = {
+			text = nd_mge_dest_tabriz_developed_tt
+			location:tabriz = {
+				owner ?= root
+				development >= 29
+			}
+		}
 		prestige >= 50
 		has_embraced_institution = institution:printing_press
 	}
 	icon = merchants_and_trade
-	monthly_legitimacy = 0.1
-	monthly_devotion = 0.1
-	monthly_horde_unity = 0.1
-	monthly_republican_tradition = 0.1
+	# The exchange of knowledge: a new institution is taken up at less cost.
+	embrace_institution_cost_modifier = -0.1
 	global_separatism = -0.05
 }
 
@@ -385,7 +390,19 @@ nd_mge_dest_universal_dominion = {
 	requires = nd_mge_dest_exchange_civs
 	potential = { has_or_had_tag = MGE has_variable = nd_mge_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		total_development >= 88500
+		# Karakorum: Ogedei's capital of 1235, a town of 15 thousand in
+		# 1337. The seat of the empire is rebuilt as a city (vanilla's own
+		# shape for a place that has grown, advances/country_yem.txt).
+		custom_tooltip = {
+			text = nd_mge_dest_karakorum_city_tt
+			location:karakorum = {
+				owner ?= root
+				OR = {
+					location_rank ?= location_rank:city
+					location_rank ?= location_rank:megalopolis
+				}
+			}
+		}
 		gold >= 3000
 		prestige >= 75
 		capital ?= {

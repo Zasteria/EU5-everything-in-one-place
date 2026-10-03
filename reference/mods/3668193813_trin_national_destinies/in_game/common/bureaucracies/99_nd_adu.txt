@@ -1,10 +1,20 @@
 ﻿# National Destinies: Al-Andalus bureaucracies
 # Seven historically-grounded institutions of the Andalusi state, drawn
 # from the Caliphate of Cordoba (929-1031), the taifa kingdoms, and the
-# Almoravid/Almohad emirates that ruled al-Andalus. Auto-modifier grants
-# 3 slots; capital adds 1 = 4 total. Player picks 4 of 7.
+# Almoravid/Almohad emirates that ruled al-Andalus. The auto modifier grants
+# 3 slots and sharia law gives the fourth: half of the 7 institutions, rounded
+# up, on the day the country forms. A capital gives no slot unless it is a
+# megalopolis.
 #
 # All IDs prefixed with `adu_` to avoid cross-file collisions.
+#
+# Vanilla 1.4 ships generic Islamic bureaucracies for every Muslim country
+# (bureaucracies/muslim.txt), and Al-Andalus is Muslim by its formable's
+# own gate, so it holds those as well. Three blocks here once carried the
+# same office as a vanilla one (Diwan al-Jund, Hisba, Barid) and now carry
+# the Andalusi form instead. Their KEYS are unchanged, because saves and
+# the impact modifier registry refer to them, so adu_barid_bureaucracy is
+# now the watchtower line and not a postal service.
 
 # 1. Hijaba: the Caliphal chief-ministry. The hajib stood at the head
 #    of the chancery, received petitioners, drafted decrees, and from
@@ -33,10 +43,10 @@ adu_hijaba_bureaucracy = {
 		nobles_estate
 	}
 
+	# The hajib is the head of the ministers: the office exists to name one.
 	neutral_modifier = {
+		head_of_cabinet_promotion_cost_modifier = -0.25
 		government_size = 1
-	
-		country_cabinet_efficiency = -0.10
 	}
 
 	positive_modifier = {
@@ -57,11 +67,15 @@ adu_hijaba_bureaucracy = {
 	}
 }
 
-# 2. Diwan al-Jund: the military registry inherited from the Syrian
-#    junds settled across al-Andalus in 742. Each jund (Damascus in
-#    Elvira, Jordan in Rayyu, Filastin in Sidonia) drew a salary from
-#    its allotted lands and produced cavalry on summons. Powerful but
-#    centrifugal: the same junds backed taifa fragmentation in 1031.
+# 2. Syrian Junds (key says diwan_al_jund): the regiments of Syria that
+#    the governor Abu al-Khattar settled across the south in 743 (Damascus
+#    in Elvira, Jordan in Rayyu, Palestine in Sidonia, Hims in Seville,
+#    Qinnasrin in Jaen, Egypt in Beja and Tudmir). Vanilla's Diwan al-Jund
+#    is the eastern register that pays soldiers a stipend (manpower, food,
+#    likes the crown). This is the opposite arrangement: regiments living
+#    off districts they hold and owing horsemen on summons (levies, heavy
+#    cavalry, likes the nobles). Powerful but centrifugal: the same junds
+#    backed taifa fragmentation in 1031.
 adu_diwan_al_jund_bureaucracy = {
 	implementation_price = price:implement_bureaucracy_price
 	maintenance_price = price:maintain_bureaucracy_price
@@ -161,12 +175,14 @@ adu_qadi_al_jamaa_bureaucracy = {
 	}
 }
 
-# 4. Hisba and the Muhtasib: the urban regulatory office known in
-#    al-Andalus as sahib al-suq. From the trades of Cordoba's grand
-#    market to the saddlers and perfumers of Malaga (described by
-#    al-Saqati c.1200), the muhtasib enforced weights, prices, public
-#    morals, and craft standards. The institution that made Andalusi
-#    cities the workshops of the western Mediterranean.
+# 4. Sahib al-Suq (key says hisba_muhtasib): the master of the market,
+#    the title al-Andalus kept for the office the east renamed muhtasib.
+#    Vanilla's Hisba polices the market for the crown and the pious, and
+#    the burghers dislike it. The Andalusi office is the trades' own
+#    rulebook, written down craft by craft (Ibn Abdun for Seville c.1100,
+#    al-Saqati for Malaga c.1200), and it outlived the conquest as the
+#    Castilian zabazoque and almotacen. Burghers like it. No key here is
+#    one of vanilla Hisba's.
 adu_hisba_muhtasib_bureaucracy = {
 	implementation_price = price:implement_bureaucracy_price
 	maintenance_price = price:maintain_bureaucracy_price
@@ -197,7 +213,7 @@ adu_hisba_muhtasib_bureaucracy = {
 
 	positive_modifier = {
 		scale = { value = scope:maintenance }
-		global_non_rural_monthly_prosperity = 0.002
+		global_non_rural_monthly_prosperity = 0.001
 		trade_land_efficiency = 0.10
 		global_burghers_max_literacy = 5
 	}
@@ -265,11 +281,15 @@ adu_madinat_al_zahra_bureaucracy = {
 	}
 }
 
-# 6. Barid: the postal-and-intelligence service inherited from the
-#    Umayyad east. Riders carried sealed dispatches between Cordoba
-#    and the marches of Toledo, Zaragoza, Badajoz; postmasters
-#    doubled as the caliph's eyes on every governor. Information
-#    travelled faster than rebellion.
+# 6. Atalayas of the Marches (key says barid): the chains of round
+#    watchtowers the emirs and caliphs of Cordoba built along the three
+#    marches, from Muhammad I in the ninth century to Abd al-Rahman III.
+#    Fire by night and smoke by day carried a warning from tower to tower:
+#    word from Soria could reach Cordoba in about five hours. Vanilla's
+#    Barid is the relay post of the east (spy network, proximity speed),
+#    which is what this block used to copy key for key. The towers do a
+#    different job: the frontier musters and mans its walls before the
+#    raid arrives.
 adu_barid_bureaucracy = {
 	implementation_price = price:implement_bureaucracy_price
 	maintenance_price = price:maintain_bureaucracy_price
@@ -288,38 +308,46 @@ adu_barid_bureaucracy = {
 
 	estates_that_like = {
 		crown_estate
+		peasants_estate
 	}
 	estates_that_dislike = {
 		nobles_estate
 	}
 
+	# "Levy Recruitment Speed": how quickly levies assemble. The towers
+	# stand whether they are well kept or not, and a warning is a warning.
 	neutral_modifier = {
-		global_distance_from_capital_speed_propagation = 0.20
+		global_levy_recruitment_speed_modifier = 0.10
 	}
 
+	# Manned towers: garrisons fill before the enemy arrives, strangers on
+	# the frontier are seen, and the march reports to Cordoba the same day.
 	positive_modifier = {
 		scale = { value = scope:maintenance }
-		global_max_control = 0.02
-		spy_network_construction = 0.20
+		global_garrison_growth = 0.01
+		counter_espionage = 0.20
 		global_monthly_control = 0.003
 	}
 
+	# Empty towers: raids arrive unannounced and wear the frontier down, and
+	# the marcher families (Tujibids, Banu Qasi) look to their own defence.
 	negative_modifier = {
 		scale = {
 			value = 1
 			subtract = scope:maintenance
 		}
-		country_cabinet_efficiency = -0.10
+		global_nobles_estate_power = 0.10
 		monthly_war_exhaustion = 0.008
 	}
 }
 
-# 7. Dhimma Pact: the formal protection-and-tribute relationship with
-#    the Mozarab Christian and Jewish communities, regulated by jizya
-#    on adult men and kharaj on landholders. Mozarab bishops served as
-#    administrators and envoys, Jewish viziers (Hasdai ibn Shaprut,
-#    Samuel ibn Naghrillah) reached the highest councils. Maliki
-#    clergy resented the depth of accommodation.
+# 7. Count of the Christians (key says dhimma_pact): the qumis, from
+#    Latin comes, the head of the Mozarab community of Cordoba who
+#    answered to the emir for its taxes, with the Christians' own judge
+#    beside him; the Jews had a nasi in the same place. Vanilla 1.4
+#    tells the pact itself in the advance adu_aman_ahl_al_dhimma, so the
+#    bureaucracy tells the office that collected under it. Maliki
+#    clergy resented a Christian or a Jew set over revenue.
 adu_dhimma_pact_bureaucracy = {
 	implementation_price = price:implement_bureaucracy_price
 	maintenance_price = price:maintain_bureaucracy_price
@@ -350,7 +378,7 @@ adu_dhimma_pact_bureaucracy = {
 
 	positive_modifier = {
 		scale = { value = scope:maintenance }
-		tax_income_efficiency = 0.10
+		tax_income_efficiency = 0.05
 		tolerance_heathen = 1
 		tolerance_heretic = 1
 	}

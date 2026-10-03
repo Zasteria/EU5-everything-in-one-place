@@ -22,7 +22,7 @@ nd_npl_pagoda_temple = {
 	}
 
 	modifier = {
-		local_cultural_tradition = 0.5
+		local_cultural_tradition = 0.25
 		local_clergy_estate_power = 0.25
 		local_pop_conversion_speed = 0.01
 		local_monthly_prosperity = 0.001
@@ -107,28 +107,92 @@ nd_npl_himalayan_sarai = {
 		nd_npl_salt_wool_trade = {
 			wool = 0.1
 			salt = 0.05
-			category = building_maintenance
-		}
-
-		nd_npl_herbal_trade = {
-			dyes = 0.1
-			medicaments = 0.05
-			category = building_maintenance
-		}
-
-		nd_npl_pashmina_weaving = {
-			wool = 0.1
-			dyes = 0.1
-			category = building_maintenance
-		}
-
-		nd_npl_paubha_painting = {
-			dyes = 0.1
-			silk = 0.1
+			rice = 0.1
 			category = building_maintenance
 		}
 	}
 	construction_demand = caravanserai_building_construction
+}
+
+# Herb Gatherers' Lodge: drying sheds where hill collectors bring musk pods,
+# roots and herbs. It makes medicaments, which the game counts as a raw good,
+# out of the hills' own game and plants, so it is bound to land whose own
+# good is wild game (21 locations of Nepal): where the musk deer and the
+# herbs are. Vanilla's apothecary makes the same good from the same stock in
+# a town; this is the place it is gathered.
+nd_npl_herb_lodge = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = 2
+	employment_size = rural_peasant_produce_employment
+	category = rgo_building_category
+	rural_settlement = yes
+	town = no
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_npl_himalayan_herbs
+	}
+
+	location_potential = {
+		raw_material = goods:wild_game
+	}
+
+	unique_production_methods = {
+		nd_npl_herbal_trade = {
+			wild_game = 0.2
+			lumber = 0.1
+			produced = medicaments
+			output = 0.42
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = village_construction
+}
+
+# Hill Loom House: household looms of the wool country, weaving fine shawl
+# cloth. Fine cloth is no raw good, so the wool it buys is its gate; it is
+# bound to wool land all the same (11 locations of Nepal) because the craft
+# belongs to the herding villages. Countryside and towns, as vanilla's rural
+# clothmaker; not a city trade.
+nd_npl_hill_loom = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = 2
+	employment_size = rural_peasant_produce_employment
+	category = consumer_goods_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_npl_pashmina_trade
+	}
+
+	location_potential = {
+		raw_material = goods:wool
+	}
+
+	unique_production_methods = {
+		nd_npl_pashmina_weaving = {
+			wool = 0.4
+			dyes = 0.05
+			produced = fine_cloth
+			output = 0.24
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = village_construction
 }
 
 # Newari Workshop: Artisan workshop for metalwork and woodcarving
@@ -157,15 +221,10 @@ nd_npl_newari_workshop = {
 		local_copper_output_modifier = 0.1
 	}
 
-	# Requires a real supply of salt: the formable's own
-	# territory has no source of it, so this is bound to the
-	# location's market rather than to the soil. Without a gate
-	# the building conjures the good anywhere the owner holds.
-	location_potential = {
-		market ?= {
-			is_produced_in_market = goods:salt
-		}
-	}
+	# No location gate: the workshop refines copper and timber it has to
+	# buy, as vanilla's guilds do, and makes no raw good. Until 2026-10-02 it
+	# held a method that turned stone into salt, and a salt gate with it that
+	# kept the workshop out of every market without salt.
 
 	unique_production_methods = {
 		nd_npl_bronze_casting = {
@@ -176,12 +235,14 @@ nd_npl_newari_workshop = {
 			debug_max_profit = guild_profit_margin
 		}
 
-		nd_npl_salt_processing = {
-			stone = 0.1
-			produced = salt
-			output = 0.15
+		nd_npl_newar_woodcarving = {
+			lumber = 0.4
+			dyes = 0.05
+			tools = 0.05
+			produced = furniture
+			output = 0.38
 			category = guild_input
-			debug_max_profit = -1
+			debug_max_profit = guild_profit_margin
 		}
 	}
 	construction_demand = workshop_construction
@@ -215,9 +276,9 @@ nd_npl_guthi_endowment = {
 
 	unique_production_methods = {
 		nd_npl_endowment_upkeep = {
-			wheat = 0.1
-			cloth = 0.1
-			incense = 0.05
+			wheat = 0.21
+			cloth = 0.21
+			incense = 0.105
 			category = building_maintenance
 		}
 	}
@@ -244,7 +305,7 @@ nd_npl_durbar_palace = {
 	}
 
 	modifier = {
-		local_cultural_tradition = 1.0
+		local_cultural_tradition = 0.25
 		local_nobles_estate_power = 0.5
 		local_monthly_prosperity = 0.0015
 		local_monthly_development_modifier = 0.1
@@ -294,15 +355,43 @@ nd_npl_gorkhali_barracks = {
 			tools = 0.05
 			category = building_maintenance
 		}
-	
-		nd_npl_arms_manufacturing = {
-			weaponry = 0.15
-			copper = 0.1
-			iron = 0.1
-			category = building_maintenance
-		}
 	}
 	construction_demand = soldier_building_construction
+}
+
+# Gorkhali Arsenal: the state's gun foundry and magazine, where muskets are
+# made on foreign patterns from the iron of the hill mines. No location
+# gate: it refines iron it has to buy and makes no raw good. Towns and
+# cities, like vanilla's gunsmith.
+nd_npl_arsenal = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = 1
+	employment_size = guild_employment
+	category = weapons_industry_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_npl_rana_modernization
+	}
+
+	unique_production_methods = {
+		nd_npl_arms_manufacturing = {
+			iron = 0.3
+			tools = 0.15
+			produced = firearms
+			output = 0.54
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = workshop_construction
 }
 
 # ===== DESTINY BUILDINGS =====
@@ -376,9 +465,9 @@ nd_npl_valley_academy = {
 
 	unique_production_methods = {
 		nd_npl_academy_upkeep = {
-			paper = 0.15
-			books = 0.1
-			beeswax = 0.05
+			paper = 0.225
+			books = 0.15
+			beeswax = 0.075
 			category = building_maintenance
 		}
 	}

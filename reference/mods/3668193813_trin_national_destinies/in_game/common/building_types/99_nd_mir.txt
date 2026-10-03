@@ -21,7 +21,7 @@ nd_mir_rice_terrace = {
 	}
 
 	modifier = {
-		local_monthly_food_modifier = 0.1
+		local_monthly_food_modifier = 0.05
 		local_population_capacity = 0.5
 		local_rice_output_modifier = 0.1
 	}
@@ -41,13 +41,55 @@ nd_mir_rice_terrace = {
 			category = building_maintenance
 		}
 
+		# Shown as "Paddy Clay Pottery". No method may make a grain: with rice
+		# to spare, hands are freed to fire the clay of the paddy banks. Key kept.
 		nd_mir_rice_surplus_pm = {
+			clay = 0.4
 			lumber = 0.1
-			tools = 0.05
-			produced = rice
-			output = 0.36
+			produced = pottery
+			output = 0.42
 			category = guild_input
-			debug_max_profit = guild_profit_margin
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = farm_constructions
+}
+
+# Zebu Kraal (valan'omby): the sunken cattle pen of a Malagasy village, where
+# the herd is kept, counted as wealth and driven out to trample the paddies
+# before planting. Produces livestock, a raw good, so it stands only where
+# the land's own good is livestock (nine locations of the island).
+nd_mir_valan_omby = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = 3
+	employment_size = rural_peasant_produce_employment
+	category = rgo_building_category
+	rural_settlement = yes
+	town = no
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_mir_zebu_cattle_tradition
+	}
+
+	location_potential = {
+		raw_material = goods:livestock
+	}
+
+	unique_production_methods = {
+		nd_mir_zebu_ranching_pm = {
+			lumber = 0.3
+			salt = 0.05
+			tools = 0.05
+			produced = livestock
+			output = 0.64
+			category = guild_input
+			debug_max_profit = rural_profit_margin
 		}
 	}
 	construction_demand = farm_constructions
@@ -84,13 +126,6 @@ nd_mir_rova = {
 			stone = 0.3
 			lumber = 0.2
 			weaponry = 0.1
-			category = building_maintenance
-		}
-
-		nd_mir_fanompoana_labor_pm = {
-			lumber = 0.2
-			stone = 0.1
-			tools = 0.1
 			category = building_maintenance
 		}
 	}
@@ -154,6 +189,93 @@ nd_mir_lamba_workshop = {
 	construction_demand = guild_construction
 }
 
+# Antemoro Paperworks: the bark paper of the south-east coast, made by the
+# scribes of the Matitanana valley for their Sorabe manuscripts
+nd_mir_antemoro_paperworks = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = guild_employment
+	category = basic_industry_category
+	# Towns and cities, like vanilla's paper guild. No location gate: paper
+	# is not a raw good, and the bark and fibre are bought in as inputs.
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = no
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_mir_sorabe_writing
+	}
+
+	modifier = {
+		local_monthly_literacy = 0.02
+	}
+
+	unique_production_methods = {
+		nd_mir_antemoro_paper_pm = {
+			lumber = 0.3
+			fiber_crops = 0.15
+			produced = paper
+			output = 0.45
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# Voanjo Colony: Merina soldier-settlers planted in a conquered province
+nd_mir_voanjo_colony = {
+	is_special = yes
+	is_foreign = no
+	pop_type = soldiers
+	max_levels = 1
+	employment_size = stockade_employment
+	category = military_category
+	# Countryside and small towns: the colonists were given land to farm
+	# among the conquered. A city needs no colony to hold it.
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_mir_merina_hegemony
+	}
+
+	# Planted only among a people the crown has not accepted: the mirror of
+	# vanilla's barracks rule (building_types/manpower_buildings.txt:204).
+	allow = {
+		NOT = { owner = { has_primary_or_accepted_culture = prev.dominant_culture } }
+	}
+	# The colony has done its work once the people of the place count as the
+	# crown's own, and it is dissolved.
+	remove_if = {
+		owner = { has_primary_or_accepted_culture = prev.location.dominant_culture }
+	}
+
+	modifier = {
+		local_unrest = -0.05
+		local_pop_assimilation_speed_modifier = 0.02
+	}
+
+	unique_production_methods = {
+		nd_mir_voanjo_colony_upkeep = {
+			rice = 0.175
+			weaponry = 0.088
+			tools = 0.088
+			category = building_maintenance
+		}
+	}
+	construction_demand = village_construction
+}
+
 # Fokon'olona Assembly Hall: village council governance building
 nd_mir_fokonolona_hall = {
 	is_special = yes
@@ -180,9 +302,9 @@ nd_mir_fokonolona_hall = {
 
 	unique_production_methods = {
 		nd_mir_fokonolona_upkeep = {
-			lumber = 0.1
-			paper = 0.1
-			tools = 0.05
+			lumber = 0.17
+			paper = 0.17
+			tools = 0.085
 			category = building_maintenance
 		}
 	}
@@ -209,16 +331,16 @@ nd_mir_trano_gasy = {
 	}
 
 	modifier = {
-		local_cultural_tradition = 1.0
+		local_cultural_tradition = 0.25
 		local_monthly_development = 0.0025
 		local_nobles_estate_power = 0.25
 	}
 
 	unique_production_methods = {
 		nd_mir_trano_gasy_upkeep = {
-			lumber = 0.2
-			stone = 0.1
-			fine_cloth = 0.1
+			lumber = 0.21
+			stone = 0.105
+			fine_cloth = 0.105
 			category = building_maintenance
 		}
 	}
@@ -255,13 +377,6 @@ nd_mir_tsena_market = {
 		nd_mir_tsena_upkeep = {
 			lumber = 0.1
 			pottery = 0.1
-			salt = 0.05
-			category = building_maintenance
-		}
-
-		nd_mir_zebu_ranching_pm = {
-			livestock = 0.15
-			wild_game = 0.1
 			salt = 0.05
 			category = building_maintenance
 		}
@@ -351,9 +466,9 @@ nd_mir_sekoly = {
 
 	unique_production_methods = {
 		nd_mir_sekoly_upkeep = {
-			paper = 0.2
-			lumber = 0.1
-			books = 0.1
+			paper = 0.248
+			lumber = 0.124
+			books = 0.124
 			category = building_maintenance
 		}
 	}

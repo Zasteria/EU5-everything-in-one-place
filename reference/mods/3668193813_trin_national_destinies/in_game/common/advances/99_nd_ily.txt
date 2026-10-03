@@ -1,7 +1,7 @@
 ﻿##############################################################################
 # Illyria (ILY): National Destinies Advance Tree
 #
-# 33 heritage advances, 19 of them unlocking tangible content.
+# 33 heritage advances, 17 of them unlocking tangible content.
 #
 # THE THESIS. This is not the famous Illyria. The Napoleonic Illyrian
 # Provinces (1809) and the romantic Illyrian Movement (1830s) are out of
@@ -121,7 +121,7 @@ nd_ily_tricesima = {
 	icon = crossroads_of_commerce
 
 	unlock_building = nd_ily_tridesetnica
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 
 	ai_weight = { add = 50 }
 }
@@ -140,7 +140,7 @@ nd_ily_zadarski_mir = {
 	global_trade_center_power = 0.05
 }
 
-# UNLOCK. Croatian public notaries drew deeds in the vernacular and in
+# Croatian public notaries drew deeds in the vernacular and in
 # Glagolitic letters. The liturgical privilege had become a legal habit: a
 # peasant could have his own contract read back to him.
 nd_ily_glagoljski_notari = {
@@ -153,7 +153,6 @@ nd_ily_glagoljski_notari = {
 	requires = crown_power_advance_renaissance
 	icon = bureaucracy_law_advance
 
-	unlock_production_method = nd_ily_pm_notarski_ured
 	global_monthly_literacy = 0.01
 
 	ai_weight = { add = 50 }
@@ -319,7 +318,7 @@ nd_ily_karlovac = {
 	requires = construction_speed_reformation
 	icon = arm_highland_fortresses
 
-	unlock_production_method = nd_ily_pm_kaptolski_arsenal
+	unlock_building = nd_ily_generalat
 	global_garrison_size_modifier = 0.1
 
 	ai_weight = { add = 50 }
@@ -368,7 +367,7 @@ nd_ily_skela_spalatensis = {
 	requires = global_trade_advance
 	icon = continental_trade
 
-	unlock_production_method = nd_ily_pm_karavanska_skela
+	unlock_building = nd_ily_skela
 	global_merchant_power = 0.2
 
 	ai_weight = { add = 50 }
@@ -418,9 +417,9 @@ nd_ily_oslobodjenje_slavonije = {
 	requires = war_score_absolutism_advance
 	icon = migrant_opportunities
 
-	unlock_production_method = nd_ily_pm_zadruga
+	unlock_levy = levy_nd_ily_granicar
 	global_population_growth = 0.0002
-	global_devastation_recovery = 0.005
+	global_devastation_recovery = 0.0025
 
 	ai_weight = { add = 50 }
 }
@@ -433,8 +432,8 @@ nd_ily_rijecka_luka = {
 	requires = maritime_advance_age_5
 	icon = hamburg_port_cities
 
-	unlock_production_method = nd_ily_pm_slobodna_luka
-	trade_sea_efficiency = 0.03
+	unlock_building = nd_ily_slobodna_luka
+	trade_sea_efficiency = 0.1
 
 	ai_weight = { add = 50 }
 }
@@ -452,7 +451,7 @@ nd_ily_karolinska_cesta = {
 	army_movement_speed = 0.1
 }
 
-# UNLOCK. The parish school taught the Glagolitic alphabet to children who
+# The parish school taught the Glagolitic alphabet to children who
 # would never see a Latin one, which is why literacy in this kingdom spread
 # outward from the altar rather than downward from the court.
 nd_ily_zupne_skole = {
@@ -461,7 +460,6 @@ nd_ily_zupne_skole = {
 	requires = newspapers_advance
 	icon = catholic_sunday_schools
 
-	unlock_production_method = nd_ily_pm_zupna_skola
 	global_peasants_max_literacy = 3
 
 	ai_weight = { add = 50 }
@@ -482,7 +480,7 @@ nd_ily_jozefinska_cesta = {
 	icon = modern_road_advance
 
 	global_construction_speed = 0.1
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 }
 
 # UNLOCK. Matej Karaman, archbishop of Zadar, printed a corrected Glagolitic
@@ -538,7 +536,7 @@ nd_ily_kraljevska_akademija = {
 	requires = modern_bureaucracy
 	icon = academia_pontaniana
 
-	unlock_production_method = nd_ily_pm_akademija
+	unlock_building = nd_ily_akademija
 	research_speed_modifier = 0.05
 	global_institution_growth_modifier = 0.1
 
@@ -624,7 +622,15 @@ nd_ily_dest_alba_graeca = {
 		owns_or_non_sovereign_subject_owns = location:sabac
 		owns_or_non_sovereign_subject_owns = location:belgrad
 		army_size >= 50
-		total_development >= 1000
+		# The white fortress built up: 25.5 in 1337
+		# (scripts/development_estimate.py), half again for stage two.
+		custom_tooltip = {
+			text = nd_ily_dest_belgrade_developed_tt
+			location:belgrad = {
+				owner ?= root
+				development >= 38
+			}
+		}
 	}
 	icon = vauban_fortifications
 
@@ -645,7 +651,16 @@ nd_ily_dest_banatski_kordon = {
 		owns_or_non_sovereign_subject_owns = location:smederevo
 		army_size >= 75
 		prestige >= 75
-		total_development >= 1500
+		# The line itself: the country's own watch-houses (an advance of
+		# the fourth age, which also keeps this path from ending ages
+		# before the other).
+		custom_tooltip = {
+			text = nd_ily_dest_cordon_houses_tt
+			any_owned_location = {
+				count >= 8
+				has_building = building_type:nd_ily_cardak
+			}
+		}
 	}
 	icon = military_border
 
@@ -699,7 +714,13 @@ nd_ily_dest_marcanska_unija = {
 	allow = {
 		has_embraced_institution = institution:confessionalism
 		gold >= 2000
-		total_development >= 1000
+		# The union needs priests of its own making: a college standing.
+		custom_tooltip = {
+			text = nd_ily_dest_college_tt
+			any_owned_location = {
+				has_building = building_type:nd_ily_ilirski_kolegij
+			}
+		}
 	}
 	icon = greek_rite
 

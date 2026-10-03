@@ -1,0 +1,792 @@
+﻿# ============================================================================
+# Castile (CAS): custom buildings
+# National Destinies mod
+# ============================================================================
+#
+# What is NOT here, because somebody already built it:
+#   vanilla: the Royal Atarazanas of Sevilla, the School of Salamanca, the
+#   General Archive of Simancas, the Archive of the Indies, the Artillery
+#   Academy of Segovia and the bullfighting school of Sevilla (event
+#   buildings), the Brethren of the Marsh (unique_buildings.txt), the
+#   aqueduct of Segovia, and, reserved for the Iberian DLC, the Consulado de
+#   Bilbao.
+#   the mod's Spain (99_nd_spa.txt): the alcazar, the Mesta sheepwalk, the
+#   Casa de Contratacion, the proveeduria, the mint, the royal foundry, the
+#   camino real, the Escorial and the Real Audiencia.
+#   the mod's Catalonia (99_nd_cat.txt): the mountain forge. The Cantabrian
+#   ferreria is the same works under another name and is left out for that
+#   reason.
+#
+# What is here is the kingdom at ground level: the salt the Crown took for
+# itself in 1338, the customs of Seville, the colleges that bred its judges,
+# the office that kept its debts, the sword makers, the village grain bank,
+# the playhouse yard, the great square, the potters of Talavera, the five
+# guilds of Madrid, the colonies of the Sierra Morena and the bank of 1782.
+#
+# Every production method is inline and was sized with eu5-profit (margin 20
+# percent, cap written as a name). Upkeep bills are set at or above the
+# vanilla building of the same kind, named in each block.
+
+# ----------------------------------------------------------------------------
+# Salinas Reales (age 1)
+# ----------------------------------------------------------------------------
+# A royal saltworks: brine led from the spring over terraces of clay and
+# timber and left to the sun, or the pans of a tidal marsh. In 1338 Alfonso
+# XI took every saltworks of the kingdom for the Crown and obliged each
+# household to buy its measure from the king's store.
+# location_potential: the location's own raw material must be salt (the
+# strict gate). Salt is a raw good and this building extracts it; it cannot
+# be made where there is no brine. In Castile's lands of 1337 that admits
+# Anana, Cuenca and the marshes of Cadiz, Huelva and Pontevedra.
+# Settlement: countryside and town, never a city. The works stand at the
+# spring or on the marsh, and the towns that grew beside them stayed small.
+# Inputs are the upkeep of the pans: timber for the terraces and channels,
+# tools for the rakes and sluices.
+nd_cas_salinas_reales = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = rural_building_cap
+	startup_ramp_target = rural_startup_ramp_target
+	employment_size = rural_peasant_produce_employment
+	category = rgo_building_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_cas_estanco_de_la_sal
+	}
+
+	location_potential = {
+		raw_material = goods:salt
+	}
+
+	unique_production_methods = {
+		nd_cas_salinas_reales_sal_de_granjas = {
+			lumber = 0.3
+			tools = 0.05
+			produced = salt
+			output = 0.18
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = farm_constructions
+}
+
+# ----------------------------------------------------------------------------
+# Aduana del Almojarifazgo (age 1)
+# ----------------------------------------------------------------------------
+# The customs house of the almojarife, the duty on everything that entered or
+# left by sea, taken over with Seville from its Muslim rulers and kept under
+# its Arabic name until 1783. The king's officers weigh and tax; merchants
+# gain a fixed tariff and a royal judge, and lose the habit of landing goods
+# unseen.
+# location_potential and allow: vanilla's port authority pattern (shore to be
+# shown, a harbour to be built). The duty was levied at the quay.
+# Settlement: towns and cities. A customs house needs a port town around it.
+# One per location: it is an office, not a trade that scales.
+# Upkeep above vanilla's port authority (naval supplies 0.25, paper 0.5).
+nd_cas_aduana = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = generic_burgher_employment
+	category = trade_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = trade_post_build_time
+
+	country_potential = {
+		has_advance = nd_cas_almojarifazgo
+	}
+
+	location_potential = {
+		is_coastal = yes
+	}
+
+	allow = {
+		is_port = yes
+	}
+
+	modifier = {
+		local_merchant_power = 0.5
+		local_trade_protection_factor = 0.05
+		local_crown_estate_power = 0.1
+		local_burghers_estate_power = -0.1
+	}
+
+	unique_production_methods = {
+		nd_cas_aduana_maintenance = {
+			paper = 0.5
+			naval_supplies = 0.25
+			cloth = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = town_building_construction
+}
+
+# ----------------------------------------------------------------------------
+# Colegio Mayor (age 2)
+# ----------------------------------------------------------------------------
+# A residential college inside a university: a founder's endowment keeps a
+# few dozen graduate students in law and theology under a rule of their own.
+# Diego de Anaya founded the first, San Bartolome of Salamanca, in 1401, for
+# poor scholars; within a century the colleges were the nursery of the
+# Crown's judges and councillors, and a century after that they were closed
+# to anyone without the right family.
+# allow: a university must stand in the location. A colegio mayor was a
+# house of a university and had no existence apart from one.
+# Settlement: towns and cities (wherever the university is).
+# Upkeep above vanilla's library (paper 0.1, books 0.25, glass 0.05) and
+# under its university.
+nd_cas_colegio_mayor = {
+	is_special = yes
+	is_foreign = no
+	pop_type = clergy
+	max_levels = 1
+	employment_size = religious_building_employment
+	category = cultural_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = cultural_building_time
+
+	country_potential = {
+		has_advance = nd_cas_colegios_mayores
+	}
+
+	allow = {
+		custom_tooltip = {
+			text = nd_cas_colegio_needs_university_tt
+			has_building = building_type:university
+		}
+	}
+
+	modifier = {
+		local_nobles_max_literacy = 5
+		local_burghers_max_literacy = 5
+		local_monthly_literacy = 0.05
+		local_crown_estate_power = 0.1
+	}
+
+	unique_production_methods = {
+		nd_cas_colegio_mayor_maintenance = {
+			paper = 0.3
+			books = 0.25
+			beeswax = 0.05
+			wine = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = school_construction
+}
+
+# ----------------------------------------------------------------------------
+# Contaduria Mayor (age 3)
+# ----------------------------------------------------------------------------
+# The chief accounting office of the Crown: one bench farms out the royal
+# rents and keeps the books of what each is pledged for, the other audits
+# everyone who has handled the king's money. Its books are what make a juro
+# worth buying, an annuity charged on a named rent and paid before anything
+# else.
+# location_potential, allow, remove_if: the capital, once, like every vanilla
+# office of the court.
+# capital_country_modifier: the juro is the game's government bond (bonds are
+# open from the Renaissance age, advances/0_age_of_renaissance.txt). Half the
+# bonds of vanilla's central bank, which comes two ages later, at the same
+# interest (0.01 is the smallest step vanilla writes for the key).
+# Upkeep above vanilla's tax assessor (tools 0.2, paper 1.0).
+nd_cas_contaduria_mayor = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = generic_burgher_employment
+	category = government_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = government_build_time
+
+	country_potential = {
+		has_advance = nd_cas_juros_y_contadores
+	}
+
+	location_potential = {
+		counts_as_capital = yes
+	}
+
+	allow = {
+		is_capital = yes
+		country_has_no_other_copy_of_building = { type = nd_cas_contaduria_mayor }
+	}
+
+	remove_if = {
+		is_no_longer_capital = yes
+	}
+
+	capital_country_modifier = {
+		max_bonds = 5
+		bond_interest = -0.01
+	}
+
+	unique_production_methods = {
+		nd_cas_contaduria_mayor_maintenance = {
+			paper = 1.0
+			tools = 0.2
+			books = 0.1
+			goods_gold = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = early_capital_building_construction
+}
+
+# ----------------------------------------------------------------------------
+# Espaderia (age 3; a second method in age 6)
+# ----------------------------------------------------------------------------
+# A sword maker's shop of the Toledo kind: a blade forged around a core of
+# soft iron, quenched in the river and proved by bending it point to hilt.
+# Each master struck his own mark, and a Toledo mark was forged abroad more
+# often than any other.
+# location_potential: iron must reach the local market. Weaponry is a made
+# good and iron is its body; the gate keeps the shop where a smith could buy
+# bar iron, which is the market form because the forge follows the metal.
+# Settlement: towns and cities. The sword makers were an urban guild.
+nd_cas_espaderia = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	startup_ramp_target = guild_startup_ramp_target
+	employment_size = guild_employment
+	category = weapons_industry_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_cas_espaderos_de_toledo
+	}
+
+	location_potential = {
+		is_produced_in_location_market = goods:iron
+	}
+
+	unique_production_methods = {
+		# The guild master's blade: bar iron, charcoal and the files and
+		# stones of the finishing bench.
+		nd_cas_espaderia_hojas_de_marca = {
+			iron = 0.4
+			coal = 0.3
+			tools = 0.1
+			produced = weaponry
+			output = 0.84
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+		# Unlocked by nd_cas_real_fabrica_de_espadas (age 6): the royal sword
+		# factory of 1761 gathered the masters under one roof and worked
+		# bought steel to a pattern for the whole army. More blades from the
+		# same hands.
+		nd_cas_espaderia_real_fabrica = {
+			steel = 0.4
+			coal = 0.3
+			tools = 0.1
+			produced = weaponry
+			output = 1.16
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# ----------------------------------------------------------------------------
+# Posito (age 4)
+# ----------------------------------------------------------------------------
+# The grain bank of a Castilian village: a stone barn with three keys, held
+# by the magistrate, a councillor and a steward. It buys wheat after a good
+# harvest, lends seed at sowing against a small increase in kind, and sells
+# bread grain at a fixed price when the market fails. Cisneros endowed
+# several; a royal pragmatic of 1584 gave them all one rule.
+# location_potential: grain land (the location's own raw material is wheat,
+# legumes or millet). A posito lends seed corn; where nobody sows there is
+# nothing to lend against.
+# Settlement: countryside and town, never a city. Cities fed themselves
+# through a public corn exchange, a different institution.
+# One per location.
+# Upkeep above vanilla's village granary (lumber 0.2) and granary (masonry
+# 0.2): this one keeps accounts as well as walls.
+nd_cas_posito = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = 1
+	employment_size = granary_employment
+	category = infrastructure_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_cas_positos
+	}
+
+	location_potential = {
+		OR = {
+			raw_material = goods:wheat
+			raw_material = goods:legumes
+			raw_material = goods:millet
+		}
+	}
+
+	modifier = {
+		local_food_capacity = 250
+		local_monthly_food_modifier = monthly_food_productivity_weak_bonus
+		local_peasants_estate_power = 0.2
+	}
+
+	unique_production_methods = {
+		nd_cas_posito_maintenance = {
+			masonry = 0.2
+			lumber = 0.1
+			paper = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = village_granary_construction
+}
+
+# ----------------------------------------------------------------------------
+# Corral de Comedias (age 4)
+# ----------------------------------------------------------------------------
+# A playhouse made of a courtyard between houses: a stage at one end, the
+# standing crowd in the yard, women in a gallery of their own and the gentry
+# at rented windows. Charitable brotherhoods leased the yards and paid for
+# the town's hospitals out of the takings, which is the argument that kept
+# them open whenever the moralists wanted them shut.
+# Settlement: towns and cities. Almagro had one as well as Madrid.
+# No location gate on purpose: any Castilian town with a brotherhood and a
+# courtyard could and did open one.
+# One per location.
+# The hospital share is the local_disease_resistance line.
+# Upkeep above vanilla's theater (cloth 0.2, wine 0.2, paper 0.2, fine cloth
+# 0.05, glass 0.1): an open yard has no glass, and has timber staging.
+nd_cas_corral_de_comedias = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = cultural_employment
+	category = cultural_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = cultural_building_time
+
+	country_potential = {
+		has_advance = nd_cas_corrales_de_comedias
+	}
+
+	modifier = {
+		local_cultural_tradition = 0.2
+		local_cultural_influence = 0.1
+		local_disease_resistance = 0.05
+	}
+
+	unique_production_methods = {
+		nd_cas_corral_de_comedias_maintenance = {
+			cloth = 0.2
+			wine = 0.2
+			paper = 0.25
+			lumber = 0.15
+			fine_cloth = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = theater_construction
+}
+
+# ----------------------------------------------------------------------------
+# Plaza Mayor (age 4)
+# ----------------------------------------------------------------------------
+# After the fire of 1561 Valladolid rebuilt its market as one closed
+# rectangle of uniform arcaded houses with the council's balcony on one
+# side; Madrid copied it in 1617. Market on weekdays, and on the great days
+# the place where the Crown shows itself: proclamations, bullfights, tourneys
+# and executions, watched from four hundred balconies let by the day.
+# Settlement: cities only. A plaza mayor of this kind is a planned work of a
+# large municipality; a town has a market square and vanilla's marketplace.
+# One per location.
+# Upkeep above vanilla's marketplace (cloth 0.06, jewelry 0.05, paper 0.05,
+# salt 0.06).
+nd_cas_plaza_mayor = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = trade_employment
+	category = trade_category
+	rural_settlement = no
+	town = no
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = market_build_time
+
+	country_potential = {
+		has_advance = nd_cas_plazas_mayores
+	}
+
+	modifier = {
+		local_merchant_capacity = 1
+		local_market_access = 0.005
+		local_crown_estate_power = 0.1
+		local_unrest = -0.02
+	}
+
+	unique_production_methods = {
+		nd_cas_plaza_mayor_maintenance = {
+			masonry = 0.2
+			cloth = 0.1
+			paper = 0.1
+			salt = 0.06
+			jewelry = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = town_building_construction
+}
+
+# ----------------------------------------------------------------------------
+# Alfar de Talavera (age 4)
+# ----------------------------------------------------------------------------
+# A pottery of the Talavera kind: earthenware dipped in a white glaze of tin
+# and lead and painted in blue and yellow before the second firing. It tiled
+# the Escorial, filled the dressers of Castile and went to the Indies by the
+# crate.
+# location_potential: clay must reach the local market. Pottery is a made
+# good and clay is its body.
+# Settlement: towns and cities. The potters were an urban guild with their
+# kilns at the edge of the walls.
+# The tin is the glaze.
+nd_cas_alfar = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	startup_ramp_target = guild_startup_ramp_target
+	employment_size = guild_employment
+	category = basic_industry_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_cas_loza_de_talavera
+	}
+
+	location_potential = {
+		is_produced_in_location_market = goods:clay
+	}
+
+	unique_production_methods = {
+		nd_cas_alfar_loza_estannifera = {
+			clay = 1.0
+			lumber = 0.15
+			tin = 0.05
+			produced = pottery
+			output = 0.99
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# ----------------------------------------------------------------------------
+# Casa de los Cinco Gremios (age 5)
+# ----------------------------------------------------------------------------
+# The house of the five great guilds of Madrid: jewellers, mercers, silk
+# merchants, clothiers and druggists, joined in one company in 1667. They
+# held the monopoly of fine goods at court, then took the king's rents to
+# farm, took deposits at interest and lent to the treasury.
+# location_potential, allow, remove_if: the capital, once. The company was
+# the court's supplier and the treasury's creditor and lived where both were.
+# The five upkeep goods are the five guilds' own trades.
+# Upkeep above vanilla's patrician hall (paper 0.5, fine cloth 0.2, books
+# 0.1, furniture 0.1, gold 0.05).
+nd_cas_casa_de_los_cinco_gremios = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = large_burgher_employment
+	category = trade_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = large_capital_build_time
+
+	country_potential = {
+		has_advance = nd_cas_cinco_gremios_mayores
+	}
+
+	location_potential = {
+		counts_as_capital = yes
+	}
+
+	allow = {
+		is_capital = yes
+		country_has_no_other_copy_of_building = { type = nd_cas_casa_de_los_cinco_gremios }
+	}
+
+	remove_if = {
+		is_no_longer_capital = yes
+	}
+
+	capital_modifier = {
+		local_merchant_power = 1
+	}
+
+	capital_country_modifier = {
+		global_burghers_estate_power = 0.05
+		global_merchant_capacity_modifier = 0.05
+		total_loan_capacity_modifier = 0.1
+	}
+
+	unique_production_methods = {
+		nd_cas_casa_de_los_cinco_gremios_maintenance = {
+			paper = 0.5
+			fine_cloth = 0.2
+			silk = 0.1
+			jewelry = 0.1
+			medicaments = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = early_capital_building_construction
+}
+
+# ----------------------------------------------------------------------------
+# Nueva Poblacion (age 6)
+# ----------------------------------------------------------------------------
+# A colony under the charter of 5 July 1767: each family gets fifty fanegas
+# it may neither divide nor pile up, stock, tools and ten years free of
+# tax; no entail, no convent, no municipal office for sale and no right of
+# way for the flocks of the Mesta. Six thousand German and Flemish Catholics
+# were planted along the empty stretch of the road to Andalusia, with La
+# Carolina as their capital.
+# location_potential: countryside that stands nearly empty (the same measure
+# vanilla's settlement building reads, at a wider threshold) and is joined to
+# the capital by road. The colonies were founded on wasteland along the royal
+# highway to keep it safe; neither a peopled district nor a roadless one was
+# the purpose.
+# remove_if: once the land has filled the charter has done its work, as it
+# had when it was repealed in 1835.
+# One per location, countryside only.
+# Upkeep above vanilla's settlement building (stone, lumber, game and wool
+# at 0.1 each): the Crown also paid for tools and stock.
+nd_cas_nueva_poblacion = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = 1
+	employment_size = tiny_rural_peasant_produce_employment
+	category = infrastructure_category
+	rural_settlement = yes
+	town = no
+	city = no
+	build_time = village_build_time
+
+	country_potential = {
+		has_advance = nd_cas_nuevas_poblaciones
+	}
+
+	location_potential = {
+		location_population_percentage < 0.2
+		has_road_to_capital = yes
+	}
+
+	remove_if = {
+		location = {
+			location_population_percentage > 0.4
+		}
+	}
+
+	modifier = {
+		local_migration_attraction = 0.5
+		local_peasant_enfranchisment = 0.02
+		local_nobles_estate_power = -0.25
+		local_clergy_estate_power = -0.25
+	}
+
+	unique_production_methods = {
+		nd_cas_nueva_poblacion_maintenance = {
+			stone = 0.1
+			lumber = 0.1
+			tools = 0.05
+			livestock = 0.1
+			wool = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = village_construction
+}
+
+# ----------------------------------------------------------------------------
+# Banco de San Carlos (age 6)
+# ----------------------------------------------------------------------------
+# The bank chartered on 2 June 1782 on the plan of Francisco Cabarrus: it
+# redeems the Crown's interest bearing notes for coin on demand, discounts
+# bills at four percent, holds the contract to provision the army and navy,
+# and makes the king's payments abroad.
+# location_potential, allow, remove_if: the capital, once.
+# allow: not beside vanilla's central bank. Both are the state's bank of
+# issue; vanilla bars its own national banks from standing together in the
+# same way (capital_buildings.txt, central_bank).
+# capital_country_modifier: the bond size and interest lines are vanilla's
+# central bank's; it has no extra bonds to sell (the central bank has ten),
+# and the two maintenance lines are the provisioning contract, which the
+# central bank does not have.
+# Upkeep at vanilla's Wisselbank (paper 0.5, gold 0.5, silver 0.5).
+nd_cas_banco_de_san_carlos = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = large_burgher_employment
+	category = government_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = large_capital_build_time
+
+	country_potential = {
+		has_advance = nd_cas_banco_nacional
+	}
+
+	location_potential = {
+		counts_as_capital = yes
+	}
+
+	allow = {
+		is_capital = yes
+		country_has_no_other_copy_of_building = { type = nd_cas_banco_de_san_carlos }
+		custom_tooltip = {
+			text = nd_cas_banco_no_central_bank_tt
+			NOT = { has_building = building_type:central_bank }
+		}
+	}
+
+	remove_if = {
+		is_no_longer_capital = yes
+	}
+
+	capital_country_modifier = {
+		bond_size_modifier = 0.1
+		bond_interest = -0.01
+		army_maintenance_efficiency = 0.05
+		navy_maintenance_efficiency = 0.05
+	}
+
+	unique_production_methods = {
+		nd_cas_banco_de_san_carlos_maintenance = {
+			paper = 0.5
+			goods_gold = 0.5
+			silver = 0.5
+			books = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = bank_construction
+}
+
+# ===== DESTINY BUILDINGS =====
+
+# ----------------------------------------------------------------------------
+# Real Chancilleria (destiny, path A capstone)
+# ----------------------------------------------------------------------------
+# The high court of the Crown of Castile, which heard appeals in the king's
+# name and kept his seal. Henry II founded the Audiencia at the Cortes of
+# Toro in 1371; it settled at Valladolid for good in 1442 and took its
+# ordinances at Medina del Campo in 1489. A second was opened at Ciudad Real
+# in 1494 and moved to Granada in 1505, with the Tagus as the line between
+# them. Its Sala de Hijosdalgo decided who was noble and so who paid tax.
+# Not vanilla's supreme court (the capital, once, crown power and reach) and
+# not Spain's Real Audiencia (control and assimilation, anywhere): this is a
+# law town. A city with a chancilleria lived off its suitors, proctors and
+# notaries, which is what the three modifiers say.
+# Settlement: cities only, one per location. Both historical seats were
+# cities, and a court of appeal for half a kingdom does not sit in a market
+# town. Bound to the two seats it kept, Valladolid and Granada, by a list of
+# locations: vanilla's idiom for a building of a few named places (the
+# aqueduct, town_buildings.txt:653-660). Ciudad Real held the southern court
+# for eleven years only and is left out. Without the list it could stand in
+# every city of the Crown, which history never saw.
+# Values: unrest as vanilla's forts and theatre (0.05), burgher literacy at
+# half a university's (10), promotion at one university step (0.001).
+nd_cas_dest_chancilleria = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = generic_burgher_employment
+	category = government_category
+	rural_settlement = no
+	town = no
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = government_build_time
+
+	country_potential = {
+		has_advance = nd_cas_dest_cortes_de_toledo
+	}
+
+	location_potential = {
+		OR = {
+			this = location:valladolid
+			this = location:granada
+		}
+	}
+
+	modifier = {
+		local_unrest = -0.05
+		local_burghers_max_literacy = 5
+		local_pop_promotion_speed = 0.001
+	}
+
+	unique_production_methods = {
+		nd_cas_dest_chancilleria_maintenance = {
+			paper = 0.3
+			books = 0.1
+			beeswax = 0.05
+			fine_cloth = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = town_building_construction
+}

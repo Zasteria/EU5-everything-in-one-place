@@ -1,0 +1,52 @@
+﻿# Aragon (ARA): formation lines
+# National Destinies mod
+#
+# Vanilla 1.4 defines ARA_f with an empty form_effect (level 2, 75% of
+# aragon_area, Aragonese or Catalan culture, Christian, not for a country
+# that already is ARA), so INJECT is safe: there is nothing of vanilla's to
+# lose. ARA_f is the only vanilla formable that creates the tag ARA
+# (00_formable_countries.txt:661-689).
+#
+# Roads into the tag, and what each one meets here:
+# 1. Aragon itself. It carries the tag from day one (91% of the land in
+#    1337), cannot form its own formable and never runs this block. The
+#    four-yearly marker repair in 99_nd_on_actions.txt stamps the marker and
+#    delivers nd_ara.1 for it, and for an Aragon that was released or broke
+#    away later.
+# 2. A Catalan or Aragonese country that is not a level 2 tag forms it by the
+#    button: Andorra, the Catalan duchies in Greece (Athens, Neopatras,
+#    Salona), a released lordship. form_effect runs: markers, rank, capital,
+#    event. Mallorca, Catalonia and Valencia are level 2 themselves and are
+#    shut out by the level rule (formable_countries/readme.txt:2).
+INJECT:ARA_f = {
+	form_effect = {
+		# Formation markers live HERE, not only in the event's options: a
+		# country can be formed by script, and then the popup may never be
+		# answered.
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_ara_formed
+		}
+		# Aragon was a kingdom from Ramiro I (1035). nd_can_take_kingdom_rank
+		# is false only where the engine itself would refuse the rank.
+		if = {
+			limit = {
+				nd_can_take_kingdom_rank = yes
+				country_rank_level < 3
+			}
+			set_country_rank_effect = { rank = country_rank:rank_kingdom }
+		}
+		# Zaragoza was the head of the kingdom: its kings were crowned in La
+		# Seo and its Cortes, Justicia and Diputacion sat there. Guarded by
+		# ownership: 75% of the area does not have to include the city.
+		if = {
+			limit = {
+				owns = location:zaragoza
+				NOT = { capital = location:zaragoza }
+			}
+			set_capital = location:zaragoza
+		}
+		trigger_event_non_silently = nd_ara.1
+		add_stability = stability_mild_bonus
+	}
+}

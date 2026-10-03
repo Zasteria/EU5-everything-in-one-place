@@ -1,0 +1,704 @@
+﻿# Aragon (ARA): advance tree
+# National Destinies mod
+#
+# Read before designing (EU5 1.4):
+#   vanilla tag advances (advances/country_ara.txt): conquest of the Ebro,
+#     Desperta Ferro, a Mediterranean trade power, the dinero jaques, the
+#     Diputacion del General, overseas realms, Carinena vineyards, stronger
+#     united, the Basilica del Pilar, protection of the little folk,
+#     gunpowder souls, Zaragoza industry.
+#   vanilla Aragonese culture advances (same file): the montaneses, the
+#     Pyrenean passes, the frontier castles, the royal salt works, the
+#     Sociedad Economica, foralism.
+#   vanilla Catalan culture advances and Iberian advances (culture_catalan.txt,
+#     region_iberia.txt): galleys, fleet ordinances, almogavars, crossbowmen,
+#     caravels, the tercio, the lieutenancy, viceroyalties.
+#   vanilla elsewhere: the Justicia de Aragon, the General Privilege and the
+#     formalized oath are estate privileges; the Fuero de Aragon is a town
+#     right; the Pyrenean fueros and the Crown of Aragon are government
+#     reforms; the coronation at Zaragoza is a decision; the War of the Union
+#     is a disaster; the chronicler, the Alterations of 1591, Sigena, Gracian
+#     and the artillery arsenal are flavour events.
+#   the mod's Aragonese Empire (99_nd_cda.txt), Catalonia (99_nd_cat.txt),
+#     Spain (99_nd_spa.txt) and Al-Andalus (99_nd_adu.txt): pactism, Caspe,
+#     the Consolat, the Llotja, the Generalitat, the Mesta, the tercios, the
+#     acequia, insaculation and the rest of the sea-facing Crown.
+#
+# None of that is repeated. What is left is the inland kingdom at ground
+# level: the villages of the southern march that governed themselves, the
+# stock breeders of Zaragoza and their judge, the knight-fees of the great
+# barons, the Mudejar builders and potters, the four arms of the Cortes, the
+# town hosts of the war with Castile, saffron, the Aragonese pope, the school
+# of Huesca, the German printers of Zaragoza, alabaster, the swordsmiths, the
+# book of the kingdom's customs, the kingdom's own guard, the writ of
+# manifestation, the Morisco vassals, the palaces of Renaissance Zaragoza,
+# the tercios the Cortes paid for, Lastanosa's cabinet, the protectionists,
+# the powder mills of Villafeliche, Pignatelli's canal, the first light
+# infantry of the Spanish army, the two sieges, the academy of San Luis and
+# the Aragonese party at court.
+#
+# No key below repeats, in the same age, a key that a vanilla ARA, Aragonese
+# or Catalan advance grants (the per-age blocklist printed by
+# scripts/creator_context.py ARA, plus the six Aragonese culture advances).
+# No key is granted by more than one advance of this tree.
+#
+# Stepping stone toward the Aragonese Empire and Spain: 4 or 5 per age.
+# 26 advances, 16 of them unlocks (62 percent).
+
+# ============================================================================
+# AGE 1: TRADITIONS (5 advances, 4 unlocks)
+# ============================================================================
+
+# The communities of villages of Calatayud, Daroca, Teruel and Albarracin. In
+# the thirteenth century the villages of the southern march won their
+# separation from the towns that had ruled them: grouped in sesmas, governed
+# by a general assembly (the plega), taxed by themselves and seated in the
+# Cortes in their own right. Unlocks the Casa de la Comunidad.
+# peasants_estate_levy_size is the size of the levies the peasants' estate
+# raises: the villages owed the frontier their own companies.
+# (DHE event nd_ara.2)
+nd_ara_comunidades_de_aldeas = {
+	age = age_1_traditions
+	potential = { has_or_had_tag = ARA }
+	requires = codified_laws
+	icon = nav_chartered_councils
+
+	unlock_building = nd_ara_casa_de_la_comunidad
+	peasants_estate_levy_size = 0.1
+}
+
+# The Casa de Ganaderos of Zaragoza (privilege of James I, 18 May 1218): the
+# city's stock breeders under their own elected Justicia, who judged
+# rustlers summarily and kept his own gallows, with the right to graze every
+# open pasture of the kingdom. The smaller towns had their ligallos on the
+# same model. Unlocks the Ligallo.
+nd_ara_casa_de_ganaderos = {
+	age = age_1_traditions
+	potential = { has_or_had_tag = ARA }
+	requires = agriculture_advance
+	icon = zmw_experienced_cattle_herder
+
+	unlock_building = nd_ara_ligallo
+	global_wool_output_modifier = 0.1
+}
+
+# The honores of the ricoshombres: the king granted his great barons the
+# revenues of towns in units called caballerias, each worth five hundred
+# sueldos and each owing him one armed knight. The household knights who
+# served him directly were the mesnaderos. Unlocks the Mesnaderos levy.
+# Hung on feudalism on purpose: this is a feudal host.
+# nobles_estate_levy_size is the size of the levies the nobles' estate
+# raises; 0.3 is the bottom of what vanilla grants.
+nd_ara_caballerias_de_honor = {
+	age = age_1_traditions
+	potential = { has_or_had_tag = ARA }
+	requires = feudalism_advance
+	icon = bur_knightly_prowess
+
+	unlock_levy = levy_nd_ara_mesnaderos
+	nobles_estate_levy_size = 0.3
+}
+
+# The alarifes: Muslim master builders who stayed after the conquest and
+# built the kingdom's churches and palaces in brick, plaster, timber and
+# glazed tile, because the Ebro valley has clay and little stone. The towers
+# of Teruel went up between 1257 and the 1320s. Unlocks the Alfar Mudejar.
+nd_ara_alarifes_mudejares = {
+	age = age_1_traditions
+	potential = { has_or_had_tag = ARA }
+	requires = guilds
+	icon = stone_and_brick
+
+	unlock_building = nd_ara_alfar_mudejar
+	tolerance_heathen = 1
+}
+
+# The Cortes of Aragon sat in four arms where every other realm of the Crown
+# had three: the ricoshombres, the knights and infanzones, the Church, and
+# the towns and communities. The lesser nobility voted apart from the
+# magnates, and a king who knew his business played one arm against the
+# other. global_nobles_estate_power is a key where a negative value is the
+# benefit to the crown.
+nd_ara_cuatro_brazos = {
+	age = age_1_traditions
+	potential = { has_or_had_tag = ARA }
+	requires = city_building_advance
+	icon = divide_estates
+
+	parliament_base_support = 0.05
+	global_nobles_estate_power = -0.1
+}
+
+# ============================================================================
+# AGE 2: RENAISSANCE (4 advances, 2 unlocks)
+# ============================================================================
+
+# The War of the Two Peters (1356 to 1375): Castile takes Tarazona, Calatayud
+# and Teruel, and the kingdom is held by the hosts of its own towns, called
+# out by the sobrejunteros and led by the commoner horsemen that the frontier
+# fueros had made a class of their own. Unlocks the Caballeros Villanos levy.
+# (DHE event nd_ara.3)
+nd_ara_huestes_concejiles = {
+	age = age_2_renaissance
+	potential = { has_or_had_tag = ARA }
+	requires = medieval_military
+	icon = nav_navarrese_defense_force
+
+	unlock_levy = levy_nd_ara_caballeros_villanos
+	levy_combat_efficiency_modifier = 0.1
+}
+
+# Saffron. The dry plains of the Jiloca, the Monegros and the Ebro grew the
+# costliest crop in Europe, and in the fifteenth century the great German
+# trading companies kept agents in Zaragoza to buy it. Unlocks the Azafranal.
+nd_ara_azafran_de_aragon = {
+	age = age_2_renaissance
+	potential = { has_or_had_tag = ARA }
+	requires = rgo_size_advance_renaissance
+	icon = fertile_lands
+
+	unlock_building = nd_ara_azafranal
+	global_saffron_output_modifier = 0.1
+}
+
+# Pedro Martinez de Luna of Illueca, canon lawyer, elected pope at Avignon in
+# 1394 as Benedict XIII. He never resigned: deposed by two councils, he held
+# his court on the rock of Peniscola until his death in 1423.
+# (DHE event nd_ara.4, branching)
+nd_ara_papa_luna = {
+	age = age_2_renaissance
+	potential = { has_or_had_tag = ARA }
+	requires = global_clergy_max_literacy_advance
+	icon = koa_papal_endorsement
+
+	clergy_estate_target_satisfaction = small_permanent_target_satisfaction
+	global_clergy_max_literacy = 5
+}
+
+# The Estudio General of Huesca, founded by Peter the Ceremonious on 12 March
+# 1354 against the monopoly of Lleida: the kingdom's own school of law, later
+# called the Sertoriana after the academy Sertorius was said to have kept in
+# the same city.
+nd_ara_estudio_general_de_huesca = {
+	age = age_2_renaissance
+	potential = { has_or_had_tag = ARA }
+	requires = global_nobles_max_literacy_advance
+	icon = university_naples
+
+	global_nobles_max_literacy = 5
+	global_institution_growth_modifier = 0.1
+}
+
+# ============================================================================
+# AGE 3: DISCOVERY (4 advances, 2 unlocks)
+# ============================================================================
+
+# Printing reaches Zaragoza in 1475 with Matthew of Flanders. From the 1480s
+# Pablo and Juan Hurus of Constance make the city one of the first presses of
+# Spain: illustrated books with German woodcuts, and in 1499 the first
+# history of Aragon in the vernacular. Hung on the printing press on purpose:
+# this is that institution arriving. (DHE event nd_ara.5)
+nd_ara_imprenta_de_los_hurus = {
+	age = age_3_discovery
+	potential = { has_or_had_tag = ARA }
+	requires = printing_press_advance
+	icon = ven_printing_industry
+
+	global_books_output_modifier = 0.1
+	global_monthly_literacy = 0.01
+}
+
+# The alabaster of the lower Ebro (Gelsa, Quinto, Fuentes) is soft enough to
+# cut with a knife and takes a polish like marble. Gil Morlanes and Damian
+# Forment carved it into the great altarpieces: the Pilar's between 1509 and
+# 1518, Huesca's after it. Unlocks the Taller de Alabastro.
+nd_ara_alabastro_del_ebro = {
+	age = age_3_discovery
+	potential = { has_or_had_tag = ARA }
+	requires = regulate_court_procedures
+	icon = artists_advance_artist_skills
+
+	unlock_building = nd_ara_taller_de_alabastro
+	skill_of_new_artists = 0.1
+}
+
+# Julian del Rey, a Morisco swordsmith who worked at Zaragoza around 1500,
+# signed his blades with a small dog. A century later Cervantes could still
+# write of "swords of the little dog" and expect to be understood. Unlocks
+# the Espaderia.
+nd_ara_espadas_del_perrillo = {
+	age = age_3_discovery
+	potential = { has_or_had_tag = ARA }
+	requires = crown_power_advance_discovery
+	icon = raj_martial_smiths
+
+	unlock_building = nd_ara_espaderia
+	global_weaponry_output_modifier = 0.1
+}
+
+# The Observancias (1437): the Cortes of Teruel charge the Justicia Martin
+# Diez de Aux with writing down the usages of the kingdom's courts, and the
+# result stands beside the Fueros as law. change_policy_cost_modifier is a
+# cost key: a negative value is the benefit.
+nd_ara_observancias_del_reino = {
+	age = age_3_discovery
+	potential = { has_or_had_tag = ARA }
+	requires = government_size_discovery
+	icon = law_making_renaissance
+
+	legislative_efficiency = 0.1
+	change_policy_cost_modifier = -0.1
+}
+
+# ============================================================================
+# AGE 4: REFORMATION (4 advances, 3 unlocks)
+# ============================================================================
+
+# The Guardia del Reino: companies of horse and foot kept by the Diputacion
+# out of the kingdom's own customs duties, to hunt the bandits of the
+# mountain roads. The king's officers had no say in it. Unlocks the Guardia
+# del Reino.
+nd_ara_guardia_del_reino = {
+	age = age_4_reformation
+	potential = { has_or_had_tag = ARA }
+	requires = recruitment_improvements_reformation
+	icon = dan_royal_life_guards
+
+	unlock_unit = a_nd_ara_guardia_del_reino
+	army_light_cavalry_power = 0.1
+	ai_weight = {
+		add = 30
+	}
+}
+
+# Manifestacion: on the petition of any prisoner the Justicia orders the
+# king's judges to hand him over, and he is lodged in the Justicia's own
+# prison, safe from torture, until a lawful sentence is shown. Vanilla has
+# the Justicia as a privilege and the Alterations of 1591 as an event; this
+# is the writ itself. Unlocks the Carcel de Manifestados.
+nd_ara_derecho_de_manifestacion = {
+	age = age_4_reformation
+	potential = { has_or_had_tag = ARA }
+	requires = gov_reform_reformation_a
+	icon = deliberative_council
+
+	unlock_building = nd_ara_carcel_de_manifestados
+	burghers_estate_target_satisfaction = small_permanent_target_satisfaction
+}
+
+# One Aragonese in six was a Morisco, settled thick on the irrigated land of
+# the Ebro and its tributaries as vassals of the lords, who defended them:
+# they paid more than Christians did. Their potters at Muel made the gilt
+# lustreware of the kingdom. Unlocks the lustreware method of the Alfar
+# Mudejar (the building is unlocked in age 1).
+# expand_rgo_farming_cost_modifier is a cost key: a negative value is the
+# benefit. (DHE event nd_ara.6, branching)
+nd_ara_vasallos_moriscos = {
+	age = age_4_reformation
+	potential = { has_or_had_tag = ARA }
+	requires = pop_promotion_speed_age_4
+	icon = valley_irrigation
+
+	unlock_production_method = nd_ara_alfar_loza_de_muel
+	expand_rgo_farming_cost_modifier = -0.1
+	global_monthly_food_modifier = monthly_food_productivity_mild_bonus
+}
+
+# "Zaragoza la harta", the well fed. Between 1541 and 1551 the council builds
+# the Lonja, and merchant bankers such as Gabriel Zaporta raise brick palaces
+# with arcaded galleries under deep carved eaves.
+nd_ara_zaragoza_la_harta = {
+	age = age_4_reformation
+	potential = { has_or_had_tag = ARA }
+	requires = early_modern_administation
+	icon = nav_a_renaissance_realm
+
+	global_urban_build_buildings_efficiency = 0.1
+	global_pop_promotion_speed_modifier = 0.1
+}
+
+# ============================================================================
+# AGE 5: ABSOLUTISM (4 advances, 2 unlocks)
+# ============================================================================
+
+# The servicio de armas: with the French in Catalonia, the Cortes of 1645 and
+# 1646 vote some two thousand foot, raised, officered and paid by the
+# kingdom, to serve on its own border and nowhere else. Unlocks the Tercio
+# del Reino levy. (DHE event nd_ara.7)
+nd_ara_servicio_de_armas = {
+	age = age_5_absolutism
+	potential = { has_or_had_tag = ARA }
+	requires = regiment_reinforcement_speed_absolutism
+	icon = pike_and_shot_advance
+
+	unlock_levy = levy_nd_ara_tercio_del_reino
+	army_maintenance_efficiency = 0.1
+}
+
+# Vincencio Juan de Lastanosa of Huesca (1607 to 1681) filled his house with
+# a library, coins, armour, fossils, instruments and a garden of rare plants,
+# and kept open house for scholars; Gracian's books were printed at his
+# expense. Unlocks the Gabinete de Curiosidades.
+nd_ara_circulo_de_lastanosa = {
+	age = age_5_absolutism
+	potential = { has_or_had_tag = ARA }
+	requires = artists_advance_absolutism
+	icon = library_advance
+
+	unlock_building = nd_ara_gabinete_de_curiosidades
+	cultural_influence_modifier = 0.1
+}
+
+# The Aragonese arbitristas. In the Cortes of 1677 and 1678 the guilds ask
+# that French cloth be shut out and the kingdom clothe itself; Dormer answers
+# in print that a kingdom with no sea needs trade more than walls. The duties
+# were raised, and the argument ran for a generation.
+nd_ara_arbitristas_aragoneses = {
+	age = age_5_absolutism
+	potential = { has_or_had_tag = ARA }
+	requires = absolutist_court
+	icon = economical_policies_law_advance
+
+	max_tariff = 0.1
+	global_cloth_output_modifier = 0.1
+}
+
+# The royal powder works of Villafeliche on the Jiloca: by the eighteenth
+# century close to two hundred small water mills grinding saltpetre, sulphur
+# and charcoal, the largest powder works in Spain.
+# army_artillery_build_cost_modifier is a cost key: a negative value is the
+# benefit.
+nd_ara_polvora_de_villafeliche = {
+	age = age_5_absolutism
+	potential = { has_or_had_tag = ARA }
+	requires = army_movement_speed_absolutism
+	icon = gunpowder_advance
+
+	army_artillery_build_cost_modifier = -0.1
+	siege_ability = 0.1
+}
+
+# ============================================================================
+# AGE 6: REVOLUTIONS (5 advances, 3 unlocks)
+# ============================================================================
+
+# Canon Ramon Pignatelli takes over the silted Acequia Imperial of Charles V
+# in 1771. Water reaches Zaragoza in 1784 and the works end in 1790: 110
+# kilometres from Tudela, for the fields and for barges. Unlocks the Canal
+# Imperial. (DHE event nd_ara.8)
+nd_ara_proyecto_de_pignatelli = {
+	age = age_6_revolutions
+	potential = { has_or_had_tag = ARA }
+	requires = urbanization
+	icon = cas_canal_de_castilla
+
+	unlock_building = nd_ara_canal_imperial
+	global_wheat_output_modifier = 0.1
+}
+
+# The Voluntarios de Aragon (1762): mountain men of the Pyrenean valleys
+# formed into the first regiment of light infantry of the Spanish army.
+# Unlocks the Voluntarios de Aragon.
+nd_ara_voluntarios_de_aragon = {
+	age = age_6_revolutions
+	potential = { has_or_had_tag = ARA }
+	requires = crown_power_advance_revolutions
+	icon = nav_riflemen_march
+
+	unlock_unit = a_nd_ara_voluntarios_de_aragon
+	army_light_infantry_power = 0.1
+	ai_weight = {
+		add = 30
+	}
+}
+
+# Zaragoza, 1808 and 1809: a city without modern walls holds a French army
+# for two months, and then a second one for two more, parish by parish and
+# house by house. Hung on Napoleonic warfare on purpose: this is the nation
+# in arms. Unlocks the Escopeteros de las Parroquias levy.
+# (DHE event nd_ara.9, branching)
+nd_ara_los_sitios = {
+	age = age_6_revolutions
+	potential = { has_or_had_tag = ARA }
+	requires = napoleonic_warfare
+	icon = liberty_heroes
+
+	unlock_levy = levy_nd_ara_escopeteros
+	morale_recovery_in_friendly = 0.05
+	global_garrison_growth = 0.01
+}
+
+# The Real Academia de Bellas Artes de San Luis (Zaragoza, 1792), grown out
+# of the drawing school where Jose Luzan had taught a boy from Fuendetodos
+# named Francisco de Goya.
+nd_ara_academia_de_san_luis = {
+	age = age_6_revolutions
+	potential = { has_or_had_tag = ARA }
+	requires = enlightened_court
+	icon = city_of_artists
+
+	num_possible_artists = 1
+	global_monthly_art_start_chance = 0.1
+}
+
+# The Aragonese party: the soldiers and grandees who gathered at court round
+# the Count of Aranda, president of the Council of Castile and for fourteen
+# years ambassador in Paris, against the lawyers who ran the ministries.
+# train_general_cost_modifier is a cost key: a negative value is the benefit.
+nd_ara_partido_aragones = {
+	age = age_6_revolutions
+	potential = { has_or_had_tag = ARA }
+	requires = government_size_revolutions
+	icon = spa_spanish_enlightenment
+
+	train_general_cost_modifier = -0.1
+	max_diplomats = 1
+}
+
+# ===== DESTINY TREE =====
+# Post-formation objectives. Written for the country that holds this tag in
+# practice: the Aragon of 1337, which carries the tag from day one and owns
+# the whole Aragon area, 25 of 29 Catalan locations, all of Valencia, half of
+# Sardinia, and Mallorca as a vassal (main_menu/setup/1337, checked on 1.4).
+# Nothing below asks for any of that land. A Catalan or Aragonese country
+# that forms Aragon by the button meets the same objectives from further away.
+#
+# The formation fork is the kingdom's oldest quarrel, the one the Union of
+# 1283 was sworn over: is Aragon the land the king rules from, or the title
+# he rules by?
+#   Path A (nd_ara_path_a, the Kingdom in Its Own Land): the realm of
+#     Alfonso the Battler, king of Aragon and Pamplona, put back together and
+#     governed from Zaragoza. Its land objectives are his: Molina (1129),
+#     Soria (repeopled 1109 to 1114), Tudela (1119), Pamplona. Its weight is
+#     not conquest: village communities, Mudejar kilns, sword forges and
+#     Zaragoza grown from 30 development to 45 and then 60
+#     (scripts/development_estimate.py --explain zaragoza gives 30 for 1337).
+#     Its capstone unlocks the Aljaferia.
+#   Path B (nd_ara_path_b, Head of the Crown): the house gathers realms
+#     across the sea, each kept by its own law, and a subject's land counts.
+#     The papal kingdom of Sardinia and Corsica (1297), Sicily brought back
+#     to the senior line (1409), then Alfonso the Magnanimous's reach: Gaeta,
+#     Malta and Skanderbeg's Kruje. Its capstone unlocks the Castillo Aragones.
+#
+# Earliest ages (scripts/destiny/stage_floors.py ARA): path A 1, 1, 3 (the
+# Espaderia is an age 3 building), path B 1, 1, 2 (the Renaissance).
+#
+# Kept apart from the mod's other Iberian trees on purpose. Catalonia asks
+# for the Balearics, Valencia, Alghero, Perpignan, Andorra and Barcelona's
+# growth; the Aragonese Empire for Greece, the Aegean, Cyprus, Alexandria,
+# Tunis, the Atlantic islands and the Caribbean, with Naples, Barcelona,
+# Palma and Valencia grown; Spain for Naples, Milan, Antwerp, Rome, Tunis,
+# Palermo and the Indies. No location and no modifier key of this tree is
+# asked for or granted by any of the three, nor by Aragon's own heritage
+# advances and formation choices.
+# No cabinet seat, no army size test (the kingdom's army is its levies), no
+# kingdom-wide development.
+
+# Root: the oath. No king of Aragon was acknowledged until he had sworn the
+# Fueros before the Justicia in La Seo. global_separatism is a key where a
+# negative value is the benefit.
+nd_ara_destiny = {
+	age = age_1_traditions
+	depth = 0
+	potential = { has_or_had_tag = ARA has_variable = nd_ara_formed has_game_rule = nd_destinies_enabled }
+	allow = { stability >= 75 }
+	icon = crown_rights_laws_advance
+
+	global_separatism = -0.05
+}
+
+# ----------------------------------------------------------------------------
+# PATH A: the Kingdom in Its Own Land
+# ----------------------------------------------------------------------------
+
+# Stage 1: the Extremadura of Aragon. The southern march was held by its own
+# villages, and its last piece is Molina, which Alfonso the Battler took in
+# 1129 and which gave itself to Peter the Ceremonious in 1369 rather than
+# accept Bertrand du Guesclin as its lord (it was handed back at Almazan in
+# 1375 and has been called Molina de Aragon ever since).
+# The Casa de la Comunidad is the heritage tree's age 1 building; it stands
+# only in Aragonese-majority countryside and towns, of which the kingdom has
+# 26, and history counts four communities: Calatayud, Daroca, Teruel and
+# Albarracin.
+# plateau_proximity_impact is a key where a negative value is the benefit.
+nd_ara_dest_extremadura = {
+	age = age_1_traditions
+	requires = nd_ara_destiny
+	potential = { has_or_had_tag = ARA has_variable = nd_ara_formed has_game_rule = nd_destinies_enabled }
+	allow = {
+		custom_tooltip = {
+			text = nd_ara_path_a_tt
+			has_variable = nd_ara_path_a
+		}
+		owns_or_non_sovereign_subject_owns = location:molina_de_aragon
+		custom_tooltip = {
+			text = nd_ara_dest_comunidades_tt
+			any_owned_location = {
+				count >= 4
+				has_building_with_at_least_one_level = nd_ara_casa_de_la_comunidad
+			}
+		}
+	}
+	icon = cas_repoblaciones
+
+	levy_recovery_modifier = 0.1
+	plateau_proximity_impact = -0.15
+}
+
+# Stage 2: the court at Zaragoza. A king who lives in Aragon holds the
+# Castilian march in person and builds where he lives. Soria was the
+# Battler's own foundation and went to Castile at his death in 1134.
+# Zaragoza starts at 30 development; half as much again is 45. The Alfar
+# Mudejar is the heritage tree's age 1 kiln yard: Mudejar masters built the
+# Ceremonious's rooms in the Aljaferia and every tower of the city.
+# city_upgrade_cost_modifier is a cost key: a negative value is the benefit.
+nd_ara_dest_corte_en_zaragoza = {
+	age = age_1_traditions
+	requires = nd_ara_dest_extremadura
+	potential = { has_or_had_tag = ARA has_variable = nd_ara_formed has_game_rule = nd_destinies_enabled }
+	allow = {
+		owns_or_non_sovereign_subject_owns = location:soria
+		custom_tooltip = {
+			text = nd_ara_dest_zaragoza_45_tt
+			location:zaragoza = {
+				owner ?= root
+				development >= 45
+			}
+		}
+		custom_tooltip = {
+			text = nd_ara_dest_alfares_tt
+			any_owned_location = {
+				count >= 3
+				has_building_with_at_least_one_level = nd_ara_alfar_mudejar
+			}
+		}
+		gold >= 2000
+	}
+	icon = monarchy_royal_court_advance
+
+	court_spending_efficiency = 0.1
+	city_upgrade_cost_modifier = -0.1
+}
+
+# Stage 3: Aragon and Pamplona. From 1076 to 1134 one king ruled both, and
+# the Battler took Tudela in 1119; at his death the Navarrese chose a king
+# of their own and the realms never met again. Zaragoza at twice its 1337
+# development is 60. The Espaderia is the heritage tree's age 3 building and
+# needs iron in the local market, which Albarracin and Benabarre mine.
+# Unlocks the Aljaferia.
+# land_cost_on_distance_from_capital_speed_propagation is how fast the
+# capital's proximity travels over land: one king's writ from Roncesvalles
+# to Teruel. (Not tax_income_efficiency: vanilla's own dinero jaques grants
+# it one age later.)
+# army_tradition_decay is a key where a negative value is the benefit.
+nd_ara_dest_aragon_y_pamplona = {
+	age = age_1_traditions
+	requires = nd_ara_dest_corte_en_zaragoza
+	potential = { has_or_had_tag = ARA has_variable = nd_ara_formed has_game_rule = nd_destinies_enabled }
+	allow = {
+		owns_or_non_sovereign_subject_owns = location:pamplona
+		owns_or_non_sovereign_subject_owns = location:tudela
+		custom_tooltip = {
+			text = nd_ara_dest_zaragoza_60_tt
+			location:zaragoza = {
+				owner ?= root
+				development >= 60
+			}
+		}
+		custom_tooltip = {
+			text = nd_ara_dest_espaderias_tt
+			any_owned_location = {
+				count >= 3
+				has_building_with_at_least_one_level = nd_ara_espaderia
+			}
+		}
+		gold >= 3000
+		prestige >= 75
+	}
+	icon = consolidate_the_royal_domain
+
+	unlock_building = nd_ara_dest_aljaferia
+	land_cost_on_distance_from_capital_speed_propagation = 0.1
+	fort_limit_modifier = 0.1
+	army_tradition_decay = -0.001
+}
+
+# ----------------------------------------------------------------------------
+# PATH B: Head of the Crown
+# ----------------------------------------------------------------------------
+
+# Stage 1: the kingdom of Sardinia and Corsica, which Boniface VIII invented
+# for James II in 1297. In 1337 the crown holds Cagliari, Sassari and the
+# east; Arborea holds Oristano (broken at Sanluri in 1409, its rights bought
+# in 1420), Genoa holds the Doria rock of Castelsardo (taken in 1448 and
+# renamed Castillo Aragones) and all Corsica, where Alfonso V besieged
+# Bonifacio in 1420 and the crown never ruled. A subject's land counts, so
+# Arborea may be bound instead of broken.
+nd_ara_dest_cerdena_y_corcega = {
+	age = age_1_traditions
+	requires = nd_ara_destiny
+	potential = { has_or_had_tag = ARA has_variable = nd_ara_formed has_game_rule = nd_destinies_enabled }
+	allow = {
+		custom_tooltip = {
+			text = nd_ara_path_b_tt
+			has_variable = nd_ara_path_b
+		}
+		owns_or_non_sovereign_subject_owns = location:oristano
+		owns_or_non_sovereign_subject_owns = location:castelsardo
+		owns_or_non_sovereign_subject_owns = location:bonifacio
+	}
+	icon = sar_the_giudicati
+
+	subject_opinions = 10
+	own_coast_naval_combat_bonus = 0.1
+}
+
+# Stage 2: Trinacria. Sicily had kings of the house's cadet line from 1296;
+# Martin the Younger landed with an army in 1392, and when he died in 1409
+# the island passed to his father and to the crown for good. Messina,
+# Catania and Syracuse are the east coast the barons held against him.
+nd_ara_dest_trinacria = {
+	age = age_1_traditions
+	requires = nd_ara_dest_cerdena_y_corcega
+	potential = { has_or_had_tag = ARA has_variable = nd_ara_formed has_game_rule = nd_destinies_enabled }
+	allow = {
+		owns_or_non_sovereign_subject_owns = location:messina
+		owns_or_non_sovereign_subject_owns = location:catania
+		owns_or_non_sovereign_subject_owns = location:syracuse
+		prestige >= 50
+		gold >= 2000
+	}
+	icon = sic_sicilian_baroque
+
+	diplomatic_capacity = 1
+	global_merchant_capacity_modifier = 0.1
+}
+
+# Stage 3: the Magnanimous. Alfonso V made Gaeta his base on the mainland in
+# the 1430s, kept a humanist court in Italy and never came home; Malta was
+# the county at the end of his Sicilian kingdom; and by the Treaty of Gaeta
+# (26 March 1451) Skanderbeg became his vassal and a royal garrison under
+# Bernard Vaquer took over the castle of Kruje. A vassal's land counts, as it
+# did then. Naples itself is left to the Spain and Aragonese Empire trees.
+# Unlocks the Castillo Aragones.
+# accepted_culture_maintenance_cost_modifier is a cost key: a negative value
+# is the benefit.
+nd_ara_dest_el_magnanimo = {
+	age = age_1_traditions
+	requires = nd_ara_dest_trinacria
+	potential = { has_or_had_tag = ARA has_variable = nd_ara_formed has_game_rule = nd_destinies_enabled }
+	allow = {
+		owns_or_non_sovereign_subject_owns = location:gaeta
+		owns_or_non_sovereign_subject_owns = location:malta
+		owns_or_non_sovereign_subject_owns = location:kruje
+		has_embraced_institution = institution:renaissance
+		gold >= 3000
+		prestige >= 75
+	}
+	icon = ues_strong_dynastic_ties
+
+	unlock_building = nd_ara_dest_castillo_aragones
+	power_projection = 5
+	accepted_culture_maintenance_cost_modifier = -0.1
+	diplomatic_range_modifier = 0.25
+}

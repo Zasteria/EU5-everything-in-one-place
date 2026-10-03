@@ -59,7 +59,7 @@ nd_nin_sapan_mati = {
 	potential = { has_or_had_tag = NIN }
 	requires = legalism_advance
 	icon = legalism_advance
-	global_supply_limit_modifier = 0.15
+	global_supply_limit_modifier = 0.1
 	global_hostile_attrition = 1
 }
 
@@ -102,7 +102,6 @@ nd_nin_imperial_siege_doctrine = {
 	requires = drill_army_advance
 	icon = drill_army_advance
 	unlock_unit = a_nd_nin_siege_corps
-	siege_ability = 0.1
 	siege_ability = 0.15
 	ai_weight = {
 		add = 50
@@ -205,8 +204,10 @@ nd_nin_levantine_administration = {
 	potential = { has_or_had_tag = NIN }
 	requires = diplomatic_training
 	icon = diplomatic_training
-	subject_loyalty = 10
-	diplomatic_reputation = 1
+	subject_loyalty = 5
+	# The tribute the governors and garrisons collect. Reputation is what
+	# vanilla's primacy_of_alexandria gives every miaphysite in this age.
+	subject_income_modifier = 0.05
 	global_pop_assimilation_speed_modifier = 0.08
 }
 
@@ -263,7 +264,9 @@ nd_nin_imperial_tribute = {
 	potential = { has_or_had_tag = NIN }
 	requires = global_trade_advance
 	icon = global_trade_advance
-	subject_loyalty = 0.1
+	# Loyalty is counted in whole points (every vanilla advance grants 5);
+	# the 0.1 that stood here did nothing.
+	subject_loyalty = 5
 	diplomatic_annexation_efficiency = 0.1
 }
 
@@ -276,7 +279,10 @@ nd_nin_royal_officer_corps = {
 	potential = { has_or_had_tag = NIN }
 	requires = leader_recruit_cost_advance
 	icon = leader_recruit_cost_advance
-	monthly_army_tradition = 0.05
+	# A palace school turns out generals as a matter of course, so each one
+	# costs less to train. Gaining tradition is vanilla's arm_nakharar_titles
+	# in this age for an Armenian founder.
+	train_general_cost_modifier = -0.1
 	land_morale_modifier = 0.05
 }
 
@@ -358,7 +364,10 @@ nd_nin_annexation_doctrine = {
 	icon = absolutism_agressive_advance
 	diplomatic_annexation_efficiency = 0.15
 	casus_belli_creation_speed_modifier = 0.15
-	global_pop_assimilation_speed_modifier = 0.1
+	# A subject absorbed on a known timetable resists less once it is a
+	# province. Assimilation is vanilla's preserver_of_national_identity in
+	# this age for every miaphysite.
+	global_separatism = -0.05
 	global_integration_speed_modifier = 0.1
 }
 
@@ -374,7 +383,7 @@ nd_nin_imperial_industry = {
 	requires = industrialization_advance
 	icon = industrialization_advance
 	unlock_building = nd_nin_imperial_arsenal
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }
 
 # Lamassu Academy: the imperial military-and-administrative academy,
@@ -426,7 +435,7 @@ nd_nin_destiny = {
 	potential = { has_or_had_tag = NIN has_variable = nd_nin_formed has_game_rule = nd_destinies_enabled }
 	allow = { stability >= 75 }
 	icon = imperial_ambitions
-	cultural_influence = 0.5
+	diplomatic_reputation = 1
 }
 
 # === DESTINY: Path A, Pax Sargonica (Universal Empire) ===
@@ -468,13 +477,24 @@ nd_nin_dest_zagros_throne = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:hamadan
 		owns_or_non_sovereign_subject_owns = location:istakhr
-		total_development >= 6500
+		# Ecbatana rebuilt as a throne city: 23.5 in 1337
+		# (scripts/development_estimate.py), half again for stage two.
+		custom_tooltip = {
+			text = nd_nin_dest_hamadan_developed_tt
+			location:hamadan = {
+				owner ?= root
+				development >= 35
+			}
+		}
 		stability >= 75
 	}
 	icon = feudalism_advance
 	global_garrison_size_modifier = 0.15
-	land_morale_recovery = 0.01
-	global_pop_assimilation_speed = 0.1
+	# Hamadan, Isfahan and Shiraz are plateau country in the game: rule
+	# reaches further across it. Morale recovery is vanilla's
+	# arm_legacy_of_hayk in this age for an Armenian founder.
+	plateau_proximity_impact = -0.2
+	accepted_culture_maintenance_cost_modifier = -0.1
 }
 
 # Stage 3 (The Universal Empire): Sargon II claimed the title šar kibrāt
@@ -492,13 +512,21 @@ nd_nin_dest_universal_empire = {
 		owns_or_non_sovereign_subject_owns = location:samarkand
 		owns_or_non_sovereign_subject_owns = location:peshawar
 		army_size >= 75
-		total_development >= 8500
+		# The seat at Nineveh (Mosul), where the Hall of the Lands stands:
+		# 25 in 1337, doubled for stage three.
+		custom_tooltip = {
+			text = nd_nin_dest_nineveh_developed_tt
+			location:mosul = {
+				owner ?= root
+				development >= 50
+			}
+		}
 		stability >= 75
 	}
 	icon = power_projection_advance_5
 	unlock_building = nd_nin_bit_matati
 	army_artillery_power = 0.1
-	prestige_from_land_battle = 0.5
+	prestige_from_land_battle = 0.1
 	army_maintenance_efficiency = 0.1
 }
 
@@ -548,9 +576,17 @@ nd_nin_dest_aramaic_lingua_franca = {
 	requires = nd_nin_dest_beth_hekma_imperial
 	potential = { has_or_had_tag = NIN has_variable = nd_nin_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		has_embraced_institution = institution:global_trade
+		# The printing press sets Aramaic in type. Edessa (Urfa) is the city
+		# whose dialect became classical Syriac: 23 in 1337, half again.
+		has_embraced_institution = institution:printing_press
 		gold >= 2000
-		total_development >= 6500
+		custom_tooltip = {
+			text = nd_nin_dest_edessa_developed_tt
+			location:urfa = {
+				owner ?= root
+				development >= 35
+			}
+		}
 		stability >= 75
 	}
 	icon = renaissance_court
@@ -570,7 +606,17 @@ nd_nin_dest_imperial_silk_corridor = {
 	requires = nd_nin_dest_aramaic_lingua_franca
 	potential = { has_or_had_tag = NIN has_variable = nd_nin_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		has_embraced_institution = institution:scientific_revolution
+		# No later institution than stage two's printing press, so this path
+		# ends within two ages of the other. The canal works are measured at
+		# Baghdad, the middle of the Mosul to Basra navigation: 18 in 1337,
+		# doubled for stage three.
+		custom_tooltip = {
+			text = nd_nin_dest_baghdad_developed_tt
+			location:baghdad = {
+				owner ?= root
+				development >= 36
+			}
+		}
 		owns_or_non_sovereign_subject_owns = location:bukhara
 		any_market_present_in_country = {
 			OR = {

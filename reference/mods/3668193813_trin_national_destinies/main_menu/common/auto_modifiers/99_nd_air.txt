@@ -1,19 +1,42 @@
-﻿# National Destinies: AIR bureaucracy authority
+﻿# National Destinies: AIR bureaucracy slot
 #
-# Grants 1 bureaucracy slot once AIR has been formed (nd_air_formed variable
-# set by formation event nd_air.1) and the player has the bureaucracies
-# game-rule enabled. Combined with the capital's universal +1 slot the player
-# may keep 2 of the 4 Aïr institutions active. The choice forces the player
-# to commit to either confederation legitimacy (Sultanate plus Cure Salée)
-# or merchant-clerical legitimacy (Caravan Compact plus Ineslemen Tariqat),
-# the two routes by which the historical Sultanate of Agadez held itself
-# together against its constituent drum-chiefs.
-
+# One slot once Air has been formed (nd_air_formed is set in the form_effect
+# of AIR_f) and the bureaucracies game rule is on.
+#
+# AIR_f sets no tag, so this grant cannot end on a tag test the way every
+# other country's does. It ends instead when the country holds the marker of
+# a larger formable Air leads into (the list scripts/sync_history_events.py
+# --roads AIR prints, by formable key), so that a country which goes on to
+# the Tuareg confederation or beyond hands over to that formable's grant
+# and does not keep both (user ruling 2026-10-02; Bahmanis into the Deccan
+# gives 1, then 3, never 4). Air's four institutions stay selectable through
+# their own gates.
+#
+# The second slot of an Air country does not come from its capital: vanilla
+# gives a capital slot to a megalopolis only
+# (location_ranks/00_default.txt:49-51). It comes from sharia law as the
+# legal code, which the Tuareg tribes start with
+# (setup/templates/subsaharan_muslim_tribe.txt:6, laws/01_legal_system.txt:119).
+# Two slots, then, for four institutions: confederation legitimacy (the
+# Sultanate with the Cure Salée) or merchant and clerical legitimacy (the
+# Caravan Compact with the Ineslemen Tariqat), the two ways the Sultanate of
+# Agadez held itself together against its drum chiefs.
 nd_air_bureaucracy_authority = {
 	potential_trigger = {
-		tag = AIR
-has_variable = nd_air_formed
+		has_variable = nd_air_formed
 		has_game_rule = nd_bureaucracies_enabled
+		NOR = {
+			has_variable = nd_trg_formed
+			has_variable = nd_kbu_formed
+			has_variable = nd_soe_formed
+			has_variable = nd_alm_formed
+			has_variable = nd_cth_formed
+			has_variable = nd_spa_formed
+			has_variable = nd_khl_formed
+			has_variable = nd_eur_formed
+			has_variable = nd_rom_formed
+			has_variable = nd_rom_byz_formed
+		}
 	}
 	allow_bureaucracy = yes
 	global_max_bureaucracy_slots = 1

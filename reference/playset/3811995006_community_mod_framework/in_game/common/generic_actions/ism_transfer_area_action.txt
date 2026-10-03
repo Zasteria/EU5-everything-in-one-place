@@ -1,0 +1,61 @@
+﻿ism_transfer_area_action = {
+    type = owncountry
+    show_message = no
+    show_message_to_target = no
+    show_in_gui_list = no
+    ai_tick = never
+    automation_tick = never
+
+    potential = {  }
+    allow = {  }
+
+    select_trigger = {
+        looking_for_a = area
+        interaction_source_list = {
+			scope:actor.var:ism_giver_nation = {
+				every_area_with_owned_province = {
+					add_to_list = source
+				}
+			}
+        }
+        target_flag = recipient
+        name = "transfer_area_to_subject_select_title"
+        none_available_msg_key = "no_valid_areas"
+
+        column = { data = name }
+        column = { data = population }
+
+        visible = {
+            ism_can_transfer_area = {
+                giver = scope:actor.var:ism_giver_nation
+                receiver = scope:actor.var:ism_receiver_nation
+            }
+        }
+
+        enabled = {
+            custom_tooltip = {
+                text = cannot_transfer_capital
+                ism_allow_transfer_area = yes
+            }
+        }
+    }
+
+    effect = {
+        if = {
+            limit = {
+                exists = scope:recipient
+            }
+            ism_transfer_area_effect = {
+                giver = scope:actor.var:ism_giver_nation
+                receiver = scope:actor.var:ism_receiver_nation
+                target_area = scope:recipient
+            }
+            hidden_effect = {
+                fire_generic_action = {
+                    type = ism_transfer_area_action
+                    actor = scope:actor
+                }
+            }
+        }
+    }
+}

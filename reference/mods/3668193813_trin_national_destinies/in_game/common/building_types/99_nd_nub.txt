@@ -22,7 +22,7 @@ nd_nub_saqia = {
 	}
 
 	modifier = {
-		local_monthly_food_modifier = 0.1
+		local_monthly_food_modifier = 0.05
 		local_population_growth = 0.0005
 		local_wheat_output_modifier = 0.1
 	}
@@ -69,20 +69,6 @@ nd_nub_nile_fortress = {
 			stone = 0.2
 			weaponry = 0.1
 			lumber = 0.1
-			category = building_maintenance
-		}
-
-		nd_nub_nile_trade = {
-			fur = 0.1
-			dyes = 0.1
-			salt = 0.05
-			category = building_maintenance
-		}
-
-		nd_nub_metalworking = {
-			iron = 0.1
-			copper = 0.05
-			tools = 0.05
 			category = building_maintenance
 		}
 	}
@@ -158,11 +144,11 @@ nd_nub_gold_camp = {
 
 	unique_production_methods = {
 		nd_nub_gold_processing = {
-			lumber = 0.1
+			lumber = 0.6667
 			produced = goods_gold
 			output = 0.15
 			category = guild_input
-			debug_max_profit = -1
+			debug_max_profit = rural_profit_margin
 		}
 	}
 	construction_demand = village_construction
@@ -198,41 +184,6 @@ nd_nub_ivory_warehouse = {
 			lumber = 0.1
 			salt = 0.05
 			tools = 0.05
-			category = building_maintenance
-		}
-
-		nd_nub_leatherworking = {
-			livestock = 0.15
-			dyes = 0.05
-			tools = 0.05
-			category = building_maintenance
-		}
-
-		nd_nub_incense_trade = {
-			beeswax = 0.1
-			salt = 0.05
-			paper = 0.05
-			category = building_maintenance
-		}
-
-		nd_nub_date_wine = {
-			liquor = 0.05
-			fruit = 0.05
-			pottery = 0.05
-			category = building_maintenance
-		}
-
-		nd_nub_cotton_weaving = {
-			cloth = 0.1
-			dyes = 0.05
-			tools = 0.05
-			category = building_maintenance
-		}
-
-		nd_nub_sennar_commerce = {
-			silver = 0.05
-			cloth = 0.05
-			paper = 0.05
 			category = building_maintenance
 		}
 	}
@@ -277,7 +228,10 @@ nd_nub_pottery_workshop = {
 	construction_demand = workshop_construction
 }
 
-### Madrasa: Late period education building ###
+### Masid: the school compound of a holy family of the Funj period ###
+# The key keeps the old name. Vanilla gives every Muslim country a madrasa
+# (conversion, tribal promotion); this is the Sudanese masid, a city school
+# of law that raises literacy and spreads institutions.
 nd_nub_madrasa = {
 	is_special = yes
 	is_foreign = no
@@ -292,8 +246,13 @@ nd_nub_madrasa = {
 	expensive = yes
 	build_time = cultural_building_time
 
+	# A school of Islamic law: gated as vanilla gates its madrasa
+	# (religion_buildings.txt:155), so a Christian Nubia cannot build it.
 	country_potential = {
 		has_advance = nd_nub_sennar_scholarship
+		religion ?= {
+			group = religion_group:muslim
+		}
 	}
 
 	modifier = {
@@ -312,6 +271,124 @@ nd_nub_madrasa = {
 		}
 	}
 	construction_demand = school_construction
+}
+
+### Nile Workshops: the craft quarter of a Nile town ###
+# One building, four crafts. The town makes whichever its market can feed:
+# leather from the herds (the first craft, open with the building), tools from
+# traded iron (nd_nub_nile_metalwork, age 3), date wine from the palms
+# (nd_nub_caravan_trade, age 4) and damur cloth from Blue Nile cotton
+# (nd_nub_sennar_golden_age, age 5). Vanilla's market village holds several
+# crafts in one building the same way.
+# No location gate: every product is a made good and its input is its gate.
+# Settlement: towns and cities. The crafts were town trades (Old Dongola, Soba,
+# Arbaji, Sennar).
+# No modifier block, so the level formula of the guild tier multiplies nothing.
+# Outputs are from eu5-profit at the guild margin (20%).
+nd_nub_nile_workshops = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	employment_size = guild_employment
+	category = consumer_goods_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_nub_desert_leathercraft
+	}
+
+	unique_production_methods = {
+		# Hides salted, then tanned with the pods of the Nile acacia.
+		nd_nub_leatherworking = {
+			livestock = 0.8
+			salt = 0.05
+			produced = leather
+			output = 0.56
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+
+		nd_nub_metalworking = {
+			iron = 0.4
+			lumber = 0.2
+			produced = tools
+			output = 0.6
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+
+		# Vanilla distils liquor from a food crop in jars (wheat, rice,
+		# potato); dates take the crop's place.
+		nd_nub_date_wine = {
+			fruit = 0.8
+			pottery = 0.1
+			produced = liquor
+			output = 0.432
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+
+		nd_nub_cotton_weaving = {
+			cotton = 0.8
+			dyes = 0.05
+			produced = cloth
+			output = 1.04
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+### Coral Harbour: the island port in the manner of Suakin ###
+# Suakin stands on an island inside a reef lagoon, reached by one narrow
+# channel, and its houses are built of coral blocks cut from the reef. It took
+# the pilgrim and India trade of Aydhab after 1426.
+# location_potential: a port. It is a harbour and nothing else.
+# Settlement: towns and cities; the port was a town of merchants' houses.
+# harbor_suitability is vanilla's value for a wharf (town_buildings.txt:383),
+# trade protection that of its port authority (the reef channel is the wall).
+nd_nub_coral_harbor = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = generic_burgher_employment
+	category = naval_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = medium_port_building_time
+
+	country_potential = {
+		has_advance = nd_nub_suakin_trade
+	}
+
+	location_potential = {
+		is_port = yes
+	}
+
+	modifier = {
+		harbor_suitability = 0.1
+		local_trade_protection_factor = 0.1
+	}
+
+	unique_production_methods = {
+		nd_nub_coral_harbor_upkeep = {
+			stone = 0.213
+			lumber = 0.213
+			naval_supplies = 0.107
+			category = building_maintenance
+		}
+	}
+	construction_demand = port_building_construction
 }
 
 # ===== DESTINY BUILDINGS =====

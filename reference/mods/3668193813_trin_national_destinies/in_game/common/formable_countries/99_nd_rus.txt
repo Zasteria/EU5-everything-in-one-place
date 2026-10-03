@@ -1,8 +1,13 @@
-﻿# Intentional divergence from vanilla 1.2: omits `content_priority` (UI
-# ordering hint, no functional effect).
+﻿# Follows vanilla 1.4, which reshaped Russia: forming it now grants kingdom
+# rank only (the empire is proclaimed afterwards by vanilla's own decision,
+# decisions/flavor_decisions_rus.txt), needs Tver and Vladimir as well, an
+# independent country with its capital inside, and covers the Russian
+# region plus Severia and Kursk instead of the Urals and the steppe.
 REPLACE:RUS_f = {
 	level = 4
 	required_locations_fraction = 0.5
+	capital_required = yes
+	content_priority = 800
 	rule = historical
 
 	potential = {
@@ -10,8 +15,11 @@ REPLACE:RUS_f = {
 	}
 
 	allow = {
+		is_subject = no
 		owns = location:moscow
 		owns = location:novgorod
+		owns = location:tver
+		owns = location:vladimir
 	}
 	
 	name = RUS
@@ -22,8 +30,10 @@ REPLACE:RUS_f = {
 
 	regions = {
 		russian_region
-		ural_region
-		steppes_region
+	}
+	areas = {
+		severia_area
+		kursk_area
 	}
 	form_effect = {
 		# Formation markers live HERE, not only in the event's options.
@@ -35,10 +45,13 @@ REPLACE:RUS_f = {
 			set_variable = nd_rus_formed
 		}
 		if = {
-			limit = { country_rank_level < 4 }
-			set_country_rank_effect = { rank = country_rank:rank_empire }
+			limit = { country_rank_level < 3 }
+			set_country_rank_effect = { rank = country_rank:rank_kingdom }
 		}
 		trigger_event_non_silently = nd_rus.1
 		add_stability = stability_severe_bonus
+	}
+	ai_will_do = {
+		value = 1000
 	}
 }

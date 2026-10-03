@@ -1,0 +1,726 @@
+﻿# ============================================================================
+# Valencia (VAL): custom buildings
+# National Destinies mod
+# ============================================================================
+#
+# What is NOT here, because somebody already built it:
+#   vanilla: the Llotja de la Seda (event building, flavor_ara.106), the
+#   irrigation system and the saquiyah advance that deepens it, the hospital,
+#   the coastal fort, the salt collector, and the silk the vanilla VAL advance
+#   of age 4 is about.
+#   the Aragonese Empire (99_nd_cda.txt): the Almudin of Valencia, the
+#   Drassanes, the Casa Llotja de Mar.
+#   Catalonia (99_nd_cat.txt): the municipal Taula de Canvi, the paper mill,
+#   the glass furnace, the woollen workshop.
+#
+# What is here is the kingdom's own ground: the irrigators' commune and its
+# court, the commandery of Montesa, the board of walls and ditches, the
+# potteries of Manises, the madhouse the merchants founded, the sugar mill of
+# the Safor, the watchtower of the coast, the snow well, the faience works of
+# l'Alcora, the hemp walk of the Plana and the mills of Alcoi.
+#
+# Every production method is inline, names the margin of its tier, and was
+# sized with eu5-profit (cap written as a name, never switched off).
+
+# ----------------------------------------------------------------------------
+# Comuna de Regants (age 1)
+# ----------------------------------------------------------------------------
+# The irrigators of one canal as a body: they elect a syndic, keep the weir
+# and the channels at their own cost, share the water by turn, and send the
+# syndic to sit with the others as the Tribunal de les Aigues. A quarrel over
+# water is judged within the week by men who farm the same ditch.
+# Not the canal: that is vanilla's irrigation system, and the commune cannot
+# exist without one (allow). It adds no food of its own. What it adds is that
+# the peasants run the water themselves and do not fight over it.
+# location_potential: the same river or lake vanilla's irrigation asks for.
+# Settlement: countryside and town, never a city. The communes were bodies of
+# farmers; the city of Valencia sat beside the Horta, not in it.
+# Upkeep 0.40 at base prices (tools 3, lumber 1.5, stone 1) against vanilla's
+# irrigation system at 0.30: the yearly cleaning of the channels and the
+# repair of the weir.
+nd_val_comuna_de_regants = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = 1
+	employment_size = estate_peasants_employment
+	category = infrastructure_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_val_tribunal_de_les_aigues
+	}
+
+	location_potential = {
+		OR = {
+			has_river = yes
+			is_adjacent_to_lake = yes
+		}
+	}
+
+	allow = {
+		custom_tooltip = {
+			text = nd_val_comuna_needs_canal_tt
+			has_building = building_type:irrigation_systems
+		}
+	}
+
+	modifier = {
+		local_unrest = -0.05
+		local_peasants_estate_power = 0.2
+	}
+
+	unique_production_methods = {
+		nd_val_comuna_de_regants_maintenance = {
+			tools = 0.05
+			lumber = 0.1
+			stone = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = village_construction
+}
+
+# ----------------------------------------------------------------------------
+# Comanda de Montesa (age 1)
+# ----------------------------------------------------------------------------
+# A commandery of the Order of Montesa: a castle or a fortified house, a
+# knight commander, a few brethren and chaplains, and the villages whose
+# rents keep them. The clergy of a location with a commandery ride as the
+# Frares de Montesa (levy_nd_val_frares_de_montesa reads this building).
+# location_potential: coast or border only. The bull of 1317 founded the
+# order to hold the kingdom's frontier against Granada and its shore against
+# corsairs, and its houses stood there: Montesa and Sueca toward the south,
+# Peniscola, Cervera and Sant Mateu in the Maestrat.
+# Settlement: countryside and town, never a city. A commandery lived on land.
+# Upkeep 0.70 at base prices (weaponry 3, horses 3, cloth 3, wine 2): arms,
+# remounts, the white mantles and the table of a house of knights.
+nd_val_comanda_de_montesa = {
+	is_special = yes
+	is_foreign = no
+	pop_type = clergy
+	max_levels = 1
+	employment_size = religious_order_holding_employment
+	category = religious_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	expensive = yes
+	build_time = soldier_building
+
+	country_potential = {
+		has_advance = nd_val_orde_de_montesa
+	}
+
+	location_potential = {
+		OR = {
+			is_coastal = yes
+			is_border = yes
+		}
+	}
+
+	modifier = {
+		local_clergy_estate_power = 0.2
+		local_garrison_size = 0.1
+	}
+
+	unique_production_methods = {
+		nd_val_comanda_de_montesa_maintenance = {
+			weaponry = 0.1
+			horses = 0.05
+			cloth = 0.05
+			wine = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = order_commandery_construction
+}
+
+# ----------------------------------------------------------------------------
+# Fabrica de Murs i Valls (age 2)
+# ----------------------------------------------------------------------------
+# The board of walls and ditches: deputies of the three estates and the
+# city's magistrates, with a tax on grain and meat of their own, charged with
+# the walls, the gates, the sewers (the valls), the roads out of the city
+# and the bridges. Founded in 1358 after a flood threw the wall down.
+# No location_potential on purpose: every walled town had walls to mend and
+# ditches to clear, and the board is an office, not a site. The settlement
+# flags are the gate: towns and cities only, a village has no walls.
+# It is not the wall. local_defensive stays under half of what vanilla's
+# city walls give (0.25), and it garrisons nobody.
+# Upkeep 0.70 at base prices (stone 1, masonry 1, lumber 1.5, tools 3)
+# against vanilla's city walls at 0.60.
+nd_val_fabrica_de_murs_i_valls = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = 1
+	employment_size = generic_peasant_building_employment
+	category = infrastructure_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = infrastructure_build_time
+
+	country_potential = {
+		has_advance = nd_val_dues_voltes_lleial
+	}
+
+	modifier = {
+		local_defensive = 0.1
+		local_disease_resistance = 0.02
+	}
+
+	unique_production_methods = {
+		nd_val_fabrica_de_murs_i_valls_maintenance = {
+			stone = 0.2
+			masonry = 0.2
+			lumber = 0.1
+			tools = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = town_building_construction
+}
+
+# ----------------------------------------------------------------------------
+# Obrador de Manises (age 2; a second method in age 3)
+# ----------------------------------------------------------------------------
+# A pottery of Manises or Paterna: Muslim masters brought from Malaga by the
+# lords of the place, a white tin glaze, cobalt blue, and over it a film of
+# copper and silver fired a third time in a smoky kiln until it shines like
+# gold. Sold by the crate to Italy, Flanders and the papal court.
+# location_potential: clay must reach the local market. Pottery is a made
+# good, so nothing is conjured here; the gate keeps the kiln where a potter
+# could buy clay.
+# Settlement: towns and cities. A plain producer with no modifier block, so
+# it takes the guild level formula as vanilla's pottery guild does.
+nd_val_obrador_de_manises = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	startup_ramp_target = guild_startup_ramp_target
+	employment_size = guild_employment
+	category = basic_industry_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_val_obra_de_manises
+	}
+
+	location_potential = {
+		is_produced_in_location_market = goods:clay
+	}
+
+	unique_production_methods = {
+		# Obra daurada: lustred dishes and albarelli. The copper is the
+		# lustre, the lumber is three firings.
+		nd_val_manises_obra_daurada = {
+			clay = 0.6
+			lumber = 0.2
+			copper = 0.05
+			produced = pottery
+			output = 0.9
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+		# Unlocked by nd_val_rajoleta_de_manises (age 3): painted floor
+		# tiles, shipped by the thousand for the palaces of Naples and Rome.
+		# The tin is the white glaze.
+		nd_val_manises_rajoleta = {
+			clay = 0.8
+			lumber = 0.2
+			tin = 0.05
+			produced = masonry
+			output = 0.96
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# ----------------------------------------------------------------------------
+# Hospital dels Ignoscents (age 2)
+# ----------------------------------------------------------------------------
+# The Hospital of the Innocents, the Mad and the Witless (1409): a house
+# where the insane are lodged, fed and kept from the stones of the street
+# boys. Paid for by ten merchants and governed by ten laymen for ever; the
+# founding rule shut clergy and nobles out of its board.
+# Not vanilla's hospital: that one is staffed by clergy and treats the sick.
+# This one is staffed by burghers and takes the people nobody else will, and
+# what the city gets from it is quiet streets and a merchant class with an
+# institution of its own.
+# No location_potential on purpose: the settlement flags are the gate. Cities
+# only: the house needed a city's alms and a city's number of abandoned.
+# Upkeep 0.75 at base prices (fiber crops 2, cloth 3, medicaments 1, wheat 1),
+# the same as vanilla's hospital.
+nd_val_hospital_dels_ignoscents = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = burghers_medical_employment
+	category = infrastructure_category
+	rural_settlement = no
+	town = no
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = generic_town_build_time
+
+	country_potential = {
+		has_advance = nd_val_ignoscents_folls_e_orats
+	}
+
+	modifier = {
+		local_unrest = -0.05
+		local_burghers_estate_power = 0.1
+	}
+
+	unique_production_methods = {
+		nd_val_hospital_dels_ignoscents_maintenance = {
+			fiber_crops = 0.1
+			cloth = 0.1
+			medicaments = 0.05
+			wheat = 0.2
+			category = building_maintenance
+		}
+	}
+	construction_demand = town_building_construction
+}
+
+# ----------------------------------------------------------------------------
+# Trapig (age 3)
+# ----------------------------------------------------------------------------
+# The sugar mill of the Safor: cane crushed between stone rollers turned by
+# mules, the juice boiled down over wood fires and poured into clay cones to
+# set. The dukes of Gandia owned the mills and their vassals cut the cane.
+# location_potential: the location's own raw material must be sugar (the
+# strict form). The mill follows the cane and cannot conjure it; in the
+# kingdom that is Gandia and nowhere else.
+# Settlement: countryside and town, never a city. A trapig stood in the cane.
+# The inputs are the upkeep of the work: firewood, the clay cones (the
+# potters of Paterna made them by the thousand) and the rollers' ironwork.
+# Vanilla's rural shape: building_maintenance with produced, output and the
+# rural margin.
+nd_val_trapig = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = rural_building_cap
+	startup_ramp_target = rural_startup_ramp_target
+	employment_size = rural_peasant_produce_employment
+	category = rgo_building_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_val_trapigs_de_la_safor
+	}
+
+	location_potential = {
+		raw_material = goods:sugar
+	}
+
+	unique_production_methods = {
+		nd_val_trapig_sucre = {
+			lumber = 0.3
+			pottery = 0.1
+			tools = 0.05
+			produced = sugar
+			output = 0.28
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = farm_constructions
+}
+
+# ----------------------------------------------------------------------------
+# Torre de Guaita (age 4)
+# ----------------------------------------------------------------------------
+# A watchtower of the coast guard: a stone drum with its door a ladder's
+# height above the ground, two or three guards, a small gun, and brushwood
+# for the signal. Smoke by day and fire by night passes the alarm from tower
+# to tower faster than a galley can row.
+# location_potential: the shore (is_coastal, the trigger for a building that
+# needs the sea in sight and no harbor).
+# Settlement: countryside and town, never a city. Cities had walls and forts;
+# the towers stood on the empty stretches between them.
+# A tower warns and delays. It is not vanilla's coastal fort (disembarking
+# slowed by 1.0, raids blocked): a quarter of the delay and no block.
+# Upkeep 1.05 at base prices (stone 1, firearms 3, horses 3, lumber 1.5,
+# tar 2) against vanilla's peel tower at 1.00.
+nd_val_torre_de_guaita = {
+	is_special = yes
+	is_foreign = no
+	pop_type = soldiers
+	max_levels = 1
+	employment_size = military_support_employment
+	category = defense_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	expensive = yes
+	build_time = small_fort_building
+
+	country_potential = {
+		has_advance = nd_val_guarda_de_la_costa
+	}
+
+	location_potential = {
+		is_coastal = yes
+	}
+
+	modifier = {
+		hostile_disembark_time_modifier = 0.25
+		local_maritime_presence = 0.05
+	}
+
+	unique_production_methods = {
+		nd_val_torre_de_guaita_maintenance = {
+			stone = 0.1
+			firearms = 0.15
+			horses = 0.05
+			lumber = 0.1
+			tar = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = peel_towers_construction
+}
+
+# ----------------------------------------------------------------------------
+# Cava de Neu (age 4)
+# ----------------------------------------------------------------------------
+# A snow well: a stone-lined pit as deep as a house under a vaulted roof, on
+# a north slope high enough for snow to lie. Men tread the snow down in
+# layers between straw through the winter and cut it out in blocks from
+# June, for the fishmonger, the physician and the seller of iced drinks.
+# location_potential: hills or mountains. Snow has to fall and stay.
+# Settlement: countryside only, one per location.
+# Upkeep 0.35 at base prices (lumber 1.5, stone 1, fiber crops 2) against
+# vanilla's village granary at 0.30.
+nd_val_cava_de_neu = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = 1
+	employment_size = granary_employment
+	category = infrastructure_category
+	rural_settlement = yes
+	town = no
+	city = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_val_comerc_de_la_neu
+	}
+
+	location_potential = {
+		OR = {
+			topography = mountains
+			topography = hills
+		}
+	}
+
+	modifier = {
+		local_food_preservation_efficiency_modifier = 0.05
+		local_disease_resistance = 0.02
+	}
+
+	unique_production_methods = {
+		nd_val_cava_de_neu_maintenance = {
+			lumber = 0.1
+			stone = 0.1
+			fiber_crops = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = village_granary_construction
+}
+
+# ----------------------------------------------------------------------------
+# Reial Fabrica de l'Alcora (age 5)
+# ----------------------------------------------------------------------------
+# The Count of Aranda's works (1727): some three hundred hands under one
+# roof, masters hired from Moustiers and Marseille, a drawing school for the
+# apprentices, and a fine tin-glazed faience painted in the French manner
+# that undersold the ware it copied. Later the same kilns fired pipe clay
+# and a soft porcelain.
+# location_potential: clay must reach the local market (market form: the
+# product is a made good).
+# Settlement: towns and cities. Written as a manufactory, which is what it
+# was: the manufactory level formula, employment, build time and margin, and
+# no modifier block.
+nd_val_reial_fabrica_de_l_alcora = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = manufactory_max_level
+	startup_ramp_target = manufactory_startup_ramp_target
+	employment_size = manufactory_employment
+	category = consumer_goods_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = manufactory_build_time
+
+	country_potential = {
+		has_advance = nd_val_pisa_de_l_alcora
+	}
+
+	location_potential = {
+		is_produced_in_location_market = goods:clay
+	}
+
+	unique_production_methods = {
+		# The tin is the white glaze, the dyes the cobalt, antimony and
+		# manganese of the painters, the lumber the kilns.
+		nd_val_alcora_pisa_fina = {
+			clay = 2.0
+			tin = 0.3
+			lumber = 0.5
+			dyes = 0.1
+			produced = porcelain
+			output = 1.1916
+			category = manufactory_input
+			debug_max_profit = manufactory_profit_margin
+		}
+	}
+	construction_demand = manufactory_construction
+}
+
+# ----------------------------------------------------------------------------
+# Filador de Canem (age 5)
+# ----------------------------------------------------------------------------
+# A hemp walk of the Plana: the stalks retted in ponds, broken, combed, spun
+# by men walking backwards down a long shed, and laid up into cable. The
+# navy's agents bought the crop of Castello for the arsenal of Cartagena.
+# location_potential: fiber crops must reach the local market (market form:
+# the product is a made good).
+# Settlement: towns and cities, as vanilla's naval supplies guild. A plain
+# producer with no modifier block, on the guild level formula.
+nd_val_filador_de_canem = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = guild_max_level
+	startup_ramp_target = guild_startup_ramp_target
+	employment_size = guild_employment
+	category = weapons_industry_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_val_canem_de_la_plana
+	}
+
+	location_potential = {
+		is_produced_in_location_market = goods:fiber_crops
+	}
+
+	unique_production_methods = {
+		nd_val_filador_cordam = {
+			fiber_crops = 0.8
+			tar = 0.2
+			lumber = 0.1
+			produced = naval_supplies
+			output = 0.86
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# ----------------------------------------------------------------------------
+# Fabriques del Molinar (age 6; a second method in the same age)
+# ----------------------------------------------------------------------------
+# The mills of the Molinar at Alcoi: a torrent that falls a hundred metres
+# in a short ravine, and on every ledge of it a wheel. Fulling mills first,
+# then from 1818 carding and spinning machines, which the hand carders of
+# the villages came into town to smash in 1821.
+# location_potential: hill or mountain ground, for the fall of water, AND
+# wool reaching the local market. Wool is an input here, so the market form
+# of the gate is the right one.
+# Settlement: towns and cities. Written as a mill, which is what it was: the
+# mills level formula, employment, build time and margin, no modifier block.
+nd_val_fabriques_del_molinar = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	is_mill = yes
+	max_levels = mills_max_level
+	startup_ramp_target = mills_startup_ramp_target
+	employment_size = mills_employment
+	category = consumer_goods_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = mills_build_time
+
+	country_potential = {
+		has_advance = nd_val_draps_d_alcoi
+	}
+
+	location_potential = {
+		OR = {
+			topography = mountains
+			topography = hills
+		}
+		is_produced_in_location_market = goods:wool
+	}
+
+	unique_production_methods = {
+		# Woollen cloth, carded and spun by water. The tools are the
+		# machines' own wear: card clothing, spindles, belts.
+		nd_val_molinar_draps = {
+			wool = 2.0
+			dyes = 0.2
+			tools = 0.1
+			produced = cloth
+			output = 2.745
+			category = mills_input
+			debug_max_profit = mills_profit_margin
+		}
+		# Unlocked by nd_val_paper_de_fumar (age 6): rag paper, and above
+		# all the thin sheet for rolling tobacco. The cloth is the rags.
+		nd_val_molinar_paper = {
+			cloth = 0.4
+			fiber_crops = 1.0
+			lumber = 0.3
+			produced = paper
+			output = 2.4637
+			category = mills_input
+			debug_max_profit = mills_profit_margin
+		}
+	}
+	construction_demand = mill_construction
+}
+
+# ===== DESTINY BUILDINGS =====
+
+# ----------------------------------------------------------------------------
+# Col·legi de la Seda (destiny, path A capstone)
+# ----------------------------------------------------------------------------
+# The house of the velvet weavers' guild: it examines every master, inspects
+# the looms and seals the cloth. Charles II raised the guild to the Col·legi
+# de l'Art Major de la Seda in 1686, when the trade kept thousands of looms
+# in the south-east quarter of the capital.
+# Not vanilla's Llotja de la Seda (event_only_buildings.txt), which is the
+# merchants' exchange and grants burgher power, silk output and merchant
+# power. This is the makers' side: quality of work, masters who can read
+# their own ordinances, and the foreign weavers the trade drew in.
+# location_potential: silk must reach the local market.
+# Settlement: cities only, one per location. The college sat in the capital
+# and the art was a city trade.
+# Values: production efficiency as vanilla's guild hall, burgher literacy as
+# its chancery, migration as its university.
+nd_val_dest_collegi_de_la_seda = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = guild_employment
+	category = trade_category
+	rural_settlement = no
+	town = no
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_val_dest_art_major_de_la_seda
+	}
+
+	location_potential = {
+		is_produced_in_location_market = goods:silk
+	}
+
+	modifier = {
+		local_production_efficiency = small_production_efficiency_bonus
+		local_burghers_max_literacy = 2.5
+		local_migration_attraction = 0.05
+	}
+
+	unique_production_methods = {
+		nd_val_dest_collegi_de_la_seda_maintenance = {
+			silk = 0.1
+			dyes = 0.05
+			paper = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# ----------------------------------------------------------------------------
+# Cort Ducal (destiny, path B capstone)
+# ----------------------------------------------------------------------------
+# The household of a great lord in his own town: Alfons the Old at Gandia
+# from 1399, the Borja dukes in the same palace from 1485, the dukes of
+# Sogorb, the marquises of Denia and Elx. Poets were bred in these houses
+# (Ausias March grew up in the old duke's household, where his father was steward), and
+# the lord's retinue mustered from them.
+# Not Aragon's Aljaferia (99_nd_ara.txt), a single royal palace, and not
+# vanilla's nobles' mansion: this is a seigneurial court, one for each lordly
+# town.
+# No location_potential on purpose: the settlement flags are the gate. Towns
+# only, because in this kingdom every city (Valencia, Xativa, Oriola,
+# Alacant) was the king's, and a lord's seat was a town.
+# Values: cultural tradition as Aragon's Aljaferia (0.25, half an opera
+# house), nobles' literacy as vanilla's chancery, levy as its nobles'
+# recruitment center.
+nd_val_dest_cort_ducal = {
+	is_special = yes
+	is_foreign = no
+	pop_type = nobles
+	max_levels = 1
+	employment_size = normal_noble_employment
+	category = government_category
+	rural_settlement = no
+	town = yes
+	city = no
+	megalopolis = no
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_val_dest_croada_d_almeria
+	}
+
+	modifier = {
+		local_cultural_tradition = 0.25
+		local_nobles_max_literacy = 2.5
+		local_levy_size_modifier = 0.1
+	}
+
+	unique_production_methods = {
+		nd_val_dest_cort_ducal_maintenance = {
+			paper = 0.1
+			fine_cloth = 0.1
+			furniture = 0.05
+			wine = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = estate_construct_building
+}

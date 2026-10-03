@@ -1,0 +1,365 @@
+﻿# Catalonia (CAT): bureaucracies
+# National Destinies mod
+#
+# Read before choosing subjects (EU5 1.4):
+#   vanilla bureaucracies a Catholic country holds (bureaucracies/generic.txt,
+#     ten of them, from Confessionalism or the age 4 advance): a board of
+#     revenue, a privy council, an audit bureau, a colonial office, an
+#     admiralty, a foreign ministry, a trade commission, a war council, an
+#     ordnance board and a commissariat. None is repeated here, by name or by
+#     subject. The Mestre Racional was left out for that reason: he is an
+#     auditor, and vanilla has the audit bureau.
+#   vanilla Catalonia (advances/culture_catalan.txt, town_rights/15_iberia.txt,
+#     laws/01_naval_laws.txt): the Generalitat, the remences, the constitutions,
+#     the Usatges and the Consulate of the Sea.
+#   the Aragonese Empire (99_nd_cda.txt), which a country that goes on from
+#     Catalonia holds beside these: the royal chancery, the Generalitat, the
+#     Consolat de Mar and the Sommaria of Naples.
+#   this country's own tree (advances/99_nd_cat.txt): the Corts of 1283, the
+#     charter of Barcelona, carreratge, the municipal bank, the dret del
+#     General, insaculacio, the Visita del General, the Junta de Bracos of
+#     1713. The destiny tree has the Diputacio as a state.
+#
+# What is left is the machinery under those famous names: who fed the capital,
+# who kept the prince's own land, who carried his justice into the valleys,
+# and who judged him when he broke his word. All four are offices a small
+# principality can staff.
+#
+# 1. Consell de Cent: the city government of Barcelona, which bought the
+#    capital's bread abroad and could seize a passing grain ship.
+# 2. Batllia General: the bailiff of the royal patrimony, with its land books,
+#    its grants of water and ore, and its court.
+# 3. Vegueries: the prince's officer in each district, three years at a time
+#    and audited at the end of them.
+# 4. Tribunal de Contrafaccions: three judges of the prince and three of the
+#    estates, trying breaches of the Constitutions.
+#
+# Estate alignment differs in every one: the city is burghers against barons,
+# the patrimony is the crown against barons and church lords, the vegueries
+# are the crown and the commons against barons, and the tribunal is the three
+# estates against the crown.
+#
+# On the day of forming the country's own grant gives 2 places: 2 of 4
+# institutions can run.
+#
+# All IDs are cat_-prefixed to prevent collisions with other tags (the engine
+# loads 99_nd_*.txt alphabetically and the last definition of a key wins).
+
+# 1. Consell de Cent
+# The government of Barcelona. James I named four paers in 1249, the council
+# of one hundred jurats took its name in 1265, and from 1274 five consellers
+# were elected every Saint Andrew's Day. It met in the Salo de Cent from 17
+# August 1373. Each year it also elected the city's officers: the mostassaf
+# who checked weights and prices, the obrers who kept walls, streets and the
+# harbour mole, and the administrators of the wheat market.
+# Its first duty was bread. Barcelona had outgrown its plain and ate Sicilian
+# and Sardinian wheat, which the council bought ahead with the city's money,
+# stored and sold at a fixed price. By the privilege called vi vel gratis,
+# which the consellers were already explaining to Tortosa in 1328, the city
+# could make any grain ship in its waters unload, willingly or by force.
+# Marshal Berwick dissolved the council on 15 September 1714.
+cat_consell_de_cent_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = CAT
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	# The council is the government of one city. No Barcelona, no council.
+	allow = {
+		owns = location:barcelona
+	}
+
+	# Honoured citizens, merchants and guildsmen filled its benches. Nobles
+	# were shut out of the city's offices until 1498, and carreratge took
+	# their vassals from them.
+	estates_that_like = {
+		burghers_estate
+	}
+	estates_that_dislike = {
+		nobles_estate
+	}
+
+	# A capital that governs itself, taxes itself and sends its own envoys to
+	# the prince is a power in the state whether or not it is well funded.
+	# 0.05 is what vanilla's patrician hall gives the capital's country.
+	neutral_modifier = {
+		global_burghers_estate_power = 0.05
+	}
+
+	# Funded: the wheat is bought before the harvest fails and a public store
+	# turns it over before it spoils, and the obrers build with the city's own
+	# masons at the city's own prices. food_purchase_efficiency is the gold a
+	# province pays when it must buy food (0.2 is a vanilla age 1 advance).
+	# global_food_decay is a key where a negative value is the benefit; every
+	# country starts at 0.005 a month (auto_modifiers/country.txt:113), so
+	# this halves the spoilage and does not end it.
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		food_purchase_efficiency = 0.2
+		global_food_decay = -0.0025
+		global_urban_build_buildings_efficiency = 0.1
+	}
+
+	# Starved: the council buys late and dear, the honoured citizens who hold
+	# the city's debt keep the offices for themselves, and the merchants and
+	# craftsmen shut out of them organise. That is the Biga and the Busca of
+	# the 1450s. The poor walk out of a city that cannot feed them, as they
+	# did in the first bad year, 1333. The rebel growth value is the one
+	# vanilla's oligarchic capture disaster uses.
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		non_rural_migration_attraction = -0.2
+		monthly_burghers_estate_rebel_growth = 0.005
+	}
+}
+
+# 2. Batllia General
+# The batlle general of Catalonia, documented from the thirteenth century,
+# kept everything that was the prince's own: rents and tolls, mills and
+# ovens, mines, salt pans, forests, pastures, public waters, wrecks and vacant
+# goods. He was head of the local batlle in every royal town, judge of the
+# Jewish and Moorish communities, and he answered to nobody but the mestre
+# racional. He had two tools. The capbreu was a land book: every tenant
+# appeared and declared on oath what he held of the prince and what he owed
+# for it. The establiment was a grant in perpetual lease of water for a mill,
+# ore for a forge or shore for a salt pan, against an entry fine and a yearly
+# rent. His court also tried causes of amortitzacio, the payment due whenever
+# the Church acquired royal land. In 1399 Martin I declared the patrimony
+# inalienable and places pledged to lords bought themselves back into it.
+# After 1716 the office passed to the Bourbon intendant.
+cat_batllia_general_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = CAT
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	# The office was at work in 1337 and belongs to whoever holds the
+	# Principality. Nothing gates it.
+	allow = {}
+
+	# Every recovered jurisdiction was taken from a baron or from a bishop or
+	# abbot who held it in pledge, and amortitzacio fell on the Church alone.
+	estates_that_like = {
+		crown_estate
+	}
+	estates_that_dislike = {
+		nobles_estate
+		clergy_estate
+	}
+
+	# Amortitzacio is due on every acquisition in mortmain while the court
+	# sits at all.
+	neutral_modifier = {
+		clergy_estate_max_tax = 0.05
+	}
+
+	# Funded: the capbreus are renewed, so the people of the royal domain are
+	# known and answer to the prince, and establiments put idle water, ore and
+	# shore to work. crown_power_from_population is the crown's standing drawn
+	# from the people of the country (0.1 is what vanilla gives the victor of
+	# the Italian Wars); global_max_rgo_size_modifier 0.1 is the commonest
+	# vanilla advance value.
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		crown_power_from_population = 0.1
+		global_max_rgo_size_modifier = 0.1
+	}
+
+	# Starved: the patrimony is the first thing pledged. Castles, bailiwicks
+	# and whole jurisdictions go to creditors, as they did under John I, and
+	# the prince's writ stops at their boundary stones. A positive noble power
+	# value is the harm here.
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		global_nobles_estate_power = 0.1
+		global_max_rural_control = -0.05
+	}
+}
+
+# 3. Vegueries
+# The veguer was the prince's officer in a district: judge of first instance,
+# keeper of the Peace and Truce, and captain of the district's host. The Corts
+# of Barcelona of 1228 fixed his statute, and it kept him out of church and
+# baronial land except for a breach of the Peace or a denial of justice. Under
+# James II there were about eighteen vegueries, cut along the valleys, and
+# after 1659 fifteen with nine sotsvegueries. He served three years, and at
+# the end of them judges of the table sat to hear any complaint against him:
+# the purga de taula. The Nova Planta of 1716 grouped the districts into
+# twelve corregiments.
+# Source for the three years (checked 2026-10-02, after a first check found
+# none): Angel Casals, "L'Estat catala modern: de la Constitucio de
+# l'Observanca a la Nova Planta", Universitat Catalana d'Estiu course text,
+# under "Vegueries": "Era un oficial triennal nomenat pel Rei d'una terna"
+# (uce.cat/curs_coneixement/materials/Angel_Casals_6asessio.pdf). He writes
+# of the sixteenth and seventeenth centuries. For the table: Societat
+# Catalana d'Estudis Juridics, Diccionari juridic (IEC), "judici de taula":
+# James II ordered it in the Corts of 1299, 1301 and 1311, veguers,
+# sotsveguers and batlles were subject to it, and from 1311 its three judges
+# (a knight, a citizen, a jurist) were named for three years, in step with
+# the Corts. Flocel Sabate, "El veguer a Catalunya: analisi del funcionament
+# de la jurisdiccio reial al segle XIV" (Butlleti de la Societat Catalana
+# d'Estudis Historics), is reported by a search summary to give the same
+# term for the fourteenth century; the article itself could not be opened.
+cat_vegueries_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = CAT
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	# The districts are older than the game's start. Nothing gates them.
+	allow = {}
+
+	# Royal justice was what a peasant on a lord's land could not get, and the
+	# Peace the veguer kept named the ploughman, his oxen and his tools. The
+	# barons wanted him outside their boundaries.
+	estates_that_like = {
+		crown_estate
+		peasants_estate
+	}
+	estates_that_dislike = {
+		nobles_estate
+	}
+
+	# A veguer sits in the head town of his district. The mod's Provincial
+	# Estate is that seat: a second source of proximity, staffed by the minor
+	# nobility the veguers were drawn from.
+	neutral_modifier = {
+		num_nd_provincial_estates = 1
+	}
+
+	# Funded: a court within a day's walk of every valley. Catalonia is hill
+	# country from the coast range to the Pyrenees, and the districts were
+	# drawn so that no valley was without one. hills_proximity_impact is a
+	# cost key: a negative value is the benefit (vanilla grants between -0.15
+	# and -0.33). global_max_rural_control stands at the mod's cap of 0.03.
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		hills_proximity_impact = -0.2
+		global_max_rural_control = 0.03
+	}
+
+	# Starved: a veguer lives on the fines he can sell, and takes a side. The
+	# land splits into nyerros and cadells, bands led by gentlemen and
+	# sheltered in their castles, and no road is safe without an escort: the
+	# country of Rocaguinarda and Serrallonga. The trade penalty is vanilla's
+	# named medium step; the rebel growth value is the one vanilla's
+	# oligarchic capture disaster uses.
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		trade_land_efficiency = medium_trade_land_efficiency_penalty
+		monthly_nobles_estate_rebel_growth = 0.005
+	}
+}
+
+# 4. Tribunal de Contrafaccions
+# A contrafaccio is a breach of the Constitutions. The Constitution of the
+# Observance of 1481 ("Poc valdria": little would it avail to make laws if
+# they were not kept) declared void whatever the prince or his officers did
+# against them. The Corts of 1701-1702 gave that a court of its own and the
+# Corts of 1705-1706 improved it: six judges, three doctors of the Reial
+# Audiencia for the prince and a churchman, a nobleman and a citizen for the
+# estates, sitting in the Palau de la Generalitat. A tie was settled by lot,
+# never by a royal casting vote. It heard complaints against royal officers
+# and against lords who wronged their vassals, and about a score of its cases
+# are known: illegal fees, arrests without cause, the expulsion of a Dutch
+# merchant by decree. It sat until 1713.
+cat_tribunal_de_contrafaccions_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = CAT
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	# Half the bench is named by the estates, and it was the Corts that made
+	# the court. A country with no parliament has nobody to name them. The
+	# test is the one vanilla's own reforms use: every parliament type but
+	# no_parliament sets this flag (parliament_types/00_default.txt).
+	allow = {
+		modifier:has_a_parliamentary_system = yes
+	}
+
+	# One judge for each of the three estates. The prince is the defendant.
+	estates_that_like = {
+		nobles_estate
+		clergy_estate
+		burghers_estate
+	}
+	estates_that_dislike = {
+		crown_estate
+	}
+
+	# A ruler whose officers can be tried has less of a free hand. This is
+	# the 1.4 price of an estate privilege, at half the usual size (vanilla
+	# privileges take 0.10 of political influence gain).
+	neutral_modifier = {
+		monthly_political_influence_gain_modifier = -0.05
+	}
+
+	# Funded: grievances have a judge. The Corts no longer open with a queue
+	# of them to settle before any business, a wronged estate is made whole
+	# and settles, and a man with a remedy at law lays down his arms.
+	# parliament_request_issue_support_needed and pop_leave_rebels_threshold
+	# are keys where a negative value is the benefit (-0.05 is what a vanilla
+	# government reform gives for the first). Estate satisfaction recovery of
+	# 0.002 is a vanilla reform's value, on a base of 0.001.
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		parliament_request_issue_support_needed = -0.05
+		global_estate_satisfaction_recovery = 0.002
+		pop_leave_rebels_threshold = -0.05
+	}
+
+	# Starved: the promise stands in writing and no bench sits to keep it.
+	# Any member may then stop the Corts with a dissentiment until his own
+	# grievance is answered, and the soldiers billeted on households against
+	# the Constitutions are counted one by one, as in 1640 and in 1687.
+	# monthly_war_exhaustion is a key where a positive value harms.
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		parliament_base_support = -0.1
+		monthly_war_exhaustion = 0.01
+	}
+}

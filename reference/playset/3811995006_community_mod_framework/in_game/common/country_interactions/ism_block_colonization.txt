@@ -1,0 +1,113 @@
+﻿ism_block_subject_colonization = {
+	type = subject
+	category = CATEGORY_SUBJECT_ACTIONS
+	show_message = no
+	show_message_to_target = no
+
+	potential = {
+		scope:actor = {
+			NOT = { has_variable = ism__block_colonization }
+		}
+	}
+
+	allow = {
+	}
+
+	ai_tick = never
+
+	use_enroute = no
+
+	select_trigger = {
+		looking_for_a = country
+		interaction_source_list = {
+			scope:actor = {
+				every_subject = {
+					add_to_list = source
+				}
+			}
+		}
+		target_flag = recipient
+		name = "choose_country"
+		column = {
+			data = name
+		}
+		visible = {
+			NOR = {
+				country_type = building
+				country_type = pop
+			}
+			NOT = { modifier:can_colonize = no }
+			NOT = { has_country_modifier = ism_overlord_blocking_colonization }
+		}
+        enabled = {
+		}
+	}
+
+	effect = {
+		if = {
+			limit = {
+				exists = scope:recipient
+			}
+			scope:recipient = {
+				add_country_modifier = {
+					modifier = ism_overlord_blocking_colonization
+					days = -1
+					mode = replace
+				}
+			}
+		}
+	}
+}
+
+ism_allow_subject_colonization = {
+	type = subject
+	category = CATEGORY_SUBJECT_ACTIONS
+	show_message = no
+	show_message_to_target = no
+
+	potential = {
+	}
+
+	allow = {
+	}
+
+	ai_tick = never
+
+	use_enroute = no
+
+	select_trigger = {
+		looking_for_a = country
+		interaction_source_list = {
+			scope:actor = {
+				every_subject = {
+					add_to_list = source
+				}
+			}
+		}
+		target_flag = recipient
+		name = "choose_country"
+		column = {
+			data = name
+		}
+		visible = {
+			NOR = {
+				country_type = building
+				country_type = pop
+			}
+			has_country_modifier = ism_overlord_blocking_colonization
+		}
+        enabled = {
+		}
+	}
+
+	effect = {
+		if = {
+			limit = {
+				exists = scope:recipient
+			}
+			scope:recipient = {
+				remove_country_modifier = ism_overlord_blocking_colonization
+			}
+		}
+	}
+}

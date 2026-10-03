@@ -9,9 +9,12 @@
 # useless in a set-piece line. Every land unit here trades staying power for
 # initiative, movement and terrain.
 #
-# copy_from values are ABSOLUTE overrides, not deltas. Base template stats are
-# noted above each unit. upgrades_to always targets a concrete buildable unit
-# of a LATER age, never an a_age_* template (those are buildable = no in 1.3).
+# Every stat line under copy_from is a DELTA: the engine adds it to the
+# template's value and to the unit category's own value, it never replaces
+# them (common/levies/readme.txt: "EVERY STAT LINE IS ADDITIVE, NEVER AN
+# ASSIGNMENT"). The template's stats are noted above each unit so the sum can
+# be read off. upgrades_to always targets a concrete buildable unit of a LATER
+# age, never an a_age_* template (those are buildable = no).
 
 # ----------------------------------------------------------------------------
 # Age 1: Bidau (levy light infantry)
@@ -23,7 +26,6 @@ a_nd_occ_bidau = {
 	is_special = yes
 	category = army_light_infantry
 	copy_from = a_age_1_traditions_light_infantry
-	upgrades_to = a_crossbowmen
 	buildable = no
 	levy = yes
 
@@ -34,6 +36,7 @@ a_nd_occ_bidau = {
 	# No armour is the whole point: they close, throw and leave, and they
 	# break if made to stand.
 	strength_damage_taken = 0.1
+	max_strength = 0.09	# levy power, scripts/fix_levy_power.py
 
 	combat = {
 		mountains = 0.15
@@ -63,16 +66,16 @@ a_nd_occ_milicia_consulara = {
 	is_special = yes
 	category = army_light_infantry
 	copy_from = a_age_2_renaissance_light_infantry
-	upgrades_to = a_early_arquebusiers
 	buildable = no
 	levy = yes
 
-	strength_damage_taken = -0.1
-	morale_damage_taken = -0.05
+	strength_damage_taken = -0.2	# levy power, scripts/fix_levy_power.py
+	morale_damage_taken = -0.1	# levy power, scripts/fix_levy_power.py
 	secure_flanks_defense = 0.025
 	# Townsmen who must be home for the harvest and the market: they defend
 	# well and campaign badly.
 	movement_speed = -0.15
+	max_strength = 0.08	# levy power, scripts/fix_levy_power.py
 
 	country_potential = {
 		has_or_had_tag = OCC
@@ -148,7 +151,7 @@ n_nd_occ_tartana = {
 # Younger sons of a province with more noble houses than land, serving as
 # private troopers for the chance of a commission. Reckless by design: a man
 # with nothing to inherit charges to be noticed.
-# Base a_age_5_absolutism_light_cavalry: max_strength 1.0, combat_power 4.
+# Base a_age_5_absolutism_light_cavalry: max_strength 1.0, combat_power 3.25.
 a_nd_occ_cadet_de_gasconha = {
 	is_special = yes
 	category = army_light_cavalry
@@ -182,13 +185,13 @@ a_nd_occ_camisard = {
 	is_special = yes
 	category = army_light_infantry
 	copy_from = a_age_5_absolutism_light_infantry
-	upgrades_to = a_sharpshooters
 	buildable = no
 	levy = yes
 
-	initiative = 4
-	morale_damage_done = 0.15
-	supply_weight = -0.5
+	# They choose the hour: the attack comes at night, out of the ravine.
+	initiative = 5
+	morale_damage_done = 0.2	# levy power, scripts/fix_levy_power.py
+	supply_weight = -0.25
 	attrition_loss = -0.25
 	# Irregulars with no line, no reserve and nothing behind them.
 	frontage = -0.25
@@ -224,8 +227,9 @@ a_nd_occ_cacaire = {
 	copy_from = a_age_6_revolutions_light_infantry
 	buildable = yes
 
-	initiative = 3
-	strength_damage_done = 0.15
+	# A rifle in open order: the first shot is theirs.
+	initiative = 4
+	strength_damage_done = 0.1
 	movement_speed = 0.15
 	supply_weight = -0.25
 	attrition_loss = -0.25

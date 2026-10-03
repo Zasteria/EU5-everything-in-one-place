@@ -1,7 +1,7 @@
 ﻿# Ireland: Advance Tree
 # Vanilla has 3 IRE advances (ages 2, 4, 6): grand_jury_system, irish_establishment, irish_volunteers
 # Culture-group has 2 more (ages 1, 2): long_fada ship unlocks
-# Vanilla blocklist: global_monthly_control (age 2), army_maintenance_cost (age 4), land_morale (age 6)
+# Vanilla blocklist: global_defensive (age 1, the Pale), global_monthly_control (age 2), army_maintenance_cost (age 4), land_morale (age 6)
 # Stepping stone to GBR/CEL: target 4-5 per age
 
 # ===== AGE 1: TRADITIONS =====
@@ -13,7 +13,13 @@ nd_ire_tower_house_tradition = {
 	requires = feudalism_advance
 	icon = alpine_defensiveness
 	unlock_building = nd_ire_tower_house
-	global_defensive = 0.1
+	# A land that raised three thousand of these towers builds a stronghold
+	# cheaply (vanilla grants 0.1 to 0.5, most often 0.2). Not
+	# global_defensive, which the Pale's vanilla ple_pale_defenseworks_advance
+	# grants in this age, and not fort_maintenance_efficiency, which Hy Many's
+	# guards_of_the_shannon_advance does; the building carries the local
+	# defence itself.
+	global_fort_build_buildings_efficiency = 0.2
 }
 
 # Brehon legal jurisprudence: governance and stability
@@ -32,9 +38,9 @@ nd_ire_cattle_lords = {
 	potential = { has_or_had_tag = IRE }
 	requires = guilds
 	icon = guilds
-	trade_land_efficiency = 0.05
+	trade_land_efficiency = 0.2
 
-	trade_sea_efficiency = 0.05
+	trade_sea_efficiency = 0.2
 
 	global_levy_size_modifier = 0.1
 }
@@ -63,14 +69,13 @@ nd_ire_bardic_tradition = {
 	cultural_tradition_modifier = 0.1
 }
 
-# Tower House garrison upgrade: unlock garrison muster PM + Wool Cottage building
+# Tower House garrison upgrade: unlocks the Wool Cottage building
 nd_ire_tower_house_defense = {
 	age = age_2_renaissance
 	potential = { has_or_had_tag = IRE }
 	requires = drill_army_advance
 	icon = drill_army_advance
 	unlock_building = nd_ire_wool_cottage
-	unlock_production_method = nd_ire_garrison_muster
 	global_garrison_size_modifier = 0.15
 }
 
@@ -203,7 +208,7 @@ nd_ire_linen_industry = {
 	requires = construction_speed_absolutism
 	icon = construction_speed_absolutism
 	unlock_building = nd_ire_bleach_green
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }
 
 # Provisioning trade: Irish beef and butter exports + unlock linen processing PM
@@ -310,7 +315,11 @@ nd_ire_dest_gaelic_reconquest = {
 	allow = {
 		owns = location:inverary
 		owns = location:edinburgh
-		army_size >= 50
+		# The army size objective went 2026-10-02 (Irish hosts are levies).
+		# Inverness is the gate of the Highlands; at Scone the kings of Scots
+		# were made on the stone legend brought out of Ireland.
+		owns = location:inverness
+		owns = location:scone
 	}
 	icon = imperial_ambitions
 	military_tactics = 0.1
@@ -324,15 +333,28 @@ nd_ire_dest_imperium = {
 	potential = { has_or_had_tag = IRE has_variable = nd_ire_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		owns = location:london
+		# "These islands": the north of England and Wales as well (the army
+		# size objective went 2026-10-02).
+		owns = location:york
+		owns = location:carnarvon
 		prestige >= 75
-		army_size >= 75
-		total_development >= 2500
+		# Armagh, the see of Patrick, where Brian Boru had himself written
+		# into the Book of Armagh as Imperator Scottorum in 1005. 10 in
+		# 1337, doubled.
+		custom_tooltip = {
+			text = nd_ire_dest_armagh_developed_tt
+			location:armagh = {
+				owner ?= root
+				development >= 20
+			}
+		}
 	}
 	icon = organized_religion
 	unlock_building = nd_ire_high_cross
-	monthly_devotion = 0.1
-	monthly_legitimacy = 0.1
-	monthly_republican_tradition = 0.1
+	# Brian was called Boruma, of the cattle tributes: an over-king lives
+	# on what his under-kings render. (The government power keys stood
+	# here: the heritage tree grants them.)
+	subject_income_modifier = 0.05
 	global_pop_assimilation_speed_modifier = 0.1
 	power_projection = 5
 }
@@ -387,7 +409,15 @@ nd_ire_dest_emerald_dominion = {
 		owns = location:bermuda
 		prestige >= 75
 		gold >= 3000
-		total_development >= 2500
+		# Galway, the walled town of the fourteen merchant families, whose
+		# ships carried the wine trade with Spain. 17.5 in 1337, doubled.
+		custom_tooltip = {
+			text = nd_ire_dest_galway_developed_tt
+			location:galway = {
+				owner ?= root
+				development >= 35
+			}
+		}
 	}
 	icon = maritime_advance_age_5
 	unlock_building = nd_ire_atlantic_exchange

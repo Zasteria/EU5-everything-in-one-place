@@ -31,9 +31,9 @@ nd_ira_bazaar_economy = {
 	requires = guilds
 	icon = guilds
 	unlock_building = nd_ira_bazaar
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -71,7 +71,7 @@ nd_ira_caspian_silk = {
 	potential = { has_or_had_tag = IRA }
 	requires = merchants_and_trade
 	icon = merchants_and_trade
-	unlock_production_method = nd_ira_silk_processing
+	unlock_building = nd_ira_talambar
 	global_silk_output_modifier = 0.1
 }
 
@@ -105,7 +105,9 @@ nd_ira_caravanserai_network = {
 
 ############################
 # age_3_discovery (Vanilla has 5: persian_horses, spread_of_influence, rug_production, safaviyya_order_hall, the_qizilbash)
-# Add 5: chapar riders, royal workshops, tile glazing, crown governance, carpet weaving PM
+# Add 5: chapar riders, royal workshops, tile glazing, crown governance, termeh weaving PM
+# (nd_ira_carpet_tradition keeps its key; it told of carpets until 2026-10-02,
+# as vanilla's ira_persian_rug_production of the same age does)
 ############################
 
 nd_ira_chapar_riders = {
@@ -126,8 +128,7 @@ nd_ira_royal_workshops = {
 	requires = regulate_court_procedures
 	icon = regulate_court_procedures
 	unlock_building = nd_ira_karkhane
-	global_production_efficiency = 0.05
-	unlock_production_method = nd_ira_qanat_maintenance
+	global_production_efficiency = 0.025
 }
 
 nd_ira_haft_rang_tilework = {
@@ -190,7 +191,7 @@ nd_ira_isfahan_nesf_jahan = {
 	requires = pop_promotion_speed_age_4
 	icon = pop_promotion_speed_age_4
 	global_monthly_development = 0.001
-	global_monthly_prosperity = 0.0015
+	global_monthly_prosperity = 0.001
 }
 
 nd_ira_tuyul_system = {
@@ -307,11 +308,11 @@ nd_ira_persian_trade_reform = {
 	potential = { has_or_had_tag = IRA }
 	requires = industrialization_advance
 	icon = industrialization_advance
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.03
+	trade_sea_efficiency = 0.1
 
-	global_merchant_capacity_modifier = 0.25
+	global_merchant_capacity_modifier = 0.1
 }
 
 # ===== DESTINY TREE =====
@@ -322,9 +323,7 @@ nd_ira_destiny = {
 	potential = { has_or_had_tag = IRA has_variable = nd_ira_formed has_game_rule = nd_destinies_enabled }
 	allow = { stability >= 75 }
 	icon = crown_power_advance_renaissance
-	monthly_legitimacy = 0.1
-	monthly_devotion = 0.1
-	monthly_republican_tradition = 0.1
+	global_separatism = -0.05
 }
 
 # Path A: Shahanshah - King of Kings (military conquest)
@@ -374,9 +373,21 @@ nd_ira_dest_cyrus_reborn = {
 		stability >= 75
 		army_size >= 75
 		prestige >= 75
-		total_development >= 11500
+		# Mashhad: the capital of Nader Shah, who took Delhi in 1739 and
+		# brought its treasure home. 11 in 1337, doubled for a third stage.
+		custom_tooltip = {
+			text = nd_ira_dest_mashhad_developed_tt
+			location:mashhad = {
+				owner ?= root
+				development >= 22
+			}
+		}
 		owns_or_non_sovereign_subject_owns = location:delhi
 		owns_or_non_sovereign_subject_owns = location:constantinople
+		# The camel guns that broke the Mughal army at Karnal in 1739 (an
+		# age 4 advance of the heritage tree). With it the conquest path
+		# ends in the same age as the Isfahan path (ruling of 2026-10-02).
+		has_advance = nd_ira_zamburak_corps
 	}
 	icon = imperial_ambitions
 	unlock_building = nd_ira_apadana
@@ -420,7 +431,16 @@ nd_ira_dest_institutional = {
 	allow = {
 		stability >= 75
 		prestige >= 50
-		total_development >= 8500
+		# Isfahan: rebuilt as the capital by Shah Abbas from 1598, with the
+		# money changers of the Qaysariyya bazaar. 16 in 1337, raised by
+		# half for a second stage.
+		custom_tooltip = {
+			text = nd_ira_dest_isfahan_developed_tt
+			location:isfahan = {
+				owner ?= root
+				development >= 24
+			}
+		}
 		has_embraced_institution = institution:banking
 	}
 	icon = global_trade_advance

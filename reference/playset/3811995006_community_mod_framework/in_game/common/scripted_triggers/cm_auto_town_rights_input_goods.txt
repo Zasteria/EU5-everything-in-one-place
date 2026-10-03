@@ -1,0 +1,66 @@
+﻿# Added locally.
+# Root is the candidate location. Expects scope:cm_town_right.
+#
+# The four goods-output rights below are only worth granting where the surrounding
+# province actually supplies the inputs their production chains need. Inputs were taken
+# from the unique_production_methods of the buildings that make each boosted good.
+# Any ONE of the listed RGOs in the province is enough. Every other town right is
+# unaffected and passes straight through.
+cm_town_right_input_goods_available = {
+	# Tooling: tools are worked from iron.
+	trigger_if = {
+		limit = { scope:cm_town_right = { this = town_rights_type:royal_tooling_rights } }
+		province = {
+			any_location_in_province = {
+				raw_material = goods:iron
+			}
+		}
+	}
+	# Masonry: masonry from stone and clay, glass from sand.
+	trigger_else_if = {
+		limit = { scope:cm_town_right = { this = town_rights_type:royal_masonry_rights } }
+		province = {
+			any_location_in_province = {
+				OR = {
+					raw_material = goods:stone
+					raw_material = goods:clay
+					raw_material = goods:sand
+				}
+			}
+		}
+	}
+	# Textiles: any fibre, or the dyes that finish the cloth.
+	trigger_else_if = {
+		limit = { scope:cm_town_right = { this = town_rights_type:royal_textile_rights } }
+		province = {
+			any_location_in_province = {
+				OR = {
+					raw_material = goods:wool
+					raw_material = goods:cotton
+					raw_material = goods:fiber_crops
+					raw_material = goods:silk
+					raw_material = goods:fur
+					raw_material = goods:dyes
+				}
+			}
+		}
+	}
+	# Printing: lumber for pulp, lead for type-metal, dyes for ink. Lumber is on some
+	# 2500 locations, so this gate is wide -- the player is expected to place this right
+	# low in the priority order so it only fills in behind the tighter ones.
+	trigger_else_if = {
+		limit = { scope:cm_town_right = { this = town_rights_type:royal_book_rights } }
+		province = {
+			any_location_in_province = {
+				OR = {
+					raw_material = goods:lumber
+					raw_material = goods:lead
+					raw_material = goods:dyes
+				}
+			}
+		}
+	}
+	trigger_else = {
+		always = yes
+	}
+}

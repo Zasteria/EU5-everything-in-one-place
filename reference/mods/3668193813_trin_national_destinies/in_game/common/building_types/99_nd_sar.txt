@@ -26,39 +26,12 @@ nd_sar_curia_regni = {
 	}
 
 	unique_production_methods = {
+		# The court's bill alone since the silver method moved to the gremio:
+		# raised to the low end of what vanilla's government buildings cost.
 		nd_sar_curia_maintenance = {
-			paper = 0.15
-			stone = 0.15
-			lumber = 0.1
-			category = building_maintenance
-		}
-		nd_sar_silver_minting = {
-			silver = 0.15
-			tools = 0.1
-			produced = jewelry
-			output = 0.288
-			potential = {
-				has_advance = nd_sar_silver_mountains
-			}
-			category = guild_input
-			debug_max_profit = guild_profit_margin
-		}
-		nd_sar_stamenti_governance = {
-			paper = 0.2
-			books = 0.1
-			lumber = 0.1
-			potential = {
-				has_advance = nd_sar_stamenti_parliament
-			}
-			category = building_maintenance
-		}
-		nd_sar_constitutional_admin = {
-			paper = 0.2
-			books = 0.15
-			dyes = 0.1
-			potential = {
-				has_advance = nd_sar_statuto_albertino
-			}
+			paper = 0.3
+			stone = 0.25
+			lumber = 0.2
 			category = building_maintenance
 		}
 	}
@@ -96,25 +69,27 @@ nd_sar_pinnetta = {
 			produced = cloth
 			output = 0.26
 			category = guild_input
-			debug_max_profit = guild_profit_margin
+			debug_max_profit = rural_profit_margin
 		}
-		nd_sar_coral_craft = {
-			gems = 0.15
-			tools = 0.1
-			produced = jewelry
-			output = 0.216
+		# Hides salted with the island's own salt for the export trade.
+		nd_sar_hide_salting = {
+			livestock = 0.4
+			salt = 0.05
+			tools = 0.05
+			produced = leather
+			output = 0.38
 			potential = {
-				has_advance = nd_sar_coral_riviera
+				has_advance = nd_sar_pastoral_export
 			}
 			category = guild_input
-			debug_max_profit = guild_profit_margin
+			debug_max_profit = rural_profit_margin
 		}
 	}
 	construction_demand = village_construction
 }
 
-# Torre Costiera - Spanish-era coastal watchtower
-# Defense building for coastal protection against pirates
+# Sea bastion of a royal coastal town (the key keeps its first name: the
+# watchtowers are vanilla's own advance). Defense building against raids from the sea
 nd_sar_torre_costiera = {
 	is_special = yes
 	is_foreign = no
@@ -142,11 +117,6 @@ nd_sar_torre_costiera = {
 		local_garrison_size = 0.1
 		local_hostile_attrition = 0.5
 		local_sailors = 0.0018
-
-
-
-
-
 	}
 
 	unique_production_methods = {
@@ -156,26 +126,108 @@ nd_sar_torre_costiera = {
 			lumber = 0.1
 			category = building_maintenance
 		}
-		nd_sar_torre_garrison = {
-			weaponry = 0.15
-			firearms = 0.1
-			salt = 0.05
-			potential = {
-				has_advance = nd_sar_island_fortress
-			}
-			category = building_maintenance
-		}
-		nd_sar_modern_battery = {
-			cannons = 0.1
-			firearms = 0.15
-			saltpeter = 0.1
-			potential = {
-				has_advance = nd_sar_modern_coastal_defense
-			}
-			category = building_maintenance
-		}
 	}
 	construction_demand = early_soldier_building_construction
+}
+
+# Gremio of the silversmiths: the craft guild of a royal town, on the Catalan
+# model. It holds the two jewelry methods that stood in the shepherd hut and
+# the court of justice. Towns and cities only: a gremio is a sworn body of
+# masters under a town's own magistrates, and the island's countryside had none.
+# No land binding: the masters buy their silver and coral in the market.
+# A plain producer with no modifier block. Either advance opens the building;
+# each method waits for its own advance.
+nd_sar_gremio_argentieri = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = guild_employment
+	category = consumer_goods_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = no
+	build_time = guild_build_time
+
+	country_potential = {
+		OR = {
+			has_advance = nd_sar_silver_mountains
+			has_advance = nd_sar_coral_riviera
+		}
+	}
+
+	unique_production_methods = {
+		nd_sar_silver_minting = {
+			silver = 0.15
+			tools = 0.1
+			produced = jewelry
+			output = 0.288
+			potential = {
+				has_advance = nd_sar_silver_mountains
+			}
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+		# Gems stand for the red coral landed at Alghero.
+		nd_sar_coral_craft = {
+			gems = 0.15
+			tools = 0.1
+			produced = jewelry
+			output = 0.216
+			potential = {
+				has_advance = nd_sar_coral_riviera
+			}
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# Tonnara: the fixed tuna trap and its shore station
+# A plain producer with no modifier block, so it takes the rural level
+# formula as vanilla's own rural producers do. Bound to shores whose own
+# good is fish (Castelgenovese and Posada in Sardinia): the nets are set
+# where the tuna run. Countryside and towns only: a trap stands on an open
+# cape, never inside a city.
+nd_sar_tonnara = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = rural_building_cap
+	employment_size = rural_peasant_produce_employment
+	category = rgo_building_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_sar_tuna_mattanza
+	}
+
+	location_potential = {
+		is_coastal = yes
+		raw_material = goods:fish
+	}
+
+	unique_production_methods = {
+		nd_sar_mattanza = {
+			salt = 0.2
+			lumber = 0.1
+			fiber_crops = 0.05
+			tools = 0.05
+			produced = fish
+			output = 1.44
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = village_construction
 }
 
 # ===== DESTINY BUILDINGS =====
@@ -251,9 +303,9 @@ nd_sar_palazzo_madama = {
 
 	unique_production_methods = {
 		nd_sar_palazzo_madama_maintenance = {
-			paper = 0.15
-			tools = 0.1
-			furniture = 0.15
+			paper = 0.158
+			tools = 0.105
+			furniture = 0.158
 			category = building_maintenance
 		}
 	}

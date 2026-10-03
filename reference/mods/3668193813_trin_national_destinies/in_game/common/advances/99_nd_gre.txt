@@ -31,7 +31,7 @@ nd_gre_olive_cultivation = {
 	requires = agriculture_advance
 	icon = agriculture_advance
 	unlock_building = nd_gre_olive_press
-	global_monthly_food_modifier = 0.05
+	global_monthly_food_modifier = 0.025
 }
 
 nd_gre_armatoloi_tradition = {
@@ -88,9 +88,9 @@ nd_gre_diaspora_trade_networks = {
 	requires = merchants_and_trade
 	icon = merchants_and_trade
 	unlock_building = nd_gre_merchant_house
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	global_merchant_capacity_modifier = 0.1
 }
@@ -146,9 +146,9 @@ nd_gre_merchant_marine = {
 	requires = diplomatic_training
 	icon = diplomatic_training
 	global_maritime_presence_modifier = 0.1
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	global_sailors_modifier = 0.1
 }
@@ -162,7 +162,7 @@ nd_gre_fire_ship_tactics = {
 	icon = leader_recruit_cost_advance
 	unlock_unit = n_nd_gre_fire_ship
 	naval_damage_done = 0.15
-	monthly_navy_tradition = 0.15
+	monthly_navy_tradition = 0.1
 	ai_weight = {
 		add = 50
 	}
@@ -194,7 +194,7 @@ nd_gre_aegean_trade_ascendancy = {
 	icon = pop_promotion_speed_age_4
 	unlock_production_method = nd_gre_currant_export
 	global_merchant_power = 0.1
-	trade_income = 0.15
+	trade_income = 0.1
 	global_maritime_presence_modifier = 0.25
 }
 
@@ -277,7 +277,7 @@ nd_gre_modern_navy = {
 	unlock_building = nd_gre_naval_academy
 	naval_morale_modifier = 0.15
 	navy_light_ship_power = 0.1
-	global_sailors_modifier = 0.2
+	global_sailors_modifier = 0.1
 }
 
 nd_gre_irredentist_spirit = {
@@ -326,9 +326,17 @@ nd_gre_dest_ionian = {
 	requires = nd_gre_dest_straits
 	potential = { has_or_had_tag = GRE has_variable = nd_gre_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		owns = location:smyrna
 		owns = location:trebizond
-		total_development >= 3000
+		# Smyrna grew under its Greek merchants into the first port of the Levant
+		# (the "Smyrna of the infidels" of the 1700s and 1800s). 29 in 1337
+		# (development_estimate.py --explain smyrna), half as much again.
+		custom_tooltip = {
+			text = nd_gre_dest_smyrna_developed_tt
+			location:smyrna = {
+				owner ?= root
+				development >= 44
+			}
+		}
 	}
 	icon = imperial_ambitions
 	army_light_cavalry_power = 0.1
@@ -352,7 +360,7 @@ nd_gre_dest_megali = {
 	unlock_building = nd_gre_imperial_basilica
 	declaring_war_cost_modifier = -0.1
 	global_levy_size_modifier = 0.1
-	global_pop_conversion_speed_modifier = 0.15
+	global_pop_conversion_speed_modifier = 0.1
 }
 
 # --- Path B: Hellenic Enlightenment ---
@@ -371,8 +379,8 @@ nd_gre_dest_republic = {
 		owns = location:candia
 	}
 	icon = merchants_and_trade
-	global_monthly_prosperity = 0.002
-	tax_income_efficiency = 0.05
+	global_monthly_prosperity = 0.001
+	tax_income_efficiency = 0.03
 }
 
 nd_gre_dest_maritime = {
@@ -388,11 +396,20 @@ nd_gre_dest_maritime = {
 				}
 			}
 		}
-		total_development >= 3000
+		# Chios was the house of the Greek merchant families (Ralli, Rodocanachi,
+		# Argenti) and wove silk of its own until 1822. 15.2 in 1337
+		# (development_estimate.py --explain chios), half as much again.
+		custom_tooltip = {
+			text = nd_gre_dest_chios_developed_tt
+			location:chios = {
+				owner ?= root
+				development >= 23
+			}
+		}
 		prestige >= 50
 	}
 	icon = merchants_and_trade
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 	global_trade_center_power = 0.1
 }
 
@@ -401,14 +418,26 @@ nd_gre_dest_light = {
 	requires = nd_gre_dest_maritime
 	potential = { has_or_had_tag = GRE has_variable = nd_gre_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		has_embraced_institution = institution:scientific_revolution
+		# The Greek Enlightenment was a work of the press: Greek books were printed
+		# at Venice from 1499 and Korais's Hellenic Library carried the classics
+		# home. The stage asks for the printing press (age 3), so that both paths
+		# can be finished in a similar span (owner's ruling 2026-10-02).
+		has_embraced_institution = institution:printing_press
 		gold >= 3000
 		prestige >= 75
-		total_development >= 4000
+		# Athens was a small town in 1830 and a capital with a university by 1837.
+		# 29 in 1337 (development_estimate.py --explain athens), doubled.
+		custom_tooltip = {
+			text = nd_gre_dest_athens_developed_tt
+			location:athens = {
+				owner ?= root
+				development >= 58
+			}
+		}
 	}
 	icon = global_trade_advance
 	unlock_building = nd_gre_hellenic_lyceum
-	global_monthly_development = 0.004
-	global_population_growth = 0.002
+	global_monthly_development = 0.001
+	global_population_growth = 0.00025
 	cultural_influence_modifier = 0.1
 }

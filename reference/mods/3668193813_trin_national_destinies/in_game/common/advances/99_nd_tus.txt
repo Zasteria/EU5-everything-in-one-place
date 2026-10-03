@@ -10,9 +10,7 @@ nd_tus_commune_tradition = {
 	requires = legalism_advance
 
 	legislative_efficiency = 0.075
-	monthly_republican_tradition = 0.05
-	monthly_devotion = 0.05
-	monthly_legitimacy = 0.05
+	parliament_base_support = 0.1
 }
 
 # Arte della Seta: Luccan and Florentine silk guild tradition
@@ -60,10 +58,10 @@ nd_tus_medici_banking = {
 	requires = merchants_and_trade
 
 	unlock_building = nd_tus_banco_medici
-	bank_interest = -0.02
-	trade_land_efficiency = 0.03
+	bank_interest = -0.01
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.03
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -86,7 +84,7 @@ nd_tus_condottiere_tradition = {
 	requires = drill_army_advance
 
 	unlock_levy = levy_nd_tus_bande_nere
-	mercenary_maintenance_efficiency = 0.15
+	mercenary_maintenance_efficiency = 0.1
 
 	ai_weight = {
 		add = 50
@@ -101,7 +99,7 @@ nd_tus_florentine_diplomacy = {
 	requires = renaissance_court
 
 	diplomatic_reputation = 2
-	improve_relation_impact = 0.2
+	max_diplomats = 1
 }
 
 ############################
@@ -218,7 +216,7 @@ nd_tus_leopoldine_code = {
 	requires = the_constitution
 
 	stability_cost_efficiency = 0.1
-	legislative_efficiency = 0.15
+	monthly_rebel_growth = -0.0005
 }
 
 # Maremma drainage: land reclamation transforming swampland to farmland
@@ -229,7 +227,7 @@ nd_tus_maremma_drainage = {
 	requires = construction_speed_absolutism
 
 	global_population_growth = 0.0003
-	global_monthly_food_modifier = 0.1
+	global_monthly_food_modifier = 0.05
 }
 
 # Tuscan wine tradition: Chianti, Brunello, viticulture excellence
@@ -257,7 +255,7 @@ nd_tus_risorgimento_spirit = {
 	monthly_republican_tradition = 0.05
 	monthly_devotion = 0.05
 	monthly_legitimacy = 0.05
-	global_monthly_literacy = 0.025
+	global_monthly_literacy = 0.02
 }
 
 # Tuscan straw hat industry: Florentine fashion export
@@ -268,7 +266,7 @@ nd_tus_straw_hat_industry = {
 	requires = industrialization_advance
 
 	unlock_building = nd_tus_cappelleria
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }
 
 # Tuscan scientific tradition: Galileo, Torricelli, Accademia del Cimento
@@ -280,7 +278,7 @@ nd_tus_scientific_legacy = {
 
 	unlock_building = nd_tus_osservatorio
 	research_speed_modifier = 0.1
-	global_institution_growth_modifier = 0.3
+	global_institution_growth_modifier = 0.2
 }
 
 # ===== DESTINY TREE =====
@@ -291,9 +289,7 @@ nd_tus_destiny = {
 	potential = { has_or_had_tag = TUS has_variable = nd_tus_formed has_game_rule = nd_destinies_enabled }
 	allow = { stability >= 75 }
 	icon = crown_power_advance_renaissance
-	monthly_legitimacy = 0.1
-	monthly_devotion = 0.1
-	monthly_republican_tradition = 0.1
+	stability_decay = -0.00025
 }
 
 # --- Path A: Il Dominio (Medici territorial supremacy) ---
@@ -311,6 +307,12 @@ nd_tus_dest_dominio_1 = {
 		owns = location:perugia
 		owns = location:urbino
 		gold >= 1000
+		# Cosimo I held Siena down with a fortress of the new kind (1561).
+		# The Fortezza comes with nd_tus_trace_italienne (age 3), so this
+		# path no longer ends three ages before the trade path can.
+		any_owned_location = {
+			has_building = building_type:nd_tus_fortezza
+		}
 	}
 	icon = imperial_ambitions
 	global_monthly_control = 0.001
@@ -351,7 +353,7 @@ nd_tus_dest_dominio_3 = {
 	unlock_building = nd_tus_palazzo_ducale
 	discipline = 0.03
 	power_projection = 5
-	tax_income_efficiency = 0.05
+	diplomatic_annexation_efficiency = 0.2
 }
 
 # --- Path B: La Via del Commercio (Mediterranean trade empire) ---
@@ -398,7 +400,17 @@ nd_tus_dest_commercio_2 = {
 			}
 		}
 		prestige >= 50
-		total_development >= 500
+		# Livorno, the fishing village the Medici built into a free port
+		# (Buontalenti's plan of 1577, the Livornine of 1591 and 1593): 25 in
+		# 1337 (development_estimate.py --explain livorno), half as much
+		# again for a second stage.
+		custom_tooltip = {
+			text = nd_tus_dest_livorno_developed_tt
+			location:livorno = {
+				owner ?= root
+				development >= 38
+			}
+		}
 	}
 	icon = global_trade_advance
 	global_monthly_prosperity = 0.001
@@ -418,7 +430,7 @@ nd_tus_dest_commercio_3 = {
 	}
 	icon = merchants_and_trade
 	unlock_building = nd_tus_fondaco
-	global_monthly_development = 0.002
+	global_monthly_development = 0.001
 	monthly_diplomats = 0.1
 	diplomatic_capacity_modifier = 0.1
 }

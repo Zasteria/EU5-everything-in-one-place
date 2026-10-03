@@ -1,0 +1,483 @@
+﻿# National Destinies: Algiers (ALG) buildings.
+
+# Zawiya: the lodge of a marabout and his lineage. Quranic school, guest
+# house, granary of alms and court of arbitration in one.
+nd_alg_zawiya = {
+	is_special = yes
+	is_foreign = no
+	pop_type = clergy
+	max_levels = 1
+	employment_size = religious_building_employment
+	category = religious_category
+	# A lodge of the countryside and the small towns. The cities had their
+	# madrasas and great mosques, so there is no city tier.
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	build_time = religious_building_time
+
+	country_potential = {
+		has_advance = nd_alg_zawiya_network
+	}
+
+	# Hill, mountain and plateau country only: the lodges grew where no
+	# governor or qadi sat, and the plains near the capital had no need
+	# of them.
+	location_potential = {
+		OR = {
+			topography = hills
+			topography = mountains
+			topography = plateau
+		}
+	}
+
+	modifier = {
+		local_unrest = -0.025
+		local_monthly_literacy = 0.05
+		# eu5-concept: promotion of tribesmen to peasants. The lodges
+		# settled the clans that gathered round them.
+		local_tribal_promotion = 0.1
+		# The price: a lodge is exempt from tax and answers to its shaykh.
+		local_clergy_estate_power = 0.2
+		local_crown_estate_power = -0.1
+	}
+
+	unique_production_methods = {
+		# 0.65 gold a month at base prices. Sized against vanilla's sufi
+		# lodge (sufi_lodge_maintenance, 0.775), which can stand in the
+		# same location and employs the same 50 clergy.
+		nd_alg_zawiya_upkeep = {
+			wheat = 0.2
+			livestock = 0.1
+			beeswax = 0.05
+			paper = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = village_construction
+}
+
+# Mole of Khayr al-Din: a stone causeway joining offshore islets to the
+# shore, behind which a fleet lies safe.
+nd_alg_khayr_al_din_mole = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = 1
+	employment_size = dock_employment
+	category = naval_category
+	# Harbour works belong to towns and cities, as every vanilla port
+	# building does (port_buildings.txt).
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = medium_port_building_time
+
+	country_potential = {
+		has_advance = nd_alg_penon_and_mole
+	}
+
+	# Vanilla gates its port buildings on is_port, not on the coast alone.
+	location_potential = {
+		is_port = yes
+	}
+
+	modifier = {
+		# eu5-concept: "reduces the cost of going from sea to land and
+		# vice versa in the proximity and trade calculations".
+		harbor_suitability = 0.15
+		local_repair_speed = 0.02
+		local_maritime_presence = 0.15
+	}
+
+	unique_production_methods = {
+		nd_alg_mole_upkeep = {
+			stone = 0.2
+			lumber = 0.1
+			tar = 0.1
+			tools = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = port_building_construction
+}
+
+# Bordj: a gun fort on the heights above a port, covering the beaches where
+# an army must land. Vanilla's coastal fort and naval battery keep the war
+# against ships (hostile fleet attrition, privateer raids); the bordj is
+# about the army that comes ashore.
+nd_alg_bordj = {
+	is_special = yes
+	is_foreign = no
+	pop_type = soldiers
+	max_levels = 1
+	employment_size = coastal_fort_employment
+	category = defense_category
+	# Same tiers as vanilla's coastal fort (coastal_forts.txt).
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = small_fort_building
+
+	country_potential = {
+		has_advance = nd_alg_al_mahrusa
+	}
+
+	location_potential = {
+		is_port = yes
+	}
+
+	modifier = {
+		hostile_disembark_time_modifier = 1.0
+		local_defensive = 0.15
+		local_garrison_size = 0.1
+	}
+
+	unique_production_methods = {
+		nd_alg_bordj_upkeep = {
+			stone = 0.2
+			cannons = 0.2
+			firearms = 0.1
+			tools = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = fort_construction
+}
+
+# Bagnio: the walled prison yard where the captives of the beylik slept, and
+# from which they were marched each morning to the quarries and the mole.
+nd_alg_bagnio = {
+	is_special = yes
+	is_foreign = no
+	pop_type = slaves
+	max_levels = 2
+	employment_size = guild_employment
+	category = basic_industry_category
+	# The bagnios stood in the great corsair ports and nowhere else: city
+	# tiers only, and only with a port.
+	rural_settlement = no
+	town = no
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_alg_bagnios_and_redemption
+	}
+
+	location_potential = {
+		is_port = yes
+	}
+
+	# Same slavery gate as vanilla's slave market (town_buildings.txt).
+	allow = {
+		scope:actor = {
+			has_slavery = yes
+		}
+	}
+
+	remove_if = {
+		scope:actor = {
+			has_slavery = no
+		}
+	}
+
+	modifier = {
+		# Captive gangs careened and patched the ships in harbour
+		# (vanilla's galley barracks grants the same 0.01).
+		local_repair_speed = 0.01
+		# The deliberate downside every vanilla slave building carries
+		# (slave market -0.025, plantations -0.005).
+		local_slave_pop_satisfaction = -0.025
+	}
+
+	unique_production_methods = {
+		# Masonry is a produced good and stone its raw input, so nothing
+		# is made from nothing here.
+		nd_alg_bagnio_quarry_gangs = {
+			stone = 0.4
+			tools = 0.05
+			produced = masonry
+			output = 0.66
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+		# Unlocked by nd_alg_captive_shipwrights.
+		nd_alg_bagnio_arsenal_gangs = {
+			lumber = 0.3
+			fiber_crops = 0.2
+			tar = 0.1
+			produced = naval_supplies
+			output = 0.42
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# Andalusi Aqueduct: stone channels and lead pipes carrying hill springs to
+# the public fountains of a walled city.
+nd_alg_andalusi_aqueduct = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = 1
+	employment_size = generic_peasant_building_employment
+	category = infrastructure_category
+	# Cities only: an aqueduct fed the fountains of a crowded walled city.
+	# Towns and villages drew from wells and cisterns.
+	rural_settlement = no
+	town = no
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = infrastructure_build_time
+
+	country_potential = {
+		has_advance = nd_alg_usta_musa_aqueducts
+	}
+
+	modifier = {
+		local_disease_resistance = 0.05
+		local_monthly_development_modifier = 0.05
+		local_migration_attraction = 0.05
+	}
+
+	unique_production_methods = {
+		nd_alg_aqueduct_upkeep = {
+			masonry = 0.1
+			lead = 0.05
+			tools = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = aqueduct_system_construction
+}
+
+# Haouch: a farm of the beylik's domain, let to sharecroppers who keep a
+# fifth of the crop.
+nd_alg_haouch = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = 1
+	# A building that raises what the land itself yields is a raw goods
+	# building in vanilla, not infrastructure: category and employment
+	# size are those of its windmill and sawmill (rural_buildings.txt).
+	# The staff stays peasants, because the khammes were sharecroppers
+	# (vanilla's shoen, an estate in the same category, employs peasants).
+	employment_size = rural_peasant_enhance_employment
+	category = rgo_building_category
+	# An estate of the open country: rural settlements only.
+	rural_settlement = yes
+	town = no
+	city = no
+	megalopolis = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_alg_beylik_estates
+	}
+
+	# The haouch were the grain estates of the Mitidja and the Chelif:
+	# only where the land itself yields wheat or millet.
+	location_potential = {
+		OR = {
+			raw_material = goods:wheat
+			raw_material = goods:millet
+		}
+	}
+
+	modifier = {
+		local_raw_material_output = 0.05
+		local_crown_estate_power = 0.1
+	}
+
+	unique_production_methods = {
+		nd_alg_haouch_upkeep = {
+			tools = 0.05
+			livestock = 0.05
+			lumber = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = farm_constructions
+}
+
+# Tagdempt Arsenal: musket workshops, powder mills and a foundry inside the
+# walls of an inland stronghold.
+nd_alg_tagdempt_arsenal = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 2
+	employment_size = guild_employment
+	category = weapons_industry_category
+	# Workshops need a town: same tiers as vanilla's weapon workshop.
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = workshop_build_time
+
+	country_potential = {
+		has_advance = nd_alg_tagdempt
+	}
+
+	# The Emir put his arsenals on the high plains because whatever stood
+	# on the coast could be reached by a fleet. Inland only.
+	location_potential = {
+		is_coastal = no
+	}
+
+	unique_production_methods = {
+		nd_alg_tagdempt_musket_workshops = {
+			iron = 0.3
+			coal = 0.2
+			lumber = 0.1
+			tools = 0.05
+			produced = firearms
+			output = 0.64
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+		# Unlocked by nd_alg_muhammadiyya_foundry.
+		nd_alg_tagdempt_cannon_casting = {
+			copper = 0.3
+			tin = 0.1
+			coal = 0.2
+			tools = 0.05
+			produced = cannons
+			output = 0.495
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = workshop_construction
+}
+
+# ===== DESTINY BUILDINGS =====
+
+# Badestan (path A capstone): the closed market street of Algiers (Ottoman
+# bezistan) where, in the words of the French consul d'Arvieux in the 1670s,
+# everything from the prizes the corsairs bring in is sold, captives
+# included. The ruler's share was set aside first.
+nd_alg_dest_badestan = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = trade_employment
+	category = trade_category
+	# A prize market needs a great harbour city to bring the prizes into
+	# and buyers enough to bid: city tiers only, and only in a port (the
+	# same gate as the heritage bagnio).
+	rural_settlement = no
+	town = no
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = market_build_time
+
+	country_potential = {
+		has_advance = nd_alg_dest_tribute_of_kings
+	}
+
+	location_potential = {
+		is_port = yes
+	}
+
+	modifier = {
+		# Vanilla's merchants guild grants 1 merchant power, its funduq 1
+		# merchant capacity and 0.1 trades per burgher.
+		local_merchant_power = 1
+		local_merchant_capacity = 1
+		local_trades_per_burgher = 0.1
+		# The buyers and brokers of the prize trade become a power in
+		# the city.
+		local_burghers_estate_power = 0.25
+	}
+
+	unique_production_methods = {
+		nd_alg_dest_badestan_upkeep = {
+			paper = 0.15
+			cloth = 0.1
+			lumber = 0.1
+			tools = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = important_building_construction
+}
+
+# Khalifa's Seat (path B capstone): the residence of one of the Emir Abd
+# al-Qadir's provincial governors, with its guard of regulars, its judge and
+# its storehouse for the tithe.
+nd_alg_dest_khalifa_seat = {
+	is_special = yes
+	is_foreign = no
+	pop_type = nobles
+	max_levels = 1
+	employment_size = minor_noble_employment
+	category = government_category
+	# The seat of a province: towns and cities, never the open country.
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = government_build_time
+
+	country_potential = {
+		has_advance = nd_alg_dest_commander_of_the_faithful
+	}
+
+	# All eight of the Emir's seats (Tlemcen, Mascara, Miliana, Medea, Bouira
+	# for the mountains, Setif for the Medjana, Biskra for the Ziban,
+	# Laghouat for the Sahara) stood inland, out of reach of a fleet. A
+	# proximity source does not add to the capital's own, so the capital is
+	# left out, as vanilla's local governor leaves it out.
+	location_potential = {
+		is_coastal = no
+		is_capital = no
+	}
+
+	# Eight khalifaliks and no more. The count is vanilla's own idiom for
+	# its local governor (capital_buildings.txt, local_governor).
+	allow = {
+		custom_tooltip = {
+			text = nd_alg_dest_khalifa_seat_limit_tt
+			scope:actor = { total_building_levels_including_construction:nd_alg_dest_khalifa_seat < 8 }
+		}
+		owner = scope:actor
+	}
+
+	modifier = {
+		# A small second source of proximity, the size vanilla gives the
+		# Seljuk mint (20); its local governor gives 80.
+		local_proximity_source = 20
+		local_monthly_control = 0.002
+		local_garrison_size = 0.1
+		# The Emir chose most of his khalifas from the maraboutic
+		# families, and the office made those houses stronger.
+		local_clergy_estate_power = 0.25
+	}
+
+	unique_production_methods = {
+		nd_alg_dest_khalifa_seat_upkeep = {
+			paper = 0.3
+			weaponry = 0.1
+			horses = 0.1
+			tools = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = tur_kodjabashi_office_construction
+}

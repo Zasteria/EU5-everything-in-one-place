@@ -19,9 +19,9 @@ nd_mal_niani_trade_tradition = {
 	requires = guilds
 	icon = guilds
 	unlock_building = nd_mal_sahel_caravanserai
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -51,7 +51,7 @@ nd_mal_islam_of_the_mansa = {
 # === AGE 2: RENAISSANCE (5 advances) ===
 # Vanilla has 2 (gold, land). We add scholarship, trade buildings, diplomacy.
 
-# Unlock: madrasa building
+# Unlock: Manuscript Library building (key nd_mal_madrasa)
 nd_mal_timbuktu_manuscripts = {
 	age = age_2_renaissance
 	potential = { has_or_had_tag = MAL }
@@ -62,14 +62,13 @@ nd_mal_timbuktu_manuscripts = {
 	global_monthly_literacy = 0.01
 }
 
-# Unlock: salt depot building + PM
+# Unlock: salt depot building
 nd_mal_trans_saharan_caravans = {
 	age = age_2_renaissance
 	potential = { has_or_had_tag = MAL }
 	requires = merchants_and_trade
 	icon = merchants_and_trade
 	unlock_building = nd_mal_salt_depot
-	unlock_production_method = nd_mal_salt_trade_pm
 	global_merchant_power = 0.1
 }
 
@@ -155,7 +154,7 @@ nd_mal_gold_dust_economy = {
 	requires = regulate_court_procedures
 	icon = regulate_court_procedures
 	unlock_building = nd_mal_gold_dust_market
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }
 
 # Modifier: university scholars
@@ -165,7 +164,7 @@ nd_mal_sankore_scholars = {
 	requires = printing_press_advance
 	icon = printing_press_advance
 	research_speed_modifier = 0.05
-	global_institution_growth_modifier = 0.25
+	global_institution_growth_modifier = 0.2
 }
 
 
@@ -220,16 +219,16 @@ nd_mal_provincial_farimba = {
 	diplomatic_capacity_modifier = 0.15
 }
 
-# Unlock: kola nut trade PM
+# Modifier: the kola roads to the forest. Kola is carried, not made, and the
+# game has no good for it, so the advance widens trade and unlocks nothing.
 nd_mal_kola_trade_routes = {
 	age = age_4_reformation
 	potential = { has_or_had_tag = MAL }
 	requires = global_trade_advance
 	icon = global_trade_advance
-	unlock_production_method = nd_mal_kola_trade_pm
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	global_merchant_capacity_modifier = 0.1
 }
@@ -261,7 +260,7 @@ nd_mal_tata_fortifications = {
 	requires = absolute_rulership
 	icon = absolute_rulership
 	unlock_building = nd_mal_tata_fortress
-	global_defensive = 0.25
+	global_defensive = 0.2
 	global_garrison_size_modifier = 0.2
 }
 
@@ -276,15 +275,16 @@ nd_mal_imperial_centralization = {
 	global_crown_estate_power = 0.1
 }
 
-# Modifier: river trade network
+# Unlock: Somono landing (the boatmen's stations on the river)
 nd_mal_niger_trade_network = {
 	age = age_5_absolutism
 	potential = { has_or_had_tag = MAL }
 	requires = maritime_advance_age_5
 	icon = maritime_advance_age_5
-	trade_land_efficiency = 0.025
+	unlock_building = nd_mal_somono_landing
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	global_raw_material_output = 0.1
 }
@@ -334,7 +334,7 @@ nd_mal_groundnut_economy = {
 	potential = { has_or_had_tag = MAL }
 	requires = industrialization_advance
 	icon = industrialization_advance
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 	global_monthly_development = 0.001
 	global_population_growth = 0.0003
 }
@@ -347,7 +347,7 @@ nd_mal_modern_governance = {
 	icon = crown_power_advance_revolutions
 	country_cabinet_efficiency = 0.1
 	global_monthly_control = 0.002
-	global_integration_speed_modifier = 0.25
+	global_integration_speed_modifier = 0.2
 }
 
 # Modifier: cultural heritage preservation
@@ -383,8 +383,26 @@ nd_mal_dest_crossroads = {
 			text = nd_mal_path_a_tt
 			has_variable = nd_mal_path_a
 		}
-		owns_or_non_sovereign_subject_owns = location:timbuktu
-		owns_or_non_sovereign_subject_owns = location:djenne
+		# Both cities are held by vassals on day one (Timbuktu by GHA, Djenne
+		# by BMR), so plain ownership asks nothing. The stage asks for the
+		# Mansa's own rule and for the growth history records: Mansa Musa took
+		# Timbuktu in 1324 and built the Djinguereber there; Djenne is the
+		# river market that fed it. 1337 values 10 and 12
+		# (development_estimate.py), each +25%.
+		custom_tooltip = {
+			text = nd_mal_dest_timbuktu_developed_tt
+			location:timbuktu = {
+				owner ?= root
+				development >= 13
+			}
+		}
+		custom_tooltip = {
+			text = nd_mal_dest_djenne_developed_tt
+			location:djenne = {
+				owner ?= root
+				development >= 15
+			}
+		}
 		gold >= 1000
 	}
 	icon = merchants_and_trade
@@ -397,7 +415,8 @@ nd_mal_dest_salt_gold = {
 	requires = nd_mal_dest_crossroads
 	potential = { has_or_had_tag = MAL has_variable = nd_mal_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		owns_or_non_sovereign_subject_owns = location:taghaza
+		# Taghaza is a vassal's on day one (GHA): direct ownership is the deed.
+		owns = location:taghaza
 		has_embraced_institution = institution:banking
 		gold >= 2000
 	}
@@ -413,16 +432,25 @@ nd_mal_dest_empire_gold = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:sijilmasa
 		prestige >= 75
-		total_development >= 1500
+		# Niani, the capital Mansa Musa rebuilt after the pilgrimage (the
+		# audience hall of al-Sahili). 1337 value 18 (development_estimate.py),
+		# +100%.
+		custom_tooltip = {
+			text = nd_mal_dest_niani_developed_tt
+			location:niani = {
+				owner ?= root
+				development >= 36
+			}
+		}
 		gold >= 3000
 	}
 	icon = imperial_ambitions
 	unlock_building = nd_mal_house_of_gold
-	cultural_influence = 5
 	global_construction_speed = 0.1
-	monthly_legitimacy = 0.1
-	monthly_devotion = 0.1
-	monthly_republican_tradition = 0.1
+	# The golden chain itself: what the trade pays and what the gold dust
+	# mints. Vanilla's advances grant 0.1 of each.
+	trade_income = 0.1
+	minting_income_factor = 0.1
 }
 
 # Path B: The Lion's Conquest (military, extends "Mandate of the Gbara")
@@ -436,7 +464,8 @@ nd_mal_dest_march_gao = {
 			text = nd_mal_path_b_tt
 			has_variable = nd_mal_path_b
 		}
-		owns_or_non_sovereign_subject_owns = location:gao
+		# Gao is a vassal's on day one (SON): direct ownership is the deed.
+		owns = location:gao
 		army_size >= 30
 		stability >= 75
 	}
@@ -453,7 +482,17 @@ nd_mal_dest_hausa_campaigns = {
 		owns_or_non_sovereign_subject_owns = location:kano
 		owns_or_non_sovereign_subject_owns = location:katsina
 		army_size >= 50
-		total_development >= 1000
+		# The stage is the conquest of Hausaland: half of Katsina's country
+		# under the Mansa's own rule, beside the two cities.
+		custom_tooltip = {
+			text = nd_mal_dest_hausaland_held_tt
+			area:north_hausa_area = {
+				any_location_in_area = {
+					percent >= 0.5
+					owner ?= root
+				}
+			}
+		}
 	}
 	icon = feudalism_advance
 	army_movement_speed = 0.1
@@ -469,7 +508,17 @@ nd_mal_dest_gold_coast = {
 		owns_or_non_sovereign_subject_owns = location:bono_manso
 		army_size >= 75
 		prestige >= 75
-		total_development >= 1500
+		# The stage is the gold at its source: half of the Akan country
+		# under the Mansa's own rule, beside the two towns.
+		custom_tooltip = {
+			text = nd_mal_dest_akan_held_tt
+			area:akan_area = {
+				any_location_in_area = {
+					percent >= 0.5
+					owner ?= root
+				}
+			}
+		}
 	}
 	icon = imperial_ambitions
 	unlock_building = nd_mal_sundiata_hall

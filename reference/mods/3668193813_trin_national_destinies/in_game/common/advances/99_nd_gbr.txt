@@ -1,6 +1,6 @@
 ﻿# Great Britain: Custom Advances
 # National Destinies mod
-# 18 advances across ages 2-6, complementing 19 vanilla advances
+# 19 advances across ages 2-6, complementing 19 vanilla advances
 # Themes: naval dockyards, colonial trade, financial institutions,
 #          Highland integration, industrial infrastructure
 
@@ -28,6 +28,19 @@ nd_gbr_admiralty_courts = {
 	monthly_navy_tradition = 0.05
 }
 
+# Trinity House: the guild of Thames pilots chartered by Henry VIII in 1514
+nd_gbr_trinity_house_charter = {
+	age = age_2_renaissance
+	requires = maritime_advance_age_2
+	potential = { has_or_had_tag = GBR }
+	icon = maritime_advance_age_2
+
+	unlock_building = nd_gbr_trinity_house
+	# Licensed pilots and marked channels: fewer ships lost on the way out
+	# and home (vanilla grants -0.05 to -0.25).
+	naval_unit_attrition = -0.1
+}
+
 # ===== AGE 3: DISCOVERY =====
 
 # New Model Army: Cromwell's professional standing army
@@ -49,9 +62,9 @@ nd_gbr_chartered_companies = {
 	icon = merchant_power_from_maritime_discovery_advance
 
 	global_merchant_capacity_modifier = 0.1
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -226,7 +239,7 @@ nd_gbr_charity_schools = {
 	icon = enlightened_court
 
 	unlock_building = nd_gbr_charity_school
-	global_monthly_literacy = 0.025
+	global_monthly_literacy = 0.02
 }
 
 # Coal and Iron: foundations of industrial supremacy
@@ -254,6 +267,9 @@ nd_gbr_destiny = {
 # === PATH A: RULE BRITANNIA ===
 
 # Stage 1: Command the Narrow Seas (secure Ireland and the Channel crossing)
+# Derry stands for Ireland: the English lordship holds Dublin from the
+# start, and the island was not secured until Ulster fell and the London
+# companies walled Derry (1613-1618). It looks across the North Channel.
 nd_gbr_dest_narrow_seas = {
 	age = age_1_traditions
 	requires = nd_gbr_destiny
@@ -263,7 +279,7 @@ nd_gbr_dest_narrow_seas = {
 			text = nd_gbr_path_a_tt
 			has_variable = nd_gbr_path_a
 		}
-		owns_or_non_sovereign_subject_owns = location:dublin
+		owns_or_non_sovereign_subject_owns = location:derry
 		owns_or_non_sovereign_subject_owns = location:calais
 		army_size >= 30
 	}
@@ -297,11 +313,19 @@ nd_gbr_dest_pax_britannica = {
 		owns_or_non_sovereign_subject_owns = location:adan
 		owns_or_non_sovereign_subject_owns = location:bombay
 		owns_or_non_sovereign_subject_owns = location:temasek
+		# A chain of stations is kept by cruisers that can stay at sea for
+		# years. Without them the path could be finished four ages before
+		# the Industrial Revolution of the other one.
+		has_advance = nd_gbr_frigate_design
 	}
 	icon = imperial_ambitions
 	unlock_building = nd_gbr_royal_arsenal
 	power_projection = 5
-	global_maritime_presence_modifier = 0.15
+	# Gibraltar, Aden, Bombay and Singapore are a chain of naval stations:
+	# a ship refits where it serves instead of sailing home (vanilla's
+	# commonest grant is 0.2). Not maritime presence, which England's
+	# vanilla english_heritage grants in the same age.
+	navy_repair_efficiency = 0.2
 	navy_maintenance_efficiency = 0.1
 
 }
@@ -318,7 +342,16 @@ nd_gbr_dest_united_kingdom = {
 			text = nd_gbr_path_b_tt
 			has_variable = nd_gbr_path_b
 		}
-		owns_or_non_sovereign_subject_owns = location:newcastle
+		# The Union of 1801 closed the Dublin parliament: Ireland is ruled
+		# from Westminster, not through a lordship. Georgian Dublin grew into
+		# the second city of the kingdoms. 29 in 1337, a quarter more.
+		custom_tooltip = {
+			text = nd_gbr_dest_dublin_developed_tt
+			location:dublin = {
+				owner ?= root
+				development >= 36
+			}
+		}
 		stability >= 75
 		any_market_present_in_country = {
 			OR = {
@@ -328,7 +361,10 @@ nd_gbr_dest_united_kingdom = {
 		}
 	}
 	icon = agriculture_advance
-	country_cabinet_efficiency = 0.05
+	# English, Scots, Welsh and Irish members sit in one parliament.
+	# (Cabinet efficiency stood here: the tree charges it in Imperial
+	# Federation.)
+	cultures_capacity = 1
 	global_supply_limit_modifier = 0.075
 }
 
@@ -340,7 +376,14 @@ nd_gbr_dest_city_of_london = {
 	allow = {
 		gold >= 2000
 		has_embraced_institution = institution:banking
-		total_development >= 4500
+		# London itself: 37.5 in 1337, half again.
+		custom_tooltip = {
+			text = nd_gbr_dest_london_developed_tt
+			location:london = {
+				owner ?= root
+				development >= 56
+			}
+		}
 	}
 	icon = merchants_and_trade
 	monthly_legitimacy = 0.1
@@ -356,13 +399,26 @@ nd_gbr_dest_industrial_revolution = {
 	potential = { has_or_had_tag = GBR has_variable = nd_gbr_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		has_embraced_institution = institution:industrialization
-		owns_or_non_sovereign_subject_owns = location:manchester
-		owns_or_non_sovereign_subject_owns = location:birmingham
-		total_development >= 6000
+		# The two towns the revolution made: a market village on the Irwell
+		# (17 in 1337) and a town of smiths (22), each doubled.
+		custom_tooltip = {
+			text = nd_gbr_dest_manchester_developed_tt
+			location:manchester = {
+				owner ?= root
+				development >= 34
+			}
+		}
+		custom_tooltip = {
+			text = nd_gbr_dest_birmingham_developed_tt
+			location:birmingham = {
+				owner ?= root
+				development >= 44
+			}
+		}
 	}
 	icon = industrialization_advance
 	unlock_building = nd_gbr_industrial_works
 	legislative_efficiency = 0.075
 	government_size = 1
-	global_population_growth = 0.0015
+	global_population_growth = 0.00025
 }

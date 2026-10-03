@@ -86,11 +86,61 @@ nd_sil_linen_workshop = {
 			category = guild_input
 			debug_max_profit = guild_profit_margin
 		}
+		# Hirschberg veil linen (Schleierleinen): fine white linen bleached on
+		# the valley meadows with wood ash and never dyed. The lumber is the
+		# potash.
+		nd_sil_schleierleinen = {
+			cloth = 0.45
+			lumber = 0.15
+			produced = fine_cloth
+			output = 0.315
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
 	}
 
 	construction_demand = guild_construction
 }
 
+### Age 2: Schweidnitz Brewhouse ###
+# The dark strong beer of Schweidnitz was the export beer of medieval
+# Silesia: from 1273 the council of Breslau sold it in the cellar under the
+# town hall, which still bears the town's name.
+# No location_potential: the right to brew belonged to every chartered town
+# of Silesia, and the grain reaches it through the market.
+# Settlement: towns and cities only. Brewing for sale was a town right, and
+# the mile right kept village taverns to the town's barrels.
+nd_sil_brewhouse = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	employment_size = guild_employment
+	category = consumer_goods_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_sil_breslau_emporium
+	}
+
+	unique_production_methods = {
+		# Vanilla's wheat brewery takes wheat 0.9944, lumber 0.2484 and
+		# tools for an output of 1; this one buys no tools and makes less.
+		nd_sil_beer_brewing = {
+			wheat = 1.0
+			lumber = 0.25
+			produced = beer
+			output = 0.825
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
 ### Age 3: Silesian Mining Pit ###
 # Silver and lead mining operation in the Silesian mountains
 nd_sil_mining_pit = {
@@ -129,7 +179,7 @@ nd_sil_mining_pit = {
 			produced = silver
 			output = 0.12
 			category = guild_input
-			debug_max_profit = guild_profit_margin
+			debug_max_profit = rural_profit_margin
 		}
 	}
 
@@ -169,15 +219,109 @@ nd_sil_breslau_kontor = {
 			salt = 0.05
 			category = building_maintenance
 		}
-		nd_sil_beer_brewing = {
-			wheat = 0.1
-			lumber = 0.1
-			pottery = 0.05
+	}
+
+	construction_demand = kontor_construction
+}
+
+### Age 4: Sudeten Glass Hut ###
+# A glassworks stood at Schreiberhau by 1366. In 1617 the Preussler family
+# came over the ridge from Bohemia and took a concession from the counts
+# Schaffgotsch for a hut that moved on when the wood around it was burnt;
+# the valley's cutters made its lead glass known across Europe.
+# location_potential: woodland (the hut burns the forest it stands in, as
+# vanilla's tar kiln asks for) AND lead reaching the local market. Lead is
+# an input, so the market form of the gate is the right one; Silesia mines
+# its own at Tarnowitz.
+# Settlement: countryside and town, never a city. A forest works.
+nd_sil_glass_hut = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = guild_max_level
+	employment_size = generic_peasant_building_employment
+	category = consumer_goods_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_sil_linen_export_boom
+	}
+
+	location_potential = {
+		OR = {
+			vegetation = forest
+			vegetation = woods
+		}
+		is_produced_in_location_market = goods:lead
+	}
+
+	unique_production_methods = {
+		# Vanilla's rural glassmaker makes 0.2 from sand alone, its lead
+		# glass guild 1 from five goods; this hut stands between them.
+		nd_sil_glassmaking = {
+			sand = 0.6
+			lumber = 0.3
+			lead = 0.1
+			produced = glass
+			output = 0.38
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+### Age 4: Church of Peace ###
+# Church of Peace: the Peace of Westphalia allowed the Lutherans of the
+# Habsburg principalities three churches, at Glogau, Jauer and Schweidnitz
+# (1652 to 1657), each outside the town walls, of timber, clay and straw,
+# without tower or bell, and finished within a year.
+nd_sil_friedenskirche = {
+	is_special = yes
+	is_foreign = no
+	pop_type = clergy
+	max_levels = 1
+	employment_size = religious_building_employment
+	category = religious_category
+	# Towns and cities only: each church was granted to a named town and
+	# stood before its walls, never in a village.
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = no
+	build_time = religious_building_time
+
+	country_potential = {
+		has_advance = nd_sil_religious_coexistence
+	}
+
+	# A church for the faith the ruler does not hold. It can be raised only
+	# where the people of the place follow another religion than the state
+	# (the trigger is vanilla's own, building_types/foreign_buildings.txt:153).
+	allow = {
+		NOT = { dominant_religion = scope:actor.religion }
+	}
+
+	# The price of peace: a congregation with a church of its own stays
+	# quiet and stays in its faith.
+	modifier = {
+		local_unrest = -0.05
+		local_pop_conversion_speed_modifier = -0.2
+	}
+
+	unique_production_methods = {
+		nd_sil_friedenskirche_upkeep = {
+			lumber = 0.15
+			beeswax = 0.05
+			books = 0.05
 			category = building_maintenance
 		}
 	}
 
-	construction_demand = kontor_construction
+	construction_demand = village_construction
 }
 
 ### Age 4: Silesian Protestant Academy ###
@@ -209,15 +353,9 @@ nd_sil_protestant_academy = {
 
 	unique_production_methods = {
 		nd_sil_protestant_academy_upkeep = {
-			paper = 0.2
-			books = 0.1
-			beeswax = 0.05
-			category = building_maintenance
-		}
-		nd_sil_glassmaking = {
-			lumber = 0.2
-			sand = 0.1
-			lead = 0.05
+			paper = 0.263
+			books = 0.132
+			beeswax = 0.066
 			category = building_maintenance
 		}
 	}
@@ -264,7 +402,7 @@ nd_sil_coal_works = {
 			produced = coal
 			output = 0.54
 			category = guild_input
-			debug_max_profit = guild_profit_margin
+			debug_max_profit = rural_profit_margin
 		}
 		nd_sil_iron_smelting = {
 			iron = 0.2
@@ -272,7 +410,7 @@ nd_sil_coal_works = {
 			produced = steel
 			output = 0.24
 			category = guild_input
-			debug_max_profit = guild_profit_margin
+			debug_max_profit = rural_profit_margin
 		}
 	}
 

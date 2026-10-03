@@ -24,7 +24,7 @@ nd_egy_nile_irrigation = {
 	potential = { has_or_had_tag = EGY }
 	requires = agriculture_advance
 	icon = agriculture_advance
-	global_monthly_food_modifier = 0.1
+	global_monthly_food_modifier = 0.05
 	unlock_building = nd_egy_irrigation_works
 }
 
@@ -34,9 +34,9 @@ nd_egy_wikala_network = {
 	potential = { has_or_had_tag = EGY }
 	requires = guilds
 	icon = guilds
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	unlock_building = nd_egy_wikala
 }
@@ -81,7 +81,7 @@ nd_egy_nile_fleet = {
 	potential = { has_or_had_tag = EGY }
 	requires = dock_advance
 	icon = dock_advance
-	navy_galley_power = 0.25
+	navy_galley_power = 0.15
 	unlock_unit = n_nd_egy_nile_galley
 	ai_weight = {
 		add = 50
@@ -107,14 +107,14 @@ nd_egy_cairo_madrasas = {
 	unlock_building = nd_egy_madrasa
 }
 
-# Unlock: Cotton Weaving PM
+# Unlock: Weaving Hall building (cotton into fine cloth)
 nd_egy_cotton_cultivation = {
 	age = age_2_renaissance
 	potential = { has_or_had_tag = EGY }
 	requires = merchants_and_trade
 	icon = merchants_and_trade
 	global_cloth_output_modifier = 0.2
-	unlock_production_method = nd_egy_cotton_processing
+	unlock_building = nd_egy_weaving_hall
 }
 
 # Modifier-only: Diplomatic statecraft
@@ -173,9 +173,9 @@ nd_egy_spice_entrepot = {
 	potential = { has_or_had_tag = EGY }
 	requires = printing_press_advance
 	icon = printing_press_advance
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	global_merchant_capacity_modifier = 0.1
 }
@@ -190,14 +190,14 @@ nd_egy_citadel_tradition = {
 	fort_maintenance_efficiency = 0.1
 }
 
-# Unlock: Sugar Refining PM
+# Unlock: Sugar Press building (a producer of sugar in cane country)
 nd_egy_sugar_processing = {
 	age = age_3_discovery
 	potential = { has_or_had_tag = EGY }
 	requires = regulate_court_procedures
 	icon = regulate_court_procedures
 	global_sugar_output_modifier = 0.1
-	unlock_production_method = nd_egy_sugar_refining
+	unlock_building = nd_egy_sugar_press
 }
 
 # Modifier-only: Waqf endowment system
@@ -254,7 +254,7 @@ nd_egy_coffee_culture = {
 	requires = pop_promotion_speed_age_4
 	icon = pop_promotion_speed_age_4
 	global_coffee_output_modifier = 0.2
-	global_monthly_prosperity = 0.0015
+	global_monthly_prosperity = 0.001
 }
 
 # Unlock: Felucca levy
@@ -315,8 +315,8 @@ nd_egy_cotton_monopoly = {
 	potential = { has_or_had_tag = EGY }
 	requires = the_constitution
 	icon = the_constitution
-	global_production_efficiency = 0.05
-	trade_income = 0.15
+	global_production_efficiency = 0.025
+	trade_income = 0.1
 }
 
 # Modifier-only: Centralized administration reform
@@ -329,14 +329,14 @@ nd_egy_centralized_pashalik = {
 	global_monthly_control = 0.002
 }
 
-# Unlock: Corvee labor PM
+# Unlock: Summer Canal building (dug and dredged by the corvee)
 nd_egy_corvee_system = {
 	age = age_5_absolutism
 	potential = { has_or_had_tag = EGY }
 	requires = maritime_advance_age_5
 	icon = maritime_advance_age_5
 	global_construction_speed = 0.1
-	unlock_production_method = nd_egy_corvee_labor
+	unlock_building = nd_egy_summer_canal
 }
 
 # Modifier-only: Egyptian printing press
@@ -346,7 +346,7 @@ nd_egy_bulaq_press = {
 	requires = militiamen_advance
 	icon = militiamen_advance
 	global_monthly_literacy = 0.02
-	global_institution_growth_modifier = 0.25
+	global_institution_growth_modifier = 0.2
 }
 
 ############################
@@ -375,7 +375,7 @@ nd_egy_industrial_works = {
 	potential = { has_or_had_tag = EGY }
 	requires = industrialization_advance
 	icon = industrialization_advance
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 	unlock_building = nd_egy_state_factory
 }
 
@@ -395,11 +395,11 @@ nd_egy_suez_transit = {
 	potential = { has_or_had_tag = EGY }
 	requires = urbanization
 	icon = urbanization
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.03
+	trade_sea_efficiency = 0.1
 
-	global_trade_center_power = 0.2
+	global_trade_center_power = 0.1
 }
 
 # Unlock: Conscript levy
@@ -451,11 +451,19 @@ nd_egy_dest_levant = {
 		}
 		owns_or_non_sovereign_subject_owns = location:jerusalem
 		owns_or_non_sovereign_subject_owns = location:damascus
-		army_size >= 30
+		# The Levant was held from garrison towns: the barracks of
+		# nd_egy_slave_soldier_tradition stand in three of them.
+		custom_tooltip = {
+			text = nd_egy_dest_barracks_tt
+			any_owned_location = {
+				count >= 3
+				has_building = building_type:nd_egy_mamluk_barracks
+			}
+		}
 	}
 	icon = feudalism_advance
 	siege_ability = 0.1
-	global_separatism = -0.1
+	global_separatism = -0.05
 }
 
 nd_egy_dest_heart_islam = {
@@ -465,8 +473,9 @@ nd_egy_dest_heart_islam = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:mecca
 		owns_or_non_sovereign_subject_owns = location:baghdad
-		army_size >= 50
-		total_development >= 2000
+		# The stage is custody of both Holy Cities: Medina with Mecca.
+		owns_or_non_sovereign_subject_owns = location:medina
+		prestige >= 50
 	}
 	icon = imperial_ambitions
 	global_levy_size_modifier = 0.1
@@ -482,7 +491,14 @@ nd_egy_dest_sultan_domain = {
 		owns_or_non_sovereign_subject_owns = location:adan
 		prestige >= 75
 		gold >= 3000
-		army_size >= 75
+		# A garrison in every great town of the road from Aleppo to Aden.
+		custom_tooltip = {
+			text = nd_egy_dest_garrisons_tt
+			any_owned_location = {
+				count >= 6
+				has_building = building_type:nd_egy_mamluk_barracks
+			}
+		}
 	}
 	icon = imperial_ambitions
 	unlock_building = nd_egy_sultans_citadel
@@ -524,12 +540,21 @@ nd_egy_dest_crossroads = {
 	potential = { has_or_had_tag = EGY has_variable = nd_egy_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:massawa
-		total_development >= 2000
+		# Alexandria is the Mediterranean end of the route: the port that
+		# shrank under the late sultans and was rebuilt once the Mahmudiyya
+		# canal joined it to the Nile. 39 in 1337, grown by half.
+		custom_tooltip = {
+			text = nd_egy_dest_alexandria_developed_tt
+			location:alexandria = {
+				owner ?= root
+				development >= 59
+			}
+		}
 		prestige >= 50
 	}
 	icon = global_trade_advance
 	cultural_influence_modifier = 0.1
-	global_devastation_recovery = 0.005
+	global_devastation_recovery = 0.0025
 }
 
 nd_egy_dest_jewel_orient = {
@@ -537,10 +562,36 @@ nd_egy_dest_jewel_orient = {
 	requires = nd_egy_dest_crossroads
 	potential = { has_or_had_tag = EGY has_variable = nd_egy_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		has_embraced_institution = institution:industrialization
+		# Looms in the cotton towns and presses in the cane country (the
+		# buildings of nd_egy_cotton_cultivation and nd_egy_sugar_processing).
+		# They stand where the institution industrialization stood: that one
+		# waits for the sixth age, while the other path can be finished in
+		# the first (owner's ruling 2026-10-02, scripts/destiny/stage_floors.py).
+		custom_tooltip = {
+			text = nd_egy_dest_looms_tt
+			any_owned_location = {
+				count >= 3
+				has_building = building_type:nd_egy_weaving_hall
+			}
+		}
+		custom_tooltip = {
+			text = nd_egy_dest_presses_tt
+			any_owned_location = {
+				count >= 3
+				has_building = building_type:nd_egy_sugar_press
+			}
+		}
 		gold >= 3000
 		prestige >= 75
-		total_development >= 2500
+		# Al-Mahalla, the weaving town of the Delta, was where the state
+		# put its largest spinning and weaving mills. 25 in 1337, doubled.
+		custom_tooltip = {
+			text = nd_egy_dest_mahalla_developed_tt
+			location:el_mahalla = {
+				owner ?= root
+				development >= 50
+			}
+		}
 	}
 	icon = global_trade_advance
 	unlock_building = nd_egy_suez_canal_office

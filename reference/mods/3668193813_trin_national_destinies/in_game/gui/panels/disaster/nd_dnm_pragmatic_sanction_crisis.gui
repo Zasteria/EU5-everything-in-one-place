@@ -1,0 +1,104 @@
+﻿# Disaster panel for nd_dnm_pragmatic_sanction_crisis.
+#
+# The engine looks a disaster's panel up by file name: every vanilla
+# disaster ships gui/panels/disaster/<key>.gui (39 of 39 on 1.4, and
+# gui/panels/disaster/readme.txt says so). This disaster shipped without
+# one from 2026-05 to 2026-10, so its panel opened empty, and since
+# 2026-07-31 its exits are actions that are drawn only inside this panel:
+# players had no way to end it (Workshop reports 2026-09-09 to 09-21).
+#
+# The Crown Confidence Council actions need no block here. The shared
+# template carries disaster_card_actions, which lists every generic
+# action of type = disaster whose select_trigger admits this disaster
+# (shared/cards.gui, bound to DisasterView.GetActions).
+#
+# Modelled on three vanilla panels:
+#   decline_of_empire.gui: the skeleton and the end requirements card
+#   crisis_of_the_chinese_dynasty.gui: a disaster run through actions
+#   decline_of_majapahit.gui: an owner variable shown as number and bar
+disaster_panel = {
+
+	##################################### END REQUIREMENTS #####################################
+
+	blockoverride "disaster_secondary_tab" {
+		margin_top = 10
+		spacing = 5
+		disaster_card_expandable = {
+			blockoverride "header_button_onclick" {
+				onclick = "[LateralView.Vars.Toggle( 'requirements_toggled' )]"
+			}
+			blockoverride "header_text" {
+				text = "END_REQUIREMENTS"
+			}
+			blockoverride "header_icon" {
+				texture = "gfx/interface/icons/disasters/end_requirements_green.dds"
+			}
+			blockoverride "bottom_content" {
+				TooltipRequirementsList = {
+					textcontext = "[DisasterView.GetDisaster.GetType.GetEndConditions]"
+				}
+			}
+			blockoverride "bottom_content_onclick" {
+				visible = "[LateralView.Vars.Exists( 'requirements_toggled' )]"
+			}
+			blockoverride "icon_replace_visible_yes" {
+				visible = "[LateralView.Vars.Exists( 'requirements_toggled' )]"
+			}
+			blockoverride "icon_replace_visible_not" {
+				visible = "[Not(LateralView.Vars.Exists( 'requirements_toggled' ))]"
+			}
+		}
+	}
+
+	##################################### SUBHEADER #####################################
+
+	blockoverride "disaster_main_content_subheader" {}
+
+	##################################### MAIN CONTENT #####################################
+
+	blockoverride "main_content" {
+
+		# Crown Confidence: the counter all three exits are read from.
+		# The bar covers the whole range, empty at the floor of -30 and
+		# full at the target of 80: the value is drawn 30 higher on a bar
+		# of 0 to 110. No vanilla progressbar has a negative minimum;
+		# vanilla draws its own counter that runs negative, the war score,
+		# by adding the offset first (diplomacy_lateralview.gui, Add_float
+		# of 100 and the war score). The number beside the bar is the
+		# value itself.
+		disaster_card_common = {
+			blockoverride "common_header_icon_texture" {
+				texture = "gfx/interface/icons/disasters/nd_dnm_pragmatic_sanction_crisis.dds"
+			}
+			blockoverride "common_header_text" {
+				text = "nd_dnm_confidence_header"
+			}
+			blockoverride "common_bottom_content" {
+				hbox = {
+					maximumsize = { -1 150 }
+					margin = { 10 0 }
+					spacing = 10
+					layoutpolicy_horizontal = expanding
+
+					text_single = {
+						size = { 70 30 }
+						autoresize = yes
+						align = left|nobaseline
+						raw_text = "[DisasterView.GetDisaster.GetOwner.MakeScope.GetVariable('nd_dnm_crown_confidence').GetValue|0] / [DisasterView.GetDisaster.GetOwner.MakeScope.GetVariable('nd_dnm_crown_confidence_target').GetValue|0]"
+					}
+
+					progressbar = {
+						visible = yes
+						layoutpolicy_horizontal = expanding
+						size = { -1 6 }
+						using = progress_bar_red_alt
+						min = 0
+						max = 110
+						value = "[Add_float('(float)30.0', FixedPointToFloat(DisasterView.GetDisaster.GetOwner.MakeScope.GetVariable('nd_dnm_crown_confidence').GetValue))]"
+						direction = horizontal
+					}
+				}
+			}
+		}
+	}
+}

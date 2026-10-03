@@ -1,0 +1,51 @@
+﻿# Portugal (POR): formation lines
+# National Destinies mod
+#
+# Vanilla 1.4 defines POR_f with an empty form_effect (level 2, 75% of
+# north_portugal_area, Portuguese culture, Christian, not for the country
+# that already is POR), so INJECT is safe: there is nothing of vanilla's to
+# lose. POR_f is the only vanilla formable that creates the tag POR
+# (00_formable_countries.txt:865-890).
+#
+# Roads into the tag, and what each one meets here:
+# 1. Portugal itself, which holds the tag from day one and 34 of the 35
+#    locations. It never passes through this block. The four-yearly marker
+#    repair in 99_nd_on_actions.txt stamps the marker and delivers nd_por.1
+#    for it, so the event reads right for a kingdom that already exists.
+# 2. A Portuguese country that is not POR forms it by the button (the
+#    Algarve released, a Portuguese colonial nation come home, a Portugal
+#    that lost its name to a union and takes it back). form_effect runs:
+#    markers, rank, capital, event.
+INJECT:POR_f = {
+	form_effect = {
+		# Formation markers live HERE, not only in the event's options: a
+		# country can be formed by script, and then the popup may never be
+		# answered.
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_por_formed
+		}
+		# A kingdom since Zamora (1143) and the bull Manifestis Probatum
+		# (1179). nd_can_take_kingdom_rank is false only where the engine
+		# itself would refuse the rank.
+		if = {
+			limit = {
+				nd_can_take_kingdom_rank = yes
+				country_rank_level < 3
+			}
+			set_country_rank_effect = { rank = country_rank:rank_kingdom }
+		}
+		# Lisbon has been the seat of the court since Afonso III (1255). It
+		# lies in the southern area, outside the land the formable asks for,
+		# so the move is guarded by ownership.
+		if = {
+			limit = {
+				owns = location:lisbon
+				NOT = { capital = location:lisbon }
+			}
+			set_capital = location:lisbon
+		}
+		trigger_event_non_silently = nd_por.1
+		add_stability = stability_mild_bonus
+	}
+}

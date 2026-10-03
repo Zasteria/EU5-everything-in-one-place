@@ -28,21 +28,9 @@ nd_hen_llys = {
 
 	unique_production_methods = {
 		nd_hen_court_of_justice = {
-			livestock = 0.1
-			beeswax = 0.1
-			paper = 0.05
-			category = building_maintenance
-		}
-		nd_hen_cattle_tithe = {
-			livestock = 0.15
-			salt = 0.05
-			tools = 0.1
-			category = building_maintenance
-		}
-		nd_hen_wool_weaving = {
-			wool = 0.2
-			dyes = 0.1
-			tools = 0.1
+			livestock = 0.245
+			beeswax = 0.245
+			paper = 0.123
 			category = building_maintenance
 		}
 	}
@@ -82,10 +70,16 @@ nd_hen_neuadd_y_beirdd = {
 			dyes = 0.05
 			category = building_maintenance
 		}
+		# Unlocked by nd_hen_manuscript_tradition. Vanilla's scriptorium
+		# makes books from paper, dyes and leather.
 		nd_hen_manuscript_copying = {
-			paper = 0.15
-			dyes = 0.1
-			category = building_maintenance
+			paper = 0.2
+			dyes = 0.05
+			leather = 0.05
+			produced = books
+			output = 0.3
+			category = guild_input
+			debug_max_profit = guild_profit_margin
 		}
 	}
 	construction_demand = school_construction
@@ -125,14 +119,177 @@ nd_hen_dinas = {
 			livestock = 0.1
 			category = building_maintenance
 		}
-		nd_hen_forge_work = {
-			iron = 0.15
-			lumber = 0.1
-			coal = 0.1
-			category = building_maintenance
-		}
 	}
 	construction_demand = fort_construction
+}
+
+# Gefail: the forge of the gof, one of the three privileged crafts of
+# Brythonic law. A plain producer with no modifier block, so it takes the
+# level formula of vanilla's guilds.
+nd_hen_gefail = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	employment_size = guild_employment
+	category = weapons_industry_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_hen_brythonic_smiths
+	}
+
+	# No location gate: it makes nothing out of the land. The iron it
+	# consumes has to be bought, and that is its limit (vanilla's weapon
+	# guild has none either).
+	unique_production_methods = {
+		nd_hen_forge_work = {
+			iron = 0.3
+			coal = 0.1
+			lumber = 0.1
+			produced = weaponry
+			output = 0.5
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+		# Unlocked by nd_hen_northern_industry: nails, edge tools and
+		# hardware (vanilla's iron foundry makes tools from iron and coal).
+		nd_hen_ironmongery = {
+			iron = 0.5
+			coal = 0.15
+			produced = tools
+			output = 0.72
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# Barcdy: the bark house. Hides lie for a year in pits of oak bark and
+# running water before they go downriver as leather.
+nd_hen_barcdy = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = guild_max_level
+	employment_size = generic_peasant_building_employment
+	category = consumer_goods_category
+	# A works of the river bank outside the walls: countryside and town.
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_hen_clyde_trade
+	}
+
+	# Tan pits are dug beside running water, and the river carries the
+	# leather to market.
+	location_potential = {
+		has_river = yes
+	}
+
+	unique_production_methods = {
+		# Lumber stands for the oak bark. The building can stand in the
+		# countryside, so the method names the rural margin.
+		nd_hen_cattle_tithe = {
+			livestock = 0.4
+			lumber = 0.1
+			tools = 0.05
+			produced = leather
+			output = 0.36
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = village_construction
+}
+
+# Pandy: the fulling mill. Water-driven hammers beat the web in fuller's
+# earth until it shrinks and thickens into cloth.
+nd_hen_pandy = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = guild_max_level
+	employment_size = generic_peasant_building_employment
+	category = consumer_goods_category
+	# A mill on an upland stream: countryside and town.
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_hen_wool_trade
+	}
+
+	# The hammers are driven by a water wheel.
+	location_potential = {
+		has_river = yes
+	}
+
+	unique_production_methods = {
+		# Clay stands for the fuller's earth.
+		nd_hen_wool_weaving = {
+			wool = 0.5
+			clay = 0.1
+			produced = cloth
+			output = 0.52
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = village_construction
+}
+
+# Bole Hill: a smelting hearth on a windy brow of the Pennine and Lakeland
+# ore fields. Ore and brushwood are stacked in a stone ring and the west
+# wind does the work of bellows.
+nd_hen_bole_hill = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = rural_building_cap
+	employment_size = generic_peasant_building_employment
+	category = rgo_building_category
+	# A hearth on open moor: rural settlements only.
+	rural_settlement = yes
+	town = no
+	city = no
+	megalopolis = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_hen_pennine_mines
+	}
+
+	# Only on the ore field itself: a bole smelts the lead the land
+	# yields, it does not make lead where there is none.
+	location_potential = {
+		raw_material = goods:lead
+	}
+
+	unique_production_methods = {
+		# Brushwood and the tools of the groove are what the work consumes.
+		nd_hen_bole_smelting = {
+			lumber = 0.3
+			tools = 0.05
+			produced = lead
+			output = 0.36
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = village_construction
 }
 
 # ===== DESTINY BUILDINGS =====

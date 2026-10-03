@@ -84,9 +84,9 @@ nd_fkn_imperial_city_charters = {
 	potential = { has_or_had_tag = FKN }
 	requires = crown_power_advance_renaissance
 	icon = genoese_banking_traditions
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	global_pop_promotion_speed_modifier = 0.1
 }
@@ -167,29 +167,31 @@ nd_fkn_nuremberg_clockworks = {
 	requires = pop_promotion_speed_age_4
 	icon = printing_press_advance
 	unlock_production_method = nd_fkn_pm_clockworks
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }
 
-# Landfrieden enforcement: maintaining Imperial Peace in the region
+# Landfrieden enforcement: maintaining Imperial Peace in the region; unlocks the
+# Einspaennige, the mounted road patrol the cities kept on permanent pay
 nd_fkn_landfrieden_enforcement = {
 	age = age_4_reformation
 	potential = { has_or_had_tag = FKN }
 	requires = gov_reform_reformation_a
 	icon = bavarian_circle_tax
-	unlock_production_method = nd_fkn_pm_landfrieden_patrol
+	unlock_unit = a_nd_fkn_einspaennige
 	global_monthly_control = 0.002
 	global_defensive = 0.1
 }
 
 # === Age 5: Absolutism ===
 
-# Franconian baroque: Wurzburg Residenz, Balthasar Neumann architecture
+# Franconian baroque: Wurzburg Residenz, Balthasar Neumann architecture; unlocks
+# the court glassworks Neumann ran to glaze and mirror his own buildings
 nd_fkn_franconian_baroque = {
 	age = age_5_absolutism
 	potential = { has_or_had_tag = FKN }
 	requires = construction_speed_absolutism
 	icon = renaissance_art
-	unlock_production_method = nd_fkn_pm_baroque_patronage
+	unlock_building = nd_fkn_hofglashuette
 	cultural_tradition_modifier = 0.15
 }
 
@@ -212,9 +214,9 @@ nd_fkn_commercial_code = {
 	potential = { has_or_had_tag = FKN }
 	requires = maritime_advance_age_5
 	icon = genoese_banking_traditions
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	global_merchant_capacity_modifier = 0.1
 }
@@ -248,7 +250,7 @@ nd_fkn_industrial_modernization = {
 	requires = industrialization_advance
 	icon = industrialization_advance
 	unlock_production_method = nd_fkn_pm_industrial_tooling
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }
 
 # National integration: unifying the Franconian patchwork
@@ -281,9 +283,7 @@ nd_fkn_destiny = {
 	potential = { has_or_had_tag = FKN has_variable = nd_fkn_formed has_game_rule = nd_destinies_enabled }
 	allow = { stability >= 75 }
 	icon = crown_power_advance_renaissance
-	monthly_legitimacy = 0.1
-	monthly_devotion = 0.1
-	monthly_republican_tradition = 0.1
+	global_estate_target_satisfaction = 0.025
 }
 
 # --- Path A: The Princes' Faith ---
@@ -314,7 +314,16 @@ nd_fkn_dest_primate = {
 		owns_or_non_sovereign_subject_owns = location:cologne
 		owns_or_non_sovereign_subject_owns = location:trier
 		prestige >= 50
-		total_development >= 500
+		# Wuerzburg, rebuilt by Julius Echter as the model episcopal residence
+		# (Juliusspital 1576, university 1582): 26.5 in 1337
+		# (scripts/development_estimate.py --explain wurzburg), half as much again for a second stage.
+		custom_tooltip = {
+			text = nd_fkn_dest_wurzburg_developed_tt
+			location:wurzburg = {
+				owner ?= root
+				development >= 40
+			}
+		}
 	}
 	icon = organized_religion
 	improve_relation_impact = 0.15
@@ -328,6 +337,10 @@ nd_fkn_dest_defender = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:salzburg
 		owns_or_non_sovereign_subject_owns = location:aachen
+		# A defender of the faith belongs to the confessional age: this gives
+		# the path a floor of its own (age 4), so the two paths end within two
+		# ages of each other (owner's ruling 2026-10-02, scripts/destiny/stage_floors.py).
+		has_embraced_institution = institution:confessionalism
 		prestige >= 75
 		gold >= 3000
 	}
@@ -364,7 +377,15 @@ nd_fkn_dest_workshop = {
 	potential = { has_or_had_tag = FKN has_variable = nd_fkn_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		gold >= 2000
-		total_development >= 500
+		# Nuremberg, the workshop itself: 24 in 1337
+		# (scripts/development_estimate.py --explain nuremberg), half as much again for a second stage.
+		custom_tooltip = {
+			text = nd_fkn_dest_nuremberg_developed_tt
+			location:nuremberg = {
+				owner ?= root
+				development >= 36
+			}
+		}
 		any_market_present_in_country = {
 			OR = {
 				is_produced_in_market = goods:tools
@@ -385,7 +406,8 @@ nd_fkn_dest_industrial = {
 		owns_or_non_sovereign_subject_owns = location:augsburg
 		owns_or_non_sovereign_subject_owns = location:leipzig
 		gold >= 3000
-		has_embraced_institution = institution:industrialization
+		# From workshop to manufactory (age 5), not the factory age (age 6).
+		has_embraced_institution = institution:manufactories
 	}
 	icon = industrialization_advance
 	unlock_building = nd_fkn_handelshaus

@@ -1,0 +1,294 @@
+﻿# Portugal (POR): bureaucracies
+# National Destinies mod
+#
+# Read before choosing subjects (EU5 1.4):
+#   vanilla bureaucracies Portugal can hold (bureaucracies/generic.txt, ten,
+#     from Confessionalism or the age 4 advance): board of revenue, privy
+#     council, audit bureau, colonial office, admiralty, foreign ministry,
+#     trade commission, war council, ordnance board, commissariat. So no
+#     Conselho da Fazenda, no Casa dos Contos, no Conselho de Estado and no
+#     Conselho de Guerra here.
+#   vanilla Portugal elsewhere: the Casa da India is a reform and a decision;
+#     the Feitoria, the Ribeira das Naus and the Portuguese Quarters are
+#     buildings; the Estudo Geral is a law; the foros are town rights; the
+#     Almirante-Mor, the Ordenancas, the colonial governors and the Carreira
+#     are advances; the Inquisition is a law every Catholic country can pass
+#     (laws/00_religious.txt:80, inquisition_law), so no Santo Oficio.
+#   this country's own tree (99_nd_por.txt): the Inquiricoes, the Cortes of
+#     Coimbra, the keeper of the Torre do Tombo, the Order of Christ, the
+#     Padroado, the cosmografo-mor, the capitaes-mores, the Junta do Comercio
+#     and the Misericordia are advances or buildings.
+#
+# What is left, and what only this kingdom had in this form:
+# 1. Juizes de Fora: the king's judge "from outside", sent into a town to
+#    preside over its council.
+# 2. Companhia das Naus: the register and common purse of 1380 that
+#    replaced a lost ship at the cost of all shipowners.
+# 3. Mesa da Consciencia e Ordens: the king's tribunal of conscience, which
+#    ran the three military orders once their masterships were his.
+# 4. Conselho Ultramarino: the council that read every letter from overseas
+#    and advised on every post and reward there.
+#
+# Estate alignment differs in each: the crown against lords and town
+# oligarchies, the shipowners against the nobles, the crown and the knights
+# against the church, the nobility of service against the merchants.
+#
+# Slots. Vanilla gives Portugal none on the day it forms (a capital grants
+# one only as a megalopolis, location_ranks/00_default.txt:50; Lisbon starts
+# as a city). The auto modifier grants 2, half of these four. Vanilla adds
+# one with the age 4 bureaucracy advance and one in age 6, and from
+# Confessionalism its ten generic offices compete for the same slots.
+#
+# No cabinet seat and no character modifier. No key stands in both the funded
+# and the neglected block of one institution. No government power key. All
+# IDs are por_-prefixed (the last definition of a key wins across files).
+
+# 1. Juizes de Fora
+# Fetched (pt.wikipedia, "Juiz de fora"): created in 1327 under Afonso IV; a
+# magistrate named by the crown who judged and also presided over the town
+# council as a means of central control; consolidated by Joao III in 1532;
+# more than fifty towns had one by 1580; ended with the constitutional regime.
+# Fetched (pt.wikipedia, "Corregedor"): the corregedor of the comarca stood
+# over the juizes de fora and the ordinary judges; in the lands of a lord
+# there was no corregedor, an ouvidor named by the lord did the work.
+# From memory, not fetched: that the towns paid the judge's salary and
+# protested the cost in Cortes. That is why the burghers dislike the office;
+# the lords dislike it for the fetched reason (the king's judge is the one
+# their ouvidor keeps out).
+# Urban control and not control at large: the judge sat in a town.
+# Unpaid, a stranger with no kin in the town is lodged and fed by whoever has
+# a house fit for him, and judges accordingly.
+por_juizes_de_fora_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = POR
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {}
+
+	estates_that_like = {
+		crown_estate
+	}
+	estates_that_dislike = {
+		nobles_estate
+		burghers_estate
+	}
+
+	neutral_modifier = {
+		monthly_towards_centralization = societal_value_monthly_move
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		global_monthly_urban_control = 0.002
+		monthly_political_influence_gain_modifier = 0.05
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		global_nobles_estate_power = 0.2
+		global_monthly_control_decline = 0.002
+	}
+}
+
+# 2. Companhia das Naus (the key keeps the name of the Casa dos Vinte e
+# Quatro, which stood here until 2026-10-02: saved games and the generated
+# impact modifier hold the key. The house of the twenty four is told once,
+# by the formation choice nd_por_casa_dos_vinte_e_quatro.)
+# Fetched (pt.wikipedia, "Companhia das Naus"): founded in 1380 by Fernando
+# I; every ship above fifty toneis was registered; two per cent of what a
+# ship earned in freight went into a common fund; two purses, one at Lisbon
+# and one at Porto; the fund paid owners for ships lost or damaged and for
+# new hulls in their place, so that a loss was divided among all owners.
+# From memory, not fetched: that Fernando's law of 1377 excused the owners
+# of large ships from keeping horse and arms for the host. That is why the
+# nobles dislike it: men who should ride with them are entered as shipowners.
+# The gate is Lisbon: the first purse and the register were kept there.
+# The country's age 1 building, the Casa da Bolsa, is the purse of 1293 that
+# the merchants agreed among themselves; this is the king's company that
+# made it compulsory ninety years later.
+# Funded, a damaged ship is mended out of the purse. Unpaid, the purse is
+# empty when a ship is lost: owners build under fifty tuns to stay off the
+# register and keep their ships in the river.
+por_casa_dos_vinte_e_quatro_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	# two clerks and two chests: vanilla's light multiplier (0.003, the
+	# Bayt al-Mal and the Byzantine set)
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.003
+	}
+
+	potential = {
+		has_or_had_tag = POR
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		owns = location:lisbon
+	}
+
+	estates_that_like = {
+		burghers_estate
+	}
+	estates_that_dislike = {
+		nobles_estate
+	}
+
+	neutral_modifier = {
+		global_burghers_estate_power = 0.1
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		navy_repair_efficiency = 0.2
+		burghers_estate_satisfaction_recovery = 0.001
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		ship_build_speed = -0.1
+		trade_sea_efficiency = small_trade_sea_efficiency_penalty
+	}
+}
+
+# 3. Mesa da Consciencia e Ordens
+# Fetched (en.wikipedia, "Mesa da Consciencia e Ordens"): founded in December
+# 1532 at Evora by Joao III; renamed in 1551, after a bull of Julius III,
+# when the orders of Christ, Santiago and Avis came under it; it oversaw the
+# University of Coimbra until 1772, the ransom of captives, the commanderies,
+# and the goods of subjects who died outside the kingdom; abolished on 16
+# August 1833.
+# From memory, not fetched: that the 1551 bull joined the three masterships
+# to the crown for ever, and that commanderies were the usual reward for
+# service in Africa and India. The second is why the nobles like it.
+# The gate reads vanilla's privilege clergy_military_orders (Portugal starts
+# with it; it gives the clergy 25% power): the Mesa is what the crown does
+# with orders it has, and a crown that has dissolved them has nothing to
+# administer. The neutral line takes back part of that power.
+# Unpaid, the commanderies are held by men who never see them and pay
+# nothing on them, and the priests of the orders' churches go without.
+por_mesa_da_consciencia_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = POR
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		has_estate_privilege = estate_privilege:clergy_military_orders
+	}
+
+	estates_that_like = {
+		crown_estate
+		nobles_estate
+	}
+	estates_that_dislike = {
+		clergy_estate
+	}
+
+	neutral_modifier = {
+		global_clergy_estate_power = -0.1
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		clergy_estate_max_tax = 0.1
+		nobles_estate_satisfaction_recovery = 0.001
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		nobles_estate_max_tax = -0.1
+		clergy_estate_target_satisfaction = medium_permanent_target_satisfaction_penalty
+	}
+}
+
+# 4. Conselho Ultramarino
+# Fetched (pt.wikipedia, "Conselho Ultramarino"): created on 14 July 1642
+# under Joao IV in place of the Conselho da India; a noble president and
+# three councillors, two nobles and one jurist; seated on 2 December 1643
+# under the Marquis of Montalvao; competent for India, Brazil, Maranhao,
+# Guinea, Sao Tome, Cape Verde and the islands: finance, shipping, defence,
+# the naming of officials and the granting of rewards; it shared money
+# matters with the Conselho da Fazenda; dissolved on 30 August 1833.
+# Vanilla's colonial office is about range and settlers. This council
+# settled nobody: it answered governors and paid service with posts, so its
+# lines are loyalty of the dominions and a contented nobility of service.
+# One key is shared with vanilla's por_colonial_governors (subject_loyalty),
+# the other key of that advance is left alone.
+# From memory, not fetched: that the merchants and the Fazenda resented a
+# council of soldiers deciding fleets and contracts. That is the dislike.
+# The gate: a council for the overseas needs something overseas to answer.
+# Unpaid, the consultas pile up, a governor waits two monsoons for an answer
+# and in the meantime trades on his own account.
+por_conselho_ultramarino_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = POR
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		num_subjects >= 1
+	}
+
+	estates_that_like = {
+		nobles_estate
+	}
+	estates_that_dislike = {
+		burghers_estate
+	}
+
+	neutral_modifier = {
+		colonial_maintenance_efficiency = 0.1
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		subject_loyalty = 5
+		nobles_estate_target_satisfaction = small_permanent_target_satisfaction
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		create_colonial_charter_cost_modifier = 0.2
+		estate_enrichment = 0.1
+	}
+}

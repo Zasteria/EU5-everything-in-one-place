@@ -1,0 +1,606 @@
+﻿namespace = nd_cat
+
+# Formation event: fires from form_effect (99_nd_cat.txt), and from the
+# four-yearly marker repair for a Catalonia that was released or broke away
+# and so never pressed the button.
+nd_cat.1 = {
+	type = country_event
+	title = nd_cat.1.t
+	# A country that was the Crown of Aragon reads what it has just given up;
+	# every other former reads the plain account.
+	desc = {
+		first_valid = {
+			triggered_desc = {
+				trigger = { has_or_had_tag = ARA }
+				desc = nd_cat.1.d.crown
+			}
+			triggered_desc = {
+				desc = nd_cat.1.d
+			}
+		}
+	}
+	outcome = neutral
+	# Once per COUNTRY, by its own guard variable. Not fire_only_once: that
+	# is once per campaign (events/readme.txt:62), so an AI that formed the
+	# tag first would retire the popup for every later former. Country
+	# variables die with the country, so a Catalonia that falls and rises
+	# again is asked again.
+	trigger = {
+		NOT = { has_variable = nd_cat_e1_done }
+	}
+	immediate = {
+		hidden_effect = { set_variable = nd_cat_e1_done }
+	}
+
+	# The prince swears first: the pactist principality.
+	option = {
+		name = nd_cat.1.a
+		add_country_modifier = {
+			modifier = nd_cat_sworn_principality
+			years = 20
+			mode = add_and_extend
+		}
+		change_societal_value = {
+			type = centralization_vs_decentralization
+			value = societal_value_minor_move_to_right
+		}
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_cat_formed
+			set_variable = nd_cat_path_a
+		}
+	}
+	# The land governs itself: the Diputacio as the state, as in 1462 and 1641.
+	option = {
+		name = nd_cat.1.b
+		add_country_modifier = {
+			modifier = nd_cat_govern_de_la_terra
+			years = 20
+			mode = add_and_extend
+		}
+		change_societal_value = {
+			type = aristocracy_vs_plutocracy
+			value = societal_value_minor_move_to_right
+		}
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_cat_formed
+			set_variable = nd_cat_path_b
+		}
+	}
+}
+
+# The advance events below name three tags. Only a tag named in the block is
+# polled for the event (events/readme.txt, dynamic_historical_event), and
+# Catalonia is a stepping stone: a country that has gone on to the Aragonese
+# Empire (CDA) or Spain (SPA) still researches these advances, which are
+# gated on has_or_had_tag = CAT, and would otherwise never see their events.
+# The has_advance trigger keeps them from every other CDA or SPA.
+
+# Advance event: the Corts of Barcelona, 1283 ("Una vegada lo any")
+nd_cat.2 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAT
+		tag = CDA
+		tag = SPA
+		tag = ADU
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OCC
+		tag = ROM
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cat_una_vegada_lo_any
+	}
+
+	title = nd_cat.2.t
+	desc = nd_cat.2.d
+	outcome = neutral
+
+	option = {
+		name = nd_cat.2.a
+	}
+}
+
+# Advance event: the Taula de Canvi, 1401. The fork is the table's founding
+# rule: lend to the city alone, or carry private credit as well.
+nd_cat.3 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAT
+		tag = CDA
+		tag = SPA
+		tag = ADU
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OCC
+		tag = ROM
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cat_banca_municipal
+	}
+
+	title = nd_cat.3.t
+	desc = nd_cat.3.d
+	outcome = neutral
+
+	option = {
+		name = nd_cat.3.a
+		add_country_modifier = {
+			modifier = nd_cat_taula_segura
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_cat.3.b
+		add_country_modifier = {
+			modifier = nd_cat_taula_oberta
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# Advance event: the miquelets of 1640. The fork is who commands and pays
+# them: the Diputacio's own captains, or an ally's marshals.
+nd_cat.4 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAT
+		tag = CDA
+		tag = SPA
+		tag = ADU
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OCC
+		tag = ROM
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cat_miquelets_de_la_terra
+	}
+
+	title = nd_cat.4.t
+	desc = nd_cat.4.d
+	outcome = neutral
+
+	option = {
+		name = nd_cat.4.a
+		add_country_modifier = {
+			modifier = nd_cat_capitans_de_la_terra
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_cat.4.b
+		add_country_modifier = {
+			modifier = nd_cat_a_sou_de_l_aliat
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# Advance event: the Junta de Bracos, July 1713. Resist to the last, or treat
+# while there is something left to treat with.
+nd_cat.5 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAT
+		tag = CDA
+		tag = SPA
+		tag = ADU
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OCC
+		tag = ROM
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cat_resistencia_a_ultranca
+	}
+
+	title = nd_cat.5.t
+	desc = nd_cat.5.d
+	outcome = neutral
+
+	option = {
+		name = nd_cat.5.a
+		add_country_modifier = {
+			modifier = nd_cat_a_ultranca
+			years = 10
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_cat.5.b
+		add_country_modifier = {
+			modifier = nd_cat_capitulacio_honrosa
+			years = 10
+			mode = add_and_extend
+		}
+	}
+}
+
+# Advance event: El Bruc, June 1808
+nd_cat.6 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAT
+		tag = CDA
+		tag = SPA
+		tag = ADU
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OCC
+		tag = ROM
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cat_timbal_del_bruc
+	}
+
+	title = nd_cat.6.t
+	desc = nd_cat.6.d
+	outcome = positive
+
+	option = {
+		name = nd_cat.6.a
+	}
+}
+
+# ===== DESTINY EVENTS =====
+# One event per destiny advance. They name the same three tags as the advance
+# events above, for the same reason: the tree is gated on has_or_had_tag = CAT
+# and goes on with a country that has become the Aragonese Empire or Spain.
+# Root and stage 1 events acknowledge; stage 2 and stage 3 events each offer
+# two readings of the milestone, with a timed modifier for each (15 and 20
+# years).
+
+# Destiny root: the land named by its bounds
+nd_cat.7 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAT
+		tag = CDA
+		tag = SPA
+		tag = ADU
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OCC
+		tag = ROM
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cat_destiny
+	}
+
+	title = nd_cat.7.t
+	desc = nd_cat.7.d
+	outcome = neutral
+
+	option = {
+		name = nd_cat.7.a
+	}
+}
+
+# Path A, stage 1: the islands reunited
+nd_cat.8 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAT
+		tag = CDA
+		tag = SPA
+		tag = ADU
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OCC
+		tag = ROM
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cat_dest_regne_dins_la_mar
+	}
+
+	title = nd_cat.8.t
+	desc = nd_cat.8.d
+	outcome = positive
+
+	option = {
+		name = nd_cat.8.a
+	}
+}
+
+# Path A, stage 2: the oath at Valencia. The fork is the one James I faced:
+# give the new kingdom a law of its own, or carry the old law into it.
+nd_cat.9 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAT
+		tag = CDA
+		tag = SPA
+		tag = ADU
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OCC
+		tag = ROM
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cat_dest_jurar_els_furs
+	}
+
+	title = nd_cat.9.t
+	desc = nd_cat.9.d
+	outcome = neutral
+
+	option = {
+		name = nd_cat.9.a
+		add_country_modifier = {
+			modifier = nd_cat_dest_regne_per_si
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_cat.9.b
+		add_country_modifier = {
+			modifier = nd_cat_dest_una_sola_llei
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# Path A, stage 3: the bundle of rushes. One General Corts for every land, as
+# at Montso, or each land bargaining in its own hall.
+nd_cat.10 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAT
+		tag = CDA
+		tag = SPA
+		tag = ADU
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OCC
+		tag = ROM
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cat_dest_mata_de_jonc
+	}
+
+	title = nd_cat.10.t
+	desc = nd_cat.10.d
+	outcome = positive
+
+	option = {
+		name = nd_cat.10.a
+		add_country_modifier = {
+			modifier = nd_cat_dest_corts_generals
+			years = 20
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_cat.10.b
+		add_country_modifier = {
+			modifier = nd_cat_dest_cada_regne
+			years = 20
+			mode = add_and_extend
+		}
+	}
+}
+
+# Path B, stage 1: the Counties under the General again
+nd_cat.11 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAT
+		tag = CDA
+		tag = SPA
+		tag = ADU
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OCC
+		tag = ROM
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cat_dest_principat_i_comtats
+	}
+
+	title = nd_cat.11.t
+	desc = nd_cat.11.d
+	outcome = positive
+
+	option = {
+		name = nd_cat.11.a
+	}
+}
+
+# Path B, stage 2: the censals. Sell the General's pensions to foreign houses
+# at a lower rate, or keep the debt among the land's own people.
+nd_cat.12 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAT
+		tag = CDA
+		tag = SPA
+		tag = ADU
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OCC
+		tag = ROM
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cat_dest_censals_del_general
+	}
+
+	title = nd_cat.12.t
+	desc = nd_cat.12.d
+	outcome = neutral
+
+	option = {
+		name = nd_cat.12.a
+		add_country_modifier = {
+			modifier = nd_cat_dest_censals_oberts
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_cat.12.b
+		add_country_modifier = {
+			modifier = nd_cat_dest_censals_de_la_terra
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# Path B, stage 3: lo General. The fork of fifteenth century Barcelona: the
+# quay open to every flag, which suited the honoured citizens and the
+# importers of fine cloth (the Biga), or foreign cloth shut out, which the
+# Corts voted in 1422 and the Busca asked for again in 1453.
+nd_cat.13 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAT
+		tag = CDA
+		tag = SPA
+		tag = ADU
+		tag = CTH
+		tag = EUR
+		tag = GOT
+		tag = ITA
+		tag = KHL
+		tag = OCC
+		tag = ROM
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cat_dest_lo_general
+	}
+
+	title = nd_cat.13.t
+	desc = nd_cat.13.d
+	outcome = positive
+
+	option = {
+		name = nd_cat.13.a
+		add_country_modifier = {
+			modifier = nd_cat_dest_port_obert
+			years = 20
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_cat.13.b
+		add_country_modifier = {
+			modifier = nd_cat_dest_bolla_de_plom
+			years = 20
+			mode = add_and_extend
+		}
+	}
+}

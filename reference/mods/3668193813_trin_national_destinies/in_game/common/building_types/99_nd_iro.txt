@@ -21,29 +21,49 @@ nd_iro_longhouse = {
 		local_unrest = -0.05
 		local_peasants_estate_power = 0.5
 		local_population_capacity = 0.5
-		local_monthly_food_modifier = 0.05
+		local_monthly_food_modifier = 0.025
 	}
 
 	unique_production_methods = {
 		nd_iro_longhouse_maintenance = {
-			lumber = 0.2
-			tools = 0.1
-			fiber_crops = 0.1
+			lumber = 0.275
+			tools = 0.138
+			fiber_crops = 0.138
 			category = building_maintenance
+		}
+
+		# Unlocked by nd_iro_fur_trade_network: deer hides dressed and smoked
+		# in the longhouse (the key keeps the older name). Vanilla's
+		# forest_tannery makes leather from wild_game the same way. It stood in
+		# the Three Sisters Garden as leather from fur until 2026-10-02.
+		# Inputs cost 0.4 + 0.075 = 0.475; 0.19 leather at 3 is 0.57. The
+		# longhouse can stand in the countryside, so the rural cap.
+		nd_iro_fur_processing = {
+			wild_game = 0.4
+			lumber = 0.05
+			produced = leather
+			output = 0.19
+			category = guild_input
+			debug_max_profit = rural_profit_margin
 		}
 	}
 	construction_demand = village_construction
 }
 
 # Haudenosaunee Palisade: triple-walled fortified village
+# Staffed by tribesmen, as vanilla's own tribal forts are (dun_fort,
+# guich_garrison): the homeland holds only tribesmen and peasants in 1337.
 nd_iro_palisade = {
 	is_special = yes
 	is_foreign = no
-	pop_type = soldiers
+	pop_type = tribesmen
 	max_levels = 1
 	employment_size = stockade_employment
 	category = defense_category
-	rural_settlement = no
+	# Villages too: a Haudenosaunee "castle" was a palisaded village, the
+	# homeland has one town (Canajoharie), and vanilla's own tribal forts
+	# and its stockade stand in the countryside (dun_fort, guich_garrison).
+	rural_settlement = yes
 	town = yes
 	city = yes
 	megalopolis = yes
@@ -67,20 +87,6 @@ nd_iro_palisade = {
 			tools = 0.1
 			category = building_maintenance
 		}
-
-		nd_iro_improved_palisade = {
-			lumber = 0.2
-			stone = 0.1
-			tools = 0.1
-			category = building_maintenance
-		}
-
-		nd_iro_warrior_training = {
-			lumber = 0.1
-			weaponry = 0.05
-			leather = 0.05
-			category = building_maintenance
-		}
 	}
 	construction_demand = stockade_construction
 }
@@ -89,10 +95,14 @@ nd_iro_palisade = {
 nd_iro_council_fire = {
 	is_special = yes
 	is_foreign = no
-	pop_type = nobles
+	# The sachems are men of the clans: tribesmen, not a nobility.
+	pop_type = tribesmen
 	max_levels = 1
 	employment_size = castle_employment
 	category = government_category
+	# Towns only: it raises the ceiling of control (local_max_control),
+	# which no village building may do, and the league had one fire. The
+	# place that keeps it is the one built up into a town.
 	rural_settlement = no
 	town = yes
 	city = yes
@@ -112,9 +122,9 @@ nd_iro_council_fire = {
 
 	unique_production_methods = {
 		nd_iro_council_fire_ceremony = {
-			beeswax = 0.1
-			paper = 0.05
-			fur = 0.05
+			beeswax = 0.275
+			paper = 0.138
+			fur = 0.138
 			category = building_maintenance
 		}
 	}
@@ -125,11 +135,15 @@ nd_iro_council_fire = {
 nd_iro_wampum_workshop = {
 	is_special = yes
 	is_foreign = no
-	pop_type = burghers
+	# Beads were drilled and strung by the people of the town: no burghers
+	# live in the homeland.
+	pop_type = peasants
 	max_levels = 1
 	employment_size = guild_employment
 	category = trade_category
-	rural_settlement = no
+	# Villages too: belts were strung in the longhouse villages of every
+	# nation, and the homeland has one town (Canajoharie).
+	rural_settlement = yes
 	town = yes
 	city = yes
 	megalopolis = yes
@@ -154,31 +168,16 @@ nd_iro_wampum_workshop = {
 			category = building_maintenance
 		}
 
+		# Belts for trade: shell beads carried up from the coast (pearls stand
+		# for the shell, as in vanilla's pearls_enhancement) are strung on twine
+		# and woven into belts. Output from eu5-profit.
 		nd_iro_wampum_trade = {
-			pottery = 0.1
-			dyes = 0.1
-			paper = 0.05
-			category = building_maintenance
-		}
-
-		nd_iro_portage_trade = {
-			fur = 0.15
-			tools = 0.05
-			category = building_maintenance
-		}
-
-		nd_iro_european_diplomacy = {
-			paper = 0.1
-			fine_cloth = 0.05
-			jewelry = 0.05
-			category = building_maintenance
-		}
-
-		nd_iro_treaty_negotiation = {
-			paper = 0.1
-			beeswax = 0.1
-			fur = 0.05
-			category = building_maintenance
+			pearls = 0.1
+			fiber_crops = 0.05
+			produced = jewelry
+			output = 0.12
+			category = guild_input
+			debug_max_profit = rural_profit_margin
 		}
 	}
 	construction_demand = guild_construction
@@ -203,7 +202,7 @@ nd_iro_three_sisters_garden = {
 	}
 
 	modifier = {
-		local_monthly_food_modifier = 0.1
+		local_monthly_food_modifier = 0.05
 		local_population_growth = 0.0005
 		local_maize_output_modifier = 0.15
 	}
@@ -216,41 +215,181 @@ nd_iro_three_sisters_garden = {
 			category = building_maintenance
 		}
 
-		nd_iro_fur_processing = {
-			fur = 0.2
-			produced = leather
-			output = 0.16
+		# Flax spun and woven on the farms, as the Friends taught on the Allegany
+		# after 1798: vanilla's own recipe (rural_fiber_clothmaker), sized by
+		# eu5-profit. The garden can stand in the countryside, so the rural cap.
+		nd_iro_homespun = {
+			fiber_crops = 0.25
+			produced = cloth
+			output = 0.2
 			category = guild_input
-			debug_max_profit = guild_profit_margin
-		}
-	
-		nd_iro_controlled_burns = {
-			lumber = 0.1
-			tools = 0.05
-			category = building_maintenance
-		}
-
-		nd_iro_modern_agriculture = {
-			maize = 0.15
-			tools = 0.05
-			pottery = 0.05
-			category = building_maintenance
+			debug_max_profit = rural_profit_margin
 		}
 	}
 	construction_demand = farm_constructions
 }
 
+# The Smith at the Castle: a resident smith and his forge in a Haudenosaunee
+# town. From the later seventeenth century the towns that treated with the
+# French or the English asked for one to mend guns, hatchets and kettles, and
+# the governors of New France and New York kept smiths at Onondaga and in the
+# Seneca country for generations.
+nd_iro_castle_smith = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	# One smith to a castle, as the treaties granted.
+	max_levels = 1
+	employment_size = guild_employment
+	category = basic_industry_category
+	# The castles of the Five Nations were villages: no gate on rank.
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = no
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_iro_firearms_adoption
+	}
+
+	# No location gate: a forge works wherever bar iron is carried to it, and
+	# tools and firearms are worked goods, not the yield of the land.
+
+	unique_production_methods = {
+		# vanilla's tamagahane_blacksmith in small (iron to tools)
+		nd_iro_smith_mending = {
+			iron = 0.2
+			produced = tools
+			output = 0.24
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+
+		# vanilla's guns_guild_lumber_maintenance in small (stocks and locks)
+		nd_iro_gun_mending = {
+			lumber = 0.13
+			iron = 0.04
+			tools = 0.02
+			produced = firearms
+			output = 0.15
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# The Carrying Place: a portage between two waters, where the nation that
+# holds it carries the goods and canoes of everyone who passes. The Seneca
+# kept the carry round Niagara and the Oneida the one from the Mohawk River
+# to Wood Creek.
+nd_iro_carrying_place = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = 1
+	employment_size = trade_employment
+	category = trade_category
+	# A carry lies in the woods between two waters: no gate on rank.
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = no
+	build_time = trade_post_build_time
+
+	country_potential = {
+		has_advance = nd_iro_portage_control
+	}
+
+	# A portage joins a river to a river or a lake.
+	location_potential = {
+		OR = {
+			has_river = yes
+			is_adjacent_to_lake = yes
+		}
+	}
+
+	# vanilla's caravan_stop gives 0.5 and 1 with no gate at all
+	modifier = {
+		local_merchant_power = 0.5
+		local_merchant_capacity = 0.5
+	}
+
+	unique_production_methods = {
+		nd_iro_carrying_place_upkeep = {
+			fiber_crops = 0.1
+			lumber = 0.1
+			leather = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = village_construction
+}
+
+# Longhouse of the Good Message: the meeting house of the Gaiwiio, the code
+# Handsome Lake preached at Cornplanter's town from 1799, where the
+# faithkeepers recite it and the cycle of thanksgivings is kept.
+nd_iro_gaiwiio_longhouse = {
+	is_special = yes
+	is_foreign = no
+	pop_type = clergy
+	max_levels = 1
+	employment_size = religious_building_employment
+	category = religious_category
+	# The longhouses of the Gaiwiio stood in the villages: no gate on rank.
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = no
+	build_time = religious_building_time
+
+	country_potential = {
+		has_advance = nd_iro_handsome_lake
+	}
+
+	# The Good Message was preached to the Haudenosaunee and sought no
+	# converts beyond them.
+	location_potential = {
+		dominant_culture = { has_culture_group = culture_group:haudenosaunee_group }
+	}
+
+	# vanilla's temple (unrest) and great temple (tradition, clergy)
+	modifier = {
+		local_unrest = -0.025
+		local_cultural_tradition = 0.1
+		local_clergy_estate_power = 0.1
+	}
+
+	unique_production_methods = {
+		nd_iro_gaiwiio_thanksgivings = {
+			tobacco = 0.1
+			maize = 0.1
+			lumber = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = village_construction
+}
+
 # ===== DESTINY BUILDINGS =====
 
-# Tree of Great Peace: capstone for Roots of Peace destiny path
-# Represents the White Pine of Peace planted at Onondaga, its roots spreading in four directions
+# House of the Wampum Keeper: capstone for the Roots of Peace destiny path.
+# The Onondaga kept the belts of the whole league. The key keeps the older
+# name: as the Tree of Great Peace it told of vanilla's tree_of_peace advance.
 nd_iro_peace_tree = {
 	is_special = yes
 	is_foreign = no
-	pop_type = nobles
+	pop_type = tribesmen
 	max_levels = 1
 	employment_size = castle_employment
 	category = government_category
+	# Towns only: it raises the ceiling of control (local_max_control),
+	# which no village building may do, and one house kept the belts of
+	# the whole league.
 	rural_settlement = no
 	town = yes
 	city = yes
@@ -264,32 +403,37 @@ nd_iro_peace_tree = {
 
 	modifier = {
 		local_crown_estate_power = 0.25
-		local_unrest = -0.1
+		local_unrest = -0.05
 		local_max_control = 0.05
 		local_cultural_tradition = 0.25
 	}
 
 	unique_production_methods = {
 		nd_iro_peace_tree_ceremonies = {
-			beeswax = 0.1
-			paper = 0.1
-			fine_cloth = 0.05
+			beeswax = 0.158
+			paper = 0.158
+			fine_cloth = 0.079
 			category = building_maintenance
 		}
 	}
 	construction_demand = village_construction
 }
 
-# War Lodge: capstone for War Road destiny path
-# A fortified lodge where war chiefs plan campaigns and warriors prepare for distant raids
+# Castle on the War Road: capstone for the War Road destiny path. A palisaded
+# town planted in conquered country, as Teiaiagon and Ganatsekwyagon were on
+# the north shore of Lake Ontario in the 1660s. The key keeps the older name:
+# as a War Lodge it was a twin of vanilla's warrior_lodge.
 nd_iro_war_lodge = {
 	is_special = yes
 	is_foreign = no
-	pop_type = soldiers
+	pop_type = tribesmen
 	max_levels = 1
 	employment_size = stockade_employment
 	category = defense_category
-	rural_settlement = no
+	# Villages too: Teiaiagon and Ganatsekwyagon were palisaded villages,
+	# and the conquered country north of the lakes has no towns to plant
+	# one in. Vanilla's warrior_lodge stands in the countryside as well.
+	rural_settlement = yes
 	town = yes
 	city = yes
 	megalopolis = yes

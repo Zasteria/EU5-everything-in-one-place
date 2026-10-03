@@ -51,7 +51,7 @@ nd_khl_grand_jami = {
 	icon = organized_religion
 	unlock_building = nd_khl_grand_jami_mosque
 	tolerance_own = 1
-	cultural_tradition_modifier = 0.1
+	town_upgrade_cost_modifier = -0.05
 }
 
 # Caliphal Diwan: the bureaucratic apparatus of the universal state
@@ -122,7 +122,7 @@ nd_khl_caliphal_dirham = {
 	requires = standardized_coins
 	icon = standardized_coins
 	unlock_building = nd_khl_caliphal_mint
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 	global_silver_output_modifier = 0.1
 }
 
@@ -160,7 +160,7 @@ nd_khl_post_mongol_restoration = {
 	potential = { has_or_had_tag = KHL }
 	requires = construction_speed_discovery
 	icon = construction_speed_discovery
-	global_devastation_recovery = 0.1
+	global_devastation_recovery = 0.0025
 	global_monthly_development = 0.001
 	global_monthly_prosperity = 0.001
 }
@@ -171,7 +171,7 @@ nd_khl_gunpowder_caliphate = {
 	potential = { has_or_had_tag = KHL }
 	requires = pike_square
 	icon = pike_square
-	army_artillery_power = 0.15
+	army_artillery_power = 0.1
 	siege_ability = 0.15
 	discipline = 0.025
 }
@@ -268,7 +268,7 @@ nd_khl_oceanic_galleon = {
 	requires = global_trade_advance
 	icon = global_trade_advance
 	unlock_unit = n_nd_khl_oceanic_galleon
-	trade_sea_efficiency = 0.04
+	trade_sea_efficiency = 0.2
 	global_maritime_presence_modifier = 0.1
 	ai_weight = {
 		add = 30
@@ -309,8 +309,8 @@ nd_khl_imperial_integration = {
 	requires = imperial_ambitions
 	icon = imperial_ambitions
 	global_integration_speed_modifier = 0.2
-	global_pop_assimilation_speed_modifier = 0.15
-	subject_loyalty = 0.15
+	global_pop_assimilation_speed_modifier = 0.1
+	subject_loyalty = 5
 }
 
 # ============================================================
@@ -327,7 +327,7 @@ nd_khl_caliphal_absolutism = {
 	monthly_legitimacy = 0.1
 	monthly_devotion = 0.1
 	monthly_republican_tradition = 0.1
-	tax_income_efficiency = 0.05
+	tax_income_efficiency = 0.03
 }
 
 # Caliphal frigate: modernized Mediterranean and Indian Ocean warship
@@ -377,7 +377,7 @@ nd_khl_universal_legitimacy = {
 	monthly_devotion = 0.1
 	monthly_republican_tradition = 0.1
 	cultural_influence_modifier = 0.1
-	monthly_prestige = 0.1
+	power_projection = 5
 }
 
 # ============================================================
@@ -437,7 +437,7 @@ nd_khl_industrial_khilafah = {
 	potential = { has_or_had_tag = KHL }
 	requires = urbanization
 	icon = urbanization
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 	global_monthly_development = 0.001
 	global_population_growth = 0.0005
 }
@@ -523,7 +523,7 @@ nd_khl_dest_two_oceans_caliphate = {
 	}
 	icon = merchants_and_trade
 	unlock_building = nd_khl_bayt_al_hikmah_restored
-	prestige_from_naval_battle = 1.0
+	prestige_from_naval_battle = 0.5
 	ship_repair_at_sea = 0.025
 	global_merchant_capacity_modifier = 0.20
 }
@@ -546,7 +546,16 @@ nd_khl_dest_two_cities = {
 		}
 		owns_or_non_sovereign_subject_owns = location:vienna
 		owns_or_non_sovereign_subject_owns = location:rome
-		army_size >= 30
+		# The marches behind the advance are held by ribats. (The army size
+		# objectives of this path went 2026-10-02: no file says whether raised
+		# levies count for that trigger.)
+		custom_tooltip = {
+			text = nd_khl_dest_ribats_10_tt
+			any_owned_location = {
+				count >= 10
+				has_building = building_type:nd_khl_ribat_garrison
+			}
+		}
 	}
 	icon = feudalism_advance
 	land_morale_recovery = 0.025
@@ -559,9 +568,14 @@ nd_khl_dest_hammer = {
 	requires = nd_khl_dest_two_cities
 	potential = { has_or_had_tag = KHL has_variable = nd_khl_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		owns_or_non_sovereign_subject_owns = location:delhi
+		# Kataka, seat of the Ganga kings of Odisha, and not Delhi: the Delhi
+		# Sultanate is the main former and holds Delhi on day one. Odisha kept
+		# its coast against the sultans of Delhi and Bengal until 1568.
+		owns_or_non_sovereign_subject_owns = location:kataka
 		owns_or_non_sovereign_subject_owns = location:vijayanagar
-		army_size >= 50
+		# Toledo, the old capital of Castile and the Christendom half of the
+		# stage's name.
+		owns_or_non_sovereign_subject_owns = location:toledo
 		gold >= 2000
 	}
 	icon = imperial_ambitions
@@ -578,12 +592,19 @@ nd_khl_dest_world_submits = {
 		owns_or_non_sovereign_subject_owns = location:paris
 		owns_or_non_sovereign_subject_owns = location:venice
 		owns_or_non_sovereign_subject_owns = location:madrid
-		army_size >= 75
+		# The conquered world is garrisoned, not only overrun.
+		custom_tooltip = {
+			text = nd_khl_dest_ribats_25_tt
+			any_owned_location = {
+				count >= 25
+				has_building = building_type:nd_khl_ribat_garrison
+			}
+		}
 		prestige >= 75
 	}
 	icon = pike_and_shot_advance
 	unlock_building = nd_khl_caliphal_foundry
-	prestige_from_land_battle = 1.0
+	prestige_from_land_battle = 0.1
 	annexation_speed_modifier = 0.20
 	army_maintenance_efficiency = 0.10
 }

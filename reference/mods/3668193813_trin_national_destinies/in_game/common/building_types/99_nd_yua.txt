@@ -89,7 +89,7 @@ nd_yua_steppe_granary = {
 	}
 
 	modifier = {
-		local_monthly_food_modifier = 0.1
+		local_monthly_food_modifier = 0.05
 		local_food_capacity = 100
 		local_population_growth = 0.0005
 	}
@@ -126,7 +126,7 @@ nd_yua_tibetan_temple = {
 
 	modifier = {
 		local_pop_conversion_speed = 0.01
-		local_cultural_tradition = 0.5
+		local_cultural_tradition = 0.25
 		local_clergy_estate_power = 0.25
 		local_clergy_max_literacy = 2
 	}
@@ -178,4 +178,254 @@ nd_yua_border_market = {
 		}
 	}
 	construction_demand = warehouse_construction
+}
+
+# Eight White Yurts (Naiman Chagan Ger): the tent shrine of Chinggis Khan,
+# kept by the Darkhad, before which the khans of the Northern Yuan were
+# enthroned.
+nd_yua_eight_white_yurts = {
+	is_special = yes
+	is_foreign = no
+	pop_type = clergy
+	max_levels = 1
+	employment_size = religious_building_employment
+	category = religious_category
+	# Every tier: the shrine is a camp of tents and stands wherever the
+	# khan's seat is. The gate is the capital, below.
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = religious_building_time
+
+	country_potential = {
+		has_advance = nd_yua_genghisid_legitimacy
+	}
+
+	# One shrine, at the seat of the khan (the gate vanilla writes on its
+	# own capital buildings, capital_buildings.txt central_bank).
+	location_potential = {
+		counts_as_capital = yes
+	}
+
+	allow = {
+		is_capital = yes
+		country_has_no_other_copy_of_building = { type = nd_yua_eight_white_yurts }
+		owner = scope:actor
+	}
+
+	remove_if = {
+		is_no_longer_capital = yes
+	}
+
+	modifier = {
+		local_cultural_tradition = 0.25
+		local_unrest = -0.05
+	}
+
+	unique_production_methods = {
+		nd_yua_eight_white_yurts_rites = {
+			livestock = 0.2
+			wool = 0.1
+			silk = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = village_construction
+}
+
+# Composite Bow Workshop: horn, sinew and wood glued and cured over months
+nd_yua_bow_workshop = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 3
+	employment_size = guild_employment
+	category = weapons_industry_category
+	# Not rural: a workshop of bowyers, like vanilla's own weapon guild.
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = no
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_yua_composite_bow_workshops
+	}
+
+	unique_production_methods = {
+		# Livestock stands for the horn and sinew, lumber for the core.
+		nd_yua_bow_making = {
+			lumber = 0.2
+			livestock = 0.2
+			produced = weaponry
+			output = 0.24
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+# Pingzhun Treasury: the exchange treasury of the paper currency, where
+# chao is changed for silver at the official rate.
+nd_yua_pingzhun_treasury = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = generic_burgher_employment
+	category = government_category
+	# Cities only: the treasuries sat in the seats of the routes, where the
+	# silver reserve could be guarded.
+	rural_settlement = no
+	town = no
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = government_build_time
+
+	country_potential = {
+		has_advance = nd_yua_chao_currency
+	}
+
+	modifier = {
+		local_trades_per_burgher = 0.1
+		local_monthly_prosperity = 0.001
+	}
+
+	unique_production_methods = {
+		# Paper for the notes, silver for the reserve, cinnabar for the seals.
+		nd_yua_pingzhun_treasury_upkeep = {
+			paper = 0.278
+			silver = 0.07
+			dyes = 0.07
+			category = building_maintenance
+		}
+	}
+	construction_demand = minting_office_construction
+}
+
+# Darughachi Office: the seat of the resident overseer who holds the seal,
+# counts the households and gathers the tax.
+nd_yua_darughachi_office = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = generic_burgher_employment
+	category = government_category
+	# Towns and cities: an overseer was posted to a walled seat with a
+	# register to keep, never to the open country.
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = no
+	build_time = government_build_time
+
+	country_potential = {
+		has_advance = nd_yua_khubilai_bureaucracy
+	}
+
+	modifier = {
+		local_monthly_control = 0.001
+		local_unrest = -0.025
+	}
+
+	unique_production_methods = {
+		nd_yua_darughachi_office_upkeep = {
+			paper = 0.22
+			horses = 0.11
+			tools = 0.11
+			category = building_maintenance
+		}
+	}
+	construction_demand = local_governor_construction
+}
+
+# Baishin: walled farm settlements raised on the Tumed plain by the Chinese
+# settlers of Altan Khan, the seed of Hohhot.
+nd_yua_baishin = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = 1
+	employment_size = generic_peasant_building_employment
+	category = infrastructure_category
+	# Villages and small towns: a baishin is a colony of farmers, and a
+	# city has outgrown it.
+	rural_settlement = yes
+	town = yes
+	city = no
+	expensive = no
+	build_time = rural_build_time
+
+	# Only on pasture: where the land is already farmed a colony of
+	# farmers adds nothing.
+	location_potential = {
+		OR = {
+			vegetation = grasslands
+			vegetation = sparse
+		}
+	}
+
+	country_potential = {
+		has_advance = nd_yua_altan_khan_diplomacy
+	}
+
+	modifier = {
+		local_monthly_food_modifier = monthly_food_productivity_weak_bonus
+		local_population_capacity = 0.5
+	}
+
+	unique_production_methods = {
+		nd_yua_baishin_upkeep = {
+			tools = 0.05
+			lumber = 0.1
+			masonry = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = village_construction
+}
+
+# Mamba Datsan: the medical college of a monastery, where lamas study the
+# Four Tantras and compound remedies.
+nd_yua_mamba_datsan = {
+	is_special = yes
+	is_foreign = no
+	pop_type = clergy
+	max_levels = 1
+	employment_size = religious_building_employment
+	category = cultural_category
+	# Towns and cities: a college is a faculty of a large monastery, and
+	# large monasteries are what the steppe's towns grew around.
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = religious_building_time
+
+	country_potential = {
+		has_advance = nd_yua_dharma_patronage
+	}
+
+	modifier = {
+		local_disease_resistance = 0.05
+		local_clergy_max_literacy = 5
+	}
+
+	unique_production_methods = {
+		nd_yua_mamba_datsan_upkeep = {
+			medicaments = 0.4
+			paper = 0.2
+			incense = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = school_construction
 }

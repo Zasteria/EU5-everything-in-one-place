@@ -219,7 +219,7 @@ nd_ahm_muga_silk = {
 	requires = global_trade_advance
 	icon = global_trade_advance
 	global_silk_output_modifier = 0.1
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 }
 
 # Modifier: Buranji codification (Rudra Singha's commissioned chronicles
@@ -248,8 +248,6 @@ nd_ahm_modern_paltan = {
 	unlock_unit = a_nd_ahm_paltan
 	army_heavy_infantry_power = 0.05
 
-	army_light_infantry_power = 0.05
-
 	ai_weight = { add = 30 }
 }
 
@@ -261,7 +259,7 @@ nd_ahm_assam_tea = {
 	requires = construction_speed_absolutism
 	icon = construction_speed_absolutism
 	global_tea_output_modifier = 0.15
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 }
 
 # Modifier: Borphukan office (viceroyal governance of Lower Assam from
@@ -322,7 +320,7 @@ nd_ahm_brahmaputra_industry = {
 	icon = industrialization_advance
 	unlock_building = nd_ahm_river_industry
 	global_construction_speed = 0.1
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }
 
 # Unlock: Assamese paltan levy (modernized line infantry under paik recruitment).
@@ -360,7 +358,16 @@ nd_ahm_dest_bengal_frontier = {
 		}
 		owns_or_non_sovereign_subject_owns = location:sylhet
 		owns_or_non_sovereign_subject_owns = location:mymensingh
-		total_development >= 500
+		# Guwahati, the gate of the valley toward Bengal and the seat of the
+		# Borphukan after 1681: the base every push down the river started from.
+		# 1337 value 19.5 (development_estimate.py --explain guwahati), stage 1 = +25%.
+		custom_tooltip = {
+			text = nd_ahm_dest_guwahati_developed_tt
+			location:guwahati = {
+				owner ?= root
+				development >= 24
+			}
+		}
 	}
 	icon = imperial_ambitions
 	monthly_army_tradition = 0.05
@@ -374,11 +381,14 @@ nd_ahm_dest_bengal_core = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:gaur
 		owns_or_non_sovereign_subject_owns = location:sonargaon
-		army_size >= 50
+		# The Ahom army is the paik levy, so no head count of a standing army
+		# (planner Step 4). The Ahoms took up the matchlock from the Bengal
+		# army they beat in 1532 to 1533, and held Bengal's guns off with it.
+		has_embraced_institution = institution:pike_and_shot
 	}
 	icon = feudalism_advance
 	cultures_capacity = 1
-	prestige_from_land_battle = 0.5
+	prestige_from_land_battle = 0.1
 }
 
 nd_ahm_dest_imperial_court = {
@@ -390,7 +400,16 @@ nd_ahm_dest_imperial_court = {
 		owns_or_non_sovereign_subject_owns = location:pinya
 		owns_or_non_sovereign_subject_owns = location:sagaing
 		prestige >= 75
-		total_development >= 500
+		# Charaideo, the first capital (1253) and the burial ground of the
+		# Swargadeos, rebuilt as the imperial seat.
+		# 1337 value 21.5 (development_estimate.py --explain charaideo), stage 3 = +100%.
+		custom_tooltip = {
+			text = nd_ahm_dest_charaideo_developed_tt
+			location:charaideo = {
+				owner ?= root
+				development >= 43
+			}
+		}
 	}
 	icon = crown_power_advance_renaissance
 	unlock_building = nd_ahm_imperial_court
@@ -419,7 +438,16 @@ nd_ahm_dest_satra_outreach = {
 				}
 			}
 		}
-		total_development >= 500
+		# Bordowa (Batadrava), Sankardev's birthplace and the site of his
+		# first prayer hall: the mother house the network grows out from.
+		# 1337 value 16.5 (development_estimate.py --explain bordowa), stage 1 = +25%.
+		custom_tooltip = {
+			text = nd_ahm_dest_bordowa_developed_tt
+			location:bordowa = {
+				owner ?= root
+				development >= 21
+			}
+		}
 	}
 	icon = organized_religion
 	# Religious influence belongs to the Christian family plus mayan and
@@ -427,7 +455,7 @@ nd_ahm_dest_satra_outreach = {
 	# Renaissance and a silk market: let the satra network carry onward what
 	# the trade routes carried in.
 	global_institution_growth_modifier = 0.1
-	global_devastation_recovery = 0.005
+	global_devastation_recovery = 0.0025
 }
 
 nd_ahm_dest_bay_pilgrimage = {
@@ -458,7 +486,8 @@ nd_ahm_dest_pan_vaishnava = {
 	}
 	icon = global_trade_advance
 	unlock_building = nd_ahm_mahapurusha_satra
-	global_institution_growth_modifier = 0.20
+	# The coast kingdoms join under protection: the reward is their loyalty.
+	subject_loyalty = 5
 	merchant_maintenance_efficiency = 0.20
 	prestige_decay = -0.001
 }

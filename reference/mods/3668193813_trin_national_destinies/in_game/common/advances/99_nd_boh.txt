@@ -77,7 +77,7 @@ nd_boh_tabor_warfare = {
 	requires = pike_square
 	icon = pike_square
 	unlock_building = nd_boh_hussite_tabor
-	fort_limit_modifier = 0.3
+	fort_limit_modifier = 0.2
 	global_garrison_size_modifier = 0.2
 }
 
@@ -137,8 +137,8 @@ nd_boh_estate_diets = {
 	requires = gov_reform_reformation_a
 	icon = gov_reform_reformation_a
 	legislative_efficiency = 0.1
-	burghers_estate_target_satisfaction = 0.075
-	global_estate_target_satisfaction = 0.03
+	burghers_estate_target_satisfaction = 0.05
+	global_estate_target_satisfaction = 0.025
 }
 
 # === Age 5: Absolutism ===
@@ -178,9 +178,9 @@ nd_boh_bohemian_glass_trade = {
 	potential = { has_or_had_tag = BOH }
 	requires = maritime_advance_age_5
 	icon = maritime_advance_age_5
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	global_glass_output_modifier = 0.15
 	global_merchant_capacity_modifier = 0.1
@@ -195,7 +195,7 @@ nd_boh_national_awakening = {
 	requires = enlightened_court
 	icon = enlightened_court
 	global_monthly_literacy = 0.02
-	cultures_capacity = 3
+	cultures_capacity = 1.75
 	cultural_tradition_modifier = 0.1
 }
 
@@ -205,7 +205,7 @@ nd_boh_industrial_bohemia = {
 	requires = industrialization_advance
 	icon = industrialization_advance
 	unlock_building = nd_boh_ironworks
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 	global_construction_speed = 0.1
 }
 
@@ -215,10 +215,10 @@ nd_boh_pilsner_revolution = {
 	requires = urbanization
 	icon = urbanization
 	unlock_production_method = nd_boh_pilsner_method
-	global_monthly_prosperity = 0.0015
-	trade_land_efficiency = 0.025
+	global_monthly_prosperity = 0.001
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -240,7 +240,10 @@ nd_boh_destiny = {
 	potential = { has_or_had_tag = BOH has_variable = nd_boh_formed has_game_rule = nd_destinies_enabled }
 	allow = { stability >= 75 }
 	icon = crown_power_advance_renaissance
-	global_manpower_modifier = 0.1
+	# The crown lands were held through dukes and margraves (Moravia, the
+	# Silesian duchies, Lusatia): a united crown keeps them loyal. 5 is the
+	# one value vanilla's advances write for this key.
+	subject_loyalty = 5
 }
 
 # === Path A: Hussite Crusade ===
@@ -258,12 +261,18 @@ nd_boh_dest_spanile_jizdy = {
 			has_variable = nd_boh_path_a
 		}
 		owns = location:wroclaw
-		owns = location:gorlitz
+		# Zittau, not Gorlitz: Bohemia holds Gorlitz on day one
+		# (validate_destiny.py, owned_at_start), while Zittau, the richest
+		# town of the Lusatian League, stands under the Duke of Jawor.
+		owns = location:zittau
 		stability >= 75
 	}
 	icon = feudalism_advance
-	land_morale_modifier = 0.1
-	global_hostile_attrition = 0.5
+	# The rides lived off what they carried home, and the wagon columns
+	# covered ground no feudal host could (0.33 and 0.1 are vanilla's
+	# commonest advance values for these keys).
+	amount_looted_modifier = 0.33
+	army_movement_speed = 0.1
 }
 
 nd_boh_dest_bohemian_hegemony = {
@@ -273,11 +282,23 @@ nd_boh_dest_bohemian_hegemony = {
 	allow = {
 		owns = location:dresden
 		owns = location:meissen
-		army_size >= 50
+		# The ride of 1429 and 1430 went down the Elbe and across the whole
+		# Wettin land to the gates of Leipzig and through the Vogtland:
+		# half of Upper Saxony (49 locations) and not its two capitals alone.
+		custom_tooltip = {
+			text = nd_boh_dest_upper_saxony_share_tt
+			area:upper_saxony_area = {
+				any_location_in_area = {
+					percent >= 0.5
+					owner ?= root
+				}
+			}
+		}
 		gold >= 2000
 	}
 	icon = imperial_ambitions
-	discipline = 0.05
+	# The wagon fort as a way of fighting, carried abroad.
+	military_tactics = 0.1
 	siege_ability = 0.1
 }
 
@@ -289,14 +310,29 @@ nd_boh_dest_warriors_of_god = {
 		owns = location:nuremberg
 		owns = location:berlin
 		owns = location:krakow
-		army_size >= 75
+		# The same ride ended in Franconia, where Bamberg and Nuremberg
+		# bought the field armies off: half of Franconia (38 locations).
+		custom_tooltip = {
+			text = nd_boh_dest_franconia_share_tt
+			area:franconia_area = {
+				any_location_in_area = {
+					percent >= 0.5
+					owner ?= root
+				}
+			}
+		}
 		prestige >= 75
 	}
 	icon = pike_square
 	unlock_building = nd_boh_hussite_arsenal
 	land_morale_modifier = 0.15
-	global_manpower_modifier = 0.1
-	global_hostile_attrition = 1
+	# The field armies of Tabor and the Orphans stayed under arms for
+	# years, so what they had learned was not lost between campaigns, and
+	# what they took they kept. (-0.001 is vanilla's commonest advance
+	# value for the decay key. Not monthly_army_tradition: every Catholic
+	# country's crusading_knights grants that in the same age.)
+	army_tradition_decay = -0.001
+	global_war_score_efficiency = 0.1
 }
 
 # === Path B: Crown of the Empire ===
@@ -319,7 +355,9 @@ nd_boh_dest_carolinum = {
 	}
 	icon = patron_of_art
 	global_institution_growth_modifier = 0.15
-	prestige_decay = -0.001
+	# The masters of the university were clerics (5 is vanilla's commonest
+	# advance value for this key).
+	global_clergy_max_literacy = 5
 }
 
 nd_boh_dest_imperial_capital = {
@@ -329,12 +367,26 @@ nd_boh_dest_imperial_capital = {
 	allow = {
 		owns = location:vienna
 		prestige >= 50
-		total_development >= 1000
+		# Kutna Hora's silver paid for the court at Prague: the mint in the
+		# Italian Court struck the Prague groschen from 1300, and the town
+		# grew into the second city of the kingdom. 1337 value 21
+		# (scripts/development_estimate.py --explain kutna_hora), raised by
+		# half for a second stage.
+		custom_tooltip = {
+			text = nd_boh_dest_kutna_hora_developed_tt
+			location:kutna_hora = {
+				owner ?= root
+				development >= 32
+			}
+		}
 		gold >= 2000
 	}
 	icon = vibrant_court_advance
 	global_monthly_development = 0.001
-	global_institution_growth_modifier = 0.2
+	# An imperial court draws painters, builders and stargazers, as
+	# Charles IV's and Rudolf II's did (1 is the one value vanilla's
+	# advances write for this key).
+	num_possible_artists = 1
 }
 
 nd_boh_dest_praga_caput = {
@@ -345,11 +397,23 @@ nd_boh_dest_praga_caput = {
 		owns = location:augsburg
 		has_embraced_institution = institution:printing_press
 		prestige >= 75
-		total_development >= 1000
+		# Prague itself: Charles IV laid out the New Town in 1348 and made
+		# it one of the largest cities north of the Alps. 1337 value 36
+		# (scripts/development_estimate.py --explain prague), doubled for a
+		# third stage.
+		custom_tooltip = {
+			text = nd_boh_dest_prague_developed_tt
+			location:prague = {
+				owner ?= root
+				development >= 72
+			}
+		}
 	}
 	icon = crown_power_advance_renaissance
 	unlock_building = nd_boh_imperial_academy
-	global_monthly_development = 0.002
-	global_institution_growth_modifier = 0.2
-	monthly_diplomats = 1
+	# The press carries learning into the towns, and the capital trains
+	# its own masters (10 and 0.1 are vanilla's commonest advance values).
+	global_burghers_max_literacy = 10
+	skill_of_new_artists = 0.1
+	monthly_diplomats = 0.1
 }

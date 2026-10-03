@@ -30,8 +30,9 @@ nd_hre_reichshofkanzlei = {
 
 	unique_production_methods = {
 		nd_hre_chancellery_maintenance = {
-			paper = 0.2
-			books = 0.1
+			paper = 0.275
+			books = 0.138
+			beeswax = 0.069
 			category = building_maintenance
 		}
 	}
@@ -70,20 +71,66 @@ nd_hre_messeplatz = {
 			lumber = 0.1
 			category = building_maintenance
 		}
-	
+
+		# Unlocked by nd_hre_handelsmesse (age 2, before the press): the
+		# stationers who copied and bound for sale at the fair. Frankfurt was
+		# a market for manuscripts before it was one for printed sheets.
+		# Vanilla's scriptorium makes books from the same three goods.
 		nd_hre_fair_trade = {
-			cloth = 0.2
-			dyes = 0.1
-			category = building_maintenance
-		}
-	
-		nd_hre_manufaktur_pm = {
-			iron = 0.2
-			cloth = 0.2
-			category = building_maintenance
+			paper = 0.2
+			dyes = 0.05
+			leather = 0.05
+			produced = books
+			output = 0.3
+			category = guild_input
+			debug_max_profit = guild_profit_margin
 		}
 	}
 	construction_demand = guild_construction
+}
+
+### Age 2: Posthalterei (Imperial Post Station) ###
+# A relay of the Thurn und Taxis post: a postmaster, a stable of remounts
+# and a locked bag changing riders every few leagues.
+# On a road only: a relay with no road to ride is nothing (vanilla gates
+# its Inca waystation, the tambo, the same way).
+# Towns and cities only: the stations stood at the inns and gates of the
+# places the routes joined.
+nd_hre_posthalterei = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = 1
+	employment_size = small_burgher_employment
+	category = infrastructure_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = no
+	build_time = infrastructure_build_time
+
+	country_potential = {
+		has_advance = nd_hre_reichspost
+	}
+
+	location_potential = {
+		num_roads > 0
+	}
+
+	modifier = {
+		local_distance_from_capital_speed_propagation = 0.1
+	}
+
+	unique_production_methods = {
+		nd_hre_post_relay_upkeep = {
+			horses = 0.1
+			leather = 0.05
+			paper = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = town_building_construction
 }
 
 ### Age 2: Bergakademie (Mining Academy) ###
@@ -121,12 +168,6 @@ nd_hre_bergakademie = {
 			iron = 0.1
 			category = building_maintenance
 		}
-	
-		nd_hre_imperial_mining = {
-			silver = 0.2
-			copper = 0.1
-			category = building_maintenance
-		}
 	}
 	construction_demand = guild_construction
 }
@@ -159,8 +200,9 @@ nd_hre_reichskammergericht = {
 
 	unique_production_methods = {
 		nd_hre_court_maintenance = {
-			paper = 0.3
-			books = 0.1
+			paper = 0.375
+			books = 0.125
+			beeswax = 0.063
 			category = building_maintenance
 		}
 	}
@@ -196,16 +238,19 @@ nd_hre_universitas = {
 
 	unique_production_methods = {
 		nd_hre_university_maintenance = {
-			paper = 0.3
-			books = 0.1
+			paper = 0.35
+			books = 0.117
 			category = building_maintenance
 		}
 	}
 	construction_demand = university_construction
 }
 
-### Age 4: Zeughaus (Imperial Arsenal) ###
-# Arsenals for storing and manufacturing Imperial armaments
+### Age 4: Imperial Fortress (Reichsfestung; the key keeps the older name) ###
+# The Empire's own fortresses on the Rhine (Philippsburg, Kehl), garrisoned by
+# the Circles. Re-themed 2026-10-02: as an arsenal it told of the same thing as
+# vanilla's armory and hre_imperial_armory. Towns and cities only, one level:
+# a fortress town, not a village work.
 nd_hre_zeughaus = {
 	is_special = yes
 	is_foreign = no
@@ -234,13 +279,36 @@ nd_hre_zeughaus = {
 		nd_hre_arsenal_maintenance = {
 			iron = 0.2
 			weaponry = 0.1
+			saltpeter = 0.05
 			category = building_maintenance
 		}
-	
+
+		# Unlocked by nd_hre_metallverarbeitung (age 4): the fortress's own
+		# forges. Chosen instead of the plain upkeep, the fortress makes arms
+		# for the market. Inputs cost 0.9 + 0.2 + 0.15 = 1.25; 0.5 weaponry
+		# at 3 is 1.5, the guild margin of 20%.
 		nd_hre_metalworks = {
 			iron = 0.3
 			coal = 0.1
-			category = building_maintenance
+			lumber = 0.1
+			produced = weaponry
+			output = 0.5
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+
+		# Unlocked by nd_hre_manufaktur (age 6): the gun manufactory beside
+		# the fortress (Potsdam and Spandau from 1722). It stood in the fair
+		# grounds as an upkeep bill of iron and cloth until 2026-10-02.
+		# Inputs cost 1.2 + 0.6 + 0.15 = 1.95; 0.78 firearms at 3 is 2.34.
+		nd_hre_manufaktur_pm = {
+			iron = 0.4
+			tools = 0.2
+			lumber = 0.1
+			produced = firearms
+			output = 0.78
+			category = guild_input
+			debug_max_profit = guild_profit_margin
 		}
 	}
 	construction_demand = soldier_building_construction
@@ -267,15 +335,15 @@ nd_hre_barockpalast = {
 	}
 
 	modifier = {
-		local_cultural_tradition = 1
+		local_cultural_tradition = 0.25
 		local_nobles_estate_power = 0.5
 		local_monthly_prosperity = 0.001
 	}
 
 	unique_production_methods = {
 		nd_hre_palace_maintenance = {
-			stone = 0.3
-			glass = 0.1
+			stone = 0.525
+			glass = 0.175
 			category = building_maintenance
 		}
 	}
@@ -305,13 +373,14 @@ nd_hre_rathaus = {
 	modifier = {
 		local_burghers_estate_power = 1
 		local_monthly_prosperity = 0.001
-		local_cultural_tradition = 0.5
+		local_cultural_tradition = 0.25
 	}
 
 	unique_production_methods = {
 		nd_hre_rathaus_maintenance = {
-			stone = 0.2
-			paper = 0.1
+			stone = 0.315
+			paper = 0.158
+			furniture = 0.158
 			category = building_maintenance
 		}
 	}
@@ -348,6 +417,7 @@ nd_hre_kavallerieschule = {
 		nd_hre_academy_maintenance = {
 			horses = 0.2
 			weaponry = 0.1
+			leather = 0.05
 			category = building_maintenance
 		}
 	}

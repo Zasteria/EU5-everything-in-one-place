@@ -1,5 +1,9 @@
-﻿# Hansekontor: Hanseatic League trading post
-# Represents the Pomeranian Hanseatic commercial infrastructure
+﻿# Kompaniehaus: the house of a merchant company in a Pomeranian Hanse town
+# (the key keeps the old name Hansekontor: saved games hold it). A Kontor was
+# the League's office in a foreign port, and vanilla has that building
+# (hanseatic_kontor, built abroad by a member of the League). At home the
+# merchants and shipmasters of Stralsund, Stettin and Greifswald sat in
+# companies with a house, a chest and a chapel of their own.
 nd_pom_hansekontor = {
 	is_special = yes
 	is_foreign = no
@@ -36,18 +40,54 @@ nd_pom_hansekontor = {
 			paper = 0.1
 			category = building_maintenance
 		}
-		nd_pom_herring_processing = {
-			fish = 0.15
-			salt = 0.1
-			category = building_maintenance
-		}
-		nd_pom_grain_export = {
-			wheat = 0.15
-			lumber = 0.1
-			category = building_maintenance
-		}
 	}
 	construction_demand = kontor_construction
+}
+
+# Vitte: a herring station. The Hanse towns kept fenced compounds of booths
+# on the herring coasts where the catch was gutted, salted and packed in
+# barrels for the Lenten trade. Stralsund and Stettin had theirs at
+# Falsterbo in Scania; Vitt on Ruegen and Vitte on Hiddensee keep the name.
+nd_pom_vitte = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = 1
+	employment_size = guild_employment
+	category = basic_industry_category
+	# A Vitte stood on the beach by the fishing grounds, outside any town
+	# wall, or below a small harbour town. Never in a city.
+	rural_settlement = yes
+	town = yes
+	city = no
+	expensive = no
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_pom_herring_trade
+	}
+
+	# Bound to the herring grounds: a sea shore whose own raw good is fish
+	# (Ruegen, Kamien, Ueckermuende and Koeslin in Pomerania).
+	location_potential = {
+		is_coastal = yes
+		raw_material = goods:fish
+	}
+
+	unique_production_methods = {
+		# Vanilla's fishing village makes fish from salt and tools the same
+		# way (fishing_village_maintenance); here the barrel staves take the
+		# place of the tools.
+		nd_pom_herring_salting = {
+			salt = 0.15
+			lumber = 0.05
+			produced = fish
+			output = 0.81
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = guild_construction
 }
 
 # Greifswalder Kollegium: Pomeranian ducal university
@@ -84,11 +124,16 @@ nd_pom_greifswalder_kollegium = {
 			beeswax = 0.1
 			category = building_maintenance
 		}
+		# The university's own press: with it the college prints books
+		# where before it only bought them.
 		nd_pom_scholarly_printing = {
 			paper = 0.2
-			dyes = 0.1
 			lead = 0.05
-			category = building_maintenance
+			dyes = 0.05
+			produced = books
+			output = 0.28
+			category = guild_input
+			debug_max_profit = guild_profit_margin
 		}
 	}
 	construction_demand = university_construction
@@ -132,12 +177,6 @@ nd_pom_coastal_bastion = {
 			iron = 0.1
 			category = building_maintenance
 		}
-		nd_pom_harbor_watch = {
-			tar = 0.1
-			naval_supplies = 0.1
-			firearms = 0.1
-			category = building_maintenance
-		}
 	}
 	construction_demand = fort_construction
 }
@@ -178,11 +217,24 @@ nd_pom_amber_workshop = {
 			lumber = 0.1
 			category = building_maintenance
 		}
-		nd_pom_amber_jewelry = {
+		# Open from the day the workshop stands (age 3): amber turned into
+		# beads for rosaries, the trade of the paternoster makers.
+		nd_pom_paternoster_turning = {
 			amber = 0.3
 			tools = 0.1
 			produced = jewelry
 			output = 0.36
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+		# Unlocked in age 6 (nd_pom_stettin_industrialization): amber set in
+		# silver, a larger trade on the same bench.
+		nd_pom_amber_jewelry = {
+			amber = 0.3
+			silver = 0.1
+			tools = 0.1
+			produced = jewelry
+			output = 0.504
 			category = guild_input
 			debug_max_profit = guild_profit_margin
 		}
@@ -293,7 +345,7 @@ nd_pom_stapelhaus = {
 	modifier = {
 		local_merchant_power = 0.1
 		local_trades_per_burgher = 0.1
-		local_production_efficiency = 0.1
+		local_production_efficiency = 0.05
 		local_monthly_development = 0.0025
 	}
 

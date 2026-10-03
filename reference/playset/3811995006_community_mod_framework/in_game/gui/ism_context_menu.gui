@@ -1,0 +1,239 @@
+﻿types ContextMenuSpecificTypes
+{
+	type CountryContextMenuSection = ContextMenuSection {
+		visible = "[Country.IsValid]"
+
+		blockoverride "title_icon" {
+			country_flag_small = {
+				blockoverride "tooltip" {}
+				blockoverride "contextmenu" {}
+				blockoverride "rightclick" {}
+			}
+		}
+
+		blockoverride "title_text" {
+			raw_text = "[Country.GetLongNameWithNoTooltip]"
+		}
+
+		blockoverride "title_right" {
+			button_pin = {
+				size = { 23 23 }
+				visible = "[IsPlayerValid]"
+				action_tooltip = {
+					title = "[SelectLocalization(IsCountryFaved(Country.Self), 'UNPIN_OUTLINER', 'PIN_OUTLINER')]"
+					on_action = "[ToggleCountryFav(Country.Self)]"
+				}
+				tooltipwidget = { BasicFunctionalTooltip = {} }
+				down = "[IsCountryFaved(Country.Self)]"
+			}
+		}
+
+		blockoverride "contextmenu_entries" {
+			ContextMenuEntry = {
+				visible = "[Country.HasCapital]"
+
+				blockoverride "click_action" {
+					title = "GO_TO_CAPITAL_TEXT"
+					on_action = "[PanToCountry(Country.Self)]"
+				}
+
+				blockoverride "tooltip" {
+					tagtooltip_enabled = yes
+					tooltip = "[Country.GetCapital.GetName]"
+				}
+
+				blockoverride "entry_icon_texture" {
+					texture = "gfx/interface/icons/location_icons/capital.dds"
+				}
+
+				blockoverride "entry_text" {
+					text = "GO_TO_CAPITAL_TEXT"
+				}
+			}
+
+			# ISM-CHANGE: Allow renaming any subject except tributary in singleplayer.
+			# ExecuteConsoleCommand does not work in multiplayer, so fall back to
+			# the vanilla entry (colonial subjects only) when in a multiplayer game.
+			ContextMenuEntry = {
+				visible = "[And(Not(GameIsMultiplayer), And3(Country.GetDiplomacy.GetTopOverlord.IsValid, EqualTo_string(GetPlayer.GetTag, Country.GetDiplomacy.GetTopOverlord.GetTag), Not(EqualTo_string(Country.GetDiplomacy.GetSubjectType.GetNameKey, 'tributary'))))]"
+
+				blockoverride "click_action" {
+					title = "RENAME_COUNTRY"
+					on_action = "[OpenRenameCountryDialog(Country.Self)]"
+				}
+
+				blockoverride "entry_icon_texture" {
+					texture = "gfx/interface/icons/flat_icons/rename_country.dds"
+				}
+
+				blockoverride "entry_text" {
+					text = "RENAME_COUNTRY"
+				}
+			}
+
+			ContextMenuEntry = {
+				visible = "[And(GameIsMultiplayer, CanPlayerRenameCountry(Country.Self))]"
+
+				blockoverride "click_action" {
+					title = "RENAME_COUNTRY"
+					on_action = "[OpenRenameCountryDialog(Country.Self)]"
+				}
+
+				blockoverride "entry_icon_texture" {
+					texture = "gfx/interface/icons/flat_icons/rename_country.dds"
+				}
+
+				blockoverride "entry_text" {
+					text = "RENAME_COUNTRY"
+				}
+			}
+
+			ContextMenuEntry = {
+				visible = "[And(IsLobbyOpen, IsCountryPlayable(Country.Self))]"
+
+				blockoverride "click_action" {
+					title = "JOMINI_MULTIPLAYER_GUI_SELECT"
+					on_action = "[SetLobbyCountry(Country.Self)]"
+				}
+
+				blockoverride "entry_icon_texture" {
+					texture = "gfx/interface/buttons/flats/accept.dds"
+					using = ui_direction_button_overlay
+				}
+
+				blockoverride "entry_text" {
+					text = "JOMINI_MULTIPLAYER_GUI_SELECT"
+				}
+			}
+
+			block "open_country_panel_entry" {
+				ContextMenuEntry = {
+					visible = "[And4(Not(IsLobbyOpen), IsPlayerValid, Not(Country.IsPlayer), Country.IsReal)]"
+					blockoverride "click_action" {
+						title = "OPEN_COUNTRY_PANEL"
+						on_action = "[ShowForeignCountry(Country.Self)]"
+					}
+
+					blockoverride "entry_icon_texture" {
+						texture = "gfx/interface/icons/flat_icons/country.dds"
+					}
+
+					blockoverride "entry_text" {
+						text = "OPEN_COUNTRY_PANEL"
+					}
+				}
+			}
+
+			ContextMenuEntry = {
+				visible = "[And4(Not(IsLobbyOpen), IsPlayerValid, Not(Country.IsPlayer), Country.IsReal)]"
+				blockoverride "click_action" {
+					title = "SELECT_ACTIONS"
+					on_action = "[ShowDiploMacrobuilderWithCountry(Country.Self)]"
+					on_action = "[ExtraTooltipInfo.CloseContextMenu]"
+				}
+
+				blockoverride "entry_icon_texture" {
+					texture = "gfx/interface/icons/alerts_icons/diplomacy.dds"
+				}
+
+				blockoverride "entry_text" {
+					text = "SELECT_ACTIONS"
+				}
+			}
+
+			ContextMenuEntryListSubSection = {
+				datacontext = "[Country.GetQuickDiplomaticActions]"
+				visible = "[And(And(Not(IsLobbyOpen), IsPlayerValid), DataModelHasItems(QuickDiplomaticActions.GetList))]"
+				datacontext = "[Pin('diplo_actions')]"
+				datamodel = "[QuickDiplomaticActions.GetList]"
+				item = {
+					ContextMenuEntry = {
+						visible = "[PinCollection.IsPinned( DiplomaticActionItem.GetTag )]"
+						enabled = "[DiplomaticActionItem.IsEnabled]"
+
+						blockoverride "entry_button" {
+							button = {
+								visible = "[Not(EqualTo_string(DiplomaticActionItem.GetTag, 'UNCONDITIONALSURRENDER'))]"
+								using = contextmenu_entry_button_template
+							}
+							button = {
+								visible = "[EqualTo_string(DiplomaticActionItem.GetTag, 'UNCONDITIONALSURRENDER')]"
+								using = contextmenu_entry_button_template
+								blockoverride "button_texture" {
+									using = button_regular_red_texture
+								}
+							}
+						}
+
+						blockoverride "click_action" {
+							title = "[DiplomaticActionItem.GetTitle]"
+							enabled = "[DiplomaticActionItem.IsEnabled]"
+							conditions = "[DiplomaticActionItem.GetTooltip]"
+							on_action = "[DiplomaticActionItem.OnClick]"
+						}
+
+						blockoverride "tooltip" {
+							tooltipwidget = {
+								using = diplomatic_action_tooltip
+								blockoverride "diplomatic_action_tooltip_content_extra" {
+									TooltipScrolledBlockList = {
+										visible = "[EqualTo_string(DiplomaticActionItem.GetTag, 'IMPROVE_RELATION')]"
+										blockoverride "block_scrollarea" { maximumsize = { -1 420 }}
+										textcontext = "[Country.GetDiplomacy.GetOpinionDescription(GetPlayer)]"
+									}
+									TooltipScrolledBlockList = {
+										visible = "[EqualTo_string(DiplomaticActionItem.GetTag, 'BUILD_SPYNETWORK')]"
+										blockoverride "block_scrollarea" { maximumsize = { -1 420 }}
+										textcontext = "[Country.GetDiplomaticCurrencyDesc('spy_network')]"
+									}
+									TooltipScrolledBlockList = {
+										visible = "[EqualTo_string(DiplomaticActionItem.GetTag, 'CURRY_FAVORS')]"
+										blockoverride "block_scrollarea" { maximumsize = { -1 420 }}
+										textcontext = "[Country.GetDiplomaticCurrencyDesc('favors')]"
+									}
+									TooltipScrolledBlockList = {
+										visible = "[EqualTo_string(DiplomaticActionItem.GetTag, 'PROFESS_TRUST')]"
+										blockoverride "block_scrollarea" { maximumsize = { -1 420 }}
+										textcontext = "[Country.GetDiplomacy.GetTrustDescription(GetPlayer)]"
+									}
+								}
+							}
+						}
+
+						blockoverride "entry_icon_texture" {
+							texture = "[DiplomaticActionItem.GetTexture]"
+							# using = ui_direction_button_overlay
+						}
+
+						blockoverride "entry_text" {
+							text = "[DiplomaticActionItem.GetTitle]"
+						}
+
+						blockoverride "entry_right" {
+							hbox = {
+								spacing = 5
+								text_single = {
+									visible = "[DiplomaticActionItem.HasAffectedDiplomaticCurrency]"
+									align = nobaseline
+									autoresize = yes
+									text = "[DiplomaticActionItem.GetAffectedDiplomaticCurrency]"
+								}
+								icon = {
+									size = { 20 20 }
+									frame_grid = { 3 1 }
+									visible = "[And(Not(DiplomaticActionItem.HasAffectedDiplomaticCurrency), DiplomaticActionItem.RequiresAcceptance)]"
+									texture = "gfx/interface/icons/diplomatic_status/ai_accept_decline_icon.dds"
+									frame = "[DiplomaticActionItem.GetAcceptanceFrame]"
+									tooltip = "[DiplomaticActionItem.GetAcceptanceTooltip]"
+								}
+							}
+						}
+					}
+				}
+			}
+
+			DynamicDiploContextMenuSection = {}
+
+		}
+	}
+}

@@ -31,14 +31,170 @@ nd_drd_dun = {
 			weaponry = 0.1
 			category = building_maintenance
 		}
-		nd_drd_cattle_tribute = {
-			livestock = 0.2
-			salt = 0.1
-			beeswax = 0.1
-			category = building_maintenance
-		}
 	}
 	construction_demand = castle_construction
+}
+
+# Buaile (cattle fold): where the cattle rendered to the chief are gathered,
+# the Martinmas beasts slaughtered and their hides salted and cured.
+# A plain producer with no modifier block, so it takes the level formula of
+# vanilla's rural producers.
+nd_drd_cattle_fold = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = rural_building_cap
+	employment_size = generic_peasant_building_employment
+	category = consumer_goods_category
+	# A fold of the open hill country: rural settlements only.
+	rural_settlement = yes
+	town = no
+	city = no
+	megalopolis = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_drd_cattle_wealth
+	}
+
+	# Only where the land itself raises cattle: the herds are the tribute.
+	location_potential = {
+		raw_material = goods:livestock
+	}
+
+	unique_production_methods = {
+		nd_drd_cattle_tribute = {
+			livestock = 0.4
+			salt = 0.05
+			produced = leather
+			output = 0.32
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = village_construction
+}
+
+# Herring Station: curing yards on the sea lochs, where the catch of the
+# Minch and Loch Fyne is gutted, salted and packed in barrels.
+nd_drd_herring_station = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = rural_building_cap
+	employment_size = generic_peasant_building_employment
+	category = rgo_building_category
+	# The curing yards stand on the shore of fishing townships and small
+	# burghs, never in a city.
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_drd_herring_fishery
+	}
+
+	# On the coast, and only where the sea off the location is itself
+	# fished: the station cures a catch, it does not make one.
+	location_potential = {
+		is_coastal = yes
+		raw_material = goods:fish
+	}
+
+	unique_production_methods = {
+		# Salt, barrel staves and knives are what curing consumes
+		# (vanilla's fishing village cures with salt and tools).
+		nd_drd_herring_curing = {
+			salt = 0.1
+			lumber = 0.05
+			tools = 0.02
+			produced = fish
+			output = 0.642
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = village_construction
+}
+
+# Waulking House (taigh-luaidh): where the women of a township full the
+# web by hand to the beat of the waulking songs, and the cloth is dyed
+# with crotal and heather.
+nd_drd_waulking_house = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = guild_max_level
+	employment_size = generic_peasant_building_employment
+	category = consumer_goods_category
+	# Township work: rural settlements only.
+	rural_settlement = yes
+	town = no
+	city = no
+	megalopolis = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_drd_plantation_system
+	}
+
+	# No location gate: it makes nothing out of the land. The wool it
+	# consumes has to be bought, and that is its limit (vanilla's rural
+	# clothmaker has none either).
+	unique_production_methods = {
+		nd_drd_highland_wool = {
+			wool = 0.5
+			dyes = 0.05
+			produced = cloth
+			output = 0.58
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = village_construction
+}
+
+# Kelp Kiln: stone-lined trenches on the shore where cut tangle is dried
+# and burnt. The ash is the glassmaker's alkali, and a glasshouse beside
+# the kilns needs only sand.
+nd_drd_kelp_kiln = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = guild_max_level
+	employment_size = generic_peasant_building_employment
+	category = basic_industry_category
+	# Shore work of the crofting townships: rural settlements only.
+	rural_settlement = yes
+	town = no
+	city = no
+	megalopolis = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_drd_kelp_industry
+	}
+
+	# Kelp is cut between the tide marks: the coast is the supply.
+	location_potential = {
+		is_coastal = yes
+	}
+
+	unique_production_methods = {
+		# Vanilla's rural glassmaker turns sand alone into glass, its
+		# potash being wood ash. Here the ash is kelp.
+		nd_drd_kelp_glass = {
+			sand = 0.8
+			tools = 0.05
+			produced = glass
+			output = 0.22
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = village_construction
 }
 
 # Monastic Scriptorium - inspired by Iona's scholarly tradition
@@ -74,11 +230,28 @@ nd_drd_scriptorium = {
 			beeswax = 0.1
 			category = building_maintenance
 		}
+		# Unlocked by nd_drd_bardic_schools. Vanilla's own scriptorium makes
+		# books from paper, dyes and leather.
 		nd_drd_manuscript_production = {
-			paper = 0.15
-			dyes = 0.1
-			leather = 0.1
-			category = building_maintenance
+			paper = 0.2
+			dyes = 0.05
+			leather = 0.05
+			produced = books
+			output = 0.3
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+		# Unlocked by nd_drd_gaelic_literary_revival: a hand press beside
+		# the writing room (inputs of vanilla's printing press shop).
+		nd_drd_gaelic_press = {
+			paper = 0.75
+			lead = 0.2
+			tools = 0.03
+			leather = 0.13
+			produced = books
+			output = 0.952
+			category = guild_input
+			debug_max_profit = guild_profit_margin
 		}
 	}
 	construction_demand = school_construction
@@ -112,15 +285,9 @@ nd_drd_clan_hall = {
 
 	unique_production_methods = {
 		nd_drd_clan_hall_maintenance = {
-			lumber = 0.2
-			livestock = 0.15
-			liquor = 0.1
-			category = building_maintenance
-		}
-		nd_drd_highland_wool = {
-			wool = 0.2
-			dyes = 0.1
-			lumber = 0.1
+			lumber = 0.284
+			livestock = 0.213
+			liquor = 0.142
 			category = building_maintenance
 		}
 	}
@@ -201,11 +368,16 @@ nd_drd_drove_station = {
 			salt = 0.1
 			category = building_maintenance
 		}
+		# Unlocked by nd_drd_emigrant_networks. The station can stand in
+		# the countryside, so the method names the rural margin.
 		nd_drd_hide_tanning = {
-			livestock = 0.15
-			salt = 0.1
+			livestock = 0.4
+			salt = 0.05
 			tools = 0.05
-			category = building_maintenance
+			produced = leather
+			output = 0.38
+			category = guild_input
+			debug_max_profit = rural_profit_margin
 		}
 	}
 	construction_demand = kontor_construction

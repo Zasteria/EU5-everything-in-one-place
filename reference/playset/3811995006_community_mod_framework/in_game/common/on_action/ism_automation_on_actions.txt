@@ -1,0 +1,121 @@
+﻿cmf_yearly_human_country_pulse = {
+    on_actions = {
+        ism_share_maps
+		ism_take_over_country_wars
+		ism_block_subject_wars
+		ism_block_subject_colonization_sync
+		ism_block_subject_urbanization_sync
+		ism_block_subject_columbian_exchange_sync
+    }
+}
+
+ism_block_subject_colonization_sync = {
+	effect = {
+		ism_block_subject_colonization = yes
+	}
+}
+
+ism_block_subject_urbanization_sync = {
+	effect = {
+		ism_block_subject_urbanization = yes
+	}
+}
+
+ism_block_subject_columbian_exchange_sync = {
+	effect = {
+		ism_block_subject_columbian_exchange = yes
+	}
+}
+
+ism_share_maps = {
+    trigger = {
+        is_overlord = yes
+		has_variable = ism__auto_subject_map_sharing
+    }
+    effect = {
+        save_temporary_scope_as = highest_overlord
+        every_area = {
+            save_temporary_scope_as = current_area
+            if = {
+                limit = {
+                    NOT = { scope:highest_overlord = { has_discovered_area = scope:current_area } }
+                    any_neighbor_area = { scope:highest_overlord = { has_discovered_area = prev } }
+                    scope:highest_overlord = { any_subject_or_below = { has_discovered_area = scope:current_area } }
+                }
+                scope:highest_overlord = {
+                    add_to_variable_list = {
+                        name = areas_to_discover
+                        target = scope:current_area
+                    }
+                }
+            }
+        }
+        if = {
+            limit = { has_variable_list = areas_to_discover }
+            every_in_list = {
+                variable = areas_to_discover
+                scope:highest_overlord = { discover_area = prev }
+            }
+            clear_variable_list = areas_to_discover
+        }
+    }
+}
+
+ism_take_over_country_wars = {
+	effect = {
+		ism_take_over_all_subject_wars = yes
+	}
+}
+
+ism_block_subject_wars = {
+	effect = {
+		ism_block_subject_war_declarations = yes
+	}
+}
+
+cmf_monthly_human_country_pulse = {
+	on_actions = {
+		ism_taken_units_upkeep
+		ism_taken_units_reclaim
+		ism_taken_units_prune
+	}
+}
+
+ism_taken_units_upkeep = {
+	trigger = {
+		is_overlord = yes
+	}
+	effect = {
+		ism_charge_taken_units_upkeep = yes
+	}
+}
+
+ism_taken_units_reclaim = {
+	trigger = {
+		is_overlord = yes
+	}
+	effect = {
+		ism_reclaim_taken_units = yes
+	}
+}
+
+ism_taken_units_prune = {
+	trigger = {
+		is_overlord = yes
+	}
+	effect = {
+		ism_prune_taken_units = yes
+	}
+}
+
+on_ending_war = {
+	on_actions = {
+		ism_war_ended_return_taken_units
+	}
+}
+
+ism_war_ended_return_taken_units = {
+	effect = {
+		ism_auto_return_taken_units = yes
+	}
+}

@@ -19,9 +19,10 @@ nd_bnh_catholicate_of_seleucia = {
 	requires = organized_religion
 	icon = organized_religion
 	unlock_building = nd_bnh_catholicate_palace
-	monthly_devotion = 0.05
-	monthly_legitimacy = 0.05
-	monthly_republican_tradition = 0.05
+	# Not the ruler's own authority: every miaphysite country already takes
+	# that in this age (vanilla original_christianity). The seat's return
+	# is the clergy's gain.
+	clergy_estate_target_satisfaction = 0.025
 	tolerance_own = 1
 }
 
@@ -117,7 +118,7 @@ nd_bnh_mosul_baghdad_caravans = {
 	requires = merchants_and_trade
 	icon = merchants_and_trade
 	unlock_building = nd_bnh_river_caravanserai
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 	global_merchant_capacity_modifier = 0.1
 }
 
@@ -161,7 +162,7 @@ nd_bnh_mesopotamian_revival = {
 	requires = regulate_court_procedures
 	icon = regulate_court_procedures
 	global_monthly_prosperity = 0.001
-	global_devastation_recovery = 0.005
+	global_devastation_recovery = 0.0025
 }
 
 # Silk Road Metropolitanate: the Church of the East's missionary dioceses
@@ -196,7 +197,7 @@ nd_bnh_christian_diwan = {
 	potential = { has_or_had_tag = BNH }
 	requires = crown_power_advance_discovery
 	icon = crown_power_advance_discovery
-	tax_income_efficiency = 0.04
+	tax_income_efficiency = 0.03
 	country_cabinet_efficiency = 0.05
 	global_pop_assimilation_speed_modifier = 0.08
 }
@@ -274,7 +275,10 @@ nd_bnh_aramaic_civil_service = {
 	icon = government_size_absolutism
 	country_cabinet_efficiency = 0.1
 	global_monthly_literacy = 0.02
-	global_pop_assimilation_speed_modifier = 0.1
+	# One written language for every diwan makes the offices cheaper to run
+	# (vanilla efficient_bureaucracy grants the same 0.04). Assimilation is
+	# what vanilla preserver_of_national_identity gives miaphysites this age.
+	global_bureaucracy_maintenance_efficiency = 0.04
 }
 
 # Catholicate Constitutional: the Catholicos of the East takes a formal
@@ -299,7 +303,7 @@ nd_bnh_mosul_foundries = {
 	requires = construction_speed_absolutism
 	icon = construction_speed_absolutism
 	unlock_building = nd_bnh_mosul_foundry
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }
 
 # === Age 6: Revolutions ===
@@ -324,7 +328,7 @@ nd_bnh_mesopotamian_industry = {
 	requires = industrialization_advance
 	icon = industrialization_advance
 	unlock_building = nd_bnh_river_manufactory
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }
 
 # Aramaic Civic Synod: the kingdom converts the patriarchal synod into
@@ -392,7 +396,9 @@ nd_bnh_dest_a1 = {
 
 # Stage 2: The Maphrian-General marches. The kingdom's writ reaches
 # Tabriz (Ilkhanid capital, Christian-court memory) and Basra (the Shatt
-# al-Arab, the gateway to the Gulf). Total dev and army size required.
+# al-Arab, the gateway to the Gulf). The seat at Mosul must be built up
+# (25 in 1337 by scripts/development_estimate.py, half again for stage two)
+# and the army assembled.
 nd_bnh_dest_a2 = {
 	age = age_1_traditions
 	requires = nd_bnh_dest_a1
@@ -401,7 +407,13 @@ nd_bnh_dest_a2 = {
 		owns_or_non_sovereign_subject_owns = location:tabriz
 		owns_or_non_sovereign_subject_owns = location:basra
 		army_size >= 50
-		total_development >= 1000
+		custom_tooltip = {
+			text = nd_bnh_dest_mosul_developed_tt
+			location:mosul = {
+				owner ?= root
+				development >= 38
+			}
+		}
 	}
 	icon = imperial_ambitions
 	global_supply_limit_modifier = 0.1
@@ -458,7 +470,8 @@ nd_bnh_dest_b1 = {
 
 # Stage 2: Beth Hekma Restored. The kingdom's treasury endows the
 # Translator-Patriarchs of Mosul, the printing press is embraced at
-# Seleucia, and the diaspora dioceses send acknowledgments.
+# Seleucia, and Nisibis (Nusaybin), seat of the old School of Nisibis, is
+# built up again (21 in 1337, half again for stage two).
 nd_bnh_dest_b2 = {
 	age = age_1_traditions
 	requires = nd_bnh_dest_b1
@@ -466,7 +479,13 @@ nd_bnh_dest_b2 = {
 	allow = {
 		gold >= 2000
 		has_embraced_institution = institution:printing_press
-		total_development >= 1000
+		custom_tooltip = {
+			text = nd_bnh_dest_nisibis_developed_tt
+			location:nusaybin = {
+				owner ?= root
+				development >= 32
+			}
+		}
 	}
 	icon = patron_of_art
 	trade_income = 0.1
@@ -475,8 +494,10 @@ nd_bnh_dest_b2 = {
 
 # Stage 3: The Sees of the Mor. The Patriarchate's Silk Road
 # metropolitanates are reopened at Samarkand and the holy city of
-# Jerusalem; global trade is embraced, the kingdom is read as the
-# Christian intermediary between Latin west and Tang-memory east.
+# Jerusalem; the pepper of the Malabar sees reaches the capital's market,
+# and the kingdom is read as the Christian intermediary between Latin west
+# and Tang-memory east. No institution later than stage two's printing
+# press is asked, so the path ends within two ages of the imperial one.
 nd_bnh_dest_b3 = {
 	age = age_1_traditions
 	requires = nd_bnh_dest_b2
@@ -484,7 +505,17 @@ nd_bnh_dest_b3 = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:samarkand
 		owns_or_non_sovereign_subject_owns = location:jerusalem
-		has_embraced_institution = institution:global_trade
+		custom_tooltip = {
+			text = nd_bnh_dest_malabar_pepper_tt
+			capital = {
+				market = {
+					OR = {
+						is_produced_in_market = goods:pepper
+						is_traded_in_market = goods:pepper
+					}
+				}
+			}
+		}
 		prestige >= 75
 	}
 	icon = global_trade_advance

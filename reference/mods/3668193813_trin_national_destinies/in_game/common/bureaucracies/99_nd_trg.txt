@@ -1,0 +1,308 @@
+﻿# National Destinies: Tuareg (TRG) bureaucracies
+#
+# Four institutions of a confederation of drum groups. None of them is an
+# office and none needs a town: each is a custom the tribes keep among
+# themselves and the amenokal either upholds or lets lapse. That is what the
+# upkeep stands for here: animals, cloth and hospitality given to the people
+# who carry the custom, in place of salaries.
+#
+# What the land is in the installed game (the heritage and destiny trees in
+# advances/99_nd_trg.txt rest on the same three facts): the eleven locations
+# hold tribesmen and a few clergy, none is a town, and four of the eleven
+# produce livestock. So the estates these institutions move are the tribes and
+# the clergy, and the pop they concern is the tribesman.
+#
+# Slots. Vanilla grants a bureaucracy slot for a capital only when the capital
+# is a megalopolis (location_ranks/00_default.txt:49-51), which no Tuareg
+# location is. A Maliki tribe does start with one slot of its own, because the
+# setup template gives it sharia law as its legal code and that policy carries
+# a slot (setup/templates/subsaharan_muslim_tribe.txt:6,
+# laws/01_legal_system.txt:107-120). The auto modifier adds one more, so the
+# confederation keeps two institutions at formation, chosen among these four
+# and the nine Islamic offices of vanilla's muslim.txt.
+#
+# Not repeated from elsewhere:
+#   vanilla muslim.txt (available to the same country): the grievance court,
+#     the chancery, the post, the pilgrimage office, the army register, the
+#     watch, the market inspector and the treasury. No judge, scribe or
+#     courier is modelled here.
+#   Air (99_nd_air.txt, a country can hold both sets): the Sultanate of
+#     Agadez, the Cure Salee, the Kel Owey caravan compact and the clerical
+#     tribes. The salt caravan, the caravan escort and the ineslemen are
+#     therefore left to Air and to this tag's advances.
+#   vanilla's six TRG advances (advances/country_tle.txt): none of their
+#     modifiers is granted here. The four government powers of Tin Hinan's
+#     legacy (and horde unity beside them) appear only as a loss, in the
+#     first institution's neglect.
+#
+# Sources: M. Gast, "Ahaggar", Encyclopedie berbere 3 (1986), online at
+# journals.openedition.org/encyclopedieberbere/820 (election of the amenokal,
+# tiwse, temazlayt); "Presentation des Kel-Ajjer", Presses de l'Inalco,
+# books.openedition.org/pressesinalco/40604 (matrilineal succession, the
+# Ifoghas who take no tributaries); H. Claudot-Hawad, "Personnages de
+# l'entre-deux chez les Touaregs", books.openedition.org/iremam/2859 (the
+# smith as arbiter, messenger and diplomat); S. Rasmussen on the akh huderan,
+# the living milk herds (everyculture.com, Tuareg: Marriage and Family).
+
+# 1. Assembly of the Imgharen. The amenokal is elected by an assembly of all
+#    the men of the noble tribes and all the imgharen, the chiefs each vassal
+#    tribe elects for itself, and the same assembly can depose him (Gast). In
+#    1900, at the death of Ahitaghel, it could not agree, the men of religion
+#    asked to arbitrate named both candidates, and the Ahaggar had two
+#    amenokals at once (Gast dates the double reign 1900 to 1902).
+#    Gate: the chiefs can sit in judgment on their amenokal only while the
+#    country leans to decentralization (the tribe template starts at 80).
+#    Funded, the amenokal acts with the circle behind him. Starved, the chiefs
+#    meet without him: the tribe loses its cohesion and a rival is named.
+trg_imgharen_assembly_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.003
+	}
+
+	potential = {
+		has_or_had_tag = TRG
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		societal_value:centralization_vs_decentralization > 0
+	}
+
+	estates_that_like = {
+		tribes_estate
+		clergy_estate
+	}
+	estates_that_dislike = {
+		crown_estate
+	}
+
+	# The men who can take the drum away hold real power by that fact alone.
+	neutral_modifier = {
+		global_tribes_estate_power = 0.10
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		monthly_political_influence_gain_modifier = 0.10
+		tribes_estate_satisfaction_recovery = 0.001
+		monthly_tribes_estate_rebel_growth = -0.005
+	}
+
+	# A tribe is the only government this tag starts as, so tribal cohesion is
+	# the line that bites. The other four powers are listed beside it for a
+	# country that has changed its government since (horde unity added
+	# 2026-10-02 with the Court of the Drum's, so a horde does not escape the
+	# loss).
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		monthly_tribal_cohesion = -0.10
+		monthly_legitimacy = -0.10
+		monthly_republican_tradition = -0.10
+		monthly_devotion = -0.10
+		monthly_horde_unity = -0.10
+		monthly_pretender_rebel_growth = 0.01
+	}
+}
+
+# 2. Temazlayt. Inside a drum group a vassal lineage asks one noble house for
+#    protection against being plundered by the other nobles. The clients put
+#    their protector's brand on their animals and supply him with milk animals
+#    and meat; he must recover what raiders take. The contract is inherited in
+#    the mother's line on both sides (Gast). Clerical tribes such as the
+#    Ifoghas of the Ajjer held no tributaries, on grounds of religion, and the
+#    reformer al-Jilani (this tag's event 6) preached the tribute unlawful.
+#    Gate: a contract between riders and herders needs herders.
+#    The contract is hereditary, so the harm of neglect grows with the years
+#    it has stood (entrenchment, 0 to 100, doubles the block at most).
+trg_temazlayt_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.003
+	}
+
+	potential = {
+		has_or_had_tag = TRG
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		custom_tooltip = {
+			text = nd_trg_bur_tribesmen_50_tt
+			pop_type_population_in_country = {
+				pop_type = pop_type:tribesmen
+				value >= 50
+			}
+		}
+	}
+
+	estates_that_like = {
+		tribes_estate
+		crown_estate
+	}
+	estates_that_dislike = {
+		clergy_estate
+	}
+
+	# The riders are kept in milk and meat by their clients.
+	neutral_modifier = {
+		levy_maintenance_modifier = -0.10
+	}
+
+	# Tribute received and protection owed: the clients' milk animals and
+	# meat follow the host into the field, and a lineage that has a protector
+	# is not preyed on by the other nobles, so it has no cause to rise.
+	# Until 2026-10-02 the two lines were livestock output +10% and
+	# devastation recovery 0.0025. Air grants both (its Cure Salee and camel
+	# advance the first, its destiny root the second) and one country can
+	# hold both sets, so the owner ruled that this institution repeats
+	# nothing Air has. No Air file and no other Tuareg file grants either key
+	# below (the Assembly's line is the tribes estate's own rebels).
+	# Sizes: vanilla's bureaucracies do not grant army food gathering, and
+	# vanilla's one grant of it is 0.2 (static_modifiers/country.txt:1932).
+	# Rebel growth stands in one vanilla bureaucracy as the price of neglect,
+	# +0.0025 (bureaucracies/muslim.txt:446); as a grant vanilla's usual
+	# value is -0.001 (13 of its 28 grants, laws/01_legal_system.txt among
+	# them).
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		army_food_gathering_modifier = 0.15
+		monthly_rebel_growth = -0.001
+	}
+
+	# Protectors turn plunderers and the vassals move their tents out of reach.
+	negative_modifier = {
+		scale = {
+			value = 1
+			add = { value = scope:entrenchment divide = 100 }
+			multiply = { value = 1 subtract = scope:maintenance }
+		}
+		global_max_rural_control = -0.03
+		tribes_estate_satisfaction_decay = 0.015
+	}
+}
+
+# 3. Akh Huderan, the living milk. The child follows the blood of its mother:
+#    the drum goes to the son of the chief's eldest sister (Kel Ajjer: an
+#    amenokal is one whose mother is a tamenokalt), and a herd is set aside for
+#    sisters, daughters and nieces so that it escapes the Koranic shares, under
+#    which a son takes twice what a daughter takes (Rasmussen).
+#    Gate: it is a custom of the Tuareg mothers and of nobody else.
+#    Funded, the reserved herds carry the tents through bad years and the
+#    tribesmen multiply. Starved, inheritance goes to the judges of the book,
+#    who divide the herds, and the mothers' lineages take up arms.
+trg_akh_huderan_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.003
+	}
+
+	potential = {
+		has_or_had_tag = TRG
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		culture = culture:tuareg
+	}
+
+	estates_that_like = {
+		tribes_estate
+	}
+	estates_that_dislike = {
+		clergy_estate
+	}
+
+	# Birth settles who may be offered the drum, so few can claim it.
+	neutral_modifier = {
+		monthly_pretender_rebel_growth = -0.005
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		global_food_capacity_modifier = 0.10
+		global_tribesmen_pop_growth = 0.05
+	}
+
+	# Clergy power alone would cost a country of tribesmen little, so the
+	# divided herds are counted too: livestock is the produce of four of the
+	# eleven locations.
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		global_clergy_estate_power = 0.20
+		global_livestock_output_modifier = -0.10
+		monthly_tribes_estate_rebel_growth = 0.005
+	}
+}
+
+# 4. Go-betweens of the inadan. The smiths are a caste born to their craft and
+#    stand outside the nobles' contest for honor, so a smith can carry what a
+#    noble cannot: he arbitrates an assembly, bears messages between rival
+#    groups and negotiates alliances (Claudot-Hawad), and he keeps the praises
+#    and genealogies of the house he serves. Smiths and men of religion are
+#    rival mediators (Rasmussen 1992).
+#    The drum groups themselves are societies of pops in the 1337 setup (AHG,
+#    AJJ, KAH, KAY, IWL and KGS in setup/1337/10_countries.txt), and several
+#    of them live beyond the eleven locations. pop_countries_opinions is the
+#    opinion such societies hold of the country; vanilla's trade policy toward
+#    them gives 25 (laws/01_common.txt:550).
+#    Starved, the smiths mock the chief who was mean to them, and quarrels
+#    nobody carries words for are slow to heal.
+trg_inadan_go_betweens_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.003
+	}
+
+	potential = {
+		has_or_had_tag = TRG
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {}
+
+	estates_that_like = {
+		crown_estate
+	}
+	estates_that_dislike = {
+		clergy_estate
+	}
+
+	# Nothing is said in a camp that its smith does not hear.
+	neutral_modifier = {
+		counter_espionage = 0.10
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		pop_countries_opinions = 25
+		prestige_decay = -0.002
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		monthly_prestige = -0.10
+		global_estate_satisfaction_recovery = -0.002
+	}
+}

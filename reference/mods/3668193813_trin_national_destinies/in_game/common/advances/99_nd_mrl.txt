@@ -132,7 +132,7 @@ nd_mrl_manila_trade = {
 	icon = merchants_and_trade
 	unlock_building = nd_mrl_pantalan
 	global_merchant_capacity_modifier = 0.1
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 }
 
 # Datu council statecraft: formalized assemblies of paramount datus producing
@@ -217,7 +217,7 @@ nd_mrl_surigao_goldsmithing = {
 	requires = regulate_court_procedures
 	icon = regulate_court_procedures
 	unlock_building = nd_mrl_ginto_foundry
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 	monthly_prestige = 0.05
 }
 
@@ -257,8 +257,8 @@ nd_mrl_archipelago_marketplace = {
 	requires = global_trade_advance
 	icon = global_trade_advance
 	unlock_building = nd_mrl_palengke_aguinaldo
-	trade_sea_efficiency = 0.03
-	trade_land_efficiency = 0.025
+	trade_sea_efficiency = 0.1
+	trade_land_efficiency = 0.1
 	global_merchant_power = 0.1
 }
 
@@ -298,7 +298,7 @@ nd_mrl_manila_galleon = {
 	requires = maritime_advance_age_5
 	icon = maritime_advance_age_5
 	unlock_unit = n_nd_mrl_filipino_galleon
-	trade_sea_efficiency = 0.03
+	trade_sea_efficiency = 0.1
 	global_merchant_capacity_modifier = 0.1
 	ai_weight = {
 		add = 50
@@ -324,7 +324,7 @@ nd_mrl_abaca_indigo_export = {
 	potential = { has_or_had_tag = MRL }
 	requires = absolute_rulership
 	icon = absolute_rulership
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 	global_raw_material_output = 0.1
 	trade_income = 0.1
 }
@@ -376,7 +376,7 @@ nd_mrl_katipunan_spirit = {
 	potential = { has_or_had_tag = MRL }
 	requires = rights_of_man
 	icon = rights_of_man
-	global_estate_target_satisfaction = 0.05
+	global_estate_target_satisfaction = 0.025
 	global_separatism = -0.05
 	monthly_legitimacy = 0.1
 	monthly_devotion = 0.1
@@ -390,7 +390,7 @@ nd_mrl_industrial_manila_bay = {
 	potential = { has_or_had_tag = MRL }
 	requires = industrialization_advance
 	icon = industrialization_advance
-	global_production_efficiency = 0.075
+	global_production_efficiency = 0.0375
 	global_construction_speed = 0.1
 	global_monthly_development = 0.001
 }
@@ -414,7 +414,7 @@ nd_mrl_bayanihan_compact = {
 	potential = { has_or_had_tag = MRL }
 	requires = crown_power_advance_revolutions
 	icon = crown_power_advance_revolutions
-	global_estate_target_satisfaction = 0.03
+	global_estate_target_satisfaction = 0.025
 	global_monthly_prosperity = 0.001
 	global_pop_assimilation_speed_modifier = 0.1
 	cultures_capacity = 1
@@ -449,7 +449,15 @@ nd_mrl_dest_compact_endures = {
 			has_variable = nd_mrl_path_b
 		}
 		has_embraced_institution = institution:legalism
-		total_development >= 1500
+		# Tondo, the Luzon entrepot of the Laguna Copperplate and of the Ming
+		# tribute trade, grown a quarter above its 1337 value of 16.8.
+		custom_tooltip = {
+			text = nd_mrl_dest_tondo_developed_tt
+			location:tondo = {
+				owner ?= root
+				development >= 21
+			}
+		}
 	}
 	icon = crown_power_advance_renaissance
 	add_accepted_culture_cost_modifier = -0.2
@@ -463,7 +471,15 @@ nd_mrl_dest_concord_codex = {
 	potential = { has_or_had_tag = MRL has_variable = nd_mrl_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		has_embraced_institution = institution:banking
-		total_development >= 2000
+		# Singhapala, seat of the rajahs of Cebu and the pearl and gold port of
+		# the Visayas, grown by half from its 1337 value of 8.
+		custom_tooltip = {
+			text = nd_mrl_dest_singhapala_developed_tt
+			location:singhapala = {
+				owner ?= root
+				development >= 12
+			}
+		}
 		gold >= 2000
 		any_market_present_in_country = {
 			OR = {
@@ -484,8 +500,38 @@ nd_mrl_dest_bayanihan_empire = {
 	requires = nd_mrl_dest_concord_codex
 	potential = { has_or_had_tag = MRL has_variable = nd_mrl_formed has_game_rule = nd_destinies_enabled }
 	allow = {
-		has_embraced_institution = institution:global_trade
-		total_development >= 2500
+		# The printing press and not global trade: the council's edicts go out
+		# in print to every datu hall, and the federation path may not wait
+		# three ages longer than the sword path.
+		has_embraced_institution = institution:printing_press
+		# Every island group sits in the council: three quarters of each.
+		custom_tooltip = {
+			text = nd_mrl_dest_luzon_share_tt
+			area:luzon_area = {
+				any_location_in_area = {
+					percent >= 0.75
+					owner ?= root
+				}
+			}
+		}
+		custom_tooltip = {
+			text = nd_mrl_dest_visayas_share_tt
+			area:visayas_area = {
+				any_location_in_area = {
+					percent >= 0.75
+					owner ?= root
+				}
+			}
+		}
+		custom_tooltip = {
+			text = nd_mrl_dest_mindanao_share_tt
+			area:mindanao_area = {
+				any_location_in_area = {
+					percent >= 0.75
+					owner ?= root
+				}
+			}
+		}
 		gold >= 3000
 		stability >= 75
 	}
@@ -494,7 +540,7 @@ nd_mrl_dest_bayanihan_empire = {
 	burghers_estate_max_tax = 0.05
 	clergy_estate_max_tax = 0.05
 	add_tolerated_culture_cost_modifier = -0.1
-	institution_growth = 0.1
+	institution_growth = 0.05
 }
 
 # ----- PATH B: SWORD OF MAHARLIKA -----
@@ -511,10 +557,12 @@ nd_mrl_dest_kris_unsheathed = {
 		}
 		owns_or_non_sovereign_subject_owns = location:berune
 		owns_or_non_sovereign_subject_owns = location:sandakan
-		army_size >= 30
+		owns_or_non_sovereign_subject_owns = location:kudat
 	}
 	icon = feudalism_advance
-	army_initiative = 0.1
+	# The sword crosses the sea: landing from the boats is the skill.
+	# army_initiative stays with the offensive choice of the event.
+	army_disembark_speed = 0.25
 	army_reinforce_efficiency = 0.15
 }
 
@@ -527,7 +575,8 @@ nd_mrl_dest_lanong_ascendancy = {
 		owns_or_non_sovereign_subject_owns = location:ternate
 		owns_or_non_sovereign_subject_owns = location:tidore
 		owns_or_non_sovereign_subject_owns = location:manado
-		army_size >= 50
+		# The stage is named for the lanong: the fleet that carries them must exist.
+		has_advance = nd_mrl_combined_fleet_doctrine
 		prestige >= 50
 	}
 	icon = maritime_advance_age_5
@@ -548,7 +597,7 @@ nd_mrl_dest_kalayaan_pacific = {
 		owns_or_non_sovereign_subject_owns = location:ketagalan
 		owns_or_non_sovereign_subject_owns = location:miyakojima
 		owns_or_non_sovereign_subject_owns = location:jailolo
-		army_size >= 75
+		owns_or_non_sovereign_subject_owns = location:guahan
 		gold >= 3000
 		stability >= 75
 	}

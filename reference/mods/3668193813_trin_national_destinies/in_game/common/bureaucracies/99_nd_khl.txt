@@ -1,23 +1,35 @@
 ﻿# National Destinies: Khilafah bureaucracies
 # Five historically grounded institutions of the universal Sunni caliphate
-# restored under one Caliph from al-Andalus to the Indus. Auto-modifier
-# grants 2 slots; capital adds 1 = 3 total. Player picks 3 of 5. The set
-# spans the caliphal jurisdictional supremacy (Diwan al-Mazalim), pan-
-# islamic fiscal coordination (Bayt al-Mal), the unification of the four
-# Sunni madhhabs under the Caliph (Pan-Islamic Ulama Council), the
-# universal pilgrimage apparatus (Hajj Caravan Apparatus), and the
-# trans-imperial revival of Abbasid translation-and-sciences scholarship
-# (Bayt al-Hikmah Network).
+# restored under one Caliph from al-Andalus to the Indus. The set spans the
+# house where anyone may petition the Caliph (Dar al-'Adl), the audit of every
+# provincial treasury (Diwan al-Zimam), the unification of the four Sunni
+# madhhabs under the Caliph (Pan-Islamic Ulama Council), the yearly covering
+# of the Kaaba (Kiswa of the Kaaba), and the trans-imperial revival of Abbasid
+# translation-and-sciences scholarship (Bayt al-Hikmah Network). On the day of
+# forming the country's own grant gives 2 places and vanilla 1: 3 of 5
+# institutions can run.
+#
+# Vanilla 1.4 ships generic Islamic bureaucracies for every Muslim country
+# (bureaucracies/muslim.txt), and the Khilafat is Sunni by its formable's
+# own gate, so it holds those as well. Three blocks here carried the same
+# office as a vanilla one: the Mazalim court and the Bayt al-Mal under the
+# same names, and the pilgrimage caravan, which vanilla calls Diwan
+# al-Hajj. Each now carries an institution that only a Caliph has. Their
+# KEYS are unchanged, because saves and the impact modifier registry refer
+# to them, so khl_bayt_al_mal_bureaucracy is now the audit bureau and
+# khl_hajj_caravan_bureaucracy is the covering of the Kaaba.
 
-# 1. Diwan al-Mazalim: the Court of Grievances. The caliph (or his
-#    delegated wazir-mazalim) sat in personal jurisdiction over wrongs
-#    that the ordinary qadi courts could not reach: oppression by
-#    governors, seizure by tax-farmers, and abuse of waqf endowments.
-#    The institution is traced to Caliph Umar (d. 644) and was systematized
-#    under the Abbasids and Mamluks (al-Mawardi's al-Ahkam al-Sultaniyya
-#    is its locus classicus). Restored at universal scale, it makes the
-#    Caliph the supreme appellate authority over every emir and qadi in
-#    the ummah, and the chief check on noble overreach.
+# 1. Dar al-'Adl (key says diwan_al_mazalim): the House of Justice.
+#    Nur al-Din built the first in Damascus around 1163 and sat in it twice
+#    a week to hear complaints against his own officers. Baybars moved the
+#    hearing of petitions into a new one below the Cairo citadel in the
+#    1260s, with the chief judges of the four schools beside him. Vanilla's
+#    Mazalim Court is the sovereign's tribunal (legitimacy, a higher
+#    ceiling on control, nobles resentful) and this block used to repeat
+#    its control key. The House of Justice is the written petition: anyone
+#    in any province may complain of any governor and get an answer in the
+#    Caliph's name. So the reward is fewer revolts and peasants who recover
+#    from a wrong, not a higher ceiling.
 khl_diwan_al_mazalim_bureaucracy = {
 	implementation_price = price:implement_bureaucracy_price
 	maintenance_price = price:maintain_bureaucracy_price
@@ -50,9 +62,11 @@ khl_diwan_al_mazalim_bureaucracy = {
 
 	positive_modifier = {
 		scale = { value = scope:maintenance }
-		global_max_control = 0.02
-		global_monthly_control = 0.05
-		nobles_estate_satisfaction_decay = 0.010
+		# 0.05 a month stood here, ten times vanilla's usual grant (0.001 to
+		# 0.005) and a standing balance finding.
+		global_monthly_control = 0.003
+		monthly_rebel_growth = -0.001
+		peasants_estate_satisfaction_recovery = 0.001
 	}
 
 	negative_modifier = {
@@ -65,15 +79,16 @@ khl_diwan_al_mazalim_bureaucracy = {
 	}
 }
 
-# 2. Bayt al-Mal: the Public Treasury. From Abu Bakr's first ledger
-#    in Medina through the great divan-registers of Umar and the Umayyad-
-#    Abbasid khazaa'in, the Bayt al-Mal pooled zakat, jizya, kharaj,
-#    fay', and ghanima into a single fiscal house, then disbursed it as
-#    soldier-stipends ('ata'), waqf endowments, and welfare to the poor.
-#    Restored at universal scale, it gives the Caliph a single budget
-#    spanning the whole ummah, and makes the clergy his fiscal partner,
-#    since zakat assessment runs through the qadis. Decay turns the
-#    treasury into a pool the dynasts dip into for private patronage.
+# 2. Diwan al-Zimam (key says bayt_al_mal): the bureau of control. The
+#    Abbasid caliph al-Mahdi (775-785) set an audit office beside every
+#    bureau of state and one above them all, the zimam al-azimma, to check
+#    their books. Vanilla's Bayt al-Mal is the treasury that collects and
+#    pays out (army upkeep, a higher tax ceiling, estates enriching
+#    themselves when it decays), and this block used to share that last
+#    key. A realm from al-Andalus to the Indus cannot keep one treasury.
+#    It keeps many and audits them: revenue that was assessed arrives,
+#    waste is found, the emirs' remittances come in full. Starved, the
+#    auditors are bought and the emirs keep what they owe.
 khl_bayt_al_mal_bureaucracy = {
 	implementation_price = price:implement_bureaucracy_price
 	maintenance_price = price:maintain_bureaucracy_price
@@ -94,7 +109,7 @@ khl_bayt_al_mal_bureaucracy = {
 
 	estates_that_like = {
 		crown_estate
-		clergy_estate
+		burghers_estate
 	}
 	estates_that_dislike = {
 		nobles_estate
@@ -106,9 +121,9 @@ khl_bayt_al_mal_bureaucracy = {
 
 	positive_modifier = {
 		scale = { value = scope:maintenance }
-		tax_income_efficiency = 0.10
-		clergy_estate_satisfaction_recovery = 0.001
-		global_estate_target_satisfaction = 0.025
+		tax_income_efficiency = 0.05
+		building_upkeep_efficiency = 0.10
+		subject_income_modifier = 0.10
 	}
 
 	negative_modifier = {
@@ -117,7 +132,7 @@ khl_bayt_al_mal_bureaucracy = {
 			subtract = scope:maintenance
 		}
 		monthly_inflation = 0.005
-		estate_enrichment = 0.10
+		subject_loyalty = -5
 	}
 }
 
@@ -179,16 +194,22 @@ khl_pan_islamic_ulama_bureaucracy = {
 	}
 }
 
-# 4. Hajj Caravan Apparatus: the imperial organization of the universal
-#    pilgrimage. The mahmal procession, instituted by the Mamluk Sultan
-#    Baybars in 1266, sent the caliphal palanquin from Cairo to Mecca each
-#    Dhu al-Hijja; under a restored universal Caliphate the apparatus
-#    coordinates parallel caravans from Damascus, Constantinople, Cordoba,
-#    and Delhi, all converging on the Hijaz under armed escort. The
-#    institution combines spiritual legitimacy, transregional prestige,
-#    diplomatic reach (foreign emirs send tribute via the caravans), and
-#    a genuine logistics-infrastructure spine threaded through the desert.
-#    Allowed only when the Caliph holds the Holy Cities.
+# 4. Kiswa of the Kaaba (key says hajj_caravan). Not named for the
+#    custody of the two sanctuaries, because Aegyptus (Khidmat al-Haramayn)
+#    and Arabia (Custodianship of the Two Holy Mosques) already carry that
+#    office, and either can go on to form the Khilafat and would then hold
+#    two of them. Vanilla's
+#    Diwan al-Hajj already organises and provisions the pilgrimage caravan
+#    (cheaper pilgrimage actions, conversion), and any Muslim ruler can run
+#    one. What only the Caliph does is clothe the Kaaba: a new covering,
+#    the kiswa, sent every year since the Abbasid al-Mahdi made the custom
+#    annual, paid for under the Mamluks from 1349 out of three Egyptian
+#    villages endowed for nothing else, with gifts for the sharifs and the
+#    poor of the two cities. Allowed only when the Caliph holds the Holy
+#    Cities. No key here is one of vanilla's. The old neglect block took
+#    away the same government power the funded block gave (a standing
+#    balance finding), and paid out loot, which is ours and not the
+#    raiders'. Neglect now costs standing among the courts instead.
 khl_hajj_caravan_bureaucracy = {
 	implementation_price = price:implement_bureaucracy_price
 	maintenance_price = price:maintain_bureaucracy_price
@@ -232,10 +253,8 @@ khl_hajj_caravan_bureaucracy = {
 			value = 1
 			subtract = scope:maintenance
 		}
-		amount_looted_modifier = 0.20
-		monthly_devotion = -0.10
-		monthly_legitimacy = -0.1
-		monthly_republican_tradition = -0.1
+		monthly_prestige = -0.10
+		diplomatic_reputation = -1
 	}
 }
 

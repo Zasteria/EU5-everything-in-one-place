@@ -1,0 +1,529 @@
+﻿##############################
+# Tuareg (TRG): Custom Building Types
+#
+# Two decisions run through this whole file and are deliberate.
+#
+# 1. pop_type = tribesmen. Every one of the confederation's eleven locations
+#    starts with tribesmen and next to nothing else
+#    (main_menu/setup/1337/06_pops.txt), so a building staffed by burghers
+#    or laborers would stand empty in the country it was written for.
+#    Vanilla staffs buildings with tribesmen too (dun_fort, warrior_lodge,
+#    safaviyya_order_hall). It also gives the formation choice teeth: a
+#    country that settles its tribes (global_tribal_promotion) drains these
+#    buildings of workers, one that keeps them nomad keeps them staffed.
+#
+# 2. rural_settlement = yes. None of the eleven locations is a town in 1337
+#    (07_cities_and_buildings.txt), so a town-only building could not be
+#    built at all. Reach is held down another way: every building here is
+#    bound to the capital, to a raw good, to the desert, or to locations
+#    where Tuareg culture is dominant.
+##############################
+
+### Court of the Drum: the amenokal's camp, where the ettebel is kept ###
+# All four settlement tiers on purpose: the building follows the capital,
+# whatever the capital is. One per country, removed when the capital moves.
+nd_trg_drum_court = {
+	is_special = yes
+	is_foreign = no
+	pop_type = tribesmen
+	max_levels = 1
+	employment_size = stockade_employment
+	category = government_category
+	rural_settlement = yes
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = government_build_time
+
+	country_potential = {
+		has_advance = nd_trg_voice_of_the_drum
+	}
+
+	location_potential = {
+		counts_as_capital = yes
+	}
+
+	allow = {
+		is_capital = yes
+		country_has_no_other_copy_of_building = { type = nd_trg_drum_court }
+	}
+
+	remove_if = {
+		is_no_longer_capital = yes
+	}
+
+	# A country has one government power pool
+	# (government_types/00_default.txt), so all five are granted side by side
+	# as vanilla does (advances/country_tre.txt:109-113): a tribe is paid in
+	# cohesion, Timbuktu's Tuareg monarchy in legitimacy, a Tuareg horde in
+	# unity (vanilla's own capital building for a horde pays it the same way,
+	# building_types/capital_buildings.txt:739).
+	capital_country_modifier = {
+		monthly_tribal_cohesion = 0.05
+		monthly_legitimacy = 0.05
+		monthly_republican_tradition = 0.05
+		monthly_devotion = 0.05
+		monthly_horde_unity = 0.05
+		tribes_estate_target_satisfaction = small_permanent_target_satisfaction
+		# The court's own grant (2026-10-02): the four older powers are also
+		# what vanilla's trg_tin_hinan_legacy pays (advances/country_tle.txt:
+		# 326-329). The host gathers at the drum, so asking the tribes for
+		# men (generic_actions/estate_emergency_actions.txt:771, price
+		# ask_tribes_for_manpower) costs less. Vanilla grants no modifier on
+		# this price; its other price modifiers run from -0.1 to -0.25.
+		ask_tribes_for_manpower_cost_modifier = -0.25
+	}
+
+	# The host musters where the drum is beaten: without this a country of
+	# rural camps has nowhere to recruit the Agher Shieldmen.
+	modifier = {
+		can_recruit_regiment_in_this_location = yes
+	}
+
+	# 1.25 gold a month at base prices (livestock 1.5, millet 1.0, leather and
+	# cloth 3.0, goods/*.txt). Its vanilla peers cost 1.95 (chieftain_hall,
+	# capital_buildings.txt:805-814) and 1.30 (council_hall.txt:42); it read
+	# 0.45 until 2026-10-02, when the owner ruled 1.0 to 1.3.
+	unique_production_methods = {
+		nd_trg_drum_court_upkeep = {
+			livestock = 0.2
+			millet = 0.2
+			leather = 0.1
+			cloth = 0.15
+			category = building_maintenance
+		}
+	}
+	construction_demand = stockade_construction
+}
+
+### Guarded Well: a deep well held by a drum group ###
+# Rural and desert only: a well is what makes a stretch of sand passable,
+# and it means nothing in a town or on farmland.
+nd_trg_guarded_well = {
+	is_special = yes
+	is_foreign = no
+	pop_type = tribesmen
+	max_levels = 1
+	employment_size = granary_employment
+	category = infrastructure_category
+	rural_settlement = yes
+	town = no
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_trg_wells_of_the_deep_desert
+	}
+
+	location_potential = {
+		vegetation = desert
+		climate = arid
+	}
+
+	modifier = {
+		supply_limit = 2
+		local_food_capacity = 100
+		movement_cost = -0.05
+	}
+
+	unique_production_methods = {
+		nd_trg_well_upkeep = {
+			leather = 0.036
+			tools = 0.024
+			stone = 0.059
+			category = building_maintenance
+		}
+	}
+	construction_demand = village_construction
+}
+
+### Takedda Copper Works: copper cast into rods at the pit head ###
+# Bound to the copper itself (raw_material), which in the heartland means
+# Takedda and nowhere else. It refines copper it has to buy, so the input
+# is its own second gate. Rural and town: the mine is a camp, not a city.
+nd_trg_copper_works = {
+	is_special = yes
+	is_foreign = no
+	pop_type = tribesmen
+	max_levels = 2
+	employment_size = guild_employment
+	category = basic_industry_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_trg_copper_rods_of_takedda
+	}
+
+	location_potential = {
+		raw_material = goods:copper
+	}
+
+	modifier = {
+		local_copper_output_modifier = 0.1
+	}
+
+	unique_production_methods = {
+		nd_trg_copper_rod_casting = {
+			copper = 0.3
+			lumber = 0.2
+			produced = tools
+			output = 0.48
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = guild_construction
+}
+
+### Salt Cure Grounds: the salt pastures where the herds gather after the rains ###
+# Produces camels, a raw good, so it is bound to a raw good: the salt flats
+# themselves or the pasture that feeds the herds. NOT to camels already
+# being produced: no location of the confederation produces camels and no
+# market of the central Sahara does (location_templates.txt), which is the
+# whole reason to build it. Camels in the market are what vanilla's camelry
+# asks for (unit_camelry_location_trigger). Arid climate keeps it out of
+# the cattle country a Tuareg state might conquer to the south.
+nd_trg_salt_cure_grounds = {
+	is_special = yes
+	is_foreign = no
+	pop_type = tribesmen
+	max_levels = 1
+	employment_size = rural_peasant_enhance_employment
+	category = basic_industry_category
+	rural_settlement = yes
+	town = no
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_trg_cure_of_the_salt_pastures
+	}
+
+	location_potential = {
+		climate = arid
+		OR = {
+			raw_material = goods:salt
+			raw_material = goods:livestock
+		}
+	}
+
+	unique_production_methods = {
+		nd_trg_camel_herding = {
+			salt = 0.1
+			millet = 0.3
+			produced = camels
+			output = 0.28
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+
+		nd_trg_herd_fattening = {
+			salt = 0.1
+			millet = 0.3
+			produced = livestock
+			output = 0.56
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = farm_constructions
+}
+
+### Tent Saddlery: saddles, tent skins and bags worked in the camp ###
+# Camp industry, so rural and town, and only where the Tuareg are the
+# dominant culture: this is the craft of their own artisan caste and does
+# not travel with a conquest.
+nd_trg_saddlery = {
+	is_special = yes
+	is_foreign = no
+	pop_type = tribesmen
+	max_levels = 1
+	employment_size = guild_employment
+	category = consumer_goods_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_trg_saddle_of_three_horns
+	}
+
+	location_potential = {
+		dominant_culture = culture:tuareg
+	}
+
+	unique_production_methods = {
+		nd_trg_saddle_and_tent_leather = {
+			livestock = 0.3
+			salt = 0.1
+			produced = leather
+			output = 0.34
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+
+		nd_trg_dyed_leatherwork = {
+			livestock = 0.5
+			dyes = 0.15
+			produced = leather
+			output = 0.54
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = farm_constructions
+}
+
+### Scholar Camp of the Kel Es-Suq: a tent school of the clerical tribes ###
+# Rural and town, Tuareg-dominant locations only: the teachers are a Tuareg
+# tribe that moves with the camps. Staffed by clergy, the one pop type here
+# that is not tribesmen, because that is what the ineslemen are.
+nd_trg_scholar_camp = {
+	is_special = yes
+	is_foreign = no
+	pop_type = clergy
+	max_levels = 1
+	employment_size = religious_building_employment
+	category = religious_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = religious_building_time
+
+	country_potential = {
+		has_advance = nd_trg_people_of_the_market
+	}
+
+	location_potential = {
+		dominant_culture = culture:tuareg
+	}
+
+	modifier = {
+		local_clergy_max_literacy = 5
+		local_max_literacy = 2.5
+		local_pop_conversion_speed_modifier = 0.1
+	}
+
+	unique_production_methods = {
+		nd_trg_scholar_camp_upkeep = {
+			paper = 0.044
+			leather = 0.044
+			livestock = 0.074
+			category = building_maintenance
+		}
+	}
+	construction_demand = village_construction
+}
+
+### Ahal Tent: the evening gathering of poetry and the imzad ###
+# Rural and town, Tuareg-dominant locations only, one level: a custom of
+# the camps, not an institution a city would house.
+nd_trg_ahal_tent = {
+	is_special = yes
+	is_foreign = no
+	pop_type = tribesmen
+	max_levels = 1
+	employment_size = cultural_employment
+	category = cultural_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = cultural_building_time
+
+	country_potential = {
+		has_advance = nd_trg_ahal_and_imzad
+	}
+
+	location_potential = {
+		dominant_culture = culture:tuareg
+	}
+
+	modifier = {
+		local_cultural_tradition = 0.1
+		local_cultural_influence = 0.1
+	}
+
+	unique_production_methods = {
+		nd_trg_ahal_upkeep = {
+			livestock = 0.127
+			leather = 0.127
+			cloth = 0.127
+			category = building_maintenance
+		}
+	}
+	construction_demand = farm_constructions
+}
+
+### Salt Slab Quarry: bars of rock salt cut for the caravans ###
+# Extraction, so rural and bound to the salt: only a location whose own raw
+# good is salt (In Gall and Tadmekka in the heartland, Taoudenni and Bilma
+# for a country that takes them).
+nd_trg_salt_quarry = {
+	is_special = yes
+	is_foreign = no
+	pop_type = tribesmen
+	max_levels = 2
+	employment_size = rural_peasant_enhance_employment
+	category = basic_industry_category
+	rural_settlement = yes
+	town = no
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_trg_slabs_of_taoudenni
+	}
+
+	location_potential = {
+		raw_material = goods:salt
+	}
+
+	unique_production_methods = {
+		nd_trg_salt_slab_cutting = {
+			tools = 0.1
+			millet = 0.3
+			produced = salt
+			output = 0.18
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+
+		nd_trg_great_salt_caravan = {
+			tools = 0.15
+			camels = 0.2
+			millet = 0.3
+			produced = salt
+			output = 0.405
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = farm_constructions
+}
+
+# ===== DESTINY BUILDINGS =====
+#
+# The two capstones answer the same fact of a Saharan realm, that the
+# capital's reach dies in the sand long before it gets to the next town, in
+# the two opposite ways the formation choice describes. Each is a small
+# second source of proximity (20, the value of vanilla's seljuk_mint; a
+# local_governor gives 80), and neither can stand in the capital.
+
+### Camp Beyond the Walls: Path A capstone ###
+# How Akil ag Malwal held Timbuktu from 1433: a camp outside a town that
+# keeps its own governor and judges. Towns and cities of OTHER peoples only
+# (the Tuareg's own towns are the other path's business), and staffed by
+# tribesmen, so it works only where tribesmen live beside the town, as they
+# do at Gao, Bamba, Kabara and Timbuktu in the 1337 setup, and only for a
+# country that has kept its tribes in the tent. No region bound: the custom
+# travels with the host. The tribes, not the crown, are the ones who grow
+# strong on it.
+nd_trg_dest_camp_beyond_the_walls = {
+	is_special = yes
+	is_foreign = no
+	pop_type = tribesmen
+	max_levels = 1
+	employment_size = stockade_employment
+	category = government_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = government_build_time
+
+	country_potential = {
+		has_advance = nd_trg_dest_tribute_of_the_pashas
+	}
+
+	location_potential = {
+		is_capital = no
+		NOT = { dominant_culture = culture:tuareg }
+	}
+
+	modifier = {
+		local_proximity_source = 20
+		local_unrest = -0.05
+		local_tribes_estate_power = 0.25
+	}
+
+	unique_production_methods = {
+		nd_trg_dest_camp_upkeep = {
+			livestock = 0.2
+			cloth = 0.134
+			leather = 0.067
+			weaponry = 0.067
+			category = building_maintenance
+		}
+	}
+	construction_demand = stockade_construction
+}
+
+### House of the Amghar: Path B capstone ###
+# Amghar is the Tuareg word for a chief, of a tribe or of a place (the title
+# is attested; that Ghat's own town chief bore it is NOT verified, so the
+# text does not claim it). Towns and cities where the Tuareg are the dominant culture
+# only: this is the settled path's own towns, which do not exist until the
+# player raises them (none of the eleven locations is a town in 1337).
+# Staffed by peasants, the people a tribesman becomes when he settles, so a
+# country that kept its tents has nobody to put in it. local_max_control
+# 0.05 is the mod's ceiling for a building a town can hold.
+nd_trg_dest_amghars_house = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = 1
+	employment_size = stockade_employment
+	category = government_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = yes
+	build_time = government_build_time
+
+	country_potential = {
+		has_advance = nd_trg_dest_amenokal_of_the_oases
+	}
+
+	location_potential = {
+		is_capital = no
+		dominant_culture = culture:tuareg
+	}
+
+	modifier = {
+		local_proximity_source = 20
+		local_max_control = 0.05
+		local_tribal_promotion = 0.1
+	}
+
+	unique_production_methods = {
+		nd_trg_dest_amghars_house_upkeep = {
+			paper = 0.138
+			cloth = 0.138
+			livestock = 0.138
+			tools = 0.069
+			category = building_maintenance
+		}
+	}
+	construction_demand = town_building_construction
+}

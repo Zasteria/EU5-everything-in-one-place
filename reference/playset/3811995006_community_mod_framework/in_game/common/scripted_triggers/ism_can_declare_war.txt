@@ -1,0 +1,28 @@
+﻿# Prevent colonial subjects from declaring war on each other.
+# And to only declaring war on nations located within the same continent.
+REPLACE:colonial_nation_can_declare_wars_trigger = {
+    scope:attacker ?= {
+        AND = {
+            exists = scope:attacker
+            exists = scope:defender
+            NOT = { scope:attacker.top_overlord ?= scope:defender.top_overlord }
+            scope:defender.capital.continent = scope:attacker.capital.continent
+        }
+    }
+}
+
+# ROOT = subject type
+# scope:attacker = country that wants to attack (overlord or subject)
+# scope:subject = subject in the relation
+# scope:overlord = overlord in the relation
+# scope:defender = country they want to attack
+ism_can_attack = {
+    trigger_if = {
+        limit = {
+            scope:attacker = scope:subject
+        }
+        scope:attacker = {
+            NOT = { modifier:blocked_from_declaring_war = yes }
+        }
+    }
+}

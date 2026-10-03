@@ -35,7 +35,7 @@ nd_lxa_sticky_rice_tradition = {
 	icon = agriculture_advance
 	unlock_building = nd_lxa_rice_paddy
 	unlock_production_method = nd_lxa_sticky_rice
-	global_monthly_food_modifier = 0.1
+	global_monthly_food_modifier = 0.05
 }
 
 # Modifier: Fa Ngum's conquest (unification of Lao principalities)
@@ -80,9 +80,9 @@ nd_lxa_mekong_trade = {
 	requires = merchants_and_trade
 	icon = merchants_and_trade
 	unlock_building = nd_lxa_mekong_trading_post
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -159,13 +159,13 @@ nd_lxa_pha_that_luang = {
 	cultural_tradition_modifier = 0.1
 }
 
-# Unlock: Ivory carving PM on Mekong Trading Post (high-value craft export)
+# Unlock: Ivory Carvers' Workshop (tusks carved into jewelry for export)
 nd_lxa_ivory_craft = {
 	age = age_3_discovery
 	potential = { has_or_had_tag = LXA }
 	requires = merchant_power_from_maritime_discovery_advance
 	icon = merchant_power_from_maritime_discovery_advance
-	unlock_production_method = nd_lxa_ivory_carving
+	unlock_building = nd_lxa_ivory_workshop
 	global_merchant_power = 0.1
 }
 
@@ -211,7 +211,7 @@ nd_lxa_lacquerware = {
 	requires = global_trade_advance
 	icon = global_trade_advance
 	unlock_production_method = nd_lxa_lac_production
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }
 
 # Unlock: Royal Palace building (Haw Kham)
@@ -242,9 +242,9 @@ nd_lxa_deer_skin_trade = {
 	potential = { has_or_had_tag = LXA }
 	requires = pop_promotion_speed_age_4
 	icon = pop_promotion_speed_age_4
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	global_wild_game_output_modifier = 0.15
 }
@@ -283,9 +283,9 @@ nd_lxa_european_contact = {
 	potential = { has_or_had_tag = LXA }
 	requires = maritime_advance_age_5
 	icon = maritime_advance_age_5
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	research_speed_modifier = 0.05
 }
@@ -300,13 +300,13 @@ nd_lxa_law_code = {
 	global_monthly_control = 0.002
 }
 
-# Unlock: Palm-leaf manuscript PM on Wat (Buddhist learning tradition)
+# Unlock: Ho Tai scripture library (palm-leaf manuscripts made as books)
 nd_lxa_manuscript_tradition = {
 	age = age_5_absolutism
 	potential = { has_or_had_tag = LXA }
 	requires = construction_speed_absolutism
 	icon = construction_speed_absolutism
-	unlock_production_method = nd_lxa_manuscript_copying
+	unlock_building = nd_lxa_ho_tai
 	global_monthly_literacy = 0.015
 	monthly_prestige = 0.1
 }
@@ -378,7 +378,13 @@ nd_lxa_dest_khorat = {
 		}
 		stability >= 75
 		owns_or_non_sovereign_subject_owns = location:kengtung
-		army_size >= 30
+		custom_tooltip = {
+			text = nd_lxa_dest_three_kraals_tt
+			any_owned_location = {
+				count >= 3
+				has_building = building_type:nd_lxa_elephant_kraal
+			}
+		}
 	}
 	icon = feudalism_advance
 	siege_ability = 0.1
@@ -393,7 +399,7 @@ nd_lxa_dest_mekong_hegemony = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:angkor
 		owns_or_non_sovereign_subject_owns = location:stung_treng
-		army_size >= 50
+		owns_or_non_sovereign_subject_owns = location:prey_nokor
 		prestige >= 50
 	}
 	icon = imperial_ambitions
@@ -409,7 +415,13 @@ nd_lxa_dest_white_elephants = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:pegu
 		owns_or_non_sovereign_subject_owns = location:ayodhya
-		army_size >= 75
+		custom_tooltip = {
+			text = nd_lxa_dest_eight_kraals_tt
+			any_owned_location = {
+				count >= 8
+				has_building = building_type:nd_lxa_elephant_kraal
+			}
+		}
 		gold >= 3000
 		prestige >= 75
 	}
@@ -463,12 +475,21 @@ nd_lxa_dest_silk_road = {
 				}
 			}
 		}
-		total_development >= 2000
+		# Vientiane's 1337 development is 19.5 (development_estimate.py
+		# --explain vientiane); stage two asks for half as much again. The
+		# Dutch factor van Wuysthoff found it the kingdom's market in 1641.
+		custom_tooltip = {
+			text = nd_lxa_dest_vientiane_developed_tt
+			location:vientiane = {
+				owner ?= root
+				development >= 29
+			}
+		}
 		prestige >= 50
 		gold >= 2000
 	}
 	icon = merchants_and_trade
-	tax_income_efficiency = 0.05
+	tax_income_efficiency = 0.03
 	global_build_buildings_efficiency = 0.1
 }
 
@@ -479,13 +500,22 @@ nd_lxa_dest_light_theravada = {
 	potential = { has_or_had_tag = LXA has_variable = nd_lxa_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		has_embraced_institution = institution:printing_press
-		total_development >= 2500
+		# Muang Sua (Luang Prabang) stands at 20.5 in 1337; the capstone asks
+		# for double. The city of the Phra Bang was the seat of the sangha
+		# and of the kingdom's manuscript learning.
+		custom_tooltip = {
+			text = nd_lxa_dest_muang_sua_developed_tt
+			location:muang_sua = {
+				owner ?= root
+				development >= 41
+			}
+		}
 		gold >= 3000
 		prestige >= 75
 	}
 	icon = organized_religion
 	unlock_building = nd_lxa_great_vihara
-	monthly_complacency = -0.05
-	global_devastation_recovery = 0.005
+	global_max_literacy = 5
+	global_devastation_recovery = 0.0025
 	global_population_growth = 0.0002
 }

@@ -1,0 +1,218 @@
+﻿# ============================================================================
+# Mallorca (MLL): custom unit types
+# National Destinies mod
+# ============================================================================
+#
+# Vanilla already arms the Catalan-speaking peasant of ages 1 and 2 with the
+# almogavar levies, and gives the Catalan crossbowmen, the Catalan galley,
+# the caravels, the galleons and the tercio (advances/region_iberia.txt).
+# Nothing here repeats those. This file holds what was the islands' own: the
+# armed horses of the Repartiment, the villagers of 1450, the guildsmen of
+# 1521, the parish militia of the coast, and three ships.
+#
+# Every stat under copy_from is a DELTA added to the template and then to the
+# unit category's own value (common/levies/readme.txt: "EVERY STAT LINE IS
+# ADDITIVE, NEVER AN ASSIGNMENT"). Template totals are quoted for the reader
+# only; none of them is written in a block.
+#
+# Levy lines, each ending where history ended it:
+#   nobles: the cavalls armats (age 1). No later twin: the duty was paid off
+#     in coin more and more, and from age 2 the nobles raise vanilla's
+#     plated knights.
+#   peasants: the forans (age 3), then with the laborers the parish militia
+#     (age 4). The Nova Planta of 1715 disarmed the island, so from age 5
+#     they raise vanilla's levy.
+#   burghers and laborers: the agermanats (age 3). The Germania was drowned
+#     in 1523 and the guilds never armed again.
+# Each levy stands about 1.2 times the vanilla levy its pops raise in its
+# age (eu5-validate --checks levies), set by hand.
+
+# ----------------------------------------------------------------------------
+# Age 1: Cavalls Armats (levy heavy cavalry)
+# ----------------------------------------------------------------------------
+# The riders owed by the holders of the great shares of 1230: a horse worth
+# its price, a hauberk, shield and lance, inspected at muster. Armoured as
+# vanilla's mailed knights are (the two damage-taken lines are theirs) and
+# drilled to charge as one troop (morale_damage_done), since on an island
+# the same hundred men ride together every year. They are the island's
+# guard and slow to move off it (movement_speed).
+# Template a_age_1_traditions_heavy_cavalry: max_strength 0.2, combat_power 2.6.
+# Power 1.208 against the mailed knights' 1.007: 1.20 times.
+a_nd_mll_cavalls_armats = {
+	is_special = yes
+	category = army_heavy_cavalry
+	copy_from = a_age_1_traditions_heavy_cavalry
+	buildable = no
+	levy = yes
+
+	strength_damage_taken = -0.25
+	morale_damage_taken = -0.25
+	morale_damage_done = 0.2
+	movement_speed = -0.25
+
+	country_potential = {
+		has_or_had_tag = MLL
+	}
+
+	gfx_tags = { heavy_tag }
+}
+
+# ----------------------------------------------------------------------------
+# Age 2: Uixer (buildable transport)
+# ----------------------------------------------------------------------------
+# A broad galley with a single mast, a square sail and a door in the stern
+# through which horses are led aboard. Jaume Ferrer took one down the coast
+# of Africa in 1346. It carries more than a round ship of its day and has a
+# deeper hull; under oars and one sail it is slow.
+# Template n_age_2_renaissance_transport: speed 6, hull 12, cannons 4,
+# transport 0.5, crew 0.05.
+n_nd_mll_uixer = {
+	is_special = yes
+	category = navy_transport
+	copy_from = n_age_2_renaissance_transport
+	upgrades_to = n_flute
+	buildable = yes
+
+	hull_size = 2
+	transport_capacity = 0.05
+	movement_speed = -0.5
+
+	country_potential = {
+		has_or_had_tag = MLL
+	}
+}
+
+# ----------------------------------------------------------------------------
+# Age 3: Forans (levy light infantry)
+# ----------------------------------------------------------------------------
+# The men of the villages who besieged the City three times between 1450
+# and 1451: crossbows, slings, boar spears and a grievance. They come on
+# hard and in numbers; against paid soldiers in the open they broke
+# (morale_damage_taken).
+# Template a_age_3_discovery_light_infantry: max_strength 1.5, combat_power 1.
+# Power 1.661 against the matchlock levy's 1.408: 1.18 times.
+a_nd_mll_forans = {
+	is_special = yes
+	category = army_light_infantry
+	copy_from = a_age_3_discovery_light_infantry
+	buildable = no
+	levy = yes
+
+	initiative = 1
+	strength_damage_done = 0.1
+	morale_damage_done = 0.1
+	morale_damage_taken = 0.05
+
+	country_potential = {
+		has_or_had_tag = MLL
+	}
+
+	gfx_tags = { crossbow_tag light_tag }
+}
+
+# ----------------------------------------------------------------------------
+# Age 3: Agermanats (levy heavy infantry)
+# ----------------------------------------------------------------------------
+# The sworn brothers of the guilds, armed from the City's own stores with
+# pike, breastplate and the arsenal's guns. Five or six thousand of them sat
+# before Alcudia for a year. They stand their ground like men defending
+# their own street; nobody taught them to manoeuvre (initiative).
+# Template a_age_3_discovery_heavy_infantry: max_strength 1.5, combat_power 1.
+# Power 1.671 against the matchlock levy's 1.408: 1.19 times.
+a_nd_mll_agermanats = {
+	is_special = yes
+	category = army_heavy_infantry
+	copy_from = a_age_3_discovery_heavy_infantry
+	buildable = no
+	levy = yes
+
+	morale_damage_taken = -0.1
+	initiative = -0.5
+
+	country_potential = {
+		has_or_had_tag = MLL
+	}
+
+	gfx_tags = { pike_tag medium_tag }
+}
+
+# ----------------------------------------------------------------------------
+# Age 4: Milicia Forana (levy light infantry)
+# ----------------------------------------------------------------------------
+# The parish companies: every man from sixteen to sixty on his captain's
+# roll, mustered by smoke from the towers. They fight on paths and terraces
+# they have walked all their lives and are hard to kill there
+# (strength_damage_taken); they are farmers, and will not march far from
+# the harvest (movement_speed).
+# Template a_age_4_reformation_light_infantry: max_strength 2, combat_power 1.5.
+# Power 3.325 against the flintlock levy's 2.816: 1.18 times.
+a_nd_mll_milicia_forana = {
+	is_special = yes
+	category = army_light_infantry
+	copy_from = a_age_4_reformation_light_infantry
+	buildable = no
+	levy = yes
+
+	initiative = 1
+	strength_damage_taken = -0.1
+	morale_damage_done = 0.05
+	movement_speed = -0.25
+
+	country_potential = {
+		has_or_had_tag = MLL
+	}
+
+	gfx_tags = { musket_tag light_tag }
+}
+
+# ----------------------------------------------------------------------------
+# Age 5: Xabec de Cors (buildable galley)
+# ----------------------------------------------------------------------------
+# The corsair's own ship turned against him: a long low hull, three lateen
+# sails, a few more guns than a galley of her size and sweeps for a calm.
+# Fast and well armed, and built so lightly that she cannot stay in a
+# gunnery duel (hull_size).
+# Template n_age_5_absolutism_galley: speed 4.5, hull 16, cannons 24,
+# crew 0.15, blockade 0.5.
+n_nd_mll_xabec = {
+	is_special = yes
+	category = navy_galley
+	copy_from = n_age_5_absolutism_galley
+	upgrades_to = n_nd_mll_llanxa_canonera
+	buildable = yes
+
+	movement_speed = 1
+	cannons = 4
+	hull_size = -2
+
+	country_potential = {
+		has_or_had_tag = MLL
+	}
+}
+
+# ----------------------------------------------------------------------------
+# Age 6: Llanxa Canonera (buildable galley)
+# ----------------------------------------------------------------------------
+# Barcelo's gunboat: an open launch of some fifty feet with a lateen sail,
+# fourteen oars a side and one twenty-four pounder in the bow behind an
+# iron-plated bulwark. A swarm of them could close with a ship of the line
+# in a calm and be too small to hit. One gun is still one heavy gun more per
+# ton than anything afloat, and the boats could sit off a harbour mouth for
+# weeks; the hull is a launch's and the crew a launch's.
+# Template n_age_6_revolutions_galley: speed 5, hull 20, cannons 30,
+# crew 0.2, blockade 0.6.
+n_nd_mll_llanxa_canonera = {
+	is_special = yes
+	category = navy_galley
+	copy_from = n_age_6_revolutions_galley
+	buildable = yes
+
+	cannons = 6
+	blockade_capacity = 0.2
+	hull_size = -6
+	crew_size = -0.03
+
+	country_potential = {
+		has_or_had_tag = MLL
+	}
+}

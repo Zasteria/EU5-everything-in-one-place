@@ -27,18 +27,7 @@ nd_can_trading_post = {
 		nd_can_pelt_processing = {
 			fur = 0.1
 			tools = 0.05
-			category = building_maintenance
-		}
-
-		nd_can_cod_curing = {
-			fish = 0.15
-			salt = 0.1
-			category = building_maintenance
-		}
-
-		nd_can_maple_sugar = {
-			lumber = 0.1
-			pottery = 0.05
+			cloth = 0.05
 			category = building_maintenance
 		}
 	}
@@ -73,12 +62,7 @@ nd_can_timber_slide = {
 		nd_can_log_driving = {
 			lumber = 0.1
 			tools = 0.05
-			category = building_maintenance
-		}
-
-		nd_can_potash_production = {
-			lumber = 0.1
-			pottery = 0.05
+			livestock = 0.05
 			category = building_maintenance
 		}
 	}
@@ -115,10 +99,92 @@ nd_can_canal_lock = {
 		nd_can_canal_tolls = {
 			stone = 0.1
 			lumber = 0.1
+			tools = 0.05
 			category = building_maintenance
 		}
 	}
 	construction_demand = pound_lock_canal_infrastructure_construction
+}
+
+# Fishing Stage: the shore station of the dry cod fishery
+# Bound to the sea and to the location's own fish (raw_material): the catch
+# is landed, split, salted and dried on flakes where the boats come in.
+# Rural and town, not city: a fishing room is a beach with sheds on it.
+nd_can_fishing_stage = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = 2
+	employment_size = generic_peasant_building_employment
+	category = basic_industry_category
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	expensive = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_can_grand_banks
+	}
+
+	location_potential = {
+		is_coastal = yes
+		raw_material = goods:fish
+	}
+
+	unique_production_methods = {
+		# Vanilla's fishing village turns salt 0.0929 and tools 0.015 into
+		# fish 0.5 (fishing_village_maintenance). The dry cure needs more
+		# salt and timber for the flakes.
+		nd_can_cod_curing = {
+			salt = 0.1
+			lumber = 0.05
+			produced = fish
+			output = 0.57
+			category = guild_input
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = village_construction
+}
+
+# Implement Works: ploughs, reapers and mowers made behind the tariff
+# Town and city only: a works needs hands and a market. No location gate:
+# it makes tools from iron it has to buy, so the iron is its gate.
+nd_can_implement_works = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = 2
+	employment_size = guild_employment
+	category = basic_industry_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = no
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_can_national_policy
+	}
+
+	unique_production_methods = {
+		# Vanilla's tool guild turns iron 0.8333 into tools 1
+		# (metalwork_guild_maintenance); a works with wooden frames and a
+		# foundry adds lumber and coal.
+		nd_can_implement_making = {
+			iron = 0.3
+			lumber = 0.1
+			coal = 0.1
+			produced = tools
+			output = 0.5
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
 }
 
 # ===== DESTINY BUILDINGS =====

@@ -1842,3 +1842,204 @@ nd_dnb_proclaim_or_offer = {
 		trigger_event_non_silently = nd_danube.41
 	}
 }
+
+# ==========================================================================
+# THE THRONE WAR (2026-10-01, Workshop thread 2026-09-29: a Bohemia that
+# won the war for the Austrian throne ended as Austria's junior, the
+# Congress acclaimed Austria, Hungary entered as Austria's fief and the
+# closing situation made an AI Austria the Danubian Monarchy).
+#
+# No mod script names a senior at that peace. The claim on a throne is
+# cb_claim_throne (casus_belli/claim_throne.txt:23, war goal
+# take_capital_claim_throne, wargoals/00_default.txt:210), and its peace
+# term, "installing <character> as ruler" (PEACE_TREATY_UNION), is the
+# engine's own and has no file in peace_treaties. What follows it in
+# script is on_union_formation (on_action/_hardcoded.txt:4502-4552): the
+# leader of a union that already existed becomes leader and senior
+# partner of the merged one, and when only ONE of the two countries led a
+# union there is nobody to compare its economy with. So a claimant with
+# no union of its own, seating its king on the throne of a crown that
+# already leads one, comes out the junior. Every reader of
+# nd_dnb_merged_under then takes the loser for the holder of the winner.
+#
+# The rule here is vanilla's for its own scripted throne treaties: the
+# winner is the senior (peace_treaties/claim_french_throne.txt:54-80,
+# assume_union_senority.txt:24-52). Two roads lead to it:
+#   1. the peace treaty peace_nd_dnb_take_the_crown
+#      (peace_treaties/99_nd_danube.txt), which names the winner itself;
+#   2. for the engine's own term, which script cannot remove from the
+#      peace screen, a marker per throne war and a settlement once the
+#      winner's king sits on both thrones. The marker has two writers,
+#      because neither can be shown to run from the files alone: the
+#      on_losing_war chain (on_action/99_nd_on_actions.txt) and the
+#      monthly war watch below.
+# Marriage and inheritance unions are untouched: no marker, no change.
+# ==========================================================================
+
+# ROOT = the crown that won the throne and already sits in the union with
+# the loser. set_senior_partner sets the seniority policy where the union
+# has none, strips the old senior and seats the new one
+# (scripted_effects/international_organization_effects.txt:963-1018). The
+# two lines after it repeat what vanilla repeats after the same call
+# (claim_french_throne.txt:72-79), each only where it is still missing.
+nd_dnb_take_seniority = {
+	save_scope_as = nd_dnb_throne_winner
+	set_senior_partner = yes
+	hidden_effect = {
+		union ?= {
+			if = {
+				limit = {
+					NOT = { international_organization_has_policy = policy:union_establish_seniority_policy }
+				}
+				add_policy_to_international_organization = policy:union_establish_seniority_policy
+			}
+			if = {
+				limit = {
+					NOT = {
+						country_has_special_status = {
+							type = special_status:senior_partner
+							country = scope:nd_dnb_throne_winner
+						}
+					}
+				}
+				international_organization_add_special_status = {
+					type = special_status:senior_partner
+					country = scope:nd_dnb_throne_winner
+				}
+			}
+		}
+	}
+}
+
+# SITUATION scope, monthly. c:$W$ leads the attack in a war for the
+# throne of c:$L$: stamp the pair for three months, refreshed while the
+# war lasts. Three months and no longer, so that a union the two enter
+# later by marriage or inheritance is never read as this war's result. original_defender_leader covers a crown defended by its master
+# (the Contest the Foreign Crown case), where defender_leader is the
+# master.
+nd_dnb_watch_throne_war = {
+	if = {
+		limit = {
+			country_exists = c:$W$
+			country_exists = c:$L$
+			c:$W$ = {
+				any_current_war = {
+					is_no_cb_war = no
+					casus_belli ?= casus_belli:cb_claim_throne
+					attacker_leader = c:$W$
+					OR = {
+						defender_leader = c:$L$
+						original_defender_leader = c:$L$
+					}
+				}
+			}
+		}
+		set_variable = { name = nd_dnb_throne_war_$w$_$l$ value = yes months = 3 }
+	}
+}
+
+# Any scope, called from the on_losing_war chain with scope:winner and
+# scope:loser set by the engine: the same stamp, written at the peace.
+nd_dnb_mark_throne_war_won = {
+	if = {
+		limit = {
+			scope:winner = { tag = $W$ }
+			scope:loser = { tag = $L$ }
+		}
+		situation:nd_danube_succession ?= {
+			set_variable = { name = nd_dnb_throne_war_$w$_$l$ value = yes months = 3 }
+		}
+	}
+}
+
+# SITUATION scope. The war for the throne of c:$L$ is over and the king of
+# c:$W$ sits on both thrones: c:$W$ becomes the senior, unless a third
+# country is. A senior that is neither of the two is somebody else's
+# union and is left alone. The stamp stays until the two share a ruler
+# and a union (a captive crown changes union a tick or two after its
+# ruler) and lapses after three months if the war ended some other way.
+nd_dnb_settle_throne_war = {
+	if = {
+		limit = {
+			has_variable = nd_dnb_throne_war_$w$_$l$
+			country_exists = c:$W$
+			country_exists = c:$L$
+			c:$L$ = { has_ruler = yes }
+			c:$W$ = {
+				NOT = { is_at_war_with = c:$L$ }
+				is_subject = no
+				has_ruler = yes
+				ruler = c:$L$.ruler
+				in_union_with = c:$L$
+			}
+		}
+		if = {
+			limit = {
+				c:$W$ = {
+					union ?= {
+						NOT = { country_is_senior_partner = { country = c:$W$ } }
+						OR = {
+							has_active_senior_partner = no
+							country_is_senior_partner = { country = c:$L$ }
+						}
+					}
+				}
+			}
+			c:$W$ = { nd_dnb_take_seniority = yes }
+		}
+		remove_variable = nd_dnb_throne_war_$w$_$l$
+	}
+}
+
+# SITUATION scope: all six ordered pairs, watch first, then settle. First
+# thing in on_monthly, so that the standings, the fold alerts and the
+# Congress of the same tick already read the winner as the senior.
+nd_dnb_throne_wars_monthly = {
+	nd_dnb_watch_throne_war = { W = HAB L = HUN w = hab l = hun }
+	nd_dnb_watch_throne_war = { W = HAB L = BOH w = hab l = boh }
+	nd_dnb_watch_throne_war = { W = HUN L = HAB w = hun l = hab }
+	nd_dnb_watch_throne_war = { W = HUN L = BOH w = hun l = boh }
+	nd_dnb_watch_throne_war = { W = BOH L = HAB w = boh l = hab }
+	nd_dnb_watch_throne_war = { W = BOH L = HUN w = boh l = hun }
+	nd_dnb_settle_throne_wars = yes
+}
+
+nd_dnb_settle_throne_wars = {
+	nd_dnb_settle_throne_war = { W = HAB L = HUN w = hab l = hun }
+	nd_dnb_settle_throne_war = { W = HAB L = BOH w = hab l = boh }
+	nd_dnb_settle_throne_war = { W = HUN L = HAB w = hun l = hab }
+	nd_dnb_settle_throne_war = { W = HUN L = BOH w = hun l = boh }
+	nd_dnb_settle_throne_war = { W = BOH L = HAB w = boh l = hab }
+	nd_dnb_settle_throne_war = { W = BOH L = HUN w = boh l = hun }
+}
+
+# Any scope, from the on_losing_war chain. The claimant (the attacker) won
+# a throne war against a fellow crown while the question is open: stamp
+# the pair and settle at once if the union already stands. The monthly
+# pass settles it otherwise.
+nd_dnb_on_throne_war_lost = {
+	if = {
+		limit = {
+			has_global_variable = nd_dnb_active
+			exists = scope:winner
+			exists = scope:loser
+			exists = scope:war
+			scope:war = {
+				is_no_cb_war = no
+				casus_belli ?= casus_belli:cb_claim_throne
+				attacker_leader = scope:winner
+			}
+			scope:winner = { nd_dnb_is_crown = yes }
+			scope:loser = { nd_dnb_is_crown = yes }
+		}
+		nd_dnb_mark_throne_war_won = { W = HAB L = HUN w = hab l = hun }
+		nd_dnb_mark_throne_war_won = { W = HAB L = BOH w = hab l = boh }
+		nd_dnb_mark_throne_war_won = { W = HUN L = HAB w = hun l = hab }
+		nd_dnb_mark_throne_war_won = { W = HUN L = BOH w = hun l = boh }
+		nd_dnb_mark_throne_war_won = { W = BOH L = HAB w = boh l = hab }
+		nd_dnb_mark_throne_war_won = { W = BOH L = HUN w = boh l = hun }
+		situation:nd_danube_succession ?= {
+			nd_dnb_settle_throne_wars = yes
+		}
+	}
+}

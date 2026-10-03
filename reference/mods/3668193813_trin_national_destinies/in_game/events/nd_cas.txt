@@ -1,0 +1,620 @@
+﻿namespace = nd_cas
+
+# Formation event. Castile carries its tag from day one and never runs
+# form_effect, so for the kingdom of 1337 this event arrives through the
+# four-yearly marker repair (99_nd_on_actions.txt); a Castilian country that
+# restores the kingdom gets it from form_effect (99_nd_cas.txt). The two read
+# different opening texts and face the same choice.
+nd_cas.1 = {
+	type = country_event
+	title = nd_cas.1.t
+	desc = {
+		first_valid = {
+			# original_tag: "a country is a specific historical tag or was
+			# it". True for the Castile of the start, false for a Toledo or a
+			# Sevilla that has just taken the name.
+			triggered_desc = {
+				trigger = { original_tag = CAS }
+				desc = nd_cas.1.d
+			}
+			triggered_desc = {
+				desc = nd_cas.1.d.restored
+			}
+		}
+	}
+	outcome = neutral
+	# Once per COUNTRY, by its own guard variable. Not fire_only_once: that
+	# is once per campaign (events/readme.txt), so the first Castile to
+	# answer would retire the popup for every later one. Country variables
+	# die with the country, so a Castile that falls and rises again is asked
+	# again.
+	trigger = {
+		NOT = { has_variable = nd_cas_e1_done }
+	}
+	immediate = {
+		hidden_effect = { set_variable = nd_cas_e1_done }
+	}
+
+	# The king's justice: judges, accountants and the councils of the towns.
+	option = {
+		name = nd_cas.1.a
+		add_country_modifier = {
+			modifier = nd_cas_justicia_del_rey
+			years = 20
+			mode = add_and_extend
+		}
+		change_societal_value = {
+			type = centralization_vs_decentralization
+			value = societal_value_minor_move_to_left
+		}
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_cas_formed
+			set_variable = nd_cas_path_a
+		}
+	}
+	# The host of the ricoshombres: the great lineages, paid in rents and
+	# towns.
+	option = {
+		name = nd_cas.1.b
+		add_country_modifier = {
+			modifier = nd_cas_hueste_de_los_ricoshombres
+			years = 20
+			mode = add_and_extend
+		}
+		change_societal_value = {
+			type = aristocracy_vs_plutocracy
+			value = societal_value_minor_move_to_left
+		}
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_cas_formed
+			set_variable = nd_cas_path_b
+		}
+	}
+}
+
+# The advance events below name the country's own tag only. The
+# orchestrator's scripts/sync_history_events.py adds the tags of the larger
+# formables a Castile can go on to; the has_advance trigger keeps the events
+# from every other holder of those tags.
+
+# Advance event: the alcabala, 1342. The fork is whether the tax stays a
+# grant of the Cortes or becomes the king's by custom.
+nd_cas.2 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAS
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cas_alcabala
+	}
+
+	title = nd_cas.2.t
+	desc = nd_cas.2.d
+	outcome = neutral
+
+	option = {
+		name = nd_cas.2.a
+		add_country_modifier = {
+			modifier = nd_cas_alcabala_otorgada
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_cas.2.b
+		add_country_modifier = {
+			modifier = nd_cas_alcabala_perpetua
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# Advance event: La Rochelle, 1372
+nd_cas.3 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAS
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cas_galeras_de_castilla
+	}
+
+	title = nd_cas.3.t
+	desc = nd_cas.3.d
+	outcome = positive
+
+	option = {
+		name = nd_cas.3.a
+	}
+}
+
+# Advance event: the embassy to Timur, 1403 to 1406
+nd_cas.4 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAS
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cas_embajada_a_tamorlan
+	}
+
+	title = nd_cas.4.t
+	desc = nd_cas.4.d
+	outcome = neutral
+
+	option = {
+		name = nd_cas.4.a
+	}
+}
+
+# Advance event: the siege train of the war of Granada
+nd_cas.5 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAS
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cas_tren_de_lombardas
+	}
+
+	title = nd_cas.5.t
+	desc = nd_cas.5.d
+	outcome = neutral
+
+	option = {
+		name = nd_cas.5.a
+	}
+}
+
+# Advance event: the playhouses and the preachers. The fork is the one the
+# Council of Castile faced in 1598 and again in the 1640s.
+nd_cas.6 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAS
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cas_corrales_de_comedias
+	}
+
+	title = nd_cas.6.t
+	desc = nd_cas.6.d
+	outcome = neutral
+
+	option = {
+		name = nd_cas.6.a
+		add_country_modifier = {
+			modifier = nd_cas_corrales_abiertos
+			years = 10
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_cas.6.b
+		add_country_modifier = {
+			modifier = nd_cas_corrales_cerrados
+			years = 10
+			mode = add_and_extend
+		}
+	}
+}
+
+# Advance event: the new settlements and the trial of Olavide
+nd_cas.7 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAS
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cas_nuevas_poblaciones
+	}
+
+	title = nd_cas.7.t
+	desc = nd_cas.7.d
+	outcome = neutral
+
+	option = {
+		name = nd_cas.7.a
+		add_country_modifier = {
+			modifier = nd_cas_fuero_de_poblacion
+			years = 10
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_cas.7.b
+		add_country_modifier = {
+			modifier = nd_cas_olavide_condenado
+			years = 10
+			mode = add_and_extend
+		}
+	}
+}
+
+# Advance event: the Banco de San Carlos, 1782
+nd_cas.8 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAS
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cas_banco_nacional
+	}
+
+	title = nd_cas.8.t
+	desc = nd_cas.8.d
+	outcome = neutral
+
+	option = {
+		name = nd_cas.8.a
+	}
+}
+
+# ===== DESTINY EVENTS =====
+# One event per destiny advance. Like the advance events above they name the
+# country's own tag only; scripts/sync_history_events.py adds the tags of the
+# larger formables. Root and stage 1 events acknowledge; stage 2 and stage 3
+# events each offer two readings of the milestone, with a timed modifier for
+# each (15 and 20 years). Nothing the tree depends on lives in an event:
+# these fire once per campaign.
+
+# Destiny root: the king comes of age
+nd_cas.9 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAS
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cas_destiny
+	}
+
+	title = nd_cas.9.t
+	desc = nd_cas.9.d
+	outcome = neutral
+
+	option = {
+		name = nd_cas.9.a
+	}
+}
+
+# Path A, stage 1: Algeciras and Gibraltar
+nd_cas.10 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAS
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cas_dest_cerco_de_algeciras
+	}
+
+	title = nd_cas.10.t
+	desc = nd_cas.10.d
+	outcome = positive
+
+	option = {
+		name = nd_cas.10.a
+	}
+}
+
+# Path A, stage 2: the letrados. The fork is the real one between the two
+# kinds of corregidor: the graduate in his gown, or the knight of cloak and
+# sword.
+nd_cas.11 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAS
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cas_dest_los_letrados
+	}
+
+	title = nd_cas.11.t
+	desc = nd_cas.11.d
+	outcome = neutral
+
+	option = {
+		name = nd_cas.11.a
+		add_country_modifier = {
+			modifier = nd_cas_dest_toga
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_cas.11.b
+		add_country_modifier = {
+			modifier = nd_cas_dest_capa_y_espada
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# Path A, stage 3: the Cortes of Toledo. The fork is where the recovered
+# strength goes: into the treasury, or into the towns' brotherhood.
+nd_cas.12 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAS
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cas_dest_cortes_de_toledo
+	}
+
+	title = nd_cas.12.t
+	desc = nd_cas.12.d
+	outcome = neutral
+
+	option = {
+		name = nd_cas.12.a
+		add_country_modifier = {
+			modifier = nd_cas_dest_reduccion_de_juros
+			years = 20
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_cas.12.b
+		add_country_modifier = {
+			modifier = nd_cas_dest_hermandad_general
+			years = 20
+			mode = add_and_extend
+		}
+	}
+}
+
+# Path B, stage 1: Antequera and Huescar
+nd_cas.13 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAS
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cas_dest_la_frontera
+	}
+
+	title = nd_cas.13.t
+	desc = nd_cas.13.d
+	outcome = positive
+
+	option = {
+		name = nd_cas.13.a
+	}
+}
+
+# Path B, stage 2: Granada. The fork is the one of 1492: share the land out
+# among the houses that won it, or keep the terms sworn to its people.
+nd_cas.14 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAS
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cas_dest_guerra_de_granada
+	}
+
+	title = nd_cas.14.t
+	desc = nd_cas.14.d
+	outcome = neutral
+
+	option = {
+		name = nd_cas.14.a
+		add_country_modifier = {
+			modifier = nd_cas_dest_repartimiento
+			years = 15
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_cas.14.b
+		add_country_modifier = {
+			modifier = nd_cas_dest_capitulaciones
+			years = 15
+			mode = add_and_extend
+		}
+	}
+}
+
+# Path B, stage 3: the islands of lordship. The fork is what a lord does
+# with an island: raid the coast opposite, or plant cane.
+nd_cas.15 = {
+	type = country_event
+	fire_only_once = yes
+
+	dynamic_historical_event = {
+		tag = CAS
+		tag = ADU
+		tag = EUR
+		tag = GOT
+		tag = KHL
+		tag = ROM
+		tag = SPA
+		from = 1337.1.1
+		to = 1836.1.1
+		monthly_chance = 100
+	}
+
+	trigger = {
+		has_advance = nd_cas_dest_islas_de_senorio
+	}
+
+	title = nd_cas.15.t
+	desc = nd_cas.15.d
+	outcome = neutral
+
+	option = {
+		name = nd_cas.15.a
+		add_country_modifier = {
+			modifier = nd_cas_dest_cabalgadas
+			years = 20
+			mode = add_and_extend
+		}
+	}
+	option = {
+		name = nd_cas.15.b
+		add_country_modifier = {
+			modifier = nd_cas_dest_ingenios
+			years = 20
+			mode = add_and_extend
+		}
+	}
+}

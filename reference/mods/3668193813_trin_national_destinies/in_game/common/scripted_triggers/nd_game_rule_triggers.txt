@@ -18,7 +18,7 @@
 # only governs the player's rank BUTTON (country_ranks/00_default.txt:46-48):
 # set_country_rank_effect is not bound by the rank's allow, and vanilla's
 # Germany formable grants empire rank by effect to sitting members
-# (00_formable_countries.txt:1564-1586). Whether a formable inside the
+# (GER_f's form_effect in 00_formable_countries.txt). Whether a formable inside the
 # Reich takes empire rank is therefore a design call per formable
 # (2026-08-24): the Danubian Monarchy keeps kingdom rank when it stays,
 # because the one Empire inside the Reich is the Reich.
@@ -35,9 +35,10 @@ nd_can_take_kingdom_rank = {
 # Read at every activate_situation site for nd_dnm_reaction_of_the_reich.
 # The rule governs the EMPIRE'S ANSWER only: a Monarchy that breaks with
 # the Reich still sweeps its imperial land out and still takes empire rank,
-# and both Danubian disasters gate on nd_dnm_formed rather than on the
-# situation, so the internal arc (the Nationalities Question, the Pragmatic
-# Sanction) is untouched by switching this off. Read at every activation
+# and both Danubian disasters gate on nd_dnm_formed and on their own rule
+# (nd_dnm_crises_are_enabled below) rather than on the situation, so the
+# internal arc (the Nationalities Question, the Pragmatic Sanction) is
+# untouched by switching this off. Read at every activation
 # site: the break option of nd_dnm.52, the break interaction, and the
 # monthly departure catch, all through nd_dnm_break_with_reich_effect.
 nd_reich_reaction_is_enabled = {
@@ -58,4 +59,19 @@ nd_reich_reaction_is_enabled = {
 # already exists.
 nd_danube_succession_is_enabled = {
 	has_game_rule = nd_danube_succession_enabled
+}
+
+# Do the Danubian Monarchy's two disasters, the succession question that
+# leads into one of them, and the forewarning event nd_dnm.48 run in this
+# campaign? Reads nd_dnm_crises_rule and nothing else.
+#
+# Written as "not disabled", where the two triggers above ask for the
+# enabled setting. The rule is new in a mod with campaigns in progress, and
+# no file says what has_game_rule answers for a rule a save has no value
+# for. Asked this way, a save that carries no value keeps the disasters it
+# always had, whichever way the engine treats it. Vanilla reads a rule by
+# its off setting the same way (scripted_triggers/game_triggers.txt:37-38,
+# game_has_missions_enabled).
+nd_dnm_crises_are_enabled = {
+	NOT = { has_game_rule = nd_dnm_crises_disabled }
 }

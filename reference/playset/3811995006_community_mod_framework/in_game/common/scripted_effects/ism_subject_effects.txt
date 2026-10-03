@@ -1,0 +1,256 @@
+﻿ism_take_over_all_subject_wars = {
+	if = {
+		limit = {
+			has_variable = ism__auto_take_over_subject_wars
+			is_overlord = yes
+		}
+		save_scope_as = selected_overlord
+		every_subject = {
+			limit = { ism_can_take_over_subject_war = { selected_overlord = scope:selected_overlord } }
+			save_scope_as = selected_subject
+			ism_take_over_subject_wars = {
+				selected_overlord = scope:selected_overlord
+				selected_subject = scope:selected_subject
+			}
+		}
+	}
+}
+
+ism_take_over_subject_wars = {
+	$selected_subject$ = {
+		every_current_war = {
+			if = {
+				limit = {
+					$selected_subject$ = { is_war_leader_of = prev }
+					NOT = { is_in_war = $selected_overlord$ }
+				}
+				if = {
+					limit = {
+						is_civil_war_for = $selected_subject$
+					}
+					$selected_overlord$ = {
+						reverse_add_opinion = {
+							target = $selected_subject$
+							modifier = opinion_helped_in_civil_war
+						}
+					}
+				}
+				if = {
+					limit = {
+						attacker_leader = $selected_subject$
+					}
+					$selected_overlord$ = {
+						join_war_as_attacker = {
+							war = prev
+							reason = intervene
+							ignore_rules = yes
+						}
+					}
+				}
+				else = {
+					$selected_overlord$ = {
+						join_war_as_defender = {
+							war = prev
+							reason = intervene
+							ignore_rules = yes
+						}
+					}
+				}
+			}
+		}
+	}
+	$selected_overlord$ = {
+		take_over_all_wars = $selected_subject$
+	}
+	# Attempt to fix strange vanilla bug, #TODO Verify if working
+	$selected_overlord$ = {
+		if = {
+			limit = { is_rival_of = $selected_subject$ }
+			$selected_subject$ = { remove_rival = $selected_overlord$ }
+		}
+	}
+	$selected_subject$ = {
+		if = {
+			limit = { is_rival_of = $selected_overlord$ }
+			$selected_overlord$ = { remove_rival = $selected_subject$ }
+		}
+	}
+}
+
+ism_block_subject_colonization = {
+	if = {
+		limit = { is_overlord = yes }
+		save_scope_as = overlord_scope
+		every_subject = {
+			if = {
+				limit = {
+					scope:overlord_scope = { has_variable = ism__block_colonization }
+				}
+				add_country_modifier = {
+					modifier = ism_overlord_blocking_all_subject_colonization
+					days = -1
+					mode = replace
+				}
+			}
+			else_if = {
+				limit = {
+					has_country_modifier = ism_overlord_blocking_all_subject_colonization
+				}
+				remove_country_modifier = ism_overlord_blocking_all_subject_colonization
+			}
+		}
+	}
+}
+
+ism_block_subject_urbanization = {
+	if = {
+		limit = { is_overlord = yes }
+		save_scope_as = overlord_scope
+		every_subject = {
+			if = {
+				limit = {
+					scope:overlord_scope = { has_variable = ism__block_urbanization }
+				}
+				add_country_modifier = {
+					modifier = ism_overlord_blocking_all_subject_urbanization
+					days = -1
+					mode = replace
+				}
+			}
+			else_if = {
+				limit = {
+					has_country_modifier = ism_overlord_blocking_all_subject_urbanization
+				}
+				remove_country_modifier = ism_overlord_blocking_all_subject_urbanization
+			}
+		}
+	}
+}
+
+ism_block_subject_columbian_exchange = {
+	if = {
+		limit = { is_overlord = yes }
+		save_scope_as = overlord_scope
+		every_subject = {
+			if = {
+				limit = {
+					scope:overlord_scope = { has_variable = ism__block_columbian_exchange }
+				}
+				add_country_modifier = {
+					modifier = ism_overlord_blocking_all_subject_columbian_exchange
+					days = -1
+					mode = replace
+				}
+			}
+			else_if = {
+				limit = {
+					has_country_modifier = ism_overlord_blocking_all_subject_columbian_exchange
+				}
+				remove_country_modifier = ism_overlord_blocking_all_subject_columbian_exchange
+			}
+		}
+	}
+}
+
+ism_block_subject_war_declarations = {
+	if = {
+		limit = { is_overlord = yes }
+		save_scope_as = overlord_scope
+		every_subject = {
+			if = {
+				limit = {
+					scope:overlord_scope = { has_variable = ism__block_declaring_war }
+				}
+				add_country_modifier = {
+					modifier = ism_overlord_blocking_all_subject_war_declarations
+					days = -1
+					mode = replace
+				}
+			}
+			else_if = {
+				limit = {
+					has_country_modifier = ism_overlord_blocking_all_subject_war_declarations
+				}
+				remove_country_modifier = ism_overlord_blocking_all_subject_war_declarations
+			}
+		}
+	}
+}
+
+# Scope: subject country. Returns every taken army still held by $overlord$.
+ism_return_taken_units = {
+	every_in_list = {
+		variable = ism_units_taken
+		limit = { exists = this owner = $overlord$ }
+		remove_unit_modifier = ism_taken_from_subject
+		change_unit_owner = prev
+	}
+	clear_variable_list = ism_units_taken
+}
+
+# Scope: overlord country. Returns taken armies to subjects that no longer share a war with it.
+ism_auto_return_taken_units = {
+	if = {
+		limit = { is_overlord = yes }
+		save_temporary_scope_as = ism_taken_overlord
+		every_subject = {
+			limit = {
+				has_variable_list = ism_units_taken
+				NOT = { any_current_war = { is_in_war = scope:ism_taken_overlord } }
+			}
+			ism_return_taken_units = { overlord = scope:ism_taken_overlord }
+		}
+	}
+}
+
+# Scope: overlord country. Subjects pay the overlord for each subunit of their taken armies.
+ism_charge_taken_units_upkeep = {
+	save_temporary_scope_as = ism_taken_overlord
+	every_subject = {
+		limit = { has_variable_list = ism_units_taken }
+		save_temporary_scope_as = ism_taken_subject
+		every_in_list = {
+			variable = ism_units_taken
+			limit = { exists = this owner = scope:ism_taken_overlord }
+			every_sub_unit = {
+				scope:ism_taken_subject = {
+					add_gold = {
+						value = ism_taken_troops_subunit_upkeep
+						multiply = -1
+					}
+				}
+				scope:ism_taken_overlord = { add_gold = ism_taken_troops_subunit_upkeep }
+			}
+		}
+	}
+}
+
+# Scope: overlord country. Disloyal subjects take their armies back.
+ism_reclaim_taken_units = {
+	save_temporary_scope_as = ism_taken_overlord
+	every_subject = {
+		limit = {
+			has_variable_list = ism_units_taken
+			subject_loyalty < ism_taken_troops_reclaim_loyalty
+		}
+		ism_return_taken_units = { overlord = scope:ism_taken_overlord }
+	}
+}
+
+# Scope: overlord country. Drops bookkeeping for subjects whose taken armies were all consolidated or destroyed.
+ism_prune_taken_units = {
+	save_temporary_scope_as = ism_taken_overlord
+	every_subject = {
+		limit = {
+			has_variable_list = ism_units_taken
+			NOT = {
+				any_in_list = {
+					variable = ism_units_taken
+					exists = this
+					owner = scope:ism_taken_overlord
+				}
+			}
+		}
+		clear_variable_list = ism_units_taken
+	}
+}

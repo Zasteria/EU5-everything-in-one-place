@@ -1,0 +1,307 @@
+﻿# Aragon (ARA): bureaucracies
+# National Destinies mod
+#
+# Read before choosing subjects (EU5 1.4):
+#   vanilla bureaucracies Aragon can hold (bureaucracies/generic.txt, ten of
+#     them, from Confessionalism or the age 4 advance): a board of revenue, a
+#     privy council, an audit bureau, a colonial office, an admiralty, a
+#     foreign ministry, a trade commission, a war council, an ordnance board
+#     and a commissariat. None is repeated here by name or by subject, so no
+#     Maestre Racional (an auditor) and no royal council.
+#   vanilla names spa_council_of_aragon_bureaucracy for a release to come: no
+#     Council of Aragon.
+#   vanilla Aragon elsewhere: the Justicia, the General Privilege and the
+#     formalized oath are estate privileges; the merindad is a policy of the
+#     administrative law; the lieutenancy is an advance with a building; the
+#     Diputacion del General is an advance; the Fuero de Aragon is a town
+#     right; the coronation is a decision.
+#   the mod's Catalonia (99_nd_cat.txt) and Aragonese Empire (99_nd_cda.txt):
+#     the Consell de Cent, the Batllia General, the vegueries, the Tribunal de
+#     Contrafaccions, the royal chancery, the Generalitat, the Consolat de Mar
+#     and the Sommaria. So no Baile General of Aragon either: it is the same
+#     office as the Catalan one.
+#   this country's own tree (advances/99_nd_ara.txt): the village communities,
+#     the Casa de Ganaderos, the four arms of the Cortes, the Observancias,
+#     the Guardia del Reino and the writ of manifestation.
+#
+# What is left is how justice was carried, and who answered for it, in a
+# kingdom where the king had sworn to the law before he was obeyed:
+# 1. Sobrejunterias: the leagues of towns under a royal officer that hunted
+#    malefactors and executed the courts' sentences.
+# 2. Privilegio de los Veinte: Zaragoza's right to avenge itself by its own
+#    hand on anyone who wronged a citizen.
+# 3. Real Audiencia: the king's own bench in Zaragoza, the rival of the
+#    Justicia's court.
+# 4. Diecisiete Judicantes: seventeen laymen drawn by lot from the four arms
+#    who tried the Justicia's lieutenants.
+#
+# Estate alignment differs in each: crown and towns against the lords, the
+# city against the lords, the crown and its lawyers against the lords, and
+# the three estates against the crown.
+#
+# Slots. Vanilla gives Aragon none on the day it forms (a capital grants one
+# only as a megalopolis, location_ranks/00_default.txt:50). The auto modifier
+# grants 2, half of these four. Vanilla adds one with the age 4 bureaucracy
+# advance and one in age 6, and from Confessionalism its ten generic offices
+# compete for the same slots.
+#
+# No cabinet seat and no character modifier. No key stands in both the funded
+# and the neglected block of one institution. All IDs are ara_-prefixed (the
+# last definition of a key wins across files).
+
+# 1. Sobrejunterias
+# In 1274 the kingdom was divided into juntas, leagues of towns sworn to deny
+# shelter to malefactors and to ride after them, each under a sobrejuntero
+# named by the king (es.wikipedia, "Merino de Zaragoza" for the date;
+# "Sobrejunteros" for the fuero De offitio suprajunctariorum of James II and
+# the duties: execute the sentences of the Justicia and the other judges,
+# pursue thieves and killers, restore stolen goods, and seize nobody without
+# a mandate of the king, the governor or a judge). They answered to the
+# governor of Aragon (es.wikipedia, "Gobernador de Aragon", office 1344 to
+# 1707). From memory, not fetched: that lordships were closed to them, which
+# is why the lords are the ones who dislike the office.
+# The kingdom has no sea: what it buys and sells goes by road, and the road
+# over the passes is as safe as the junta makes it. That is the funded side.
+# Unpaid, the junta does not ride, and the countryside goes back to whoever
+# is strongest in it.
+ara_sobrejunterias_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = ARA
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {}
+
+	estates_that_like = {
+		crown_estate
+		burghers_estate
+	}
+	estates_that_dislike = {
+		nobles_estate
+	}
+
+	neutral_modifier = {
+		global_monthly_control = 0.001
+	}
+
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		trade_land_efficiency = small_trade_land_efficiency_bonus
+		mountains_proximity_impact = -0.15
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		global_max_rural_control = -0.05
+		monthly_rebel_growth = 0.001
+	}
+}
+
+# 2. Privilegio de los Veinte
+# Granted to Zaragoza by Alfonso the Battler on 5 February 1129, "tortum per
+# tortum": a citizen who was wronged could have the wrongdoer seized and
+# punished and his property attacked, outside the city as well, by twenty men
+# the city chose, with no judge of the king in it (es.wikipedia, "Privilegio
+# de los veinte" and "Fuero de Zaragoza"). It was still used in 1560 against
+# Mozota and Mezalocha; in 1589 the Diputacion sent the count of Aranda to
+# complain of the city's excesses under it, and its abuse is counted among
+# the grievances behind 1591 ("Luis Ximenez de Urrea", "Alteraciones de
+# Aragon"). It ended with the Nueva Planta decrees of 1707 and 1711.
+# A city that can answer a lord in kind draws people and keeps lords careful.
+# Left to a faction, the Twenty are a private war with the city's seal on it.
+ara_privilegio_de_los_veinte_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = ARA
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	# The privilege is Zaragoza's and no other city's.
+	allow = {
+		owns = location:zaragoza
+	}
+
+	estates_that_like = {
+		burghers_estate
+	}
+	estates_that_dislike = {
+		nobles_estate
+	}
+
+	neutral_modifier = {
+		global_burghers_estate_power = 0.1
+	}
+
+	# global_nobles_estate_power is a key where a negative value is the benefit.
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		non_rural_migration_attraction = 0.1
+		global_nobles_estate_power = -0.1
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		nobles_estate_target_satisfaction = medium_permanent_target_satisfaction_penalty
+		monthly_nobles_estate_rebel_growth = 0.005
+	}
+}
+
+# 3. Real Audiencia de Aragon
+# The king's bench in Zaragoza, grown out of the royal chancery and presided
+# by the king or his lieutenant. In 1528 Charles V made it a college: the
+# regent of the chancery could give no sentence without four councillors. A
+# criminal chamber of five followed in 1565, and the Cortes of Tarazona of
+# 1592 gave it the keeping of public order that the Diputacion had held. It
+# stood in open competition with the court of the Justicia, until then the
+# kingdom's one high court (es.wikipedia, "Real Audiencia de Aragon" and
+# "Cortes de Tarazona (1592)").
+# Open from the Age of Discovery: the bench is the work of Ferdinand and
+# Charles, not of the medieval kingdom.
+# A working bench gives the king's will a lawful road around the magnates.
+# A starved one is the stranger's court of 1591: sentences nobody in the
+# kingdom accepts as law.
+ara_real_audiencia_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = ARA
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		OR = {
+			current_age = age_3_discovery
+			current_age = age_4_reformation
+			current_age = age_5_absolutism
+			current_age = age_6_revolutions
+		}
+	}
+
+	# The university lawyers who sat on it were townsmen.
+	estates_that_like = {
+		crown_estate
+		burghers_estate
+	}
+	estates_that_dislike = {
+		nobles_estate
+	}
+
+	neutral_modifier = {
+		monthly_towards_centralization = societal_value_monthly_move
+	}
+
+	# revoke_privilege_cost_modifier is a cost key: a negative value is the benefit.
+	positive_modifier = {
+		scale = { value = scope:maintenance }
+		monthly_political_influence_gain_modifier = 0.1
+		revoke_privilege_cost_modifier = -0.1
+	}
+
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		global_separatism = 0.05
+		legislative_efficiency = -0.1
+	}
+}
+
+# 4. Tribunal de los Diecisiete Judicantes
+# Seventeen men drawn by lot each year from the four arms of the Cortes, none
+# of them a lawyer, who heard any subject's complaint against the lieutenants
+# of the Justicia and could strip a lieutenant of his office or worse. The
+# judge of the king's officers was himself judged by the kingdom.
+# Sources: the office of judicante at the Diputacion is attested on
+# es.wikipedia ("Jeronimo Martel y Losilla": "diputado, inquisidor y
+# judicante en la Diputacion del Reino"). The number seventeen, the lot, the
+# rule against lawyers and the founding at the Cortes of Calatayud in 1461
+# rest on memory: no page that states them could be fetched on 2026-10-02.
+# The tribunal is drawn from the Cortes, so it needs a parliament. Vanilla's
+# Justicia is an estate privilege granted by an event that may never fire
+# (flavor_ARA.txt, the option at line 880), so it is not the gate: it is read
+# in the scale instead, as vanilla's Hisba reads its privilege
+# (bureaucracies/muslim.txt:91-94). The values are sized for that case: 0.06
+# and 0.15 with the Justicia, 0.04 and 0.1 without.
+# Estates that trust the bench bear more. A tribunal left to itself becomes
+# the magnates' way of breaking any judge who rules against them.
+ara_diecisiete_judicantes_bureaucracy = {
+	implementation_price = price:implement_bureaucracy_price
+	maintenance_price = price:maintain_bureaucracy_price
+	removal_price = price:remove_bureaucracy_price
+	maintenance_price_modifier = {
+		value = country_economical_base
+		multiply = 0.004
+	}
+
+	potential = {
+		has_or_had_tag = ARA
+		has_game_rule = nd_bureaucracies_enabled
+	}
+
+	allow = {
+		modifier:has_a_parliamentary_system = yes
+	}
+
+	estates_that_like = {
+		nobles_estate
+		clergy_estate
+		burghers_estate
+	}
+	estates_that_dislike = {
+		crown_estate
+	}
+
+	neutral_modifier = {
+		global_estate_satisfaction_recovery = 0.001
+	}
+
+	positive_modifier = {
+		scale = {
+			value = scope:maintenance
+			if = {
+				limit = { root ?= { has_estate_privilege = estate_privilege:justicia_de_aragon } }
+				multiply = 1.5
+			}
+		}
+		global_estate_max_tax = 0.04
+		stability_cost_efficiency = 0.1
+	}
+
+	# global_nobles_estate_power is a key where a positive value is the harm.
+	negative_modifier = {
+		scale = {
+			value = 1
+			subtract = scope:maintenance
+		}
+		global_nobles_estate_power = 0.15
+		monthly_political_influence = -0.1
+	}
+}

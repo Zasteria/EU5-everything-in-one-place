@@ -1,0 +1,45 @@
+﻿# Castile (CAS): formation lines
+# National Destinies mod
+#
+# Vanilla 1.4 defines CAS_f with an empty form_effect (level 2, 75% of
+# castile_area, Castilian culture, Christian, not for the country that
+# already is CAS; 00_formable_countries.txt:692-717), so INJECT is safe:
+# there is nothing of vanilla's to lose. CAS_f is the only vanilla formable
+# that creates the tag CAS.
+#
+# Roads into the tag, and what each one meets here:
+# 1. Castile itself. It carries the tag from day one, owns 47 of the 54
+#    locations of the area and never passes through this block (the formable
+#    is closed to it by its own potential). The four-yearly marker repair in
+#    99_nd_on_actions.txt stamps the marker and delivers nd_cas.1, so the
+#    event is written to read right for a kingdom that has always been
+#    Castile.
+# 2. A Castilian country that restores the kingdom after it fell or was
+#    partitioned: the tags vanilla keeps for the Castilian cities (Toledo,
+#    Sevilla, Cordoba, Jaen, Murcia) or any other Castilian breakaway.
+#    form_effect runs: markers, rank, event.
+# Closed by the level rule: Leon, Galicia, Aragon, Portugal and every other
+# country that carries the tag of a level 2 formable.
+INJECT:CAS_f = {
+	form_effect = {
+		# Formation markers live HERE, not only in the event's options: a
+		# country can be formed by script, and then the popup may never be
+		# answered.
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_cas_formed
+		}
+		# Castile was a kingdom from 1065. nd_can_take_kingdom_rank is false
+		# exactly when the engine would refuse the rank (a member of the Holy
+		# Roman Empire under the rank restriction).
+		if = {
+			limit = {
+				nd_can_take_kingdom_rank = yes
+				country_rank_level < 3
+			}
+			set_country_rank_effect = { rank = country_rank:rank_kingdom }
+		}
+		trigger_event_non_silently = nd_cas.1
+		add_stability = stability_mild_bonus
+	}
+}

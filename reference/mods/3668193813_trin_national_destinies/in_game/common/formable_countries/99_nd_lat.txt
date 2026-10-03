@@ -20,7 +20,7 @@ REPLACE:LAT_f = {
 		NOT = { has_variable = lat_reduced_requirements_to_form }
 		religion = religion:catholic
 		is_frankokratia_state = yes
-		NOT = { current_age_or_later = { age = age_4_reformation } }
+		NOT = { current_age_or_later = { age = age_5_absolutism } }
 	}
 
 	allow = {
@@ -83,6 +83,25 @@ REPLACE:LAT_f = {
 			set_country_rank_effect = { rank = country_rank:rank_empire }
 		}
 		if = {
+			limit = { NOT = { capital = location:constantinople } }
+			move_capital_event_effect = {
+				from = root.capital
+				to = location:constantinople
+			}
+		}
+		if = {
+			limit = {
+				location:constantinople = {
+					NOT = { is_core_of = ROOT }
+				}
+			}
+			location:constantinople = { add_core = ROOT }
+		}
+		if = {
+			limit = { has_reform = government_reform:lat_papal_restoration_claimant }
+			remove_reform = government_reform:lat_papal_restoration_claimant
+		}
+		if = {
 			limit = { has_reform = government_reform:partitio_reform }
 			remove_reform = government_reform:partitio_reform
 		}
@@ -116,5 +135,134 @@ REPLACE:LAT_f = {
 				change_country_color = map_LAT
 			}
 		}
+	}
+}
+
+# Vanilla's second road to the same country (a third of the territory, for a
+# claimant flagged by its own events). Hooked so that road also carries the
+# mod's formation lines.
+REPLACE:LAT_REDUCED_REQUIREMENTS_f = { 
+
+	level = 3
+	required_locations_fraction = 0.33
+	rule = plausible
+
+	potential = {
+		NOT = { country_exists = c:LAT }
+		religion = religion:catholic
+		has_variable = lat_reduced_requirements_to_form
+		is_frankokratia_state = yes
+		NOT = { current_age_or_later = { age = age_4_reformation } }
+	}
+
+	allow = {
+		NOT = { country_exists = c:LAT }
+		owns = location:constantinople
+		religion = religion:catholic
+		OR = {
+			culture = { has_culture_group = culture_group:french_group }
+			culture = { has_culture_group = culture_group:iberian_group }
+			culture = { has_culture_group = culture_group:italian_group }
+		}
+		OR = {
+			current_age = age_1_traditions
+			current_age = age_2_renaissance
+			current_age = age_3_discovery
+		}		
+	}
+	
+	name = LAT
+	flag = LAT
+	adjective = LAT_ADJ
+	tag = LAT
+	color = map_LAT
+	
+	areas = {
+		northern_greece_area
+		morea_area
+	}
+	provinces = {
+		north_epirus_province
+		constantinople_province
+		edirne_province
+		evros_province
+		dardanelles_province
+		central_macedonia_province
+		lower_macedonia_province
+		upper_macedonia_province
+		chalkidiki_province
+		naxos_province
+		euboea_province
+		lemnos_province
+	}
+	form_effect = {
+		# Formation markers live HERE, not only in the event's options.
+		# A country can be formed by script (vanilla forms JAP from the
+		# sengoku situation), and then the popup may never be answered,
+		# leaving every advance gated on this variable unreachable.
+		hidden_effect = {
+			set_variable = nd_formed
+			set_variable = nd_lat_formed
+		}
+		trigger_event_non_silently = nd_lat.1
+		add_stability = stability_mild_bonus
+
+		if = {
+			limit = { country_rank_level < 4 }
+			set_country_rank_effect = { rank = country_rank:rank_empire }
+		}
+		if = {
+			limit = { NOT = { capital = location:constantinople } }
+			move_capital_event_effect = {
+				from = root.capital
+				to = location:constantinople
+			}
+		}
+		if = {
+            limit = {
+                location:constantinople = {
+                    NOT = { is_core_of = ROOT }
+                }
+            }
+            location:constantinople = { add_core = ROOT }
+        }
+		if = {
+			limit = { has_reform = government_reform:lat_papal_restoration_claimant }
+			remove_reform = government_reform:lat_papal_restoration_claimant
+		}
+		if = {
+			limit = { has_reform = government_reform:partitio_reform }
+			remove_reform = government_reform:partitio_reform
+		}
+		unlock_government_reform_effect = { type = lat_restored_rule_of_the_latins }
+		add_reform = government_reform:lat_restored_rule_of_the_latins
+		if = {
+			limit = { 
+				culture = culture:catalan
+				NOT = { has_variable = de_brienne_rule_of_athens }
+				NOT = { has_reform = government_reform:ach_heirs_of_the_latin_empire } 
+			}
+			hidden_effect = {
+				change_country_color = map_LAT_catalan_restoration
+			}
+		}
+		if = {
+			limit = { 
+				has_reform = government_reform:ach_heirs_of_the_latin_empire
+				NOT = { has_variable = de_brienne_rule_of_athens }
+			}
+			hidden_effect = {
+				change_country_color = map_LAT_titular_restoration
+			}            
+		}
+		else_if = {
+			limit = {
+				NOT = { has_reform = government_reform:ach_heirs_of_the_latin_empire } 
+				NOT = { culture = culture:catalan }
+			}
+			hidden_effect = {
+				change_country_color = map_LAT
+			} 
+		}					
 	}
 }

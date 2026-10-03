@@ -34,7 +34,7 @@ nd_slo_banska_mines = {
 			produced = tools
 			output = 0.3
 			category = guild_input
-			debug_max_profit = guild_profit_margin
+			debug_max_profit = rural_profit_margin
 		}
 		nd_slo_arms_forging = {
 			copper = 0.2
@@ -42,7 +42,7 @@ nd_slo_banska_mines = {
 			produced = weaponry
 			output = 0.36
 			category = guild_input
-			debug_max_profit = guild_profit_margin
+			debug_max_profit = rural_profit_margin
 		}
 		nd_slo_steel_forging = {
 			iron = 0.15
@@ -50,7 +50,7 @@ nd_slo_banska_mines = {
 			produced = steel
 			output = 0.18
 			category = guild_input
-			debug_max_profit = guild_profit_margin
+			debug_max_profit = rural_profit_margin
 		}
 		nd_slo_mine_maintenance = {
 			lumber = 0.2
@@ -142,7 +142,7 @@ nd_slo_salas = {
 	modifier = {
 		local_livestock_output_modifier = 0.1
 		local_peasants_food_consumption = 0.05
-		local_monthly_food_modifier = 0.05
+		local_monthly_food_modifier = 0.025
 	}
 
 	# Extraction is bound to the resource: you cannot mine, tap or
@@ -159,7 +159,7 @@ nd_slo_salas = {
 			produced = leather
 			output = 0.25
 			category = guild_input
-			debug_max_profit = guild_profit_margin
+			debug_max_profit = rural_profit_margin
 		}
 		nd_slo_wool_processing = {
 			wool = 0.15
@@ -167,7 +167,7 @@ nd_slo_salas = {
 			produced = cloth
 			output = 0.31
 			category = guild_input
-			debug_max_profit = guild_profit_margin
+			debug_max_profit = rural_profit_margin
 		}
 		nd_slo_fur_tanning = {
 			livestock = 0.2
@@ -175,7 +175,7 @@ nd_slo_salas = {
 			produced = fur
 			output = 0.27
 			category = guild_input
-			debug_max_profit = guild_profit_margin
+			debug_max_profit = rural_profit_margin
 		}
 		nd_slo_salas_maintenance = {
 			livestock = 0.1
@@ -213,12 +213,6 @@ nd_slo_carpathian_watchtower = {
 	}
 
 	unique_production_methods = {
-		nd_slo_frontier_provisions = {
-			livestock = 0.1
-			salt = 0.1
-			weaponry = 0.1
-			category = building_maintenance
-		}
 		nd_slo_watchtower_maintenance = {
 			lumber = 0.15
 			stone = 0.1
@@ -256,24 +250,107 @@ nd_slo_mining_academy = {
 	}
 
 	unique_production_methods = {
-		nd_slo_academy_instruction = {
-			paper = 0.15
-			books = 0.1
-			category = building_maintenance
-		}
-		nd_slo_mineral_surveys = {
-			glass = 0.15
-			iron = 0.1
-			category = building_maintenance
-		}
 		nd_slo_academy_maintenance = {
-			books = 0.15
-			paper = 0.1
-			lumber = 0.1
+			books = 0.197
+			paper = 0.132
+			lumber = 0.132
 			category = building_maintenance
 		}
 	}
 	construction_demand = university_construction
+}
+
+# Tajch: a mining reservoir of the Stiavnica hills. Samuel Mikoviny, director
+# and first professor of the mining school of 1735, and the two Hells laid
+# out the system: at its height sixty reservoirs joined by over 100 km of
+# channels. The water drove the pumps that drained the shafts, and the stamp
+# mills. A drained mine can go deeper, which is what the building gives.
+nd_slo_tajch = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = 1
+	employment_size = tiny_rural_peasant_produce_employment
+	category = infrastructure_category
+	# A dam in the hills above a mining town: never inside a great city.
+	rural_settlement = yes
+	town = yes
+	city = no
+	megalopolis = no
+	expensive = yes
+	build_time = infrastructure_build_time
+
+	country_potential = {
+		has_advance = nd_slo_technical_education
+	}
+
+	# Only where there is an ore mine to drain.
+	location_potential = {
+		OR = {
+			raw_material = goods:silver
+			raw_material = goods:goods_gold
+			raw_material = goods:copper
+			raw_material = goods:iron
+			raw_material = goods:lead
+			raw_material = goods:tin
+		}
+	}
+
+	modifier = {
+		# Vanilla's mining charter gives a mining town 0.35 (town_rights/00_traditions.txt:147).
+		local_max_rgo_size_modifier = 0.25
+	}
+
+	unique_production_methods = {
+		nd_slo_tajch_maintenance = {
+			lumber = 0.15
+			stone = 0.1
+			tools = 0.05
+			category = building_maintenance
+		}
+	}
+	construction_demand = pound_lock_canal_infrastructure_construction
+}
+
+# Holic majolica: the faience works Francis of Lorraine, consort of Maria
+# Theresa, set up on his Holic estate in 1743, the first in the Kingdom of
+# Hungary. Tin glazed ware, fired with wood: its own recipe, no coal.
+# A plain producer with no modifier block, so it takes the guild formula.
+nd_slo_holic_majolica = {
+	is_special = yes
+	is_foreign = no
+	pop_type = burghers
+	max_levels = guild_max_level
+	startup_ramp_target = guild_startup_ramp_target
+	employment_size = guild_employment
+	category = consumer_goods_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_slo_theresian_reforms
+	}
+
+	# The potter's clay has to be at hand (vanilla's glass guild asks the same of sand).
+	location_potential = {
+		is_produced_in_location_market = goods:clay
+	}
+
+	unique_production_methods = {
+		nd_slo_majolica_firing = {
+			clay = 2.0
+			tin = 0.4
+			lumber = 0.5
+			produced = porcelain
+			output = 1.02
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
 }
 
 # ===== DESTINY BUILDINGS =====
@@ -365,7 +442,7 @@ nd_slo_dest_krajina_fortress = {
 			produced = weaponry
 			output = 0.3
 			category = guild_input
-			debug_max_profit = guild_profit_margin
+			debug_max_profit = rural_profit_margin
 		}
 		nd_slo_dest_krajina_maintenance = {
 			stone = 0.15

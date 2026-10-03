@@ -21,7 +21,7 @@ nd_oye_afin = {
 
 	modifier = {
 		local_crown_estate_power = 0.25
-		local_cultural_tradition = 0.5
+		local_cultural_tradition = 0.25
 		local_nobles_estate_power = 0.5
 	}
 
@@ -67,39 +67,9 @@ nd_oye_oja_oba = {
 		nd_oye_market_maintenance = {
 			livestock = 0.1
 			cloth = 0.1
+			salt = 0.05
 			category = building_maintenance
 		}
-	
-		nd_oye_aso_oke_weaving = {
-			wool = 0.15
-			dyes = 0.15
-			category = building_maintenance
-		}
-
-		nd_oye_indigo_dyeing = {
-			dyes = 0.15
-			cloth = 0.1
-			category = building_maintenance
-		}
-	
-		nd_oye_ajase_port_ops = {
-			naval_supplies = 0.1
-			cloth = 0.1
-			category = building_maintenance
-		}
-	
-		nd_oye_ifa_consultation = {
-			paper = 0.1
-			dyes = 0.05
-			category = building_maintenance
-		}
-	
-		nd_oye_modern_manufacturing = {
-			weaponry = 0.1
-			cloth = 0.15
-			category = building_maintenance
-		}
-	
 	}
 	construction_demand = town_building_construction
 }
@@ -173,20 +143,6 @@ nd_oye_ile_ikoyi = {
 			leather = 0.1
 			category = building_maintenance
 		}
-
-		nd_oye_horse_breeding = {
-			livestock = 0.15
-			horses = 0.1
-			wheat = 0.1
-			category = building_maintenance
-		}
-
-		nd_oye_ogun_ironwork = {
-			weaponry = 0.15
-			lumber = 0.1
-			iron = 0.1
-			category = building_maintenance
-		}
 	}
 	construction_demand = soldier_building_construction
 }
@@ -211,22 +167,23 @@ nd_oye_sango_shrine = {
 	}
 
 	modifier = {
-		local_cultural_tradition = 0.5
+		local_cultural_tradition = 0.25
 		local_clergy_estate_power = 0.25
 		local_pop_conversion_speed = 0.01
 	}
 
 	unique_production_methods = {
 		nd_oye_shrine_maintenance = {
-			livestock = 0.1
-			pottery = 0.05
+			livestock = 0.11
+			pottery = 0.055
+			medicaments = 0.11
 			category = building_maintenance
 		}
 	}
 	construction_demand = school_construction
 }
 
-# Ile Ise (Craft Workshop): specialized Yoruba artisan workshop
+# Ile Ise: the house of Yoruba weavers and dyers (all three methods make cloth)
 nd_oye_ile_ise = {
 	is_special = yes
 	is_foreign = no
@@ -251,33 +208,88 @@ nd_oye_ile_ise = {
 		local_burghers_estate_power = 0.5
 	}
 
-	# Extraction is bound to the resource: you cannot mine, tap or
-	# harvest medicaments where there is none. Without this the building
-	# is a free resource generator in every location the owner holds.
-	location_potential = {
-		is_produced_in_location_market = goods:medicaments
-	}
+	# No location gate. The workshop is a weavers' and dyers' house: every
+	# product is a made good and its inputs are its gate. Until 2026-10-02
+	# it also held the kola method and was bound to markets that produce
+	# medicaments, which shut the cloth methods out of every other market.
+	# Kola now has a building of its own on kola land (nd_oye_kola_grove).
 
 	unique_production_methods = {
+		# Cotton, not wool: Yoruba cloth was woven from cotton. Output from
+		# eu5-profit at the guild margin (20%).
 		nd_oye_craft_maintenance = {
 			dyes = 0.1
-			wool = 0.1
+			cotton = 0.1
 			produced = cloth
-			output = 0.26
+			output = 0.28
 			category = guild_input
 			debug_max_profit = guild_profit_margin
 		}
 
-		nd_oye_kola_processing = {
-			fiber_crops = 0.1
-			pottery = 0.1
-			produced = medicaments
-			output = 0.36
+		# Unlocked by nd_oye_textile_expansion: narrow strips of cotton
+		# cloth woven with sanyan, the wild silk of the savanna.
+		nd_oye_aso_oke_weaving = {
+			cloth = 0.2
+			silk = 0.1
+			produced = fine_cloth
+			output = 0.2
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+
+		# Unlocked by nd_oye_indigo_trade: cloth dyed deep blue in the
+		# pits of the dyers' quarter.
+		nd_oye_indigo_dyeing = {
+			cloth = 0.3
+			dyes = 0.1
+			produced = fine_cloth
+			output = 0.26
 			category = guild_input
 			debug_max_profit = guild_profit_margin
 		}
 	}
 	construction_demand = guild_construction
+}
+
+# Kola Grove (age 2, nd_oye_horse_trade). The kola of the Yoruba forest
+# went north with the caravans that brought the horses back.
+# location_potential: the location's own raw material is medicaments, the
+# good kola stands for. A tree crop is picked where the trees stand.
+# Settlement: countryside only.
+# Bill: baskets and wrapping leaves (fiber crops) and pots to keep the nuts
+# moist on the road. Output from eu5-profit at the rural margin (20%).
+nd_oye_kola_grove = {
+	is_special = yes
+	is_foreign = no
+	pop_type = peasants
+	max_levels = rural_building_cap
+	employment_size = rural_peasant_produce_employment
+	category = rgo_building_category
+	rural_settlement = yes
+	town = no
+	city = no
+	megalopolis = no
+	build_time = rural_build_time
+
+	country_potential = {
+		has_advance = nd_oye_horse_trade
+	}
+
+	location_potential = {
+		raw_material = goods:medicaments
+	}
+
+	unique_production_methods = {
+		nd_oye_kola_processing = {
+			fiber_crops = 0.1
+			pottery = 0.1
+			produced = medicaments
+			output = 0.36
+			category = building_maintenance
+			debug_max_profit = rural_profit_margin
+		}
+	}
+	construction_demand = farm_constructions
 }
 
 # Odi (Earthen Fortification): traditional Yoruba defensive wall
@@ -343,8 +355,9 @@ nd_oye_ile_bata = {
 
 	unique_production_methods = {
 		nd_oye_drum_maintenance = {
-			lumber = 0.1
-			livestock = 0.05
+			lumber = 0.28
+			livestock = 0.14
+			leather = 0.14
 			category = building_maintenance
 		}
 	}
@@ -370,7 +383,7 @@ nd_oye_oko_oba = {
 	}
 
 	modifier = {
-		local_monthly_food_modifier = 0.05
+		local_monthly_food_modifier = 0.025
 		local_population_growth = 0.0005
 	}
 
@@ -385,6 +398,7 @@ nd_oye_oko_oba = {
 		nd_oye_farm_upkeep = {
 			lumber = 0.05
 			tools = 0.05
+			pottery = 0.1
 			category = building_maintenance
 		}
 		nd_oye_yam_farming = {
@@ -393,10 +407,99 @@ nd_oye_oko_oba = {
 			produced = millet
 			output = 0.27
 			category = guild_input
-			debug_max_profit = guild_profit_margin
+			debug_max_profit = rural_profit_margin
 		}
 	}
 	construction_demand = plantation_construction
+}
+
+# Igbodu (Ifa Grove): the grove where babalawo are initiated and spend
+# years learning the verses of the 256 odu by heart.
+# Settlement: towns and cities. Every Yoruba town kept its grove at the
+# edge of its walls; a farm hamlet had none.
+nd_oye_igbodu = {
+	is_special = yes
+	is_foreign = no
+	pop_type = clergy
+	max_levels = 1
+	employment_size = religious_building_employment
+	category = religious_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	expensive = no
+	build_time = religious_building_time
+
+	country_potential = {
+		has_advance = nd_oye_ifa_divination
+	}
+
+	modifier = {
+		local_clergy_max_literacy = 5
+		local_monthly_literacy = 0.02
+		local_clergy_estate_power = 0.25
+	}
+
+	unique_production_methods = {
+		nd_oye_igbodu_upkeep = {
+			fruit = 0.2
+			medicaments = 0.1
+			livestock = 0.1
+			category = building_maintenance
+		}
+	}
+	construction_demand = school_construction
+}
+
+# Agbede (Forge of Ogun): the smithy of a Yoruba town, with its shrine to
+# Ogun, where iron is worked into blades, spearheads and, later, gun parts.
+# A plain producer with no modifier block, so it takes the guild level
+# formula.
+# No location gate: weapons and firearms are made goods, and the iron and
+# charcoal they are made of are the gate.
+# Settlement: towns and cities, where the smiths' compounds stood.
+nd_oye_agbede = {
+	is_special = yes
+	is_foreign = no
+	pop_type = laborers
+	max_levels = guild_max_level
+	employment_size = guild_employment
+	category = weapons_industry_category
+	rural_settlement = no
+	town = yes
+	city = yes
+	megalopolis = yes
+	build_time = guild_build_time
+
+	country_potential = {
+		has_advance = nd_oye_ogun_smithing
+	}
+
+	unique_production_methods = {
+		nd_oye_ogun_ironwork = {
+			iron = 0.2
+			lumber = 0.1
+			tools = 0.05
+			produced = weaponry
+			output = 0.36
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+
+		# Unlocked by nd_oye_firearms_adoption: trade muskets repaired and
+		# copied, shot and locks made in the same forge.
+		nd_oye_gunsmithing = {
+			iron = 0.15
+			lumber = 0.1
+			tools = 0.1
+			produced = firearms
+			output = 0.36
+			category = guild_input
+			debug_max_profit = guild_profit_margin
+		}
+	}
+	construction_demand = guild_construction
 }
 
 # ===== DESTINY BUILDINGS =====

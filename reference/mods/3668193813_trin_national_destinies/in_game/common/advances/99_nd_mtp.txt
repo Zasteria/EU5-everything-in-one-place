@@ -14,7 +14,7 @@ nd_mtp_great_enclosure_tradition = {
 	icon = medieval_administration
 
 	unlock_building = nd_mtp_dzimba
-	global_monthly_development = 0.002
+	global_monthly_development = 0.001
 }
 
 # Njanja iron smelting: forced-draught furnace technology
@@ -71,6 +71,7 @@ nd_mtp_cattle_wealth = {
 	requires = horse_riding_advance
 	icon = horse_riding_advance
 
+	unlock_building = nd_mtp_cattle_post
 	global_livestock_output_modifier = 0.1
 }
 
@@ -81,9 +82,9 @@ nd_mtp_plateau_trade_routes = {
 	requires = legalism_advance
 	icon = legalism_advance
 
-	trade_land_efficiency = 0.025
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.025
+	trade_sea_efficiency = 0.1
 
 	trade_range_modifier = 0.1
 }
@@ -112,7 +113,6 @@ nd_mtp_sofala_trade_network = {
 
 	unlock_building = nd_mtp_feira
 	global_merchant_power = 0.1
-	unlock_production_method = nd_mtp_cattle_herding
 }
 
 # Nhare scouts: swift reconnaissance and ambush troops
@@ -136,8 +136,7 @@ nd_mtp_ivory_cotton_export = {
 	requires = patron_of_art
 	icon = patron_of_art
 
-	unlock_production_method = nd_mtp_ivory_processing
-	unlock_production_method = nd_mtp_cotton_weaving
+	unlock_building = nd_mtp_hunters_camp
 	global_raw_material_output = 0.1
 }
 
@@ -201,7 +200,7 @@ nd_mtp_gold_taxation = {
 	icon = regulate_court_procedures
 
 	unlock_production_method = nd_mtp_gold_preparation
-	tax_income_efficiency = 0.04
+	tax_income_efficiency = 0.03
 }
 
 # Feira market system: regulated trading posts where gold met cloth and glass
@@ -212,9 +211,9 @@ nd_mtp_feira_markets = {
 	icon = merchant_power_from_maritime_discovery_advance
 
 	global_merchant_capacity_modifier = 0.1
-	trade_land_efficiency = 0.03
+	trade_land_efficiency = 0.1
 
-	trade_sea_efficiency = 0.03
+	trade_sea_efficiency = 0.1
 
 }
 
@@ -225,7 +224,6 @@ nd_mtp_oracular_network = {
 	requires = printing_press_advance
 	icon = printing_press_advance
 
-	unlock_production_method = nd_mtp_shrine_ceremonies
 	spy_network_construction = 0.3
 }
 
@@ -237,7 +235,7 @@ nd_mtp_shaft_mining = {
 	icon = crown_power_advance_discovery
 
 	global_raw_material_output = 0.1
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }
 
 ##############################
@@ -289,7 +287,6 @@ nd_mtp_cloth_currency = {
 	requires = global_trade_advance
 	icon = global_trade_advance
 
-	unlock_production_method = nd_mtp_machira_production
 	global_cloth_output_modifier = 0.15
 }
 
@@ -301,7 +298,6 @@ nd_mtp_zambezi_corridor = {
 	icon = gov_reform_reformation_a
 
 	unlock_building = nd_mtp_zambezi_wharf
-	unlock_production_method = nd_mtp_zambezi_transport
 	trade_range_modifier = 0.2
 }
 
@@ -312,6 +308,7 @@ nd_mtp_mass_mobilization = {
 	requires = pop_promotion_speed_age_4
 	icon = pop_promotion_speed_age_4
 
+	unlock_production_method = nd_mtp_spear_forging
 	global_manpower_modifier = 0.1
 	global_levy_size_modifier = 0.1
 }
@@ -342,7 +339,7 @@ nd_mtp_firearms_adoption = {
 	icon = absolute_rulership
 
 	unlock_unit = a_nd_mtp_musketmen
-	global_firearms_output_modifier = 0.3
+	global_firearms_output_modifier = 0.2
 	ai_weight = {
 		add = 50
 	}
@@ -367,7 +364,7 @@ nd_mtp_ivory_expansion = {
 	icon = construction_speed_absolutism
 
 	global_raw_material_output = 0.1
-	global_production_efficiency = 0.05
+	global_production_efficiency = 0.025
 }
 
 # Khami architecture: the Rozvi capital's distinctive walling style
@@ -388,7 +385,12 @@ nd_mtp_gold_monopoly = {
 	requires = maritime_advance_age_5
 	icon = maritime_advance_age_5
 
-	global_goods_gold_output_modifier = 0.15
+	# A monopoly on export controls where the gold goes, it does not dig
+	# more of it: the gold that stays is worked by the court's own smiths.
+	# (More gold output here took the country's total for that key to 0.4
+	# with Great Zimbabwe's vanilla zmw_strict_gold_regulations, over the
+	# stacking cap of 0.3.)
+	unlock_production_method = nd_mtp_gold_wire_drawing
 	tax_income_efficiency = 0.04
 }
 
@@ -426,7 +428,7 @@ nd_mtp_anti_colonial_resistance = {
 	icon = napoleonic_warfare
 
 	discipline = 0.05
-	land_morale_modifier = 0.15
+	land_morale_modifier = 0.1
 	monthly_war_exhaustion = -0.05
 }
 
@@ -437,7 +439,7 @@ nd_mtp_mineral_sovereignty = {
 	requires = industrialization_advance
 	icon = industrialization_advance
 
-	tax_income_efficiency = 0.05
+	tax_income_efficiency = 0.03
 	global_copper_output_modifier = 0.15
 	global_raw_material_output = 0.1
 }
@@ -550,7 +552,9 @@ nd_mtp_dest_southern_march = {
 		}
 		owns_or_non_sovereign_subject_owns = location:mapulana
 		owns_or_non_sovereign_subject_owns = location:bakgatla
-		army_size >= 30
+		# The road south crosses the Limpopo at Mapungubwe, the hill
+		# capital older than Great Zimbabwe. Nobody owns it in 1337.
+		owns_or_non_sovereign_subject_owns = location:mapungubwe
 	}
 	icon = feudalism_advance
 	siege_ability = 0.1
@@ -564,12 +568,31 @@ nd_mtp_dest_highveld_conquest = {
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:kweneng
 		owns_or_non_sovereign_subject_owns = location:lejweleputswa
-		army_size >= 50
-		total_development >= 2000
+		# Cattle were what the king held the land with: the royal
+		# cattle posts of nd_mtp_cattle_wealth (age 1) in four places.
+		custom_tooltip = {
+			text = nd_mtp_dest_cattle_posts_tt
+			any_owned_location = {
+				count >= 4
+				has_building = building_type:nd_mtp_cattle_post
+			}
+		}
+		# The stage is the conquest of the Highveld, so it asks for a share
+		# of the area both of its targets stand in and not for a sum over
+		# the whole realm.
+		custom_tooltip = {
+			text = nd_mtp_dest_thaba_bosiu_share_tt
+			area:thaba_bosiu_area = {
+				any_location_in_area = {
+					percent >= 0.5
+					root = { owns_or_non_sovereign_subject_owns = prev }
+				}
+			}
+		}
 	}
 	icon = imperial_ambitions
 	army_logistics_distance_modifier = 0.1
-	global_devastation_recovery = 0.005
+	global_devastation_recovery = 0.0025
 }
 
 nd_mtp_dest_imperium = {
@@ -578,9 +601,26 @@ nd_mtp_dest_imperium = {
 	potential = { has_or_had_tag = MTP has_variable = nd_mtp_formed has_game_rule = nd_destinies_enabled }
 	allow = {
 		owns_or_non_sovereign_subject_owns = location:damara
-		army_size >= 75
+		# The path is the stone tradition: the enclosures of
+		# nd_mtp_great_enclosure_tradition (age 1) in three towns.
+		custom_tooltip = {
+			text = nd_mtp_dest_dzimba_tt
+			any_owned_location = {
+				count >= 3
+				has_building = building_type:nd_mtp_dzimba
+			}
+		}
 		prestige >= 75
-		total_development >= 2500
+		# The path is named for the stone city. Great Zimbabwe stands at 6
+		# in 1337 (development_estimate.py --explain great_zimbabwe); the
+		# capstone asks for double.
+		custom_tooltip = {
+			text = nd_mtp_dest_great_zimbabwe_developed_tt
+			location:great_zimbabwe = {
+				owner ?= root
+				development >= 12
+			}
+		}
 	}
 	icon = absolutism_agressive_advance
 	unlock_building = nd_mtp_royal_mustering_ground
