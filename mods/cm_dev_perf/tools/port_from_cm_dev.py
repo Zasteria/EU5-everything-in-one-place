@@ -64,6 +64,8 @@ _spec = importlib.util.spec_from_file_location(
 beta = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(beta)
 BETA_SPECS = Path(__file__).resolve().parent / "beta"
+RIO_SPECS = Path(__file__).resolve().parent / "rio_patch"
+RIO_PATCH = refs.REPO / "mods/cm_rio_patch"
 
 _spec = importlib.util.spec_from_file_location(
     "cm_perf_buildings", Path(__file__).resolve().parent / "buildings.py")
@@ -521,10 +523,106 @@ EDITS = (
 )
 
 
+CM_ACTIVE = "GetScriptedGui('glorpui_is_cm_active').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End)"
+VANILLA_TOGGLE = re.compile(r'on_action = "\[(?:ToggleAutoExpand\w*\(|\w+LateralView\.ToggleAutoExpandAll\w*\])')
+RGO_FLAG_ICON = 'visible = "[IsAutoExpandRGO(Location.Self)]"\n'
+
+
+def _gate_vanilla_toggles(text: str) -> tuple[str, int]:
+    """Hide the game's own auto-expand toggles while CM runs (his words 10-04:
+    «Ванильная автостройка при включёном cm вообще должна быть заблокирована»).
+
+    CM hides vanilla's checkboxes behind `glorpui_is_cm_active` and puts its own
+    beside them; the beta added Alt+click toggles to the RGO and building
+    buttons, and Río's RGO button marks a vanilla-flagged RGO with an icon, and
+    neither was gated. Every `action_tooltip` whose action is a vanilla toggle
+    gets the gate, and so does that icon.
+    """
+    out, n, at = [], 0, 0
+    for m in re.finditer(r"action_tooltip = \{", text):
+        if m.start() < at:
+            continue
+        depth, end = 0, m.end() - 1
+        for end in range(m.end() - 1, len(text)):
+            depth += {"{": 1, "}": -1}.get(text[end], 0)
+            if depth == 0:
+                break
+        block = text[m.start():end + 1]
+        if VANILLA_TOGGLE.search(block) and "glorpui_is_cm_active" not in block:
+            seen = re.search(r'^([ \t]*)visible = "\[(.*)\]"$', block, flags=re.M)
+            if seen:
+                block = (block[:seen.start()] + f'{seen.group(1)}visible = "[And({seen.group(2)}, Not({CM_ACTIVE}))]"'
+                         + block[seen.end():])
+            else:
+                indent = re.search(r"\n([ \t]*)\S", block).group(1)
+                block = block.replace("{\n", f'{{\n{indent}visible = "[Not({CM_ACTIVE})]"\n', 1)
+            n += 1
+        out.append(text[at:m.start()] + block)
+        at = end + 1
+    text = "".join(out) + text[at:]
+    for m in reversed(list(re.finditer(re.escape(RGO_FLAG_ICON) + r'[ \t]*texture = "gfx/interface/icons/flat_icons/mass_upgrade.dds"', text))):
+        gated = f'visible = "[And(IsAutoExpandRGO(Location.Self), Not({CM_ACTIVE}))]"\n'
+        text = text[:m.start()] + gated + text[m.start() + len(RGO_FLAG_ICON):]
+        n += 1
+    return text, n
+
+
+# Bump with every change to what cm_rio_patch ships; `mods.bat` compares it.
+RIO_PATCH_REVISION = 1
+
+
+def _rio_patch() -> str:
+    """mods/cm_rio_patch: Glorp UI Río's own windows with the CM hooks Río lacks.
+
+    In 1.3 Glorp UI's windows carried every CM hook and CM loaded before it (his
+    words 10-04: «всё было на месте… CM должен был идти перед glorpui»). Río,
+    Glorp UI for 1.4, carries most of them but not CM's auto-food and RGO
+    auto-expand toggles on the location window's RGO button, nor CM's toggle on
+    a built building in the production view, where it shows the game's own.
+    This mod is Río's file plus exactly those hooks (`tools/rio_patch/`), built
+    from the Río in `reference/` and loaded right after Río.
+    """
+    rio_root = refs.mod("glorp.ui.rio")
+    rio = rio_root / "in_game/gui"
+    for name in ("in_game", ".metadata"):
+        if (RIO_PATCH / name).exists():
+            shutil.rmtree(RIO_PATCH / name)
+    out = RIO_PATCH / "in_game/gui"
+    out.mkdir(parents=True)
+    gated = 0
+    for spec in sorted(RIO_SPECS.glob("*.json")):
+        window = spec.stem + ".gui"
+        text = (rio / window).read_text(encoding="utf-8-sig").replace("\r\n", "\n")
+        text = beta.apply(text, json.loads(spec.read_text(encoding="utf-8")), window, refs.GAME_GUI)
+        text, n = _gate_vanilla_toggles(text)
+        gated += n
+        (out / window).write_text("﻿" + text, encoding="utf-8")
+    rio_meta = json.loads((rio_root / ".metadata/metadata.json").read_text(encoding="utf-8-sig"))
+    meta = {
+        "name": "CM Perf x Glorp UI Rio",
+        "id": "bag.cm_rio_patch",
+        "version": f"0.1.{RIO_PATCH_REVISION}",
+        "game_id": "eu5",
+        "supported_game_version": "1.*",
+        "short_description": (
+            f"Glorp UI Rio's location and production windows (built on its {rio_meta.get('version')}) with "
+            "Construction Manager's auto-food, RGO auto-expand and building auto-expand toggles, and the "
+            "game's own auto-expand toggles hidden while CM runs. Load right after Glorp UI Rio; "
+            "Construction Manager Dev (perf) goes before Rio."),
+        "tags": ["User Interface", "Utilities"],
+        "relationships": [],
+        "game_custom_data": {},
+    }
+    (RIO_PATCH / ".metadata").mkdir()
+    (RIO_PATCH / ".metadata/metadata.json").write_text(
+        "﻿" + json.dumps(meta, indent=4, ensure_ascii=False) + "\n", encoding="utf-8")
+    return f"{', '.join(p.stem for p in sorted(RIO_SPECS.glob('*.json')))} on Río {rio_meta.get('version')}, {gated} vanilla toggles gated"
+
+
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 20
+PERF_REVISION = 21
 
 
 def metadata() -> str:
@@ -587,7 +685,8 @@ def main() -> int:
     # glorp… аккуратно встраивался в glorp, если он включён». Glorp UI Río replaces three of the
     # same windows and carries CM's hooks itself; this mod ships the beta's windows with CM's
     # hooks and loads ABOVE Río, so with Río on Río's own windows win whole and without it these
-    # do. (+perf11..19 shipped Río's file plus the hooks it lacks and loaded below it.)
+    # do. (+perf11..19 shipped Río's file plus the hooks it lacks and loaded below it.) What Río
+    # lacks, Río's file plus those hooks, is mods/cm_rio_patch, loaded right after Río (_rio_patch).
     # The beta's engine dropped `use_global_input_instance` (his log 10-02:
     # «not a valid widget/type/property»); commented out as the beta does.
     for path in (MOD / "in_game/gui").rglob("*.gui"):
@@ -614,6 +713,14 @@ def main() -> int:
                             encoding="utf-8")
     if not owner_gates:
         raise SystemExit("the tag-compare owner gate is gone from CM's windows; drop this pass")
+    gated = 0
+    for path in (MOD / "in_game/gui").rglob("*.gui"):
+        text = path.read_text(encoding="utf-8-sig")
+        text, n = _gate_vanilla_toggles(text)
+        if n:
+            gated += n
+            path.write_text("\ufeff" + text.lstrip("\ufeff"), encoding="utf-8")
+    patch = _rio_patch()
     # The beta added a native trigger `is_host`, CMF's own trigger's name; CM's
     # host gates (the classification among them, his run 10-02: never ran) go
     # to cmf_is_host, which cmf_dev_beta defines with CMF's body.
@@ -647,6 +754,7 @@ def main() -> int:
         shutil.copy2(thumb, MOD / ".metadata/thumbnail.png")
     print("cm_dev_perf: %d files copied from %s, %d edits applied, rebuilt on the beta: %s"
           % (copied, SRC.name, len(EDITS), ", ".join(rebuilt)))
+    print(f"cm_dev_perf: {gated} vanilla auto-expand toggles gated on CM; cm_rio_patch: {patch}")
     print("cm_dev_perf: National Destinies %s: %d capital, %d market-centre, %d control, %d for its list "
           "(at most %d rows a country)" % ("read" if nd_root else "absent", len(nd.capital), len(nd.market),
                                           len(nd.control), nd.count(), nd.most_rows()))
