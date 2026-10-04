@@ -188,6 +188,8 @@ PHRASES["english"] = _language(
         "svx__main__lists_name": "Filtering",
         "svx__show_all_name": "Show the game's full lists",
         "svx__show_all_desc": "Instead of the filtered lists, shows the game's own lists and every other source unfiltered. Glorp UI's “show unavailable suggestions” switch does the same.",
+        "svx__test_conditions_name": "Test: conditions on hover",
+        "svx__test_conditions_desc": "Experimental. In the “Not yet available” list the age numeral becomes a link: hovering it shows what it takes to get that privilege, reform or policy. Switch it off if anything breaks.",
     },
     scaled=_pairs(SCALED_KEYS, [
         "Fort maintenance", "Army maintenance", "Navy maintenance",
@@ -247,6 +249,8 @@ PHRASES["russian"] = _language(
         "svx__main__lists_name": "Фильтрация",
         "svx__show_all_name": "Показывать полные списки игры",
         "svx__show_all_desc": "Вместо отфильтрованных списков показывает списки самой игры и все прочие источники без фильтра. То же делает переключатель Glorp UI «Показать недоступные предложения».",
+        "svx__test_conditions_name": "Тест: условия по наведению",
+        "svx__test_conditions_desc": "Пробная функция. В списке «Пока недоступно» цифра эпохи становится ссылкой: наведение показывает, что нужно, чтобы получить привилегию, реформу или политику. Если что-то сломалось, выключите.",
     },
     scaled=_pairs(SCALED_KEYS, [
         "Содержание крепостей", "Содержание армии", "Содержание флота",

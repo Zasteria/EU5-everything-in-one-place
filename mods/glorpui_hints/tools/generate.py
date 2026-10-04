@@ -318,15 +318,7 @@ def requirements_name(line: dict) -> str | None:
     return "svx_req_%s_%s" % (line["kind"], line["object"])
 
 
-def with_bracket(text: str, line: dict, label: str | None) -> str:
-    """The line with `label` before its number: a link to the object's
-    conditions when it has any, else plain."""
-    name = requirements_name(line)
-    if label is None and name:
-        label = "(!)"
-    if label is None:
-        return text
-    note = " [Concept('%s', '%s')]" % (name, label) if name else " #help %s#!" % label
+def before_number(text: str, note: str) -> str:
     at = text.rfind(": #color_green")
     if at < 0:
         at = text.rfind("\\n")
@@ -342,40 +334,45 @@ def age_label(line: dict) -> str | None:
 
 
 def soon_text(text: str, line: dict, reason: str) -> str:
-    """The line with its age in brackets before its number, and that bracket a
-    link to the object's conditions (his ask 10-04: the age as a numeral; the
-    conditions not in the row, which ten of them would tear, but in a tooltip of
-    their own on hovering it). Without an age the bracket is «(!)».
-
-    1.2.2 put a `#TOOLTIP:CUSTOM` on a separate icon and it opened nothing (run
-    05:53); a concept link is what hovers in this list already.
-    """
+    """The line with its age in brackets before its number (his ask 10-04, and
+    what 1.2.2 showed him and he kept): «(IV)» while the advance or the age is
+    still to come, nothing otherwise."""
     why = line.get("why") or {}
-    label = None
     if reason == "_ADV":
-        label = "(%s)" % ROMAN[core.age_number(why["advance_age"])]
-    elif reason == "_AGE":
-        label = "(%s)" % ROMAN[core.age_number(why["age"])]
-    return with_bracket(text, line, label)
+        return before_number(text, " #help (%s)#!" % ROMAN[core.age_number(why["advance_age"])])
+    if reason == "_AGE":
+        return before_number(text, " #help (%s)#!" % ROMAN[core.age_number(why["age"])])
+    return text
 
 
-def requirements(by_direction: dict[str, list[dict]]) -> dict[str, list[str]]:
-    """scripted GUI name -> the triggers it checks, once per object."""
-    out: dict[str, list[str]] = {}
+def soon_test_text(text: str, line: dict) -> str:
+    """The same line with the bracket a link to the object's conditions, for the
+    «test» checkbox only (10-04: 1.2.2's `#TOOLTIP:CUSTOM` icon opened nothing,
+    1.2.3/1.2.4's `[Concept(...)]` cut the line after the name). This one is
+    written as Calidad de Vida's working mod concept is used, `[key|E]`, the
+    concept's own name being the bracket."""
+    name = requirements_name(line)
+    return before_number(text, " [%s|E]" % name) if name else text
+
+
+def requirements(by_direction: dict[str, list[dict]]) -> dict[str, dict]:
+    """scripted GUI name -> the triggers it checks and the bracket it shows,
+    once per object a «not yet» line names."""
+    out: dict[str, dict] = {}
     for lines in by_direction.values():
         for line in lines:
             name = requirements_name(line)
-            if name:
-                out[name] = line["needs"]
+            if name and line["soon"]:
+                out[name] = {"needs": line["needs"], "label": age_label(line) or "(!)"}
     return dict(sorted(out.items()))
 
 
-def scripted_guis(reqs: dict[str, list[str]]) -> str:
+def scripted_guis(reqs: dict[str, dict]) -> str:
     out = [HEADER, "# One per object a «not yet» line names: its `is_valid` is every gate the",
            "# game puts on that object, and IsValidTooltip has the game word them.", ""]
-    for name, needs in reqs.items():
+    for name, req in reqs.items():
         out += ["%s = {" % name, "\tscope = country", "\tis_valid = {"]
-        out += ["\t\t%s" % n for n in needs]
+        out += ["\t\t%s" % n for n in req["needs"]]
         out += ["\t}", "}", ""]
     return "\n".join(out)
 
@@ -384,7 +381,7 @@ NAME_OF = {"privilege": "ShowEstatePrivilegeName", "reform": "ShowGovernmentRefo
            "policy": "ShowPolicyName"}
 
 
-def concepts(reqs: dict[str, list[str]]) -> str:
+def concepts(reqs: dict[str, dict]) -> str:
     """One game concept per object: the link the age bracket is. A mod concept
     with no texture renders as nothing (docs/pitfalls/localization.md); the
     texture is the one Calidad de Vida's hovering concept carries."""
@@ -395,14 +392,14 @@ def concepts(reqs: dict[str, list[str]]) -> str:
     return "\n".join(out)
 
 
-def concept_words(reqs: dict[str, list[str]], lang: str) -> str:
+def concept_words(reqs: dict[str, dict], lang: str) -> str:
     out = [HEADER, "l_%s:" % lang]
-    for name in reqs:
+    for name, req in reqs.items():
         kind, key = name[len("svx_req_"):].split("_", 1)
-        out.append(' game_concept_%s: "[%s(\'%s\')]"' % (name, NAME_OF[kind], key))
-        out.append(' game_concept_%s_desc: "$LIST_TITLE_REQUIREMENTS$\\n'
+        out.append(' game_concept_%s: "%s"' % (name, req["label"]))
+        out.append(' game_concept_%s_desc: "[%s(\'%s\')]\\n$LIST_TITLE_REQUIREMENTS$\\n'
                    '[GetScriptedGui(\'%s\').IsValidTooltip(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"'
-                   % (name, name))
+                   % (name, NAME_OF[kind], key, name))
     return "\n".join(out) + "\n"
 
 
@@ -430,6 +427,7 @@ def build() -> dict[str, str]:
                 custom += custom_choice(line["name"] + "_soon", [
                     (key + "_SOON" + reason, line["soon"] + extra)
                     for reason, extra in soon_reasons(line)])
+                custom += custom_entry(line["name"] + "_soon_t", key + "_SOON_T", line["soon"])
     files[CUSTOM] = "\n".join(custom)
 
     # --- whether each list has anything to show --------------------------------
@@ -518,7 +516,7 @@ def build() -> dict[str, str]:
             out.append(' %s: "%s"' % (key, text))
         for direction in directions:
             lines = by_direction.get(direction, [])
-            now_body, soon_body, all_body = [], [], []
+            now_body, soon_body, test_body, all_body = [], [], [], []
             for line in lines:
                 key = line["name"].upper()
                 text = line_text(line, lang, glorp)
@@ -527,25 +525,29 @@ def build() -> dict[str, str]:
                 if line["soon"]:
                     for reason, _ in soon_reasons(line):
                         out.append(' %s_SOON%s: "%s"' % (key, reason, soon_text(text, line, reason)))
+                    out.append(' %s_SOON_T: "%s"' % (key, soon_test_text(text, line)))
                 now_body.append("[Player.Custom('%s_now')]" % line["name"] if line["now"] else text)
                 if line["soon"]:
                     soon_body.append("[Player.Custom('%s_soon')]" % line["name"])
-                # With the switch on, everything, unfiltered (his ask 10-04: the
-                # game's own lists said nothing of whose an object is or what it
-                # takes): the three takeable kinds with their age and conditions.
-                if line["kind"] in NAME_OF:
-                    all_body.append(with_bracket(text, line, age_label(line)))
-                else:
+                    test_body.append("[Player.Custom('%s_soon_t')]" % line["name"])
+                if line["kind"] not in NAME_OF:
+                    # With the switch on, the game's own lists stand in for the
+                    # three takeable kinds; everything else is listed whole.
+                    # (1.2.4 listed those too, unfiltered: «каша», 10-04.)
                     all_body.append(text)
             upper = direction.upper()
             out.append(' SVX_NOW_%s: "%s"' % (upper, "".join(now_body)))
             out.append(' SVX_SOON_%s: "%s"' % (upper, "".join(soon_body)))
+            out.append(' SVX_SOON_T_%s: "%s"' % (upper, "".join(test_body)))
             out.append(' SVX_ALL_%s: "%s"' % (upper, "".join(all_body)))
         files["main_menu/localization/%s/svx_hints_l_%s.yml" % (lang, lang)] = "\n".join(out) + "\n"
 
         menu = [HEADER, "# CMM derives every key below from the mod id and the setting id,",
                 "# and a key it cannot find shows as the raw key on screen.", "l_%s:" % lang]
-        menu += [' %s: "%s"' % (k, v.replace('"', '\\"')) for k, v in phrases["menu"].items()]
+        # A setting only English and Russian word yet shows in English rather
+        # than as its raw key.
+        words = dict(svx_languages.PHRASES["english"]["menu"], **phrases["menu"])
+        menu += [' %s: "%s"' % (k, v.replace('"', '\\"')) for k, v in words.items()]
         files["main_menu/localization/%s/svx_menu_l_%s.yml" % (lang, lang)] = "\n".join(menu) + "\n"
 
     for lang, fixes in svx_languages.GLORP_UI_FIXES.items():
@@ -571,6 +573,9 @@ def gui(pairs, by_direction) -> str:
     show_game = ("Or(Player.MakeScope.GetVariable('showUnavailableSocietalValueSuggestions').IsSet,"
                  " And(CMMSettingIsRegistered('svx__show_all'),"
                  "CMMValueEqualsOne(CMMSettingValue('svx__show_all'))))")
+    # The test checkbox (10-04): the «not yet» brackets as links to conditions.
+    test_on = ("And(CMMSettingIsRegistered('svx__test_conditions'),"
+               "CMMValueEqualsOne(CMMSettingValue('svx__test_conditions')))")
 
     def scope_value(name: str) -> str:
         return ("GreaterThan_CFixedPoint(GuiScope.AddScope('%s', SocietalValue.MakeScope)"
@@ -603,24 +608,32 @@ def gui(pairs, by_direction) -> str:
                 "\tusing = SocietalValue%s_tooltip" % side,
                 "\tblockoverride \"societal_value_%s_tooltip_extra\" {" % side.lower(),
                 "",
+                "\t\t# Either switch on: the game's own two lists.",
                 ""]
-        out += ["\t\t# Both off: this mod's lists, under the game's own two titles.", ""]
+        out += block(show_game, "TO_MOVE_FURTHER_TO_%s" % side.upper(),
+                     "[SocietalValue.Get%sHint(Player.Self)]" % side)
+        out += block("And(%s, SocietalValue.Show%sLockedHint(Player.Self))" % (show_game, side),
+                     "SV_HINT_NOT_YET_AVAILABLE",
+                     "[SocietalValue.Get%sLockedHint(Player.Self)]" % side)
+        out += ["\t\t# Both off: this mod's lists, under the game's own two titles; the",
+                "\t\t# «not yet» one with links to conditions while the test checkbox is on.", ""]
         for pair in pairs:
             direction = pair[index]
             upper = direction.upper()
             out += block("And(Not(%s), %s)" % (show_game, scope_value("svx_now_visible_%s" % direction)),
                          "TO_MOVE_FURTHER_TO_%s" % side.upper(), "[Localize('SVX_NOW_%s')]" % upper)
-            out += block("And(Not(%s), %s)" % (show_game, scope_value("svx_soon_visible_%s" % direction)),
+            soon = scope_value("svx_soon_visible_%s" % direction)
+            out += block("And3(Not(%s), Not(%s), %s)" % (show_game, test_on, soon),
                          "SV_HINT_NOT_YET_AVAILABLE", "[Localize('SVX_SOON_%s')]" % upper)
-        out += ["\t\t# Either switch on: every source, unfiltered, the takeable ones with",
-                "\t\t# their age and a link to their conditions (10-04: the game's own",
-                "\t\t# lists stood here and named neither).", ""]
+            out += block("And3(Not(%s), %s, %s)" % (show_game, test_on, soon),
+                         "SV_HINT_NOT_YET_AVAILABLE", "[Localize('SVX_SOON_T_%s')]" % upper)
+        out += ["\t\t# Either switch on: every other source, unfiltered.", ""]
         for pair in pairs:
             direction = pair[index]
-            if not by_direction.get(direction):
+            if not any(l["kind"] not in NAME_OF for l in by_direction.get(direction, [])):
                 continue
             out += block("And(%s, %s)" % (show_game, scope_value("svx_axis_%s" % pair[2])),
-                         "SVX_EVERYTHING", "[Localize('SVX_ALL_%s')]" % direction.upper(), 320)
+                         "SVX_EVERYTHING", "[Localize('SVX_ALL_%s')]" % direction.upper())
         out += ["\t}", "}", ""]
     return "\n".join(out)
 

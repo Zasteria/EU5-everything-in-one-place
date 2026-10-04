@@ -20,3 +20,14 @@
 
 Подозрение 09-27 (не хватает 1 с на постройку дерева) и зонд +perf3:
 [`docs/archive/cm_dev_perf_suspicion_0927.md`](../../docs/archive/cm_dev_perf_suspicion_0927.md).
+
+## +perf8..+perf10, moved 2026-10-04
+
+**+perf8 (10-03): журнал CM в `debug.log`.** Строки вкладки «Отладка» →
+«Журнал действий» меню CMF (девять галочек по разделам) идут ещё и в
+`debug.log` (`_mirror_log`): «CM<раздел>$<ключ>$ <числа>», под строкой — район
+или тип здания. Ключи — `cm_log_*` в `cm_localization_l_english.yml`.
+
+**+perf9:** перед каждым неохраняемым поиском в карте — `has_variable_map`
+(`_guard_maps`); 04:50 ошибок «нет карты» ноль. **+perf10:** прямые `cmf_log*`
+идут в `debug.log` (`_mirror_direct`), зонд дорог печатает «CM roads gate …».

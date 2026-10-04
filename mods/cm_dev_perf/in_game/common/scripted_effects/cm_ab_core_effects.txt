@@ -335,10 +335,21 @@ cm_ab_stage_core_material = {
 			save_temporary_scope_as = cm_ab_core_pred
 			scope:cm_country = { add_to_variable_list = { name = cm_ab_core_lead_preds target = scope:cm_ab_core_pred } }
 		}
-		every_market_center_in_country = {
-			limit = { cm_market_in_slice = yes }
-			save_scope_as = cm_ab_market
-			scope:cm_country = { cm_ab_stage_core_good = yes }
+		# cm_dev_perf: every market the country is in, when the player asked for it
+		if = {
+			limit = { exists = var:cm_ab_core_foreign_markets }
+			every_market_present_in_country = {
+				limit = { cm_market_in_slice = yes }
+				save_scope_as = cm_ab_market
+				scope:cm_country = { cm_ab_stage_core_good = yes }
+			}
+		}
+		else = {
+			every_market_center_in_country = {
+				limit = { cm_market_in_slice = yes }
+				save_scope_as = cm_ab_market
+				scope:cm_country = { cm_ab_stage_core_good = yes }
+			}
 		}
 		clear_variable_list = cm_ab_core_lead_preds
 	}

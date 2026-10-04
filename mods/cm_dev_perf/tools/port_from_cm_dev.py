@@ -128,6 +128,7 @@ def _widen_refresh(text: str) -> str:
 LOG = "in_game/common/scripted_effects/cm_log_effects.txt"
 ROADS = "in_game/common/scripted_effects/cm_ab_roads_effects.txt"
 CMM = "in_game/common/scripted_effects/cm_cmm_effects.txt"
+CORE = "in_game/common/scripted_effects/cm_ab_core_effects.txt"
 # wrapper: (number of values, logs a location, logs a building type)
 _LOGGED = {
     "cm_dbg_log": (0, False, False),
@@ -287,26 +288,76 @@ def _register_ignore_shortage(text: str) -> str:
         "\t\t\t}\n\t\t}\n") + changed)
 
 
+def _core_foreign_markets(text: str) -> str:
+    """Core goods also work markets whose centre is someone else's when the
+    player ticks «И на чужом рынке» (+perf14, 10-04). His run 06:23: masonry
+    20 % dear, target not met, every probe gate yes but «we own the market
+    centre» — the walk only visits `every_market_center_in_country`, so his
+    Württemberg, in a market centred outside it, never got a quarry."""
+    old = ("\t\tevery_market_center_in_country = {\n\t\t\tlimit = { cm_market_in_slice = yes }\n"
+           "\t\t\tsave_scope_as = cm_ab_market\n\t\t\tscope:cm_country = { cm_ab_stage_core_good = yes }\n\t\t}\n")
+    if text.count(old) != 1:
+        raise SystemExit("core: the market walk has changed shape")
+    present = old.replace("every_market_center_in_country", "every_market_present_in_country")
+    indent = lambda s: "".join("\t" + l + "\n" for l in s.rstrip("\n").split("\n"))
+    return text.replace(old, (
+        "\t\t# cm_dev_perf: every market the country is in, when the player asked for it\n"
+        "\t\tif = {\n\t\t\tlimit = { exists = var:cm_ab_core_foreign_markets }\n"
+        + indent(present) + "\t\t}\n\t\telse = {\n" + indent(old) + "\t\t}\n"))
+
+
+def _register_core_foreign(text: str) -> str:
+    """The checkbox behind `_core_foreign_markets`, after the core goods target."""
+    sync = ("\tcmm_sync_setting_alias = {\n\t\tsetting = cm__ab_core_target\n"
+            "\t\talias = cm_ab_core_target\n\t}\n")
+    if text.count(sync) != 1:
+        raise SystemExit("cmm: the core target setting has changed shape")
+    text = text.replace(sync, sync + (
+        "\n\t# cm_dev_perf: core goods in markets centred elsewhere (+perf14)\n"
+        "\tcmm_register_bool_setting = {\n\t\tmod_id = cm\n\t\tsetting_id = ab_core_foreign_markets\n"
+        "\t\ttab_id = ab_core\n\t\tgroup_id = ab_core\n\t\tdefault_value = 0\n\t}\n"
+        "\tcmm_sync_bool_alias = {\n\t\tsetting = cm__ab_core_foreign_markets\n"
+        "\t\talias = cm_ab_core_foreign_markets\n\t}\n"))
+    changed = "\t\tflag:cm__ab_core_target = {\n"
+    if text.count(changed) != 1:
+        raise SystemExit("cmm: the core target branch has changed shape")
+    return text.replace(changed, (
+        "\t\tflag:cm__ab_core_foreign_markets = {\n\t\t\tcmm_sync_bool_alias = {\n"
+        "\t\t\t\tsetting = cm__ab_core_foreign_markets\n\t\t\t\talias = cm_ab_core_foreign_markets\n"
+        "\t\t\t}\n\t\t}\n") + changed)
+
+
 # The checkbox's words: CMM shows a missing key raw, so every language gets
 # them, English where there is no translation.
-IGNORE_SHORTAGE_WORDS = {
-    "russian": ("Строить при нехватке товаров",
-                "Прокладывать дороги, даже когда на рынке не хватает пиломатериалов, камня или песка. "
-                "Золото списывается сразу, нехватка только замедляет стройку."),
-    "english": ("Build Through Shortages",
-                "Lay roads even when the market is short of lumber, masonry or sand. "
-                "The gold is paid at once; a shortage only slows the work."),
+SETTING_WORDS = {
+    "cm__ab_roads_ignore_shortage": {
+        "russian": ("Строить при нехватке товаров",
+                    "Прокладывать дороги, даже когда на рынке не хватает пиломатериалов, камня или песка. "
+                    "Золото списывается сразу, нехватка только замедляет стройку."),
+        "english": ("Build Through Shortages",
+                    "Lay roads even when the market is short of lumber, masonry or sand. "
+                    "The gold is paid at once; a shortage only slows the work."),
+    },
+    "cm__ab_core_foreign_markets": {
+        "russian": ("И на чужом рынке",
+                    "Строить основные товары и на рынках, центр которых принадлежит другой державе, "
+                    "если там есть ваши районы. Без этого Construction Manager работает только на рынках "
+                    "со своим центром."),
+        "english": ("Markets Centred Elsewhere Too",
+                    "Build core goods in markets whose centre belongs to another country too, where you "
+                    "own locations. Without it Construction Manager only works markets you hold the centre of."),
+    },
 }
 
 
 def _write_setting_words() -> None:
     for folder in sorted((MOD / "main_menu/localization").iterdir()):
         lang = folder.name
-        name, desc = IGNORE_SHORTAGE_WORDS.get(lang, IGNORE_SHORTAGE_WORDS["english"])
-        (folder / f"cm_perf_settings_l_{lang}.yml").write_text(
-            f"\ufeffl_{lang}:\n cm__ab_roads_ignore_shortage_name: \"{name}\"\n"
-            f" cm__ab_roads_ignore_shortage_desc: \"{desc}\"\n"
-            f" cm__ab_roads_ignore_shortage: \"cm__ab_roads_ignore_shortage\"\n", encoding="utf-8")
+        lines = [f"\ufeffl_{lang}:"]
+        for key, words in SETTING_WORDS.items():
+            name, desc = words.get(lang, words["english"])
+            lines += [f' {key}_name: "{name}"', f' {key}_desc: "{desc}"', f' {key}: "{key}"']
+        (folder / f"cm_perf_settings_l_{lang}.yml").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 EDITS = (
@@ -317,13 +368,15 @@ EDITS = (
     (ROADS, "say the roads plan's gates in its probe", _probe_road_gates),
     (ROADS, "let roads go ahead through a market shortage", _roads_ignore_shortage),
     (CMM, "the checkbox for it", _register_ignore_shortage),
+    (CORE, "work core goods in markets centred elsewhere", _core_foreign_markets),
+    (CMM, "the checkbox for it", _register_core_foreign),
 )
 
 
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 13
+PERF_REVISION = 14
 
 
 def metadata() -> str:
