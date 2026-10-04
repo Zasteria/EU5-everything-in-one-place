@@ -64,6 +64,7 @@ _spec = importlib.util.spec_from_file_location(
 beta = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(beta)
 BETA_SPECS = Path(__file__).resolve().parent / "beta"
+BETA_RIO = Path(__file__).resolve().parent / "beta_rio"
 
 _CLASSIFY = (
     "GetScriptedGui('cm_should_building_type_section_show')"
@@ -259,7 +260,7 @@ EDITS = (
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 10
+PERF_REVISION = 11
 
 
 def metadata() -> str:
@@ -298,6 +299,24 @@ def main() -> int:
     # break on the beta; each with a spec in tools/beta/ is rebuilt as the
     # beta's window plus CM's hooks (beta_windows.py).
     rebuilt = beta.rebuild(refs.GAME_GUI, BETA_SPECS, MOD / "in_game/gui")
+    # 10-04: Glorp UI Río replaces three of the same windows and loads after
+    # this mod, so his location window was Río's, which carries every CM hook
+    # but the RGO button's auto-expand and auto-food toggles (his screenshot:
+    # «Запас пищи в провинции» is Río's header; the toggles were gone). Those
+    # three are Río's file plus the hooks it lacks (`beta_rio/`); this mod then
+    # has to load after Río. Río's windows name nothing that only Glorp UI
+    # defines but its ROI labels.
+    try:
+        rio = refs.mod("glorp.ui.rio") / "in_game/gui"
+    except SystemExit:
+        rio = None
+    if rio is not None and rio.is_dir():
+        for spec in sorted(BETA_RIO.glob("*.json")):
+            window = spec.stem + ".gui"
+            text = (rio / window).read_text(encoding="utf-8-sig").replace("\r\n", "\n")
+            text = beta.apply(text, json.loads(spec.read_text(encoding="utf-8")), window, refs.GAME_GUI)
+            (MOD / "in_game/gui" / window).write_text("\ufeff" + text, encoding="utf-8")
+            rebuilt = [w if w != window else window + " (on Glorp UI Río)" for w in rebuilt]
     # The beta's engine dropped `use_global_input_instance` (his log 10-02:
     # «not a valid widget/type/property»); commented out as the beta does.
     for path in (MOD / "in_game/gui").rglob("*.gui"):
