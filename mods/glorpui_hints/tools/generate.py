@@ -496,12 +496,24 @@ def worded(need: str, sources: dict[str, dict]) -> str:
     return re.sub(r"has_variable = ([A-Za-z0-9_]+)", flag, need)
 
 
+# PROBE 1.2.9 (10-04), remove after his run: «Крейты» showed «Всё из
+# перечисленного:» and nothing under it. Each extra line fails for Lithuania and
+# is worded differently, so which of them print says whether the game drops a
+# scope change, an OR, or both.
+PROBE = {"svx_req_privilege_creaghts_privilege": [
+    "has_reform = government_reform:celtic_traditions_reform",
+    "culture = { has_culture_group = culture_group:hibernian_group }",
+    "OR = { has_or_had_tag = IRE has_or_had_tag = SCO }",
+]}
+
+
 def scripted_guis(reqs: dict[str, dict], sources: dict[str, dict]) -> str:
     out = [HEADER, "# One per object a «not yet» line names: its `is_valid` is every gate the",
            "# game puts on that object, and IsValidTooltip has the game word them.", ""]
     for name, req in reqs.items():
         out += ["%s = {" % name, "\tscope = country", "\tis_valid = {"]
         out += ["\t\t%s" % worded(n, sources) for n in req["needs"]]
+        out += ["\t\t%s" % n for n in PROBE.get(name, [])]
         out += ["\t}", "}", ""]
     return "\n".join(out)
 
