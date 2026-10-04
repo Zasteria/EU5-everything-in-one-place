@@ -248,19 +248,34 @@ def _probe_road_gates(text: str) -> str:
     return text.replace(head, head + "\n".join(lines) + "\n", 1)
 
 
+def _roads_ignore_shortage(text: str) -> str:
+    """A road no longer waits on the market's lumber, masonry and sand (+perf12,
+    his choice 10-04). The 05:53 probe: every gate yes, 26 corridors planned,
+    all 26 «short», and the walk stops on the first without a word. Released CM
+    has no such gate and built his roads; a shortage only slows the work, the
+    gold is paid at once either way."""
+    old = ("\t\t\tcm_market_has_construction_goods_for_road = yes\n"
+           "\t\t\tcm_ab_rd_meets_min_discount = yes\n")
+    if text.count(old) != 1:
+        raise SystemExit("roads: the try_build gate has changed shape")
+    return text.replace(old, "\t\t\t# cm_dev_perf: no market shortage gate for roads\n"
+                             "\t\t\tcm_ab_rd_meets_min_discount = yes\n")
+
+
 EDITS = (
     (WINDOW, "gate the building-type tree", _gate_the_tree),
     (WINDOW, "widen the first pass's instantiation window", perf._widen_first_pass),
     (WINDOW, "widen the upgrade refresh's instantiation window", _widen_refresh),
     (LOG, "mirror the Debug tab's log into debug.log", _mirror_log),
     (ROADS, "say the roads plan's gates in its probe", _probe_road_gates),
+    (ROADS, "let roads go ahead through a market shortage", _roads_ignore_shortage),
 )
 
 
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 11
+PERF_REVISION = 12
 
 
 def metadata() -> str:
