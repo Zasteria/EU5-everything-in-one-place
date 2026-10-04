@@ -15,7 +15,7 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`cmf_dev_beta`](../mods/cmf_dev_beta/CLAUDE.md) | +beta5 (10-03): копия авторского CMF под 1.4 + `cmf_is_host`; ставится вместо CMF и CMF Dev | всё |
 | [`glorpui_hints`](../mods/glorpui_hints/CLAUDE.md) | 1.2.10, игра 1.4, основной предмет; условия по наведению | OR в условиях |
 | [`glorpui_hints_1_3`](../mods/glorpui_hints_1_3/CLAUDE.md) | 1.1.1 для 1.3, свой предмет | — |
-| [`centered_towns`](../mods/centered_towns/CLAUDE.md) | 0.1.0 (10-04): города в середину района | всё |
+| [`centered_towns`](../mods/centered_towns/CLAUDE.md) | 0.1.0 (10-04): веса городов — в игре без эффекта | — |
 | [`quiet_alerts`](../mods/quiet_alerts/CLAUDE.md) | 10-02: 0.3.0 не в игре. Красные и оранжевые с жёлтым звуком, галочка в CMF | всё |
 | [`war_sliders`](../mods/war_sliders/CLAUDE.md) | **0.6.2 ждёт прогона** (0.5.2 работала 09-29). Кнопка на панели CMF: содержание и инфляция, без нажатия спит | кнопка: содержание, правка чеканки (09-30) |
 
