@@ -450,7 +450,44 @@ EDITS = (
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 16
+PERF_REVISION = 17
+
+
+UNBUILT_HOOK = """\t\t\t\t\tcm_auto_expand_new_building_button_pl = {
+\t\t\t\t\t\tignore_layout = yes
+\t\t\t\t\t\tparentanchor = right|vcenter
+\t\t\t\t\t\tposition = { -133 0 }
+\t\t\t\t\t\tdatacontext = "[BuildingItem.GetBuildingType]"
+\t\t\t\t\t}
+"""
+
+UNBUILT_PROBE = """\t\t\t\t\t# PROBE +perf17: A drawn, B has owner, C owner = Player.Self, D owner = GetPlayer, then the location's name
+\t\t\t\t\thbox = {
+\t\t\t\t\t\tignore_layout = yes
+\t\t\t\t\t\tparentanchor = left|top
+\t\t\t\t\t\tposition = { 230 3 }
+\t\t\t\t\t\tspacing = 6
+\t\t\t\t\t\ttext_single = { fontsize = 13 raw_text = "A" }
+\t\t\t\t\t\ttext_single = { fontsize = 13 visible = "[Location.HasOwner]" raw_text = "B" }
+\t\t\t\t\t\ttext_single = { fontsize = 13 visible = "[ObjectsEqual(Location.GetOwner, Player.Self)]" raw_text = "C" }
+\t\t\t\t\t\ttext_single = { fontsize = 13 visible = "[ObjectsEqual(Location.GetOwner, GetPlayer)]" raw_text = "D" }
+\t\t\t\t\t\ttext_single = { fontsize = 13 raw_text = "[Location.GetName]" }
+\t\t\t\t\t}
+\t\t\t\t\t# PROBE +perf17: the same button with no owner gate
+\t\t\t\t\tcm_auto_expand_new_building_button = {
+\t\t\t\t\t\tignore_layout = yes
+\t\t\t\t\t\tparentanchor = right|vcenter
+\t\t\t\t\t\tposition = { -160 0 }
+\t\t\t\t\t\tdatacontext = "[BuildingItem.GetBuildingType]"
+\t\t\t\t\t}
+"""
+
+
+def _probe_unbuilt_toggle(path: Path) -> None:
+    text = path.read_text(encoding="utf-8-sig")
+    if text.count(UNBUILT_HOOK) != 1:
+        raise SystemExit(f"{path.name}: the unbuilt-row auto-expand hook is not there once")
+    path.write_text("﻿" + text.replace(UNBUILT_HOOK, UNBUILT_HOOK + UNBUILT_PROBE), encoding="utf-8")
 
 
 def metadata() -> str:
@@ -532,6 +569,11 @@ def main() -> int:
                             encoding="utf-8")
     if not owner_gates:
         raise SystemExit("the tag-compare owner gate is gone from CM's windows; drop this pass")
+    # PROBE (+perf17), one run then out: +perf15's object compare did not bring
+    # the toggle back (his run 10-04 17:14, Тырговиште). Letters by the name say
+    # which part of the gate holds, an ungated copy of the button 27 px left of
+    # the gated one says whether the button draws at all there.
+    _probe_unbuilt_toggle(MOD / "in_game/gui/production_lateralview.gui")
     # The beta added a native trigger `is_host`, CMF's own trigger's name; CM's
     # host gates (the classification among them, his run 10-02: never ran) go
     # to cmf_is_host, which cmf_dev_beta defines with CMF's body.
