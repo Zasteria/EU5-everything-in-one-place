@@ -327,6 +327,77 @@ def _register_core_foreign(text: str) -> str:
         "\t\t\t}\n\t\t}\n") + changed)
 
 
+TRMM = "in_game/common/scripted_effects/cm_town_right_map_mode_effects.txt"
+TRMM_GUIS = "in_game/common/scripted_guis/cm_town_right_map_mode_scripted_guis.txt"
+PF_WINDOW = "in_game/gui/cm_pf_map_mode_window.gui"
+
+_MARK = "\t\t\tset_variable = {\n\t\t\t\tname = cm_trmm_cov_v\n\t\t\t\tvalue = cm_trmm_version_value\n\t\t\t}\n"
+
+
+def _mark_trmm_slices(text: str) -> str:
+    """**The rights tooltip of conquered land is empty** (his run 10-04: new
+    Moldavian locations under the rights map, «Подробности» and «Лучшие
+    производства» with nothing under them, the colour right). The coverage the
+    tooltip reads is stored on the province, and a province is the owner's
+    slice of a province definition: land changing hands makes new slices that
+    carry none of it, while the colour is read from the location and lives on
+    (docs/PITFALLS.md, found in cm_maps 2026-09-19). CM recomputes once per
+    save, behind `cm_trmm_stamp`. So every slice the pass writes is marked,
+    and `cm_trmm_repair` recomputes the definitions with an unmarked slice —
+    cm_maps' repair, the same names without the `b`."""
+    written = ("\t\tevery_province_in_province_definition = {\n"
+               "\t\t\tset_variable = {\n\t\t\t\tname = cm_trmm_cov_tools")
+    empty = ("\telse = {\n\t\tevery_province_in_province_definition = {\n"
+             "\t\t\tevery_location_in_province = {")
+    if text.count(written) != 1 or text.count(empty) != 1:
+        raise SystemExit("trmm: the coverage write has changed shape")
+    text = text.replace(written, written.replace(
+        "{\n\t\t\tset_variable", "{\n\t\t\t# cm_dev_perf: this slice holds the coverage\n" + _MARK + "\t\t\tset_variable", 1))
+    text = text.replace(empty, empty.replace(
+        "{\n\t\t\tevery_location_in_province", "{\n\t\t\t# cm_dev_perf: marked too, or every open recomputes it\n" + _MARK + "\t\t\tevery_location_in_province", 1))
+    return text + (
+        "\n# cm_dev_perf: recomputes exactly the definitions holding a slice without the\n"
+        "# mark -- a change of owner made it, or the save predates the mark. One cheap\n"
+        "# check per definition; run each time the rights map family is entered.\n"
+        "cm_trmm_repair = {\n\tevery_province_definition = {\n\t\tlimit = {\n"
+        "\t\t\tany_province_in_province_definition = {\n"
+        "\t\t\t\tNOT = { has_variable = cm_trmm_cov_v }\n\t\t\t}\n\t\t}\n"
+        "\t\tcm_trmm_recompute_province_definition = yes\n\t}\n}\n")
+
+
+def _trmm_repair_gui(text: str) -> str:
+    return text.rstrip("\n") + (
+        "\n\n# cm_dev_perf: fired on entering the rights map family (cm_pf_map_mode_window).\n"
+        "# No is_shown: the effect's per-definition check is the gate.\n"
+        "cm_trmm_run_repair = {\n\teffect = {\n\t\tcm_trmm_repair = yes\n\t}\n}\n")
+
+
+_TRMM_MODES = ["cm_best_town_right"] + ["cm_trmm_search_" + r for r in (
+    "tooling", "jewelry", "naval", "textile", "weaponry", "book", "artisan", "brewing", "masonry")]
+
+
+def _trmm_repair_driver(text: str) -> str:
+    """The repair runs when the player enters the rights map family: `_show`
+    fires on the hidden->shown edge, so switching between its modes costs one
+    scan, and the refresh modes are in the gate so a repaint is not a re-entry.
+    The window's root is always shown; this child adds ten-odd map-mode reads a
+    frame."""
+    modes = [m for m in _TRMM_MODES] + [m + "_refresh" for m in _TRMM_MODES]
+    ors = [f"GetMapMode('{m}').IsActive" for m in modes]
+    groups = ["Or5(" + ", ".join(ors[i:i + 5]) + ")" for i in range(0, 20, 5)]
+    gate = f"And(GetPlayer.Exists, Or(Or({groups[0]}, {groups[1]}), Or({groups[2]}, {groups[3]})))"
+    closing = text.rstrip().rfind("\n}")
+    if closing < 0:
+        raise SystemExit("cm_pf_map_mode_window.gui: no closing brace")
+    driver = ("\n\t# cm_dev_perf: urban-rights repair driver (+perf16); see _mark_trmm_slices.\n"
+              "\twidget = {\n\t\tsize = { 0 0 }\n\t\tvisible_at_creation = no\n"
+              f"\t\tvisible = \"[{gate}]\"\n"
+              "\t\tstate = {\n\t\t\tname = _show\n\t\t\tduration = 0.1\n"
+              "\t\t\ton_finish = \"[GetScriptedGui('cm_trmm_run_repair').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]\"\n"
+              "\t\t}\n\t}\n")
+    return text[:closing] + "\n" + driver + text[closing:]
+
+
 # The checkbox's words: CMM shows a missing key raw, so every language gets
 # them, English where there is no translation.
 SETTING_WORDS = {
@@ -370,13 +441,16 @@ EDITS = (
     (CMM, "the checkbox for it", _register_ignore_shortage),
     (CORE, "work core goods in markets centred elsewhere", _core_foreign_markets),
     (CMM, "the checkbox for it", _register_core_foreign),
+    (TRMM, "mark the province slices the rights pass writes, and the repair", _mark_trmm_slices),
+    (TRMM_GUIS, "the repair's scripted gui", _trmm_repair_gui),
+    (PF_WINDOW, "run the repair on entering the rights map", _trmm_repair_driver),
 )
 
 
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 15
+PERF_REVISION = 16
 
 
 def metadata() -> str:
