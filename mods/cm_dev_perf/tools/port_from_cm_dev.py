@@ -127,6 +127,7 @@ def _widen_refresh(text: str) -> str:
 
 LOG = "in_game/common/scripted_effects/cm_log_effects.txt"
 ROADS = "in_game/common/scripted_effects/cm_ab_roads_effects.txt"
+CMM = "in_game/common/scripted_effects/cm_cmm_effects.txt"
 # wrapper: (number of values, logs a location, logs a building type)
 _LOGGED = {
     "cm_dbg_log": (0, False, False),
@@ -249,17 +250,63 @@ def _probe_road_gates(text: str) -> str:
 
 
 def _roads_ignore_shortage(text: str) -> str:
-    """A road no longer waits on the market's lumber, masonry and sand (+perf12,
-    his choice 10-04). The 05:53 probe: every gate yes, 26 corridors planned,
-    all 26 «short», and the walk stops on the first without a word. Released CM
-    has no such gate and built his roads; a shortage only slows the work, the
-    gold is paid at once either way."""
-    old = ("\t\t\tcm_market_has_construction_goods_for_road = yes\n"
-           "\t\t\tcm_ab_rd_meets_min_discount = yes\n")
+    """A road may go ahead through the market's lumber, masonry and sand
+    shortage when the player ticks «Строить при нехватке товаров» (+perf12,
+    his ask 10-04: the choice, but his to control). The 05:53 probe: every gate
+    yes, 26 corridors planned, all 26 «short», and the walk stops on the first
+    without a word. Released CM has no such gate; a shortage only slows the
+    work, the gold is paid at once either way."""
+    old = "\t\t\tcm_market_has_construction_goods_for_road = yes\n"
     if text.count(old) != 1:
         raise SystemExit("roads: the try_build gate has changed shape")
-    return text.replace(old, "\t\t\t# cm_dev_perf: no market shortage gate for roads\n"
-                             "\t\t\tcm_ab_rd_meets_min_discount = yes\n")
+    return text.replace(old, "\t\t\t# cm_dev_perf: the shortage gate unless the player lifted it\n"
+                             "\t\t\tOR = {\n\t\t\t\texists = var:cm_ab_roads_ignore_shortage\n"
+                             "\t\t\t\tcm_market_has_construction_goods_for_road = yes\n\t\t\t}\n")
+
+
+def _register_ignore_shortage(text: str) -> str:
+    """The checkbox behind `_roads_ignore_shortage`, after «Связь со столицей»
+    and registered and synced the way CM registers that one."""
+    sync = ("\tcmm_sync_bool_alias = {\n\t\tsetting = cm__ab_roads_capital\n"
+            "\t\talias = cm_ab_roads_capital\n\t}\n")
+    if text.count(sync) != 1:
+        raise SystemExit("cmm: the capital checkbox has changed shape")
+    text = text.replace(sync, sync + (
+        "\n\t# cm_dev_perf: roads through a market shortage (+perf12)\n"
+        "\tcmm_register_bool_setting = {\n\t\tmod_id = cm\n\t\tsetting_id = ab_roads_ignore_shortage\n"
+        "\t\ttab_id = ab_roads\n\t\tgroup_id = ab_roads\n\t\tdefault_value = 0\n\t}\n"
+        "\tcmm_sync_bool_alias = {\n\t\tsetting = cm__ab_roads_ignore_shortage\n"
+        "\t\talias = cm_ab_roads_ignore_shortage\n\t}\n"))
+    changed = "\t\tflag:cm__ab_roads_min_discount = {\n"
+    if text.count(changed) != 1:
+        raise SystemExit("cmm: the roads discount branch has changed shape")
+    return text.replace(changed, (
+        "\t\t# cm_dev_perf: tested afresh at every issue, so no replan\n"
+        "\t\tflag:cm__ab_roads_ignore_shortage = {\n\t\t\tcmm_sync_bool_alias = {\n"
+        "\t\t\t\tsetting = cm__ab_roads_ignore_shortage\n\t\t\t\talias = cm_ab_roads_ignore_shortage\n"
+        "\t\t\t}\n\t\t}\n") + changed)
+
+
+# The checkbox's words: CMM shows a missing key raw, so every language gets
+# them, English where there is no translation.
+IGNORE_SHORTAGE_WORDS = {
+    "russian": ("Строить при нехватке товаров",
+                "Прокладывать дороги, даже когда на рынке не хватает пиломатериалов, камня или песка. "
+                "Золото списывается сразу, нехватка только замедляет стройку."),
+    "english": ("Build Through Shortages",
+                "Lay roads even when the market is short of lumber, masonry or sand. "
+                "The gold is paid at once; a shortage only slows the work."),
+}
+
+
+def _write_setting_words() -> None:
+    for folder in sorted((MOD / "main_menu/localization").iterdir()):
+        lang = folder.name
+        name, desc = IGNORE_SHORTAGE_WORDS.get(lang, IGNORE_SHORTAGE_WORDS["english"])
+        (folder / f"cm_perf_settings_l_{lang}.yml").write_text(
+            f"\ufeffl_{lang}:\n cm__ab_roads_ignore_shortage_name: \"{name}\"\n"
+            f" cm__ab_roads_ignore_shortage_desc: \"{desc}\"\n"
+            f" cm__ab_roads_ignore_shortage: \"cm__ab_roads_ignore_shortage\"\n", encoding="utf-8")
 
 
 EDITS = (
@@ -269,13 +316,14 @@ EDITS = (
     (LOG, "mirror the Debug tab's log into debug.log", _mirror_log),
     (ROADS, "say the roads plan's gates in its probe", _probe_road_gates),
     (ROADS, "let roads go ahead through a market shortage", _roads_ignore_shortage),
+    (CMM, "the checkbox for it", _register_ignore_shortage),
 )
 
 
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 12
+PERF_REVISION = 13
 
 
 def metadata() -> str:
@@ -310,6 +358,7 @@ def main() -> int:
         if patched == text:
             raise SystemExit(f"{path}: {label} changed nothing")
         target.write_text("﻿" + patched.lstrip("﻿"), encoding="utf-8")
+    _write_setting_words()
     # 10-01: CM Dev's copies of vanilla windows are Glorp UI's 1.3 layout and
     # break on the beta; each with a spec in tools/beta/ is rebuilt as the
     # beta's window plus CM's hooks (beta_windows.py).
