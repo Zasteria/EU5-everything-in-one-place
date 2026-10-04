@@ -31,9 +31,19 @@ cm_dbg_solo_allows = {
 
 # True when some roster row builds in subject locations. Root is the country.
 cm_ab_custom_subjects_wanted = {
-	exists = var:cm_ab_custom_roster
-	has_variable_list = cm_ab_building_types_in_subjects_enabled
-	variable_list_size = { name = cm_ab_building_types_in_subjects_enabled value >= 1 }
+	OR = {
+		AND = {
+			exists = var:cm_ab_custom_roster
+			has_variable_list = cm_ab_building_types_in_subjects_enabled
+			variable_list_size = { name = cm_ab_building_types_in_subjects_enabled value >= 1 }
+		}
+		# cm_dev_perf: the National Destinies list.
+		AND = {
+			cm_perf_nd_wanted = yes
+			has_variable_list = cm_perf_nd_types_in_subjects_enabled
+			variable_list_size = { name = cm_perf_nd_types_in_subjects_enabled value >= 1 }
+		}
+	}
 }
 
 # Root is the location, expects scope:cm_country. A location no proximity source reaches carries
