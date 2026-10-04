@@ -43,8 +43,8 @@ Río → [`cm_rio_patch`](../cm_rio_patch/CLAUDE.md) → glorpui_hints → ru_lo
 **Подпись строки** — локализация `_iN_name` из `cm_perf_nd_bt_N`/`cm_perf_ndi_bt_N`
 (копия флага, +perf20, не сработала). Без ND — ошибки в error.log.
 
-**Ванильная автостройка**: CM гасит её при загрузке, мы — каждый месяц (+perf24),
-с +perf25 и «Добычу ресурсов» (`cm_perf_automation_on_actions.txt`).
+**Ванильная автостройка**: CM гасит её при загрузке, мы — каждый месяц
+(`cm_perf_automation_on_actions.txt`). «Добычу ресурсов» не трогать: его (10-04).
 
 ## Что должен показать прогон
 

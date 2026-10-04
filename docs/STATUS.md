@@ -11,7 +11,7 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`nmt_fix`](../mods/nmt_fix/CLAUDE.md) | 0.2.0 (10-03): земли подданных (121 условие) + NMT под 1.4: Арагон, модификатор, подданные, 7 старых ошибок NMT | всё |
 | [`cm_maps`](../mods/cm_maps/CLAUDE.md) | **загружен 09-19, рисует**; губернатор починен и подтверждён, права починены. Три карты CM dev без CM и CMF | починка прав, карта еды |
 | [`cm_perf`](../mods/cm_perf/CLAUDE.md) | **09-19 он снял мод: тормозит тем сильнее, чем больше точек авторасширения.** Копия CM, ставится **вместо** CM; месячный пульс не трогать | правки 3 и 5 |
-| [`cm_dev_perf`](../mods/cm_dev_perf/CLAUDE.md) | CM Dev + правка 1, окна беты; +perf25 перед Río, после Río — [`cm_rio_patch`](../mods/cm_rio_patch/CLAUDE.md); ND — своя категория | +perf19–25, патч |
+| [`cm_dev_perf`](../mods/cm_dev_perf/CLAUDE.md) | CM Dev + правка 1, окна беты; +perf26 перед Río, после Río — [`cm_rio_patch`](../mods/cm_rio_patch/CLAUDE.md); ND — своя категория | +perf19–26, патч |
 | [`cmf_dev_beta`](../mods/cmf_dev_beta/CLAUDE.md) | +beta5 (10-03): копия авторского CMF под 1.4 + `cmf_is_host`; ставится вместо CMF и CMF Dev | всё |
 | [`glorpui_hints`](../mods/glorpui_hints/CLAUDE.md) | 1.2.12, игра 1.4, основной предмет; ворота по техам | 1.2.10–1.2.12 в игре не были |
 | [`glorpui_hints_1_3`](../mods/glorpui_hints_1_3/CLAUDE.md) | 1.1.1 для 1.3, свой предмет | — |
