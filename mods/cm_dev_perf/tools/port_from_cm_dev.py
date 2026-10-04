@@ -376,7 +376,7 @@ EDITS = (
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 14
+PERF_REVISION = 15
 
 
 def metadata() -> str:
@@ -442,6 +442,22 @@ def main() -> int:
                           r"\1# \2  (removed from the engine, beta 10-01)", text, flags=re.M)
         if n:
             path.write_text("\ufeff" + text, encoding="utf-8")
+    # The beta's `Country.GetTag` no longer returns a CString («[unregistered]» in
+    # the 10-02 dumps, CString in 1.3), and the one CM gate that compares tags as
+    # strings is the unbuilt-building button: his run 10-04, no auto-expand
+    # toggle on unbuilt rows of a location's building list, while the
+    # existing-building and build-location buttons, which compare objects, drew.
+    # Compared as objects here too (+perf15).
+    owner_gate = "EqualTo_string(Location.GetOwner.GetTag, GetPlayer.GetTag)"
+    owner_gates = 0
+    for path in (MOD / "in_game/gui").rglob("*.gui"):
+        text = path.read_text(encoding="utf-8-sig")
+        if owner_gate in text:
+            owner_gates += text.count(owner_gate)
+            path.write_text("\ufeff" + text.replace(owner_gate, "ObjectsEqual(Location.GetOwner, Player.Self)"),
+                            encoding="utf-8")
+    if not owner_gates:
+        raise SystemExit("the tag-compare owner gate is gone from CM's windows; drop this pass")
     # The beta added a native trigger `is_host`, CMF's own trigger's name; CM's
     # host gates (the classification among them, his run 10-02: never ran) go
     # to cmf_is_host, which cmf_dev_beta defines with CMF's body.
