@@ -90,6 +90,10 @@ texture, name = the link text) opened its tooltip. In a row the pair list
 shrinks to fit, the hover area does not shrink with it: put the link at the
 row's start.
 
+**`IsValidTooltip` draws a failing `OR` as «Всё из перечисленного:» with nothing
+under it** (glorpui_hints probe, 10-04); leaves and scope blocks print. Use
+`calc_true_if = { amount >= 1 … }` in a trigger that is only for display.
+
 **A `$NAME$` that names no key prints the name.** No error, no log line, no
 blank: the engine puts `SOCIEALVALUE_RIGHTITEM_WNTT_GEN` in capitals in the
 middle of the Russian sentence and carries on. The game's own Russian defines

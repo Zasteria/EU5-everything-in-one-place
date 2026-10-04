@@ -476,17 +476,25 @@ def flag_word(source: dict, lang: str) -> str:
                         tags=", ".join("$%s$" % t for t in source["tags"]))
 
 
-# `X ?= { ... }` scope changes the IsValidTooltip may not word (his run 10-04:
-# «Крейты», OR over `culture ?=` and has_reform, showed no conditions at all).
-# Every country has these scopes, so `=` checks the same thing.
+# `X ?= { ... }` scope changes: suspected first for «Крейты» (1.2.8), cleared
+# by the probe, kept since every country has these scopes and `=` reads plainer.
 SAFE_SCOPES = re.compile(r"\b(culture|religion|capital) \?= \{")
 SAFE_VALUES = re.compile(r"\b(group|region|area|sub_continent|language_family) \?= ")
+
+
+# IsValidTooltip draws a failing OR as «Всё из перечисленного:» with nothing
+# under it (his 1.2.9 probe, 10-04: the same triggers outside an OR printed).
+# calc_true_if is the same test with its own block and words.
+OR_BLOCK = re.compile(r"\bOR = \{")
+NOR_BLOCK = re.compile(r"\bNOR = \{")
 
 
 def worded(need: str, sources: dict[str, dict]) -> str:
     """One `is_valid` line, with what the game words badly worded by us."""
     need = SAFE_SCOPES.sub(r"\1 = {", need)
     need = SAFE_VALUES.sub(r"\1 = ", need)
+    need = OR_BLOCK.sub("calc_true_if = { amount >= 1", need)
+    need = NOR_BLOCK.sub("calc_true_if = { amount = 0", need)
 
     def flag(m: re.Match) -> str:
         # a variable the game already wraps in its own custom_tooltip stays
@@ -496,24 +504,12 @@ def worded(need: str, sources: dict[str, dict]) -> str:
     return re.sub(r"has_variable = ([A-Za-z0-9_]+)", flag, need)
 
 
-# PROBE 1.2.9 (10-04), remove after his run: «Крейты» showed «Всё из
-# перечисленного:» and nothing under it. Each extra line fails for Lithuania and
-# is worded differently, so which of them print says whether the game drops a
-# scope change, an OR, or both.
-PROBE = {"svx_req_privilege_creaghts_privilege": [
-    "has_reform = government_reform:celtic_traditions_reform",
-    "culture = { has_culture_group = culture_group:hibernian_group }",
-    "OR = { has_or_had_tag = IRE has_or_had_tag = SCO }",
-]}
-
-
 def scripted_guis(reqs: dict[str, dict], sources: dict[str, dict]) -> str:
     out = [HEADER, "# One per object a «not yet» line names: its `is_valid` is every gate the",
            "# game puts on that object, and IsValidTooltip has the game word them.", ""]
     for name, req in reqs.items():
         out += ["%s = {" % name, "\tscope = country", "\tis_valid = {"]
         out += ["\t\t%s" % worded(n, sources) for n in req["needs"]]
-        out += ["\t\t%s" % n for n in PROBE.get(name, [])]
         out += ["\t}", "}", ""]
     return "\n".join(out)
 
