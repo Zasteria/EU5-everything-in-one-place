@@ -34,12 +34,13 @@
 **1.2.8:** условие-переменная (`has_variable`) — `custom_tooltip` «Принято
 решение «…» (держава)» и т. п. от `flag_sources()` (62 из 74; проверено на
 Мазаньелло). `?=` → `=` у culture/religion/capital не помог «Крейтам».
-**1.2.10:** IsValidTooltip рисует failing OR как «Всё из перечисленного:» без
-строк (зонд 1.2.9; скоуп-блоки и листья рисует) — в условиях OR/NOR заменены на
-`calc_true_if` (`amount >= 1` / `= 0`). Сам 1.2.10 в игре не был.
+**1.2.10:** failing OR в IsValidTooltip — пустой заголовок (зонд 1.2.9); OR/NOR
+в условиях → `calc_true_if`. 1.2.10 в игре не был.
 
-**Мастерская:** с 1.2.7 имя «Societal Value Hints» (Glorp не нужен), превью
-его новое (10-04); описания — `workshop/description_<lang>.bbcode`.
+**Мастерская (10-04):** имя «Societal Value Hints», id
+`bag.societal_value_hints` — **отдельный предмет для 1.4** (бета); основной
+предмет снова 1.3, папка `mods/glorpui_hints_1_3`. Описания —
+`workshop/description_<lang>.bbcode`, первая строка отсылает 1.3 туда.
 
 ## Правки 28.09 сделаны в 1.2.0
 
