@@ -190,11 +190,16 @@ def collect(game: Path) -> list[dict]:
         now = base + ["svx_privilege_takeable = { KEY = %s }" % key]
         reach = base + ["NOT = { has_estate_privilege = estate_privilege:%s }" % key]
         potential = own_trigger(pdx.get(block, "potential"))
+        allow = own_trigger(pdx.get(block, "allow"))
         if potential:
             reach.append(potential)
+        # Its own blocks in «now» too, as policies have them: whether
+        # `is_implementable_in` asks them was never measured, and it was
+        # shown not to ask the unlocking advance (10-04).
+        now += [p for p in (potential, allow) if p]
         unlocking = advances.of("estate_privilege", key)
         needs = _needs(*base, advances.have(unlocking) if unlocking else None, potential,
-                       own_trigger(pdx.get(block, "allow")))
+                       allow)
         if unlocking:
             # `is_implementable_in` lets these through before the advance:
             # five of them were recommended to countries that could not take
@@ -223,8 +228,10 @@ def collect(game: Path) -> list[dict]:
                 "government_reform:%s = { NOT = { is_locked_for = PREV } }" % key]
         reach = base + ["NOT = { has_reform = government_reform:%s }" % key]
         potential = own_trigger(pdx.get(block, "potential"))
+        allow = own_trigger(pdx.get(block, "allow"))
         if potential:
             reach.append(potential)
+        now += [p for p in (potential, allow) if p]  # as for privileges
         unlocking = advances.of("government_reform", key)
         if unlocking:
             # As for privileges: `is_implementable_in` alone lets it through
@@ -232,7 +239,7 @@ def collect(game: Path) -> list[dict]:
             now.append(advances.have(unlocking))
         needs = _needs(*base, "current_age_or_later = { age = %s }" % age if isinstance(age, str) else None,
                        advances.have(unlocking) if unlocking else None, potential,
-                       own_trigger(pdx.get(block, "allow")))
+                       allow)
         if unlocking:
             opened = advances.open_to(unlocking)
             if opened:

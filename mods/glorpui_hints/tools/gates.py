@@ -182,6 +182,8 @@ def gate_for(source_type, key, objects, extra=None):
             block = sub_block(body, name)
             if block and not _needs_a_scope(block):
                 lines.append(" ".join(block.split()))
+        # Not the type already sitting: it pushes already (10-04).
+        lines.append("NOT = { parliament_type = parliament_type:%s }" % key)
         return {"reach": lines, "now": lines}
 
     if source_type == "religious_aspects":
@@ -200,6 +202,11 @@ def gate_for(source_type, key, objects, extra=None):
             # gates called a trigger that does not exist.
             reach.append("OR = { %s }" % " ".join(
                 "religion = religion:%s" % r for r in sorted(set(religions))))
+        # Its own `visible` too: the Hellenic aspects want the Fate of the
+        # Phoenix DLC (10-04).
+        visible = sub_block(body, "visible")
+        if visible and not _needs_a_scope(visible):
+            reach.append(" ".join(visible.split()))
         # `has_religious_aspect = religious_aspect:X` - confirmed in the same files
         now = reach + ["NOT = { has_religious_aspect = religious_aspect:%s }" % key]
         enabled = sub_block(body, "enabled")
@@ -229,6 +236,11 @@ def gate_for(source_type, key, objects, extra=None):
         potential = sub_block(body, "country_potential")
         reach = ([" ".join(potential.split())]
                  if potential and not _needs_a_scope(potential) else [])
+        # Already standing in the capital: it pushes already. Only the three
+        # with `country_has_no_other_copy_of_building` in `allow` said so;
+        # the Confucian academy kept asking to be built (10-04).
+        reach.append("NOT = { AND = { exists = capital capital = { "
+                     "has_building = building_type:%s } } }" % key)
         allow = sub_block(body, "allow")
         now = reach + (["exists = capital capital = { %s }" % " ".join(allow.split())]
                        if allow and not _needs_a_scope(allow) else [])
@@ -274,6 +286,11 @@ def gate_for(source_type, key, objects, extra=None):
             block = sub_block(body, name)
             if block and not _needs_a_scope(block):
                 lines.append(" ".join(block.split()))
+        # Already running and `allow_multiple = no`: it pushes already, and a
+        # second cannot be started. `any_cabinet_action = { this = ... }` is
+        # the game's own way to ask (laws/01_common.txt, bironovshchina).
+        if re.search(r"^\tallow_multiple\s*=\s*no\b", body, re.M):
+            lines.append("NOT = { any_cabinet_action = { this = cabinet_action:%s } }" % key)
         return {"reach": lines, "now": lines}
 
     if source_type == "subject_types":
