@@ -78,12 +78,25 @@ def pushes(block: list, known: dict[str, float]) -> dict[str, tuple[float, bool]
     return {axis: (max(values), len(set(values)) > 1) for axis, values in found.items()}
 
 
+def foreign(line: str) -> bool:
+    """True when a trigger line reaches for a scope a country lacks.
+
+    `international_organization_type` inside
+    `any_international_organizations_member_of = { ... }` is asked of the
+    organization the country is in, which the country scope does reach: the
+    Confucian school, «Мелкая бюрократия» and the examination law were left
+    ungated by that one word (10-04).
+    """
+    return bool(FOREIGN_SCOPE.search(
+        pdx.without_blocks(line, "any_international_organizations_member_of")))
+
+
 def own_trigger(block) -> str | None:
     """A trigger block as one line, or None when it is empty or not the country's."""
     if not block or not isinstance(block, list):
         return None
     line = pdx.text(block)
-    if not line.strip() or FOREIGN_SCOPE.search(line):
+    if not line.strip() or foreign(line):
         return None
     return line
 
@@ -177,11 +190,16 @@ def collect(game: Path) -> list[dict]:
         now = base + ["svx_privilege_takeable = { KEY = %s }" % key]
         reach = base + ["NOT = { has_estate_privilege = estate_privilege:%s }" % key]
         potential = own_trigger(pdx.get(block, "potential"))
+        allow = own_trigger(pdx.get(block, "allow"))
         if potential:
             reach.append(potential)
+        # Its own blocks in «now» too, as policies have them: whether
+        # `is_implementable_in` asks them was never measured, and it was
+        # shown not to ask the unlocking advance (10-04).
+        now += [p for p in (potential, allow) if p]
         unlocking = advances.of("estate_privilege", key)
         needs = _needs(*base, advances.have(unlocking) if unlocking else None, potential,
-                       own_trigger(pdx.get(block, "allow")))
+                       allow)
         if unlocking:
             # `is_implementable_in` lets these through before the advance:
             # five of them were recommended to countries that could not take
@@ -210,8 +228,10 @@ def collect(game: Path) -> list[dict]:
                 "government_reform:%s = { NOT = { is_locked_for = PREV } }" % key]
         reach = base + ["NOT = { has_reform = government_reform:%s }" % key]
         potential = own_trigger(pdx.get(block, "potential"))
+        allow = own_trigger(pdx.get(block, "allow"))
         if potential:
             reach.append(potential)
+        now += [p for p in (potential, allow) if p]  # as for privileges
         unlocking = advances.of("government_reform", key)
         if unlocking:
             # As for privileges: `is_implementable_in` alone lets it through
@@ -219,7 +239,7 @@ def collect(game: Path) -> list[dict]:
             now.append(advances.have(unlocking))
         needs = _needs(*base, "current_age_or_later = { age = %s }" % age if isinstance(age, str) else None,
                        advances.have(unlocking) if unlocking else None, potential,
-                       own_trigger(pdx.get(block, "allow")))
+                       allow)
         if unlocking:
             opened = advances.open_to(unlocking)
             if opened:

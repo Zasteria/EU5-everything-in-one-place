@@ -13,7 +13,7 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`cm_perf`](../mods/cm_perf/CLAUDE.md) | **09-19 он снял мод: тормозит тем сильнее, чем больше точек авторасширения.** Копия CM, ставится **вместо** CM; месячный пульс не трогать | правки 3 и 5 |
 | [`cm_dev_perf`](../mods/cm_dev_perf/CLAUDE.md) | CM Dev + правка 1 `cm_perf`, окна беты; +perf19 значок у непостроенных | обе галочки, +perf19 |
 | [`cmf_dev_beta`](../mods/cmf_dev_beta/CLAUDE.md) | +beta5 (10-03): копия авторского CMF под 1.4 + `cmf_is_host`; ставится вместо CMF и CMF Dev | всё |
-| [`glorpui_hints`](../mods/glorpui_hints/CLAUDE.md) | 1.2.10, игра 1.4, основной предмет; условия по наведению | OR в условиях |
+| [`glorpui_hints`](../mods/glorpui_hints/CLAUDE.md) | 1.2.12, игра 1.4, основной предмет; ворота по техам | 1.2.10–1.2.12 в игре не были |
 | [`glorpui_hints_1_3`](../mods/glorpui_hints_1_3/CLAUDE.md) | 1.1.1 для 1.3, свой предмет | — |
 | [`centered_towns`](../mods/centered_towns/CLAUDE.md) | 0.2.0 (10-04): позиции Better label placement под новыми именами файлов 1.4 | 0.2.0 |
 | [`quiet_alerts`](../mods/quiet_alerts/CLAUDE.md) | 10-02: 0.3.0 не в игре. Красные и оранжевые с жёлтым звуком, галочка в CMF | всё |

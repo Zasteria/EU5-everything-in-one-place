@@ -13,6 +13,8 @@ mistyped trigger is a load error, an ungated hint is only noise.
 import os
 import re
 
+import pdx
+
 CONFIRMED_NOTE = "# gates use only trigger forms found verbatim in the game files"
 
 
@@ -75,7 +77,10 @@ def scan_objects(root, relative_dir):
             continue
         with open(os.path.join(directory, name),
                   encoding="utf-8-sig", errors="replace") as handle:
-            for key, body in find_blocks(handle.read()):
+            # Comments out first: a block is copied as one line, and a `#` left
+            # in it swallowed the rest — `merge_culture_group`'s commented-out
+            # rank, four unit checks of `support_noble_sponsored_armies` (10-04).
+            for key, body in find_blocks(pdx.strip_comments(handle.read())):
                 objects[key] = body
     return objects
 
@@ -108,6 +113,7 @@ def _needs_a_scope(block):
     and the entry is left ungated instead. `international_organization_type`
     is the same problem by another name: it is asked of an organization.
     """
+    block = pdx.without_blocks(block, "any_international_organizations_member_of")
     return any(token in block for token in
                ("scope:recipient", "scope:source", "scope:actor", "scope:target",
                 "international_organization_type"))
@@ -176,6 +182,8 @@ def gate_for(source_type, key, objects, extra=None):
             block = sub_block(body, name)
             if block and not _needs_a_scope(block):
                 lines.append(" ".join(block.split()))
+        # Not the type already sitting: it pushes already (10-04).
+        lines.append("NOT = { parliament_type = parliament_type:%s }" % key)
         return {"reach": lines, "now": lines}
 
     if source_type == "religious_aspects":
@@ -194,6 +202,11 @@ def gate_for(source_type, key, objects, extra=None):
             # gates called a trigger that does not exist.
             reach.append("OR = { %s }" % " ".join(
                 "religion = religion:%s" % r for r in sorted(set(religions))))
+        # Its own `visible` too: the Hellenic aspects want the Fate of the
+        # Phoenix DLC (10-04).
+        visible = sub_block(body, "visible")
+        if visible and not _needs_a_scope(visible):
+            reach.append(" ".join(visible.split()))
         # `has_religious_aspect = religious_aspect:X` - confirmed in the same files
         now = reach + ["NOT = { has_religious_aspect = religious_aspect:%s }" % key]
         enabled = sub_block(body, "enabled")
@@ -223,6 +236,11 @@ def gate_for(source_type, key, objects, extra=None):
         potential = sub_block(body, "country_potential")
         reach = ([" ".join(potential.split())]
                  if potential and not _needs_a_scope(potential) else [])
+        # Already standing in the capital: it pushes already. Only the three
+        # with `country_has_no_other_copy_of_building` in `allow` said so;
+        # the Confucian academy kept asking to be built (10-04).
+        reach.append("NOT = { AND = { exists = capital capital = { "
+                     "has_building = building_type:%s } } }" % key)
         allow = sub_block(body, "allow")
         now = reach + (["exists = capital capital = { %s }" % " ".join(allow.split())]
                        if allow and not _needs_a_scope(allow) else [])
@@ -268,14 +286,33 @@ def gate_for(source_type, key, objects, extra=None):
             block = sub_block(body, name)
             if block and not _needs_a_scope(block):
                 lines.append(" ".join(block.split()))
+        # Already running and `allow_multiple = no`: it pushes already, and a
+        # second cannot be started. `any_cabinet_action = { this = ... }` is
+        # the game's own way to ask (laws/01_common.txt, bironovshchina).
+        if re.search(r"^\tallow_multiple\s*=\s*no\b", body, re.M):
+            lines.append("NOT = { any_cabinet_action = { this = cabinet_action:%s } }" % key)
         return {"reach": lines, "now": lines}
 
     if source_type == "subject_types":
         # A `subject_modifier` pushes the subject itself; an `overlord_modifier`
         # pushes whoever holds such a subject, which no gate on this country's
         # own type can say — those stay ungated.
+        #
+        # What the overlord's side can say comes from the type's `visible` and
+        # `visible_through_diplomacy`, which run in the overlord's scope with
+        # the would-be subject as `scope:target`: each top-level condition
+        # that does not reach for the subject is copied. Pronoia then wants
+        # Byzantium, the familial governor the Tunisian reform (10-04).
         if extra.get("block") == "overlord_modifier":
-            return {"reach": [], "now": []}
+            lines = []
+            for name in ("visible", "visible_through_diplomacy"):
+                block = sub_block(body, name)
+                for entry in pdx.parse(block or ""):
+                    line = pdx.text([entry])
+                    if line.split() == ["always", "=", "no"] or _needs_a_scope(line):
+                        continue
+                    lines.append(line)
+            return {"reach": lines, "now": lines}
         lines = ["is_subject_type = %s" % key]
         return {"reach": lines, "now": lines}
 
@@ -296,7 +333,13 @@ def gate_for(source_type, key, objects, extra=None):
                 "now": reach + ["bureaucracy_type_is_enabled = bureaucracy_type:%s" % key]}
 
     if source_type == "chivalric_orders":
+        # And the order's own `potential`: the Golden Fleece is Burgundy's,
+        # each German society its own state's, and every one of them was on
+        # screen for any country with an order until 10-04.
         lines = ["has_chivalric_order = yes"]
+        potential = sub_block(body, "potential")
+        if potential and not _needs_a_scope(potential):
+            lines.append(" ".join(potential.split()))
         return {"reach": lines, "now": lines}
 
     return {"reach": [], "now": []}
