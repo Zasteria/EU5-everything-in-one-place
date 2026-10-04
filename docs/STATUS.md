@@ -13,7 +13,7 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`cm_perf`](../mods/cm_perf/CLAUDE.md) | **09-19 он снял мод: тормозит тем сильнее, чем больше точек авторасширения.** Копия CM, ставится **вместо** CM; месячный пульс не трогать | правки 3 и 5 |
 | [`cm_dev_perf`](../mods/cm_dev_perf/CLAUDE.md) | CM Dev + правка 1 `cm_perf`, окна беты; журнал CM в `debug.log` (+perf8) пишет; +perf13 — окна на файлах Río (ниже Río), галочка «Строить при нехватке товаров» | строит ли дороги с галочкой |
 | [`cmf_dev_beta`](../mods/cmf_dev_beta/CLAUDE.md) | +beta5 (10-03): копия авторского CMF под 1.4 + `cmf_is_host`; ставится вместо CMF и CMF Dev | всё |
-| [`glorpui_hints`](../mods/glorpui_hints/CLAUDE.md) | 1.2.3 (10-04): подсказка ценностей из файлов 1.4, словами Glorp UI; «(IV)» в «Пока недоступно» открывает условия | наведение на «(IV)» |
+| [`glorpui_hints`](../mods/glorpui_hints/CLAUDE.md) | 1.2.4: подсказка ценностей из файлов 1.4; «(IV)» — ссылка на условия | наведение на «(IV)» |
 | [`quiet_alerts`](../mods/quiet_alerts/CLAUDE.md) | 10-02: 0.3.0 не в игре. Красные и оранжевые с жёлтым звуком, галочка в CMF | всё |
 | [`war_sliders`](../mods/war_sliders/CLAUDE.md) | **0.6.2 ждёт прогона** (0.5.2 работала 09-29). Кнопка на панели CMF: содержание и инфляция, без нажатия спит | кнопка: содержание, правка чеканки (09-30) |
 
