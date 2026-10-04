@@ -151,3 +151,13 @@ buildings because it was built from patch 1.0.6; 1.3.10 tops out at 10%.
 
 `tools/eu5data.py` holds all of this in code — it resolves every method per
 building type, inline and shared, and skips upkeep methods that produce nothing.
+
+## Where towns stand on the map (10-04)
+
+Since 1.3 or 1.4 the game ships no `city` or `vfx` locator file: it places towns
+itself at map load, by the weights in `NGameCityLocators`
+(`loading_screen/common/defines/graphic/00_graphics.txt`), which pull a town
+onto a river, lake or coast far harder than towards the middle. Unit stacks and
+battles still come from shipped `gfx/map/map_objects/generated_map_object_locators_*.txt`.
+A mod that ships a `city` file (Better label placement, made on 1.2) no longer
+moves towns; `centered_towns` changes the weights instead. Unverified in game.

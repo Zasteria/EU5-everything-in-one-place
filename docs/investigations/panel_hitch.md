@@ -38,7 +38,7 @@ construction_manager         20     4545            344      3      0
 glorp_ui                     49    13782             67      1      0
 national_destinies            3      251              0      0      0
 auto_build                    7    14125           4719      7     19
-mods/rgo_bonus_filter         2      207              4      0      0
+rgo_bonus_filter              2      207              4      0      0
 ```
 
 **The number that does not belong.** `GetScriptedGui('x')` in a `.gui` file

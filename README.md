@@ -29,7 +29,7 @@
 | [`quiet_alerts`](mods/quiet_alerts/) | красные и оранжевые уведомления звучат как жёлтые |
 | [`war_sliders`](mods/war_sliders/) | кнопка на панели CMF: содержание армии и инфляция |
 | [`glorpui_hints`](mods/glorpui_hints/) | подсказки смещения ценностей к Glorp UI (версия из Steam) |
-| [`rgo_bonus_filter`](mods/rgo_bonus_filter/) | фильтр зданий с бонусом от сырья локации |
+| [`centered_towns`](mods/centered_towns/) | города и замки в середине района, а не на реке у края |
 
 Где каждый стоит и что не было в игре — [`docs/STATUS.md`](docs/STATUS.md).
 Убранные 2026-10-03 — [`docs/archive/retired_mods.md`](docs/archive/retired_mods.md).

@@ -37,7 +37,6 @@ import refs  # noqa: E402
 # Every generator, in the order that makes the output read sensibly. Each takes
 # its reference paths from `refs`, so none of them is given an argument here.
 GENERATORS = (
-    ("rgo_bonus_filter", "mods/rgo_bonus_filter/tools/generate_rgo_filter.py"),
     ("cm_maps", "mods/cm_maps/tools/port_from_cm.py"),
     ("cm_perf", "mods/cm_perf/tools/port_from_cm.py"),
     ("cm_dev_perf", "mods/cm_dev_perf/tools/port_from_cm_dev.py"),
