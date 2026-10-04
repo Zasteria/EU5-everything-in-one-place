@@ -844,3 +844,43 @@ for _key, _labels in NEW_LABELS.items():
 
 assert set(GLORP_UI_FIXES) <= set(LANGUAGES), "a fix for a language that is not one"
 assert set(PHRASES) == set(LANGUAGES), "a language is in one list and not the other"
+
+
+# How a gate that is only a game variable is worded instead (generate.py,
+# flag_sources): the decision, event, disaster or rebel demand that sets it,
+# and whose it is. {name} is a game key's text, {tags} country names.
+FLAG_WORDS = {
+    "english": {"decision_country": "A decision of {tags}", "decision": "Decision «{name}» taken ({tags})", "event": "Event «{name}» ({tags})",
+                "event_country": "An event of {tags}", "disaster": "Outcome of the disaster «{name}»",
+                "rebels": "A concession to rebels ({tags})"},
+    "russian": {"decision_country": "Решение державы {tags}", "decision": "Принято решение «{name}» ({tags})", "event": "Было событие «{name}» ({tags})",
+                "event_country": "Событие державы {tags}", "disaster": "Исход бедствия «{name}»",
+                "rebels": "Уступка мятежникам ({tags})"},
+    "french": {"decision_country": "Une décision de {tags}", "decision": "Décision « {name} » prise ({tags})", "event": "Événement « {name} » ({tags})",
+               "event_country": "Un événement de {tags}", "disaster": "Issue de la catastrophe « {name} »",
+               "rebels": "Une concession aux rebelles ({tags})"},
+    "german": {"decision_country": "Eine Entscheidung von {tags}", "decision": "Entscheidung „{name}“ getroffen ({tags})", "event": "Ereignis „{name}“ ({tags})",
+               "event_country": "Ein Ereignis von {tags}", "disaster": "Ausgang der Katastrophe „{name}“",
+               "rebels": "Ein Zugeständnis an Rebellen ({tags})"},
+    "spanish": {"decision_country": "Una decisión de {tags}", "decision": "Decisión «{name}» tomada ({tags})", "event": "Evento «{name}» ({tags})",
+                "event_country": "Un evento de {tags}", "disaster": "Desenlace del desastre «{name}»",
+                "rebels": "Una concesión a los rebeldes ({tags})"},
+    "braz_por": {"decision_country": "Uma decisão de {tags}", "decision": "Decisão «{name}» tomada ({tags})", "event": "Evento «{name}» ({tags})",
+                 "event_country": "Um evento de {tags}", "disaster": "Desfecho do desastre «{name}»",
+                 "rebels": "Uma concessão aos rebeldes ({tags})"},
+    "polish": {"decision_country": "Decyzja państwa {tags}", "decision": "Podjęta decyzja „{name}” ({tags})", "event": "Wydarzenie „{name}” ({tags})",
+               "event_country": "Wydarzenie państwa {tags}", "disaster": "Wynik katastrofy „{name}”",
+               "rebels": "Ustępstwo wobec buntowników ({tags})"},
+    "turkish": {"decision_country": "{tags} kararı", "decision": "«{name}» kararı alındı ({tags})", "event": "«{name}» olayı ({tags})",
+                "event_country": "{tags} olayı", "disaster": "«{name}» felaketinin sonucu",
+                "rebels": "İsyancılara verilen taviz ({tags})"},
+    "simp_chinese": {"decision_country": "{tags}的决议", "decision": "已执行决议「{name}」（{tags}）", "event": "事件「{name}」（{tags}）",
+                     "event_country": "{tags}的事件", "disaster": "灾难「{name}」的结局",
+                     "rebels": "对叛军的让步（{tags}）"},
+    "japanese": {"decision_country": "{tags}の決定", "decision": "決定「{name}」を実行（{tags}）", "event": "イベント「{name}」（{tags}）",
+                 "event_country": "{tags}のイベント", "disaster": "災厄「{name}」の結末",
+                 "rebels": "反乱軍への譲歩（{tags}）"},
+    "korean": {"decision_country": "{tags}의 결정", "decision": "결정 「{name}」 실행 ({tags})", "event": "이벤트 「{name}」 ({tags})",
+               "event_country": "{tags}의 이벤트", "disaster": "재난 「{name}」의 결말",
+               "rebels": "반란군에 대한 양보 ({tags})"},
+}
