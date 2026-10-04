@@ -670,7 +670,9 @@ def localization(lang: str) -> str:
     # A row's label is its building's own name, read from the variable the row's visibility pass
     # sets (CMF prints the localization of the row's _name flag; the 10-04 run showed «-» for every
     # row when the label was a flag copied out of another variable).
-    name = "[GetPlayer.MakeScope.GetVariable('{var}').GetBuildingType.GetNameWithNoTooltip]"
+    # GetName, not GetNameWithNoTooltip: the name hovers as the building's own tooltip, as CM's
+    # rows do with ShowBuildingTypeName (his ask 10-04 22:31).
+    name = "[GetPlayer.MakeScope.GetVariable('{var}').GetBuildingType.GetName]"
     lines += [f' {dst}_i{i}_name: "{name.format(var=f"cm_perf_nd_bt_{i}")}" # NO-TRANSLATE'
               for i in range(1, ND_ROWS + 1)]
     info = f"{dst}_info"
