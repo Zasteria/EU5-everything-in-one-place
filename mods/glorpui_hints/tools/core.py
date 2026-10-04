@@ -213,6 +213,10 @@ def collect(game: Path) -> list[dict]:
         if potential:
             reach.append(potential)
         unlocking = advances.of("government_reform", key)
+        if unlocking:
+            # As for privileges: `is_implementable_in` alone lets it through
+            # before the advance.
+            now.append(advances.have(unlocking))
         needs = _needs(*base, "current_age_or_later = { age = %s }" % age if isinstance(age, str) else None,
                        advances.have(unlocking) if unlocking else None, potential,
                        own_trigger(pdx.get(block, "allow")))
@@ -266,7 +270,11 @@ def collect(game: Path) -> list[dict]:
                 # The law's and the policy's own `potential` too, as Glorp UI
                 # did: `svx_policy_core` lets a law through once it is in force,
                 # whatever its `potential` says of the policy.
-                now = peers + [p for p in (law_potential, policy_potential) if p] + [
+                # The advance too (10-04: «Статуты Литвы» offered to Württemberg,
+                # `is_implementable_in` letting a policy through before the
+                # Lithuanian advance that unlocks it, as it did privileges).
+                now = peers + [p for p in (law_potential, policy_potential) if p] + (
+                    [advances.have(unlocking)] if unlocking else []) + [
                     "svx_policy_core = { KEY = %s LAW = %s }" % (name, law),
                     "law:%s = { NOT = { is_locked_for = PREV } }" % law,
                     "policy:%s = { NOT = { is_locked_for = PREV } }" % name,

@@ -82,6 +82,14 @@ and these carried only `shown_in_encyclopedia = no`. On screen the whole
 lost the word between them. No error, no log line. If a text-only concept is
 wanted, prove it with one before generating forty.
 
+**A mod concept hovers as `[key|E]`, not as `[Concept('key', 'text')]`.**
+2026-10-04, `glorpui_hints`: `[Concept('svx_req_x','(IV)')]` dropped the row's
+text from the object's name on, under `in_game/` and `main_menu/` alike, with no
+error; `[svx_req_x|E]` (concept under `main_menu/common/game_concepts/`, a
+texture, name = the link text) opened its tooltip. In a row the pair list
+shrinks to fit, the hover area does not shrink with it: put the link at the
+row's start.
+
 **A `$NAME$` that names no key prints the name.** No error, no log line, no
 blank: the engine puts `SOCIEALVALUE_RIGHTITEM_WNTT_GEN` in capitals in the
 middle of the Russian sentence and carries on. The game's own Russian defines
@@ -93,25 +101,8 @@ repair: the *nearest* defined key is not always the intended one, and four of
 the thirteen references it finds are cultures whose neighbour is a different
 people (Even and Evenk, Halkomelem and Halkomelemt, Lalagir and Lalagyr).
 
-**A pattern in the data is not a fault until something fails.** All 1755
-`*_culture_tt` keys in the game's Russian
-`EU5_customizable_localization_ru_culrel_l_russian.yml` hold a bare number that
-is exactly the key's own line number minus two — every one of them, plus 624
-more in a sibling family. They are used as `#TOOLTIP:CULTURE,$X_tt$,`, where a
-culture key looks like it belongs. That is a striking, verifiable pattern and it
-reads exactly like a generator that wrote line numbers into tooltip targets, so
-this document briefly said every culture tooltip in the Russian localization was
-broken.
-
-It is not. A hover settled it: the tooltips are complete and correct, and the
-key on screen (`westphalian_cadj` → `#TOOLTIP:CULTURE,$westphalian_tt$,` →
-`"1052"`, on line 1054) is one of the numeric ones. The number is what the engine
-wants there, or the engine ignores it.
-
-The cost of getting this wrong would have been 1755 keys rewritten to fix
-nothing. **A pattern explains a fault; it does not establish one.** Before
-repairing on the strength of a shape in the data, find the thing that visibly
-fails — and if nothing visibly fails, that is the answer.
+**A pattern in the data is not a fault until something fails** — 1755 Russian
+`*_culture_tt` keys that look broken and are not: `docs/archive/localization_culture_tt.md`.
 
 **A "broken" key can be a key nothing can call.** Three of the culture
 references `missing_ref` found are declensions for `even_culture`,

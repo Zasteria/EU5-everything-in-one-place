@@ -352,7 +352,16 @@ def soon_test_text(text: str, line: dict) -> str:
     written as Calidad de Vida's working mod concept is used, `[key|E]`, the
     concept's own name being the bracket."""
     name = requirements_name(line)
-    return before_number(text, " [%s|E]" % name) if name else text
+    if not name:
+        return text
+    # At the start of the row: a row too long for its width is drawn smaller,
+    # and the link's hover area stays where the full-size text would put it
+    # (10-04: a link at the end of a long row hovered only on «(» or nowhere).
+    # The row's start is the one place both agree on.
+    # After the hint icon and the no-break space Glorp UI puts after it.
+    at = text.find("@hint!")
+    at = at + len("@hint!") + 1 if at >= 0 else 0
+    return text[:at] + "[%s|E] " % name + text[at:]
 
 
 def requirements(by_direction: dict[str, list[dict]]) -> dict[str, dict]:
@@ -377,18 +386,22 @@ def scripted_guis(reqs: dict[str, dict]) -> str:
     return "\n".join(out)
 
 
+# The game's own concepts' icons (main_menu/common/game_concepts/00_game_concepts.txt).
+TEXTURE_OF = {"privilege": "flat_icons/privilege", "reform": "flat_icons/reforms",
+              "policy": "alerts_icons/setup_a_law"}
 NAME_OF = {"privilege": "ShowEstatePrivilegeName", "reform": "ShowGovernmentReformName",
            "policy": "ShowPolicyName"}
 
 
 def concepts(reqs: dict[str, dict]) -> str:
     """One game concept per object: the link the age bracket is. A mod concept
-    with no texture renders as nothing (docs/pitfalls/localization.md); the
-    texture is the one Calidad de Vida's hovering concept carries."""
+    with no texture renders as nothing (docs/pitfalls/localization.md); each
+    carries the icon of the game's own concept for its kind."""
     out = [HEADER, "# The «(IV)» on a «not yet» line links here; the concept's text is the",
            "# game's own wording of the object's conditions (svx_requirements.txt).", ""]
     for name in reqs:
-        out += ["%s = {" % name, '\ttexture = "flat_icons/common_goods"', "\tshown_in_encyclopedia = no", "}", ""]
+        kind = name[len("svx_req_"):].split("_", 1)[0]
+        out += ["%s = {" % name, '\ttexture = "%s"' % TEXTURE_OF[kind], "\tshown_in_encyclopedia = no", "}", ""]
     return "\n".join(out)
 
 
