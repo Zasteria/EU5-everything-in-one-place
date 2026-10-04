@@ -156,6 +156,9 @@ def auto_modifier_gates() -> dict[str, str]:
     return found
 
 
+ADVANCES = core.Advances(GAME)
+
+
 def other_lines(findings: list[dict]) -> list[dict]:
     """Every push outside privileges, reforms and policies that the mod lists."""
     caches = {source: svx_gates.scan_objects(str(GAME), rel) for source, rel in SOURCE_DIRS.items()}
@@ -191,6 +194,8 @@ def other_lines(findings: list[dict]) -> list[dict]:
                 now += ["NOT = { has_employment_system = employment_system:%s }" % p
                         for p in peers + [obj]]
             base.update(kind="catalog", now=now, up_to=source in MAINTAINED_SOURCES)
+            if source == "advances" and obj in ADVANCES.age:
+                base["why"] = {"age": ADVANCES.age[obj]}
             # «Not yet» needs a real reach to be about: without one, failing
             # «now» means displaced or done, not pending.
             if reach and reach != now:
@@ -270,10 +275,49 @@ def axis_pairs() -> list[tuple[str, str, str]]:
 
 
 def custom_entry(name: str, key: str, trigger: list[str]) -> list[str]:
-    return ["%s = {" % name, "\ttype = country", "\ttext = {", "\t\ttrigger = {"] + [
-        "\t\t\t%s" % t for t in trigger] + [
-        "\t\t}", "\t\tlocalization_key = %s" % key, "\t}",
-        "\ttext = {", "\t\tlocalization_key = empty_text", "\t}", "}", ""]
+    return custom_choice(name, [(key, trigger)])
+
+
+def custom_choice(name: str, choices: list[tuple[str, list[str]]]) -> list[str]:
+    """The first key whose trigger holds, or nothing."""
+    out = ["%s = {" % name, "\ttype = country"]
+    for key, trigger in choices:
+        out += ["\ttext = {", "\t\ttrigger = {"] + ["\t\t\t%s" % t for t in trigger] + [
+            "\t\t}", "\t\tlocalization_key = %s" % key, "\t}"]
+    return out + ["\ttext = {", "\t\tlocalization_key = empty_text", "\t}", "}", ""]
+
+
+ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII"]
+
+
+def soon_reasons(line: dict) -> list[tuple[str, list[str]]]:
+    """Why a «not yet» line is not yet, in the order it is asked (his ask
+    10-04: the game names the age, ours named nothing): the advance that unlocks
+    it while the country lacks it, the age it belongs to while that is still to
+    come, else the game's own «requirements not yet met»."""
+    why = line.get("why") or {}
+    out = []
+    if why.get("advance"):
+        out.append(("_ADV", ["NOT = { %s }" % why["advance_have"]]))
+    if why.get("age"):
+        out.append(("_AGE", ["NOT = { current_age_or_later = { age = %s } }" % why["age"]]))
+    return out + [("_REQ", [])]
+
+
+def soon_text(text: str, line: dict, reason: str, lang: str) -> str:
+    """The line with what it waits on in brackets, before its number."""
+    why = line.get("why") or {}
+    if reason == "_ADV":
+        note = " #help (%s,#! [ShowAdvanceName('%s')]#help )#!" % (
+            ROMAN[core.age_number(why["advance_age"])], why["advance"])
+    elif reason == "_AGE":
+        note = " #help (%s)#!" % ROMAN[core.age_number(why["age"])]
+    else:
+        note = " #help (%s)#!" % svx_languages.NOT_MET[lang]
+    at = text.rfind(": #color_green")
+    if at < 0:
+        at = text.rfind("\\n")
+    return text[:at] + note + text[at:]
 
 
 def build() -> dict[str, str]:
@@ -297,7 +341,9 @@ def build() -> dict[str, str]:
             if line["now"]:
                 custom += custom_entry(line["name"] + "_now", key, line["now"])
             if line["soon"]:
-                custom += custom_entry(line["name"] + "_soon", key, line["soon"])
+                custom += custom_choice(line["name"] + "_soon", [
+                    (key + "_SOON" + reason, line["soon"] + extra)
+                    for reason, extra in soon_reasons(line)])
     files[CUSTOM] = "\n".join(custom)
 
     # --- whether each list has anything to show --------------------------------
@@ -392,6 +438,9 @@ def build() -> dict[str, str]:
                 text = line_text(line, lang, glorp)
                 if line["now"] or line["soon"]:
                     out.append(' %s: "%s"' % (key, text))
+                if line["soon"]:
+                    for reason, _ in soon_reasons(line):
+                        out.append(' %s_SOON%s: "%s"' % (key, reason, soon_text(text, line, reason, lang)))
                 now_body.append("[Player.Custom('%s_now')]" % line["name"] if line["now"] else text)
                 if line["soon"]:
                     soon_body.append("[Player.Custom('%s_soon')]" % line["name"])

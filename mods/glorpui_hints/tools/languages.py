@@ -140,6 +140,24 @@ NEW_LABELS = {
 }
 
 
+# What a «not yet» line says when neither an advance nor an age explains it:
+# the game's own words where the tree has them (english, russian:
+# HINT_SV_POLICY_LOCKED), close to them elsewhere.
+NOT_MET = {
+    "english": "requirements not yet met",
+    "russian": "требования ещё не выполнены",
+    "french": "conditions pas encore remplies",
+    "german": "Bedingungen noch nicht erfüllt",
+    "spanish": "requisitos aún no cumplidos",
+    "braz_por": "requisitos ainda não cumpridos",
+    "polish": "wymagania jeszcze niespełnione",
+    "turkish": "şartlar henüz karşılanmadı",
+    "simp_chinese": "尚未满足条件",
+    "japanese": "条件未達成",
+    "korean": "조건 미충족",
+}
+
+
 def _language(catalog, build_in_capital, scales, up_to, cabinet, cabinet_scales,
               io_policy, estate_power, titles, menu, scaled,
               conditional):

@@ -777,6 +777,21 @@ cm_ab_rd_check_orders = {
 # one that stayed quiet because it had nothing to lay. Root is the country.
 cm_ab_rd_probe = {
 	save_scope_as = cm_country
+	# cm_dev_perf: the plan's gates, into debug.log
+	if = { limit = { cm_ab_master_active = yes } debug_log = "CM roads gate master_active yes" }
+	else = { debug_log = "CM roads gate master_active NO" }
+	if = { limit = { exists = var:cm_ab_roads_enabled } debug_log = "CM roads gate roads_enabled yes" }
+	else = { debug_log = "CM roads gate roads_enabled NO" }
+	if = { limit = { has_advance = road_building } debug_log = "CM roads gate advance_road_building yes" }
+	else = { debug_log = "CM roads gate advance_road_building NO" }
+	if = { limit = { exists = var:cm_ab_roads_proximity } debug_log = "CM roads gate proximity_on yes" }
+	else = { debug_log = "CM roads gate proximity_on NO" }
+	if = { limit = { exists = var:cm_ab_roads_market_access } debug_log = "CM roads gate market_access_on yes" }
+	else = { debug_log = "CM roads gate market_access_on NO" }
+	if = { limit = { exists = var:cm_ab_roads_capital } debug_log = "CM roads gate capital_on yes" }
+	else = { debug_log = "CM roads gate capital_on NO" }
+	if = { limit = { modifier:overlord_blocked_from_building_roads = no } debug_log = "CM roads gate not_blocked_by_overlord yes" }
+	else = { debug_log = "CM roads gate not_blocked_by_overlord NO" }
 	set_variable = { name = cm_ab_rd_p1 value = 0 }
 	set_variable = { name = cm_ab_rd_p2 value = 0 }
 	set_variable = { name = cm_ab_rd_p2p value = 0 }
@@ -820,15 +835,31 @@ cm_ab_rd_probe = {
 		}
 	}
 	cmf_log_value = { action = cm_log_rd_p_prox value = var:cm_ab_rd_p1 }
+	set_global_variable = { name = cm_perf_log_v1 value = var:cm_ab_rd_p1 }
+	debug_log = "CM cm_log_rd_p_prox [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v1')|2]"
 	cmf_log_value = { action = cm_log_rd_p_ma value = var:cm_ab_rd_p2 }
+	set_global_variable = { name = cm_perf_log_v1 value = var:cm_ab_rd_p2 }
+	debug_log = "CM cm_log_rd_p_ma [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v1')|2]"
 	cmf_log_value = { action = cm_log_rd_p_ma_par value = var:cm_ab_rd_p2p }
+	set_global_variable = { name = cm_perf_log_v1 value = var:cm_ab_rd_p2p }
+	debug_log = "CM cm_log_rd_p_ma_par [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v1')|2]"
 	cmf_log_value = { action = cm_log_rd_p_cap value = var:cm_ab_rd_p3 }
+	set_global_variable = { name = cm_perf_log_v1 value = var:cm_ab_rd_p3 }
+	debug_log = "CM cm_log_rd_p_cap [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v1')|2]"
 	cmf_log_value = { action = cm_log_rd_p_cap_ring value = var:cm_ab_rd_p3r }
+	set_global_variable = { name = cm_perf_log_v1 value = var:cm_ab_rd_p3r }
+	debug_log = "CM cm_log_rd_p_cap_ring [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v1')|2]"
 	cmf_log_value = { action = cm_log_rd_p_flight value = var:cm_ab_rd_pf }
+	set_global_variable = { name = cm_perf_log_v1 value = var:cm_ab_rd_pf }
+	debug_log = "CM cm_log_rd_p_flight [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v1')|2]"
 	cmf_log_value = { action = cm_log_rd_p_short value = var:cm_ab_rd_ps }
+	set_global_variable = { name = cm_perf_log_v1 value = var:cm_ab_rd_ps }
+	debug_log = "CM cm_log_rd_p_short [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v1')|2]"
 	if = {
 		limit = { has_variable = cm_ab_pool_roads }
 		cmf_log_decimal_value = { action = cm_log_rd_p_pool value = var:cm_ab_pool_roads }
+		set_global_variable = { name = cm_perf_log_v1 value = var:cm_ab_pool_roads }
+		debug_log = "CM cm_log_rd_p_pool [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v1')|2]"
 	}
 	# Only speaks up when a target never got to look, which is the case a count of 0 cannot tell
 	# apart from a target that looked and found nothing.
@@ -842,6 +873,7 @@ cm_ab_rd_probe = {
 			trigger_else = { always = yes }
 		}
 		cmf_log = { action = cm_log_rd_p_skip_prox }
+		debug_log = "CM cm_log_rd_p_skip_prox"
 	}
 	if = {
 		limit = {
@@ -852,6 +884,7 @@ cm_ab_rd_probe = {
 			trigger_else = { always = yes }
 		}
 		cmf_log = { action = cm_log_rd_p_skip_ma }
+		debug_log = "CM cm_log_rd_p_skip_ma"
 	}
 	if = {
 		limit = {
@@ -862,6 +895,7 @@ cm_ab_rd_probe = {
 			trigger_else = { always = yes }
 		}
 		cmf_log = { action = cm_log_rd_p_skip_cap }
+		debug_log = "CM cm_log_rd_p_skip_cap"
 	}
 	remove_variable = cm_ab_rd_p1
 	remove_variable = cm_ab_rd_p2

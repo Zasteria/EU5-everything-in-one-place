@@ -94,8 +94,12 @@ class Advances:
     def __init__(self, game: Path):
         self.unlocks: dict[tuple[str, str], list[str]] = {}
         self.potential: dict[str, str | None] = {}
+        self.age: dict[str, str] = {}
         for name, (block, _) in pdx.objects(game / "in_game/common/advances").items():
             self.potential[name] = own_trigger(pdx.get(block, "potential"))
+            age = pdx.get(block, "age")
+            if isinstance(age, str):
+                self.age[name] = age
             for entry in block:
                 if entry.key.startswith("unlock_") and isinstance(entry.value, str):
                     self.unlocks.setdefault((entry.key[len("unlock_"):], entry.value),
@@ -103,6 +107,12 @@ class Advances:
 
     def of(self, kind: str, key: str) -> list[str]:
         return sorted(set(self.unlocks.get((kind, key), [])))
+
+    def earliest(self, names: list[str]) -> str | None:
+        """The one of these that comes in the earliest age: what a «not yet»
+        line names as the advance to get (his ask 10-04)."""
+        dated = [n for n in names if n in self.age]
+        return min(dated, key=lambda n: (age_number(self.age[n]), n)) if dated else None
 
     def have(self, names: list[str]) -> str:
         return "OR = { %s }" % " ".join("has_advance = %s" % n for n in names)
@@ -120,6 +130,23 @@ class Advances:
                 return None
             options.append("has_advance = %s AND = { %s }" % (name, potential))
         return "OR = { %s }" % " ".join(options)
+
+
+def age_number(age: str) -> int:
+    """`age_4_reformation` -> 4."""
+    match = re.match(r"age_(\d+)_", age)
+    return int(match.group(1)) if match else 0
+
+
+def _why(advances: Advances, unlocking: list[str], age: str | None) -> dict:
+    """What a «not yet» line says it waits on: the advance that unlocks it, or
+    the age it belongs to. Neither: «requirements not met», as the game says."""
+    why = {"age": age if isinstance(age, str) else None, "advance": None, "advance_have": None}
+    first = advances.earliest(unlocking) if unlocking else None
+    if first:
+        why.update(advance=first, advance_age=advances.age[first],
+                   advance_have=advances.have(unlocking))
+    return why
 
 
 def _soon(reach: list[str], now: list[str]) -> list[str]:
@@ -155,7 +182,8 @@ def collect(game: Path) -> list[dict]:
         for axis, (value, up_to) in pushes(block, known).items():
             lines.append({"direction": axis, "kind": "privilege", "object": key,
                           "value": value, "up_to": up_to, "now": now,
-                          "soon": _soon(reach, now) if unlocking or potential else None})
+                          "soon": _soon(reach, now) if unlocking or potential else None,
+                          "why": _why(advances, unlocking, None)})
 
     # --- government reforms ------------------------------------------------
     for key, (block, _) in pdx.objects(common / "government_reforms").items():
@@ -182,7 +210,8 @@ def collect(game: Path) -> list[dict]:
         for axis, (value, up_to) in pushes(block, known).items():
             lines.append({"direction": axis, "kind": "reform", "object": key,
                           "value": value, "up_to": up_to, "now": now,
-                          "soon": _soon(reach, now) if gated_later else None})
+                          "soon": _soon(reach, now) if gated_later else None,
+                          "why": _why(advances, unlocking, age)})
 
     # --- laws and their policies -------------------------------------------
     for law, (block, _) in pdx.objects(common / "laws").items():
@@ -234,7 +263,8 @@ def collect(game: Path) -> list[dict]:
                 gated_later = unlocking or law_potential or policy_potential
                 lines.append({"direction": axis, "kind": "policy", "object": name,
                               "law": law, "value": value, "up_to": up_to, "now": now,
-                              "soon": _soon(reach, now) if gated_later else None})
+                              "soon": _soon(reach, now) if gated_later else None,
+                              "why": _why(advances, unlocking, None)})
     return lines
 
 

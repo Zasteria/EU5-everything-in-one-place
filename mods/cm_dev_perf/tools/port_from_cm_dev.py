@@ -125,6 +125,7 @@ def _widen_refresh(text: str) -> str:
 
 
 LOG = "in_game/common/scripted_effects/cm_log_effects.txt"
+ROADS = "in_game/common/scripted_effects/cm_ab_roads_effects.txt"
 # wrapper: (number of values, logs a location, logs a building type)
 _LOGGED = {
     "cm_dbg_log": (0, False, False),
@@ -200,18 +201,65 @@ def _guard_maps(text: str) -> tuple[str, int]:
     return "\n".join(lines), n
 
 
+_DIRECT = re.compile(r"^([ \t]*)cmf_log(_value|_decimal_value)? = \{ action = (\S+)(?: value = (\S+))? \}[ \t]*$")
+_SHOWN = "[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v1')|2]"
+
+
+def _mirror_direct(text: str) -> tuple[str, int]:
+    """The lines CM writes with CMF's own `cmf_log*` rather than its Debug-tab
+    wrappers go to `debug.log` too (+perf10): the probes' summaries (roads,
+    governors, military, the gold balance) and the setup stamps. His run of
+    10-04 pressed the roads probe and `debug.log` had nothing to show for it.
+    """
+    lines = text.split("\n")
+    out, n = [], 0
+    for line in lines:
+        out.append(line)
+        match = _DIRECT.match(line)
+        if not match:
+            continue
+        indent, kind, action, value = match.groups()
+        if value:
+            out.append("%sset_global_variable = { name = cm_perf_log_v1 value = %s }" % (indent, value))
+            out.append('%sdebug_log = "CM %s %s"' % (indent, action, _SHOWN))
+        else:
+            out.append('%sdebug_log = "CM %s"' % (indent, action))
+        n += 1
+    return "\n".join(out), n
+
+
+def _probe_road_gates(text: str) -> str:
+    """The roads probe also says which of the plan's three gates holds (+perf10):
+    a plan that fails one of them returns without a word, so «no roads» and
+    «not allowed to plan roads» read the same."""
+    head = "cm_ab_rd_probe = {\n\tsave_scope_as = cm_country\n"
+    gates = (("cm_ab_master_active = yes", "master_active"),
+             ("exists = var:cm_ab_roads_enabled", "roads_enabled"),
+             ("has_advance = road_building", "advance_road_building"),
+             ("exists = var:cm_ab_roads_proximity", "proximity_on"),
+             ("exists = var:cm_ab_roads_market_access", "market_access_on"),
+             ("exists = var:cm_ab_roads_capital", "capital_on"),
+             ("modifier:overlord_blocked_from_building_roads = no", "not_blocked_by_overlord"))
+    lines = ["\t# cm_dev_perf: the plan's gates, into debug.log"]
+    for trigger, name in gates:
+        lines.append('\tif = { limit = { %s } debug_log = "CM roads gate %s yes" }' % (trigger, name))
+        lines.append('\telse = { debug_log = "CM roads gate %s NO" }' % name)
+    return text.replace(head, head + "\n".join(lines) + "\n", 1)
+
+
 EDITS = (
     (WINDOW, "gate the building-type tree", _gate_the_tree),
     (WINDOW, "widen the first pass's instantiation window", perf._widen_first_pass),
     (WINDOW, "widen the upgrade refresh's instantiation window", _widen_refresh),
     (LOG, "mirror the Debug tab's log into debug.log", _mirror_log),
+    (ROADS, "say the roads plan's gates in its probe", _probe_road_gates),
 )
 
 
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 9
+PERF_REVISION = 10
 
 
 def metadata() -> str:
@@ -274,8 +322,9 @@ def main() -> int:
     for path in (MOD / "in_game/common").rglob("*.txt"):
         text = path.read_text(encoding="utf-8-sig")
         guarded, n = _guard_maps(text)
-        if n:
-            path.write_text("\ufeff" + guarded, encoding="utf-8")
+        mirrored, m = _mirror_direct(guarded)
+        if n or m:
+            path.write_text("\ufeff" + mirrored, encoding="utf-8")
     # The probe window (09-27) ships beside CM's files; its sources live in
     # tools/probe/ so this rebuild does not wipe them.
     for src in PROBE.rglob("*"):
