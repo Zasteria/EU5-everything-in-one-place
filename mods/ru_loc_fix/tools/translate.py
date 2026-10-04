@@ -13,7 +13,12 @@ client that shows three ways:
   printed on screen (793 keys on 10-01);
 * **english** — the Russian file holds the English text (1 339 new on 10-01);
 * **stale** — English moved to other markup (a removed event's title, a
-  function the engine no longer has) and the Russian still prints the old one.
+  function the engine no longer has, a concept the game dropped) and the
+  Russian still prints the old one. A hard rule of `locscan` finds most; the
+  rest — a scope or `$ARGUMENT$` the engine stopped passing, which is a valid
+  name and so breaks no rule — are listed in `translations/stale.txt`, each
+  with the digest of the game's Russian it was found in. Once Paradox rewrites
+  that Russian the digest stops matching and ours is reported and dropped.
 
 `translations/<stem>.yml` holds the Russian, one file per game file
 (`religious_orders.yml` for `religious_orders_l_english.yml`).
@@ -55,6 +60,7 @@ import locscan  # noqa: E402
 
 SOURCE = MOD / "translations"
 FINGERPRINTS = SOURCE / "english_fingerprints.txt"
+STALE = SOURCE / "stale.txt"
 OUT = MOD / "main_menu/localization/russian/bag_ruloc_translated_l_russian.yml"
 OUT_LOADING = MOD / "loading_screen/localization/russian/bag_ruloc_translated_loading_l_russian.yml"
 
@@ -112,6 +118,20 @@ def hard_flagged(russian: dict, english: dict) -> set[str]:
     return {f.key for f in locscan.scan(russian, english, locscan.HARD)}
 
 
+def read_stale() -> dict[str, str]:
+    """key -> digest of the game's Russian it was found stale in."""
+    found: dict[str, str] = {}
+    if STALE.exists():
+        for line in STALE.read_text(encoding="utf-8").splitlines():
+            if line and not line.startswith("#"):
+                digest, key = line.split("\t")[:2]
+                found[key] = digest
+    return found
+
+
+_STALE: dict[str, str] | None = None
+
+
 def reason(key: str, russian: dict, english: dict, flagged: set[str],
            to_do: bool = False) -> str | None:
     """Why the game's Russian for `key` needs ours, or None once it does not."""
@@ -128,6 +148,11 @@ def reason(key: str, russian: dict, english: dict, flagged: set[str],
             and (not to_do or re.search(r"[A-Za-z]{2}", prose(theirs)))):
         return "english"
     if key in flagged:
+        return "stale"
+    global _STALE
+    if _STALE is None:
+        _STALE = read_stale()
+    if _STALE.get(key) == fingerprint(theirs):
         return "stale"
     return None
 
