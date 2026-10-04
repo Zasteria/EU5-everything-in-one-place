@@ -622,7 +622,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 21
+PERF_REVISION = 22
 
 
 def metadata() -> str:
@@ -668,6 +668,11 @@ def main() -> int:
     nd = buildings.ND(nd_root)
     if nd.most_rows() > buildings.ND_ROWS:
         raise SystemExit(f"National Destinies: a country can claim {nd.most_rows()} rows, the list has {buildings.ND_ROWS}")
+    if nd.most_info() > buildings.INFO_ROWS:
+        raise SystemExit(f"National Destinies: a country has {nd.most_info()} buildings, the info list {buildings.INFO_ROWS} rows")
+    (MOD / "in_game/common/customizable_localization").mkdir(parents=True, exist_ok=True)
+    (MOD / "in_game/common/customizable_localization/cm_perf_buildings_custom_loc.txt").write_text(
+        buildings.custom_localization(), encoding="utf-8")
     (MOD / "in_game/common/scripted_effects/cm_perf_buildings_effects.txt").write_text(
         buildings.effects(nd), encoding="utf-8")
     (MOD / "in_game/common/scripted_guis/cm_perf_buildings_scripted_gui.txt").write_text(
@@ -755,9 +760,10 @@ def main() -> int:
     print("cm_dev_perf: %d files copied from %s, %d edits applied, rebuilt on the beta: %s"
           % (copied, SRC.name, len(EDITS), ", ".join(rebuilt)))
     print(f"cm_dev_perf: {gated} vanilla auto-expand toggles gated on CM; cm_rio_patch: {patch}")
-    print("cm_dev_perf: National Destinies %s: %d capital, %d market-centre, %d control, %d for its list "
-          "(at most %d rows a country)" % ("read" if nd_root else "absent", len(nd.capital), len(nd.market),
-                                          len(nd.control), nd.count(), nd.most_rows()))
+    print("cm_dev_perf: National Destinies %s: %d capital, %d market-centre, %d for its list "
+          "(at most %d rows a country, %d in the info list)" % ("read" if nd_root else "absent", len(nd.capital),
+                                                                 len(nd.market), nd.count(), nd.most_rows(),
+                                                                 nd.most_info()))
     return 0
 
 

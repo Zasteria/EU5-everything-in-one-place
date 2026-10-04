@@ -19,7 +19,10 @@ a set, read off the sets he wrote:
   `allow` (CM's six from `market_buildings.txt`; `city_walls` is CM's one
   exception and stays his);
 - control: a special building with a positive `local_max_control` in its
-  `modifier` (CM's six uniques from `unique_buildings.txt`, all of them).
+  `modifier` (CM's six uniques from `unique_buildings.txt`, all of them). Only
+  the game's own: National Destinies' control buildings give a few per cent of
+  control beside better things, so his call 10-04 is that they go to the list
+  («их "управленческость" — это вторичность, а не основа»).
 
 A building that produces goods is the Production tab's: that tab walks every
 building type the game has (`cm_building_types_to_process`), modded ones
@@ -44,6 +47,8 @@ NEW_CAPITAL = ("sacred_council", "khan_ordu", "chieftain_hall", "patrician_hall"
 NEW_ROSTER = ("village_granary",)
 ROSTER_ROWS = 24  # CM Dev's own auto_build_list
 ND_ROWS = 30
+INFO_ROWS = 40  # auto_build_nd_info: every National Destinies building of the country
+KINDS = {"capital": 1, "market": 2, "roster": 3, "control": 3, "production": 4}
 FREE = "flag:cm_perf_nd_free"
 
 
@@ -120,18 +125,22 @@ class ND:
     def __init__(self, root: Path | None):
         self.capital: list[str] = []
         self.market: list[str] = []
-        self.control: list[str] = []
-        self.groups: dict[str, list[str]] = {}  # potential -> roster buildings, file order
+        self.groups: dict[str, list[str]] = {}  # potential -> list buildings, file order
+        self.info: dict[str, list[tuple[str, int]]] = {}  # potential -> every building and its KINDS
         if root is None:
             return
         types = blocks(root / "in_game/common/building_types")
         advances = blocks(root / "in_game/common/advances")
         for key, body in types.items():
             k = kind(body)
-            if k in ("capital", "market", "control"):
+            if k == "unbuildable":
+                continue
+            pot = self._potential(body, advances)
+            self.info.setdefault(pot, []).append((key, KINDS[k]))
+            if k in ("capital", "market"):
                 getattr(self, k).append(key)
-            elif k == "roster":
-                self.groups.setdefault(self._potential(body, advances), []).append(key)
+            elif k in ("roster", "control"):
+                self.groups.setdefault(pot, []).append(key)
         if not types:
             raise SystemExit(f"{root}: no building types read")
 
@@ -153,13 +162,25 @@ class ND:
             return parts[0]
         return "OR = { " + " ".join(f"AND = {{ {p} }}" for p in parts) + " }"
 
-    def most_rows(self) -> int:
-        """The most roster rows one tag can claim (its own and its formed variants)."""
+    @staticmethod
+    def _most(groups: dict[str, list]) -> int:
+        """The most rows one tag can claim: its own and its formed variants, plus every group no
+        tag owns (a game rule, a formed-country variable, everyone's), as if it held all of them."""
         per_tag: dict[str, int] = {}
-        for pot, keys in self.groups.items():
-            for tag in set(re.findall(r"has_or_had_tag = (\w+)", pot)) or {pot}:
+        anyone = 0
+        for pot, keys in groups.items():
+            tags = set(re.findall(r"has_or_had_tag = (\w+)", pot))
+            if not tags:
+                anyone += len(keys)
+            for tag in tags:
                 per_tag[tag] = per_tag.get(tag, 0) + len(keys)
-        return max(per_tag.values(), default=0)
+        return max(per_tag.values(), default=0) + anyone
+
+    def most_rows(self) -> int:
+        return self._most(self.groups)
+
+    def most_info(self) -> int:
+        return self._most(self.info)
 
     def count(self) -> int:
         return sum(len(v) for v in self.groups.values())
@@ -184,10 +205,7 @@ def edit_custom_sets(text: str) -> str:
     _once(text, market, "market-centre set")
     text = text.replace(market, market + "\t\t\t\t# cm_dev_perf: National Destinies' market-centre buildings.\n"
                         "\t\t\t\tcm_perf_nd_stage_market = yes\n")
-    control = "\tcm_ab_add_control_type = { bt = tambo }\n"
-    _once(text, control, "control set")
-    return text.replace(control, control + "\t# cm_dev_perf: National Destinies' control buildings.\n"
-                        "\tcm_perf_nd_add_control = yes\n")
+    return text
 
 
 def edit_registration(text: str) -> str:
@@ -258,8 +276,7 @@ def effects(nd: ND) -> str:
         "# strictly meeting the author's criterion for a set is called from that set",
         "# (cm_ab_custom_effects.txt); the rest of them, those that produce nothing, are the",
         "# auto_build_nd list's, whose rows go to the player's own country's buildings.",
-        f"# {len(nd.capital)} capital, {len(nd.market)} market-centre, {len(nd.control)} control, "
-        f"{nd.count()} for the list.",
+        f"# {len(nd.capital)} capital, {len(nd.market)} market-centre, {nd.count()} for the list.",
         "",
         "# Root is the capital location. Expects scope:cm_country, scope:cm_location.",
         "cm_perf_nd_stage_capital = {",
@@ -269,11 +286,6 @@ def effects(nd: ND) -> str:
         "# Root is a market-centre location. Expects scope:cm_country, scope:cm_location.",
         "cm_perf_nd_stage_market = {",
         *[f"\tcm_ab_stage_custom_type_here = {{ bt = {k} }}" for k in nd.market],
-        "}",
-        "",
-        "# Root is the country.",
-        "cm_perf_nd_add_control = {",
-        *[f"\tcm_ab_add_control_type = {{ bt = {k} }}" for k in nd.control],
         "}",
         "",
         "# The list. Rows stand for nothing until cm_perf_nd_assign_rows gives them a building; the",
@@ -314,6 +326,7 @@ def effects(nd: ND) -> str:
         "\t\tstep_value = 1",
         "\t}",
         "\tcmm_set_list_field_conditional_format = { mod_id = cm setting_id = auto_build_nd field_id = min_discount }",
+        "\tcm_perf_ndi_register = yes",
         "}",
         "",
         "# Gives each of this country's buildings a row the first time the country qualifies for it (the",
@@ -337,13 +350,11 @@ def effects(nd: ND) -> str:
         "\t\t\tNOT = { is_target_in_variable_list = { name = cm_perf_nd_rows target = scope:cm_perf_nd_t } }",
         f"\t\t\tvar:cm_perf_nd_rows_used < {ND_ROWS}",
         "\t\t}",
-        "\t\tset_variable = { name = cm_perf_nd_label value = flag:$bt$ }",
         "\t\tcm_perf_nd_place_row = yes",
         "\t}",
         "}",
         "",
-        "# The next free row gets scope:cm_perf_nd_t, labelled with var:cm_perf_nd_label (the",
-        "# building's own key, which is its name). Root is the country.",
+        "# The next free row gets scope:cm_perf_nd_t. Root is the country.",
         "cm_perf_nd_place_row = {",
         "\tchange_variable = { name = cm_perf_nd_rows_used add = 1 }",
         "\tadd_to_variable_list = { name = cm_perf_nd_rows target = scope:cm_perf_nd_t }",
@@ -351,10 +362,8 @@ def effects(nd: ND) -> str:
         "\tswitch = {",
         "\t\ttrigger = var:cm_perf_nd_rows_used",
         _rows(ND_ROWS, "\t\t{i} = {{ cmm_set_list_item_value = {{ mod_id = cm setting_id = auto_build_nd item = {i} "
-                       "value = scope:cm_perf_nd_t }} set_variable = {{ name = cm__auto_build_nd_i{i}_name "
-                       "value = var:cm_perf_nd_label }} }}\n").rstrip("\n"),
+                       "value = scope:cm_perf_nd_t }} }}\n").rstrip("\n"),
         "\t}",
-        "\tremove_variable = cm_perf_nd_label",
         "}",
         "",
         "# New rows first, then each row shown while its building can be built (or a later tier of it",
@@ -369,12 +378,19 @@ def effects(nd: ND) -> str:
         "\t\tlimit = { has_local_variable = cm_perf_nd_new }",
         "\t\tcm_rebuild_auto_build_lookups = yes",
         "\t}",
+        "\tcm_perf_ndi_refresh_rows = yes",
         "}",
         "",
-        "# Callback for cmm_for_each_list_item. Root is the country.",
+        "# Callback for cmm_for_each_list_item. A row's label reads its building from",
+        "# var:cm_perf_nd_bt_<row> (localization cm__auto_build_nd_i<row>_name): set here rather",
+        "# than once, so a save whose rows predate it gets its names too. Root is the country.",
         "cm_perf_nd_row_visibility = {",
         "\tif = {",
         "\t\tlimit = { is_target_in_variable_list = { name = cm_perf_nd_rows target = scope:cmm_list_current_item_value } }",
+        "\t\tset_variable = { name = cm_perf_nd_bt_$i$ value = scope:cmm_list_current_item_value }",
+        "\t\t# +perf20 tried to relabel the row by copying a flag between variables; put the row's",
+        "\t\t# label back on its own key, as CMF's _cmm_initialize_list_item_metadata sets it.",
+        "\t\tset_variable = { name = $setting$_i$i$_name value = flag:$setting$_i$i$_name }",
         "\t\tif = {",
         "\t\t\tlimit = {",
         "\t\t\t\tOR = {",
@@ -441,11 +457,116 @@ def effects(nd: ND) -> str:
         "}",
         "",
     ]
-    return "﻿" + "\n".join(lines)
+    lines += info_effects(nd)
+    return "\ufeff" + "\n".join(lines)
+
+
+def info_effects(nd: ND) -> list[str]:
+    """auto_build_nd_info: every National Destinies building of the player's country, whatever it
+    is and whether or not it is open yet, with where Construction Manager takes it — his ask
+    10-04, «открыть список этих зданий, без настроек… просто ради информации». No fields."""
+    lines = [
+        "",
+        "# --- auto_build_nd_info: the country's National Destinies buildings, for reading only ---",
+        "",
+        "# Root is the country.",
+        "cm_perf_ndi_register = {",
+        "\tcmm_register_settings_list = {",
+        "\t\tmod_id = cm",
+        "\t\tsetting_id = auto_build_nd_info",
+        "\t\ttab_id = ab_custom",
+        f"\t\titem_count = {INFO_ROWS}",
+        "\t\tis_ordered = 0",
+        "\t}",
+        _rows(INFO_ROWS, "\tif = {{ limit = {{ NOT = {{ has_variable_list = cm__auto_build_nd_info_i{i}_value }} }} "
+                         "cmm_set_list_item_value = {{ mod_id = cm setting_id = auto_build_nd_info item = {i} value = "
+                         + FREE + " }} }}\n").rstrip("\n"),
+        "}",
+        "",
+        "# Root is the country. Same owners as the list's (the unlocking advance's potential).",
+        "cm_perf_ndi_assign_rows = {",
+        "\tif = { limit = { NOT = { has_variable = cm_perf_ndi_rows_used } } set_variable = { name = cm_perf_ndi_rows_used value = 0 } }",
+    ]
+    for pot, items in nd.info.items():
+        lines.append(f"\tif = {{ limit = {{ {pot} }}")
+        lines += [f"\t\tcm_perf_ndi_assign = {{ bt = {k} kind = {n} }}" for k, n in items]
+        lines.append("\t}")
+    lines += [
+        "}",
+        "",
+        "# Root is the country. $bt$ = the building type, $kind$ = 1 capital, 2 market centre,",
+        "# 3 the list above, 4 the Production tab.",
+        "cm_perf_ndi_assign = {",
+        "\tbuilding_type:$bt$ = { save_scope_as = cm_perf_ndi_t }",
+        "\tif = {",
+        "\t\tlimit = {",
+        "\t\t\tNOT = { is_target_in_variable_list = { name = cm_perf_ndi_rows target = scope:cm_perf_ndi_t } }",
+        f"\t\t\tvar:cm_perf_ndi_rows_used < {INFO_ROWS}",
+        "\t\t}",
+        "\t\tset_variable = { name = cm_perf_ndi_kind value = $kind$ }",
+        "\t\tcm_perf_ndi_place_row = yes",
+        "\t}",
+        "}",
+        "",
+        "# The next free row gets scope:cm_perf_ndi_t and its kind. Root is the country.",
+        "cm_perf_ndi_place_row = {",
+        "\tchange_variable = { name = cm_perf_ndi_rows_used add = 1 }",
+        "\tadd_to_variable_list = { name = cm_perf_ndi_rows target = scope:cm_perf_ndi_t }",
+        "\tswitch = {",
+        "\t\ttrigger = var:cm_perf_ndi_rows_used",
+        _rows(INFO_ROWS, "\t\t{i} = {{ cmm_set_list_item_value = {{ mod_id = cm setting_id = auto_build_nd_info item = {i} "
+                         "value = scope:cm_perf_ndi_t }} set_variable = {{ name = cm_perf_ndi_k_{i} "
+                         "value = var:cm_perf_ndi_kind }} }}\n").rstrip("\n"),
+        "\t}",
+        "\tremove_variable = cm_perf_ndi_kind",
+        "}",
+        "",
+        "# Rows with a building are shown, open or not; the rest hidden. Root is the country.",
+        "cm_perf_ndi_refresh_rows = {",
+        "\tcm_perf_ndi_assign_rows = yes",
+        "\tif = {",
+        "\t\tlimit = { has_variable_list = cmm_list_items_cm__auto_build_nd_info }",
+        "\t\tcmm_for_each_list_item = { setting = cm__auto_build_nd_info effect = cm_perf_ndi_row_visibility }",
+        "\t}",
+        "}",
+        "",
+        "# Callback for cmm_for_each_list_item; labels as cm_perf_nd_row_visibility. Root is the country.",
+        "cm_perf_ndi_row_visibility = {",
+        "\tif = {",
+        "\t\tlimit = { is_target_in_variable_list = { name = cm_perf_ndi_rows target = scope:cmm_list_current_item_value } }",
+        "\t\tset_variable = { name = cm_perf_ndi_bt_$i$ value = scope:cmm_list_current_item_value }",
+        "\t\tcmm_show_list_item = { mod_id = cm setting_id = auto_build_nd_info item = $i$ }",
+        "\t}",
+        "\telse = {",
+        "\t\tcmm_hide_list_item = { mod_id = cm setting_id = auto_build_nd_info item = $i$ }",
+        "\t}",
+        "\tif = {",
+        "\t\tlimit = { always = no }",
+        "\t\tcmf_suppress = { v = $setting$_$i$ }",
+        "\t}",
+        "}",
+        "",
+    ]
+    return lines
+
+
+KIND_KEYS = ("capital", "market", "list", "production")
+
+
+def custom_localization() -> str:
+    """Where an info row's building goes, by var:cm_perf_ndi_k_<row>; text keys in localization()."""
+    lines = ["# Generated by mods/cm_dev_perf/tools/buildings.py; not to be edited by hand.", ""]
+    for i in range(1, INFO_ROWS + 1):
+        lines += [f"cm_perf_ndi_kind_{i} = {{", "\ttype = country"]
+        for n, key in enumerate(KIND_KEYS, 1):
+            lines += ["\ttext = {", f"\t\tlocalization_key = cm_perf_ndi_kind_{key}",
+                      f"\t\ttrigger = {{ has_variable = cm_perf_ndi_k_{i} var:cm_perf_ndi_k_{i} = {n} }}", "\t}"]
+        lines += ["\ttext = {", "\t\tlocalization_key = cm_perf_ndi_kind_none", "\t\tfallback = yes", "\t}", "}", ""]
+    return "\ufeff" + "\n".join(lines)
 
 
 def scripted_guis() -> str:
-    return "﻿" + "\n".join([
+    return "\ufeff" + "\n".join([
         "# Generated by mods/cm_dev_perf/tools/buildings.py; not to be edited by hand.",
         "# A CMF list is invisible without its _on_changed (docs/research/cmf.md), and this one also",
         "# commits the change: lists have no auto-apply.",
@@ -468,6 +589,20 @@ def scripted_guis() -> str:
         "\t}",
         "}",
         "",
+        "cm__auto_build_nd_info_on_changed = {",
+        "\tscope = country",
+        "",
+        "\tis_shown = {",
+        "\t\talways = yes",
+        "\t}",
+        "",
+        "\teffect = {",
+        "\t\tcmm_apply_list_change = {",
+        "\t\t\tsetting = cm__auto_build_nd_info",
+        "\t\t}",
+        "\t}",
+        "}",
+        "",
     ])
 
 
@@ -478,6 +613,13 @@ WORDS = {
                 "строка появляется, когда здание можно строить. По умолчанию выключены. Работают вместе со "
                 "списком выше и по его правилам, после него. Производящие здания строит вкладка «Производство».",
         "column": "Здание",
+        "info_title": "Здания National Destinies: все здания державы",
+        "info_desc": "Только для справки: все национальные здания вашей страны из National Destinies, открытые "
+                     "и нет, и где их строит Менеджер строительства. Ничего не настраивает.",
+        "kind_capital": " — столичное (галочка столичных зданий)",
+        "kind_market": " — рыночное (галочка зданий центра рынка)",
+        "kind_list": " — список «Здания National Destinies»",
+        "kind_production": " — вкладка «Производство»",
     },
     "english": {
         "title": "National Destinies Buildings",
@@ -485,6 +627,13 @@ WORDS = {
                 "building can be built. Off by default. Worked with the list above and by its rules, after it. "
                 "Buildings that produce goods are the Production tab's.",
         "column": "Building",
+        "info_title": "National Destinies Buildings: all of the country's",
+        "info_desc": "For reading only: every National Destinies building of your country, open or not, and "
+                     "where Construction Manager builds it. Sets nothing.",
+        "kind_capital": " — capital (the capital buildings checkbox)",
+        "kind_market": " — market centre (the market-centre buildings checkbox)",
+        "kind_list": " — the National Destinies Buildings list",
+        "kind_production": " — the Production tab",
     },
 }
 
@@ -494,7 +643,7 @@ def localization(lang: str) -> str:
     src = "cm__auto_build_list"
     dst = "cm__auto_build_nd"
     lines = [
-        f"﻿l_{lang}:",
+        f"\ufeffl_{lang}:",
         "# Generated by mods/cm_dev_perf/tools/buildings.py; not to be edited by hand.",
         f' cm__ab_custom__auto_build_nd_name: "{w["title"]}"',
         f' cm__ab_custom__auto_build_nd_desc: "{w["desc"]}"',
@@ -518,7 +667,24 @@ def localization(lang: str) -> str:
         f' {dst}__min_discount_prefix_low: "#G "',
         f' {dst}__min_discount_postfix_low: "%#!"',
     ]
-    # A row's label is the building's own name once it has one (flag:<building>); until then the
-    # row is hidden, and its default label says what it is if it ever shows.
-    lines += [f' {dst}_i{i}_name: "-"' for i in range(1, ND_ROWS + 1)]
+    # A row's label is its building's own name, read from the variable the row's visibility pass
+    # sets (CMF prints the localization of the row's _name flag; the 10-04 run showed «-» for every
+    # row when the label was a flag copied out of another variable).
+    name = "[GetPlayer.MakeScope.GetVariable('{var}').GetBuildingType.GetNameWithNoTooltip]"
+    lines += [f' {dst}_i{i}_name: "{name.format(var=f"cm_perf_nd_bt_{i}")}" # NO-TRANSLATE'
+              for i in range(1, ND_ROWS + 1)]
+    info = f"{dst}_info"
+    lines += [
+        f' cm__ab_custom__auto_build_nd_info_name: "{w["info_title"]}"',
+        f' cm__ab_custom__auto_build_nd_info_desc: "{w["info_desc"]}"',
+        f' cm__ab_custom__auto_build_nd_info: "cm__ab_custom__auto_build_nd_info"',
+        f' {info}_name: "{w["info_title"]}"',
+        f' {info}_desc: "{w["info_desc"]}"',
+        f' {info}: "{info}"',
+        f' {info}_item_column_name: "{w["column"]}"',
+    ]
+    lines += [f' {info}_i{i}_name: "{name.format(var=f"cm_perf_ndi_bt_{i}")}'
+              f'[GetPlayer.Custom(\'cm_perf_ndi_kind_{i}\')]" # NO-TRANSLATE' for i in range(1, INFO_ROWS + 1)]
+    lines += [f' cm_perf_ndi_kind_{k}: "{w["kind_" + k]}"' for k in KIND_KEYS]
+    lines.append(' cm_perf_ndi_kind_none: ""')
     return "\n".join(lines) + "\n"
