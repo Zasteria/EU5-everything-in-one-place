@@ -450,7 +450,7 @@ EDITS = (
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 18
+PERF_REVISION = 19
 
 
 def metadata() -> str:
@@ -534,6 +534,17 @@ def main() -> int:
                             encoding="utf-8")
     if not owner_gates:
         raise SystemExit("the tag-compare owner gate is gone from CM's windows; drop this pass")
+    # Río sets the unbuilt-row toggle 133 px from the row's right edge, which on
+    # the beta's row is the income column (his screenshot 10-04 17:42, the
+    # toggle over «+0.44 / +0.15»). From the right the row is margin 8, build
+    # button 110, spacing 6, margin 3, income 60, 5, efficiency 70, 5, then an
+    # empty 24 px slot the row keeps for nothing: the toggle goes there (+perf19).
+    lateral = MOD / "in_game/gui/production_lateralview.gui"
+    text = lateral.read_text(encoding="utf-8-sig")
+    hook = "parentanchor = right|vcenter\n\t\t\t\t\t\tposition = { -133 0 }"
+    if text.count(hook) != 1:
+        raise SystemExit("production_lateralview.gui: the unbuilt-row toggle is not at Río's -133 once")
+    lateral.write_text("\ufeff" + text.replace(hook, hook.replace("-133", "-289")), encoding="utf-8")
     # The beta added a native trigger `is_host`, CMF's own trigger's name; CM's
     # host gates (the classification among them, his run 10-02: never ran) go
     # to cmf_is_host, which cmf_dev_beta defines with CMF's body.
