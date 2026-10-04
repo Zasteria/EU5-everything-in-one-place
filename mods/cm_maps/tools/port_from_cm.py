@@ -110,6 +110,7 @@ def _delta(line: str) -> int:
 
 IDENT = re.compile(r"\b(cm_[A-Za-z0-9_]*)\b")
 IDENT_UPPER = re.compile(r"\b(CM_[A-Za-z0-9_]*)\b")
+IS_HOST = re.compile(r"(?<![A-Za-z0-9_])is_host(\s*=\s*(?:yes|no)\b)")
 
 
 def rename(text: str) -> str:
@@ -130,7 +131,12 @@ def rename(text: str) -> str:
     # them — and a mode whose name key is missing shows its raw key in the
     # flyout.
     text = text.replace("mapmode_cm_", "mapmode_bcm_")
-    return text.replace("MAPMODE_CM_", "MAPMODE_BCM_")
+    text = text.replace("MAPMODE_CM_", "MAPMODE_BCM_")
+    # Game 1.4 has a native trigger `is_host` (host of a multiplayer session),
+    # false in single player, and it shadows CMF's scripted one (his probe
+    # 10-02): the river precompute never ran. `cmf_dev_beta` carries CMF's body
+    # as `cmf_is_host`.
+    return IS_HOST.sub(r"cmf_is_host\1", text)
 
 
 def unrenamed(text: str) -> set[str]:

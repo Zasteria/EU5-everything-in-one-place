@@ -64,6 +64,7 @@ _spec = importlib.util.spec_from_file_location(
 beta = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(beta)
 BETA_SPECS = Path(__file__).resolve().parent / "beta"
+BETA_RIO = Path(__file__).resolve().parent / "beta_rio"
 
 _CLASSIFY = (
     "GetScriptedGui('cm_should_building_type_section_show')"
@@ -124,17 +125,258 @@ def _widen_refresh(text: str) -> str:
     )
 
 
+LOG = "in_game/common/scripted_effects/cm_log_effects.txt"
+ROADS = "in_game/common/scripted_effects/cm_ab_roads_effects.txt"
+CMM = "in_game/common/scripted_effects/cm_cmm_effects.txt"
+CORE = "in_game/common/scripted_effects/cm_ab_core_effects.txt"
+# wrapper: (number of values, logs a location, logs a building type)
+_LOGGED = {
+    "cm_dbg_log": (0, False, False),
+    "cm_dbg_log_value": (1, False, False),
+    "cm_dbg_log_at_loc": (0, True, False),
+    "cm_dbg_log_loc": (1, True, False),
+    "cm_dbg_log_loc_values": (3, True, False),
+    "cm_dbg_log_bld": (2, True, True),
+}
+
+
+def _mirror_log(text: str) -> str:
+    """Every line CM's Debug tab logs goes to `debug.log` as well (+perf8).
+
+    CM's own log is CMF's action pane: 200 lines, on screen only, gone with the
+    session. The same line in `debug.log` comes back with `mods.bat` → 4, so a
+    run says what each cycle did without a screenshot. Still gated on the Debug
+    tab's category toggles, so with them off nothing is written. The key is
+    printed as the key (a `debug_log` does not resolve localization), the values
+    through a scratch global, the location and building as named scopes
+    (docs/research/engine.md, «What a `debug_log` string reaches»). The three
+    script values that read the globals back ship with the probe, in tools/probe/.
+    """
+    for name, (values, loc, bt) in _LOGGED.items():
+        head = f"\n{name} = {{\n"
+        at = text.index(head)
+        call = text.index("\t\tcmf_log", at)
+        shown = []
+        mirror = ["\t\t# cm_dev_perf: the same line into debug.log"]
+        for n in range(1, values + 1):
+            arg = "$value$" if n == 1 else f"$value{n}$"
+            mirror.append(f"\t\tset_global_variable = {{ name = cm_perf_log_v{n} value = {arg} }}")
+            shown.append(f"[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v{n}')|2]")
+        words = ["CM", "$cat$", "$action$"]
+        if values and name != "cm_dbg_log_value":
+            words.append("$arg1$")
+        if bt:
+            words.append("$arg2$")
+        mirror.append('\t\tdebug_log = "%s"' % " ".join(words + shown))
+        if bt:
+            mirror.append("\t\tscope:cmf_log_bt ?= { debug_log_scopes = no }")
+        if loc:
+            mirror.append("\t\tscope:cmf_log_loc ?= { debug_log_scopes = no }")
+        text = text[:call] + "\n".join(mirror) + "\n" + text[call:]
+    return text
+
+
+_LOOKUP = re.compile(r"is_key_in_variable_map\s*=\s*\{\s*name\s*=\s*(\S+)\s+target\s*=\s*(\S+)\s*\}")
+
+
+def _guard_maps(text: str) -> tuple[str, int]:
+    """`AND = { has_variable_map = M <lookup> }` for every lookup not already
+    guarded within the two lines above it, as CM itself writes the guard.
+
+    The AND keeps the meaning under a `NOT`, which reads its children as NOR.
+    """
+    lines = text.split("\n")
+    n = 0
+    for i, line in enumerate(lines):
+        if line.lstrip().startswith("#"):
+            continue
+        out, pos = [], 0
+        for match in _LOOKUP.finditer(line):
+            above = "\n".join(lines[max(0, i - 2):i]) + line[:match.start()]
+            if re.search(r"has_variable_map\s*=\s*%s(?!\S)" % re.escape(match.group(1)), above):
+                continue
+            out.append(line[pos:match.start()])
+            out.append("AND = { has_variable_map = %s %s }" % (match.group(1), match.group(0)))
+            pos = match.end()
+            n += 1
+        if out:
+            lines[i] = "".join(out) + line[pos:]
+    return "\n".join(lines), n
+
+
+_DIRECT = re.compile(r"^([ \t]*)cmf_log(_value|_decimal_value)? = \{ action = (\S+)(?: value = (\S+))? \}[ \t]*$")
+_SHOWN = "[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v1')|2]"
+
+
+def _mirror_direct(text: str) -> tuple[str, int]:
+    """The lines CM writes with CMF's own `cmf_log*` rather than its Debug-tab
+    wrappers go to `debug.log` too (+perf10): the probes' summaries (roads,
+    governors, military, the gold balance) and the setup stamps. His run of
+    10-04 pressed the roads probe and `debug.log` had nothing to show for it.
+    """
+    lines = text.split("\n")
+    out, n = [], 0
+    for line in lines:
+        out.append(line)
+        match = _DIRECT.match(line)
+        if not match:
+            continue
+        indent, kind, action, value = match.groups()
+        if value:
+            out.append("%sset_global_variable = { name = cm_perf_log_v1 value = %s }" % (indent, value))
+            out.append('%sdebug_log = "CM %s %s"' % (indent, action, _SHOWN))
+        else:
+            out.append('%sdebug_log = "CM %s"' % (indent, action))
+        n += 1
+    return "\n".join(out), n
+
+
+def _probe_road_gates(text: str) -> str:
+    """The roads probe also says which of the plan's three gates holds (+perf10):
+    a plan that fails one of them returns without a word, so «no roads» and
+    «not allowed to plan roads» read the same."""
+    head = "cm_ab_rd_probe = {\n\tsave_scope_as = cm_country\n"
+    gates = (("cm_ab_master_active = yes", "master_active"),
+             ("exists = var:cm_ab_roads_enabled", "roads_enabled"),
+             ("has_advance = road_building", "advance_road_building"),
+             ("exists = var:cm_ab_roads_proximity", "proximity_on"),
+             ("exists = var:cm_ab_roads_market_access", "market_access_on"),
+             ("exists = var:cm_ab_roads_capital", "capital_on"),
+             ("modifier:overlord_blocked_from_building_roads = no", "not_blocked_by_overlord"))
+    lines = ["\t# cm_dev_perf: the plan's gates, into debug.log"]
+    for trigger, name in gates:
+        lines.append('\tif = { limit = { %s } debug_log = "CM roads gate %s yes" }' % (trigger, name))
+        lines.append('\telse = { debug_log = "CM roads gate %s NO" }' % name)
+    return text.replace(head, head + "\n".join(lines) + "\n", 1)
+
+
+def _roads_ignore_shortage(text: str) -> str:
+    """A road may go ahead through the market's lumber, masonry and sand
+    shortage when the player ticks «Строить при нехватке товаров» (+perf12,
+    his ask 10-04: the choice, but his to control). The 05:53 probe: every gate
+    yes, 26 corridors planned, all 26 «short», and the walk stops on the first
+    without a word. Released CM has no such gate; a shortage only slows the
+    work, the gold is paid at once either way."""
+    old = "\t\t\tcm_market_has_construction_goods_for_road = yes\n"
+    if text.count(old) != 1:
+        raise SystemExit("roads: the try_build gate has changed shape")
+    return text.replace(old, "\t\t\t# cm_dev_perf: the shortage gate unless the player lifted it\n"
+                             "\t\t\tOR = {\n\t\t\t\texists = var:cm_ab_roads_ignore_shortage\n"
+                             "\t\t\t\tcm_market_has_construction_goods_for_road = yes\n\t\t\t}\n")
+
+
+def _register_ignore_shortage(text: str) -> str:
+    """The checkbox behind `_roads_ignore_shortage`, after «Связь со столицей»
+    and registered and synced the way CM registers that one."""
+    sync = ("\tcmm_sync_bool_alias = {\n\t\tsetting = cm__ab_roads_capital\n"
+            "\t\talias = cm_ab_roads_capital\n\t}\n")
+    if text.count(sync) != 1:
+        raise SystemExit("cmm: the capital checkbox has changed shape")
+    text = text.replace(sync, sync + (
+        "\n\t# cm_dev_perf: roads through a market shortage (+perf12)\n"
+        "\tcmm_register_bool_setting = {\n\t\tmod_id = cm\n\t\tsetting_id = ab_roads_ignore_shortage\n"
+        "\t\ttab_id = ab_roads\n\t\tgroup_id = ab_roads\n\t\tdefault_value = 0\n\t}\n"
+        "\tcmm_sync_bool_alias = {\n\t\tsetting = cm__ab_roads_ignore_shortage\n"
+        "\t\talias = cm_ab_roads_ignore_shortage\n\t}\n"))
+    changed = "\t\tflag:cm__ab_roads_min_discount = {\n"
+    if text.count(changed) != 1:
+        raise SystemExit("cmm: the roads discount branch has changed shape")
+    return text.replace(changed, (
+        "\t\t# cm_dev_perf: tested afresh at every issue, so no replan\n"
+        "\t\tflag:cm__ab_roads_ignore_shortage = {\n\t\t\tcmm_sync_bool_alias = {\n"
+        "\t\t\t\tsetting = cm__ab_roads_ignore_shortage\n\t\t\t\talias = cm_ab_roads_ignore_shortage\n"
+        "\t\t\t}\n\t\t}\n") + changed)
+
+
+def _core_foreign_markets(text: str) -> str:
+    """Core goods also work markets whose centre is someone else's when the
+    player ticks «И на чужом рынке» (+perf14, 10-04). His run 06:23: masonry
+    20 % dear, target not met, every probe gate yes but «we own the market
+    centre» — the walk only visits `every_market_center_in_country`, so his
+    Württemberg, in a market centred outside it, never got a quarry."""
+    old = ("\t\tevery_market_center_in_country = {\n\t\t\tlimit = { cm_market_in_slice = yes }\n"
+           "\t\t\tsave_scope_as = cm_ab_market\n\t\t\tscope:cm_country = { cm_ab_stage_core_good = yes }\n\t\t}\n")
+    if text.count(old) != 1:
+        raise SystemExit("core: the market walk has changed shape")
+    present = old.replace("every_market_center_in_country", "every_market_present_in_country")
+    indent = lambda s: "".join("\t" + l + "\n" for l in s.rstrip("\n").split("\n"))
+    return text.replace(old, (
+        "\t\t# cm_dev_perf: every market the country is in, when the player asked for it\n"
+        "\t\tif = {\n\t\t\tlimit = { exists = var:cm_ab_core_foreign_markets }\n"
+        + indent(present) + "\t\t}\n\t\telse = {\n" + indent(old) + "\t\t}\n"))
+
+
+def _register_core_foreign(text: str) -> str:
+    """The checkbox behind `_core_foreign_markets`, after the core goods target."""
+    sync = ("\tcmm_sync_setting_alias = {\n\t\tsetting = cm__ab_core_target\n"
+            "\t\talias = cm_ab_core_target\n\t}\n")
+    if text.count(sync) != 1:
+        raise SystemExit("cmm: the core target setting has changed shape")
+    text = text.replace(sync, sync + (
+        "\n\t# cm_dev_perf: core goods in markets centred elsewhere (+perf14)\n"
+        "\tcmm_register_bool_setting = {\n\t\tmod_id = cm\n\t\tsetting_id = ab_core_foreign_markets\n"
+        "\t\ttab_id = ab_core\n\t\tgroup_id = ab_core\n\t\tdefault_value = 0\n\t}\n"
+        "\tcmm_sync_bool_alias = {\n\t\tsetting = cm__ab_core_foreign_markets\n"
+        "\t\talias = cm_ab_core_foreign_markets\n\t}\n"))
+    changed = "\t\tflag:cm__ab_core_target = {\n"
+    if text.count(changed) != 1:
+        raise SystemExit("cmm: the core target branch has changed shape")
+    return text.replace(changed, (
+        "\t\tflag:cm__ab_core_foreign_markets = {\n\t\t\tcmm_sync_bool_alias = {\n"
+        "\t\t\t\tsetting = cm__ab_core_foreign_markets\n\t\t\t\talias = cm_ab_core_foreign_markets\n"
+        "\t\t\t}\n\t\t}\n") + changed)
+
+
+# The checkbox's words: CMM shows a missing key raw, so every language gets
+# them, English where there is no translation.
+SETTING_WORDS = {
+    "cm__ab_roads_ignore_shortage": {
+        "russian": ("Строить при нехватке товаров",
+                    "Прокладывать дороги, даже когда на рынке не хватает пиломатериалов, камня или песка. "
+                    "Золото списывается сразу, нехватка только замедляет стройку."),
+        "english": ("Build Through Shortages",
+                    "Lay roads even when the market is short of lumber, masonry or sand. "
+                    "The gold is paid at once; a shortage only slows the work."),
+    },
+    "cm__ab_core_foreign_markets": {
+        "russian": ("И на чужом рынке",
+                    "Строить основные товары и на рынках, центр которых принадлежит другой державе, "
+                    "если там есть ваши районы. Без этого Construction Manager работает только на рынках "
+                    "со своим центром."),
+        "english": ("Markets Centred Elsewhere Too",
+                    "Build core goods in markets whose centre belongs to another country too, where you "
+                    "own locations. Without it Construction Manager only works markets you hold the centre of."),
+    },
+}
+
+
+def _write_setting_words() -> None:
+    for folder in sorted((MOD / "main_menu/localization").iterdir()):
+        lang = folder.name
+        lines = [f"\ufeffl_{lang}:"]
+        for key, words in SETTING_WORDS.items():
+            name, desc = words.get(lang, words["english"])
+            lines += [f' {key}_name: "{name}"', f' {key}_desc: "{desc}"', f' {key}: "{key}"']
+        (folder / f"cm_perf_settings_l_{lang}.yml").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 EDITS = (
     (WINDOW, "gate the building-type tree", _gate_the_tree),
     (WINDOW, "widen the first pass's instantiation window", perf._widen_first_pass),
     (WINDOW, "widen the upgrade refresh's instantiation window", _widen_refresh),
+    (LOG, "mirror the Debug tab's log into debug.log", _mirror_log),
+    (ROADS, "say the roads plan's gates in its probe", _probe_road_gates),
+    (ROADS, "let roads go ahead through a market shortage", _roads_ignore_shortage),
+    (CMM, "the checkbox for it", _register_ignore_shortage),
+    (CORE, "work core goods in markets centred elsewhere", _core_foreign_markets),
+    (CMM, "the checkbox for it", _register_core_foreign),
 )
 
 
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 7
+PERF_REVISION = 14
 
 
 def metadata() -> str:
@@ -169,10 +411,29 @@ def main() -> int:
         if patched == text:
             raise SystemExit(f"{path}: {label} changed nothing")
         target.write_text("﻿" + patched.lstrip("﻿"), encoding="utf-8")
+    _write_setting_words()
     # 10-01: CM Dev's copies of vanilla windows are Glorp UI's 1.3 layout and
     # break on the beta; each with a spec in tools/beta/ is rebuilt as the
     # beta's window plus CM's hooks (beta_windows.py).
     rebuilt = beta.rebuild(refs.GAME_GUI, BETA_SPECS, MOD / "in_game/gui")
+    # 10-04: Glorp UI Río replaces three of the same windows and loads after
+    # this mod, so his location window was Río's, which carries every CM hook
+    # but the RGO button's auto-expand and auto-food toggles (his screenshot:
+    # «Запас пищи в провинции» is Río's header; the toggles were gone). Those
+    # three are Río's file plus the hooks it lacks (`beta_rio/`); this mod then
+    # has to load after Río. Río's windows name nothing that only Glorp UI
+    # defines but its ROI labels.
+    try:
+        rio = refs.mod("glorp.ui.rio") / "in_game/gui"
+    except SystemExit:
+        rio = None
+    if rio is not None and rio.is_dir():
+        for spec in sorted(BETA_RIO.glob("*.json")):
+            window = spec.stem + ".gui"
+            text = (rio / window).read_text(encoding="utf-8-sig").replace("\r\n", "\n")
+            text = beta.apply(text, json.loads(spec.read_text(encoding="utf-8")), window, refs.GAME_GUI)
+            (MOD / "in_game/gui" / window).write_text("\ufeff" + text, encoding="utf-8")
+            rebuilt = [w if w != window else window + " (on Glorp UI Río)" for w in rebuilt]
     # The beta's engine dropped `use_global_input_instance` (his log 10-02:
     # «not a valid widget/type/property»); commented out as the beta does.
     for path in (MOD / "in_game/gui").rglob("*.gui"):
@@ -190,6 +451,16 @@ def main() -> int:
                           r"\1cmf_is_host\2", text, flags=re.M)
         if n:
             path.write_text("\ufeff" + text, encoding="utf-8")
+    # A lookup into a map the scope does not have yet is an error, not false
+    # (his log 10-04: 1 243 of them, cm_rgob_cov and cm_rgob_sum the bulk). CM
+    # guards most of its lookups with `has_variable_map`; the rest get the
+    # same guard (+perf9).
+    for path in (MOD / "in_game/common").rglob("*.txt"):
+        text = path.read_text(encoding="utf-8-sig")
+        guarded, n = _guard_maps(text)
+        mirrored, m = _mirror_direct(guarded)
+        if n or m:
+            path.write_text("\ufeff" + mirrored, encoding="utf-8")
     # The probe window (09-27) ships beside CM's files; its sources live in
     # tools/probe/ so this rebuild does not wipe them.
     for src in PROBE.rglob("*"):

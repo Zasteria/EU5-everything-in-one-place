@@ -36,13 +36,12 @@ it the launcher does not treat the folder as an EU5 mod.
 
 **Overriding another mod's *generated* override goes stale in complete
 silence.** `mods/glorpui_hints/` overrides Glorp UI's override of the societal
-value tooltip templates, and to keep Glorp UI's own hint lists it re-emits them
-inside its own file. When Glorp UI regenerates those templates — which it does
-on every game patch — nothing errors: the templates still parse, the mod still
-loads, and the player quietly gets a months-old copy of Glorp UI's list with
-whatever Glorp UI added missing from it. `error.log` says nothing, because
-nothing failed. The only defence is a checker that compares the two files, so
-`mods/glorpui_hints/tools/generate.py` reduces both to an ordered sequence of
-(gating script value, title, body key) and fails naming the difference. Any mod
-that copies another mod's generated file needs the same check written the same
-day the copy is made.
+value tooltip templates, and until 2026-10 it carried Glorp UI's hint lists as a
+copy. When Glorp UI regenerates those — or, as with game 1.4, does not — nothing
+errors: the templates still parse, the mod still loads, and the player quietly
+gets a stale list. `error.log` says nothing, because nothing failed. Since
+2026-10-03 the mod builds its lists from the game's own files
+(`mods/glorpui_hints/tools/generate.py`) and takes from Glorp UI only the wording,
+read at build time and refused if its shape changes. Any mod that copies another
+mod's generated file needs a check like that written the same day the copy is
+made.

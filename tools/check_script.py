@@ -123,7 +123,10 @@ def known_names() -> set[str]:
             names.update(line[3:].strip()
                          for line in path.read_text(encoding="utf-8", errors="replace").splitlines()
                          if line.startswith("## "))
+    # `cmf_dev_beta` is our CMF, loaded instead of the Workshop one; it alone
+    # defines `cmf_is_host`, which `cm_dev_perf` and `cm_maps` call.
     for base in ((REPO / "reference/game/in_game/common"),
+                 (REPO / "mods/cmf_dev_beta/in_game/common"),
                  *(p / "in_game/common" for p in (REPO / "reference/mods").glob("*"))):
         if not base.is_dir():
             continue

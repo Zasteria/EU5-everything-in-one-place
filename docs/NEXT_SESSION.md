@@ -9,6 +9,8 @@ mods retired on 2026-10-03 are in [`archive/retired_mods.md`](archive/retired_mo
 Что патч сломал и что сделано — [`investigations/patch_2026_10_01.md`](investigations/patch_2026_10_01.md).
 Копии под бету (`cmf_dev_beta`, `cm_dev_perf`) ставятся **вместо** оригиналов;
 что из них не было в игре — [`STATUS.md`](STATUS.md).
+`glorpui_hints` в мастерской двумя предметами (1.4 основной, 1.3 отдельный, 10-04);
+когда 1.4 выйдет из беты — предмет 1.3 закрыть, `mods/glorpui_hints_1_3` в архив.
 
 ## The job: `mods.bat`, rebuilt 10-03 and never run
 

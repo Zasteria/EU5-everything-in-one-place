@@ -71,9 +71,7 @@ IGNORE = "check-docs: ignore"
 RETIRED = ("mods/goods_target", "mods/marker_throttle", "mods/widget_probe",
            "mods/where_to_produce", "mods/qol_beta", "mods/auto_build_ru",
            "tools/diag.py", "tools/eu5data.py", "tools/sync_workshop.ps1",
-           "tools/extract_game_files.ps1",
-           # glorpui_hints went back to its Steam build (8e028184), tools and all.
-           "mods/glorpui_hints/tools")
+           "tools/extract_game_files.ps1")
 # A version number sitting next to a mod's name, which `tools/refs.py` owns.
 VERSIONS = re.compile(
     r"(?:CMF|Community Mod Framework|Construction Manager|Glorp UI|"
