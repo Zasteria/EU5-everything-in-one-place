@@ -1,0 +1,794 @@
+﻿swe_stormaktstiden_mission_pack = {
+	icon = nmt_scandinavia
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = SWE
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = { always = yes }
+
+	on_start = { set_variable = swe_mission_started }
+	on_completion = { remove_variable = swe_mission_started }
+	on_abort = { remove_variable = swe_mission_started }
+
+	# ==================== ROOT ====================
+
+	swe_kingdom_of_sweden = {
+		icon = dan_rulers_of_the_north
+		requires = { }
+		enabled = {
+			legitimacy >= 100
+			stability >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_kingdom_mod years = 100 mode = add }
+		}
+	}
+
+	# ==================== BRANCH A: カルマル同盟・スカンジナビア統一 ====================
+
+	swe_norway_union = {
+		icon = dan_levy_recruitment
+		requires = { swe_kingdom_of_sweden }
+		enabled = {
+			OR = {
+				AND = {
+					c:NOR = { in_union_with = root }
+					c:NOR = { opinion = { target = root value >= 200 } }
+				}
+				AND = {
+					c:NOR = { is_subject_of = root }
+					c:NOR = { opinion = { target = root value >= 200 } }
+				}
+				NOT = { country_exists = c:NOR }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_norway_union_mod years = -1 mode = add }
+		}
+	}
+
+	swe_break_from_denmark = {
+		icon = dan_danish_legislation
+		requires = { swe_control_skaane }
+		enabled = {
+			OR = {
+				NOT = { c:DAN = { in_union_with = root } }
+				c:DAN = { is_rival_of = root }
+				owns = location:roskilde
+			}
+		}
+		on_completion = {
+			if = {
+				limit = { country_exists = c:DAN }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:DAN
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	swe_control_skaane = {
+		icon = dan_scanian_regiment
+		requires = { swe_kingdom_of_sweden }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:asbo
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_skaane_mod years = -1 mode = add }
+		}
+	}
+
+	swe_defeat_denmark = {
+		icon = dan_scanian_regiment
+		requires = { swe_break_from_denmark }
+		enabled = {
+			OR = {
+				NOT = { country_exists = c:DAN }
+				c:DAN = { in_union_with = root }
+				c:DAN = { is_subject_of = root }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_denmark_crushed_mod years = 50 mode = add }
+			add_prestige = 20
+		}
+	}
+
+	swe_integrate_norway = {
+		icon = dan_danish_agriculture
+		requires = { swe_norway_union }
+		enabled = {
+			owns = location:oslo
+			owns = location:bergen
+			owns = location:nidaros
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_norway_integrated_mod years = -1 mode = add }
+		}
+	}
+
+	# A合流: スカンジナビア統一
+	swe_unite_scandinavia = {
+		icon = dan_rulers_of_the_north
+		requires = { swe_defeat_denmark swe_integrate_norway }
+		enabled = {
+			region:scandinavian_region = {
+				any_location_in_region = {
+					count >= 300
+					owner = root
+				}
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = swe_events.30
+		}
+	}
+
+	# ==================== BRANCH B: バルト海・東方（ヴァランギャン） ====================
+
+	swe_control_gotland = {
+		icon = hsa_hanseatic_ties
+		requires = { swe_kingdom_of_sweden }
+		enabled = {
+			location:visby = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:visby = {
+				add_location_modifier = { modifier = swe_visby_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	swe_baltic_trade = {
+		icon = hsa_mastery_of_the_sea
+		requires = { swe_control_gotland }
+		enabled = {
+			navy_size >= 20
+			monthly_income_trade_and_tax >= 80
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_baltic_trade_mod years = -1 mode = add }
+		}
+	}
+
+	swe_conquer_estonia = {
+		icon = hsa_mastery_of_the_sea
+		requires = { swe_baltic_trade }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:tallinn
+			owns_or_non_sovereign_subject_owns = location:narva
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_estonia_mod years = -1 mode = add }
+		}
+	}
+
+	swe_control_livonia = {
+		icon = hsa_mastery_of_the_sea
+		requires = { swe_conquer_estonia }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:riga
+			owns_or_non_sovereign_subject_owns = location:tartu
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_livonia_mod years = -1 mode = add }
+		}
+	}
+
+	swe_varangian_legacy = {
+		icon = hsa_global_reach
+		requires = { swe_control_livonia }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:novgorod
+			owns_or_non_sovereign_subject_owns = location:pskov
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_varangian_mod years = -1 mode = add }
+		}
+	}
+
+	swe_city_of_rus = {
+		icon = hsa_global_reach
+		requires = { swe_varangian_legacy }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:moscow
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_eastern_empire_mod years = -1 mode = add }
+		}
+	}
+
+	# B+C合流: バルチカ支配
+	swe_dominium_maris_baltici = {
+		icon = hsa_mastery_of_the_sea
+		requires = { swe_control_livonia swe_bane_of_hansa }
+		enabled = {
+			navy_size >= 50
+			owns_or_non_sovereign_subject_owns = location:gdansk
+			owns_or_non_sovereign_subject_owns = location:konigsberg
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_dominium_baltici_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH C: 南方・ドイツ・ポメラニア ====================
+
+	swe_bane_of_hansa = {
+		icon = hsa_seal_of_the_hansa
+		requires = { swe_kingdom_of_sweden }
+		enabled = {
+			OR = {
+				owns_or_non_sovereign_subject_owns = location:lubeck
+				NOT = { country_exists = c:HSA }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_hansa_victory_mod years = 30 mode = add }
+		}
+	}
+
+	swe_pomeranian_coast = {
+		icon = dan_old_naval_traditions
+		requires = { swe_bane_of_hansa }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:stralsund
+			owns_or_non_sovereign_subject_owns = location:stettin
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_pomerania_mod years = -1 mode = add }
+		}
+	}
+
+	swe_prussian_ambition = {
+		icon = dan_scanian_regiment
+		requires = { swe_pomeranian_coast }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:konigsberg
+			any_owned_location = {
+				area = area:prussia_area
+				count >= 5
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_prussia_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH D: 内政・産業・経済（2サブブランチ） ====================
+
+	swe_secure_stockholm = {
+		icon = dan_rulers_of_the_north
+		requires = { swe_kingdom_of_sweden }
+		enabled = {
+			location:stockholm = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+				development >= 25
+			}
+		}
+		on_completion = {
+			location:stockholm = {
+				add_building_level = building_type:local_governor
+				add_location_modifier = { modifier = swe_stockholm_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	# D1: 鉱山・産業路線
+	swe_falun_mine = {
+		icon = nor_bounties_of_the_sea
+		requires = { swe_secure_stockholm }
+		enabled = {
+			location:falun = { rgo_level >= 6 }
+			produced_in_country:copper > 20
+		}
+		on_completion = {
+			location:falun = {
+				add_location_modifier = { modifier = swe_falun_copper_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	swe_iron_industry = {
+		icon = nor_bounties_of_the_sea
+		requires = { swe_falun_mine }
+		enabled = {
+			produced_in_country:iron > 20
+			any_owned_location = {
+				area = area:svealand_area
+				rgo_level >= 10
+				count >= 10
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_iron_industry_mod years = -1 mode = add }
+		}
+	}
+
+	swe_swedish_steel = {
+		icon = nor_bounties_of_the_sea
+		requires = { swe_iron_industry }
+		enabled = {
+			produced_in_country:iron > 40
+			produced_in_country:copper > 40
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_steel_mod years = -1 mode = add }
+		}
+	}
+
+
+	swe_norrkoping_textiles = {
+		icon = nor_bounties_of_the_sea
+		requires = { swe_secure_stockholm }
+		enabled = {
+			location:norrkoping = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+				rgo_level >= 6
+			}
+		}
+		on_completion = {
+			location:norrkoping = {
+				add_location_modifier = { modifier = swe_norrkoping_textile_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	# D2: 行政・王権路線
+	swe_riksdag = {
+		icon = dan_danish_legislation
+		requires = { swe_secure_stockholm }
+		enabled = {
+			OR = {
+				"estate_power(estate_type:crown_estate)" >= 0.25
+				"estate_power(estate_type:nobles_estate)" >= 0.50
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_riksdag_mod years = -1 mode = add }
+		}
+	}
+
+	swe_absolutism = {
+		icon = dan_admiralty_college
+		requires = { swe_riksdag }
+		enabled = {
+			"estate_power(estate_type:crown_estate)" >= 0.40
+			legitimacy >= 95
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_absolutism_mod years = -1 mode = add }
+		}
+	}
+
+	swe_great_power = {
+		icon = dan_rulers_of_the_north
+		requires = { swe_absolutism }
+		enabled = {
+			num_locations >= 300
+			monthly_income_trade_and_tax >= 300
+			prestige >= 70
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_great_power_mod years = -1 mode = add }
+		}
+	}
+
+	# D1+D2合流: スウェーデン帝国経済
+	swe_stormakt_economy = {
+		icon = dan_trading_economy
+		requires = { swe_swedish_steel swe_great_power }
+		enabled = {
+			monthly_income_trade_and_tax >= 400
+			any_owned_location = {
+				is_market_center = yes
+				count >= 3
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_stormakt_economy_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH E: 宗教分岐（3方向）====================
+
+	swe_religious_crossroads = {
+		icon = dan_danish_orthodoxy
+		requires = { swe_secure_stockholm }
+		enabled = {
+			is_situation_active = situation:reformation
+		}
+		on_completion = {
+			trigger_event_non_silently = swe_events.40
+		}
+	}
+
+	# E1: カトリック路線
+	swe_catholic_sweden = {
+		icon = dan_danish_orthodoxy
+		requires = { swe_religious_crossroads }
+		enabled = {
+			dominant_religion = religion:catholic
+			c:PAP = { opinion = { target = root value >= 150 } }
+			NOT = { has_country_modifier = swe_lutheran_mod }
+			NOT = { has_country_modifier = swe_norse_conversion_mod }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_catholic_mod years = -1 mode = add }
+		}
+	}
+
+	swe_northern_crusade = {
+		icon = dan_danish_orthodoxy
+		requires = { swe_catholic_sweden }
+		enabled = {
+			any_current_war = {
+				OR = {
+					attacker_leader = root
+					defender_leader = root
+				}
+				any_war_participant = {
+					religion.group = religion_group:muslim
+					NOT = { this = root }
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_crusader_glory_mod years = 50 mode = add }
+			add_prestige = 20
+		}
+	}
+
+	# E2: ルター派路線
+	swe_reformation = {
+		icon = dan_danish_legislation
+		requires = { swe_religious_crossroads }
+		enabled = {
+			OR = {
+				dominant_religion = religion:lutheran
+				dominant_religion = religion:calvinist
+			}
+			NOT = { has_country_modifier = swe_catholic_mod }
+			NOT = { has_country_modifier = swe_norse_conversion_mod }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_lutheran_mod years = -1 mode = add }
+		}
+	}
+
+	swe_protestant_reform = {
+		icon = dan_danish_legislation
+		requires = { swe_reformation }
+		enabled = {
+			any_owned_location = {
+				has_building = building_type:university
+				count >= 3
+			}
+			estate_satisfaction:clergy_estate >= 0.65
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_protestant_reform_mod years = -1 mode = add }
+		}
+	}
+
+	# E3: ノルド路線
+	swe_norse_revival = {
+		icon = nor_seaborn_country
+		requires = { swe_religious_crossroads }
+		enabled = {
+			dominant_religion = religion:norse
+			NOT = { has_country_modifier = swe_catholic_mod }
+			NOT = { has_country_modifier = swe_lutheran_mod }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_norse_conversion_mod years = -1 mode = add }
+		}
+	}
+
+	swe_berserker_army = {
+		icon = nor_seaborn_country
+		requires = { swe_norse_revival }
+		enabled = {
+			navy_tradition >= 50
+			army_size >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_berserker_mod years = -1 mode = add }
+		}
+	}
+
+	swe_yggdrasil_throne = {
+		icon = nor_seaborn_country
+		requires = { swe_berserker_army }
+		enabled = {
+			country_rank = country_rank:rank_empire
+			num_locations >= 500
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_yggdrasil_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH F: フィンランド・北方開拓 ====================
+
+	swe_finland_integration = {
+		icon = dan_danish_agriculture
+		requires = { swe_kingdom_of_sweden }
+		enabled = {
+			any_owned_location = {
+				area = area:finland_area
+				count >= 40
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_finland_mod years = -1 mode = add }
+		}
+	}
+
+	swe_lapland_expansion = {
+		icon = dan_danish_agriculture
+		requires = { swe_finland_integration }
+		enabled = {
+			any_owned_location = {
+				area = area:norrland_area
+				count >= 70
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_lapland_mod years = -1 mode = add }
+		}
+	}
+
+	swe_arctic_empire = {
+		icon = hsa_global_reach
+		requires = { swe_lapland_expansion }
+		enabled = {
+			any_owned_location = {
+				area = area:norrland_area
+				count >= 80
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_arctic_mod years = -1 mode = add }
+		}
+	}
+
+
+	# ==================== BRANCH A延伸 ====================
+
+	swe_danish_navy_seizure = {
+		icon = dan_old_naval_traditions
+		requires = { swe_defeat_denmark }
+		enabled = {
+			navy_size >= 30
+			navy_tradition >= 40
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_captured_fleet_mod years = 30 mode = add }
+		}
+	}
+
+	swe_sound_toll = {
+		icon = dan_royal_danish_navy
+		requires = { swe_control_skaane }
+		enabled = {
+			navy_size >= 25
+			monthly_income_trade_and_tax >= 100
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_sound_toll_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH B延伸 ====================
+
+	swe_develop_stockholm = {
+		icon = dan_rulers_of_the_north
+		requires = { swe_secure_stockholm }
+		enabled = {
+			location:stockholm = {
+				development >= 40
+				has_building = building_type:university
+			}
+		}
+		on_completion = {
+			location:stockholm = {
+				add_location_modifier = { modifier = swe_stockholm_great_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	swe_develop_goteborg = {
+		icon = dan_trading_economy
+		requires = { swe_bane_of_hansa }
+		enabled = {
+			location:varberg = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:varberg = {
+				add_location_modifier = { modifier = swe_goteborg_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	# ==================== BRANCH D延伸 ====================
+
+	swe_peasant_support = {
+		icon = dan_danish_agriculture
+		requires = { swe_riksdag }
+		enabled = {
+			estate_satisfaction:peasants_estate >= 0.90
+			produced_in_country:grain > 10
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_peasant_mod years = -1 mode = add }
+		}
+	}
+
+	swe_engelbrekt = {
+		icon = dan_levy_recruitment
+		requires = { swe_break_from_denmark }
+		enabled = {
+			legitimacy >= 80
+			estate_satisfaction:peasants_estate >= 0.70
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_engelbrekt_mod years = 30 mode = add }
+			add_prestige = 10
+		}
+	}
+
+	swe_colonization = {
+		icon = hsa_global_reach
+		requires = { swe_arctic_empire }
+		enabled = {
+			OR = {
+				region:east_coast_region = {
+					any_location_in_region = {
+						count >= 5
+						OR = {
+							owner ?= root
+							owner ?= { is_subject_of = root }
+						}
+					}
+				}
+				region:canada_region = {
+					any_location_in_region = {
+						count >= 5
+						OR = {
+							owner ?= root
+							owner ?= { is_subject_of = root }
+						}
+					}
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_colonial_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== 宗教路線延伸 ====================
+
+	swe_church_reform = {
+		icon = dan_danish_orthodoxy
+		requires = { swe_northern_crusade }
+		enabled = {
+			c:PAP = { opinion = { target = root value >= 180 } }
+			owns_or_non_sovereign_subject_owns = location:lubeck
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_papal_champion_mod years = -1 mode = add }
+		}
+	}
+
+	swe_protestant_empire = {
+		icon = dan_danish_legislation
+		requires = { swe_protestant_reform }
+		enabled = {
+			num_locations >= 500
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_protestant_empire_mod years = -1 mode = add }
+			set_country_rank_effect = { rank = country_rank:rank_empire }
+		}
+	}
+
+	swe_amber_trade = {
+		icon = dan_trading_economy
+		requires = { swe_stormakt_economy }
+		enabled = {
+			produced_in_country:amber > 3
+			monthly_income_trade_and_tax >= 200
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_amber_mod years = -1 mode = add }
+		}
+	}
+
+
+	swe_develop_uppsala = {
+		icon = dan_rentekammer_advance
+		requires = { swe_riksdag }
+		enabled = {
+			current_date > 1480.1.1
+			location:uppsala = {
+				has_building = building_type:university
+				development >= 25
+			}
+		}
+		on_completion = {
+			location:uppsala = {
+				add_location_modifier = { modifier = swe_uppsala_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	swe_karoliner = {
+		icon = dan_scanian_regiment
+		requires = { swe_absolutism }
+		enabled = {
+			army_tradition >= 50
+			army_size >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_karoliner_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== 大合流: ストールマクツティデン ====================
+
+	swe_stormaktstiden = {
+		icon = dan_rulers_of_the_north
+		requires = { swe_unite_scandinavia swe_dominium_maris_baltici swe_stormakt_economy }
+		enabled = {
+			num_locations >= 600
+			monthly_income_trade_and_tax >= 600
+			prestige >= 80
+		}
+		on_completion = {
+			add_country_modifier = { modifier = swe_stormaktstiden_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== FINAL ====================
+
+	swe_swedish_empire = {
+		icon = dan_rulers_of_the_north
+		requires = { swe_stormaktstiden swe_city_of_rus }
+		final = yes
+		enabled = {
+			num_locations >= 1000
+			prestige >= 80
+			monthly_income_trade_and_tax >= 1000
+		}
+		on_completion = {
+			trigger_event_non_silently = swe_events.99
+		}
+	}
+}

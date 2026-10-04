@@ -33,6 +33,13 @@ wrapped in a ``custom_tooltip`` so the mission says what it counts.
 A mission file is replaced whole by a file of the same name loading later, so
 only files with a change are written, and the mod must load after the base.
 
+``PATCHES`` (0.2.0, 2026-10-03) carries the rest: what game 1.4 removed under
+the base mod (Aragon's event, a trade modifier, a subject-type field), and
+references the base mod always had that name nothing in the game (a holy-war
+casus belli, a colonial country type, Gothenburg, India, «reformed», a
+Byzantine culture) or give a casus belli the wrong way round.  Every anchor
+must match the stated number of times, or the build stops.
+
 Usage:  python3 mods/nmt_fix/tools/generate.py
 """
 
@@ -62,6 +69,84 @@ MISSION = re.compile(r"^\t(\w+)\s*=\s*\{", re.M)
 SHAPE = "OR = { owner = root owner = { is_subject_of = root } }"
 OWNED = "OR = { owner ?= root owner ?= { is_subject_of = root } }"
 GAME_LOC = REPO / "reference/game/main_menu/localization"
+
+# (file under the base mod, text, replacement, times it occurs, why)
+PATCHES = [
+    # -- game 1.4 --
+    ("in_game/common/missions/ara_crown_mission_pack.txt",
+     "\t\t\thas_fired_unique_event = flavor_ara.6\n",
+     "\t\t\tOR = {\n"
+     "\t\t\t\thas_variable = ara_sindicat_remenca_flag\n"
+     "\t\t\t\thas_estate_privilege = estate_privilege:ara_sindicat_remenca\n"
+     "\t\t\t}\n", 1,
+     "1.4 turned event flavor_ara.6 into ara_sindicat_remenca_decision; its "
+     "first option sets this flag and grants the privilege"),
+    ("main_menu/common/static_modifiers/ayy_modifiers.txt",
+     "global_trade_through_owned_territory_efficiency = 0.10",
+     "trade_land_efficiency = tiny_trade_land_efficiency_bonus", 1,
+     "1.4 removed the modifier; the game's own 0.10 became this (Emilian advance)"),
+    ("main_menu/common/static_modifiers/brb_modifiers.txt",
+     "global_trade_through_owned_territory_efficiency = 0.10",
+     "trade_land_efficiency = tiny_trade_land_efficiency_bonus", 1,
+     "1.4 removed the modifier; the game's own 0.10 became this (Emilian advance)"),
+    *((f"{root}/common/subject_types/{name}.txt",
+       "\toverlord_protects_other_subjects = yes\n", "", 1,
+       "1.4 removed the field from subject types")
+      for root in ("in_game", "main_menu")
+      for name in ("eng_welsh_principality", "hab_integrated_crown")),
+    # -- the base mod's own, never valid --
+    ("in_game/common/missions/hun_crown_of_saint_stephen_mission_pack.txt",
+     "\t\t\t\tadd_casus_belli = {\n"
+     "\t\t\t\t\ttarget = this\n"
+     "\t\t\t\t\ttype = casus_belli:cb_holy_war\n"
+     "\t\t\t\t}\n",
+     "\t\t\t\tsave_scope_as = nmt_fix_holy_war_target\n"
+     "\t\t\t\troot = {\n"
+     "\t\t\t\t\tadd_casus_belli = {\n"
+     "\t\t\t\t\t\ttarget = scope:nmt_fix_holy_war_target\n"
+     "\t\t\t\t\t\ttype = casus_belli:cb_crusade\n"
+     "\t\t\t\t\t}\n"
+     "\t\t\t\t}\n", 1,
+     "no cb_holy_war exists, and in the neighbour's scope each neighbour got a "
+     "casus belli on itself"),
+    ("in_game/common/missions/cas_castile_mission_pack.txt",
+     "\t\t\t\t\towner ?= {\n"
+     "\t\t\t\t\t\tadd_casus_belli = {\n"
+     "\t\t\t\t\t\t\ttarget = root\n"
+     "\t\t\t\t\t\t\ttype = casus_belli:cb_conquer_province\n"
+     "\t\t\t\t\t\t\tprovince = prev.province\n"
+     "\t\t\t\t\t\t\tyears = 50\n"
+     "\t\t\t\t\t\t}\n"
+     "\t\t\t\t\t}\n",
+     "\t\t\t\t\tsave_scope_as = nmt_fix_target_location\n"
+     "\t\t\t\t\troot = {\n"
+     "\t\t\t\t\t\tadd_casus_belli = {\n"
+     "\t\t\t\t\t\t\ttarget = scope:nmt_fix_target_location.owner\n"
+     "\t\t\t\t\t\t\ttype = casus_belli:cb_conquer_province\n"
+     "\t\t\t\t\t\t\tprovince = scope:nmt_fix_target_location.province\n"
+     "\t\t\t\t\t\t\tyears = 50\n"
+     "\t\t\t\t\t\t}\n"
+     "\t\t\t\t\t}\n", 2,
+     "the owners of Castile and Leon got the casus belli on Castile; the "
+     "author's Carolingian tree has the right way round"),
+    ("in_game/common/missions/hab_habsburg_mission_pack.txt",
+     "limit = { country_type = country_type:colonial }",
+     "limit = { is_subject_type = colonial_nation }", 2,
+     "country types are location/pop/building/army/navy; colonial is a subject type"),
+    ("in_game/common/missions/por_portuguese_mission_pack.txt",
+     "capital = { region = region:india }",
+     "capital = { sub_continent = sub_continent:south_asia }", 1,
+     "no region india; its six regions make up sub-continent south_asia"),
+    ("in_game/common/missions/mon_montferrat_mission_pack.txt",
+     "\t\t\t\t\t\tculture = { this = culture:byzantine_culture }\n", "", 1,
+     "no such culture; greek_culture beside it is the game's"),
+    ("in_game/common/missions/swe_stormaktstiden_mission_pack.txt",
+     "location:goteborg = {", "location:varberg = {", 1,
+     "no location goteborg; the mission checks Varberg and its text says Varberg"),
+    ("in_game/common/missions/brb_brabant_mission_pack.txt",
+     "religion:reformed", "religion:calvinist", 2,
+     "no religion reformed; the game's Reformed faith is calvinist"),
+]
 
 
 def game_name(key: str, lang: str) -> str:
@@ -181,6 +266,17 @@ def script_values(values: dict) -> None:
     (folder / "nmt_fix_values.txt").write_text("\n".join(parts), encoding="utf-8-sig")
 
 
+def patch(text: str, where: str, edits: list) -> tuple[str, int]:
+    """``text`` with each edit applied; an anchor off its count stops the build."""
+    for old, new, times in edits:
+        found = text.count(old)
+        if found != times:
+            sys.exit(f"{where}: {old.strip()[:60]!r} occurs {found} times, not {times}"
+                     " -- the base mod changed; re-read it")
+        text = text.replace(old, new)
+    return text, len(edits)
+
+
 def main() -> int:
     if OUT.is_dir():
         for old in OUT.glob("*.txt"):
@@ -189,16 +285,26 @@ def main() -> int:
     tooltips: dict = {}
     values: dict = {}
     total = 0
+    patches: dict[str, list] = {}
+    for rel, old, new, times, _why in PATCHES:
+        patches.setdefault(rel, []).append((old, new, times))
     for path in sorted((BASE / MISSIONS).glob("*.txt")):
         raw = path.read_bytes()
         text = raw.decode("utf-8-sig")
         new, fixed = rewrite(text, path.name, values, tooltips)
-        if not fixed:
+        rel = f"{MISSIONS}/{path.name}"
+        new, patched = patch(new, rel, patches.pop(rel, []))
+        if not fixed and not patched:
             continue
         total += fixed
         (OUT / path.name).write_bytes(
             new.encode("utf-8-sig"))
-        print(f"{path.name}: {fixed}")
+        print(f"{path.name}: {fixed}" + (f", {patched} for 1.4" if patched else ""))
+    for rel, edits in sorted(patches.items()):
+        new, patched = patch((BASE / rel).read_bytes().decode("utf-8-sig"), rel, edits)
+        (MOD / rel).parent.mkdir(parents=True, exist_ok=True)
+        (MOD / rel).write_bytes(new.encode("utf-8-sig"))
+        print(f"{rel}: {patched} for 1.4")
     script_values(values)
     localization(tooltips)
     print(f"nmt_fix: {total} blocks now count subjects")

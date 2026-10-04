@@ -1,0 +1,724 @@
+﻿ara_crown_mission_pack = {
+	icon = nmt_iberia
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = ARA
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = {
+		always = yes
+	}
+
+	on_start = {
+		set_variable = ara_crown_started
+	}
+
+	on_completion = {
+		remove_variable = ara_crown_started
+	}
+
+	on_abort = {
+		remove_variable = ara_crown_started
+	}
+
+	# ==================== ROOT: カスペの妥協 ====================
+
+	ara_accession_of_pedro_iv = {
+		icon = ara_stronger_united
+		requires = { }
+
+		enabled = {
+			always = yes
+		}
+		duration = 0
+		on_completion = {
+			trigger_event_non_silently = ara_events.1
+		}
+	}
+
+	# ==================== BRANCH A: イベリア統合 ====================
+
+	ara_kingdom_of_majorca = {
+		icon = ara_a_maritime_realm
+		requires = { ara_accession_of_pedro_iv }
+
+		enabled = {
+			c:MLL = { opinion = { target = root value >= 200 } }
+		}
+		duration = 120
+		on_completion = {
+			trigger_event_non_silently = ara_events.2
+		}
+	}
+
+	ara_reconquest_of_granada = {
+		icon = ara_desperta_ferro
+		requires = { ara_kingdom_of_majorca }
+
+		enabled = {
+			owns = location:granada
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = ara_reconquest_of_granada_mod years = -1 mode = add }
+		}
+	}
+
+	ara_vassalize_navarre = {
+		icon = nav_navarrese_defense_force
+		requires = { ara_kingdom_of_majorca }
+
+		enabled = {
+			OR = {
+				c:NAV = { is_subject_of = root }
+				NOT = { country_exists = c:NAV }
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = ara_vassalize_navarre_mod years = 40 mode = add }
+		}
+	}
+
+	ara_intervene_in_castile = {
+		icon = ara_desperta_ferro
+		requires = { ara_vassalize_navarre ara_reconquest_of_granada }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:toledo
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = ara_intervene_in_castile_mod years = 40 mode = add }
+			add_casus_belli = {
+				type = casus_belli:cb_claim_throne
+				target = c:CAS
+				target_character = root.ruler
+				years = 100
+			}
+		}
+	}
+
+	ara_union_of_the_crowns = {
+		icon = ara_constellation_cities
+		requires = { ara_intervene_in_castile }
+
+		enabled = {
+			OR = {
+				in_union_with = c:CAS
+				c:CAS = { is_subject_of = root }
+				NOT = { country_exists = c:CAS }
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = ara_union_of_the_crowns_mod years = -1 mode = add }
+		}
+	}
+
+	ara_war_of_the_remences = {
+		icon = ara_remenca
+		requires = { ara_accession_of_pedro_iv }
+
+		enabled = {
+			OR = {
+				has_variable = ara_sindicat_remenca_flag
+				has_estate_privilege = estate_privilege:ara_sindicat_remenca
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = ara_war_of_the_remences_mod years = 40 mode = add }
+		}
+	}
+
+	ara_catalan_nobility = {
+		icon = ara_mossos_esquadra
+		requires = { ara_war_of_the_remences }
+
+		enabled = {
+			has_fired_unique_event = flavor_ara.16
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = ara_catalan_nobility_mod years = 40 mode = add }
+		}
+	}
+
+	ara_crowns_of_iberia = {
+		icon = ara_constellation_cities
+		requires = { ara_union_of_the_crowns ara_catalan_nobility }
+
+		enabled = {
+			num_locations >= 300
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = ara_crowns_of_iberia_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH B: イタリア・オクシタニア征服 ====================
+
+	ara_pacify_sardinia = {
+		icon = sardinian_the_turres_costeras
+		requires = { ara_accession_of_pedro_iv }
+
+		enabled = {
+			owns = location:oristano
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = ara_pacify_sardinia_mod years = 40 mode = add }
+		}
+	}
+
+	ara_consulate_of_the_sea = {
+		icon = ara_chartered_merchant_companies
+		requires = { ara_pacify_sardinia }
+
+		enabled = {
+			has_fired_unique_event = flavor_ara.1
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = ara_consulate_of_the_sea_mod years = 40 mode = add }
+		}
+	}
+
+	ara_dominate_genoa = {
+		icon = ara_a_maritime_realm
+		requires = { ara_consulate_of_the_sea }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:genoa
+		}
+		duration = 180
+		on_completion = {
+			location:genoa = {
+				add_location_modifier = { modifier = ara_dominate_genoa_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	ara_rule_italy = {
+		icon = divine_supremacy
+		requires = { ara_dominate_genoa }
+
+		enabled = {
+			any_owned_location = {
+				region = region:italy_region
+				count >= 240
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = ara_rule_italy_mod years = -1 mode = add }
+		}
+	}
+
+	ara_invade_occitania = {
+		icon = ara_desperta_ferro
+		requires = { ara_dominate_genoa }
+
+		enabled = {
+			OR = {
+				owns_or_non_sovereign_subject_owns = location:marseille
+				owns_or_non_sovereign_subject_owns = location:toulon
+				owns_or_non_sovereign_subject_owns = location:nice
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = ara_invade_occitania_mod years = 40 mode = add }
+		}
+	}
+
+	ara_humiliate_provence = {
+		icon = ara_desperta_ferro
+		requires = { ara_invade_occitania }
+
+		enabled = {
+			NOT = { country_exists = c:PRO }
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = ara_humiliate_provence_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH C: 西地中海とコンスタンティノープル（本ルート） ====================
+
+	ara_aragonese_navy = {
+		icon = ara_fleet_ordinances
+		requires = { ara_accession_of_pedro_iv }
+
+		enabled = {
+			navy_size >= 25
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = ara_aragonese_navy_mod years = 40 mode = add }
+			if = {
+				limit = { country_exists = c:SIC }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:SIC
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	ara_seize_sicily = {
+		icon = ara_fleet_ordinances
+		requires = { ara_aragonese_navy }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:palermo
+		}
+		duration = 150
+		on_completion = {
+			add_country_modifier = { modifier = ara_seize_sicily_mod years = 40 mode = add }
+			if = {
+				limit = { country_exists = c:NAP }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:NAP
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	ara_integrate_naples = {
+		icon = ara_constellation_cities
+		requires = { ara_seize_sicily }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:naples
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = ara_integrate_naples_mod years = 40 mode = add }
+		}
+	}
+
+	ara_mediterranean_ambitions = {
+		icon = secure_mediterranean_ports
+		requires = { ara_integrate_naples ara_rule_italy }
+
+		enabled = {
+			navy_size >= 100
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = ara_mediterranean_ambitions_mod years = 40 mode = add }
+		}
+	}
+
+	ara_combat_barbary_piracy = {
+		icon = ara_fleet_ordinances
+		requires = { ara_mediterranean_ambitions }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:tlemcen
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = ara_combat_barbary_piracy_mod years = 40 mode = add }
+		}
+	}
+
+	ara_conquer_tunis = {
+		icon = ara_gunpowder_souls
+		requires = { ara_combat_barbary_piracy }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:tunis
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = ara_conquer_tunis_mod years = -1 mode = add }
+		}
+	}
+
+	ara_occupy_alexandria = {
+		icon = primacy_of_alexandria
+		requires = { ara_conquer_tunis }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:alexandria
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = ara_occupy_alexandria_mod years = -1 mode = add }
+		}
+	}
+
+	ara_claims_on_athens = {
+		icon = ath_the_catalan_company_advance
+		requires = { ara_mediterranean_ambitions ara_humiliate_provence }
+
+		enabled = {
+			navy_size >= 200
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = ara_claims_on_athens_mod years = 40 mode = add }
+			if = {
+				limit = { country_exists = c:ATH }
+				add_casus_belli = {
+					type = casus_belli:cb_conquer_province
+					target = c:ATH
+				}
+			}
+			if = {
+				limit = { country_exists = c:ACH }
+				add_casus_belli = {
+					type = casus_belli:cb_conquer_province
+					target = c:ACH
+				}
+			}
+			if = {
+				limit = { country_exists = c:ARG }
+				add_casus_belli = {
+					type = casus_belli:cb_conquer_province
+					target = c:ARG
+				}
+			}
+			if = {
+				limit = { country_exists = c:NEG }
+				add_casus_belli = {
+					type = casus_belli:cb_conquer_province
+					target = c:NEG
+				}
+			}
+			if = {
+				limit = { country_exists = c:CRT }
+				add_casus_belli = {
+					type = casus_belli:cb_conquer_province
+					target = c:CRT
+				}
+			}
+		}
+	}
+
+	ara_mare_nostrum = {
+		icon = secure_mediterranean_ports
+		requires = { ara_occupy_alexandria ara_claims_on_athens }
+
+		enabled = {
+			navy_size >= 250
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = ara_mare_nostrum_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH D: 経済と繁栄 ====================
+
+	ara_taula_de_canvi = {
+		icon = ara_chartered_merchant_companies
+		requires = { ara_accession_of_pedro_iv }
+
+		enabled = {
+			gold >= 300
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = ara_taula_de_canvi_mod years = 40 mode = add }
+		}
+	}
+
+	ara_valencian_silk = {
+		icon = riches_of_the_silk_road
+		requires = { ara_taula_de_canvi }
+
+		enabled = {
+			location:valencia = {
+				rgo_level >= 10
+			}
+		}
+		duration = 120
+		on_completion = {
+			location:valencia = {
+				add_location_modifier = { modifier = ara_valencian_silk_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	ara_guilds_of_barcelona = {
+		icon = ara_chartered_merchant_companies
+		requires = { ara_taula_de_canvi }
+
+		enabled = {
+			location:barcelona.total_building_levels >= 50
+		}
+		duration = 120
+		on_completion = {
+			location:barcelona = {
+				add_location_modifier = { modifier = ara_guilds_of_barcelona_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	ara_industrial_districts = {
+		icon = sardinian_the_industrial_transition
+		requires = { ara_valencian_silk ara_guilds_of_barcelona }
+
+		enabled = {
+			any_owned_location = {
+				is_market_center = yes
+				count >= 2
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = ara_industrial_districts_mod years = 40 mode = add }
+		}
+	}
+
+	ara_aragonese_renaissance = {
+		icon = ara_valencian_golden_age
+		requires = { ara_industrial_districts }
+
+		enabled = {
+			any_owned_location = {
+				any_work_of_art_in_location = {
+					count >= 50
+				}
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = ara_aragonese_renaissance_mod years = -1 mode = add }
+		}
+	}
+
+	ara_golden_century = {
+		icon = ara_valencian_golden_age
+		requires = { ara_aragonese_renaissance ara_crowns_of_iberia }
+
+		enabled = {
+			region:iberia_region = {
+				NOT = {
+					any_location_in_region = {
+						owner ?= {
+							NOT = { any_overlord_or_above = { this = root } }
+							NOT = { this = root }
+						}
+					}
+				}
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = ara_golden_century_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== FINAL: 世界の願望の都 ====================
+
+	ara_city_of_the_worlds_desire = {
+		icon = ara_constellation_cities
+		requires = { ara_mare_nostrum ara_golden_century }
+		final = yes
+
+		enabled = {
+			num_locations >= 1500
+		}
+		duration = 365
+		on_completion = {
+			set_country_rank_effect = { rank = country_rank:rank_empire }
+			add_country_modifier = { modifier = ara_city_of_the_worlds_desire_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== 植民サブツリー: 新世界への道 ====================
+
+	# ==================== ROOT: プルス・ウルトラ ====================
+
+	ara_plus_ultra = {
+		icon = colonial_ambition
+		requires = { }
+
+		enabled = {
+			any_character = { is_explorer = yes }
+		}
+		duration = 0
+		on_completion = {
+			add_country_modifier = { modifier = ara_plus_ultra_mod years = 40 mode = add }
+		}
+	}
+
+	# ==================== BRANCH A: アフリカ航路 ====================
+
+	ara_african_outposts = {
+		icon = colonial_heritage
+		requires = { ara_plus_ultra }
+
+		enabled = {
+			any_owned_location = {
+				continent = continent:africa
+				count >= 3
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = ara_african_outposts_mod years = 40 mode = add }
+		}
+	}
+
+	ara_gold_coast_trade = {
+		icon = riches_of_the_silk_road
+		requires = { ara_african_outposts }
+
+		enabled = {
+			any_owned_location = {
+				continent = continent:africa
+				is_market_center = yes
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = ara_gold_coast_trade_mod years = 40 mode = add }
+		}
+	}
+
+	# ==================== BRANCH B: 新大陸 ====================
+
+	ara_discover_the_new_world = {
+		icon = new_world_advance
+		requires = { ara_plus_ultra }
+
+		enabled = {
+			any_owned_location = {
+				continent = continent:america
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = ara_discover_the_new_world_mod years = 40 mode = add }
+		}
+	}
+
+	ara_caribbean_foothold = {
+		icon = colonial_tradition
+		requires = { ara_discover_the_new_world }
+
+		enabled = {
+			any_owned_location = {
+				continent = continent:america
+				count >= 5
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = ara_caribbean_foothold_mod years = 40 mode = add }
+		}
+	}
+
+	ara_conquest_of_the_incas = {
+		icon = adapted_incan_army
+		requires = { ara_caribbean_foothold }
+
+		enabled = {
+			any_owned_location = {
+				continent = continent:america
+				count >= 15
+			}
+		}
+		duration = 365
+		on_completion = {
+			add_country_modifier = { modifier = ara_conquest_of_the_incas_mod years = -1 mode = add }
+		}
+	}
+
+	ara_new_kingdom_of_aragon = {
+		icon = ara_stronger_united
+		requires = { ara_conquest_of_the_incas }
+
+		enabled = {
+			any_colonial_country = {
+				is_subject_of = root
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = ara_new_kingdom_of_aragon_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH C: 香料諸島への道 ====================
+
+	ara_route_to_the_indies = {
+		icon = route_to_the_indies_advance
+		requires = { ara_plus_ultra }
+
+		enabled = {
+			any_owned_location = {
+				continent = continent:asia
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = ara_route_to_the_indies_mod years = 40 mode = add }
+		}
+	}
+
+	ara_spice_trade_outposts = {
+		icon = riches_of_the_silk_road
+		requires = { ara_route_to_the_indies }
+
+		enabled = {
+			any_owned_location = {
+				continent = continent:asia
+				is_market_center = yes
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = ara_spice_trade_outposts_mod years = 40 mode = add }
+		}
+	}
+
+	ara_las_filipinas = {
+		icon = colonial_tradition
+		requires = { ara_spice_trade_outposts }
+
+		enabled = {
+			any_owned_location = {
+				continent = continent:asia
+				count >= 5
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = ara_las_filipinas_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== FINAL: 三つの海の帝国 ====================
+
+	ara_empire_of_the_three_oceans = {
+		icon = divine_supremacy
+		requires = { ara_new_kingdom_of_aragon ara_las_filipinas ara_gold_coast_trade }
+
+		enabled = {
+			num_colonial_charters >= 3
+		}
+		duration = 365
+		on_completion = {
+			add_country_modifier = { modifier = ara_empire_of_the_three_oceans_mod years = -1 mode = add }
+		}
+	}
+}

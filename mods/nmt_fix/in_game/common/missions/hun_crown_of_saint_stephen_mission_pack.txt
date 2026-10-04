@@ -1,0 +1,850 @@
+﻿hun_crown_of_saint_stephen_mission_pack = {
+	icon = nmt_mediterranean_port
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = HUN
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = { always = yes }
+
+	on_start = { set_variable = hun_mission_started }
+	on_completion = { remove_variable = hun_mission_started }
+	on_abort = { remove_variable = hun_mission_started }
+
+	# ==================== ROOT ====================
+
+	hun_crown_of_st_stephen = {
+		icon = consolidate_the_royal_domain
+		requires = { }
+		enabled = {
+			legitimacy >= 100
+			stability >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_angevin_prestige_mod years = 100 mode = add }
+		}
+	}
+
+	# ==================== BRANCH A: ポーランド同君連合・北方拡大 ====================
+
+	hun_angevin_diplomacy = {
+		icon = a_magnanimous_empire
+		requires = { hun_crown_of_st_stephen }
+		enabled = {
+			power_projection >= 13
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_angevin_diplomacy_mod years = 40 mode = add }
+		}
+	}
+
+	hun_polish_union = {
+		icon = crown_power_advance_renaissance
+		requires = { hun_angevin_diplomacy }
+		enabled = {
+			OR = {
+				is_in_union_with = c:POL
+				c:POL = { in_union_with = root }
+				c:POL = { is_subject_of = root }
+			}
+		}
+		on_completion = {
+			if = {
+				limit = { location:prague = { exists = yes } }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = location:prague.owner
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	hun_bohemian_ambitions = {
+		icon = crusader_tradition
+		requires = { hun_polish_union }
+		enabled = {
+			OR = {
+				is_in_union_with = c:BOH
+				c:BOH = { in_union_with = root }
+				c:BOH = { is_subject_of = root }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_bohemian_crown_mod years = -1 mode = add }
+		}
+	}
+
+	hun_lord_of_the_north = {
+		icon = legacy_of_great_empires
+		requires = { hun_bohemian_ambitions }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:kaunas
+			owns_or_non_sovereign_subject_owns = location:vilnius
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_northern_lord_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH B: トランシルヴァニア・バルカン ====================
+
+	hun_secure_transylvania = {
+		icon = arduous_terrain
+		requires = { hun_crown_of_st_stephen }
+		enabled = {
+			owns = location:cluj
+			owns = location:brasov
+			gold >= 1000
+		}
+		on_completion = {
+			trigger_event_non_silently = hun_events.20
+		}
+	}
+
+	hun_conquer_serbia = {
+		icon = balkan_hajduks
+		requires = { hun_secure_transylvania }
+		enabled = {
+			OR = {
+				is_neighbor_of = c:SER
+				NOT = { country_exists = c:SER }
+				c:SER = { is_subject_of = root }
+			}
+		}
+		on_completion = {
+			if = {
+				limit = { location:prizren = { exists = yes } }
+				add_casus_belli = {
+					target = location:prizren.owner
+					type = casus_belli:cb_conquer_province
+					province = location:prizren.province
+				}
+			}
+		}
+	}
+
+	hun_subjugate_wallachia = {
+		icon = balkan_hajduks
+		requires = { hun_conquer_serbia }
+		enabled = {
+			OR = {
+				owns_or_non_sovereign_subject_owns = location:bucharest
+				c:WAL = { is_subject_of = root }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_wallachian_buffer_mod years = -1 mode = add }
+		}
+	}
+
+	hun_subjugate_moldavia = {
+		icon = arduous_terrain
+		requires = { hun_subjugate_wallachia }
+		enabled = {
+			OR = {
+				owns_or_non_sovereign_subject_owns = location:iasi
+				c:MOL = { is_subject_of = root }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_moldavian_buffer_mod years = -1 mode = add }
+		}
+	}
+
+	hun_danube_fortress_line = {
+		icon = a_fortified_border
+		requires = { hun_subjugate_moldavia }
+		enabled = {
+			any_owned_location = {
+				has_building = building_type:bastion
+				count >= 4
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_vegvar_system_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH C: オスマンとの戦い ====================
+
+	hun_order_of_the_dragon = {
+		icon = crusader_tradition
+		requires = { hun_crown_of_st_stephen }
+		enabled = {
+			has_chivalric_order = yes
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_dragon_order_mod years = -1 mode = add }
+		}
+	}
+
+	hun_crusade_preparations = {
+		icon = a_neverending_crusade
+		requires = { hun_order_of_the_dragon }
+		enabled = {
+			any_neighbor_country = {
+				religion.group = religion_group:muslim
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_crusade_zeal_mod years = 50 mode = add }
+			every_neighbor_country = {
+				limit = {
+					religion.group = religion_group:muslim
+				}
+				save_scope_as = nmt_fix_holy_war_target
+				root = {
+					add_casus_belli = {
+						target = scope:nmt_fix_holy_war_target
+						type = casus_belli:cb_crusade
+					}
+				}
+			}
+		}
+	}
+
+	hun_battle_of_nicopolis = {
+		icon = glorious_arms
+		requires = { hun_crusade_preparations }
+		enabled = {
+			any_current_war = {
+				OR = {
+					attacker_leader = root
+					defender_leader = root
+				}
+				any_war_participant = {
+					religion.group = religion_group:muslim
+					NOT = { this = root }
+				}
+			}
+		}
+		on_completion = {
+			add_prestige = 20
+		}
+	}
+
+	hun_black_army = {
+		icon = elan
+		requires = { hun_battle_of_nicopolis }
+		enabled = {
+			army_size >= 30
+			army_tradition >= 50
+			monthly_income_trade_and_tax >= 50
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_black_army_mod years = -1 mode = add }
+		}
+	}
+
+	hun_bulwark_of_christendom = {
+		icon = a_neverending_crusade
+		requires = { hun_black_army }
+		enabled = {
+			OR = {
+				AND = {
+					c:PAP = { opinion = { target = root value >= 150 } }
+					is_allied_with = { target = c:PAP }
+				}
+				owns_or_non_sovereign_subject_owns = location:rome
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_christendom_bulwark_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH D: アドリア海・イタリア ====================
+
+	hun_croatian_union = {
+		icon = consolidate_the_royal_domain
+		requires = { hun_crown_of_st_stephen }
+		enabled = {
+			OR = {
+				c:CRO = { opinion = { target = root value >= 200 } }
+				c:CRO = { in_union_with = root }
+				c:CRO = { is_subject_of = root }
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = hun_events.30
+		}
+	}
+
+	hun_reclaim_dalmatia = {
+		icon = ara_a_maritime_realm
+		requires = { hun_croatian_union }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:knin
+			owns_or_non_sovereign_subject_owns = location:dubrovnik
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_adriatic_coast_mod years = -1 mode = add }
+		}
+	}
+
+	hun_adriatic_supremacy = {
+		icon = development_of_maritime_law
+		requires = { hun_reclaim_dalmatia }
+		enabled = {
+			navy_size >= 20
+		}
+		on_completion = {
+			if = {
+				limit = { location:naples = { exists = yes } }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = location:naples.owner
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	hun_angevin_naples = {
+		icon = secure_mediterranean_ports
+		requires = { hun_adriatic_supremacy }
+		enabled = {
+			OR = {
+				owns_or_non_sovereign_subject_owns = location:naples
+				c:NAP = { in_union_with = root }
+				c:NAP = { is_subject_of = root }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_angevin_italy_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH E: 内政改革 ====================
+
+	hun_strengthen_estates = {
+		icon = court_accounting
+		requires = { hun_crown_of_st_stephen }
+		enabled = {
+			estate_satisfaction:nobles_estate >= 0.70
+			estate_satisfaction:clergy_estate >= 0.70
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_golden_bull_mod years = 100 mode = add }
+		}
+	}
+
+	hun_tripartitum = {
+		icon = legalism_advance
+		requires = { hun_strengthen_estates }
+		enabled = {
+			any_owned_location = {
+				has_building = building_type:counting_house
+				count >= 4
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_tripartitum_mod years = -1 mode = add }
+		}
+	}
+
+	hun_matthias_reforms = {
+		icon = fra_integration_of_new_territories
+		requires = { hun_tripartitum }
+		enabled = {
+			monthly_income_trade_and_tax >= 100
+			total_population >= 5000
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_matthias_admin_mod years = -1 mode = add }
+		}
+	}
+
+	hun_buda_renaissance = {
+		icon = city_of_artists
+		requires = { hun_matthias_reforms }
+		enabled = {
+			location:buda = { has_building = building_type:university }
+			location:pest = { has_building = building_type:university }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_buda_renaissance_mod years = -1 mode = add }
+		}
+	}
+
+	hun_great_hungary = {
+		icon = legacy_of_great_empires
+		requires = { hun_buda_renaissance }
+		enabled = {
+			num_locations >= 500
+			total_population >= 8000
+			monthly_income_trade_and_tax >= 300
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_great_hungary_mod years = -1 mode = add }
+		}
+	}
+
+
+	# ==================== BRANCH A 延伸: 神聖ローマへの野望 ====================
+
+	hun_baltic_trade = {
+		icon = continental_trade
+		requires = { hun_lord_of_the_north }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:gdansk
+			monthly_income_trade_and_tax >= 100
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_baltic_trade_mod years = -1 mode = add }
+		}
+	}
+
+	hun_hre_influence = {
+		icon = crown_power_advance_renaissance
+		requires = { hun_baltic_trade }
+		enabled = {
+			OR = {
+				c:HAB = { is_rival_of = root }
+				is_allied_with = { target = c:HAB }
+				owns_or_non_sovereign_subject_owns = location:vienna
+			}
+		}
+		on_completion = {
+			if = {
+				limit = { country_exists = c:HAB }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:HAB
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	hun_challenge_habsburgs = {
+		icon = glorious_arms
+		requires = { hun_hre_influence }
+		enabled = {
+			OR = {
+				owns_or_non_sovereign_subject_owns = location:vienna
+				c:HAB = { in_union_with = root }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_habsburg_rival_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH B 延伸: バルカン帝国 ====================
+
+	hun_conquer_bulgaria = {
+		icon = balkan_hajduks
+		requires = { hun_danube_fortress_line }
+		enabled = {
+			OR = {
+				owns_or_non_sovereign_subject_owns = location:tarnovo
+				c:BUL = { is_subject_of = root }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_bulgaria_mod years = -1 mode = add }
+		}
+	}
+
+	hun_conquer_greece = {
+		icon = a_neverending_crusade
+		requires = { hun_conquer_bulgaria }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:athens
+			owns_or_non_sovereign_subject_owns = location:thessaloniki
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_greece_mod years = -1 mode = add }
+		}
+	}
+
+	hun_balkan_empire = {
+		icon = legacy_of_great_empires
+		requires = { hun_conquer_greece }
+		enabled = {
+			any_owned_location = {
+				region = region:balkan_region
+				count >= 180
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_balkan_empire_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH C 延伸: キリスト教世界の守護者 ====================
+
+	hun_push_into_anatolia = {
+		icon = crusader_tradition
+		requires = { hun_bulwark_of_christendom }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:constantinople
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_new_crusade_mod years = -1 mode = add }
+		}
+	}
+
+	hun_hungarian_crusade = {
+		icon = a_neverending_crusade
+		requires = { hun_push_into_anatolia }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:jerusalem
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_crusade_victory_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH D 延伸: 地中海覇権 ====================
+
+	hun_mediterranean_fleet = {
+		icon = development_of_maritime_law
+		requires = { hun_angevin_naples }
+		enabled = {
+			navy_size >= 30
+			owns_or_non_sovereign_subject_owns = location:palermo
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_med_fleet_mod years = -1 mode = add }
+		}
+	}
+
+	hun_conquer_north_africa = {
+		icon = secure_mediterranean_ports
+		requires = { hun_mediterranean_fleet }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:tunis
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_north_africa_mod years = -1 mode = add }
+		}
+	}
+
+	hun_latin_empire = {
+		icon = legacy_of_great_empires
+		requires = { hun_conquer_north_africa }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:constantinople
+			owns_or_non_sovereign_subject_owns = location:rome
+			owns_or_non_sovereign_subject_owns = location:naples
+			owns_or_non_sovereign_subject_owns = location:athens
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_latin_empire_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH E 延伸: ハンガリー文明の完成 ====================
+
+	hun_corvinus_library = {
+		icon = city_of_artists
+		requires = { hun_buda_renaissance }
+		enabled = {
+			has_variable = unlocked_bibliotheca_corviniana
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_corvinus_library_mod years = -1 mode = add }
+		}
+	}
+
+	hun_hungarian_church = {
+		icon = legalism_advance
+		requires = { hun_corvinus_library }
+		enabled = {
+			estate_satisfaction:clergy_estate >= 0.90
+			any_owned_location = {
+				has_building = building_type:temple
+				count >= 100
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_church_mod years = -1 mode = add }
+		}
+	}
+
+	hun_economic_powerhouse = {
+		icon = crossroads_of_commerce
+		requires = { hun_great_hungary }
+		enabled = {
+			monthly_income_trade_and_tax >= 600
+			any_owned_location = {
+				is_market_center = yes
+				count >= 5
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_economy_mod years = -1 mode = add }
+		}
+	}
+
+	hun_danube_empire = {
+		icon = legacy_of_great_empires
+		requires = { hun_economic_powerhouse hun_hungarian_church }
+		enabled = {
+			num_locations >= 1000
+			total_population >= 10000
+			monthly_income_trade_and_tax >= 800
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_danube_empire_mod years = -1 mode = add }
+		}
+	}
+
+
+	# ==================== BRANCH F: 下ハンガリー鉱山都市群 ====================
+
+	hun_transylvanian_mines = {
+		icon = administrative_icon
+		requires = { hun_secure_transylvania }
+		enabled = {
+			location:kremnica = { rgo_level >= 6 }
+			location:banska_bystrica = { rgo_level >= 6 }
+		}
+		on_completion = {
+			location:kremnica = {
+				add_location_modifier = { modifier = hun_kremnica_mint_mod years = -1 mode = add }
+			}
+			location:banska_bystrica = {
+				add_location_modifier = { modifier = hun_banska_copper_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	hun_silver_mines = {
+		icon = administrative_icon
+		requires = { hun_transylvanian_mines }
+		enabled = {
+			location:hont = { rgo_level >= 8 }
+		}
+		on_completion = {
+			location:hont = {
+				add_location_modifier = { modifier = hun_hont_silver_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	hun_salt_mines = {
+		icon = administrative_icon
+		requires = { hun_silver_mines }
+		enabled = {
+			location:sighet = { rgo_level >= 10 }
+			location:turda = { rgo_level >= 10 }
+		}
+		on_completion = {
+			location:sighet = {
+				add_location_modifier = { modifier = hun_salt_mine_mod years = -1 mode = add }
+			}
+			location:turda = {
+				add_location_modifier = { modifier = hun_salt_mine_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	hun_tokaj_wine = {
+		icon = continental_trade
+		requires = { hun_salt_mines }
+		enabled = {
+			location:satoraljaujhely = { rgo_level >= 12 }
+		}
+		on_completion = {
+			location:satoraljaujhely = {
+				add_location_modifier = { modifier = hun_tokaj_wine_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	hun_mining_empire = {
+		icon = crossroads_of_commerce
+		requires = { hun_tokaj_wine }
+		enabled = {
+			OR = {
+				produced_in_country:silver > 20
+				produced_in_country:goods_gold > 20
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_mining_empire_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH G: ハンガリー主要都市の整備 ====================
+
+	hun_buda_capital = {
+		icon = city_building_advance
+		requires = { hun_crown_of_st_stephen }
+		enabled = {
+			location:buda = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+			location:pest = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:buda = {
+				add_location_modifier = { modifier = hun_buda_capital_mod years = -1 mode = add }
+			}
+			location:pest = {
+				add_location_modifier = { modifier = hun_pest_trade_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	hun_upper_hungary_cities = {
+		icon = continental_trade
+		requires = { hun_buda_capital }
+		enabled = {
+			location:bratislava = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+			location:kosice = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:bratislava = {
+				add_location_modifier = { modifier = hun_bratislava_gateway_mod years = -1 mode = add }
+			}
+			location:kosice = {
+				add_location_modifier = { modifier = hun_kosice_commerce_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	hun_pannonian_cities = {
+		icon = crossroads_of_commerce
+		requires = { hun_upper_hungary_cities }
+		enabled = {
+			location:pecs = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+			location:gyor = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:pecs = {
+				add_location_modifier = { modifier = hun_pecs_university_mod years = -1 mode = add }
+			}
+			location:gyor = {
+				add_location_modifier = { modifier = hun_gyor_fortress_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	hun_great_plain_cities = {
+		icon = city_building_advance
+		requires = { hun_pannonian_cities }
+		enabled = {
+			location:debrecen = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+			location:szeged = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:debrecen = {
+				add_location_modifier = { modifier = hun_debrecen_agri_mod years = -1 mode = add }
+			}
+			location:szeged = {
+				add_location_modifier = { modifier = hun_szeged_trade_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	hun_transylvania_cities = {
+		icon = city_building_advance
+		requires = { hun_great_plain_cities }
+		enabled = {
+			location:cluj = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+			location:oradea = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:cluj = {
+				add_location_modifier = { modifier = hun_cluj_center_mod years = -1 mode = add }
+			}
+			location:oradea = {
+				add_location_modifier = { modifier = hun_oradea_pilgrimage_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	hun_kingdom_of_cities = {
+		icon = legacy_of_great_empires
+		requires = { hun_transylvania_cities hun_mining_empire }
+		enabled = {
+			any_owned_location = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+				count >= 20
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = hun_kingdom_of_cities_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== FINAL ====================
+
+	hun_glory_of_st_stephen = {
+		icon = legacy_of_great_empires
+		requires = { hun_challenge_habsburgs hun_balkan_empire hun_hungarian_crusade hun_latin_empire hun_danube_empire hun_kingdom_of_cities }
+		final = yes
+		enabled = {
+			prestige >= 80
+			num_locations >= 1500
+			monthly_income_trade_and_tax >= 1000
+		}
+		on_completion = {
+			trigger_event_non_silently = hun_events.99
+		}
+	}
+}

@@ -124,17 +124,142 @@ def _widen_refresh(text: str) -> str:
     )
 
 
+LOG = "in_game/common/scripted_effects/cm_log_effects.txt"
+ROADS = "in_game/common/scripted_effects/cm_ab_roads_effects.txt"
+# wrapper: (number of values, logs a location, logs a building type)
+_LOGGED = {
+    "cm_dbg_log": (0, False, False),
+    "cm_dbg_log_value": (1, False, False),
+    "cm_dbg_log_at_loc": (0, True, False),
+    "cm_dbg_log_loc": (1, True, False),
+    "cm_dbg_log_loc_values": (3, True, False),
+    "cm_dbg_log_bld": (2, True, True),
+}
+
+
+def _mirror_log(text: str) -> str:
+    """Every line CM's Debug tab logs goes to `debug.log` as well (+perf8).
+
+    CM's own log is CMF's action pane: 200 lines, on screen only, gone with the
+    session. The same line in `debug.log` comes back with `mods.bat` → 4, so a
+    run says what each cycle did without a screenshot. Still gated on the Debug
+    tab's category toggles, so with them off nothing is written. The key is
+    printed as the key (a `debug_log` does not resolve localization), the values
+    through a scratch global, the location and building as named scopes
+    (docs/research/engine.md, «What a `debug_log` string reaches»). The three
+    script values that read the globals back ship with the probe, in tools/probe/.
+    """
+    for name, (values, loc, bt) in _LOGGED.items():
+        head = f"\n{name} = {{\n"
+        at = text.index(head)
+        call = text.index("\t\tcmf_log", at)
+        shown = []
+        mirror = ["\t\t# cm_dev_perf: the same line into debug.log"]
+        for n in range(1, values + 1):
+            arg = "$value$" if n == 1 else f"$value{n}$"
+            mirror.append(f"\t\tset_global_variable = {{ name = cm_perf_log_v{n} value = {arg} }}")
+            shown.append(f"[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v{n}')|2]")
+        words = ["CM", "$cat$", "$action$"]
+        if values and name != "cm_dbg_log_value":
+            words.append("$arg1$")
+        if bt:
+            words.append("$arg2$")
+        mirror.append('\t\tdebug_log = "%s"' % " ".join(words + shown))
+        if bt:
+            mirror.append("\t\tscope:cmf_log_bt ?= { debug_log_scopes = no }")
+        if loc:
+            mirror.append("\t\tscope:cmf_log_loc ?= { debug_log_scopes = no }")
+        text = text[:call] + "\n".join(mirror) + "\n" + text[call:]
+    return text
+
+
+_LOOKUP = re.compile(r"is_key_in_variable_map\s*=\s*\{\s*name\s*=\s*(\S+)\s+target\s*=\s*(\S+)\s*\}")
+
+
+def _guard_maps(text: str) -> tuple[str, int]:
+    """`AND = { has_variable_map = M <lookup> }` for every lookup not already
+    guarded within the two lines above it, as CM itself writes the guard.
+
+    The AND keeps the meaning under a `NOT`, which reads its children as NOR.
+    """
+    lines = text.split("\n")
+    n = 0
+    for i, line in enumerate(lines):
+        if line.lstrip().startswith("#"):
+            continue
+        out, pos = [], 0
+        for match in _LOOKUP.finditer(line):
+            above = "\n".join(lines[max(0, i - 2):i]) + line[:match.start()]
+            if re.search(r"has_variable_map\s*=\s*%s(?!\S)" % re.escape(match.group(1)), above):
+                continue
+            out.append(line[pos:match.start()])
+            out.append("AND = { has_variable_map = %s %s }" % (match.group(1), match.group(0)))
+            pos = match.end()
+            n += 1
+        if out:
+            lines[i] = "".join(out) + line[pos:]
+    return "\n".join(lines), n
+
+
+_DIRECT = re.compile(r"^([ \t]*)cmf_log(_value|_decimal_value)? = \{ action = (\S+)(?: value = (\S+))? \}[ \t]*$")
+_SHOWN = "[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v1')|2]"
+
+
+def _mirror_direct(text: str) -> tuple[str, int]:
+    """The lines CM writes with CMF's own `cmf_log*` rather than its Debug-tab
+    wrappers go to `debug.log` too (+perf10): the probes' summaries (roads,
+    governors, military, the gold balance) and the setup stamps. His run of
+    10-04 pressed the roads probe and `debug.log` had nothing to show for it.
+    """
+    lines = text.split("\n")
+    out, n = [], 0
+    for line in lines:
+        out.append(line)
+        match = _DIRECT.match(line)
+        if not match:
+            continue
+        indent, kind, action, value = match.groups()
+        if value:
+            out.append("%sset_global_variable = { name = cm_perf_log_v1 value = %s }" % (indent, value))
+            out.append('%sdebug_log = "CM %s %s"' % (indent, action, _SHOWN))
+        else:
+            out.append('%sdebug_log = "CM %s"' % (indent, action))
+        n += 1
+    return "\n".join(out), n
+
+
+def _probe_road_gates(text: str) -> str:
+    """The roads probe also says which of the plan's three gates holds (+perf10):
+    a plan that fails one of them returns without a word, so «no roads» and
+    «not allowed to plan roads» read the same."""
+    head = "cm_ab_rd_probe = {\n\tsave_scope_as = cm_country\n"
+    gates = (("cm_ab_master_active = yes", "master_active"),
+             ("exists = var:cm_ab_roads_enabled", "roads_enabled"),
+             ("has_advance = road_building", "advance_road_building"),
+             ("exists = var:cm_ab_roads_proximity", "proximity_on"),
+             ("exists = var:cm_ab_roads_market_access", "market_access_on"),
+             ("exists = var:cm_ab_roads_capital", "capital_on"),
+             ("modifier:overlord_blocked_from_building_roads = no", "not_blocked_by_overlord"))
+    lines = ["\t# cm_dev_perf: the plan's gates, into debug.log"]
+    for trigger, name in gates:
+        lines.append('\tif = { limit = { %s } debug_log = "CM roads gate %s yes" }' % (trigger, name))
+        lines.append('\telse = { debug_log = "CM roads gate %s NO" }' % name)
+    return text.replace(head, head + "\n".join(lines) + "\n", 1)
+
+
 EDITS = (
     (WINDOW, "gate the building-type tree", _gate_the_tree),
     (WINDOW, "widen the first pass's instantiation window", perf._widen_first_pass),
     (WINDOW, "widen the upgrade refresh's instantiation window", _widen_refresh),
+    (LOG, "mirror the Debug tab's log into debug.log", _mirror_log),
+    (ROADS, "say the roads plan's gates in its probe", _probe_road_gates),
 )
 
 
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 7
+PERF_REVISION = 10
 
 
 def metadata() -> str:
@@ -190,6 +315,16 @@ def main() -> int:
                           r"\1cmf_is_host\2", text, flags=re.M)
         if n:
             path.write_text("\ufeff" + text, encoding="utf-8")
+    # A lookup into a map the scope does not have yet is an error, not false
+    # (his log 10-04: 1 243 of them, cm_rgob_cov and cm_rgob_sum the bulk). CM
+    # guards most of its lookups with `has_variable_map`; the rest get the
+    # same guard (+perf9).
+    for path in (MOD / "in_game/common").rglob("*.txt"):
+        text = path.read_text(encoding="utf-8-sig")
+        guarded, n = _guard_maps(text)
+        mirrored, m = _mirror_direct(guarded)
+        if n or m:
+            path.write_text("\ufeff" + mirrored, encoding="utf-8")
     # The probe window (09-27) ships beside CM's files; its sources live in
     # tools/probe/ so this rebuild does not wipe them.
     for src in PROBE.rglob("*"):
