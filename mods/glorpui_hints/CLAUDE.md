@@ -37,7 +37,7 @@
 **1.2.10:** failing OR в IsValidTooltip — пустой заголовок (зонд 1.2.9); OR/NOR
 в условиях → `calc_true_if`. 1.2.10 в игре не был.
 
-**Мастерская (10-04):** основной предмет — эта 1.4-линия, имя «Societal Value
+**Мастерская (10-04, залито):** основной предмет — эта 1.4-линия, имя «Societal Value
 Hints», id `bag.glorpui_hints`. Для 1.3 — отдельный предмет из
 `mods/glorpui_hints_1_3`. Описания — `workshop/description_<lang>.bbcode`.
 
