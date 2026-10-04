@@ -148,6 +148,11 @@ Manager and Glorp UI both restyle panels by redefining `types` from files of
 their own, so a copy carrying vanilla's versions of those same types clobbers
 them, load order deciding who loses. Copy the *window* and leave the types alone.
 
+**`Player.Self` is not always the player; `GetPlayer` is.** In a location's
+building list (the unbuilt rows of «Сооружения городка …»), a probe 10-04 drew
+`ObjectsEqual(Location.GetOwner, GetPlayer)` true and the same against
+`Player.Self` false, on the player's own town. Compare owners with `GetPlayer`.
+
 **Hidden rows still occupy their cell.** The list bodies are `fixedgridbox`es
 with fixed row heights and no `ignoreinvisible`, so hiding a row from the
 interface leaves a hole. Filter the data instead, or resize the list.

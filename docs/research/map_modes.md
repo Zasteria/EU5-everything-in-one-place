@@ -151,3 +151,14 @@ buildings because it was built from patch 1.0.6; 1.3.10 tops out at 10%.
 
 `tools/eu5data.py` holds all of this in code — it resolves every method per
 building type, inline and shared, and skips upkeep methods that produce nothing.
+
+## Where towns stand on the map (10-04)
+
+Town positions are the `city` locator, shipped by the game. **On 1.4 it is
+`in_game/gfx/map/map_objects/generated_locators_city.txt`** (and `_vfx`); the
+unit-stack, battle and dock files kept the old `generated_map_object_locators_*`
+names. A mod shipping the old city name (Better label placement, made on 1.2)
+replaces nothing and moves no town. `NGameCityLocators` in the defines did
+nothing in a run (`centered_towns` 0.1.0): not where positions come from.
+`gfx/map/locators_override/locators_override.txt` exists too, unread here.
+What files the game has: `reference/game/FILES.txt`.

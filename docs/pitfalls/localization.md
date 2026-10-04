@@ -94,6 +94,10 @@ row's start.
 under it** (glorpui_hints probe, 10-04); leaves and scope blocks print. Use
 `calc_true_if = { amount >= 1 … }` in a trigger that is only for display.
 
+**A link to a concept the game dropped prints nothing, its word included** —
+rule `unknown_concept`. **A colon in an effect or alert row splits it** into a
+label and a far-off value; a dash keeps the row whole.
+
 **A `$NAME$` that names no key prints the name.** No error, no log line, no
 blank: the engine puts `SOCIEALVALUE_RIGHTITEM_WNTT_GEN` in capitals in the
 middle of the Russian sentence and carries on. The game's own Russian defines

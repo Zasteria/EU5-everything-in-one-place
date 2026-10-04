@@ -1313,6 +1313,11 @@ cm_trmm_recompute_province_definition = {
 			}
 		}
 		every_province_in_province_definition = {
+			# cm_dev_perf: this slice holds the coverage
+			set_variable = {
+				name = cm_trmm_cov_v
+				value = cm_trmm_version_value
+			}
 			set_variable = {
 				name = cm_trmm_cov_tools
 				value = local_var:cm_trmm_l_cov_tools
@@ -2444,6 +2449,11 @@ cm_trmm_recompute_province_definition = {
 	}
 	else = {
 		every_province_in_province_definition = {
+			# cm_dev_perf: marked too, or every open recomputes it
+			set_variable = {
+				name = cm_trmm_cov_v
+				value = cm_trmm_version_value
+			}
 			every_location_in_province = {
 				if = {
 					limit = { has_variable = cm_trmm_best_idx }
@@ -2549,4 +2559,18 @@ cm_trmm_enable_expands_masonry = {
 	}
 	building_type:mason = { save_scope_as = cm_building_type }
 	cm_enable_auto_expand_for_building_type = yes
+}
+
+# cm_dev_perf: recomputes exactly the definitions holding a slice without the
+# mark -- a change of owner made it, or the save predates the mark. One cheap
+# check per definition; run each time the rights map family is entered.
+cm_trmm_repair = {
+	every_province_definition = {
+		limit = {
+			any_province_in_province_definition = {
+				NOT = { has_variable = cm_trmm_cov_v }
+			}
+		}
+		cm_trmm_recompute_province_definition = yes
+	}
 }

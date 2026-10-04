@@ -288,6 +288,47 @@ def unknown_root_fault(value: str, known: set[str], neighbours: set[str]) -> str
     return None
 
 
+# `[Concept('id', 'text')|e]` and `[id|e]` — the two ways a key links a concept.
+CONCEPT_CALL = re.compile(r"\[Concept\('([A-Za-z0-9_]+)'")
+CONCEPT_SHORT = re.compile(r"\[([A-Za-z][A-Za-z0-9_]*)\|[eE]\]")
+CONCEPT_DEF = re.compile(r"^([A-Za-z0-9_]+)\s*=\s*\{", re.M)
+CONCEPT_ALIAS = re.compile(r"alias\s*=\s*\{([^}]*)\}")
+
+
+def concepts_used(value: str) -> set[str]:
+    return set(CONCEPT_CALL.findall(value)) | set(CONCEPT_SHORT.findall(value))
+
+
+def defined_concepts(english: dict[str, Entry]) -> set[str]:
+    """Every concept the game can draw: declared in `common/game_concepts/`
+    with its aliases, the engine's `<concept>_with_icon` of each, and anything
+    the English tree links, which covers concepts the engine declares itself."""
+    known: set[str] = set()
+    for path in sorted(refs.GAME.glob("*/common/game_concepts/*.txt")):
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+        known.update(CONCEPT_DEF.findall(text))
+        for block in CONCEPT_ALIAS.findall(text):
+            known.update(block.split())
+    known |= {name + "_with_icon" for name in known}
+    for entry in english.values():
+        known |= concepts_used(entry.value)
+    return known
+
+
+def unknown_concept_fault(value: str, known: set[str]) -> str | None:
+    """A concept link to a concept the game no longer has.
+
+    The engine draws such a link as nothing at all — the word inside it goes
+    too. The 10-01 beta dropped `religious_order_loyalty` and renamed
+    `religious_order_power` to `religious_order_standing`; the Russian kept both,
+    and «Предоставить владение религиозному ордену» read «… владения.  этого
+    ордена нам повысится на 20» (Lena's screenshot, 2026-10-04). Only keys
+    English still defines: a key the game dropped is drawn nowhere.
+    """
+    gone = sorted(concepts_used(value) - known)
+    return "links %s, which no concept defines" % ", ".join(gone) if gone else None
+
+
 def dumped_names() -> set[str]:
     """Every name the engine dumped, split at the dots.
 
@@ -765,7 +806,7 @@ def wrong_type_fault(value: str, english: str | None) -> str | None:
 
 
 HARD = ("brackets", "cyrillic_code", "custom_on_text", "filter_nested", "unknown_root",
-        "unknown_member", "missing_ref", "foreign_context", "wrong_type")
+        "unknown_member", "missing_ref", "foreign_context", "wrong_type", "unknown_concept")
 ADVISORY = ("scope", "arguments", "member_on_root", "declension_ref", "dropped_value")
 RULES = HARD + ADVISORY
 
@@ -782,6 +823,9 @@ def scan(russian: dict[str, Entry], english: dict[str, Entry],
             for pair in chain_pairs(entry.value):
                 en_pairs.add(pair)
                 en_roots[pair[0]] = en_roots.get(pair[0], 0) + 1
+    concepts: set[str] = set()
+    if "unknown_concept" in rules:
+        concepts = defined_concepts(english)
     repairs: dict[str, str] = {}
     if "missing_ref" in rules:
         repairs = misspelled_refs(russian, english)
@@ -813,6 +857,7 @@ def scan(russian: dict[str, Entry], english: dict[str, Entry],
                 key, entry.value, repairs, russian, english)),
             ("foreign_context", lambda: foreign_context_fault(entry.value, pair.value) if pair else None),
             ("wrong_type", lambda: wrong_type_fault(entry.value, pair.value if pair else None)),
+            ("unknown_concept", lambda: unknown_concept_fault(entry.value, concepts) if pair else None),
             ("scope", lambda: scope_difference(entry.value, pair.value) if pair else None),
             ("arguments", lambda: argument_difference(entry.value, pair.value) if pair else None),
             ("member_on_root", lambda: member_on_root_fault(entry.value, en_pairs, en_roots)),

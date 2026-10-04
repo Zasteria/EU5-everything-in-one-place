@@ -283,7 +283,7 @@ APP_ID = "3450310"                    # EU5 on Steam; tools/workshop.py has the 
 # Not copies of anything in the install, so a prune leaves them alone: the
 # engine's own API dumps come from the game's Documents folder, and the build
 # record is written here.
-NOT_FROM_INSTALL = {"docs", "version.json"}
+NOT_FROM_INSTALL = {"docs", "version.json", "FILES.txt"}
 
 # A prune that would take more than this share of a tree is refused: that is
 # not a patch, that is the wrong folder passed as the game.
@@ -466,6 +466,24 @@ def write_build(out: Path, build: dict) -> None:
                       encoding="utf-8")
 
 
+def write_listing(game: Path, out: Path) -> int:
+    """Every file in the install, path and size, into `FILES.txt`.
+
+    What is copied here is a part of the game, so «not in reference/» never said
+    whether the game has a file. 2026-10-04: towns on the map would not move,
+    and the one question was which files the game keeps its town positions in —
+    a question about names, not contents. This answers it without a run.
+    """
+    rows = []
+    for path in sorted(game.rglob("*")):
+        if path.is_file():
+            rows.append("%s\t%d" % (path.relative_to(game).as_posix(), path.stat().st_size))
+    (out / "FILES.txt").write_text(
+        "# every file of the install, path<TAB>bytes; written by "
+        "tools/extract_game_files.py\n" + "\n".join(rows) + "\n", encoding="utf-8")
+    return len(rows)
+
+
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(
         description="Copy the game directories this repository needs into one "
@@ -624,6 +642,7 @@ def main(argv: list[str]) -> int:
               "Откати изменения в GitHub Desktop и укажи папку через --game.")
         return 3
     write_build(out, build)
+    print("\nсписок всех файлов установки (FILES.txt): %d" % write_listing(game, out))
     print("\n%s, %s: новых %d, изменённых %d, удалённых %d."
           % (files(total_files), human(total_size), total_new, total_changed, len(removed)))
     # **No git here.** He commits through GitHub Desktop and asked that nothing
