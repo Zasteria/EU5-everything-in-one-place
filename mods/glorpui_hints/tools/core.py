@@ -115,6 +115,8 @@ class Advances:
         return min(dated, key=lambda n: (age_number(self.age[n]), n)) if dated else None
 
     def have(self, names: list[str]) -> str:
+        if len(names) == 1:
+            return "has_advance = %s" % names[0]
         return "OR = { %s }" % " ".join("has_advance = %s" % n for n in names)
 
     def open_to(self, names: list[str]) -> str | None:
@@ -149,6 +151,13 @@ def _why(advances: Advances, unlocking: list[str], age: str | None) -> dict:
     return why
 
 
+def _needs(*parts) -> list[str]:
+    """What the «?» beside a «not yet» line lists (his ask 10-04): every gate
+    the game itself puts on the object, for the game to word in its own
+    tooltip, with a tick or a cross beside each."""
+    return [p for p in parts if p]
+
+
 def _soon(reach: list[str], now: list[str]) -> list[str]:
     return reach + ["NOT = { AND = { %s } }" % " ".join(now)]
 
@@ -171,6 +180,8 @@ def collect(game: Path) -> list[dict]:
         if potential:
             reach.append(potential)
         unlocking = advances.of("estate_privilege", key)
+        needs = _needs(*base, advances.have(unlocking) if unlocking else None, potential,
+                       own_trigger(pdx.get(block, "allow")))
         if unlocking:
             # `is_implementable_in` lets these through before the advance:
             # five of them were recommended to countries that could not take
@@ -183,7 +194,7 @@ def collect(game: Path) -> list[dict]:
             lines.append({"direction": axis, "kind": "privilege", "object": key,
                           "value": value, "up_to": up_to, "now": now,
                           "soon": _soon(reach, now) if unlocking or potential else None,
-                          "why": _why(advances, unlocking, None)})
+                          "why": _why(advances, unlocking, None), "needs": needs})
 
     # --- government reforms ------------------------------------------------
     for key, (block, _) in pdx.objects(common / "government_reforms").items():
@@ -202,6 +213,9 @@ def collect(game: Path) -> list[dict]:
         if potential:
             reach.append(potential)
         unlocking = advances.of("government_reform", key)
+        needs = _needs(*base, "current_age_or_later = { age = %s }" % age if isinstance(age, str) else None,
+                       advances.have(unlocking) if unlocking else None, potential,
+                       own_trigger(pdx.get(block, "allow")))
         if unlocking:
             opened = advances.open_to(unlocking)
             if opened:
@@ -211,7 +225,7 @@ def collect(game: Path) -> list[dict]:
             lines.append({"direction": axis, "kind": "reform", "object": key,
                           "value": value, "up_to": up_to, "now": now,
                           "soon": _soon(reach, now) if gated_later else None,
-                          "why": _why(advances, unlocking, age)})
+                          "why": _why(advances, unlocking, age), "needs": needs})
 
     # --- laws and their policies -------------------------------------------
     for law, (block, _) in pdx.objects(common / "laws").items():
@@ -237,9 +251,12 @@ def collect(game: Path) -> list[dict]:
 
         law_potential = own_trigger(pdx.get(block, "potential"))
         law_unlocking = advances.of("law", law)
+        law_allow = own_trigger(pdx.get(block, "allow"))
         for name, body in policies:
             policy_potential = own_trigger(pdx.get(body, "potential"))
             unlocking = sorted(set(law_unlocking + advances.of("policy", name)))
+            needs = _needs(law_potential, law_allow, advances.have(unlocking) if unlocking else None,
+                           policy_potential, own_trigger(pdx.get(body, "allow")))
             for axis, (value, up_to) in pushed[name].items():
                 # Only one policy of a law is in force: one that already pushes
                 # this way at least as hard makes this one pointless.
@@ -264,7 +281,7 @@ def collect(game: Path) -> list[dict]:
                 lines.append({"direction": axis, "kind": "policy", "object": name,
                               "law": law, "value": value, "up_to": up_to, "now": now,
                               "soon": _soon(reach, now) if gated_later else None,
-                              "why": _why(advances, unlocking, None)})
+                              "why": _why(advances, unlocking, None), "needs": needs})
     return lines
 
 
