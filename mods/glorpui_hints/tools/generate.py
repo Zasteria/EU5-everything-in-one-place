@@ -11,9 +11,11 @@ What the societal value tooltip lists, per direction:
   «Not yet available» title, what it could get later. Both lists come from the
   game's `common/`: privileges, reforms and policies (`core.py`), and every other
   source that pushes a value (`gates.py`, `languages.py`).
+  Each «not yet» row opens with its age, «(IV)», a link to what it takes.
 * **On** — Glorp UI's «show unavailable suggestions» switch, or this mod's own in
-  the CMF menu, either one: the game's own two lists, and below them every other
-  source unfiltered.
+  the CMF menu, either one: the same two lists, then what this country can never
+  take (linked the same way: whose it is shows in its conditions), then every
+  other source unfiltered.
 
 **With Glorp UI and without it.** Every name the mod defines is its own
 (`svx_*`), so nothing collides with Glorp UI's and nothing needs it at runtime.
@@ -333,10 +335,24 @@ def age_label(line: dict) -> str | None:
     return "(%s)" % ROMAN[core.age_number(age)] if age else None
 
 
+def linked(text: str, line: dict) -> str:
+    """The row opened by its age, «(IV)» (or «(!)» without one), a link to what
+    it takes to get the object (his ask 10-04). `[key|E]`, the concept's name
+    being the bracket, as Calidad de Vida's working mod concept is used; at the
+    row's start, because a row too long for its width is drawn smaller while
+    the link's hover area is not (the run before: at the row's end it hovered
+    on «(» or nowhere)."""
+    at = text.find("@hint!")
+    # After the hint icon and the no-break space Glorp UI puts after it.
+    at = at + len("@hint!") + 1 if at >= 0 else 0
+    return text[:at] + "[%s|E] " % requirements_name(line) + text[at:]
+
+
 def soon_text(text: str, line: dict, reason: str) -> str:
-    """The line with its age in brackets before its number (his ask 10-04, and
-    what 1.2.2 showed him and he kept): «(IV)» while the advance or the age is
-    still to come, nothing otherwise."""
+    """A «not yet» row: linked when the object has conditions; else its age,
+    «(IV)», before its number while the advance or the age is still to come."""
+    if requirements_name(line):
+        return linked(text, line)
     why = line.get("why") or {}
     if reason == "_ADV":
         return before_number(text, " #help (%s)#!" % ROMAN[core.age_number(why["advance_age"])])
@@ -345,33 +361,33 @@ def soon_text(text: str, line: dict, reason: str) -> str:
     return text
 
 
-def soon_test_text(text: str, line: dict) -> str:
-    """The same line with the bracket a link to the object's conditions, for the
-    «test» checkbox only (10-04: 1.2.2's `#TOOLTIP:CUSTOM` icon opened nothing,
-    1.2.3/1.2.4's `[Concept(...)]` cut the line after the name). This one is
-    written as Calidad de Vida's working mod concept is used, `[key|E]`, the
-    concept's own name being the bracket."""
-    name = requirements_name(line)
-    if not name:
-        return text
-    # At the start of the row: a row too long for its width is drawn smaller,
-    # and the link's hover area stays where the full-size text would put it
-    # (10-04: a link at the end of a long row hovered only on «(» or nowhere).
-    # The row's start is the one place both agree on.
-    # After the hint icon and the no-break space Glorp UI puts after it.
-    at = text.find("@hint!")
-    at = at + len("@hint!") + 1 if at >= 0 else 0
-    return text[:at] + "[%s|E] " % name + text[at:]
+# Whether the country has the object already: such a row is in none of the
+# three lists.
+HAS = {"privilege": "has_estate_privilege = estate_privilege:%s",
+       "reform": "has_reform = government_reform:%s",
+       "policy": "has_policy = %s"}
+
+
+def never_gate(line: dict) -> list[str]:
+    """A row for the «not available to this country» list (his ask 10-04: what
+    belongs to Lithuania, what to the Ottomans): neither now nor later, and not
+    already in force."""
+    gate = ["NOT = { %s }" % HAS[line["kind"]] % line["object"]]
+    if line["now"]:
+        gate.append("NOT = { AND = { %s } }" % " ".join(line["now"]))
+    if line["soon"]:
+        gate.append("NOT = { AND = { %s } }" % " ".join(line["soon"]))
+    return gate
 
 
 def requirements(by_direction: dict[str, list[dict]]) -> dict[str, dict]:
     """scripted GUI name -> the triggers it checks and the bracket it shows,
-    once per object a «not yet» line names."""
+    once per object with conditions."""
     out: dict[str, dict] = {}
     for lines in by_direction.values():
         for line in lines:
             name = requirements_name(line)
-            if name and line["soon"]:
+            if name:
                 out[name] = {"needs": line["needs"], "label": age_label(line) or "(!)"}
     return dict(sorted(out.items()))
 
@@ -440,7 +456,8 @@ def build() -> dict[str, str]:
                 custom += custom_choice(line["name"] + "_soon", [
                     (key + "_SOON" + reason, line["soon"] + extra)
                     for reason, extra in soon_reasons(line)])
-                custom += custom_entry(line["name"] + "_soon_t", key + "_SOON_T", line["soon"])
+            if requirements_name(line):
+                custom += custom_entry(line["name"] + "_never", key + "_NEVER", never_gate(line))
     files[CUSTOM] = "\n".join(custom)
 
     # --- whether each list has anything to show --------------------------------
@@ -471,6 +488,8 @@ def build() -> dict[str, str]:
             values += visible("svx_now_visible_%s" % direction, pair, now_gates)
             values += visible("svx_soon_visible_%s" % direction, pair,
                               [l["soon"] for l in lines if l["soon"]])
+            values += visible("svx_never_visible_%s" % direction, pair,
+                              [never_gate(l) for l in lines if requirements_name(l)])
     files[VALUES] = "\n".join(values)
 
     # --- the three takeability triggers, Glorp UI's own bodies -----------------
@@ -529,7 +548,7 @@ def build() -> dict[str, str]:
             out.append(' %s: "%s"' % (key, text))
         for direction in directions:
             lines = by_direction.get(direction, [])
-            now_body, soon_body, test_body, all_body = [], [], [], []
+            now_body, soon_body, never_body, all_body = [], [], [], []
             for line in lines:
                 key = line["name"].upper()
                 text = line_text(line, lang, glorp)
@@ -538,11 +557,14 @@ def build() -> dict[str, str]:
                 if line["soon"]:
                     for reason, _ in soon_reasons(line):
                         out.append(' %s_SOON%s: "%s"' % (key, reason, soon_text(text, line, reason)))
-                    out.append(' %s_SOON_T: "%s"' % (key, soon_test_text(text, line)))
+
                 now_body.append("[Player.Custom('%s_now')]" % line["name"] if line["now"] else text)
                 if line["soon"]:
                     soon_body.append("[Player.Custom('%s_soon')]" % line["name"])
-                    test_body.append("[Player.Custom('%s_soon_t')]" % line["name"])
+
+                if requirements_name(line):
+                    out.append(' %s_NEVER: "%s"' % (key, linked(text, line)))
+                    never_body.append("[Player.Custom('%s_never')]" % line["name"])
                 if line["kind"] not in NAME_OF:
                     # With the switch on, the game's own lists stand in for the
                     # three takeable kinds; everything else is listed whole.
@@ -551,7 +573,7 @@ def build() -> dict[str, str]:
             upper = direction.upper()
             out.append(' SVX_NOW_%s: "%s"' % (upper, "".join(now_body)))
             out.append(' SVX_SOON_%s: "%s"' % (upper, "".join(soon_body)))
-            out.append(' SVX_SOON_T_%s: "%s"' % (upper, "".join(test_body)))
+            out.append(' SVX_NEVER_%s: "%s"' % (upper, "".join(never_body)))
             out.append(' SVX_ALL_%s: "%s"' % (upper, "".join(all_body)))
         files["main_menu/localization/%s/svx_hints_l_%s.yml" % (lang, lang)] = "\n".join(out) + "\n"
 
@@ -586,9 +608,6 @@ def gui(pairs, by_direction) -> str:
     show_game = ("Or(Player.MakeScope.GetVariable('showUnavailableSocietalValueSuggestions').IsSet,"
                  " And(CMMSettingIsRegistered('svx__show_all'),"
                  "CMMValueEqualsOne(CMMSettingValue('svx__show_all'))))")
-    # The test checkbox (10-04): the «not yet» brackets as links to conditions.
-    test_on = ("And(CMMSettingIsRegistered('svx__test_conditions'),"
-               "CMMValueEqualsOne(CMMSettingValue('svx__test_conditions')))")
 
     def scope_value(name: str) -> str:
         return ("GreaterThan_CFixedPoint(GuiScope.AddScope('%s', SocietalValue.MakeScope)"
@@ -621,26 +640,19 @@ def gui(pairs, by_direction) -> str:
                 "\tusing = SocietalValue%s_tooltip" % side,
                 "\tblockoverride \"societal_value_%s_tooltip_extra\" {" % side.lower(),
                 "",
-                "\t\t# Either switch on: the game's own two lists.",
+                "\t\t# This mod's lists under the game's own two titles; with either switch",
+                "\t\t# on, also what this country can never take and every other source",
+                "\t\t# (10-04: the game's own lists there named neither age nor owner).",
                 ""]
-        out += block(show_game, "TO_MOVE_FURTHER_TO_%s" % side.upper(),
-                     "[SocietalValue.Get%sHint(Player.Self)]" % side)
-        out += block("And(%s, SocietalValue.Show%sLockedHint(Player.Self))" % (show_game, side),
-                     "SV_HINT_NOT_YET_AVAILABLE",
-                     "[SocietalValue.Get%sLockedHint(Player.Self)]" % side)
-        out += ["\t\t# Both off: this mod's lists, under the game's own two titles; the",
-                "\t\t# «not yet» one with links to conditions while the test checkbox is on.", ""]
         for pair in pairs:
             direction = pair[index]
             upper = direction.upper()
-            out += block("And(Not(%s), %s)" % (show_game, scope_value("svx_now_visible_%s" % direction)),
+            out += block(scope_value("svx_now_visible_%s" % direction),
                          "TO_MOVE_FURTHER_TO_%s" % side.upper(), "[Localize('SVX_NOW_%s')]" % upper)
-            soon = scope_value("svx_soon_visible_%s" % direction)
-            out += block("And3(Not(%s), Not(%s), %s)" % (show_game, test_on, soon),
+            out += block(scope_value("svx_soon_visible_%s" % direction),
                          "SV_HINT_NOT_YET_AVAILABLE", "[Localize('SVX_SOON_%s')]" % upper)
-            out += block("And3(Not(%s), %s, %s)" % (show_game, test_on, soon),
-                         "SV_HINT_NOT_YET_AVAILABLE", "[Localize('SVX_SOON_T_%s')]" % upper)
-        out += ["\t\t# Either switch on: every other source, unfiltered.", ""]
+            out += block("And(%s, %s)" % (show_game, scope_value("svx_never_visible_%s" % direction)),
+                         "SVX_NEVER", "[Localize('SVX_NEVER_%s')]" % upper)
         for pair in pairs:
             direction = pair[index]
             if not any(l["kind"] not in NAME_OF for l in by_direction.get(direction, [])):

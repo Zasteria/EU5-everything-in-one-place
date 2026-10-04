@@ -180,16 +180,15 @@ PHRASES["english"] = _language(
     estate_power="{ref} above the threshold",
     titles={
         "SVX_EVERYTHING": "Also pushes towards this (unfiltered):",
+        "SVX_NEVER": "Not available to this country:",
     },
     menu={
         "svx_name": "Societal Value Hints",
         "svx_desc": "Lists in the societal value tooltip everything that pushes the value: privileges, reforms, policies and every other source, split into what your country can take now and what it can reach later. Works on top of Glorp UI or on its own.",
         "svx__main_name": "Lists",
         "svx__main__lists_name": "Filtering",
-        "svx__show_all_name": "Show the game's full lists",
-        "svx__show_all_desc": "Instead of the filtered lists, shows the game's own lists and every other source unfiltered. Glorp UI's “show unavailable suggestions” switch does the same.",
-        "svx__test_conditions_name": "Test: conditions on hover",
-        "svx__test_conditions_desc": "Experimental. In the “Not yet available” list the age numeral becomes a link: hovering it shows what it takes to get that privilege, reform or policy. Switch it off if anything breaks.",
+        "svx__show_all_name": "Show everything",
+        "svx__show_all_desc": "Also lists, after the two filtered lists, what this country can never take, each with its age and what it takes, and every other source unfiltered. Glorp UI's “show unavailable suggestions” switch does the same.",
     },
     scaled=_pairs(SCALED_KEYS, [
         "Fort maintenance", "Army maintenance", "Navy maintenance",
@@ -241,16 +240,15 @@ PHRASES["russian"] = _language(
     estate_power="{ref} выше порога",
     titles={
         "SVX_EVERYTHING": "Также влияет на смещение (без фильтра):",
+        "SVX_NEVER": "Недоступно этой державе:",
     },
     menu={
         "svx_name": "Подсказки общественных ценностей",
         "svx_desc": "Перечисляет в подсказке общественной ценности всё, что её сдвигает: привилегии, реформы, политики и прочие источники — отдельно то, что держава может взять сейчас, и то, что станет доступно позже. Работает поверх Glorp UI и без него.",
         "svx__main_name": "Списки",
         "svx__main__lists_name": "Фильтрация",
-        "svx__show_all_name": "Показывать полные списки игры",
-        "svx__show_all_desc": "Вместо отфильтрованных списков показывает списки самой игры и все прочие источники без фильтра. То же делает переключатель Glorp UI «Показать недоступные предложения».",
-        "svx__test_conditions_name": "Тест: условия по наведению",
-        "svx__test_conditions_desc": "Пробная функция. В списке «Пока недоступно» цифра эпохи становится ссылкой: наведение показывает, что нужно, чтобы получить привилегию, реформу или политику. Если что-то сломалось, выключите.",
+        "svx__show_all_name": "Показывать всё",
+        "svx__show_all_desc": "Под двумя отфильтрованными списками показывает ещё то, что этой державе недоступно, — у каждого эпоха и что нужно, чтобы получить, — и все прочие источники без фильтра. То же делает переключатель Glorp UI «Показать недоступные предложения».",
     },
     scaled=_pairs(SCALED_KEYS, [
         "Содержание крепостей", "Содержание армии", "Содержание флота",
@@ -299,14 +297,15 @@ PHRASES["french"] = _language(
     estate_power="{ref} au-dessus du seuil",
     titles={
         "SVX_EVERYTHING": "Pousse également dans ce sens (sans filtre) :",
+        "SVX_NEVER": "Indisponible pour ce pays :",
     },
     menu={
         "svx_name": "Indices de valeurs sociétales",
         "svx_desc": "Liste dans l'infobulle de valeur sociétale tout ce qui la fait évoluer : privilèges, réformes, politiques et toutes les autres sources, en séparant ce que votre pays peut obtenir maintenant de ce qu'il pourra atteindre plus tard. Fonctionne avec ou sans Glorp UI.",
         "svx__main_name": "Listes",
         "svx__main__lists_name": "Filtrage",
-        "svx__show_all_name": "Afficher les listes complètes du jeu",
-        "svx__show_all_desc": "Au lieu des listes filtrées, affiche les listes du jeu lui-même et toutes les autres sources sans filtre. L'option « afficher les suggestions non disponibles » de Glorp UI fait de même.",
+        "svx__show_all_name": "Tout afficher",
+        "svx__show_all_desc": "Affiche aussi, après les deux listes filtrées, ce que ce pays ne peut jamais obtenir, chacun avec son âge et ce qu'il demande, ainsi que toutes les autres sources sans filtre. L'option « afficher les suggestions non disponibles » de Glorp UI fait de même.",
     },
     scaled=_pairs(SCALED_KEYS, [
         "Entretien des forts", "Entretien de l'armée", "Entretien de la flotte",
@@ -359,14 +358,15 @@ PHRASES["german"] = _language(
     estate_power="{ref} über der Schwelle",
     titles={
         "SVX_EVERYTHING": "Treibt ebenfalls in diese Richtung (ungefiltert):",
+        "SVX_NEVER": "Für dieses Land nicht verfügbar:",
     },
     menu={
         "svx_name": "Hinweise zu gesellschaftlichen Werten",
         "svx_desc": "Listet im Tooltip eines gesellschaftlichen Werts alles, was ihn verschiebt: Privilegien, Reformen, Politiken und alle anderen Quellen, getrennt nach dem, was Euer Land jetzt nehmen kann, und dem, was es später erreichen kann. Funktioniert mit oder ohne Glorp UI.",
         "svx__main_name": "Listen",
         "svx__main__lists_name": "Filterung",
-        "svx__show_all_name": "Die vollständigen Listen des Spiels zeigen",
-        "svx__show_all_desc": "Statt der gefilterten Listen zeigt dies die Listen des Spiels selbst und alle anderen Quellen ungefiltert. Der Schalter „Nicht verfügbare Vorschläge anzeigen“ von Glorp UI tut dasselbe.",
+        "svx__show_all_name": "Alles zeigen",
+        "svx__show_all_desc": "Zeigt unter den beiden gefilterten Listen auch, was dieses Land nie erhalten kann, jeweils mit Zeitalter und Voraussetzungen, sowie alle anderen Quellen ungefiltert. Der Schalter „Nicht verfügbare Vorschläge anzeigen“ von Glorp UI tut dasselbe.",
     },
     scaled=_pairs(SCALED_KEYS, [
         "Festungsunterhalt", "Heeresunterhalt", "Flottenunterhalt",
@@ -419,14 +419,15 @@ PHRASES["spanish"] = _language(
     estate_power="{ref} por encima del umbral",
     titles={
         "SVX_EVERYTHING": "También empuja en esta dirección (sin filtro):",
+        "SVX_NEVER": "No disponible para este país:",
     },
     menu={
         "svx_name": "Pistas de valores sociales",
         "svx_desc": "Muestra en la descripción de un valor social todo lo que lo desplaza: privilegios, reformas, políticas y cualquier otra fuente, separando lo que tu país puede tomar ahora de lo que podrá alcanzar más adelante. Funciona con o sin Glorp UI.",
         "svx__main_name": "Listas",
         "svx__main__lists_name": "Filtrado",
-        "svx__show_all_name": "Mostrar las listas completas del juego",
-        "svx__show_all_desc": "En lugar de las listas filtradas, muestra las listas del propio juego y todas las demás fuentes sin filtro. El interruptor «mostrar sugerencias no disponibles» de Glorp UI hace lo mismo.",
+        "svx__show_all_name": "Mostrar todo",
+        "svx__show_all_desc": "Muestra también, tras las dos listas filtradas, lo que este país nunca podrá obtener, cada cosa con su era y lo que requiere, y todas las demás fuentes sin filtro. El interruptor «mostrar sugerencias no disponibles» de Glorp UI hace lo mismo.",
     },
     scaled=_pairs(SCALED_KEYS, [
         "Mantenimiento de fuertes", "Mantenimiento del ejército",
@@ -479,14 +480,15 @@ PHRASES["braz_por"] = _language(
     estate_power="{ref} acima do limite",
     titles={
         "SVX_EVERYTHING": "Também empurra nesta direção (sem filtro):",
+        "SVX_NEVER": "Indisponível para este país:",
     },
     menu={
         "svx_name": "Dicas de valores sociais",
         "svx_desc": "Lista na dica de um valor social tudo o que o desloca: privilégios, reformas, políticas e todas as outras fontes, separando o que seu país pode adotar agora do que poderá alcançar mais tarde. Funciona com ou sem o Glorp UI.",
         "svx__main_name": "Listas",
         "svx__main__lists_name": "Filtragem",
-        "svx__show_all_name": "Mostrar as listas completas do jogo",
-        "svx__show_all_desc": "Em vez das listas filtradas, mostra as listas do próprio jogo e todas as outras fontes sem filtro. A opção “mostrar sugestões indisponíveis” do Glorp UI faz o mesmo.",
+        "svx__show_all_name": "Mostrar tudo",
+        "svx__show_all_desc": "Mostra também, após as duas listas filtradas, o que este país nunca pode obter, cada item com sua era e o que exige, e todas as outras fontes sem filtro. A opção “mostrar sugestões indisponíveis” do Glorp UI faz o mesmo.",
     },
     scaled=_pairs(SCALED_KEYS, [
         "Manutenção de fortes", "Manutenção do exército",
@@ -539,14 +541,15 @@ PHRASES["polish"] = _language(
     estate_power="{ref} powyżej progu",
     titles={
         "SVX_EVERYTHING": "Również przesuwa w tę stronę (bez filtra):",
+        "SVX_NEVER": "Niedostępne dla tego państwa:",
     },
     menu={
         "svx_name": "Podpowiedzi wartości społecznych",
         "svx_desc": "Wymienia w podpowiedzi wartości społecznej wszystko, co ją przesuwa: przywileje, reformy, polityki i wszystkie inne źródła, osobno to, co państwo może przyjąć teraz, i to, co stanie się dostępne później. Działa z Glorp UI i bez niego.",
         "svx__main_name": "Listy",
         "svx__main__lists_name": "Filtrowanie",
-        "svx__show_all_name": "Pokaż pełne listy gry",
-        "svx__show_all_desc": "Zamiast przefiltrowanych list pokazuje listy samej gry i wszystkie inne źródła bez filtra. Przełącznik Glorp UI „Pokaż niedostępne propozycje” robi to samo.",
+        "svx__show_all_name": "Pokaż wszystko",
+        "svx__show_all_desc": "Pod dwiema przefiltrowanymi listami pokazuje też to, czego to państwo nigdy nie zdobędzie, każde z erą i wymaganiami, oraz wszystkie inne źródła bez filtra. Przełącznik Glorp UI „Pokaż niedostępne sugestie” robi to samo.",
     },
     scaled=_pairs(SCALED_KEYS, [
         "Utrzymanie fortów", "Utrzymanie armii", "Utrzymanie floty",
@@ -597,14 +600,15 @@ PHRASES["turkish"] = _language(
     estate_power="Eşiğin üzerinde {ref}",
     titles={
         "SVX_EVERYTHING": "Bu yöne de iter (filtresiz):",
+        "SVX_NEVER": "Bu ülke için kullanılamaz:",
     },
     menu={
         "svx_name": "Toplumsal Değer İpuçları",
         "svx_desc": "Toplumsal değer ipucunda değeri kaydıran her şeyi listeler: ayrıcalıklar, reformlar, politikalar ve diğer tüm kaynaklar; ülkenizin şimdi alabildikleri ile daha sonra ulaşabilecekleri ayrı ayrı. Glorp UI ile veya onsuz çalışır.",
         "svx__main_name": "Listeler",
         "svx__main__lists_name": "Filtreleme",
-        "svx__show_all_name": "Oyunun tam listelerini göster",
-        "svx__show_all_desc": "Filtrelenmiş listeler yerine oyunun kendi listelerini ve diğer tüm kaynakları filtresiz gösterir. Glorp UI'ın “kullanılamayan önerileri göster” düğmesi de aynısını yapar.",
+        "svx__show_all_name": "Her şeyi göster",
+        "svx__show_all_desc": "İki filtrelenmiş listenin altında bu ülkenin asla alamayacaklarını, her birinin çağı ve gereklilikleriyle, ve diğer tüm kaynakları filtresiz gösterir. Glorp UI'ın “kullanılamayan önerileri göster” anahtarı da aynısını yapar.",
     },
     scaled=_pairs(SCALED_KEYS, [
         "Kale bakımı", "Ordu bakımı", "Donanma bakımı", "Ordu tecrübesi",
@@ -653,14 +657,15 @@ PHRASES["simp_chinese"] = _language(
     estate_power="{ref}高于阈值",
     titles={
         "SVX_EVERYTHING": "同样推动该方向（未筛选）：",
+        "SVX_NEVER": "此国家无法获得：",
     },
     menu={
         "svx_name": "社会价值观提示",
         "svx_desc": "在社会价值观提示中列出所有推动该价值观的来源：特权、改革、政策及其他一切来源，并分开列出你的国家现在可以采取的和以后可以达成的。可与Glorp UI一同使用，也可单独使用。",
         "svx__main_name": "列表",
         "svx__main__lists_name": "筛选",
-        "svx__show_all_name": "显示游戏的完整列表",
-        "svx__show_all_desc": "显示游戏自身的列表以及所有其他来源（未筛选），而不是筛选后的列表。Glorp UI的“显示不可用建议”开关效果相同。",
+        "svx__show_all_name": "显示全部",
+        "svx__show_all_desc": "在两个筛选列表之下，另外列出此国家永远无法获得的项目（各附时代与所需条件），以及所有其他来源（未筛选）。Glorp UI的“显示不可用建议”开关效果相同。",
     },
     scaled=_pairs(SCALED_KEYS, [
         "堡垒维护费", "陆军维护费", "海军维护费", "陆军经验", "海军经验",
@@ -707,14 +712,15 @@ PHRASES["japanese"] = _language(
     estate_power="閾値を超えた{ref}",
     titles={
         "SVX_EVERYTHING": "この方向にも推進（フィルターなし）：",
+        "SVX_NEVER": "この国では利用不可：",
     },
     menu={
         "svx_name": "社会的価値観のヒント",
         "svx_desc": "社会的価値観のツールチップに、その価値観を動かすすべてのもの（特権、改革、政策、その他すべての要因）を、今すぐ採用できるものと後で手が届くものに分けて表示します。Glorp UIと併用しても単独でも動作します。",
         "svx__main_name": "リスト",
         "svx__main__lists_name": "フィルター",
-        "svx__show_all_name": "ゲームの完全なリストを表示",
-        "svx__show_all_desc": "フィルターされたリストの代わりに、ゲーム自身のリストとその他すべての要因をフィルターなしで表示します。Glorp UIの「利用不可の提案を表示する」スイッチも同じ働きをします。",
+        "svx__show_all_name": "すべて表示",
+        "svx__show_all_desc": "2つのフィルター済みリストの下に、この国が決して得られないもの（それぞれ時代と必要条件付き）と、その他すべての要因をフィルターなしで表示します。Glorp UIの「利用できない提案を表示」スイッチも同じ働きをします。",
     },
     scaled=_pairs(SCALED_KEYS, [
         "要塞維持費", "陸軍維持費", "海軍維持費", "陸軍経験", "海軍経験",
@@ -761,14 +767,15 @@ PHRASES["korean"] = _language(
     estate_power="문턱을 넘은 {ref}",
     titles={
         "SVX_EVERYTHING": "이 방향으로도 이동 (필터 없음):",
+        "SVX_NEVER": "이 국가는 이용 불가:",
     },
     menu={
         "svx_name": "사회적 가치 힌트",
         "svx_desc": "사회적 가치 툴팁에 그 가치를 움직이는 모든 것(특권, 개혁, 정책 및 기타 모든 원천)을 지금 취할 수 있는 것과 나중에 도달할 수 있는 것으로 나누어 보여줍니다. Glorp UI와 함께 또는 단독으로 작동합니다.",
         "svx__main_name": "목록",
         "svx__main__lists_name": "필터",
-        "svx__show_all_name": "게임의 전체 목록 표시",
-        "svx__show_all_desc": "필터된 목록 대신 게임 자체의 목록과 다른 모든 원천을 필터 없이 보여줍니다. Glorp UI의 ‘사용 불가 제안 표시’ 스위치도 같은 일을 합니다.",
+        "svx__show_all_name": "모두 표시",
+        "svx__show_all_desc": "필터된 두 목록 아래에 이 국가가 결코 얻을 수 없는 것(각각 시대와 필요 조건 포함)과 다른 모든 원천을 필터 없이 보여줍니다. Glorp UI의 ‘사용할 수 없는 제안 표시’ 스위치도 같은 역할을 합니다.",
     },
     scaled=_pairs(SCALED_KEYS, [
         "요새 유지비", "육군 유지비", "해군 유지비", "육군 경험", "해군 경험",
