@@ -5,16 +5,14 @@ and the tooling around both.
 
 ## Do not read this repository. Ask it.
 
-The documents here are worth about ninety thousand tokens, and a session pays for
-what it reads again on every turn afterwards — the context is resent each time.
-So:
+The documents are worth about ninety thousand tokens, and a session pays for
+what it reads again on every turn — the context is resent each time. So:
 
     python3 tools/kb.py <words>            which section answers this, and what it costs
     python3 tools/kb.py --show FILE:LINE   read exactly that section
 
-**The code is larger than the documents — ask it the same way**, the
-hand-written windows included: `code.py` indexes the comments in
-`in_game/gui/*.gui`, where the interface keeps what its runs cost.
+**The code is larger — ask it the same way**, windows included: `code.py`
+indexes the comments in `in_game/gui/*.gui`, where runs left their cost.
 
     python3 tools/code.py <words>          which effect, window or rule, and its cost
     python3 tools/code.py --show FILE:LINE read exactly that block
@@ -37,7 +35,7 @@ a last resort. `grep -rn` over `reference/` beats reading a game file.
 
 Everything else is on demand: [`docs/PITFALLS.md`](docs/PITFALLS.md) when
 something silently does nothing, [`docs/RESEARCH.md`](docs/RESEARCH.md) for how
-the engine and CMF actually work, [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md)
+the engine, CMF and CM work, [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md)
 for the reference tree and the rebuild loop,
 [`docs/WORKSHOP.md`](docs/WORKSHOP.md) when putting a mod out.
 
@@ -77,8 +75,8 @@ for the reference tree and the rebuild loop,
   мод их двигает. Лестница рычагов, и чем каждый проверен:
   [`docs/research/engine_reach.md`](docs/research/engine_reach.md). Его
   требование 09-17.
-- **Effects that merely do nothing log nothing.** `error.log` names the file and
-  line for GUI and script failures; one that never runs is invisible.
+- **Effects that merely do nothing log nothing.** `error.log` names file and
+  line of a failure; what never runs is invisible.
 - **Localization has its own checklist**,
   [`docs/pitfalls/localization.md`](docs/pitfalls/localization.md), read before
   touching a `.yml`; **he plays in Russian**, where a missing key shows raw.
@@ -118,6 +116,7 @@ holds it — and keep that place small:
 | a rule about the engine or an API | `docs/RESEARCH.md` and the file it indexes |
 | a mistake and the symptom that revealed it | `docs/PITFALLS.md` |
 | a mod's state, or what is untested | `mods/<mod>/CLAUDE.md`, one line in `docs/STATUS.md` |
+| a method true beyond its mod | `docs/research/`, `docs/pitfalls/`; `tools/check_learned.py` asks |
 | a measurement a run settled | `docs/TESTLOG.md`, and `docs/SETTLED.md` if it closes a question |
 | a rule a checker could enforce instead | the checker |
 

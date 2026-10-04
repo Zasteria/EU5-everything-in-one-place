@@ -30,7 +30,7 @@ CM сам решает когда строить, что строить. Тол�
 
 **Галочка -- три переменные CM**, и все три пишутся напрямую, без единого его
 имени (имя, которого нет, ломается не там, где его ищут; переменную можно писать
-в пустоту). Устройство -- [`../research/cmf.md`](../../research/cmf.md#construction-managers-automation-and-how-to-add-to-it);
+в пустоту). Устройство -- [`../research/construction_manager.md`](../../research/construction_manager.md#the-automation-and-how-to-add-to-it);
 форма списана с `cm_apply_auto_expand_toggle`.
 
 **Одна кнопка на оба направления**: `_cm_scan` считает, сколько галочек группы
