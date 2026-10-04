@@ -392,12 +392,116 @@ def requirements(by_direction: dict[str, list[dict]]) -> dict[str, dict]:
     return dict(sorted(out.items()))
 
 
-def scripted_guis(reqs: dict[str, dict]) -> str:
+_LOC: dict[str, dict[str, str]] = {}
+
+
+def _game_loc(key: str) -> str | None:
+    """The game's text for a key when both languages in the tree have it as
+    plain text, else None (rus_nakaz_decision.title is English-only)."""
+    for lang in ("english", "russian"):
+        if lang not in _LOC:
+            _LOC[lang] = {}
+            for path in (GAME / "main_menu/localization" / lang).rglob("*.yml"):
+                for m in re.finditer(r'^ +([^:#\s]+):\d* +"(.*)"', path.read_text("utf-8-sig", "replace"), re.M):
+                    _LOC[lang].setdefault(m.group(1), m.group(2))
+    texts = [_LOC[lang].get(key) for lang in ("english", "russian")]
+    if any(t is None or "[" in t or "$" in t for t in texts):
+        return None
+    return texts[0]
+
+
+def _tag(code: str) -> str | None:
+    tag = code.upper()
+    return tag if re.fullmatch(r"[A-Z]{3}", tag) and _game_loc(tag) else None
+
+
+def flag_sources(flags: set[str]) -> dict[str, dict]:
+    """flag -> how to word a gate that is only `has_variable = flag`.
+
+    The game words it «НЕ имеет переменной: masaniellos_fight_flag», which says
+    nothing about whose it is (his run 10-04). What sets the variable does: a
+    decision (its title, its `tags`), a country's event (its title when that is
+    plain text, the country from flavor_<tag>.txt), a disaster's event (the
+    disaster's name), or a rebel demand (rebel_demand_flavor_<tag>_N). A flag set
+    anywhere else keeps the game's wording."""
+    sets = collections.defaultdict(list)
+    for path in sorted((GAME / "in_game").rglob("*.txt")):
+        text = path.read_text("utf-8-sig", "replace")
+        if "set_variable" not in text:
+            continue
+        tops = [(m.start(), m.group(1)) for m in re.finditer(r"^([A-Za-z0-9_.]+)\s*=\s*\{", text, re.M)]
+        for m in re.finditer(r"set_variable\s*=\s*(?:\{[^}]*?name\s*=\s*)?([A-Za-z0-9_]+)", text):
+            if m.group(1) not in flags:
+                continue
+            top = next((name for at, name in reversed(tops) if at < m.start()), None)
+            body = text[[at for at, name in tops if name == top][0]:m.start()] if top else ""
+            sets[m.group(1)].append((path.relative_to(GAME / "in_game"), top, body))
+    out = {}
+    for flag, hits in sets.items():
+        found = None
+        for rel, top, body in hits:
+            folder, stem = rel.parts[-2], rel.stem
+            if folder == "decisions" and top:
+                name = _game_loc(top + ".title")
+                listed = re.search(r"\btags\s*=\s*\{([^}]*)\}", body)
+                tags = [t for t in (listed.group(1).split() if listed else []) if _tag(t)]
+                if not tags:
+                    tags = [t for t in re.findall(r"has_or_had_tag\s*=\s*([A-Z]{3})\b", body) if _tag(t)]
+                if not tags and _tag(top.split("_")[0]):
+                    tags = [top.split("_")[0].upper()]
+                if name and tags:
+                    found = {"kind": "decision", "name": top + ".title", "tags": tags}
+                elif tags:
+                    found = {"kind": "decision_country", "name": None, "tags": tags}
+            elif folder == "disaster" and _game_loc(stem):
+                found = {"kind": "disaster", "name": stem, "tags": []}
+            elif folder in ("DHE", "events") and stem.lower().startswith("flavor_") and _tag(stem[7:]):
+                name = _game_loc("%s.title" % top) if top else None
+                tags = [stem[7:].upper()]
+                found = ({"kind": "event", "name": top + ".title", "tags": tags} if name else {"kind": "event_country", "name": None, "tags": tags})
+            elif folder == "rebel_demands" and top:
+                m = re.match(r"rebel_demand_flavor_([a-z]{3})_", top)
+                if m and _tag(m.group(1)):
+                    found = {"kind": "rebels", "name": None, "tags": [m.group(1).upper()]}
+            if found:
+                break
+        if found:
+            out[flag] = found
+    return out
+
+
+def flag_word(source: dict, lang: str) -> str:
+    words = svx_languages.FLAG_WORDS[lang][source["kind"]]
+    return words.format(name="$%s$" % source["name"] if source["name"] else "",
+                        tags=", ".join("$%s$" % t for t in source["tags"]))
+
+
+# `X ?= { ... }` scope changes the IsValidTooltip may not word (his run 10-04:
+# «Крейты», OR over `culture ?=` and has_reform, showed no conditions at all).
+# Every country has these scopes, so `=` checks the same thing.
+SAFE_SCOPES = re.compile(r"\b(culture|religion|capital) \?= \{")
+SAFE_VALUES = re.compile(r"\b(group|region|area|sub_continent|language_family) \?= ")
+
+
+def worded(need: str, sources: dict[str, dict]) -> str:
+    """One `is_valid` line, with what the game words badly worded by us."""
+    need = SAFE_SCOPES.sub(r"\1 = {", need)
+    need = SAFE_VALUES.sub(r"\1 = ", need)
+
+    def flag(m: re.Match) -> str:
+        # a variable the game already wraps in its own custom_tooltip stays
+        if m.group(1) not in sources or re.search(r"custom_tooltip = \{ text = \S+\s*$", need[:m.start()]):
+            return m.group(0)
+        return "custom_tooltip = { text = svx_flag_%s %s }" % (m.group(1), m.group(0))
+    return re.sub(r"has_variable = ([A-Za-z0-9_]+)", flag, need)
+
+
+def scripted_guis(reqs: dict[str, dict], sources: dict[str, dict]) -> str:
     out = [HEADER, "# One per object a «not yet» line names: its `is_valid` is every gate the",
            "# game puts on that object, and IsValidTooltip has the game word them.", ""]
     for name, req in reqs.items():
         out += ["%s = {" % name, "\tscope = country", "\tis_valid = {"]
-        out += ["\t\t%s" % n for n in req["needs"]]
+        out += ["\t\t%s" % worded(n, sources) for n in req["needs"]]
         out += ["\t}", "}", ""]
     return "\n".join(out)
 
@@ -421,8 +525,10 @@ def concepts(reqs: dict[str, dict]) -> str:
     return "\n".join(out)
 
 
-def concept_words(reqs: dict[str, dict], lang: str) -> str:
+def concept_words(reqs: dict[str, dict], lang: str, sources: dict[str, dict]) -> str:
     out = [HEADER, "l_%s:" % lang]
+    for flag, source in sorted(sources.items()):
+        out.append(' svx_flag_%s: "%s"' % (flag, flag_word(source, lang)))
     for name, req in reqs.items():
         kind, key = name[len("svx_req_"):].split("_", 1)
         out.append(' game_concept_%s: "%s"' % (name, req["label"]))
@@ -593,10 +699,12 @@ def build() -> dict[str, str]:
 
     files[GUI] = gui(pairs, by_direction)
     reqs = requirements(by_direction)
-    files[SCRIPTED_GUIS] = scripted_guis(reqs)
+    sources = flag_sources({f for req in reqs.values() for n in req["needs"]
+                            for f in re.findall(r"has_variable = ([A-Za-z0-9_]+)", n)})
+    files[SCRIPTED_GUIS] = scripted_guis(reqs, sources)
     files[CONCEPTS] = concepts(reqs)
     for lang in svx_languages.LANGUAGES:
-        files["main_menu/localization/%s/svx_requirements_l_%s.yml" % (lang, lang)] = concept_words(reqs, lang)
+        files["main_menu/localization/%s/svx_requirements_l_%s.yml" % (lang, lang)] = concept_words(reqs, lang, sources)
     return files
 
 
