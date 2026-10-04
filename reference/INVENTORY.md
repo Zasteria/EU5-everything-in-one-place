@@ -10,7 +10,6 @@ python3 tools/refresh.py
 
 | Folder | Mod id | Version | Game |
 | --- | --- | --- | --- |
-| `3601047146_glorp_ui` | `glorp.ui` | 10.08.26 | 1.3.* |
 | `3668193813_trin_national_destinies` | `trin.national_destinies` | 1.4.0 | 1.4.* |
 | `3692202776_community_mod_framework` | `community_mod_framework` | 2.5.0 | 1.4.* |
 | `3736668860_construction_manager` | `romaimperator.construction_manager` | 2.2.12 | 1.3.* |
