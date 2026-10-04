@@ -78,12 +78,25 @@ def pushes(block: list, known: dict[str, float]) -> dict[str, tuple[float, bool]
     return {axis: (max(values), len(set(values)) > 1) for axis, values in found.items()}
 
 
+def foreign(line: str) -> bool:
+    """True when a trigger line reaches for a scope a country lacks.
+
+    `international_organization_type` inside
+    `any_international_organizations_member_of = { ... }` is asked of the
+    organization the country is in, which the country scope does reach: the
+    Confucian school, «Мелкая бюрократия» and the examination law were left
+    ungated by that one word (10-04).
+    """
+    return bool(FOREIGN_SCOPE.search(
+        pdx.without_blocks(line, "any_international_organizations_member_of")))
+
+
 def own_trigger(block) -> str | None:
     """A trigger block as one line, or None when it is empty or not the country's."""
     if not block or not isinstance(block, list):
         return None
     line = pdx.text(block)
-    if not line.strip() or FOREIGN_SCOPE.search(line):
+    if not line.strip() or foreign(line):
         return None
     return line
 

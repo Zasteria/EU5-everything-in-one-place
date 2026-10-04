@@ -38,6 +38,23 @@ def strip_comments(text: str) -> str:
     return "\n".join(out)
 
 
+def without_blocks(text: str, key: str) -> str:
+    """`text` with every `key = { ... }` cut out, braces balanced."""
+    while True:
+        match = re.search(r"\b%s\s*=\s*\{" % re.escape(key), text)
+        if not match:
+            return text
+        depth = 0
+        for i in range(match.end() - 1, len(text)):
+            if text[i] == "{":
+                depth += 1
+            elif text[i] == "}":
+                depth -= 1
+                if depth == 0:
+                    break
+        text = text[:match.start()] + text[i + 1:]
+
+
 def parse(text: str) -> list[Entry]:
     tokens = TOKEN.findall(strip_comments(text.lstrip("﻿")))
     pos = 0

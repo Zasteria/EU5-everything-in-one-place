@@ -167,6 +167,20 @@ def auto_modifier_gates() -> dict[str, str]:
 
 ADVANCES = core.Advances(GAME)
 
+# What an advance's `unlock_*` calls each catalog source. The game keeps these
+# locked until the advance whatever the object's own blocks say:
+# «Объединить культурную группу» passed `potential` and `allow` and was offered
+# in the second age, its `nation_state_advance` being in the sixth (10-04).
+UNLOCK_KIND = {"building_types": "building", "cabinet_actions": "cabinet_action",
+               "chivalric_orders": "chivalric_order", "subject_types": "subject_type"}
+
+# Static modifiers the engine applies only where there is a parliament.
+PARLIAMENT_MODIFIERS = {"parliament_in_capital", "parliament_outside_capital"}
+
+
+def gate_block(row: dict) -> str:
+    return row["path"][1] if len(row["path"]) > 1 else ""
+
 
 def other_lines(findings: list[dict]) -> list[dict]:
     """Every push outside privileges, reforms and policies that the mod lists."""
@@ -193,7 +207,7 @@ def other_lines(findings: list[dict]) -> list[dict]:
         elif source in svx_languages.CATALOG_REGISTRIES:
             gate = svx_gates.gate_for(source, obj, caches.get(source, {}),
                                       {"status_owners": status_owners,
-                                       "block": row["path"][1] if len(row["path"]) > 1 else ""})
+                                       "block": gate_block(row)})
             now, reach = list(gate["now"]), list(gate["reach"])
             if source in EXCLUSIVE_SOURCES:
                 peers = sorted({other["object"] for other in findings
@@ -202,9 +216,24 @@ def other_lines(findings: list[dict]) -> list[dict]:
                                 and (core.amount(other["raw_value"], known) or 0) >= value})
                 now += ["NOT = { has_employment_system = employment_system:%s }" % p
                         for p in peers + [obj]]
+            # The unlocking advance. A subject type's is the overlord's to
+            # research, so only the overlord's line waits on it.
+            unlocking = (ADVANCES.of(UNLOCK_KIND[source], obj)
+                         if source in UNLOCK_KIND and not (
+                             source == "subject_types"
+                             and gate_block(row) != "overlord_modifier") else [])
+            if unlocking:
+                now.append(ADVANCES.have(unlocking))
+                opened = ADVANCES.open_to(unlocking)
+                if opened:
+                    reach.append(opened)
+                elif not reach:
+                    reach.append("always = yes")
             base.update(kind="catalog", now=now, up_to=source in MAINTAINED_SOURCES)
             if source == "advances" and obj in ADVANCES.age:
                 base["why"] = {"age": ADVANCES.age[obj]}
+            elif unlocking:
+                base["why"] = core._why(ADVANCES, unlocking, None)
             # «Not yet» needs a real reach to be about: without one, failing
             # «now» means displaced or done, not pending.
             if reach and reach != now:
@@ -212,7 +241,8 @@ def other_lines(findings: list[dict]) -> list[dict]:
         elif obj in scaled or obj in conditional:
             base.update(kind="scaled" if obj in scaled else "conditional",
                         up_to=obj in scaled,
-                        now=[auto_gates[obj]] if obj in auto_gates else [])
+                        now=[auto_gates[obj]] if obj in auto_gates else
+                        ["has_parliament = yes"] if obj in PARLIAMENT_MODIFIERS else [])
         elif obj.endswith(CABINET_SUFFIX):
             base.update(kind="cabinet", now=[])
         else:
