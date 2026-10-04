@@ -64,7 +64,11 @@ _spec = importlib.util.spec_from_file_location(
 beta = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(beta)
 BETA_SPECS = Path(__file__).resolve().parent / "beta"
-BETA_RIO = Path(__file__).resolve().parent / "beta_rio"
+
+_spec = importlib.util.spec_from_file_location(
+    "cm_perf_buildings", Path(__file__).resolve().parent / "buildings.py")
+buildings = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(buildings)
 
 _CLASSIFY = (
     "GetScriptedGui('cm_should_building_type_section_show')"
@@ -421,6 +425,71 @@ SETTING_WORDS = {
 }
 
 
+CUSTOM = "in_game/common/scripted_effects/cm_ab_custom_effects.txt"
+SEED = "in_game/common/scripted_effects/cm_game_load_setup_effects.txt"
+LOOKUPS = "in_game/common/scripted_effects/cm_cmm_custom_effects.txt"
+AUTO_EXPAND = "in_game/gui/cm_auto_expand_button.gui"
+
+
+def _unbuilt_toggle_slot(text: str) -> str:
+    """Glorp UI Río places the unbuilt-row toggle itself (production_lateralview.gui:
+    `parentanchor = right|vcenter`, `position = { -133 0 }`), which on the beta's row is the
+    income column (his screenshot 10-04 17:42, the toggle over «+0.44 / +0.15»). From the
+    right the row is margin 8, build button 110, spacing 6, margin 3, income 60, 5, efficiency
+    70, 5, then an empty 24 px slot. Río's file is his and stays his (10-04: «не хотелось бы,
+    чтобы наш мод перезаписывал окна интерфейса glorp»), so the type does the moving: it is
+    156 wide and anchored by its right edge, which puts its left edge, and the toggle drawn
+    there, 289 px from the row's right. Transparent, so the income and efficiency columns
+    under it keep their tooltips. The beta window's own instance sets its size and anchor
+    back (beta/production_lateralview.json)."""
+    old = ("\ttype cm_auto_expand_new_building_button_pl = widget {\n\t\tsize = { 20 20 }\n"
+           "\t\tvisible = \"[And(Location.HasOwner, EqualTo_string(Location.GetOwner.GetTag, GetPlayer.GetTag))]\"\n"
+           "\t\tcm_auto_expand_new_building_button = { parentanchor = center widgetanchor = center }\n")
+    new = ("\ttype cm_auto_expand_new_building_button_pl = widget {\n"
+           "\t\t# cm_dev_perf: 156 wide, right-anchored, so Río's -133 lands the toggle at -289.\n"
+           "\t\tsize = { 156 20 }\n\t\twidgetanchor = right|vcenter\n\t\talwaystransparent = yes\n"
+           "\t\tvisible = \"[And(Location.HasOwner, EqualTo_string(Location.GetOwner.GetTag, GetPlayer.GetTag))]\"\n"
+           "\t\tcm_auto_expand_new_building_button = { parentanchor = left|vcenter widgetanchor = left|vcenter }\n")
+    if text.count(old) != 1:
+        raise SystemExit("cm_auto_expand_button.gui: the unbuilt-row type is not as expected")
+    return text.replace(old, new)
+
+
+def _split_glorp_shared() -> int:
+    """CM ships files under Glorp UI's own names (`glorpui_construction_manager_scripted_gui.txt`,
+    `glorpui_shared_l_<lang>.yml`), and with this mod above Río it is Río's copy of each that
+    loads, so what only CM's copy has would be gone while CM's ROI templates still name it. Those
+    parts move to files of this mod's own name: present whichever copy wins, defined once."""
+    sgui = MOD / "in_game/common/scripted_guis/glorpui_construction_manager_scripted_gui.txt"
+    text = sgui.read_text(encoding="utf-8-sig")
+    m = re.search(r"(?ms)^# True when the ROI figures should carry[^\n]*\n^glorpui_roi_indirect_active = \{.*?^\}\n?", text)
+    if not m:
+        raise SystemExit("glorpui_roi_indirect_active: not where CM keeps it")
+    sgui.write_text("\ufeff" + text[:m.start()].rstrip("\n") + "\n" + text[m.end():], encoding="utf-8")
+    (sgui.parent / "cm_perf_glorp_shared_scripted_gui.txt").write_text("\ufeff" + m.group(0), encoding="utf-8")
+    try:
+        rio = refs.mod("glorp.ui.rio") / "main_menu/localization"
+    except SystemExit:
+        return 0
+    moved = 0
+    for folder in sorted((MOD / "main_menu/localization").iterdir()):
+        lang = folder.name
+        ours = folder / f"glorpui_shared_l_{lang}.yml"
+        theirs = rio / lang / f"glorpui_shared_l_{lang}.yml"
+        if not ours.exists() or not theirs.exists():
+            continue
+        has = set(re.findall(r"(?m)^ ([A-Za-z0-9_.]+):", theirs.read_text(encoding="utf-8-sig")))
+        keep, move = [], []
+        for line in ours.read_text(encoding="utf-8-sig").splitlines():
+            key = re.match(r" ([A-Za-z0-9_.]+):", line)
+            (move if key and key.group(1) not in has else keep).append(line)
+        ours.write_text("\ufeff" + "\n".join(keep) + "\n", encoding="utf-8")
+        (folder / f"cm_perf_glorp_shared_l_{lang}.yml").write_text(
+            "\ufeff" + f"l_{lang}:\n" + "\n".join(move) + "\n", encoding="utf-8")
+        moved += len(move)
+    return moved
+
+
 def _write_setting_words() -> None:
     for folder in sorted((MOD / "main_menu/localization").iterdir()):
         lang = folder.name
@@ -444,13 +513,18 @@ EDITS = (
     (TRMM, "mark the province slices the rights pass writes, and the repair", _mark_trmm_slices),
     (TRMM_GUIS, "the repair's scripted gui", _trmm_repair_gui),
     (PF_WINDOW, "run the repair on entering the rights map", _trmm_repair_driver),
+    (CUSTOM, "the beta's capital buildings, and National Destinies' sets", buildings.edit_custom_sets),
+    (CMM, "the roster's new rows and the National Destinies list", buildings.edit_registration),
+    (SEED, "the seeded roster's new rows", buildings.edit_seed),
+    (LOOKUPS, "National Destinies rows in the roster's lookups and visibility", buildings.edit_lookups),
+    (AUTO_EXPAND, "the unbuilt-row toggle in Río's slot", _unbuilt_toggle_slot),
 )
 
 
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 19
+PERF_REVISION = 20
 
 
 def metadata() -> str:
@@ -486,28 +560,34 @@ def main() -> int:
             raise SystemExit(f"{path}: {label} changed nothing")
         target.write_text("﻿" + patched.lstrip("﻿"), encoding="utf-8")
     _write_setting_words()
+    _split_glorp_shared()
+    # The beta's buildings and National Destinies' in Custom auto-build (buildings.py).
+    buildings.vanilla_checks(refs.GAME / "in_game/common/building_types")
+    try:
+        nd_root = refs.mod("trin.national_destinies")
+    except SystemExit:
+        nd_root = None
+    nd = buildings.ND(nd_root)
+    if nd.most_rows() > buildings.ND_ROWS:
+        raise SystemExit(f"National Destinies: a country can claim {nd.most_rows()} rows, the list has {buildings.ND_ROWS}")
+    (MOD / "in_game/common/scripted_effects/cm_perf_buildings_effects.txt").write_text(
+        buildings.effects(nd), encoding="utf-8")
+    (MOD / "in_game/common/scripted_guis/cm_perf_buildings_scripted_gui.txt").write_text(
+        buildings.scripted_guis(), encoding="utf-8")
+    for folder in sorted((MOD / "main_menu/localization").iterdir()):
+        lang = folder.name
+        rows = folder / f"cm_cmm_l_{lang}.yml"
+        rows.write_text("\ufeff" + buildings.edit_row_names(rows.read_text(encoding="utf-8-sig")), encoding="utf-8")
+        (folder / f"cm_perf_buildings_l_{lang}.yml").write_text(buildings.localization(lang), encoding="utf-8")
     # 10-01: CM Dev's copies of vanilla windows are Glorp UI's 1.3 layout and
     # break on the beta; each with a spec in tools/beta/ is rebuilt as the
     # beta's window plus CM's hooks (beta_windows.py).
     rebuilt = beta.rebuild(refs.GAME_GUI, BETA_SPECS, MOD / "in_game/gui")
-    # 10-04: Glorp UI Río replaces three of the same windows and loads after
-    # this mod, so his location window was Río's, which carries every CM hook
-    # but the RGO button's auto-expand and auto-food toggles (his screenshot:
-    # «Запас пищи в провинции» is Río's header; the toggles were gone). Those
-    # three are Río's file plus the hooks it lacks (`beta_rio/`); this mod then
-    # has to load after Río. Río's windows name nothing that only Glorp UI
-    # defines but its ROI labels.
-    try:
-        rio = refs.mod("glorp.ui.rio") / "in_game/gui"
-    except SystemExit:
-        rio = None
-    if rio is not None and rio.is_dir():
-        for spec in sorted(BETA_RIO.glob("*.json")):
-            window = spec.stem + ".gui"
-            text = (rio / window).read_text(encoding="utf-8-sig").replace("\r\n", "\n")
-            text = beta.apply(text, json.loads(spec.read_text(encoding="utf-8")), window, refs.GAME_GUI)
-            (MOD / "in_game/gui" / window).write_text("\ufeff" + text, encoding="utf-8")
-            rebuilt = [w if w != window else window + " (on Glorp UI Río)" for w in rebuilt]
+    # 10-04 night, his call: «не хотелось бы, чтобы наш мод перезаписывал окна интерфейса
+    # glorp… аккуратно встраивался в glorp, если он включён». Glorp UI Río replaces three of the
+    # same windows and carries CM's hooks itself; this mod ships the beta's windows with CM's
+    # hooks and loads ABOVE Río, so with Río on Río's own windows win whole and without it these
+    # do. (+perf11..19 shipped Río's file plus the hooks it lacks and loaded below it.)
     # The beta's engine dropped `use_global_input_instance` (his log 10-02:
     # «not a valid widget/type/property»); commented out as the beta does.
     for path in (MOD / "in_game/gui").rglob("*.gui"):
@@ -534,17 +614,6 @@ def main() -> int:
                             encoding="utf-8")
     if not owner_gates:
         raise SystemExit("the tag-compare owner gate is gone from CM's windows; drop this pass")
-    # Río sets the unbuilt-row toggle 133 px from the row's right edge, which on
-    # the beta's row is the income column (his screenshot 10-04 17:42, the
-    # toggle over «+0.44 / +0.15»). From the right the row is margin 8, build
-    # button 110, spacing 6, margin 3, income 60, 5, efficiency 70, 5, then an
-    # empty 24 px slot the row keeps for nothing: the toggle goes there (+perf19).
-    lateral = MOD / "in_game/gui/production_lateralview.gui"
-    text = lateral.read_text(encoding="utf-8-sig")
-    hook = "parentanchor = right|vcenter\n\t\t\t\t\t\tposition = { -133 0 }"
-    if text.count(hook) != 1:
-        raise SystemExit("production_lateralview.gui: the unbuilt-row toggle is not at Río's -133 once")
-    lateral.write_text("\ufeff" + text.replace(hook, hook.replace("-133", "-289")), encoding="utf-8")
     # The beta added a native trigger `is_host`, CMF's own trigger's name; CM's
     # host gates (the classification among them, his run 10-02: never ran) go
     # to cmf_is_host, which cmf_dev_beta defines with CMF's body.
@@ -578,6 +647,9 @@ def main() -> int:
         shutil.copy2(thumb, MOD / ".metadata/thumbnail.png")
     print("cm_dev_perf: %d files copied from %s, %d edits applied, rebuilt on the beta: %s"
           % (copied, SRC.name, len(EDITS), ", ".join(rebuilt)))
+    print("cm_dev_perf: National Destinies %s: %d capital, %d market-centre, %d control, %d for its list "
+          "(at most %d rows a country)" % ("read" if nd_root else "absent", len(nd.capital), len(nd.market),
+                                          len(nd.control), nd.count(), nd.most_rows()))
     return 0
 
 
