@@ -1,0 +1,108 @@
+﻿# Зонд производительности. Вопрос одного прогона: живёт ли профилировщик движка
+# (`PdxProfiler*`, окно `pdx_profiler_window` в reference/clausewitz/.../profiler.gui)
+# в обычной сборке игры. Его функции глобальные, поэтому окно мода может их звать;
+# дерево таймеров движок заполняет только в своём окне, сюда оно не придёт.
+#
+# Сигнал: число «Кадр, мс» меняется — профилировщик жив. «Запись» переключает
+# надпись — запись есть. После кнопки CSV в папке игры появляется .csv —
+# `mods.bat` → 4 → логи кладёт его в архив.
+#
+# Свёрнутое состояние — плашка «Замер», окно открывается по ней.
+
+window = {
+	name = "bag_perf_window"
+	allow_outside = yes
+	alwaystransparent = no
+	parentanchor = top|right
+	widgetanchor = top|right
+	position = { -260 90 }
+	movable = yes
+	size = { 600 330 }
+	using = bg_window_default_alt
+	visible = "[GetVariableSystem.Exists('bag_perf_open')]"
+
+	vbox = {
+		using = window_margin_alt
+
+		window_header_alt = {
+			blockoverride "header_text" { text = "bag_perf_title" }
+		}
+
+		vbox = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+			using = bg_secondary_inner_alt
+			margin = { 12 12 }
+			spacing = 4
+
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				spacing = 8
+				text_single = { autoresize = yes text = "bag_perf_frame_ms" }
+				text_single = { autoresize = yes text = "[PdxProfilerGetFrameTimeMs]" }
+				text_single = { autoresize = yes text = "bag_perf_frame_no" }
+				text_single = { autoresize = yes text = "[PdxProfilerGetCurrentFrame]" }
+				text_single = { autoresize = yes text = "bag_perf_ns_tick" }
+				text_single = { autoresize = yes text = "[PdxProfilerGetNsPerTick]" }
+				widget = { layoutpolicy_horizontal = expanding }
+			}
+
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				spacing = 8
+				text_single = { autoresize = yes text = "bag_perf_rec" }
+				text_single = { autoresize = yes text = "[SelectLocalization(PdxProfilerIsRecording, 'bag_perf_yes', 'bag_perf_no')]" }
+				widget = { layoutpolicy_horizontal = expanding }
+			}
+
+			icon = {
+				name = "bag_perf_graph"
+				effectname = "PdxGuiProfileGraph"
+				size = { 540 128 }
+				alwaystransparent = no
+				filter_mouse = all
+			}
+
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				spacing = 4
+
+				button_regular = {
+					size = { 130 26 }
+					tooltip = "bag_perf_btn_rec_tt"
+					onclick = "[PdxProfilerToggleRecording]"
+					text_single = { parentanchor = center widgetanchor = center autoresize = yes text = "bag_perf_btn_rec" }
+				}
+				button_regular = {
+					size = { 130 26 }
+					tooltip = "bag_perf_btn_track_tt"
+					onclick = "[PdxProfilerGuiTrackCurrentFrame]"
+					text_single = { parentanchor = center widgetanchor = center autoresize = yes text = "bag_perf_btn_track" }
+				}
+				button_regular = {
+					size = { 130 26 }
+					tooltip = "bag_perf_btn_csv_tt"
+					onclick = "[PdxProfilerGuiWriteFrameCSV]"
+					text_single = { parentanchor = center widgetanchor = center autoresize = yes text = "bag_perf_btn_csv" }
+				}
+				button_regular = {
+					size = { 130 26 }
+					onclick = "[GetVariableSystem.Clear('bag_perf_open')]"
+					text_single = { parentanchor = center widgetanchor = center autoresize = yes text = "bag_perf_btn_hide" }
+				}
+			}
+
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				maximumsize = { 560 -1 }
+				text = "bag_perf_hint"
+			}
+
+			widget = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+			}
+		}
+	}
+}

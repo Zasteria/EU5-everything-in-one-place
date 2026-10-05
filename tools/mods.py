@@ -1196,6 +1196,16 @@ def screen_logs() -> None:
                 data = handle.read()
             archive.writestr("debug.log", data)
             written.append("debug.log — последние %s" % workshop.human(len(data)))
+        # Таблицы профилировщика движка (`perf_probe`, кнопка CSV): куда игра
+        # их пишет, не известно, поэтому берутся все .csv папки игры за двое
+        # суток, кроме совсем больших.
+        recent = time.time() - 2 * 86400
+        for path in sorted(folder.parent.rglob("*.csv")):
+            stat = path.stat()
+            if stat.st_mtime > recent and stat.st_size < 20 * 1024 * 1024:
+                rel = path.relative_to(folder.parent).as_posix()
+                archive.write(path, "csv/" + rel)
+                written.append("%s — %s" % (rel, workshop.human(stat.st_size)))
     if not written:
         out.unlink(missing_ok=True)
         say("В папке логов нет ни одного нужного файла: %s" % folder)
