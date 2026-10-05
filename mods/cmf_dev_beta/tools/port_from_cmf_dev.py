@@ -11,13 +11,19 @@ CMF's hooks (the lobby tooltips, its pause-menu buttons, its alert bar). So the
 three fixes +beta1..4 carried (75 types from the beta, the beta's lobby,
 `use_global_input_instance`) are the authors' now, and are gone from here.
 
-One change remains, because 2.5.0 still has the fault:
+Two changes remain, because 2.5.0 still has the faults:
 
 **`cmf_is_host`.** The game added a native trigger `is_host` («the host of a
 multiplayer session»), the name of CMF's own scripted trigger, and in a
 single-player game the game's reads false (his probe 10-02). CMF's body is copied
 under `cmf_is_host` and CMF's own calls use it; `is_host` stays for other mods.
 `cm_dev_perf` and `cm_maps` call `cmf_is_host`.
+
+**The bottom action bar keeps a slot for a hidden button** (+beta6, 10-05). Its
+row of buttons is a datamodel `hbox` without `ignoreinvisible`, so a button whose
+scripted GUI is not shown (CM's «Пересчитать» while the finder map is closed)
+stands as an empty 34 px square that cannot be clicked — his screenshot 10-05,
+bottom-left. The top bar is tabs and does not have it.
 
     python3 mods/cmf_dev_beta/tools/port_from_cmf_dev.py
 """
@@ -43,7 +49,7 @@ _spec = importlib.util.spec_from_file_location(
 beta = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(beta)
 
-REVISION = 5
+REVISION = 6
 
 
 def metadata() -> str:
@@ -54,9 +60,10 @@ def metadata() -> str:
     base["version"] = f"{version}+beta{REVISION}"
     base["supported_game_version"] = "1.4.*"
     base["short_description"] = (
-        f"Community Mod Framework {version} (the authors' 1.4 port) with one fix: CMF's "
+        f"Community Mod Framework {version} (the authors' 1.4 port) with two fixes: CMF's "
         "own is_host is called as cmf_is_host, since the game's native is_host is false "
-        "in single player. Load this INSTEAD of CMF and CMF Dev.")
+        "in single player; the bottom action bar no longer keeps empty slots for hidden "
+        "buttons. Load this INSTEAD of CMF and CMF Dev.")
     base["relationships"] = []
     return json.dumps(base, indent=4, ensure_ascii=False) + "\n"
 
@@ -89,6 +96,23 @@ def own_host_trigger() -> int:
     return calls
 
 
+ACTION_BAR = "in_game/gui/cmf/cmf_action_bar.gui"
+BAR_ROW = ("        hbox = {\n"
+           "            spacing = 4\n"
+           "            datamodel = \"[GetPlayer.MakeScope.GetList('cmf_action_bar_active_elements')]\"\n")
+
+
+def bar_ignores_hidden() -> None:
+    """The bottom bar's button row skips hidden buttons instead of keeping their slot."""
+    path = MOD / ACTION_BAR
+    text = path.read_text(encoding="utf-8-sig")
+    if text.count(BAR_ROW) != 1:
+        raise SystemExit(f"{ACTION_BAR}: the bottom bar's button row moved")
+    text = text.replace(BAR_ROW, BAR_ROW.replace(
+        "spacing = 4\n", "spacing = 4\n            ignoreinvisible = yes\n", 1))
+    path.write_text("\ufeff" + text, encoding="utf-8")
+
+
 def main() -> int:
     for name in ("in_game", "main_menu", "loading_screen", ".metadata"):
         if (MOD / name).exists():
@@ -97,6 +121,7 @@ def main() -> int:
         if (SRC / name).exists():
             shutil.copytree(SRC / name, MOD / name)
     host_calls = own_host_trigger()
+    bar_ignores_hidden()
     (MOD / ".metadata").mkdir(parents=True, exist_ok=True)
     (MOD / ".metadata/metadata.json").write_text("﻿" + metadata(), encoding="utf-8")
     thumb = SRC / ".metadata/thumbnail.png"
