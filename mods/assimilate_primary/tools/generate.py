@@ -10,8 +10,13 @@ the primary Wallachian 15 % (`docs/research/vanilla.md`).
 
 His rule, 05.10: an accepted culture is a fair target where it already leads
 the primary one by about 30 points; anywhere else, assimilate into the primary.
-The game's own file is copied whole and the penalty appended to `ai_will_do`,
-after its `multiply`, so the factor does not shrink it.
+
+0.1.0 put the 1.3 penalty back into `ai_will_do`, and in his 40-minute run
+(05.10) no advisor assimilated anything at all; the logs hold no error for
+the file. Why is not measured. 0.2.0 scores nothing negative: the rule moves
+into the province's `enabled`, the same place the game itself narrows the
+choice for the AI, and only while cabinet actions are automated, so a choice
+made by hand stays free.
 
     python3 mods/assimilate_primary/tools/generate.py
 """
@@ -31,23 +36,28 @@ OUT = MOD / SOURCE
 LEAD = 0.3
 
 HEAD = """# assimilate_primary: the game's promote_culture.txt, copied whole, with one
-# penalty at the end of ai_will_do. Rebuilt from the game by tools/generate.py.
+# more condition in the province's `enabled`. Rebuilt from the game by
+# tools/generate.py.
 """
 
-PENALTY = """
-\t\t# assimilate_primary: an accepted culture only where it already leads the
-\t\t# primary culture in this province by %d points (the 1.3 rule was -1000 for
-\t\t# any culture but the primary; the beta dropped it).
-\t\tif = {
-\t\t\tlimit = {
-\t\t\t\tscope:target != scope:actor.culture
-\t\t\t\t"scope:target_1.culture_percentage(scope:target)" < {
-\t\t\t\t\tvalue = "scope:target_1.culture_percentage(scope:actor.culture)"
+RULE = """\t\t\t# assimilate_primary: while the cabinet is automated, an accepted culture
+\t\t\t# only where it already leads the primary culture in this province by %d
+\t\t\t# points (the 1.3 rule was -1000 for any culture but the primary).
+\t\t\ttrigger_if = {
+\t\t\t\tlimit = {
+\t\t\t\t\tscope:actor = {
+\t\t\t\t\t\tOR = {
+\t\t\t\t\t\t\tis_system_automated = cabinetactions
+\t\t\t\t\t\t\tis_system_automated = cabinet
+\t\t\t\t\t\t}
+\t\t\t\t\t}
+\t\t\t\t\tNOT = { scope:target = scope:actor.culture }
+\t\t\t\t}
+\t\t\t\t"culture_percentage(scope:target)" >= {
+\t\t\t\t\tvalue = "culture_percentage(scope:actor.culture)"
 \t\t\t\t\tadd = %s
 \t\t\t\t}
 \t\t\t}
-\t\t\tadd = -1000
-\t\t}
 """ % (round(LEAD * 100), LEAD)
 
 
@@ -69,11 +79,15 @@ def main() -> None:
     if "Wrong culture" in text:
         raise SystemExit("promote_culture: the game has its own culture penalty again — "
                          "this mod may no longer be needed; read the file before rebuilding")
-    start = text.find("\tai_will_do = {")
-    if start < 0:
-        raise SystemExit("promote_culture: no ai_will_do in the game's file")
-    end = block_end(text, start)
-    out = HEAD + text[:end].rstrip("\t") + PENALTY.lstrip("\n") + "\t" + text[end:]
+    province = text.find("looking_for_a = province")
+    if province < 0:
+        raise SystemExit("promote_culture: no province selection in the game's file")
+    trigger_end = block_end(text, text.rindex("select_trigger = {", 0, province))
+    enabled = text.find("\t\tenabled = {", province, trigger_end)
+    if enabled < 0:
+        raise SystemExit("promote_culture: the province selection has no `enabled`")
+    end = block_end(text, enabled)
+    out = HEAD + text[:end].rstrip("\t") + RULE + "\t\t" + text[end:]
     OUT.parent.mkdir(parents=True, exist_ok=True)
     old = OUT.read_text(encoding="utf-8-sig") if OUT.exists() else None
     if old != out:

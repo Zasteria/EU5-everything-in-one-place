@@ -16,7 +16,7 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`glorpui_hints_1_3`](../mods/glorpui_hints_1_3/CLAUDE.md) | 1.1.1 для 1.3, свой предмет | — |
 | [`centered_towns`](../mods/centered_towns/CLAUDE.md) | 0.2.0 (10-04): позиции Better label placement под новыми именами файлов 1.4 | 0.2.0 |
 | [`quiet_alerts`](../mods/quiet_alerts/CLAUDE.md) | 10-02: 0.3.0 не в игре. Красные и оранжевые с жёлтым звуком, галочка в CMF | всё |
-| [`assimilate_primary`](../mods/assimilate_primary/CLAUDE.md) | 0.1.0: автоматика ассимилирует в основную | всё |
+| [`assimilate_primary`](../mods/assimilate_primary/CLAUDE.md) | 0.2.0: автоматика в основную; 0.1.0 глушил ассимиляцию | 0.2.0 |
 | [`war_sliders`](../mods/war_sliders/CLAUDE.md) | **0.6.2 ждёт прогона** (0.5.2 работала 09-29). Кнопка на панели CMF: содержание и инфляция, без нажатия спит | кнопка: содержание, правка чеканки (09-30) |
 
 Закрытые, но лежащие здесь: [`archive/status_closed.md`](archive/status_closed.md).

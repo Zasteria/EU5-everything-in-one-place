@@ -1,5 +1,6 @@
 ﻿# assimilate_primary: the game's promote_culture.txt, copied whole, with one
-# penalty at the end of ai_will_do. Rebuilt from the game by tools/generate.py.
+# more condition in the province's `enabled`. Rebuilt from the game by
+# tools/generate.py.
 promote_culture = {
 	ability = dip
 	
@@ -99,6 +100,24 @@ promote_culture = {
 						}
 					}
 					trigger_else = { always = no }
+				}
+			}
+			# assimilate_primary: while the cabinet is automated, an accepted culture
+			# only where it already leads the primary culture in this province by 30
+			# points (the 1.3 rule was -1000 for any culture but the primary).
+			trigger_if = {
+				limit = {
+					scope:actor = {
+						OR = {
+							is_system_automated = cabinetactions
+							is_system_automated = cabinet
+						}
+					}
+					NOT = { scope:target = scope:actor.culture }
+				}
+				"culture_percentage(scope:target)" >= {
+					value = "culture_percentage(scope:actor.culture)"
+					add = 0.3
 				}
 			}
 		}
@@ -206,19 +225,6 @@ promote_culture = {
 		multiply = {
 			value = 1
 			subtract = "scope:target_1.culture_percentage(scope:target)"
-		}
-		# assimilate_primary: an accepted culture only where it already leads the
-		# primary culture in this province by 30 points (the 1.3 rule was -1000 for
-		# any culture but the primary; the beta dropped it).
-		if = {
-			limit = {
-				scope:target != scope:actor.culture
-				"scope:target_1.culture_percentage(scope:target)" < {
-					value = "scope:target_1.culture_percentage(scope:actor.culture)"
-					add = 0.3
-				}
-			}
-			add = -1000
 		}
 	}
 }
