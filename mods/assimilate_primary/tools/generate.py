@@ -11,12 +11,14 @@ the primary Wallachian 15 % (`docs/research/vanilla.md`).
 His rule, 05.10: an accepted culture is a fair target where it already leads
 the primary one by about 30 points; anywhere else, assimilate into the primary.
 
-0.1.0 put the 1.3 penalty back into `ai_will_do`, and in his 40-minute run
+0.1.0 put the 1.3 penalty back into `ai_will_do`, and in his run
 (05.10) no advisor assimilated anything at all; the logs hold no error for
 the file. Why is not measured. 0.2.0 scores nothing negative: the rule moves
 into the province's `enabled`, the same place the game itself narrows the
 choice for the AI, and only while cabinet actions are automated, so a choice
-made by hand stays free.
+made by hand stays free. 0.2.1, his ask 05.10: computer countries must not be
+touched at all, so the rule also requires `is_ai = no`; 0.1.0's penalty had
+applied to every country.
 
     python3 mods/assimilate_primary/tools/generate.py
 """
@@ -40,12 +42,14 @@ HEAD = """# assimilate_primary: the game's promote_culture.txt, copied whole, wi
 # tools/generate.py.
 """
 
-RULE = """\t\t\t# assimilate_primary: while the cabinet is automated, an accepted culture
-\t\t\t# only where it already leads the primary culture in this province by %d
-\t\t\t# points (the 1.3 rule was -1000 for any culture but the primary).
+RULE = """\t\t\t# assimilate_primary: for a player whose cabinet is automated, an accepted
+\t\t\t# culture only where it already leads the primary culture in this province
+\t\t\t# by %d points (the 1.3 rule was -1000 for any culture but the primary).
+\t\t\t# Computer countries are not touched.
 \t\t\ttrigger_if = {
 \t\t\t\tlimit = {
 \t\t\t\t\tscope:actor = {
+\t\t\t\t\t\tis_ai = no
 \t\t\t\t\t\tOR = {
 \t\t\t\t\t\t\tis_system_automated = cabinetactions
 \t\t\t\t\t\t\tis_system_automated = cabinet
