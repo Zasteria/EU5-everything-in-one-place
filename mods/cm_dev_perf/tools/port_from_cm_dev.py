@@ -709,7 +709,29 @@ def _pf_log_click(text: str) -> str:
                              "\t\t\tcm_pf_force_refresh = yes\n", 1)
 
 
+# CM Dev links the automation card's «Gold to Save» slider to its own gold
+# reserve both ways. The pull (slider into the reserve, every 0.25 s while the
+# card is open) is the only way anything but CM's own setting writes the
+# player's `cm_minimum_gold`, and his run 10-05: reserve 2000, the slider shot to
+# its maximum (1 000 000+), CM took that number and built nothing. With CM on the
+# game's own building automation is off every month (AUTOMATION_PULSE), so that
+# slider steers nothing; the pull is cut, the push (CM's setting shown on the
+# slider) stays. CM 2.2.12, the release, has no link at all.
+RESERVE_GUIS = "in_game/common/scripted_guis/cm_cmm_custom_scripted_gui.txt"
+
+
+def _cut_reserve_pull(text: str) -> str:
+    old = ("\t\tif = {\n\t\t\tlimit = {\n"
+           "\t\t\t\tNOT = { has_variable = cm_gold_reserve_from_cmm }\n")
+    if text.count(old) != 1:
+        raise SystemExit("reserve guis: cm_gold_reserve_changed has changed shape")
+    return text.replace(old, "\t\tif = {\n\t\t\tlimit = {\n"
+                             "\t\t\t\talways = no # cm_dev_perf: the slider no longer writes CM's reserve (+perf31)\n"
+                             "\t\t\t\tNOT = { has_variable = cm_gold_reserve_from_cmm }\n", 1)
+
+
 EDITS = (
+    (RESERVE_GUIS, "the gold slider no longer writes CM's reserve", _cut_reserve_pull),
     (WINDOW, "gate the building-type tree", _gate_the_tree),
     (WINDOW, "widen the first pass's instantiation window", perf._widen_first_pass),
     (WINDOW, "widen the upgrade refresh's instantiation window", _widen_refresh),
@@ -846,7 +868,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 30
+PERF_REVISION = 31
 
 
 def metadata() -> str:
