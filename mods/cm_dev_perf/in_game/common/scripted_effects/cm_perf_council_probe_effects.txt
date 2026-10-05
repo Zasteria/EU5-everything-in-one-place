@@ -13,3 +13,21 @@ cm_perf_council_probe = {
 		else = { debug_log = "CM council probe $WHEN$: seat idle" }
 	}
 }
+
+# His run 10-05 08:09: «Совет» on, «Члены совета» on, the hidden «Действия совета»
+# (cabinetactions) off, so seats are filled and never given an action. The panel has
+# no switch for it. Put back once, where the panel's «Совет» is on; the probe then
+# shows whether something turns it off again.
+cm_perf_council_actions_back = {
+	if = {
+		limit = {
+			is_ai = no
+			NOT = { has_variable = cm_perf_council_actions_back }
+			is_system_automated = cabinet
+			NOT = { is_system_automated = cabinetactions }
+		}
+		set_variable = cm_perf_council_actions_back
+		set_automated_system = { system = cabinetactions activate = yes }
+		debug_log = "CM council probe: cabinetactions switched back on"
+	}
+}

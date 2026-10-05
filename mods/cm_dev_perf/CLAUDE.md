@@ -25,9 +25,9 @@ cm`), чтобы сохранения и настройки CMF работали
 `_reassert`, зонд в `debug.log` (`CM pf: finder map closed…`, `…refresh button
 clicked`). Пустой квадрат внизу слева — `cmf_dev_beta` +beta6. В игре не был.
 
-**+perf28 (10-05), временный зонд совета:** раз в месяц до и после гашения
-автоматик CM пишет в `debug.log` `CM council probe before/after:` — флаги
-`cabinet`/`cabinetactions`/`cabinetmembers` и занятость мест. Убрать после прогона.
+**+perf28/29 (10-05), совет:** зонд пишет в `debug.log` `CM council probe` —
+прогон 08:09: скрытый `cabinetactions` off, CM его не трогает. +perf29 один раз
+включает его, где «Совет» включён. Не проверено; зонд убрать после прогона.
 
 ## Автостройка: здания беты и National Destinies (`tools/buildings.py`)
 

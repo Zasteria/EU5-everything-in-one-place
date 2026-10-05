@@ -293,6 +293,7 @@ cm_perf_automation_monthly_pulse = {
 		cm_perf_council_probe = { WHEN = before }
 		cm_suppress_engine_automation = yes
 		cm_perf_council_probe = { WHEN = after }
+		cm_perf_council_actions_back = yes
 	}
 }
 """
@@ -318,6 +319,23 @@ def _council_probe() -> str:
             "\tevery_cabinet = {\n"
             "\t\tif = { limit = { has_cabinet_action = yes } debug_log = \"CM council probe $WHEN$: seat busy\" }\n"
             "\t\telse = { debug_log = \"CM council probe $WHEN$: seat idle\" }\n"
+            "\t}\n"
+            "}\n\n"
+            "# His run 10-05 08:09: «Совет» on, «Члены совета» on, the hidden «Действия совета»\n"
+            "# (cabinetactions) off, so seats are filled and never given an action. The panel has\n"
+            "# no switch for it. Put back once, where the panel's «Совет» is on; the probe then\n"
+            "# shows whether something turns it off again.\n"
+            "cm_perf_council_actions_back = {\n"
+            "\tif = {\n"
+            "\t\tlimit = {\n"
+            "\t\t\tis_ai = no\n"
+            "\t\t\tNOT = { has_variable = cm_perf_council_actions_back }\n"
+            "\t\t\tis_system_automated = cabinet\n"
+            "\t\t\tNOT = { is_system_automated = cabinetactions }\n"
+            "\t\t}\n"
+            "\t\tset_variable = cm_perf_council_actions_back\n"
+            "\t\tset_automated_system = { system = cabinetactions activate = yes }\n"
+            "\t\tdebug_log = \"CM council probe: cabinetactions switched back on\"\n"
             "\t}\n"
             "}\n")
 
@@ -873,7 +891,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 28
+PERF_REVISION = 29
 
 
 def metadata() -> str:
