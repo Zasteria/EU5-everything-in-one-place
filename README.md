@@ -27,6 +27,7 @@
 | [`cm_perf`](mods/cm_perf/) | облегчённый CM; снят 09-19, его основа живёт в `cm_dev_perf` |
 | [`cmf_dev_beta`](mods/cmf_dev_beta/) | CMF Dev под бету; ставится вместо CMF Dev |
 | [`quiet_alerts`](mods/quiet_alerts/) | красные и оранжевые уведомления звучат как жёлтые |
+| [`assimilate_primary`](mods/assimilate_primary/) | автоматика совета ассимилирует в основную культуру, а не в признанную |
 | [`war_sliders`](mods/war_sliders/) | кнопка на панели CMF: содержание армии и инфляция |
 | [`glorpui_hints`](mods/glorpui_hints/) | подсказки смещения ценностей к Glorp UI (версия из Steam) |
 | [`centered_towns`](mods/centered_towns/) | города и замки в середине района, а не на реке у края |
