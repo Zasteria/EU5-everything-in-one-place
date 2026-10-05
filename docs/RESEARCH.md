@@ -15,6 +15,7 @@ does not care what a `$vanilla_key$` passthrough is.
 | **[`research/cmf.md`](research/cmf.md)** | Community Mod Framework: its hooks, Mod Menu settings, and the list machinery that fails silently |
 | **[`research/construction_manager.md`](research/construction_manager.md)** | Construction Manager: where it gets its buildings, why it builds what it builds, how it meets the game's own automation, and how an addon reaches it |
 | **[`research/translation.md`](research/translation.md)** | Translating somebody else's mod: what the job is, what it costs, and how a localization breaks without a word |
+| **[`research/vanilla.md`](research/vanilla.md)** | Vanilla behaviour the player sees but does not choose: what decides it, from the game's files (cabinet automation picking an accepted culture) |
 
 Two things are worth knowing before opening any of them.
 
