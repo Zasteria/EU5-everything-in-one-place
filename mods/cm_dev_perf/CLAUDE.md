@@ -25,9 +25,8 @@ cm`), чтобы сохранения и настройки CMF работали
 `_reassert`, зонд в `debug.log` (`CM pf: finder map closed…`, `…refresh button
 clicked`). Пустой квадрат внизу слева — `cmf_dev_beta` +beta6. В игре не был.
 
-**+perf28/29 (10-05), совет:** зонд пишет в `debug.log` `CM council probe` —
-прогон 08:09: скрытый `cabinetactions` off, CM его не трогает. +perf29 один раз
-включает его, где «Совет» включён. Не проверено; зонд убрать после прогона.
++perf28/29 (10-05) возили зонд и правку совета; +perf30 их убрал — его слова:
+«CM абсолютно не для этого предназначен». Правка живёт в `assimilate_primary` 0.3.0.
 
 ## Автостройка: здания беты и National Destinies (`tools/buildings.py`)
 

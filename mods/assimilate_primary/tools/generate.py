@@ -20,6 +20,13 @@ made by hand stays free. 0.2.1, his ask 05.10: computer countries must not be
 touched at all, so the rule also requires `is_ai = no`; 0.1.0's penalty had
 applied to every country.
 
+0.3.0, his run 05.10 08:09: every seat stopped getting new actions, with or
+without this mod. A probe (in CM, now removed at his word) read «Совет»
+(`cabinet`) and «Члены совета» (`cabinetmembers`) on and «Действия совета»
+(`cabinetactions`) off, every month; the 1.4 panel has no switch for the last.
+What turned it off is not known. Each month, for a player whose «Совет» is on,
+the mod switches `cabinetactions` back on and says so in debug.log.
+
     python3 mods/assimilate_primary/tools/generate.py
 """
 
@@ -65,6 +72,42 @@ RULE = """\t\t\t# assimilate_primary: for a player whose cabinet is automated, a
 """ % (round(LEAD * 100), LEAD)
 
 
+COUNCIL = MOD / "in_game/common/on_action/assimilate_primary_council_on_actions.txt"
+COUNCIL_TEXT = """# assimilate_primary: the council's hidden «Действия совета» automation
+# (cabinetactions) back on wherever the panel's «Совет» (cabinet) is on. Off,
+# seats are filled and never given an action (his run 05.10). The engine merges
+# on_actions lists, so this adds to monthly_country_pulse, it does not replace it.
+# Rebuilt by tools/generate.py.
+monthly_country_pulse = {
+\ton_actions = {
+\t\tassimilate_primary_council_pulse
+\t}
+}
+
+assimilate_primary_council_pulse = {
+\ttrigger = {
+\t\tis_ai = no
+\t\tis_system_automated = cabinet
+\t\tNOT = { is_system_automated = cabinetactions }
+\t}
+\teffect = {
+\t\tset_automated_system = { system = cabinetactions activate = yes }
+\t\tdebug_log = "assimilate_primary: cabinetactions was off with cabinet on, switched back on"
+\t}
+}
+"""
+
+
+def write(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    old = path.read_text(encoding="utf-8-sig") if path.exists() else None
+    if old != text:
+        path.write_text(text, encoding="utf-8-sig")
+        print(f"{path.relative_to(refs.REPO)}: rebuilt")
+    else:
+        print(f"{path.relative_to(refs.REPO)}: unchanged")
+
+
 def block_end(text: str, start: int) -> int:
     """Index of the brace closing the block whose `{` is the first after start."""
     depth, i = 0, text.index("{", start)
@@ -91,14 +134,8 @@ def main() -> None:
     if enabled < 0:
         raise SystemExit("promote_culture: the province selection has no `enabled`")
     end = block_end(text, enabled)
-    out = HEAD + text[:end].rstrip("\t") + RULE + "\t\t" + text[end:]
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    old = OUT.read_text(encoding="utf-8-sig") if OUT.exists() else None
-    if old != out:
-        OUT.write_text(out, encoding="utf-8-sig")
-        print(f"{OUT.relative_to(refs.REPO)}: rebuilt")
-    else:
-        print(f"{OUT.relative_to(refs.REPO)}: unchanged")
+    write(OUT, HEAD + text[:end].rstrip("\t") + RULE + "\t\t" + text[end:])
+    write(COUNCIL, COUNCIL_TEXT)
 
 
 if __name__ == "__main__":
