@@ -15,6 +15,7 @@ python3 tools/refresh.py
 | `3692202776_community_mod_framework` | `community_mod_framework` | 2.5.0 | 1.4.* |
 | `3736668860_construction_manager` | `romaimperator.construction_manager` | 2.2.12 | 1.3.* |
 | `3742578604_national_mission_trees` | `national_mission_trees` | 0.2 | 1.3.10 |
+| `3765240629_responsive_universalis_aggressive_ticks` | `responsive_universalis_aggressive_ticks` | 1.1.0 | 1.4.* |
 | `3784699906_calidad_de_vida_eu5` | `calidad_de_vida_eu5` | 1.2.1 | 1.4.* |
 | `3789103426_community_mod_framework_dev` | `community_mod_framework.dev` | 2.4.1 | 1.3.* |
 | `3789151637_romaimperator_construction_manager_dev` | `romaimperator.construction_manager.dev` | 2.3.0 | 1.3.* |
@@ -32,7 +33,6 @@ compiles from them.
 | `3633816300_ogasoptimized` | `ogasoptimized` | 20260627 | in_game, main_menu |
 | `3696243603_autonomous_diplomats` | `autonomous_diplomats` | 1.5.0 | in_game, main_menu |
 | `3721516330_integration_hotfix` | `Integration Hotfix` | 0.7 | in_game, loading_screen, main_menu |
-| `3765240629_responsive_universalis_aggressive_ticks` | `responsive_universalis_aggressive_ticks` | 1.1.0 | loading_screen |
 | `3779064076_rexbert_buymyart` | `rexbert.buymyart` | 1.0 | in_game |
 | `3780623638_nation_destinies_rus` | `nation_destinies_rus` | 1.3 | main_menu |
 
