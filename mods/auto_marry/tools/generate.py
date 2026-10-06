@@ -22,6 +22,11 @@ wrapper over the engine's `is_eligible_for_marriage`.  So the copy changes only:
   without diplomats or opinion; a toggle in the settings menu
   (`auto_marry_royal_off`, on by default); the author's royal reminders fire
   only while it is off;
+* marriage ages by class (his ask, 2026-10-06): every "age_in_years > 18"
+  that picks whom to marry in the player's events, triggers and effects
+  becomes `auto_marry_age_ok_<class> = yes` (`AGE_BLOCKS`), and a settings
+  event (`auto_marry_age.1`, from the settings menu) sets the age per class.
+  Unset, the age stays 19, the author's own;
 * the Russian file, which in the base is the English one under a Russian
   header.  It is written by hand in `main_menu/localization/russian/` and this
   tool never touches it.
@@ -34,6 +39,7 @@ Usage:  python3 mods/auto_marry/tools/generate.py
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -50,7 +56,7 @@ PARTS = ("in_game", "main_menu")
 OWN = Path("main_menu/localization/russian")  # hand written, kept
 OWN_TREE = MOD / "own"  # our own files, copied over the base's
 
-REVISION = "beta4"
+REVISION = "beta5"
 TEXT = (".txt", ".gui", ".yml")
 BOM = b"\xef\xbb\xbf"
 
@@ -80,6 +86,14 @@ ROYAL_OPTION = """\toption = { # toggle royal family auto marriages (auto_marry)
 \t}
 """
 
+AGE_OPTION = """\toption = { # marriage ages by class (auto_marry)
+\t\tname = noble_auto_marry.63.l
+\t\ttrigger_event_silently = {
+\t\t\tid = auto_marry_age.1
+\t\t}
+\t}
+"""
+
 MENU_CLOSE = "\toption = { # close menu\n\t\tname = noble_auto_marry.63.h\n"
 
 # file -> [(anchor, replacement, times the anchor must occur)]
@@ -97,9 +111,71 @@ PATCHES = {
          "\t\thas_variable = auto_marry_royal_off\n", 1),
     ],
     "in_game/events/nobles_auto_marry.txt": [
-        (MENU_CLOSE, ROYAL_OPTION + MENU_CLOSE, 1),
+        (MENU_CLOSE, ROYAL_OPTION + AGE_OPTION + MENU_CLOSE, 1),
     ],
 }
+
+
+# Who is old enough to marry: the author writes "age_in_years > 18" wherever a
+# character is picked for a marriage, and "> 16" only when counting relatives.
+# Each top-level block that picks belongs to one class; the AI's blocks stay.
+AGE_FILES = (
+    "in_game/events/nobles_auto_marry.txt",
+    "in_game/common/scripted_triggers/noble_auto_marry_triggers.txt",
+    "in_game/common/scripted_effects/noble_auto_marry_effects.txt",
+)
+AGE_BLOCKS = {
+    "noble_valid_for_auto_marry_unrestricted": "nobles",
+    "noble_valid_for_auto_marry_selective": "nobles",
+    "noble_valid_for_auto_marry_dynastic_preservation": "nobles",
+    "noble_marriage_immediate_effect": "nobles",
+    "noble_auto_marry.57": "royal",  # the author's royal reminder
+    "burgher_valid_for_auto_marry": "burghers",
+    "burgher_marriage_immediate_effect": "burghers",
+    "clergy_valid_for_auto_marry": "clergy",
+    "clergy_marriage_immediate_effect": "clergy",
+    "peasants_valid_for_auto_marry": "peasants",
+    "peasant_marriage_immediate_effect": "peasants",
+    "dhimmi_valid_for_auto_marry": "dhimmi",
+    "dhimmi_marriage_immediate_effect": "dhimmi",
+    "tribes_valid_for_auto_marry": "tribes",
+    "tribes_marriage_immediate_effect": "tribes",
+    "cossacks_valid_for_auto_marry": "cossacks",
+    "cossack_marriage_immediate_effect": "cossacks",
+}
+AGE_AI = {
+    "noble_valid_for_auto_marry_dynastic_preservation_for_ai",
+    "non_noble_valid_for_auto_marry_for_ai",
+    "noble_marriage_immediate_effect_for_ai",
+    "non_noble_marriage_immediate_effect_for_ai",
+}
+AGE_FROM = "age_in_years > 18"
+AGE_COUNT = 42  # replaced; a different number means the base changed
+
+
+def ages() -> int:
+    done = 0
+    for rel in AGE_FILES:
+        path = MOD / rel
+        text = path.read_text(encoding="utf-8-sig")
+        out, pos = [], 0
+        for m in re.finditer(r"(?ms)^([\w.]+) = \{.*?^\}", text):
+            name, body = m.group(1), m.group(0)
+            if AGE_FROM not in body:
+                continue
+            if name in AGE_AI:
+                continue
+            if name not in AGE_BLOCKS:
+                sys.exit(f"{rel}: {name} picks by age but is in neither AGE_BLOCKS nor AGE_AI")
+            out.append(text[pos:m.start()])
+            out.append(body.replace(AGE_FROM, f"auto_marry_age_ok_{AGE_BLOCKS[name]} = yes"))
+            done += body.count(AGE_FROM)
+            pos = m.end()
+        out.append(text[pos:])
+        path.write_text("".join(out), encoding="utf-8-sig")
+    if done != AGE_COUNT:
+        sys.exit(f"ages: replaced {done}, expected {AGE_COUNT}")
+    return done
 
 
 def copy() -> None:
@@ -168,7 +244,7 @@ def metadata() -> str:
 
 def main() -> None:
     copy()
-    edits = patch()
+    edits = patch() + ages()
     version = metadata()
     print(f"auto_marry {version}: copied {BASE.name}, {edits} patched anchors")
 
