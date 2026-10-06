@@ -12,6 +12,7 @@ python3 tools/refresh.py
 | --- | --- | --- | --- |
 | `3624485168_labelplace` | `labelplace` | 0.1 | 1.* |
 | `3668193813_trin_national_destinies` | `trin.national_destinies` | 1.4.0 | 1.4.* |
+| `3681629733_eu5_noblesautomarry_fix` | `eu5.noblesautomarry.fix` | 1.4.0 | 1.3.* |
 | `3692202776_community_mod_framework` | `community_mod_framework` | 2.5.0 | 1.4.* |
 | `3736668860_construction_manager` | `romaimperator.construction_manager` | 2.2.12 | 1.3.* |
 | `3742578604_national_mission_trees` | `national_mission_trees` | 0.2 | 1.3.10 |
