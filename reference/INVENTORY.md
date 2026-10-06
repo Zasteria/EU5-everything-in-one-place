@@ -21,6 +21,7 @@ python3 tools/refresh.py
 | `3789103426_community_mod_framework_dev` | `community_mod_framework.dev` | 2.4.1 | 1.3.* |
 | `3789151637_romaimperator_construction_manager_dev` | `romaimperator.construction_manager.dev` | 2.3.0 | 1.3.* |
 | `3812518640_glorp_ui_rio` | `glorp.ui.rio` | 04.10.26 | 1.4.* |
+| `3813746228_grackbox_formables_atlas` | `grackbox.formables_atlas` | 1.0.2 | 1.4.* |
 
 ## The rest of the playset
 

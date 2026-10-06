@@ -1,0 +1,1873 @@
+
+template CountryType_tooltip {
+	ContextualTooltipType = {
+		blockoverride "title_icon_texture" {
+			texture = "[GetCountryTypeIcon(Country.Self)]"
+		}
+
+		blockoverride "title_text" {
+			text = "[Country.GetCountryTypeNameWithNoTooltip]"
+		}
+
+		blockoverride "concept_link" {
+			text = [country_type|E]
+		}
+
+		blockoverride "title_button" {
+			mapmode_tooltip_button = {
+				datacontext = "[GetMapMode('army_based')]"
+			}
+			mapmode_tooltip_button = {
+				datacontext = "[GetMapMode('building_based')]"
+			}
+			mapmode_tooltip_button = {
+				datacontext = "[GetMapMode('pop_based')]"
+			}
+		}
+
+		blockoverride "tooltip_content" {
+			TooltipTextBlock = {
+				blockoverride "text" {
+					text =  "[Country.GetCountryTypeDesc]"
+				}
+			}
+		}
+	}
+}
+
+template CountryRank_tooltip {
+	ContextualTooltipType = {
+		blockoverride "title_icon_texture" {
+			texture = "[GetCountryRankIcon(CountryRank.Self)]"
+		}
+
+		blockoverride "title_text" {
+			text = "[CountryRank.GetNameWithNoTooltip]"
+		}
+
+		blockoverride "concept_link" {
+			text = [country_rank|E]
+		}
+		
+		blockoverride "tooltip_content" {
+			TooltipDebugTextBlock = {
+				blockoverride "text" {
+					debug_text = "[CountryRank.GetDebugText]"
+				}
+			}
+			TooltipTextBlock = {
+				textcontext =  "[CountryRank.GetEffectsTitle]"
+			}
+
+			TooltipScrolledStringPairList = {
+				blockoverride "block_scrollarea" { maximumsize = { -1 300 } }
+				blockoverride "block_title" { text = "country_rank_effects_list_title" }
+				textcontext = "[CountryRank.GetRankTooltip]"
+			}
+
+			TooltipTextBlock = {
+				textcontext = "[CountryRank.GetDescription]"
+			}
+
+			block "tooltip_content_extra" {}
+		}
+	}
+}
+
+template Hegemony_tooltip {
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				texture = "[GetHegemonyBorder(Hegemony.Self)]"
+				using = tooltip_title_icon_size
+            }
+		}
+		blockoverride "title_text" {
+				text = "[Hegemony.GetNameWithNoTooltip]"
+		}
+		blockoverride "concept_link" {
+			text = [hegemony|e]
+		}
+		
+		blockoverride "tooltip_content" {
+			TooltipStringPairList = {
+				blockoverride "block_title" {
+					text = "HEGEMONY_INFO_BASE"
+				}
+				textcontext = "[Hegemony.GetBaseInfo]"
+			}
+
+		
+
+			TooltipFlavorTextBlock = {
+				blockoverride "text" {
+					text = "[Hegemony.GetDesc]"
+				}
+			}
+		}
+	}
+}
+
+template ScriptedPeaceTreaty_tooltip {
+	ContextualTooltipType = {
+		blockoverride "title_text" {
+			text = "[ScriptedPeaceTreatyType.GetNameWithNoTooltip]"
+		}
+
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "gfx/interface/icons/peace_treaty/sue_for_peace.dds"
+			}
+		}
+
+		blockoverride "concept_link" {
+			text = [peace_treaty|E]
+		}
+	
+		blockoverride "tooltip_content" {
+			TooltipTextBlock = {
+				blockoverride "text" {
+					text = "[ScriptedPeaceTreatyType.GetTooltip]"
+				}
+			}
+		
+			TooltipFlavorTextBlock = {
+				blockoverride "text" {
+					text = "[ScriptedPeaceTreatyType.GetDesc]"
+				}
+			}
+		}
+	}
+}
+
+template EconomicalBaseTimelineTooltip {
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "[GetConceptTexture('economical_base')]"
+			}
+		}
+
+		blockoverride "title_text" {
+			text = "TIMELINE_ECONOMICALBASE_TOOLTIP_TITLE"
+		}
+
+		blockoverride "concept_link" {
+			text = [economical_base|E]
+		}
+
+		blockoverride "tooltip_content" {
+			TooltipDebugStringPairList = {
+				textcontext = "[TimelineCountry.GetTimelineDebugText]"
+			}
+
+			caesar_plotline = {
+				size = { 400 360 }
+
+				blockoverride "header" {
+					text = "TIMELINE_ECONOMICALBASE_TOOLTIP_HEADER"
+					background = {
+						using = bg_round_corners_up
+
+						modify_texture = {
+							using = bg_fade_vertical_up_mask_texture
+							blend_mode = alphamultiply
+							alpha = 0.2
+						}
+					}
+				}
+				blockoverride "line_color" {
+					color = { .9 .9 .9 1.0 }
+				}
+				blockoverride "line_plotpoints" {
+					plotpoints = "[TimelineCountry.GetHistoricalEconomicalBasePlotPoints]"
+				}
+				blockoverride "maxvalue" {
+					raw_text = "[TimelineCountry.GetHistoricalMaxEconomicalBase|2]@gold!"
+				}
+				blockoverride "minvalue" {
+					raw_text = "[TimelineCountry.GetHistoricalMinEconomicalBase|2]@gold!"
+				}
+				blockoverride "startdate" {
+					text = "[TimelineCountry.GetHistoricalEconomicalBaseStartYear]"
+				}
+				blockoverride "enddate" {
+					text = "[TimelineCountry.GetHistoricalEconomicalBaseEndYear]"
+				}
+				blockoverride "tooltip" {
+					marker = {
+						text_single = {
+							position = { 0 -20 }
+							autoresize = yes
+
+							margin_right = 4
+							margin_top = 4
+							align = left|nobaseline
+							using = bg_number_container_bckg
+							default_format = "#t"
+
+							text = "[TimelineCountry.GetHistoricalEconomicalBaseValueAt(PlotLine.GetSnappedIndexNearMouse)]"
+						}
+					}
+				}
+				blockoverride "multiitem" {}
+
+				blockoverride "extra_plotlines" {}
+				blockoverride "empty_state_visibility" {}
+				blockoverride "empty_state_text" {}
+			}
+		}
+	}
+}
+
+template EconomicalBaseTooltip {
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "[GetConceptTexture('economical_base')]"
+			}
+		}
+
+		blockoverride "title_text" {
+			datacontext = "[Country]"
+			text = "ECONOMICALBASE_TOOLTIP_TITLE"
+		}
+
+		blockoverride "concept_link" {
+			text = [economical_base|E]
+		}
+
+		blockoverride "tooltip_content" {
+			hbox = {
+				TooltipStringPairList = {
+					textcontext =  "[Country.GetEconomicalBaseInfo]"
+				}
+				widget = { size = { 16 16 } }
+
+				caesar_plotline = {
+					size = { 400 360 }
+
+					blockoverride "header" {
+						datacontext = "[Country]"
+						text = "ECONOMICALBASE_TOOLTIP_HEADER"
+						background = {
+							using = bg_round_corners_up
+
+							modify_texture = {
+								using = bg_fade_vertical_up_mask_texture
+								blend_mode = alphamultiply
+								alpha = 0.2
+							}
+						}
+					}
+					blockoverride "line_color" {
+						color = { .9 .9 .9 1.0 }
+					}
+					blockoverride "line_plotpoints" {
+						plotpoints = "[Country.GetHistoricalEconomicalBase]"
+					}
+					blockoverride "maxvalue" {
+						raw_text = "[Country.GetHistoricalMaxEconomicalBase|2]@gold!"
+					}
+					blockoverride "minvalue" {
+						raw_text = "[Country.GetHistoricalMinEconomicalBase|2]@gold!"
+					}
+					blockoverride "startdate" {
+						text = "[Country.GetStartDataDate]"
+					}
+					blockoverride "enddate" {
+						text = "[Country.GetEndDataDate]"
+					}
+					blockoverride "tooltip" {
+						marker = {
+							text_single = {
+								position = { 0 -20 }
+								autoresize = yes
+
+								margin_right = 4
+								margin_top = 4
+								align = left|nobaseline
+								#using = Font_Size_Small
+								using = bg_number_container_bckg
+								default_format = "#t"
+
+								text = "[Country.GetYearlyDataPointValueEconomicalBase(PlotLine.GetSnappedIndexNearMouse)]"
+							}
+						}
+					}
+					blockoverride "multiitem" {}
+
+					blockoverride "extra_plotlines" {}
+					blockoverride "empty_state_visibility" {}
+					blockoverride "empty_state_text" {}
+				}
+			}
+		}
+	}
+}
+
+
+
+
+template AverageControlTooltip {
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "[GetConceptTexture('control')]"
+			}
+		}
+
+		blockoverride "title_text" {
+			text = "AVERAGE_CONTROL_TT_TITLE"
+		}
+
+		blockoverride "title_button" {
+			mapmode_tooltip_button = {
+				datacontext = "[GetMapMode('control')]"
+			}
+		}
+
+		blockoverride "concept_link" {
+			text = [control|E]
+		}
+
+		blockoverride "tooltip_content" {
+			TooltipStringPairList = {
+				blockoverride "block_title" {
+					text = "AVERAGE_CONTROL_TT_TABLE"
+				}
+				textcontext = "[Country.GetAverageControlInfo]"
+			}
+		}
+	}
+}
+
+template TotalWealthTooltip {
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "[GetConceptTexture('wealth')]"
+			}
+		}
+
+		blockoverride "title_text" {
+			datacontext = "[Country]"
+			text = "TOTAL_WEALTH_TOOLTIP_TITLE"
+		}
+
+		blockoverride "title_button" {
+			mapmode_tooltip_button = {
+				datacontext = "[GetMapMode('potential_tax_base')]"
+			}
+		}
+
+		blockoverride "concept_link" {
+			text = [wealth|E]
+		}
+
+		blockoverride "tooltip_content" {
+			TooltipBlockList = {
+				ontextcontextchanged = "[SetBlockListFromTextContext(PdxGuiWidget.AccessSelf)]"
+				textcontext = "TOTAL_WEALTH_TOOLTIP_TEXT"
+			}
+
+			hbox = {
+				spacing = 5
+				vbox = { 
+					TooltipScrolledStringPairList = {
+						blockoverride "block_title" {
+							text = "WEALTH_SOURCES"
+						}
+						blockoverride "block_scrollarea" { maximumsize = { -1 300 } }
+	
+						textcontext =  "[Country.GetWealthLocationInfo]"
+					}
+
+					TooltipScrolledStringPairList = {
+						blockoverride "block_title" {
+							text = "WEALTH_GOODS_HEADER"
+						}
+						blockoverride "block_scrollarea" { maximumsize = { -1 300 } }
+	
+						textcontext =  "[Country.GetWealthGoodsInfo]"
+					}
+				}
+
+				vbox = { 
+					TooltipScrolledStringPairList = {
+						blockoverride "block_title" {
+							text = "TAX_BASE_SOURCES"
+						}
+						blockoverride "block_scrollarea" { maximumsize = { -1 300 } }
+	
+						textcontext =  "[Country.GetTaxBaseLocationInfo]"
+					}
+					TooltipScrolledStringPairList = {
+						blockoverride "block_title" {
+							text = "TAX_BASE_GOODS_HEADER"
+						}
+						blockoverride "block_scrollarea" { maximumsize = { -1 300 } }
+						textcontext =  "[Country.GetTaxBaseGoodsInfo]"
+					}
+				}
+			}
+		}
+	}
+}
+
+template TaxBaseWealthRatioTooltip {
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "[GetConceptTexture('tax_base')]"
+			}
+		}
+
+		blockoverride "title_text" {
+			datacontext = "[Country]"
+			text = "TAX_BASE_WEALTH_RATIO_TOOLTIP_TITLE"
+		}
+
+		blockoverride "title_button" {
+			mapmode_tooltip_button = {
+				datacontext = "[GetMapMode('control')]"
+			}
+		}
+
+		blockoverride "concept_link" {
+			text = [tax_base_ratio|E]
+		}
+
+		blockoverride "tooltip_content" {
+			TooltipTextBlock = {
+				blockoverride "text" {
+					text = "TAX_BASE_WEALTH_RATIO_TOOLTIP_TEXT"
+				}
+			}
+
+			TooltipScrolledStringPairList = {
+				blockoverride "block_title" {
+					text = "TAX_BASE_WEALTH_RATIO_LOSSES_BY_AMOUNT"
+				}
+				blockoverride "block_scrollarea" { maximumsize = { -1 300 } }
+
+				textcontext = "[Country.GetTaxBaseLostByAmountInfo]"
+			}
+
+			TooltipScrolledStringPairList = {
+				blockoverride "block_title" {
+					text = "TAX_BASE_WEALTH_RATIO_LOSSES_BY_RATIO"
+				}
+				blockoverride "block_scrollarea" { maximumsize = { -1 300 } }
+
+				textcontext = "[Country.GetTaxBaseLostByRatioInfo]"
+			}
+		}
+	}
+}
+
+template TaxBaseTimelineTooltip {
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "[GetConceptTexture('tax_base')]"
+			}
+		}
+
+		blockoverride "title_text" {
+			text = "TIMELINE_TAXBASE_TOOLTIP_TITLE"
+		}
+
+		blockoverride "concept_link" {
+			text = [tax_base|E]
+		}
+
+		blockoverride "tooltip_content" {
+			TooltipDebugStringPairList = {
+				textcontext = "[TimelineCountry.GetTimelineDebugText]"
+			}
+
+			caesar_plotline = {
+				size = { 400 360 }
+
+				blockoverride "header" {
+					text = "TIMELINE_TAXBASE_TOOLTIP_HEADER"
+					background = {
+						using = bg_round_corners_up
+
+						modify_texture = {
+							using = bg_fade_vertical_up_mask_texture
+							blend_mode = alphamultiply
+							alpha = 0.2
+						}
+					}
+				}
+				blockoverride "line_color" {
+					color = { .9 .9 .9 1.0 }
+				}
+				blockoverride "line_plotpoints" {
+					plotpoints = "[TimelineCountry.GetHistoricalTaxBasePlotPoints]"
+				}
+				blockoverride "maxvalue" {
+					raw_text = "[TimelineCountry.GetHistoricalMaxTaxBase|2]@tax_base!"
+				}
+				blockoverride "minvalue" {
+					raw_text = "[TimelineCountry.GetHistoricalMinTaxBase|2]@tax_base!"
+				}
+				blockoverride "startdate" {
+					text = "[TimelineCountry.GetHistoricalTaxBaseStartYear]"
+				}
+				blockoverride "enddate" {
+					text = "[TimelineCountry.GetHistoricalTaxBaseEndYear]"
+				}
+				blockoverride "tooltip" {
+					marker = {
+						text_single = {
+							position = { 0 -20 }
+							autoresize = yes
+
+							margin_right = 4
+							margin_top = 4
+							align = left|nobaseline
+							using = bg_number_container_bckg
+							default_format = "#t"
+
+							text = "[TimelineCountry.GetHistoricalTaxBaseValueAt(PlotLine.GetSnappedIndexNearMouse)]"
+						}
+					}
+				}
+				blockoverride "multiitem" {}
+
+				blockoverride "extra_plotlines" {}
+				blockoverride "empty_state_visibility" {}
+				blockoverride "empty_state_text" {}
+			}
+		}
+	}
+}
+
+template TaxBaseTooltip {
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "[GetConceptTexture('tax_base')]"
+			}
+		}
+
+		blockoverride "title_text" {
+			datacontext = "[Country]"
+			text = "TAXBASE_TOOLTIP_TITLE"
+		}
+
+		blockoverride "title_button" {
+			mapmode_tooltip_button = {
+				datacontext = "[GetMapMode('tax_base')]"
+			}
+			mapmode_tooltip_button = {
+				datacontext = "[GetMapMode('control')]"
+			}
+		}
+
+		blockoverride "concept_link" {
+			text = [tax_base|E]
+		}
+
+		blockoverride "tooltip_content" {
+			hbox = {
+				vbox = {
+					TooltipScrolledStringPairList = {
+						blockoverride "block_title" {
+							text = "TAX_BASE_SOURCES"
+						}
+						blockoverride "block_scrollarea" { maximumsize = { -1 300 } }
+						textcontext =  "[Country.GetTaxBaseLocationInfo]"
+					}
+					TooltipScrolledStringPairList = {
+						blockoverride "block_title" {
+							text = "TAX_BASE_GOODS_HEADER"
+						}
+						blockoverride "block_scrollarea" { maximumsize = { -1 300 } }
+						textcontext =  "[Country.GetTaxBaseGoodsInfo]"
+					}
+				}
+			
+				widget = { size = { 16 16 } }
+
+				caesar_plotline = {
+					size = { 400 360 }
+					
+					blockoverride "header" {
+						datacontext = "[Country]"
+						text = "TAXBASE_TOOLTIP_HEADER"
+						background = {
+							using = bg_round_corners_up
+
+							modify_texture = {
+								using = bg_fade_vertical_up_mask_texture
+								blend_mode = alphamultiply
+								alpha = 0.2
+							}
+						}
+					}
+					blockoverride "line_color" {
+						color = { .9 .9 .9 1.0 }
+					}
+					blockoverride "line_plotpoints" {
+						plotpoints = "[Country.GetHistoricalTaxBase]"
+					}
+					blockoverride "maxvalue" {
+						raw_text = "[Country.GetHistoricalMaxTaxBase|2]@tax_base!"
+					}
+					blockoverride "minvalue" {
+						raw_text = "[Country.GetHistoricalMinTaxBase|2]@tax_base!"
+					}
+					blockoverride "startdate" {
+						text = "[Country.GetStartDataDate]"
+					}
+					blockoverride "enddate" {
+						text = "[Country.GetEndDataDate]"
+					}
+					blockoverride "tooltip" {
+						marker = {
+							text_single = {
+								position = { 0 -20 }
+								autoresize = yes				
+								
+								margin_right = 4
+								margin_top = 4
+								align = left|nobaseline
+								#using = Font_Size_Small
+								using = bg_number_container_bckg
+								default_format = "#t"
+
+								text = "[Country.GetYearlyDataPointValue(PlotLine.GetSnappedIndexNearMouse)]"
+							}					
+						}				
+					}
+					blockoverride "multiitem" {}
+
+					blockoverride "extra_plotlines" {}
+					blockoverride "empty_state_visibility" {}
+					blockoverride "empty_state_text" {}
+				}
+			}
+		}
+	}
+}
+
+template CountryTooltip {
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			country_flag_mid = {
+				blockoverride "tooltip" {}
+			}
+		}
+
+		blockoverride "title_text" {
+			text = "[Country.GetLongNameWithNoTooltip]"
+		}
+
+		blockoverride "concept_link" {
+			text = "[country|e]"
+		}
+
+		blockoverride "tooltip_content" {
+            TooltipDebugStringPairList = {
+				textcontext = "[Country.GetDebugText]"
+			}
+
+			TooltipDebugTextBlock = {
+				visible = "[And(IsBuildDebug, Country.HasActiveAreaPreferences)]"
+				blockoverride "text" {
+					debug_text = "[Country.GetActiveAreaPreferencesInfo]"
+				}
+			}
+
+			TooltipTextBlock = {
+				visible = "[Not(StringIsEmpty(Country.GetIsHumanCountryTooltip))]"
+				textcontext = "[Country.GetIsHumanCountryTooltip]"
+			}
+
+			# relative power
+			TooltipContentSection = {
+				using = CountryTooltip_RelativePower
+			}
+			
+			TooltipStatsBar = {
+				blockoverride "items" {
+					TooltipStatBarItem = {
+						blockoverride "item_content" {
+							icon = {
+								size = { 31 31 }
+								texture = "[GetGovernmentTypeIcon(Country.GetGovernment.GetGovernmentType)]"
+							}
+						}
+
+						datacontext = "[Country.GetGovernment.GetGovernmentType]"
+						tooltipwidget = {
+							using = GovernmentType_tooltip
+						}
+					}
+
+					TooltipStatBarItem = {
+						blockoverride "item_content" {
+							icon = {
+								size = { 31 31 }
+								texture = "[GetCountryTypeIcon(Country.Self)]"
+							}
+						}
+
+						tooltipwidget = {
+							using = CountryType_tooltip
+						}
+					}
+
+					TooltipStatBarItem = {
+						blockoverride "item_content" {
+							icon = {
+								size = { 31 31 }
+								texture = "[GetCountryRankIcon(Country.GetRank)]"
+							}
+						}
+
+						datacontext = "[Country.GetRank]"
+						tooltipwidget = {
+							using = CountryRank_tooltip
+						}
+					}
+				}	
+			}
+
+			TooltipContentSection = {
+				using = CountryTooltip_DiplomacyStatBars
+			}
+
+			TooltipRowList = {
+				visible = "[And(Country.GetDiplomacy.IsDisloyalSubject, Country.GetDiplomacy.IsSubject)]"
+				lowpriotextcontext = "SubjectTypeDetail_DESC_NOT"
+				tooltipwidget = {
+					using = SubjectLoyalty_tooltip
+				}
+			}
+			TooltipRowList = {
+				visible = "[And(Not(Country.GetDiplomacy.IsDisloyalSubject), Country.GetDiplomacy.IsSubject)]"
+				lowpriotextcontext = "SubjectTypeDetail_DESC"
+				tooltipwidget = {
+					using = SubjectLoyalty_tooltip
+				}
+			}
+
+			# ruler
+			TooltipStringPairList = {
+				textcontext = "[Country.GetGovernment.GetRulerRegentHeirInfo]"
+			}
+
+			# table of country stats
+			TooltipListBase = {
+				ignoreinvisible = yes
+				TooltipManualTableField = { # Capital - Locations
+					hbox = {
+						spacing = 5
+
+						widget = {
+							size = { 24 24 }
+							tooltip = "[capital|e]"
+							tagtooltip_enabled = yes
+							icon = {
+								size = { 100% 100% }
+								using = icon_country_capital
+							}
+						}
+
+						text_single = {
+							autoresize = yes
+							align = right
+							raw_text = "[Country.GetCapital.GetName]"
+						}
+					}
+
+					expand = {}
+
+					hbox = {
+						tooltipwidget = {
+							using = towns_or_cities_tooltip
+						}
+						spacing = 5
+
+						text_single = {
+							autoresize = yes
+							align = right
+							text = "[Country.GetOwnedLocationCount|L]"
+						}
+						icon = {
+							size = { 24 24 }
+							texture = "gfx/interface/icons/map_subdivisons/location.dds"
+						}
+					}
+				}
+
+				TooltipManualTableField = { #POPULATION - Tax base
+					hbox = {
+						spacing = 5
+
+						widget = {
+							size = { 24 24 }
+							icon = {
+								size = { 100% 100% }
+								texture = "gfx/interface/icons/location_icons/population.dds"
+							}
+							tooltip = "[population|e]"
+							tagtooltip_enabled = yes
+						}
+
+						text_single = {
+							autoresize = yes
+							align = right
+							raw_text = "[Country.GetTotalPopulation]"
+						}
+					}
+
+					expand = {}
+
+					hbox = {
+						spacing = 5
+						text_single = {
+							visible = "[HasTaxBaseIntelOn(Country.Self)]"
+							autoresize = yes
+							align = right
+							raw_text = "[Country.GetTotalTaxBase]"
+						}
+
+						text_single = {
+							visible = "[Not(HasTaxBaseIntelOn(Country.Self))]"
+							tagtooltip_enabled = yes
+							text = "INTEL_FOG_TAX_BASE_UNKNOWN"
+						}
+
+						widget = {
+							size = { 24 24 }
+							icon = {
+								size = { 100% 100% }
+								texture = "gfx/interface/icons/location_icons/tax_base.dds"
+							}
+							tooltip = "[tax_base|e]"
+							tagtooltip_enabled = yes
+						}
+					}
+				}
+
+				# religion/population
+				TooltipManualTableField = { #RELIGION - MILITARY?
+					hbox = {
+						spacing = 5
+						datacontext = "[Country.GetReligion]"
+						tooltipwidget = { using = religion_tooltip	}
+
+						widget = {
+							size = { 24 24 }
+							icon = {
+								size = { 100% 100% }
+								texture = "[GetReligionIcon(Country.GetReligion.Self)]"
+							}
+							tooltip = "[primary_religion|e]"
+							tagtooltip_enabled = yes
+						}
+
+						text_single = {
+							autoresize = yes
+							align = right
+							text = "[Country.GetReligion.GetName]"
+						}
+					}
+
+					expand = {}
+
+					hbox = {
+						tooltipwidget = { using = ArmyOverview_tooltip }
+						spacing = 5
+						text_single = {
+							visible = "[HasArmySizeIntelOn(Country.Self)]"
+							autoresize = yes
+							align = right
+							raw_text = "[Country.GetRaisedAndPotentialLevyStrength] @levy! / [Country.GetRegularArmySize|0L] @regular!"
+						}
+						text_single = {
+							visible = "[Not(HasArmySizeIntelOn(Country.Self))]"
+							tagtooltip_enabled = yes
+							text = "INTEL_FOG_ARMY_SIZE_UNKNOWN"
+						}
+
+						icon = {
+							size = { 24 24 }
+							texture = "gfx/interface/icons/flat_icons/declare_war/army_size.dds"
+						}
+					}
+				}
+
+				TooltipManualTableField = { #CULTURE- mil
+					hbox = {
+						spacing = 5
+
+						widget = {
+							size = { 24 24 }
+							icon = {
+								size = { 100% 100% }
+								texture = "gfx/interface/icons/culture/primary_culture.dds"
+							}
+							tooltip = "[primary_culture|e]"
+							tagtooltip_enabled = yes
+						}
+						
+						text_single = {
+							autoresize = yes
+							align = right
+							text = "[Country.GetCulture.GetName]"
+							datacontext = "[Country.GetCulture]"
+							tooltipwidget = {
+								using = culture_tooltip
+							}
+						}
+					}
+
+					expand = {}
+
+					hbox = {
+						tooltipwidget = { using = NavyOverview_tooltip }
+						spacing = 5
+						text_single = {
+							visible = "[HasNavyStrengthIntelOn(Country.Self)]"
+							autoresize = yes
+							align = right
+							text = "[Country.GetTotalNavyStrengthAndPotentialLevies|0L]"
+						}
+						text_single = {
+							visible = "[Not(HasNavyStrengthIntelOn(Country.Self))]"
+							tagtooltip_enabled = yes
+							text = "INTEL_FOG_NAVY_STRENGTH_UNKNOWN"
+						}
+
+						icon = {
+							size = { 24 24 }
+							texture = "gfx/interface/icons/flat_icons/declare_war/navy.dds"
+						}
+					}
+				}
+
+				TooltipManualTableField = { #Subjects
+					visible = "[Country.GetDiplomacy.HasSubjects]"
+					hbox = {
+						spacing = 5
+
+						widget = {
+							size = { 24 24 }
+							icon = {
+								size = { 100% 100% }
+								texture = "gfx/interface/icons/treaty_type/become_subject.dds"
+							}
+							tooltip = "[subjects|e]"
+							tagtooltip_enabled = yes
+						}
+						
+						text_single = {
+							autoresize = yes
+							align = right
+							text = "[subjects|e]"							
+						}
+					}
+
+					expand = {}
+
+					hbox = {
+						tooltipwidget = {
+							using = country_tooltip_subjects
+						}
+						spacing = 5
+						text_single = {
+							autoresize = yes
+							align = right
+							text = "[GetDataModelSize(Country.GetDiplomacy.GetSubjects)|0L]"
+						}
+
+						icon = {
+							size = { 24 24 }
+							texture = "gfx/interface/icons/treaty_type/become_subject.dds"
+						}
+					}
+				}
+
+				TooltipManualTableField = { # Personality and Disposition
+					hbox = {
+						spacing = 5
+						datacontext = "[Country.GetAiPersonality]"
+						tooltipwidget = { using = AiPersonality_tooltip }
+	
+						icon = {
+							size = { 20 20 }
+							texture = "[GetAiPersonalityIcon(AiPersonality.Self)]"
+						}
+						text_single = {
+							autoresize = yes
+							text = "[AiPersonality.GetName|L]"
+						}
+					}
+	
+					expand = {}
+	
+					hbox = {
+						tooltipwidget = { using = AiDisposition_tooltip }
+						visible = "[And3(IsPlayerValid, Not(Country.HasHumanController), Not(Country.IsLocalPlayer))]"
+						spacing = 5
+
+						text_single = {
+							autoresize = yes
+							text = "[Country.GetDispositionToPlayer|L]"
+						}
+
+						icon = {
+							size = { 20 20 }
+							texture = "[GetAiDispositionIcon(Country.Self)]"
+						}
+					}
+
+					hbox = {
+						tooltipwidget = { using = HumanPlayerDisposition_tooltip }
+						visible = "[Country.HasHumanController]"
+						spacing = 5
+
+						icon = {
+							size = { 20 20 }
+							texture = "[GetAiDispositionIcon(Country.Self)]"
+						}
+						icon = {
+							size = { 20 20 }
+							texture = "gfx/interface/icons/outliner/human_player.dds"
+						}
+					}
+				}
+			}
+
+			TooltipTextBlock = {
+				visible = "[And(Not(Country.IsLocalPlayer), Country.GetDiplomacy.IsAtWar)]"
+				blockoverride "text" {
+					text = "COUNTRY_TOOLTIP_IS_AT_WAR"
+				}
+				tooltip_enabled = "[DataModelHasItems(Country.GetDiplomacy.GetCurrentWars)]"
+				tooltipwidget = {
+					using = War_list_tooltip
+					blockoverride "wars_list_datamodel" {
+						datamodel = "[Country.GetDiplomacy.GetCurrentWars]"
+					}
+				}
+			}
+
+			TooltipRowList = {
+				block "general_text_area" {
+					visible = "[And(Not(Country.IsLocalPlayer), Not(StringIsEmpty(Country.GetPlayerDiplomacyInfo)))]"
+					textcontext = "[SelectLocalization(Country.Exists, Country.GetPlayerDiplomacyInfo, Localize('COUNTRY_TOOLTIP_DOES_NOT_EXIST'))]"
+				}
+			}
+		}
+	}
+}
+
+template ReleaseCountryTooltip {
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			country_flag_mid = {
+				blockoverride "tooltip" {}
+			}
+		}
+
+		blockoverride "title_text" {
+			text = "[Country.GetLongNameWithNoTooltip]"
+		}
+
+		blockoverride "concept_link" {
+			text = "[country|e]"
+		}
+
+		blockoverride "tooltip_content" {
+			TooltipDebugTextBlock = {
+				blockoverride "text" {
+					debug_text = "[Country.GetDebugText]"
+				}
+			}
+
+			TooltipRowList = {
+				block "general_text_area" {
+					textcontext = "[Country.GetCountryReleaseInfo]"
+				}
+			}
+		}
+	}
+}
+
+template towns_or_cities_tooltip {
+	ContextualTooltipType = {
+
+		blockoverride "title_text" {
+			text = "[Country.GetNameWithNoTooltip]"
+		}
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "gfx/interface/icons/map_subdivisons/location.dds"
+			}
+		}
+
+		blockoverride "concept_link" {
+			text = [locations|E]
+		}
+		
+		blockoverride "tooltip_content" {
+			TooltipTextBlock = {
+				blockoverride "text" {
+					text = "COUNTRY_TOOLTIP_LOCATIONS_NUMBER"
+				}
+			}
+			TooltipStringPairList = {
+				textcontext = "[Country.GetOwnedLocationsInfo]"
+			}
+		}
+	}
+}
+
+template CountryInteraction_tooltip {
+	ContextualTooltipType = {
+		blockoverride "title_text" {
+			text = "[CountryInteraction.GetNameWithNoTooltip]"
+		}
+		
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "gfx/interface/icons/flat_icons/tabicons/diplomacy.dds"
+			}
+		}
+
+		blockoverride "concept_link" {
+			text = [country_interaction|E]
+		}
+		blockoverride "tooltip_content" {
+			TooltipDebugTextBlock = {
+				blockoverride "text" {
+					debug_text = "[CountryInteraction.GetDebugText]"
+				}
+			}
+			TooltipScrolledTextBlock = {				 
+                blockoverride "block_scrollarea" { maximumsize = { -1 600 }}
+				blockoverride "text" {
+					text = "[CountryInteraction.GetTooltip(Player.Self,Player.Self)]"
+				}
+			}
+		}
+	}
+}
+
+template ScriptedRelationType_tooltip {
+	ContextualTooltipType = {
+		blockoverride "title_text" {
+			text = "[ScriptedRelationType.GetNameWithNoTooltip]"
+		}
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "gfx/interface/icons/flat_icons/tabicons/diplomacy.dds"
+			}
+		}
+
+		blockoverride "concept_link" {
+			text = [relation_type|E]
+		}
+		
+		blockoverride "tooltip_content" {
+			TooltipTextBlock = {
+				blockoverride "text" {
+					text = "[ScriptedRelationType.GetTooltip(Player.Self)]"
+				}
+			}
+		}
+	}
+}
+
+template ScriptedRelationTypeWith_tooltip {
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			country_flag_small = {
+				datacontext = "[ScriptedRelationTypeWithContextWrap.GetFirstCountry]"
+			}
+		}
+		
+		blockoverride "title_button" {
+			country_flag_small = {
+				datacontext = "[ScriptedRelationTypeWithContextWrap.GetSecondCountry]"
+			}
+		}
+	
+		blockoverride "title_text" {
+			text = "[ScriptedRelationTypeWithContextWrap.GetScriptedRelationType.GetNameWithNoTooltip]"
+		}
+
+		blockoverride "concept_link" {
+			text = [relation_type|E]
+		}
+		
+		blockoverride "tooltip_content" {
+			TooltipTextBlock = {
+				blockoverride "text" {
+					text = "[ScriptedRelationTypeWithContextWrap.GetTooltip]"
+				}
+			}
+			TooltipFlavorTextBlock = {
+				visible = "[Not(StringIsEmpty( ScriptedRelationTypeWithContextWrap.GetScriptedRelationType.GetDesc ))]"
+				blockoverride "text" {
+					text = "[ScriptedRelationTypeWithContextWrap.GetScriptedRelationType.GetDesc]"
+				}
+			}
+		}
+	}
+}
+
+template formablecountry_info {
+	TooltipTextBlock = {
+		blockoverride "text" {
+			text = "[FormableCountry.GetRank]"
+		}
+	}
+	# Formables Atlas
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('EUR_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_EUR_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('ROM_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_ROM_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('ROM_BYZ_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_ROM_BYZ_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('USA_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_USA_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('BYZ_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_BYZ_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('BYZ_trebizond_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_BYZ_trebizond_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('CTH_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_CTH_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('CHI_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_CHI_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('GER_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_GER_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('HIN_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_HIN_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('HRE_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_HRE_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('ITA_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_ITA_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('JAP_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_JAP_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('MGE_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_MGE_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('MUG_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_MUG_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('NSE_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_NSE_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('TUR_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_TUR_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('IRA_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_IRA_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('RUS_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_RUS_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('RUM_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_RUM_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('SPA_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_SPA_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('ILK_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_ILK_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('KOA_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_KOA_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('ADU_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_ADU_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('AIA_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_AIA_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('ASK_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_ASK_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('AZT_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_AZT_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('BAN_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_BAN_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('BNG_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_BNG_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('BNO_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_BNO_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('CAN_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_CAN_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('CEL_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_CEL_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('LAT_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_LAT_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('LAT_REDUCED_REQUIREMENTS_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_LAT_REDUCED_REQUIREMENTS_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('DEC_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_DEC_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('DLH_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_DLH_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('EGY_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_EGY_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('ETH_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_ETH_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('FRA_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_FRA_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('GBR_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_GBR_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('GUJ_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_GUJ_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('IRO_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_IRO_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('HUN_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_HUN_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('INC_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_INC_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('KOJ_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_KOJ_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('KON_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_KON_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('KRS_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_KRS_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('LOT_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_LOT_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('MSA_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_MSA_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('MCH_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_MCH_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('MHR_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_MHR_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('MTM_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_MTM_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('MEX_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_MEX_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('MGO_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_MGO_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('NUS_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_NUS_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('OCC_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_OCC_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('PGR_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_PGR_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('PLC_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_PLC_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('PON_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_PON_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('PUN_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_PUN_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('RJP_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_RJP_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('RMN_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_RMN_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('UKR_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_UKR_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('RYU_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_RYU_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('SCA_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_SCA_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('SHA_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_SHA_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('CSH_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_CSH_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('SIA_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_SIA_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('SLO_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_SLO_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('SKO_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_SKO_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('TIM_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_TIM_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('TWS_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_TWS_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('YMT_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_YMT_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('YUA_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_YUA_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('ALB_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_ALB_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('ALG_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_ALG_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('ARA_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_ARA_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('ARM_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_ARM_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('HAB_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_HAB_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('AYU_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_AYU_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('BAH_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_BAH_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('LVA_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_LVA_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('BAV_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_BAV_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('BEL_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_BEL_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('BOH_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_BOH_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('BGP_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_BGP_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('CAS_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_CAS_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('CAT_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_CAT_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('CRO_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_CRO_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('DAH_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_DAH_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('DRD_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_DRD_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('denmark_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_denmark_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('ENG_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_ENG_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('FKN_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_FKN_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('GLC_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_GLC_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('GLD_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_GLD_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('GEO_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_GEO_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('GRE_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_GRE_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('HAN_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_HAN_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('HAU_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_HAU_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('SHL_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_SHL_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('MIR_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_MIR_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('IRE_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_IRE_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('IRE_high_kingship_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_IRE_high_kingship_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('IRE_lordship_of_ireland_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_IRE_lordship_of_ireland_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('LON_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_LON_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('MLC_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_MLC_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('MAL_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_MAL_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('MLL_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_MLL_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('MAY_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_MAY_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('MOR_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_MOR_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('NAV_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_NAV_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('NPL_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_NPL_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('NED_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_NED_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('NTR_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_NTR_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('NUB_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_NUB_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('HEN_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_HEN_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('POL_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_POL_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('POM_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_POM_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('POR_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_POR_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('PRU_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_PRU_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('PUE_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_PUE_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('SAR_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_SAR_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('SAR_piedmont_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_SAR_piedmont_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('SAX_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_SAX_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('SCO_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_SCO_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('SER_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_SER_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('SIL_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_SIL_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('SOI_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_SOI_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('SWA_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_SWA_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('sweden_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_sweden_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('SWI_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_SWI_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('TIB_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_TIB_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('TRA_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_TRA_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('TRG_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_TRG_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('TUN_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_TUN_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('VAL_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_VAL_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('WLS_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_WLS_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('WES_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_WES_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('AIR_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_AIR_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('BEJ_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_BEJ_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('BUL_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_BUL_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('CIR_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_CIR_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('CNN_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_CNN_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('DAL_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_DAL_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('FIN_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_FIN_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('KRY_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_KRY_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('ICE_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_ICE_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('KAZ_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_KAZ_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('LIV_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_LIV_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('MAZ_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_MAZ_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('MTH_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_MTH_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('MKL_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_MKL_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('MOL_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_MOL_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('MSI_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_MSI_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('MCM_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_MCM_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('NSA_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_NSA_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('NOL_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_NOL_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('THE_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_THE_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('THE_REDUCED_REQUIREMENTS_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_THE_REDUCED_REQUIREMENTS_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('TUS_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_TUS_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledTextBlock = { visible = "[EqualTo_string(FormableCountry.GetNameWithNoTooltip, Localize('ULS_f'))]" blockoverride "tooltip_minimumsize" { minimumsize = { 820 -1 } } blockoverride "block_scrollarea" { maximumsize = { -1 420 } } blockoverride "text" { text = "FMX_FC_ULS_f" max_width = 820 fontsize = 15 } }
+	TooltipScrolledRowList = {
+		blockoverride "block_scrollarea" { maximumsize = { -1 250 } }
+		visible = "[FormableCountry.HasPossibleAdvances]"
+		blockoverride "block_title" {
+			text = "POSSIBLE_ADVANCES_FOR_FORMABLE"
+		}
+		textcontext = "[FormableCountry.GetPossibleAdvances]"
+	}
+	
+	TooltipScrolledRowList = {
+		blockoverride "block_scrollarea" { maximumsize = { -1 250 } }
+		visible = "[Not(StringIsEmpty( FormableCountry.GetEffects ))]"
+		blockoverride "block_title" {
+			text = "WHEN_FORMED"
+		}
+		textcontext = "[FormableCountry.GetEffects]"
+	}
+	TooltipFlavorTextBlock = {
+		visible = "[Not(StringIsEmpty( FormableCountry.GetFlavorText ))]"
+		blockoverride "text" {
+			text = "[FormableCountry.GetFlavorText]"
+		}
+	}
+}
+
+template FormableCountry_tooltip {
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			country_flag = {
+				size = { 60 40 }
+				
+				blockoverride "tooltip" {
+					tooltip_enabled = no
+					tagtooltip_enabled = no
+				}
+				
+				blockoverride "contextmenu" {
+					contextmenu_enabled = no
+				}
+				
+				blockoverride "flag" {
+					datacontext = "[FormableCountry.GetOrCreateCoatOfArms(Player.Self)]"
+					texture = "[CoatOfArmsWrapper.GetTexture('(int32)144','(int32)96')]"
+					frame = "[CoatOfArmsWrapper.GetFrame('(int32)144','(int32)96')]"
+					framesize = "[CoatOfArmsWrapper.GetFrameSizeOrFallback('(int32)144','(int32)96','(float)0.5')]"
+					texture_density = 2
+				}
+
+				blockoverride "click" {}
+				blockoverride "double_click" {}
+				blockoverride "hover" {}
+			}
+		}
+		blockoverride "title_text" {
+			text = "[FormableCountry.GetNameWithNoTooltip|U]"
+		}
+
+		blockoverride "concept_link" {
+			text = [formable_country|E]
+		}
+		blockoverride "tooltip_content" {
+			TooltipDebugTextBlock = {
+				blockoverride "text" {
+					debug_text = "[FormableCountry.GetDebugText]"
+				}
+			}
+
+			TooltipContentSection = {
+				using = formablecountry_info
+			}
+		}
+	}
+}
+
+template societal_value_in_country_tooltip {
+	ContextualTooltipType = {
+		blockoverride "title_text" {
+			text = "SOCIETAL_VALUES_IN"
+		}
+
+		blockoverride "title_icon" {
+			icon = {
+				texture = "gfx/interface/icons/cabinet_actions/change_societal_values.dds"
+				using = tooltip_concept_title_icon_size
+			}
+		}
+
+		blockoverride "concept_link" {
+			text = [societal_values|E]
+		}
+
+		blockoverride "tooltip_content" {
+			TooltipScrolledContentSection = {
+				blockoverride "block_scrollarea" {
+					maximumsize = { -1 1000 }
+				}
+
+				blockoverride "section_content" {
+					vbox = {
+						layoutpolicy_horizontal = expanding
+						set_parent_dimension_to_minimum = height
+						spacing = 8
+						datamodel = "[SocietalValueInCountryWrap.GetSocietalValues]"
+						item = {
+							widget = {
+								tooltipwidget = {
+									using = SocietalValueItem_tooltip
+								}
+								size = { 337 67 }
+								container = {
+									tooltipwidget = {
+										using = SocietalValueItem_tooltip
+									}
+									visible = "[SocietalValueItem.IsLeft]"
+								
+									icon = {
+										size = { 337 67 }
+										texture = "[SocietalValueItem.GetType.GetLeftIllustration]"
+										
+										hbox = {
+											maximumsize = { 150 25 }
+											margin_left = 52
+											margin_bottom = 10
+											background = {
+												texture = "gfx/interface/component_tiles/society_values/society_values_banner.dds"
+											}
+		
+											hbox = {
+												margin_right = 13
+												margin_top = 7
+												layoutpolicy_horizontal = expanding
+												spacing = 5
+		
+												text_single = {
+													maximumsize = { 120 12 }
+													margin_left = 6
+													margin_bottom = 4
+													align = nobaseline
+													fontsize = 12
+		
+													text = "[SocietalValueItem.GetType.GetLeftLabelWithNoTooltip]"
+												}
+											}
+										}
+									}
+									icon = {
+										position = {20 -4}
+										parentanchor = left|top
+										size = { 35 35 }
+										texture = "gfx/interface/buttons/button_societal_values.dds"
+										icon = {
+											size = { 25 25 }
+											parentanchor = center
+											texture = "[SocietalValueItem.GetType.GetLeftIcon]"
+										}
+									}
+								}
+								
+								container = {
+									visible = "[Not(SocietalValueItem.IsLeft)]"
+								
+									icon = {
+										size = { 337 67 }
+										texture = "[SocietalValueItem.GetType.GetRightIllustration]"
+										
+										hbox = {
+											parentanchor = right|top
+											maximumsize = { 150 25 }
+											margin_left = 15
+											margin_bottom = 10
+											background = {
+												texture = "gfx/interface/component_tiles/society_values/society_values_banner_right.dds"
+											}
+		
+											hbox = {
+												margin_right = 65
+												margin_top = 7
+												layoutpolicy_horizontal = expanding
+												spacing = 5
+		
+												text_single = {
+													maximumsize = { 120 12 }
+													margin_left = 6
+													margin_bottom = 4
+													align = nobaseline
+													fontsize = 12
+		
+													text = "[SocietalValueItem.GetType.GetRightLabelWithNoTooltip]"
+												}
+											}
+										}
+									}
+									icon = {
+										position = {-20 -4}
+										parentanchor = right|top
+										size = { 35 35 }
+										texture = "gfx/interface/buttons/button_societal_values.dds"
+										icon = {
+											size = { 25 25 }
+											parentanchor = center
+											texture = "[SocietalValueItem.GetType.GetRightIcon]"
+										}
+									}
+									tooltipwidget = {
+										using = SocietalValueItem_tooltip
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+template CountryModifier_tooltip {
+	ContextualTooltipType = {
+
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "[CountryModifierWrap.GetIcon]"
+			}
+		}
+
+		blockoverride "title_text" {
+			text = "COUNTRYMODIFIERWRAP_T"
+		}
+
+		blockoverride "concept_link" {
+			text = "[country_modifier|e]"
+		}
+
+		blockoverride "tooltip_content" {
+			TooltipTextBlock = {
+				visible = "[CountryModifierWrap.HasMinCap]"
+				blockoverride "text" {
+					text = "[CountryModifierWrap.GetMinCapDescription]"
+				}
+			}
+			blockoverride "block_title" {
+				text = "COUNTRYMODIFIERWRAP_TOOLTIP_TEXT"
+			}
+			TooltipStringPairList = {
+				textcontext = "[CountryModifierWrap.GetTooltip]"
+			}
+		}
+	}
+}
+
+template CountryCountryModifier_tooltip {
+	ContextualTooltipType = {
+
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "[CountryCountryModifierWrap.GetIcon]"
+			}
+		}
+
+		blockoverride "title_text" {
+			text = "[CountryCountryModifierWrap.GetName]"
+		}
+
+		blockoverride "concept_link" {
+			text = "[country_modifier|e]"
+		}
+
+		blockoverride "tooltip_content" {
+			TooltipTextBlock = {
+				visible = "[CountryCountryModifierWrap.HasMinCap]"
+				blockoverride "text" {
+					text = "[CountryCountryModifierWrap.GetMinCapDescription]"
+				}
+			}
+			TooltipStringPairList = {
+				datacontext = "[StringToStringPairList(CountryCountryModifierWrap.GetTooltip)]"
+			}
+		}
+	}
+}
+
+# template Country_regulars_tooltip {
+# 	SimpleContextualRowTooltipType = {
+# 		blockoverride "title_icon_texture" {
+# 			texture = "gfx/interface/icons/unit_actions/regulars.dds"
+# 		}
+	
+# 		blockoverride "title_text" {
+# 			text = "FOREIGN_REL_ARMY_SIZE"
+# 		}
+
+# 		blockoverride "concept_link" {
+# 			text = "[regulars|e]"
+# 		}
+# 		lowpriotextcontext = "[Country.GetRaisedRegularArmySizeTooltip]"
+# 	}
+# }
+
+# template Country_levies_tooltip {
+# 	SimpleContextualRowTooltipType = {
+# 		blockoverride "title_icon_texture" {
+# 			texture = "gfx/interface/icons/unit_category/army_levies.dds"
+# 		}
+	
+# 		blockoverride "title_text" {
+# 			text = "[levies]"
+# 		}
+
+# 		blockoverride "concept_link" {
+# 			text = "[levies|e]"
+# 		}
+# 		lowpriotextcontext = "[Country.GetArmyLevyPowerTooltip]"
+# 	}
+# }
+
+template Country_navy_levies_tooltip {
+	SimpleContextualRowTooltipType = {
+		blockoverride "title_icon_texture" {
+			texture = "gfx/interface/icons/unit_category/navy_levies.dds"
+		}
+	
+		blockoverride "title_text" {
+			text = "FOREIGN_REL_NAVY_LEVY_POWER"
+		}
+
+		blockoverride "concept_link" {
+			text = "[navy_levies|e]"
+		}
+		blockoverride "tooltip_content" {
+			TooltipScrolledRowList = {
+				visible = "[HasNavyLevyStrengthIntelOn(Country.Self)]"
+				blockoverride "block_scrollarea" { maximumsize = { -1 420 } }
+				textcontext = "[Country.GetPotentialNavyLevyPowerTooltip]"
+			}
+			text_single = {
+				visible = "[Not(HasNavyLevyStrengthIntelOn(Country.Self))]"
+				layoutpolicy_horizontal = expanding
+				autoresize = no
+				align = right|nobaseline
+
+				tagtooltip_enabled = yes
+				text = "INTEL_FOG_NAVY_LEVY_UNKNOWN"
+			}
+		}
+	}
+}
+
+template Country_navy_regulars_tooltip {
+	SimpleContextualRowTooltipType = {
+		blockoverride "title_icon_texture" {
+			texture = "gfx/interface/icons/unit_category/regulars_navy.dds"
+		}
+	
+		blockoverride "title_text" {
+			text = "FOREIGN_REL_NAVY_SIZE"
+		}
+
+		blockoverride "concept_link" {
+			text = "[navies|e]"
+		}
+		lowpriotextcontext = "[Country.GetNavySizeTooltip]"
+	}
+}
+
+template country_tooltip_subjects {
+	ContextualTooltipType = {
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "gfx/interface/icons/treaty_type/become_subject.dds"
+			}	
+		}
+		
+	
+		blockoverride "title_text" {
+			text = "SUBJECTS_COUNTRY_TOOLTIP"
+		}
+
+		blockoverride "concept_link" {
+			text = "[subject|e]"
+		}
+		
+		blockoverride "tooltip_content" {
+			TooltipListBase = {					
+				TooltipListScrollArea = {
+					blockoverride "scrollarea_content" {
+						fixedgridbox = {
+							addcolumn = 420
+							addrow = 30
+							setitemsizefromcell = yes
+		
+							datamodel = "[Country.GetDiplomacy.GetSubjects]"
+							item = {
+								widget = {
+									background = {
+										visible = "[IsOdd_int32(PdxGuiWidget.GetIndexInDataModel)]"
+										using = tooltip_table_field_texture
+									}
+
+									hbox = {
+										using = layoutpolicy_expanding
+										margin = { 10 0 }
+										spacing = 10
+
+										country_flag_small = {
+											datacontext = "[Country]"
+										}
+										
+
+										text_single = {
+											align = nobaseline
+											text = "[Country.GetLongNameWithNoTooltip]"
+											tooltipwidget = {
+												datacontext = "[Country]"
+												using = SubjectType_Tooltip
+											}
+										}
+										
+										expand = {}
+
+										text_single = {	
+											visible = "[Country.GetDiplomacy.IsDisloyalSubject]"										
+											text = "[Country.GetDiplomacy.GetSubjectLoyalty|R2%/]"							
+											datacontext = "[Country]"
+											tooltipwidget = {
+												using = SubjectLoyalty_tooltip
+											}
+										}
+
+										text_single = {	
+											visible = "[Not(Country.GetDiplomacy.IsDisloyalSubject)]"										
+											text = "[Country.GetDiplomacy.GetSubjectLoyalty|G2%/]"							
+											datacontext = "[Country]"
+											tooltipwidget = {
+												using = SubjectLoyalty_tooltip
+											}
+										}
+										
+										icon = {
+											size = { 24 24 }											
+											texture = "[GetSubjectTypeIcon(Country.GetDiplomacy.GetSubjectType)]"
+											alpha = 0.8							
+											glow = {
+												name = "drop_shadow"
+												glow_radius = 3
+												color = {0.0 0.0 0.0 1.0}
+												alpha = 0.3
+											}
+											tooltipwidget = {
+												datacontext = "[Country]"
+												using = SubjectType_Tooltip
+											}						
+										}				
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
