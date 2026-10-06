@@ -42,7 +42,7 @@ BASE = refs.mod("eu5.noblesautomarry.fix")
 PARTS = ("in_game", "main_menu")
 OWN = Path("main_menu/localization/russian")  # hand written, kept
 
-REVISION = "beta1"
+REVISION = "beta3"
 TEXT = (".txt", ".gui", ".yml")
 BOM = b"\xef\xbb\xbf"
 
