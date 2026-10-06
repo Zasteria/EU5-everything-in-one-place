@@ -10,6 +10,7 @@ python3 tools/refresh.py
 
 | Folder | Mod id | Version | Game |
 | --- | --- | --- | --- |
+| `3605651135_hide_annoying_alerts` | `hide_annoying_alerts` | 0.0.1 | 1.0.* |
 | `3624485168_labelplace` | `labelplace` | 0.1 | 1.* |
 | `3668193813_trin_national_destinies` | `trin.national_destinies` | 1.4.0 | 1.4.* |
 | `3692202776_community_mod_framework` | `community_mod_framework` | 2.5.0 | 1.4.* |
