@@ -47,9 +47,9 @@ python3 tools/publish.py glorpui_hints   один, и текст, который
 `WORKSHOP_TAGS` в [`../tools/publish.py`](../tools/publish.py), считан с
 фильтра самой мастерской 2026-08-27.
 
-**Картинки нет ни у одного мода, кроме `glorpui_hints`.** Если будешь
-выкладывать что-то ещё — `mods/glorpui_hints/tools/make_thumbnail.py` рисует
-такую.
+**Картинка есть у `glorpui_hints` и `war_sliders`.** Рисунок с
+содержанием — `mods/war_sliders/tools/make_thumbnail.py` (PIL, 512×512); у
+`glorpui_hints` — простая заливка без библиотек.
 
 ## Сама загрузка — она в игре, и найти её нельзя
 
