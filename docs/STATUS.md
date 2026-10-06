@@ -17,7 +17,8 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`centered_towns`](../mods/centered_towns/CLAUDE.md) | 0.2.0 (10-04): позиции Better label placement под новыми именами файлов 1.4 | 0.2.0 |
 | [`quiet_alerts`](../mods/quiet_alerts/CLAUDE.md) | 10-02: 0.3.0 не в игре. Красные и оранжевые с жёлтым звуком, галочка в CMF | всё |
 | [`assimilate_primary`](../mods/assimilate_primary/CLAUDE.md) | 0.3.0 (10-05): + включает скрытые «Действия совета» | 0.2.x |
-| [`war_sliders`](../mods/war_sliders/CLAUDE.md) | **0.6.2 ждёт прогона** (0.5.2 работала 09-29). Кнопка на панели CMF: содержание и инфляция, без нажатия спит | кнопка: содержание, правка чеканки (09-30) |
+| [`perf_probe`](../mods/perf_probe/CLAUDE.md), [`speed_5`](../mods/speed_5/CLAUDE.md), [`speed_10`](../mods/speed_10/CLAUDE.md) | 0.1.0: профилировщик; паузы; 10 скоростей | всё |
+| [`war_sliders`](../mods/war_sliders/CLAUDE.md) | **0.7.0**: сам после мира (`on_ending_war`) + галочка, кнопка CMF осталась | автозапуск, кнопка |
 
 Закрытые, но лежащие здесь: [`archive/status_closed.md`](archive/status_closed.md).
 Убранные из дерева 10-03 (`where_to_produce`, `goods_target`, `marker_throttle`,
@@ -32,5 +33,4 @@ One line each. **Read only the brief of the mod the task is about** —
 - **[The panel hitch](investigations/panel_hitch.md)** — панели открываются
   медленнее с плейсетом с первой минуты. **Не путать с утечкой.**
 
-Инструменты вокруг всего этого — [`CONVENTIONS.md`](CONVENTIONS.md);
-`mods.bat` **ничего не пересобирает**: генераторы — работа сессии.
+Инструменты — [`CONVENTIONS.md`](CONVENTIONS.md).

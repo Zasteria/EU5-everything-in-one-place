@@ -497,6 +497,9 @@ TOOLBOX     Language  Environment  Map menu  Inspect  Explorer  Unit Viewer  Err
 
 `Tweaker`, `DrawCmdsViewer` and `ScriptProfilerGui` are types in the data dumps
 but have no button here, so they are not reachable this way.
+`PdxProfiler*` (frame time, recording, `PdxProfilerGuiWriteFrameCSV`) are
+**global** functions, so a mod window can call them; whether they do anything in
+a release build is what `perf_probe` asks (10-05, untested).
 
 `UI Editor` is the live widget tree — the one tool that can name a widget that
 should not exist. `UI Bounds` outlines every widget on screen. `Inspect` reports

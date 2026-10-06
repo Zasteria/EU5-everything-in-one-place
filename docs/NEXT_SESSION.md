@@ -1,4 +1,4 @@
-# Next session: the job in progress
+﻿# Next session: the job in progress
 
 This file is the part that is live; history is in `docs/archive/`, and the
 mods retired on 2026-10-03 are in [`archive/retired_mods.md`](archive/retired_mods.md). What has already been settled is in
@@ -26,6 +26,8 @@ Steam folder. **Ask for** `mods.bat → 1`, `→ 2` and `mods.bat check`.
   [`investigations/panel_hitch.md`](investigations/panel_hitch.md),
   [`investigations/widget_leak.md`](investigations/widget_leak.md). **Do not
   design a different test until they have run.**
+- **Производительность 1.4** — отложена им 10-05, без просьбы не поднимать:
+  [`investigations/perf_1_4.md`](investigations/perf_1_4.md), зонд `perf_probe`.
 
 ## Задача на будущее: подсказки по действию
 
