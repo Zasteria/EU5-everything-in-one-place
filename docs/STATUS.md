@@ -19,7 +19,7 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`assimilate_primary`](../mods/assimilate_primary/CLAUDE.md) | 0.3.0 (10-05): + включает скрытые «Действия совета» | 0.2.x |
 | [`perf_probe`](../mods/perf_probe/CLAUDE.md), [`speed_5`](../mods/speed_5/CLAUDE.md), [`speed_10`](../mods/speed_10/CLAUDE.md) | 0.1.0: профилировщик; паузы; 10 скоростей | всё |
 | [`auto_marry`](../mods/auto_marry/CLAUDE.md) | автоженитьба под 1.4 | всё |
-| [`war_sliders`](../mods/war_sliders/CLAUDE.md) | **0.7.1**: сам после мира (`on_ending_war`) + галочка, кнопка CMF осталась | автозапуск, кнопка |
+| [`war_sliders`](../mods/war_sliders/CLAUDE.md) | **0.7.2**: сам после мира и восстания + галочка, кнопка CMF осталась | автозапуск, кнопка |
 
 Закрытые, но лежащие здесь: [`archive/status_closed.md`](archive/status_closed.md).
 Убранные из дерева 10-03 (`where_to_produce`, `goods_target`, `marker_throttle`,
