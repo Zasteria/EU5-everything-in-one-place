@@ -47,6 +47,7 @@ GENERATORS = (
     ("nd_ru", "mods/nd_ru/tools/generate_ru.py"),
     ("nmt_ru", "mods/nmt_ru/tools/generate_ru.py"),
     ("nmt_fix", "mods/nmt_fix/tools/generate.py"),
+    ("auto_marry", "mods/auto_marry/tools/generate.py"),
     ("glorpui_hints", "mods/glorpui_hints/tools/generate.py"),
     ("ru_loc_fix", "mods/ru_loc_fix/tools/generate.py"),
 )
