@@ -56,7 +56,7 @@ PARTS = ("in_game", "main_menu")
 OWN = Path("main_menu/localization/russian")  # hand written, kept
 OWN_TREE = MOD / "own"  # our own files, copied over the base's
 
-REVISION = "beta5"
+REVISION = "beta6"
 TEXT = (".txt", ".gui", ".yml")
 BOM = b"\xef\xbb\xbf"
 
