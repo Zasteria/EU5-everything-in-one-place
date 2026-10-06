@@ -1,0 +1,42 @@
+﻿# Династические браки правящей семьи с правящими семьями других стран (наше,
+# не автора; его просьба 2026-10-06: правители женятся с правителями других
+# стран, без дипломатов и без улучшения мнения). Возрастные пределы — как у ИИ
+# игры: AI_MIN_MARRIAGE_AGE = 19, AI_MAX_FEMALE_MARRIAGE_AGE = 30.
+
+# character: годен для династического брака, без пары, в брачном возрасте
+auto_marry_royal_eligible = {
+	is_married = no
+	has_estate = estate_type:crown_estate
+	is_eligible_for_royal_marriage = yes
+	character_can_marry_trigger = yes
+	modifier:blocked_from_character_interactions = no
+	age_in_years >= 19
+	trigger_if = {
+		limit = { is_female = yes }
+		age_in_years <= 30
+	}
+	trigger_else = {
+		age_in_years <= 60
+	}
+}
+
+# character в другой стране: пара для scope:unmarried_royal (он же
+# scope:recipient для проверки игры character_can_marry_recipient_trigger)
+auto_marry_royal_partner = {
+	auto_marry_royal_eligible = yes
+	NOT = { is_close_relative = scope:unmarried_royal }
+	trigger_if = {
+		limit = { scope:unmarried_royal = { is_female = yes } }
+		is_female = no
+	}
+	trigger_else = {
+		is_female = yes
+	}
+	character_can_marry_recipient_trigger = yes
+}
+
+# country: другая страна, где есть такая пара
+auto_marry_royal_partner_country = {
+	NOT = { this = root }
+	any_character = { auto_marry_royal_partner = yes }
+}

@@ -1,0 +1,122 @@
+﻿namespace = auto_marry_royal
+
+# Раз в месяц (on_action auto_marry_royal_on_action): один член правящей семьи
+# без пары женится на члене правящей семьи другой страны. Пара ищется сначала
+# среди стран той же веры, с которыми игра разрешает династический брак
+# (has_potential_royal_marriage), потом среди стран той же веры, потом любых.
+#
+# Зонд (не проверено, 10-06): брак пробуется дипломатическим действием игры
+# royal_marriage с вынужденным согласием; если персонаж после него не женат —
+# прямым marry_character. Событие .2 пишет, какой путь сработал и появился ли
+# династический брак между странами. Одна загрузка — и лишний путь убрать.
+auto_marry_royal.1 = {
+	type = country_event
+	hidden = yes
+
+	trigger = {
+		is_ai = no
+		NOT = { has_variable = noble_auto_marry_temp_disable }
+		NOT = { has_variable = auto_marry_royal_off }
+		any_character = { auto_marry_royal_eligible = yes }
+	}
+
+	immediate = {
+		random_character = {
+			limit = { auto_marry_royal_eligible = yes }
+			save_scope_as = unmarried_royal
+			save_scope_as = recipient
+		}
+		random_country = {
+			limit = {
+				auto_marry_royal_partner_country = yes
+				has_potential_royal_marriage = root
+				religion = root.religion
+			}
+			save_scope_as = partner_country
+		}
+		if = {
+			limit = { NOT = { exists = scope:partner_country } }
+			random_country = {
+				limit = {
+					auto_marry_royal_partner_country = yes
+					religion = root.religion
+				}
+				save_scope_as = partner_country
+			}
+		}
+		if = {
+			limit = { NOT = { exists = scope:partner_country } }
+			random_country = {
+				limit = { auto_marry_royal_partner_country = yes }
+				save_scope_as = partner_country
+			}
+		}
+		scope:partner_country ?= {
+			random_character = {
+				limit = { auto_marry_royal_partner = yes }
+				save_scope_as = target_suitor
+			}
+		}
+		if = {
+			limit = {
+				exists = scope:unmarried_royal
+				exists = scope:target_suitor
+			}
+			remove_variable = auto_marry_royal_via_diplomacy
+			remove_variable = auto_marry_royal_relation
+			if = {
+				limit = { has_potential_royal_marriage = scope:partner_country }
+				set_variable = auto_marry_royal_potential
+			}
+			else = {
+				remove_variable = auto_marry_royal_potential
+			}
+			perform_diplomatic_action = {
+				type = royal_marriage
+				actor = root
+				recipient = scope:partner_country
+				target = scope:unmarried_royal
+				target_1 = scope:target_suitor
+				mode = accept
+				hidden = yes
+			}
+			if = {
+				limit = { scope:unmarried_royal = { is_married = yes } }
+				set_variable = auto_marry_royal_via_diplomacy
+			}
+			else = {
+				scope:unmarried_royal = { marry_character = scope:target_suitor }
+			}
+			if = {
+				limit = { has_royal_marriage_with = scope:partner_country }
+				set_variable = auto_marry_royal_relation
+			}
+			if = {
+				limit = {
+					scope:unmarried_royal = { is_married = yes }
+					NOT = { has_variable = hide_marriage_events }
+				}
+				trigger_event_non_silently = auto_marry_royal.2
+			}
+		}
+	}
+
+	option = {
+		name = noble_auto_marry.3.a
+	}
+}
+
+auto_marry_royal.2 = {
+	type = country_event
+	title = auto_marry_royal.2.t
+	desc = auto_marry_royal.2.d
+
+	option = {
+		name = noble_auto_marry.3.a
+	}
+	option = {
+		name = noble_auto_marry.1.b
+		custom_tooltip = { text = hide_marriage_events.tt }
+		set_variable = hide_marriage_events
+	}
+}
