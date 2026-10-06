@@ -711,6 +711,65 @@ def _cut_reserve_pull(text: str) -> str:
                              "\t\t\t\tNOT = { has_variable = cm_gold_reserve_from_cmm }\n", 1)
 
 
+# The food subsidy checkbox subsidizes only what auto-food itself approved, the
+# cycle after it stands. His run 10-06: a farming village in an auto-food
+# location stood without workers, the country's building list showing the red
+# «!» on farms, and the box ticked. Most of them CM never built, and a farm
+# built later is never subsidized by the game either. +perf33: with the box
+# ticked, every CM cycle (monthly) subsidizes each of the player's farming
+# villages that is unprofitable or has no one employed — his words: «ежемесячной
+# проверкой (есть ли фермы с убытком?)… включает в этом месте субсидии на все
+# фермы». A location holds one building of a type per owner, so «every farm
+# there» is that one. Only farms: «вся эта тема болит только на фермах».
+FOOD = "in_game/common/scripted_effects/cm_food_auto_build_effects.txt"
+
+
+def _subsidize_idle_farms(text: str) -> str:
+    old = "cm_food_apply_subsidies = {\n"
+    if text.count(old) != 1:
+        raise SystemExit("food subsidies: cm_food_apply_subsidies has changed shape")
+    add = ("\t# cm_dev_perf +perf33: every farm standing idle or at a loss, not only auto-food's own\n"
+           "\tif = {\n"
+           "\t\tlimit = { has_variable = cm_ab_food_subsidize }\n"
+           "\t\tevery_owned_building = {\n"
+           "\t\t\tlimit = {\n"
+           "\t\t\t\tbuilding_type = building_type:farming_village\n"
+           "\t\t\t\tis_subsidized = no\n"
+           "\t\t\t\tOR = {\n"
+           "\t\t\t\t\tis_not_profitable = yes\n"
+           "\t\t\t\t\tbuilding_employed_amount <= 0\n"
+           "\t\t\t\t}\n"
+           "\t\t\t}\n"
+           "\t\t\tset_subsidized = yes\n"
+           "\t\t}\n"
+           "\t}\n")
+    return text.replace(old, old + add, 1)
+
+
+# The box's own words, to say it now covers every farm.
+SUBSIDY_DESC = {
+    "english": "Subsidize the food-producing buildings auto-food constructs, and every month any farming village "
+               "of yours that runs at a loss or has no workers, wherever it stands and whoever built it. A building "
+               "that is not turning a profit hires nobody and grows no food; subsidizing it keeps it staffed and its "
+               "harvest coming in. Subsidies are never turned back off.",
+    "russian": "Субсидировать здания, производящие пищу и возводимые автоматикой, а также каждый месяц любую вашу "
+               "земледельческую деревню без прибыли или без работников, где бы она ни стояла и кто бы её ни построил. "
+               "Здание, не приносящее прибыли, никого не нанимает и не производит еду; субсидирование позволяет "
+               "сохранять штат работников и обеспечивать сбор урожая. Субсидии никогда не отключаются.",
+}
+
+
+def _write_subsidy_desc() -> None:
+    for lang, words in SUBSIDY_DESC.items():
+        path = MOD / f"main_menu/localization/{lang}/cm_cmm_l_{lang}.yml"
+        text = path.read_text(encoding="utf-8-sig")
+        text, n = re.subn(r'(?m)^ cm__ab_food_subsidize_desc: ".*"$',
+                          lambda _m: f' cm__ab_food_subsidize_desc: "{words}"', text)
+        if n != 1:
+            raise SystemExit(f"{path.name}: the subsidy checkbox's description has moved")
+        path.write_text("\ufeff" + text, encoding="utf-8")
+
+
 EDITS = (
     (RESERVE_GUIS, "the gold slider no longer writes CM's reserve", _cut_reserve_pull),
     (WINDOW, "gate the building-type tree", _gate_the_tree),
@@ -747,6 +806,7 @@ EDITS = (
     ("in_game/common/scripted_guis/cm_proximity_finder_scripted_gui.txt", "say the finder map's close in debug.log",
      _pf_log_close),
     (CMM, "say the refresh button's click in debug.log", _pf_log_click),
+    (FOOD, "subsidize every idle or loss-making farm", _subsidize_idle_farms),
 )
 
 
@@ -849,7 +909,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 32
+PERF_REVISION = 33
 
 
 def metadata() -> str:
@@ -885,6 +945,7 @@ def main() -> int:
             raise SystemExit(f"{path}: {label} changed nothing")
         target.write_text("﻿" + patched.lstrip("﻿"), encoding="utf-8")
     _write_setting_words()
+    _write_subsidy_desc()
     _split_glorp_shared()
     # The beta's buildings and National Destinies' in Custom auto-build (buildings.py).
     buildings.vanilla_checks(refs.GAME / "in_game/common/building_types")

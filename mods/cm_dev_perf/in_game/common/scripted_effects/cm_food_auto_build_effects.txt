@@ -103,6 +103,21 @@ cm_food_mark_subsidize = {
 # workers and grows its food. An entry whose level has not appeared yet stays for the next cycle.
 # Root is the country.
 cm_food_apply_subsidies = {
+	# cm_dev_perf +perf33: every farm standing idle or at a loss, not only auto-food's own
+	if = {
+		limit = { has_variable = cm_ab_food_subsidize }
+		every_owned_building = {
+			limit = {
+				building_type = building_type:farming_village
+				is_subsidized = no
+				OR = {
+					is_not_profitable = yes
+					building_employed_amount <= 0
+				}
+			}
+			set_subsidized = yes
+		}
+	}
 	if = {
 		limit = { has_variable_list = cm_food_subsidize_locs }
 		save_scope_as = cm_country
