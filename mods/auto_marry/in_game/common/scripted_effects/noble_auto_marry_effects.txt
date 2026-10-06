@@ -1,0 +1,822 @@
+﻿noble_marriage_immediate_effect = {
+	if = {
+		limit = {
+			has_variable = nobles_auto_marry_selective_marriage
+		}
+		random_character = {
+			limit = {
+				character_can_marry_trigger = yes
+				modifier:blocked_from_character_interactions = no
+				noble_auto_marry_culture_check = yes
+				is_married = no
+				is_female = no
+				OR = {
+					has_estate = estate_type:nobles_estate
+					AND = {
+						has_estate = estate_type:crown_estate
+						is_eligible_for_royal_marriage = no
+					}
+				}
+				auto_marry_age_ok_nobles = yes
+				age_in_years < 25
+				any_close_relative = {
+					count < 3
+					is_female = no  # As they won't carry on a dynasty
+					age_in_years > 16
+					age_in_years < 50
+					is_married = yes
+				}
+			}
+			save_scope_as = target_male
+		}
+	}
+	else_if = {
+		limit = {
+			has_variable = nobles_auto_marry_dynastic_preservation
+		}
+		random_character = {
+			limit = {
+				character_can_marry_trigger = yes
+				modifier:blocked_from_character_interactions = no
+				noble_auto_marry_culture_check = yes
+				is_married = no
+				is_female = no
+				OR = {
+					has_estate = estate_type:nobles_estate
+					AND = {
+						has_estate = estate_type:crown_estate
+						is_eligible_for_royal_marriage = no
+					}
+				}
+				auto_marry_age_ok_nobles = yes
+				age_in_years < 25
+				this.dynasty = {
+					any_character_in_dynasty = {
+						count >= 3
+					}
+					any_character_in_dynasty = {
+						count < 3
+						is_female = no
+						age_in_years > 16
+						age_in_years < 50
+						is_married = yes
+					}
+				}
+			}
+			save_scope_as = target_male
+		}
+		if = {
+			limit = { NOT = { exists = scope:target_male } }
+			random_character = {
+				limit = {
+					character_can_marry_trigger = yes
+					modifier:blocked_from_character_interactions = no
+					noble_auto_marry_culture_check = yes
+					is_married = no
+					is_female = no
+					OR = {
+						has_estate = estate_type:nobles_estate
+						AND = {
+							has_estate = estate_type:crown_estate
+							is_eligible_for_royal_marriage = no
+						}
+					}
+					auto_marry_age_ok_nobles = yes
+					age_in_years < 25
+				}
+				save_scope_as = target_male
+			}
+		}
+	}
+	else = {
+		random_character = {
+			limit = {
+				character_can_marry_trigger = yes
+				modifier:blocked_from_character_interactions = no
+				noble_auto_marry_culture_check = yes
+				is_married = no
+				is_female = no
+				OR = {
+					has_estate = estate_type:nobles_estate
+					AND = {
+						has_estate = estate_type:crown_estate
+						is_eligible_for_royal_marriage = no
+					}
+				}
+				auto_marry_age_ok_nobles = yes
+				age_in_years < 25
+			}
+			save_scope_as = target_male
+		}
+	}
+	random_character = {
+		limit = {
+			character_can_marry_trigger = yes
+			modifier:blocked_from_character_interactions = no
+			noble_auto_marry_culture_check = yes
+			noble_auto_marry_celtic_marriage_check = yes
+			is_married = no
+			is_female = yes
+			NOT = {
+				is_close_relative = scope:target_male
+			}
+			OR = {
+				has_estate = estate_type:nobles_estate
+				AND = {
+					has_estate = estate_type:crown_estate
+					is_eligible_for_royal_marriage = no
+				}
+			}
+			auto_marry_age_ok_nobles = yes
+			age_in_years < 25
+		}
+		save_scope_as = target_female
+	}
+	scope:target_female ?= { scope:target_male ?= { marry_character = scope:target_female } }
+}
+
+burgher_marriage_immediate_effect = {
+	random_character = {
+		limit = {
+			character_can_marry_trigger = yes
+			modifier:blocked_from_character_interactions = no
+			noble_auto_marry_culture_check = yes
+			is_married = no
+			is_female = no
+			has_estate = estate_type:burghers_estate
+			auto_marry_age_ok_burghers = yes
+			age_in_years < 35
+			any_close_relative = {
+				count < 3
+				is_female = no  # As they won't carry on a dynasty
+				age_in_years > 16
+				age_in_years < 50
+				is_married = yes
+			}
+		}
+		save_scope_as = target_male
+	}
+
+	if = {
+		limit = {
+			any_character = {
+				noble_auto_marry_culture_check = yes
+				noble_auto_marry_celtic_marriage_check = yes
+				modifier:blocked_from_character_interactions = no
+				is_married = no
+				is_female = yes
+				NOT = {
+					is_close_relative = scope:target_male
+				}
+				NOT = {
+					OR = {
+						has_estate = estate_type:nobles_estate
+						has_estate = estate_type:crown_estate
+					}
+				}
+				auto_marry_age_ok_burghers = yes
+				age_in_years < 25
+			}
+		}
+		random_character = {
+			limit = {
+				character_can_marry_trigger = yes
+				modifier:blocked_from_character_interactions = no
+				noble_auto_marry_culture_check = yes
+				noble_auto_marry_celtic_marriage_check = yes
+				is_married = no
+				is_female = yes
+				NOT = {
+					is_close_relative = scope:target_male
+				}
+				NOT = {
+					OR = {
+						has_estate = estate_type:nobles_estate
+						has_estate = estate_type:crown_estate
+					}
+				}
+				auto_marry_age_ok_burghers = yes
+				age_in_years < 25
+			}
+			save_scope_as = target_female
+		}
+	}
+	else = {
+		create_character = {
+			religion = scope:target_male.religion
+			age = { 18 30 }
+			female = yes
+			random_estate_type_trigger = {
+				NOR = {
+					this = estate_type:nobles_estate
+					this = estate_type:clergy_estate
+					this = estate_type:dhimmi_estate
+				}
+			}
+			save_scope_as = target_female
+		}
+	}
+	scope:target_female ?= { scope:target_male ?= { marry_character = scope:target_female } }
+}
+clergy_marriage_immediate_effect = {
+	random_character = {
+		limit = {
+			character_can_marry_trigger = yes
+			modifier:blocked_from_character_interactions = no
+			noble_auto_marry_culture_check = yes
+			is_married = no
+			is_female = no
+			has_estate = estate_type:clergy_estate  
+			auto_marry_age_ok_clergy = yes
+			age_in_years < 35
+			any_close_relative = {
+				count < 3
+				is_female = no  # As they won't carry on a dynasty
+				age_in_years > 16
+				age_in_years < 50
+				is_married = yes
+			}
+		}
+		save_scope_as = target_male
+	}
+
+
+	if = {
+		limit = {
+			any_character = {
+				noble_auto_marry_culture_check = yes
+				noble_auto_marry_celtic_marriage_check = yes
+				modifier:blocked_from_character_interactions = no
+				is_married = no
+				is_female = yes
+				religion = scope:target_male.religion
+				NOT = {
+					is_close_relative = scope:target_male
+				}
+				NOT = {
+					OR = {
+						has_estate = estate_type:nobles_estate
+						has_estate = estate_type:crown_estate
+						has_estate = estate_type:dhimmi_estate
+					}
+				}
+				auto_marry_age_ok_clergy = yes
+				age_in_years < 25
+			}
+		}
+		random_character = {
+			limit = {
+				character_can_marry_trigger = yes
+				modifier:blocked_from_character_interactions = no
+				noble_auto_marry_culture_check = yes
+				noble_auto_marry_celtic_marriage_check = yes
+				is_married = no
+				is_female = yes
+				religion = scope:target_male.religion
+				NOT = {
+					is_close_relative = scope:target_male
+				}
+				NOT = {
+					OR = {
+						has_estate = estate_type:nobles_estate
+						has_estate = estate_type:crown_estate
+						has_estate = estate_type:dhimmi_estate
+					}
+				}
+				auto_marry_age_ok_clergy = yes
+				age_in_years < 25
+			}
+			save_scope_as = target_female
+		}
+	}
+	else = {
+		create_character = {
+			religion = scope:target_male.religion
+			age = { 18 30 }
+			female = yes
+			random_estate_type_trigger = {
+				NOR = {
+					this = estate_type:nobles_estate
+					this = estate_type:dhimmi_estate
+				}
+			}
+			save_scope_as = target_female
+		}
+	}
+	scope:target_female ?= { scope:target_male ?= { marry_character = scope:target_female } }
+
+}
+
+peasant_marriage_immediate_effect = {
+	random_character = {
+		limit = {
+			character_can_marry_trigger = yes
+			modifier:blocked_from_character_interactions = no
+			noble_auto_marry_culture_check = yes
+			is_married = no
+			is_female = no
+			has_estate = estate_type:peasants_estate
+			auto_marry_age_ok_peasants = yes
+			age_in_years < 35
+			any_close_relative = {
+				count < 3
+				is_female = no  # As they won't carry on a dynasty
+				age_in_years > 16
+				age_in_years < 50
+				is_married = yes
+			}
+		}
+		save_scope_as = target_male
+	}
+
+
+	if = {
+		limit = {
+			any_character = {
+				noble_auto_marry_culture_check = yes
+				noble_auto_marry_celtic_marriage_check = yes
+				modifier:blocked_from_character_interactions = no
+				is_married = no
+				is_female = yes
+				NOT = {
+					is_close_relative = scope:target_male
+				}
+				NOT = {
+					OR = {
+						has_estate = estate_type:nobles_estate
+						has_estate = estate_type:crown_estate
+						has_estate = estate_type:burghers_estate
+					}
+				}
+				auto_marry_age_ok_peasants = yes
+				age_in_years < 25
+			}
+		}
+		random_character = {
+			limit = {
+				character_can_marry_trigger = yes
+				modifier:blocked_from_character_interactions = no
+				noble_auto_marry_culture_check = yes
+				noble_auto_marry_celtic_marriage_check = yes
+				is_married = no
+				is_female = yes
+				NOT = {
+					is_close_relative = scope:target_male
+				}
+				NOT = {
+					OR = {
+						has_estate = estate_type:nobles_estate
+						has_estate = estate_type:crown_estate
+						has_estate = estate_type:burghers_estate
+					}
+				}
+				auto_marry_age_ok_peasants = yes
+				age_in_years < 25
+			}
+			save_scope_as = target_female
+		}
+	}
+	else = {
+		create_character = {
+			religion = scope:target_male.religion
+			age = { 18 30 }
+			female = yes
+			random_estate_type_trigger = {
+				NOR = {
+					this = estate_type:nobles_estate
+					this = estate_type:clergy_estate
+					this = estate_type:dhimmi_estate
+					this = estate_type:burghers_estate
+				}
+			}
+			save_scope_as = target_female
+		}
+	}
+	scope:target_female ?= { scope:target_male ?= { marry_character = scope:target_female } }
+
+}
+dhimmi_marriage_immediate_effect = {
+	random_character = {
+		limit = {
+			character_can_marry_trigger = yes
+			modifier:blocked_from_character_interactions = no
+			noble_auto_marry_culture_check = yes
+			is_married = no
+			is_female = no
+			has_estate = estate_type:dhimmi_estate  
+			auto_marry_age_ok_dhimmi = yes
+			age_in_years < 35
+			any_close_relative = {
+				count < 3
+				is_female = no  # As they won't carry on a dynasty
+				age_in_years > 16
+				age_in_years < 50
+				is_married = yes
+			}
+		}
+		save_scope_as = target_male
+	}
+
+
+	if = {
+		limit = {
+			any_character = {
+				noble_auto_marry_culture_check = yes
+				noble_auto_marry_celtic_marriage_check = yes
+				modifier:blocked_from_character_interactions = no
+				is_married = no
+				is_female = yes
+				religion = scope:target_male.religion
+				NOT = {
+					is_close_relative = scope:target_male
+				}
+				NOT = {
+					OR = {
+						has_estate = estate_type:nobles_estate
+						has_estate = estate_type:crown_estate
+						has_estate = estate_type:clergy_estate
+					}
+				}
+				auto_marry_age_ok_dhimmi = yes
+				age_in_years < 25
+			}
+		}
+		random_character = {
+			limit = {
+				character_can_marry_trigger = yes
+				modifier:blocked_from_character_interactions = no
+				noble_auto_marry_culture_check = yes
+				noble_auto_marry_celtic_marriage_check = yes
+				is_married = no
+				is_female = yes
+				religion = scope:target_male.religion
+				NOT = {
+					is_close_relative = scope:target_male
+				}
+				NOT = {
+					OR = {
+						has_estate = estate_type:nobles_estate
+						has_estate = estate_type:crown_estate
+						has_estate = estate_type:clergy_estate
+					}
+				}
+				auto_marry_age_ok_dhimmi = yes
+				age_in_years < 25
+			}
+			save_scope_as = target_female
+		}
+	}
+	else = {
+		create_character = {
+			religion = scope:target_male.religion
+			age = { 18 30 }
+			female = yes
+			random_estate_type_trigger = {
+				NOR = {
+					this = estate_type:nobles_estate
+					this = estate_type:clergy_estate
+				}
+			}
+			save_scope_as = target_female
+		}
+	}
+	scope:target_female ?= { scope:target_male ?= { marry_character = scope:target_female } }
+
+}
+tribes_marriage_immediate_effect = {
+	random_character = {
+		limit = {
+			character_can_marry_trigger = yes
+			modifier:blocked_from_character_interactions = no
+			noble_auto_marry_culture_check = yes
+			is_married = no
+			is_female = no
+			has_estate = estate_type:tribes_estate
+			auto_marry_age_ok_tribes = yes
+			age_in_years < 35
+			any_close_relative = {
+				count < 3
+				is_female = no  # As they won't carry on a dynasty
+				age_in_years > 16
+				age_in_years < 50
+				is_married = yes
+			}
+		}
+		save_scope_as = target_male
+	}
+
+	if = {
+		limit = {
+			any_character = {
+				noble_auto_marry_culture_check = yes
+				noble_auto_marry_celtic_marriage_check = yes
+				modifier:blocked_from_character_interactions = no
+				is_married = no
+				is_female = yes
+				NOT = {
+					is_close_relative = scope:target_male
+				}
+				NOT = {
+					OR = {
+						has_estate = estate_type:nobles_estate
+						has_estate = estate_type:crown_estate
+						has_estate = estate_type:burghers_estate
+						has_estate = estate_type:dhimmi_estate
+					}
+				}
+				auto_marry_age_ok_tribes = yes
+				age_in_years < 25
+			}
+		}
+		random_character = {
+			limit = {
+				character_can_marry_trigger = yes
+				modifier:blocked_from_character_interactions = no
+				noble_auto_marry_culture_check = yes
+				noble_auto_marry_celtic_marriage_check = yes
+				is_married = no
+				is_female = yes
+				NOT = {
+					is_close_relative = scope:target_male
+				}
+				NOT = {
+					OR = {
+						has_estate = estate_type:nobles_estate
+						has_estate = estate_type:crown_estate
+						has_estate = estate_type:burghers_estate
+						has_estate = estate_type:dhimmi_estate
+					}
+				}
+				auto_marry_age_ok_tribes = yes
+				age_in_years < 25
+			}
+			save_scope_as = target_female
+		}
+	}
+	else = {
+		create_character = {
+			religion = scope:target_male.religion
+			age = { 18 30 }
+			female = yes
+			random_estate_type_trigger = {
+				NOR = {
+					this = estate_type:nobles_estate
+					this = estate_type:clergy_estate
+					this = estate_type:burghers_estate
+					this = estate_type:dhimmi_estate
+				}
+			}
+			save_scope_as = target_female
+		}
+	}
+	scope:target_female ?= { scope:target_male ?= { marry_character = scope:target_female } }
+}
+cossack_marriage_immediate_effect = {
+	random_character = {
+		limit = {
+			character_can_marry_trigger = yes
+			modifier:blocked_from_character_interactions = no
+			noble_auto_marry_culture_check = yes
+			is_married = no
+			is_female = no
+			has_estate = estate_type:cossacks_estate
+			auto_marry_age_ok_cossacks = yes
+			age_in_years < 35
+			any_close_relative = {
+				count < 3
+				is_female = no  # As they won't carry on a dynasty
+				age_in_years > 16
+				age_in_years < 50
+				is_married = yes
+			}
+		}
+		save_scope_as = target_male
+	}
+
+	if = {
+		limit = {
+			any_character = {
+				noble_auto_marry_culture_check = yes
+				noble_auto_marry_celtic_marriage_check = yes
+				modifier:blocked_from_character_interactions = no
+				is_married = no
+				is_female = yes
+				NOT = {
+					is_close_relative = scope:target_male
+				}
+				NOT = {
+					has_estate = estate_type:crown_estate
+				}
+				auto_marry_age_ok_cossacks = yes
+				age_in_years < 25
+			}
+		}
+		random_character = {
+			limit = {
+				character_can_marry_trigger = yes
+				modifier:blocked_from_character_interactions = no
+				noble_auto_marry_culture_check = yes
+				noble_auto_marry_celtic_marriage_check = yes
+				is_married = no
+				is_female = yes
+				NOT = {
+					is_close_relative = scope:target_male
+				}
+				NOT = {
+					has_estate = estate_type:crown_estate
+				}
+				auto_marry_age_ok_cossacks = yes
+				age_in_years < 25
+			}
+			save_scope_as = target_female
+		}
+	}
+	else = {
+		create_character = {
+			religion = scope:target_male.religion
+			age = { 18 30 }
+			female = yes
+			random_estate_type_trigger = {
+				NOR = {
+					this = estate_type:nobles_estate
+					this = estate_type:clergy_estate
+					this = estate_type:dhimmi_estate
+				}
+			}
+			save_scope_as = target_female
+		}
+	}
+	scope:target_female ?= { scope:target_male ?= { marry_character = scope:target_female } }
+
+}
+noble_marriage_immediate_effect_for_ai = {
+	random_character = {
+		limit = {
+			character_can_marry_trigger = yes
+			modifier:blocked_from_character_interactions = no
+			noble_auto_marry_culture_check = yes
+			is_married = no
+			is_female = no
+			OR = {
+				has_estate = estate_type:nobles_estate
+				AND = {
+					has_estate = estate_type:crown_estate
+					is_eligible_for_royal_marriage = no
+				}
+			}
+			age_in_years > 18
+			age_in_years < 25
+			this.dynasty = {
+				any_character_in_dynasty = {
+					count >= 3
+				}
+				any_character_in_dynasty = {
+					count < 3
+					is_female = no
+					age_in_years > 16
+					age_in_years < 50
+					is_married = yes
+				}
+			}
+		}
+		save_scope_as = target_male
+	}
+	if = {
+		limit = { NOT = { exists = scope:target_male } }
+		random_character = {
+			limit = {
+				character_can_marry_trigger = yes
+				modifier:blocked_from_character_interactions = no
+				noble_auto_marry_culture_check = yes
+				is_married = no
+				is_female = no
+				OR = {
+					has_estate = estate_type:nobles_estate
+					AND = {
+						has_estate = estate_type:crown_estate
+						is_eligible_for_royal_marriage = no
+					}
+				}
+				age_in_years > 18
+				age_in_years < 25
+			}
+			save_scope_as = target_male
+		}
+	}
+
+	random_character = {
+		limit = {
+			character_can_marry_trigger = yes
+			modifier:blocked_from_character_interactions = no
+			noble_auto_marry_culture_check = yes
+			noble_auto_marry_celtic_marriage_check = yes
+			is_married = no
+			is_female = yes
+			NOT = {
+				is_close_relative = scope:target_male
+			}
+			OR = {
+				has_estate = estate_type:nobles_estate
+				AND = {
+					has_estate = estate_type:crown_estate
+					is_eligible_for_royal_marriage = no
+				}
+			}
+			age_in_years > 18
+			age_in_years < 25
+		}
+		save_scope_as = target_female
+	}
+	scope:target_female ?= { scope:target_male ?= { marry_character = scope:target_female } }
+
+}
+
+non_noble_marriage_immediate_effect_for_ai = {
+	random_character = {
+		limit = {
+			character_can_marry_trigger = yes
+			modifier:blocked_from_character_interactions = no
+			noble_auto_marry_culture_check = yes
+			is_married = no
+			is_female = no
+			NOT = {
+				OR = {
+					has_estate = estate_type:nobles_estate
+					has_estate = estate_type:crown_estate
+				}
+			}
+			age_in_years > 18
+			age_in_years < 35
+			any_close_relative = {
+				count < 3
+				is_female = no  # As they won't carry on a dynasty
+				age_in_years > 16
+				age_in_years < 50
+				is_married = yes
+			}
+		}
+		save_scope_as = target_male
+	}
+
+	if = {
+		limit = {
+			any_character = {
+				noble_auto_marry_culture_check = yes
+				noble_auto_marry_celtic_marriage_check = yes
+				modifier:blocked_from_character_interactions = no
+				is_married = no
+				is_female = yes
+				NOT = {
+					is_close_relative = scope:target_male
+				}
+				NOT = {
+					OR = {
+						has_estate = estate_type:nobles_estate
+						has_estate = estate_type:crown_estate
+					}
+				}
+				age_in_years > 18
+				age_in_years < 25
+			}
+		}
+		random_character = {
+			limit = {
+				character_can_marry_trigger = yes
+				modifier:blocked_from_character_interactions = no
+				noble_auto_marry_culture_check = yes
+				noble_auto_marry_celtic_marriage_check = yes
+				is_married = no
+				is_female = yes
+				NOT = {
+					is_close_relative = scope:target_male
+				}
+				NOT = {
+					OR = {
+						has_estate = estate_type:nobles_estate
+						has_estate = estate_type:crown_estate
+					}
+				}
+				age_in_years > 18
+				age_in_years < 25
+			}
+			save_scope_as = target_female
+		}
+	}
+	else = {
+		create_character = {
+			religion = scope:target_male.religion
+			age = { 18 30 }
+			female = yes
+			random_estate_type_trigger = {
+				NOR = {
+					this = estate_type:nobles_estate
+					this = estate_type:clergy_estate
+					this = estate_type:dhimmi_estate
+				}
+			}
+			save_scope_as = target_female
+		}
+	}
+	scope:target_female ?= { scope:target_male ?= { marry_character = scope:target_female } }
+
+}

@@ -10,7 +10,7 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`nmt_ru`](../mods/nmt_ru/CLAUDE.md) | Русский для National Mission Trees: 17 стран, 3 555 ключей; дерево пишется целиком | всё |
 | [`nmt_fix`](../mods/nmt_fix/CLAUDE.md) | 0.2.0 (10-03): земли подданных (121 условие) + NMT под 1.4: Арагон, модификатор, подданные, 7 старых ошибок NMT | всё |
 | [`cm_maps`](../mods/cm_maps/CLAUDE.md) | **загружен 09-19, рисует**; губернатор починен и подтверждён, права починены. Три карты CM dev без CM и CMF | починка прав, карта еды |
-| [`cm_dev_perf`](../mods/cm_dev_perf/CLAUDE.md) | +perf31 (10-05): ползунок запаса не пишет запас CM; перед Río, после Río — [`cm_rio_patch`](../mods/cm_rio_patch/CLAUDE.md); ND — своя категория | +perf19–31, патч |
+| [`cm_dev_perf`](../mods/cm_dev_perf/CLAUDE.md) | +perf33: субсидии всем пустым фермам; перед Río, после Río — [`cm_rio_patch`](../mods/cm_rio_patch/CLAUDE.md); ND — своя категория | +perf19–33, патч |
 | [`cmf_dev_beta`](../mods/cmf_dev_beta/CLAUDE.md) | +beta6 (10-05): копия авторского CMF под 1.4 + `cmf_is_host`, нижняя панель без пустых мест; ставится вместо CMF и CMF Dev | всё |
 | [`glorpui_hints`](../mods/glorpui_hints/CLAUDE.md) | 1.2.12, игра 1.4, основной предмет; ворота по техам | 1.2.10–1.2.12 в игре не были |
 | [`glorpui_hints_1_3`](../mods/glorpui_hints_1_3/CLAUDE.md) | 1.1.1 для 1.3, свой предмет | — |
@@ -18,7 +18,8 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`quiet_alerts`](../mods/quiet_alerts/CLAUDE.md) | 10-02: 0.3.0 не в игре. Красные и оранжевые с жёлтым звуком, галочка в CMF | всё |
 | [`assimilate_primary`](../mods/assimilate_primary/CLAUDE.md) | 0.3.0 (10-05): + включает скрытые «Действия совета» | 0.2.x |
 | [`perf_probe`](../mods/perf_probe/CLAUDE.md), [`speed_5`](../mods/speed_5/CLAUDE.md), [`speed_10`](../mods/speed_10/CLAUDE.md) | 0.1.0: профилировщик; паузы; 10 скоростей | всё |
-| [`war_sliders`](../mods/war_sliders/CLAUDE.md) | **0.7.0**: сам после мира (`on_ending_war`) + галочка, кнопка CMF осталась | автозапуск, кнопка |
+| [`auto_marry`](../mods/auto_marry/CLAUDE.md) | автоженитьба под 1.4 | всё |
+| [`war_sliders`](../mods/war_sliders/CLAUDE.md) | **0.7.3**: сам после мира и восстания, кнопка CMF; к мастерской | автозапуск |
 
 Закрытые, но лежащие здесь: [`archive/status_closed.md`](archive/status_closed.md).
 Убранные из дерева 10-03 (`where_to_produce`, `goods_target`, `marker_throttle`,

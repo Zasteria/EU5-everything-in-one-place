@@ -45,11 +45,55 @@ on_ending_war = {
 # Scope: country. Через день — мирный договор к тому времени исполнен, и
 # `at_war` честно говорит, не осталось ли второй войны.
 bag_wsl_on_war_end = {
-	trigger = {
-		is_human = yes
-		has_variable = bag_wsl_auto_on
-	}
 	effect = {
-		trigger_event_silently = { id = bag_wsl.3 days = 1 }
+		bag_wsl_queue_war_end = yes
+	}
+}
+
+# **Восстание и гражданская война** (0.7.2). Его прогон 10-06: подавил восстание —
+# мод не сработал. У игры для них свои крючки (`_hardcoded.txt`): конец —
+# `on_civil_war_won`/`_lost` (root, scope:winner, scope:loser), поглощение
+# мятежной страны — `on_civil_war_annex`/`_annexed` (root поглощает,
+# scope:target поглощена). Какой из них зовётся при подавленном восстании и
+# зовётся ли `on_ending_war` — не проверено, поэтому висим на всех четырёх;
+# `bag_wsl_end_queued` не даёт поставить в очередь второй раз.
+on_civil_war_won = {
+	on_actions = {
+		bag_wsl_on_civil_war_result
+	}
+}
+
+on_civil_war_lost = {
+	on_actions = {
+		bag_wsl_on_civil_war_result
+	}
+}
+
+on_civil_war_annex = {
+	on_actions = {
+		bag_wsl_on_civil_war_annex
+	}
+}
+
+on_civil_war_annexed = {
+	on_actions = {
+		bag_wsl_on_civil_war_annex
+	}
+}
+
+# root и scope:winner — победитель, scope:loser — проигравший.
+bag_wsl_on_civil_war_result = {
+	effect = {
+		bag_wsl_queue_war_end = yes
+		scope:winner ?= { bag_wsl_queue_war_end = yes }
+		scope:loser ?= { bag_wsl_queue_war_end = yes }
+	}
+}
+
+# root — кто поглощает, scope:target — кого.
+bag_wsl_on_civil_war_annex = {
+	effect = {
+		bag_wsl_queue_war_end = yes
+		scope:target ?= { bag_wsl_queue_war_end = yes }
 	}
 }
