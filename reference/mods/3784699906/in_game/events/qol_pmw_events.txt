@@ -1,0 +1,46 @@
+﻿# Post-war maintenance - deferred run.
+# Fired silently one day after on_ending_war (qol_pmw_queue_war_end); by then
+# the peace treaty has been executed and at_war tells whether the country was
+# dragged into a second war already.
+namespace = qol_pmw
+
+# Scope: country
+qol_pmw.1 = {
+	type = country_event
+	hidden = yes
+	title = empty_text
+	desc = empty_text
+
+	immediate = {
+		cmf_log = { action = qol_pmw_log_fired }
+		# Still at war one day later: open a bounded retry window and come back
+		# the next day. qol_pmw_waited expires after six days, so the run gives
+		# up instead of polling a war that never opens a peace.
+		if = {
+			limit = {
+				is_human = yes
+				at_war = yes
+				NOT = { has_variable = qol_pmw_waited }
+			}
+			cmf_log = { action = qol_pmw_log_wait }
+			set_variable = { name = qol_pmw_waited days = 6 }
+			trigger_event_silently = { id = qol_pmw.1 days = 1 }
+		}
+		else_if = {
+			limit = {
+				is_human = yes
+				at_war = yes
+				has_variable = qol_pmw_waited
+			}
+			trigger_event_silently = { id = qol_pmw.1 days = 1 }
+		}
+		else_if = {
+			limit = {
+				is_human = yes
+				at_war = no
+			}
+			cmf_log = { action = qol_pmw_log_run }
+			qol_pmw_run = yes
+		}
+	}
+}

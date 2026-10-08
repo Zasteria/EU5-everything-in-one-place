@@ -1,0 +1,262 @@
+﻿####################################################################################################
+# WHOLE-FILE REPLACEMENT of vanilla in_game/gui/attribute_columns/town_rights_type.gui
+#
+# BASED ON GAME VERSION 1.3.11. There is no INJECT/REPLACE patch system for .gui -- a mod file at
+# this path replaces vanilla's outright -- so this file MUST be re-diffed against vanilla after every
+# game patch, or it will silently pin an old version of the card and lose whatever Paradox changed.
+#
+# What we changed, so a re-sync is a small job rather than a rewrite:
+#   ADDED  two templates above `types TownRightsTypes` (urqol_marker_tooltip and this header)
+#   ADDED  one hbox inside blockoverride "header_content", after the right's name text_single
+#   REMOVED nothing of vanilla's -- the only deletions are two blank lines the hbox replaced
+#
+# To re-sync: diff this file against the new vanilla one, take vanilla's version wholesale, then
+# re-apply the two additions above. `diff <vanilla> <this>` should show our block as the only
+# additions and no removals beyond whitespace.
+#
+# This file also hard-conflicts with any other mod replacing the same path; last loaded wins.
+####################################################################################################
+
+# Marker tooltip. Datacontext is the province location whose raw material matched, so
+# Location.GetRawMaterial / GetName are exact rather than inferred.
+#
+# The share is a real number, not the word "major": EU5 shows exact figures everywhere else, and a
+# marker that says only "major input" is out of place in it. The percentage comes from the generated
+# urqol_input_share script value, read with the GuiScope...ScriptValue construct vanilla uses at
+# economy_lateralview.gui:1414, formatted |%0 the same way.
+template urqol_marker_tooltip {
+	ContextualTooltipType = {
+		blockoverride "title_text" {
+			text = "urqol_marker_title"
+		}
+
+		blockoverride "title_icon_texture" {
+			texture = "[GetGoodsIcon(Location.GetRawMaterial)]"
+		}
+
+		blockoverride "concept_link" {
+			text = "[production_efficiency|E]"
+		}
+
+		# Key/value rows, no prose. Vanilla tooltips state figures and stop -- compare the
+		# Fortress Town urban-rights tooltip or any building panel. An earlier version of this
+		# explained the mechanic in two paragraphs, which reads like documentation, not like EU5.
+		blockoverride "tooltip_content" {
+			vbox = {
+				layoutpolicy_horizontal = expanding
+				margin = { 5 3 }
+				spacing = 2
+
+				# The location is a row rather than part of the title. The title used to read
+				# "<Good> in <Location>", which needs the bare word "in" translated with no
+				# context -- and many languages inflect a preposition by the case or gender of
+				# the noun after it, which here is a proper place name hidden behind a protected
+				# token. As a key/value row the problem disappears: the label is a concept link
+				# the game translates itself, and the value is a name that is never translated.
+				hbox = {
+					layoutpolicy_horizontal = expanding
+					spacing = 5
+
+					icon = {
+						size = { 18 18 }
+						texture = "[GetConceptTexture('location')]"
+					}
+
+					text_single = { text = "urqol_marker_location" }
+
+					expand = {}
+
+					text_single = {
+						autoresize = yes
+						default_format = "#high"
+						text = "[Location.GetName]"
+					}
+				}
+
+				# Both labels are concept links, which is how EU5 signals "there is more here".
+				# Row 2 links a concept this mod registers rather than the game's
+				# production_method: linking that one looked right but opened the game's
+				# explanation of production methods, which answers a different question than
+				# "share of what?". A registered concept keeps the native look and hover
+				# behaviour while putting our text under it, and needs no tooltipwidget here.
+				hbox = {
+					layoutpolicy_horizontal = expanding
+					spacing = 5
+
+					icon = {
+						size = { 18 18 }
+						texture = "[GetGoodsIcon(Location.GetRawMaterial)]"
+					}
+
+					text_single = { text = "urqol_marker_share" }
+
+					expand = {}
+
+					text_single = {
+						autoresize = yes
+						default_format = "#high"
+						raw_text = "[GuiScope.SetRoot(Location.MakeScope).AddScope('right', InteractionTarget.GetTownRightsType.MakeScope).ScriptValue('urqol_input_share')|%0]"
+					}
+				}
+
+				# |+=%2 is vanilla's signed-percentage token: it prints the leading + and colours
+				# by sign, so no manual default_format is needed.
+				hbox = {
+					layoutpolicy_horizontal = expanding
+					spacing = 5
+
+					icon = {
+						size = { 18 18 }
+						texture = "gfx/interface/icons/flat_icons/building_panel/production_efficiency.dds"
+					}
+
+					text_single = { text = "urqol_marker_bonus" }
+
+					expand = {}
+
+					text_single = {
+						autoresize = yes
+						raw_text = "[GuiScope.SetRoot(Location.MakeScope).AddScope('right', InteractionTarget.GetTownRightsType.MakeScope).AddScope('viewer', GetPlayer.MakeScope).ScriptValue('urqol_input_bonus')|+=%2]"
+					}
+				}
+			}
+		}
+	}
+}
+
+types TownRightsTypes
+{
+	type town_rights_type = clickable_header_card {
+		blockoverride "layout_setup" {
+			using = flexible_interaction_target_entry_setup
+		}
+
+		blockoverride "header_size" {
+			size = { -1 40 }
+		}
+		blockoverride "header_color" {
+			using = color_government_texture
+		}
+
+		blockoverride "header_content" {
+			using = select_interaction_target_action_provider
+			datacontext = "[InteractionTarget.GetTownRightsType]"
+			tooltipwidget = {
+				using = TownRightsType_tooltip
+			}
+
+			hbox = {
+				margin_right = 10
+				spacing = 10
+				layoutpolicy_horizontal = expanding
+
+				estate_privilege_action_button_alt = {
+					size = { 40 40 }
+					blockoverride "icon_texture" {
+						texture = "[InteractionTarget.GetTownRightsType.GetIcon]"
+					}
+					blockoverride "estate_privilege_button_action" {
+						tooltip_enabled = no
+						using = select_interaction_target_action_provider
+					}
+				}
+
+				text_single = {
+					using = layoutpolicy_expanding
+					using = Font_Size_Medium
+					default_format = "#yellow_titles"
+					autoresize = no
+					size = { 200 18 }
+					multiline = yes
+					align = nobaseline
+					text = "[InteractionTarget.GetTownRightsType.GetNameWithNoTooltip]"
+
+					sort_by_left_fade_highlight = {
+						name = "name"
+					}
+				}
+
+				# The 'location' target flag is only populated when the rights list was opened
+				# from a location (the grant button on the location window). Opening it from
+				# the Locations tab of the Production panel passes no location, and the
+				# promoted Location is NOT null-ish in any obvious way: GetName returns the
+				# literal string "Location" and GetRawMaterial returns a default good with a
+				# generic icon. An unguarded read therefore renders a plausible-looking but
+				# entirely wrong marker rather than nothing.
+				#
+				# .IsValid is the guard for exactly this; vanilla uses the same construct in
+				# select_interaction_cards/location.gui on its own target-flag reads.
+				hbox = {
+					spacing = 10
+					visible = "[SelectInteractionTargetView.GetCurrentParams.GetTargetObjectFromFlag('location').GetLocation.IsValid]"
+
+					# One icon per MATCHING LOCATION of the province, showing that location's
+					# actual raw material -- so the card says "iron, stone" rather than a
+					# generic pin that means only "something matched".
+					#
+					# Iterating Province.GetLocations is what makes the specific good knowable:
+					# GUI cannot ask "which good matched?", but it CAN walk the province and ask
+					# script, per location, "is YOUR raw material an input for this right?". The
+					# datacontext inside the item is that location, so GetRawMaterial is exact.
+					# Vanilla iterates the same data model at
+					# location_production_lateralview.gui:681.
+					#
+					# Stays inside the .IsValid hbox: the Production-panel entry path passes a
+					# promoted-null location, and GetProvince on it must never be walked.
+					#
+					# ONE treatment for every match. There were two, sized and dimmed by the
+					# input's share of the recipe, and they could not be told apart on screen --
+					# so the size was carrying information nobody could read. The share is
+					# reported as an exact percentage in the tooltip instead, which is where a
+					# number belongs. An icon here means "this good feeds this right"; how much
+					# it is worth is one hover away.
+					hbox = {
+						spacing = 2
+						datamodel = "[SelectInteractionTargetView.GetCurrentParams.GetTargetObjectFromFlag('location').GetLocation.GetProvince.GetLocations]"
+
+						item = {
+							# The lift is a round_highlight backing plate, not `glow`.
+							# `glow` is a drop shadow -- "drop_shadow" is the ONLY glow name
+							# anywhere in the vanilla GUI (1095 uses, no others) -- so a
+							# coloured glow renders as a coloured shadow and reads as nothing.
+							# round_highlight.dds is how vanilla makes a small icon pop, see
+							# societal_values_lateralview.gui:911.
+							icon = {
+								size = { 28 28 }
+								layoutpolicy_vertical = fixed
+								layoutpolicy_horizontal = fixed
+								visible = "[GetScriptedGui('urqol_location_match').IsShown(GuiScope.SetRoot(Location.MakeScope).AddScope('right', InteractionTarget.GetTownRightsType.MakeScope).End)]"
+								texture = "[GetGoodsIcon(Location.GetRawMaterial)]"
+
+								background = {
+									texture = "gfx/interface/component_tiles/round_highlight.dds"
+									texture_density = 2
+									margin = { 8 8 }
+								}
+
+								tooltipwidget = {
+									using = urqol_marker_tooltip
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		blockoverride "bottom_content_layout" {
+			vbox = {
+				using = bg_paper_card
+
+				
+				layoutpolicy_horizontal = expanding
+				spacing = 5
+				margin = { 5 5 }
+
+				card_block_list = {
+					textcontext =  "[InteractionTarget.GetTownRightsType.GetTooltip][InteractionTarget.GetTownRightsType.GetDebugTooltip(SelectInteractionTargetView.GetCurrentParams.GetTargetObjectFromFlag('location').GetLocation)]"
+				}
+			}
+		}
+	}
+}

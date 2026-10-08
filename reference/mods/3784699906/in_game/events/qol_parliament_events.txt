@@ -1,0 +1,138 @@
+﻿namespace = qol_parliament
+
+# Popup shown when a parliament session is about to end and the selected mode
+# triggers a pause. Fired non-silently so the game pauses for the player.
+qol_parliament.1 = {
+	type = country_event
+	outcome = neutral
+	title = qol_parliament.1.t
+	desc = qol_parliament.1.d
+
+	image = "gfx/interface/illustrations/government/bg_government.dds"
+
+	trigger = {
+		is_human = yes
+		has_ongoing_parliament_debate = yes
+		remaining_parliament_days = 1
+	}
+
+	option = {
+		name = qol_parliament.1.a
+		set_variable = qol_open_parliament
+	}
+
+	option = {
+		name = qol_parliament.1.b
+	}
+}
+
+# Popup shown when a new parliament session can be called.
+qol_parliament.3 = {
+	type = country_event
+	outcome = neutral
+	title = qol_parliament.3.t
+	desc = qol_parliament.3.d
+
+	image = "gfx/interface/illustrations/government/bg_government.dds"
+
+	trigger = {
+		is_human = yes
+		qol_parliament_availability_enabled_effective = yes
+		has_parliament = yes
+		is_active_parliament = no
+		months_since_last_parliament_called > "define:NCountry|PARLIAMENT_COOLDOWN_MONTHS"
+		NOT = {
+			modifier:parliament_abolished = yes
+		}
+	}
+
+	option = {
+		name = qol_parliament.3.a
+		set_variable = qol_open_parliament
+	}
+
+	option = {
+		name = qol_parliament.3.b
+	}
+}
+
+# Daily poller while a parliament session is active.
+# Re-fires itself once a day and decides whether to show the ending popup.
+qol_parliament.2 = {
+	type = country_event
+	outcome = neutral
+	title = qol_parliament.1.t
+	hidden = yes
+
+	trigger = {
+		is_human = yes
+	}
+
+	immediate = {
+		if = {
+			limit = {
+				OR = {
+					has_ongoing_parliament_debate = no
+					qol_parliament_mode_off = yes
+				}
+			}
+			remove_variable = qol_parliament_ending_poller_active
+			remove_variable = qol_parliament_ending_notified
+		}
+		else_if = {
+			limit = { remaining_parliament_days = 1 }
+			if = {
+				limit = {
+					NOT = { has_variable = qol_parliament_ending_notified }
+					OR = {
+						qol_parliament_mode_always = yes
+						AND = {
+							qol_parliament_mode_if_fail = yes
+							parliament_issue_will_pass = no
+						}
+					}
+				}
+				set_variable = qol_parliament_ending_notified
+				trigger_event_non_silently = { id = qol_parliament.1 days = 0 }
+			}
+			trigger_event_non_silently = { id = qol_parliament.2 days = 1 }
+		}
+		else = {
+			trigger_event_non_silently = { id = qol_parliament.2 days = 1 }
+		}
+	}
+}
+
+# Hidden poller for the availability reminder.
+qol_parliament.4 = {
+	type = country_event
+	outcome = neutral
+	title = qol_parliament.3.t
+	hidden = yes
+
+	trigger = {
+		is_human = yes
+		qol_parliament_availability_enabled_effective = yes
+		has_parliament = yes
+		is_active_parliament = no
+		months_since_last_parliament_called > "define:NCountry|PARLIAMENT_COOLDOWN_MONTHS"
+		NOT = {
+			modifier:parliament_abolished = yes
+		}
+		NOT = { has_variable = qol_parliament_availability_notified }
+	}
+
+	immediate = {
+		random_possible_parliament_issue = {
+			save_scope_as = qol_parliament_availability_issue
+		}
+
+		if = {
+			limit = {
+				exists = scope:qol_parliament_availability_issue
+			}
+			set_variable = qol_parliament_availability_notified
+			trigger_event_non_silently = { id = qol_parliament.3 days = 0 }
+		}
+	}
+}

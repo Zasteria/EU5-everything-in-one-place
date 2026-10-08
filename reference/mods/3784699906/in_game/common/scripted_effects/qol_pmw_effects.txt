@@ -1,0 +1,83 @@
+﻿# Post-war maintenance - runtime. One pass of the driver per finished war: the
+# mod keeps no pulse and no daily watch, the game itself calls on_ending_war
+# when a war closes (see qol_pmw_on_actions.txt).
+#
+# Every flag carries a day expiry on purpose. If the driver ever failed to
+# clear them, the queue guard and the busy flag would expire on their own and
+# the mod would go back to sleep instead of staying awake forever.
+# Scope: country unless stated otherwise
+
+# on_ending_war reaches both the winner and the loser with root = country (see
+# the canals cleanup in _hardcoded.txt). One day is deferred on purpose: the
+# peace treaty is executed by then and at_war can honestly say whether a second
+# war is still running. The hook is called for several countries of the same
+# war, so the queued flag keeps the run from being armed twice.
+qol_pmw_queue_war_end = {
+	if = {
+		limit = {
+			is_human = yes
+			OR = {
+				has_variable = qol_pmw_army
+				has_variable = qol_pmw_navy
+				has_variable = qol_pmw_fort
+			}
+			NOT = { has_variable = qol_pmw_end_queued }
+		}
+		cmf_log = { action = qol_pmw_log_queued }
+		set_variable = { name = qol_pmw_end_queued days = 2 }
+		trigger_event_silently = { id = qol_pmw.1 days = 1 }
+	}
+}
+
+# The country is at peace: arm every branch the player switched on.
+# Scope: country
+qol_pmw_run = {
+	qol_pmw_maint_arm = yes
+	qol_pmw_update_busy = yes
+	if = {
+		limit = { has_variable = qol_pmw_busy }
+		cmf_log = { action = qol_pmw_log_busy }
+	}
+}
+
+# Arm a branch: the slider comes up holding qol_pmw_arm and takes the real
+# target (qol_pmw_target) from qol_pmw_set_*_target once it is displayed. The
+# number changing under a displayed slider is what fires onvaluechanged.
+# Scope: country
+qol_pmw_maint_arm = {
+	if = {
+		limit = { has_variable = qol_pmw_army }
+		set_variable = { name = qol_pmw_army_target value = qol_pmw_arm }
+		set_variable = { name = qol_pmw_army_go value = 1 days = 10 }
+	}
+	if = {
+		limit = { has_variable = qol_pmw_navy }
+		set_variable = { name = qol_pmw_navy_target value = qol_pmw_arm }
+		set_variable = { name = qol_pmw_navy_go value = 1 days = 10 }
+	}
+	if = {
+		limit = { has_variable = qol_pmw_fort }
+		set_variable = { name = qol_pmw_fort_target value = qol_pmw_arm }
+		set_variable = { name = qol_pmw_fort_go value = 1 days = 10 }
+	}
+}
+
+# "The driver is needed" flag. The whole widget sleeps without it: the frame
+# then reads a single variable and there is no binding to the economy view at
+# all, which is the binding that costs a debug.log line per frame while it is
+# evaluated. Scope: country
+qol_pmw_update_busy = {
+	if = {
+		limit = {
+			OR = {
+				has_variable = qol_pmw_army_go
+				has_variable = qol_pmw_navy_go
+				has_variable = qol_pmw_fort_go
+			}
+		}
+		set_variable = { name = qol_pmw_busy value = 1 days = 10 }
+	}
+	else = {
+		remove_variable = qol_pmw_busy
+	}
+}

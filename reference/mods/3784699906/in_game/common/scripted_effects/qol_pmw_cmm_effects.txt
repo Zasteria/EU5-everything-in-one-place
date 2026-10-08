@@ -1,0 +1,75 @@
+﻿# Post-war maintenance - CMM settings + callback.
+# Scope: country (matches cmf_on_mod_registration / cmf_on_callback).
+#
+# One tab of its own, "Military" (military), so the war-flavoured additions
+# have a home; a single group (postwar) holds the three branch toggles, which
+# are all the player needs: each one alone is enough to arm the run when a war
+# ends. All three start OFF: nothing moves until the player asks for it. Each
+# toggle keeps a plain country variable (qol_pmw_*) in sync through
+# cmm_sync_bool_alias, which only creates the variable while the setting is on,
+# so `has_variable` is the test the runtime uses.
+
+qol_pmw_register_settings = {
+	cmm_register_bool_setting = {
+		mod_id = qol
+		setting_id = postwar_army
+		tab_id = military
+		group_id = postwar
+		default_value = 0
+	}
+	cmm_sync_bool_alias = {
+		setting = qol__postwar_army
+		alias = qol_pmw_army
+	}
+
+	cmm_register_bool_setting = {
+		mod_id = qol
+		setting_id = postwar_navy
+		tab_id = military
+		group_id = postwar
+		default_value = 0
+	}
+	cmm_sync_bool_alias = {
+		setting = qol__postwar_navy
+		alias = qol_pmw_navy
+	}
+
+	cmm_register_bool_setting = {
+		mod_id = qol
+		setting_id = postwar_fort
+		tab_id = military
+		group_id = postwar
+		default_value = 0
+	}
+	cmm_sync_bool_alias = {
+		setting = qol__postwar_fort
+		alias = qol_pmw_fort
+	}
+}
+
+# Callback handler for cmf_on_callback. Re-syncs the toggle alias when the row
+# is clicked; no-ops for unrecognized flags. Same shape as
+# qol_cabinet_cmm_effects.txt.
+qol_pmw_handle_cmf_callback = {
+	switch = {
+		trigger = var:cmf_callback
+		flag:qol__postwar_army = {
+			cmm_sync_bool_alias = {
+				setting = qol__postwar_army
+				alias = qol_pmw_army
+			}
+		}
+		flag:qol__postwar_navy = {
+			cmm_sync_bool_alias = {
+				setting = qol__postwar_navy
+				alias = qol_pmw_navy
+			}
+		}
+		flag:qol__postwar_fort = {
+			cmm_sync_bool_alias = {
+				setting = qol__postwar_fort
+				alias = qol_pmw_fort
+			}
+		}
+	}
+}

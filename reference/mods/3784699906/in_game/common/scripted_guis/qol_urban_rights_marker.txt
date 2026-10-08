@@ -1,0 +1,34 @@
+﻿# Bridge between the urban-rights card widget and script.
+#
+# It has to exist because a town rights type cannot be identified in GUI at all: TownRightsType
+# exposes no GetKey, and no trigger or effect in the game accepts town_rights_type as a scope. The
+# only thing that can be done with a right is compare it for equality against a literal
+# town_rights_type:<key>, in script. Hence: pass the right in as a saved scope and switch on it.
+#
+# These are asked ONCE PER LOCATION OF THE PROVINCE, not once per province. The card iterates
+# Province.GetLocations and asks each location "is your raw material an input for this right?", so
+# the answer can be drawn as that location's actual goods icon. Asking at province level only ever
+# yielded a yes/no, which is why the marker previously had nothing to show but a generic pin.
+#
+# root  = one location of the province being considered (the target location is among them)
+# scope:right = the town rights type whose card is being drawn
+#
+# The province is the right unit because raw_material_in_province_impact grants production
+# efficiency to a building whose inputs are made in the same province -- see the research doc.
+# Where inside the province the RGO sits makes no difference to the bonus.
+
+# This location's raw material is an input to one of the right's boosted goods, at a share worth
+# marking. ONE entry, so exactly one icon draws per location.
+#
+# There were briefly two -- a strong tier at 50% drawn large, a weak one at 20% drawn small and
+# dimmed -- and the two treatments could not be told apart in play. The share is a number, and it is
+# already reported as a number in the marker tooltip; encoding it a second time in the icon's size
+# bought nothing and cost a second scripted gui whose only job was to exclude the first.
+urqol_location_match = {
+	scope = location
+	saved_scopes = { right }
+
+	is_shown = {
+		urqol_goods_match = yes
+	}
+}

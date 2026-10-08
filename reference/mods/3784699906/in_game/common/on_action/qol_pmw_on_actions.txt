@@ -1,0 +1,29 @@
+﻿# Post-war maintenance - hook on the end of a war.
+# Scope: country (root for on_ending_war).
+#
+# Vanilla fires on_ending_war for the winner and for the loser alike with
+# root = country (see the buildable canals cleanup in _hardcoded.txt: "Fires
+# for both winner and loser as root scope, so each side cleans up its own
+# canals"). Adding an entry to the hook is additive - religious_order_conquest
+# .txt declares it the same way, next to _hardcoded.txt, without any trigger.
+#
+# No civil war hooks in 1.2.4: whether a suppressed revolt reaches this hook is
+# untested, so the branch is deliberately left for a later version.
+on_ending_war = {
+	on_actions = {
+		qol_pmw_on_war_end
+	}
+}
+
+# Our dispatcher. The human gate lives inside the effect the way War Sliders
+# puts it, so the queue never runs - and never logs - for the AI.
+# Scope: country.
+qol_pmw_on_war_end = {
+	effect = {
+		if = {
+			limit = { is_human = yes }
+			cmf_log = { action = qol_pmw_log_hook }
+			qol_pmw_queue_war_end = yes
+		}
+	}
+}

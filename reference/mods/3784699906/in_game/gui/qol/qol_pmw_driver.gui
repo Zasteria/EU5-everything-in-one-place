@@ -1,0 +1,201 @@
+﻿# Post-war maintenance - the driver. Everything the mod does to the game, this
+# widget does; script itself has no effect that moves a maintenance slider.
+#
+# Why it works at all: script cannot move the "Maintenance" sliders, only the
+# slider's own onvaluechanged can - and it takes no argument. So the mod brings
+# its own economy_slider bound to the same engine objects and feeds it a
+# country variable; the game's slider follows.
+#
+# The economy panel does not have to be open. GetEconomyView is a global
+# promote and the topbar keeps it in the gold tooltip (hud_topbar.gui), so the
+# view is reachable even while the panel is closed.
+#
+# Binding shape: datacontext on the box with EconomyView. inside it. A global
+# promote in a callback or in a datamodel is rejected by the engine; the
+# vanilla shape is datacontext on a box plus EconomyView./MaintenanceSetting.
+# inside (economy_lateralview.gui).
+#
+# Stops come from the game, not from the mod: mincap = [MaintenanceSetting.GetMin]
+# keeps the slider inside what the engine allows. `value` is declared before
+# the caps, as the vanilla comment in economy_lateralview.gui asks for: caps
+# placed first knock over the value already taken.
+#
+# The root lives off screen instead of hidden. visible is always true so its
+# own gates (qol_pmw_arm) keep being recalculated; the form follows the live
+# cm_maps window. Every box below is gated by qol_pmw_busy, and without it the
+# economy binding is not evaluated at all - that binding is what would write a
+# line to debug.log every frame.
+widget = {
+	name = "qol_pmw_driver"
+	visible = "[EqualTo_CFixedPoint('(CFixedPoint)0', '(CFixedPoint)0')]"
+	position = { -10000 1 }
+
+	# ---- gates -------------------------------------------------------------
+	# The driver sleeps between wars. Arming waits 0.3 s after waking, so every
+	# condition below is false first under an already visible box and the states
+	# catch a real transition: a widget made visible together with its parent
+	# does not catch it. The delay is a state of its own, not a duration on
+	# trigger_when - that combined form is not used anywhere in the vanilla files
+	# and never fired when it was tried.
+	state = {
+		name = qol_pmw_arm
+		trigger_when = "[And(GetPlayer.MakeScope.GetVariable('qol_pmw_busy').IsSet, Not(GetVariableSystem.Exists('qol_pmw_armed')))]"
+		on_start = "[PdxGuiTriggerAllAnimations('qol_pmw_arm_settle')]"
+	}
+
+	state = {
+		name = qol_pmw_arm_settle
+		duration = 0.3
+		on_finish = "[GetVariableSystem.Set('qol_pmw_armed', '1')]"
+	}
+
+	state = {
+		name = qol_pmw_disarm
+		trigger_when = "[And(Not(GetPlayer.MakeScope.GetVariable('qol_pmw_busy').IsSet), GetVariableSystem.Exists('qol_pmw_armed'))]"
+		on_start = "[GetVariableSystem.Clear('qol_pmw_armed')]"
+	}
+
+	# ---- maintenance -------------------------------------------------------
+	# The list comes from the engine. Nothing but layout policies goes above the
+	# datamodel, and no static children in its box either.
+	widget = {
+		size = { 200 20 }
+		visible = "[GetPlayer.MakeScope.GetVariable('qol_pmw_busy').IsSet]"
+		datacontext = "[GetEconomyView]"
+
+		vbox = {
+			layoutpolicy_horizontal = expanding
+
+			vbox = {
+				layoutpolicy_horizontal = expanding
+				ignoreinvisible = yes
+
+				datamodel = "[EconomyView.GetMaintenanceSettings]"
+				item = {
+					widget = {
+						size = { 160 40 }
+
+						# Army
+						widget = {
+							size = { 160 12 }
+							visible_at_creation = no
+							visible = "[And(GetVariableSystem.Exists('qol_pmw_armed'), And(MaintenanceSetting.IsArmy, GetPlayer.MakeScope.GetVariable('qol_pmw_army_go').IsSet))]"
+
+							economy_slider = {
+								size = { 120 10 }
+								min = 0
+								max = 1
+								value = "[FixedPointToFloat(GetPlayer.MakeScope.GetVariable('qol_pmw_army_target').GetValue)]"
+								mincap = "[MaintenanceSetting.GetMin]"
+								maxcap = "[MaintenanceSetting.GetMax]"
+								onvaluechanged = "[MaintenanceSetting.OnChanged]"
+								onchangefinish = "[MaintenanceSetting.Post]"
+							}
+
+							# Step one: the slider is up, holding the arming value.
+							state = {
+								name = _show
+								duration = 0.2
+								next = qol_pmw_army_set
+								on_finish = "[GetScriptedGui('qol_pmw_set_army_target').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+							}
+
+							# Step two: the number changed under the displayed
+							# slider - hand it to the engine.
+							state = {
+								name = qol_pmw_army_set
+								duration = 0.2
+								next = qol_pmw_army_done
+								on_finish = "[MaintenanceSetting.Post]"
+							}
+
+							# Step three: drop the flag so the busy flag can
+							# follow and the driver go back to sleep.
+							state = {
+								name = qol_pmw_army_done
+								duration = 0.2
+								on_finish = "[GetScriptedGui('qol_pmw_clear_army_go').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+							}
+						}
+
+						# Navy
+						widget = {
+							size = { 160 12 }
+							visible_at_creation = no
+							visible = "[And(GetVariableSystem.Exists('qol_pmw_armed'), And(MaintenanceSetting.IsNavy, GetPlayer.MakeScope.GetVariable('qol_pmw_navy_go').IsSet))]"
+
+							economy_slider = {
+								size = { 120 10 }
+								min = 0
+								max = 1
+								value = "[FixedPointToFloat(GetPlayer.MakeScope.GetVariable('qol_pmw_navy_target').GetValue)]"
+								mincap = "[MaintenanceSetting.GetMin]"
+								maxcap = "[MaintenanceSetting.GetMax]"
+								onvaluechanged = "[MaintenanceSetting.OnChanged]"
+								onchangefinish = "[MaintenanceSetting.Post]"
+							}
+
+							state = {
+								name = _show
+								duration = 0.2
+								next = qol_pmw_navy_set
+								on_finish = "[GetScriptedGui('qol_pmw_set_navy_target').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+							}
+
+							state = {
+								name = qol_pmw_navy_set
+								duration = 0.2
+								next = qol_pmw_navy_done
+								on_finish = "[MaintenanceSetting.Post]"
+							}
+
+							state = {
+								name = qol_pmw_navy_done
+								duration = 0.2
+								on_finish = "[GetScriptedGui('qol_pmw_clear_navy_go').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+							}
+						}
+
+						# Fortifications
+						widget = {
+							size = { 160 12 }
+							visible_at_creation = no
+							visible = "[And(GetVariableSystem.Exists('qol_pmw_armed'), And(MaintenanceSetting.IsFort, GetPlayer.MakeScope.GetVariable('qol_pmw_fort_go').IsSet))]"
+
+							economy_slider = {
+								size = { 120 10 }
+								min = 0
+								max = 1
+								value = "[FixedPointToFloat(GetPlayer.MakeScope.GetVariable('qol_pmw_fort_target').GetValue)]"
+								mincap = "[MaintenanceSetting.GetMin]"
+								maxcap = "[MaintenanceSetting.GetMax]"
+								onvaluechanged = "[MaintenanceSetting.OnChanged]"
+								onchangefinish = "[MaintenanceSetting.Post]"
+							}
+
+							state = {
+								name = _show
+								duration = 0.2
+								next = qol_pmw_fort_set
+								on_finish = "[GetScriptedGui('qol_pmw_set_fort_target').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+							}
+
+							state = {
+								name = qol_pmw_fort_set
+								duration = 0.2
+								next = qol_pmw_fort_done
+								on_finish = "[MaintenanceSetting.Post]"
+							}
+
+							state = {
+								name = qol_pmw_fort_done
+								duration = 0.2
+								on_finish = "[GetScriptedGui('qol_pmw_clear_fort_go').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

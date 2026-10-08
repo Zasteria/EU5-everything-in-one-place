@@ -1,0 +1,163 @@
+﻿# Demolish the fortification types selected in the CMM buildings list.
+# Only runs while at peace and never touches capitals.
+# Scope: country
+qol_fort_cleanup = {
+	if = {
+		limit = { at_war = no }
+		if = {
+			limit = { has_variable = qol__fort_cleanup_scope_all }
+			cmm_for_each_list_item = {
+				setting = qol__fort_cleanup_buildings
+				effect = qol_fort_cleanup_item_world
+			}
+		}
+		else_if = {
+			limit = { has_variable = qol__fort_cleanup_scope_dependencies }
+			cmm_for_each_list_item = {
+				setting = qol__fort_cleanup_buildings
+				effect = qol_fort_cleanup_item_dependencies
+			}
+		}
+		else_if = {
+			limit = { has_variable = qol__fort_cleanup_scope_dependencies_only }
+			cmm_for_each_list_item = {
+				setting = qol__fort_cleanup_buildings
+				effect = qol_fort_cleanup_item_dependencies_only
+			}
+		}
+		else = {
+			cmm_for_each_list_item = {
+				setting = qol__fort_cleanup_buildings
+				effect = qol_fort_cleanup_item_own
+			}
+		}
+	}
+}
+
+# Per-location: demolish the current building type only when the location rank
+# matches the selected location rank filter (fallback "all" when no filter).
+# Scope: location
+qol_fort_cleanup_destroy_at_location = {
+	if = {
+		limit = { owner = { has_variable = qol__fort_cleanup_rank_settlement } }
+		if = {
+			limit = { location_rank = location_rank:rural_settlement }
+			destroy_all_buildings_of_type = scope:cmm_list_current_item_value
+		}
+	}
+	else_if = {
+		limit = { owner = { has_variable = qol__fort_cleanup_rank_town } }
+		if = {
+			limit = { location_rank = location_rank:town }
+			destroy_all_buildings_of_type = scope:cmm_list_current_item_value
+		}
+	}
+	else_if = {
+		limit = { owner = { has_variable = qol__fort_cleanup_rank_city } }
+		if = {
+			limit = { location_rank = location_rank:city }
+			destroy_all_buildings_of_type = scope:cmm_list_current_item_value
+		}
+	}
+	else_if = {
+		limit = { owner = { has_variable = qol__fort_cleanup_rank_metropolis } }
+		if = {
+			limit = { location_rank = location_rank:megalopolis }
+			destroy_all_buildings_of_type = scope:cmm_list_current_item_value
+		}
+	}
+	else_if = {
+		limit = { owner = { has_variable = qol__fort_cleanup_rank_not_province_capital } }
+		if = {
+			limit = { is_province_capital = no }
+			destroy_all_buildings_of_type = scope:cmm_list_current_item_value
+		}
+	}
+	else = {
+		destroy_all_buildings_of_type = scope:cmm_list_current_item_value
+	}
+}
+
+# Per-item: demolish this building type in every location owned by the player.
+# Called by cmm_for_each_list_item.
+# Scope: country
+# Args: setting (key), i (number)
+qol_fort_cleanup_item_own = {
+	set_local_variable = { name = qol_tmp_fk value = flag:$setting$_i$i$_f1 }
+	if = {
+		limit = { "variable_map(cmm|local_var:qol_tmp_fk)" >= 1 }
+		every_owned_location = {
+			limit = { is_capital = no }
+			qol_fort_cleanup_destroy_at_location = yes
+		}
+	}
+}
+
+# Per-item: demolish this building type in every location owned by the player,
+# by the player's subjects and by the player's junior partners of a union.
+# Called by cmm_for_each_list_item.
+# Scope: country
+# Args: setting (key), i (number)
+qol_fort_cleanup_item_dependencies = {
+	set_local_variable = { name = qol_tmp_fk value = flag:$setting$_i$i$_f1 }
+	if = {
+		limit = { "variable_map(cmm|local_var:qol_tmp_fk)" >= 1 }
+		every_owned_location = {
+			limit = { is_capital = no }
+			qol_fort_cleanup_destroy_at_location = yes
+		}
+		every_subject = {
+			every_owned_location = {
+				limit = { is_capital = no }
+				qol_fort_cleanup_destroy_at_location = yes
+			}
+		}
+		every_junior_partner = {
+			every_owned_location = {
+				limit = { is_capital = no }
+				qol_fort_cleanup_destroy_at_location = yes
+			}
+		}
+	}
+}
+
+# Per-item: demolish this building type in every location owned by the player's
+# subjects and by the player's junior partners of a union.
+# Called by cmm_for_each_list_item.
+# Scope: country
+# Args: setting (key), i (number)
+qol_fort_cleanup_item_dependencies_only = {
+	set_local_variable = { name = qol_tmp_fk value = flag:$setting$_i$i$_f1 }
+	if = {
+		limit = { "variable_map(cmm|local_var:qol_tmp_fk)" >= 1 }
+		every_subject = {
+			every_owned_location = {
+				limit = { is_capital = no }
+				qol_fort_cleanup_destroy_at_location = yes
+			}
+		}
+		every_junior_partner = {
+			every_owned_location = {
+				limit = { is_capital = no }
+				qol_fort_cleanup_destroy_at_location = yes
+			}
+		}
+	}
+}
+
+# Per-item: demolish this building type in every owned location in the world.
+# Called by cmm_for_each_list_item.
+# Scope: country
+# Args: setting (key), i (number)
+qol_fort_cleanup_item_world = {
+	set_local_variable = { name = qol_tmp_fk value = flag:$setting$_i$i$_f1 }
+	if = {
+		limit = { "variable_map(cmm|local_var:qol_tmp_fk)" >= 1 }
+		every_country = {
+			every_owned_location = {
+				limit = { is_capital = no }
+				qol_fort_cleanup_destroy_at_location = yes
+			}
+		}
+	}
+}
