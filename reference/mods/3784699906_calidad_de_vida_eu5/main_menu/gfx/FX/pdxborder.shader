@@ -230,11 +230,10 @@ PixelShader =
 				#ifndef IGNORE_TERRA_INCOGNITA
 					if(GetBorderTakeTerraIncognitaIntoAccount() > 0)
 					{
-					float Dummy = 0;
 					#ifdef LOW_QUALITY_SHADERS
-						Diffuse.a = Diffuse.a * GetVisibility(Input.WorldSpacePos.xz, Dummy);
+						Diffuse.a = Diffuse.a * GetVisibility(Input.WorldSpacePos.xz);
 					#else
-						Diffuse.a = Diffuse.a * GetBilinear(Input.WorldSpacePos.xz, Dummy);
+						Diffuse.a = Diffuse.a * GetBilinear(Input.WorldSpacePos.xz);
 						Diffuse.rgb *= Diffuse.a;
 					#endif
 					}
@@ -258,7 +257,7 @@ RasterizerState RasterizerState
 {
 	#CullMode = None
     #fillmode = wireframe
-    DepthBias = -80000
+    DepthBias = -500
 	SlopeScaleDepthBias = -2
 }
 
