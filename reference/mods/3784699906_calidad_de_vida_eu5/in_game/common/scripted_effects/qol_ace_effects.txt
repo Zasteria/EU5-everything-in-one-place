@@ -5,7 +5,10 @@
 
 # Assign the education matching the child's highest base aptitude, after
 # removing the bonuses granted by the current education (if any). Never
-# overrides an expensive or orthodox education already assigned.
+# overrides an expensive or orthodox education already assigned. When both
+# the patriarch scope and the expensive scope are enabled, the patriarch
+# education wins (1.25 vs 1.0); when the country cannot use it, the
+# expensive education is assigned instead.
 # Scope: character
 qol_ace_assign_best_education = {
 	if = {
@@ -13,6 +16,30 @@ qol_ace_assign_best_education = {
 	}
 	else_if = {
 		limit = { has_child_education = orthodox_education }
+	}
+	# Patriarch education has priority over the expensive one: a stronger
+	# modifier (1.25 vs 1.0). The scope mirrors the expensive dropdown and
+	# the country must satisfy orthodox_education's potential + allow.
+	else_if = {
+		limit = {
+			owner = { qol_ace_country_can_assign_orthodox = yes }
+			OR = {
+				AND = {
+					is_heir = yes
+					owner = { has_variable = qol_ace_orth_heirs }
+				}
+				AND = {
+					is_heir = yes
+					owner = { has_variable = qol_ace_orth_heirs_crown }
+				}
+				AND = {
+					has_estate = estate_type:crown_estate
+					owner = { has_variable = qol_ace_orth_heirs_crown }
+				}
+				owner = { has_variable = qol_ace_orth_all }
+			}
+		}
+		set_child_education = child_education:orthodox_education
 	}
 	else_if = {
 		limit = {
