@@ -9,7 +9,7 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`nd_ru`](../mods/nd_ru/CLAUDE.md) | in progress; 4 385 keys (0.2.1, 10-03: 45 ключей под ND 1.4.0) | everything except Westphalia and the override itself |
 | [`nmt_ru`](../mods/nmt_ru/CLAUDE.md) | Русский для National Mission Trees: 17 стран, 3 555 ключей; дерево пишется целиком | всё |
 | [`nmt_fix`](../mods/nmt_fix/CLAUDE.md) | 0.2.0 (10-03): земли подданных (121 условие) + NMT под 1.4: Арагон, модификатор, подданные, 7 старых ошибок NMT | всё |
-| [`cm_maps`](../mods/cm_maps/CLAUDE.md) | **загружен 09-19, рисует**; губернатор починен и подтверждён, права починены. Три карты CM dev без CM и CMF | починка прав, карта еды |
+| [`cm_maps`](../mods/cm_maps/CLAUDE.md) | **загружен 09-19, рисует**; 0.3.0: права по провинции; еда, губернатор под 1.4 не сверены | 0.3.0, починка прав, еда |
 | [`cm_dev_perf`](../mods/cm_dev_perf/CLAUDE.md) | +perf33: субсидии всем пустым фермам; перед Río, после Río — [`cm_rio_patch`](../mods/cm_rio_patch/CLAUDE.md); ND — своя категория | +perf19–33, патч |
 | [`cmf_dev_beta`](../mods/cmf_dev_beta/CLAUDE.md) | +beta6 (10-05): копия авторского CMF под 1.4 + `cmf_is_host`, нижняя панель без пустых мест; ставится вместо CMF и CMF Dev | всё |
 | [`glorpui_hints`](../mods/glorpui_hints/CLAUDE.md) | 1.2.12, игра 1.4, основной предмет; ворота по техам | 1.2.10–1.2.12 в игре не были |

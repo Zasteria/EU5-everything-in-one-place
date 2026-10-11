@@ -4,11 +4,12 @@
 Three of CM's map modes, lifted whole: location food potential, recommended
 urban rights (with its nine per-right children) and recommended governor
 placement. **Copied as files, not reproduced as formulas** — the rule from
-`docs/archive/wtp2_failed.md`, which one failed attempt paid for. Nothing here
-edits a number, a colour or a threshold; it renames `cm_` to `bcm_`, drops the
-blocks that belong to parts of CM this mod does not carry, and makes the five
-wiring changes listed in `EDITS` below, each of which is there because CM's own
-wiring runs through CMF and the rest of CM.
+`docs/archive/wtp2_failed.md`, which one failed attempt paid for. It renames
+`cm_` to `bcm_`, drops the blocks that belong to parts of CM this mod does not
+carry, and makes the wiring changes listed in `EDITS` below, each of which is
+there because CM's own wiring runs through CMF and the rest of CM. One changes
+a score, by the owner's call: the rights are scored per province
+(`province_scored_edits`).
 
     python3 mods/cm_maps/tools/port_from_cm.py
 
@@ -419,6 +420,97 @@ EDITS: tuple[tuple[str, str, str, str], ...] = (
 )
 
 
+# **The rights are scored for the province, not the location** — the owner's
+# call, 2026-10-11, the one change of a number this port makes. CM scores each
+# location as the province's input coverage plus three things of the location's
+# own: its output modifier for the good divided by the 0.1 coverage unit, so a
+# +20% tradition is +200% coverage and +67% to the right; its own dyes or wine
+# RGO, averaged in as one more covered producer; and tar, counted only where a
+# tar kiln could stand. One province came out with three rights in three
+# locations (Chernigov, 1.4), and 1.4's +50% "surveyed coast" modifiers make it
+# worse. The inputs feed the whole province, so the score is the coverage alone
+# and every location of a province gets the same right. What the location has
+# of its own is still shown — the chips on each good line, re-worded in
+# LOC_EDITS to say it is not in the score. Tar counts when any location of the
+# province could hold a kiln.
+#
+# 1.4 added a cheap tier of the nine rights, the charters; `bcm_trmm_lm_*`
+# subtracts a granted right so it does not show as the location's own bonus,
+# and now subtracts a granted charter as well, read from the game's files.
+TRMM_GOODS = ("tools", "jewelry", "naval_supplies", "tar", "cloth", "fine_cloth",
+              "dyes", "weaponry", "firearms", "cannons", "paper", "books",
+              "furniture", "pottery", "leather", "liquor", "beer", "wine",
+              "masonry", "glass")
+TRMM_VALUES = "in_game/common/script_values/bcm_trmm_values.txt"
+TAR_GATE = ("OR = { vegetation = woods vegetation = forest vegetation = jungle "
+            "raw_material ?= goods:lumber }")
+RGO_AVERAGE = (
+    "\t# The right's output modifier also boosts this raw material's own RGO, so\n"
+    "\t# on its location the RGO averages in as one more fully covered producer.\n"
+    "\tif = {{\n"
+    "\t\tlimit = {{ raw_material ?= goods:{good} }}\n"
+    "\t\tadd = 1\n"
+    "\t\tdivide = 2\n"
+    "\t}}\n")
+
+
+def charters() -> dict[str, list[tuple[str, str, str]]]:
+    """Each good's charters: (charter, its bonus to the good, file:line)."""
+    path = refs.GAME_COMMON / "town_rights/01_discovery_charter.txt"
+    text = path.read_text(encoding="utf-8-sig")
+    found: dict[str, list[tuple[str, str, str]]] = {}
+    for block in re.finditer(r"^([a-z_0-9]+) = \{(.*?)^\}", text, re.S | re.M):
+        line = text.count("\n", 0, block.start()) + 1
+        for good, bonus in re.findall(r"local_([a-z_]+)_output_modifier = ([\d.]+)",
+                                      block.group(2)):
+            found.setdefault(good, []).append(
+                (block.group(1), bonus, f"in_game/common/town_rights/{path.name}:{line}"))
+    return found
+
+
+def province_scored_edits() -> tuple[tuple[str, str, str, str], ...]:
+    edits = [(TRMM_VALUES,
+              "# Each reader closes with its location output bonus, added last so the dyes\n"
+              "# and wine RGO averaging cannot halve it.\n",
+              "# cm_maps scores the province alone: the location output bonus and the\n"
+              "# dyes and wine RGO averaging are cut, see province_scored_edits().\n",
+              "the header no longer promises the location bonus")]
+    for good in TRMM_GOODS:
+        edits.append((TRMM_VALUES, f"\tadd = bcm_trmm_lm_{good}\n}}",
+                      "}", f"{good}: the location's own bonus leaves the score"))
+    for good in ("dyes", "wine"):
+        edits.append((TRMM_VALUES, RGO_AVERAGE.format(good=good), "",
+                      f"{good}: the location's own RGO leaves the score"))
+    edits.append((TRMM_VALUES,
+                  "\t# tar_kiln location_potential.\n"
+                  "\tif = {\n"
+                  f"\t\tlimit = {{ {TAR_GATE} province = {{ has_variable = bcm_trmm_cov_tar }} }}",
+                  "\t# tar_kiln location_potential, asked of the province: a kiln anywhere\n"
+                  "\t# in it counts, as every other input does.\n"
+                  "\tif = {\n"
+                  f"\t\tlimit = {{ province = {{ any_location_in_province = {{ {TAR_GATE} }} "
+                  "has_variable = bcm_trmm_cov_tar } }",
+                  "tar: the kiln gate is asked of the province"))
+    for good, granted in sorted(charters().items()):
+        if good not in TRMM_GOODS:
+            continue
+        head = (f"bcm_trmm_lm_{good} = {{\n"
+                f"\tvalue = modifier:local_{good}_output_modifier\n")
+        lines = "".join(
+            f"\tif = {{\n"
+            f"\t\t# {charter}: {where}\n"
+            f"\t\tlimit = {{ has_town_rights = town_rights_type:{charter} }}\n"
+            f"\t\tsubtract = {bonus}\n"
+            f"\t}}\n"
+            for charter, bonus, where in granted)
+        edits.append((TRMM_VALUES, head, head + lines,
+                      f"{good}: a granted 1.4 charter is not the location's own bonus"))
+    return tuple(edits)
+
+
+EDITS = EDITS + province_scored_edits()
+
+
 # ------------------------------------------------------------------- the writing
 
 # Variables this port reads and never writes, and why each is sound. The five
@@ -685,7 +777,7 @@ def port_localization() -> int:
             src = SRC / f"main_menu/localization/{language}/{stem}_l_{language}.yml"
             if not src.is_file():
                 continue
-            text = prune(rename(read(src)).lstrip(BOM))
+            text = loc_edits(target, language, prune(rename(read(src)).lstrip(BOM)))
             have |= loc_keys(text)
             emit(MOD / f"main_menu/localization/{language}/{target}_l_{language}.yml", text)
             count += 1
@@ -708,6 +800,30 @@ def port_localization() -> int:
 # quotes several of them to say a charter is already granted.
 PRUNE = ("BCM_TRMM_GRANT_LABEL", "BCM_TRMM_GRANT_LABEL_FREE",
          "BCM_TRMM_GRANT_CANT_AFFORD", "BCM_TRMM_GRANT_REQUIREMENTS")
+
+
+# The chips on each good line of the rights tooltip, re-worded now that what
+# they mark is no longer in the score (`province_scored_edits`). CM's Russian
+# chip also had no space before it and glued itself to the percentage.
+LOC_EDITS: dict[tuple[str, str], dict[str, str]] = {
+    ("bcm_trmm", "russian"): {
+        "bcm_trmm_chip_rgo_label": "РГО района, не в оценке",
+        "bcm_trmm_chip_lm_text": " #G свой бонус района, не в оценке#!",
+    },
+    ("bcm_trmm", "english"): {
+        "bcm_trmm_chip_rgo_label": "RGO here, not scored",
+        "bcm_trmm_chip_lm_text": " #G own bonus here, not scored#!",
+    },
+}
+
+
+def loc_edits(target: str, language: str, text: str) -> str:
+    for key, value in LOC_EDITS.get((target, language), {}).items():
+        line = re.compile(rf'^( {re.escape(key)}:\s*\d*\s*)"(?:[^"\\]|\\.)*"', re.M)
+        text, count = line.subn(lambda m: f'{m.group(1)}"{value}"', text)
+        if count != 1:
+            raise SystemExit(f"{target} {language}: {key} matched {count} times, not once")
+    return text
 
 
 def prune(text: str) -> str:
@@ -890,6 +1006,8 @@ bcm_run_lobby_setup = {
 	# the mark on every slice; dropping the governor cache costs one recompute
 	# the next time that map is opened. Epoch 2 is the second such retirement:
 	# 1 was the accuracy fix alone, and a save that took it still owes the mark.
+	# Epoch 3 (2026-10-11) scores the rights per province: every stored best
+	# right is retired, the governor cache is not.
 	#
 	# The version constants live in a file this port generates from CM, so the
 	# stamp is here instead, where a CM update cannot carry it away.
@@ -898,7 +1016,22 @@ bcm_run_lobby_setup = {
 			NOT = {
 				AND = {
 					has_global_variable = bcm_pf_epoch
-					global_var:bcm_pf_epoch = 2
+					global_var:bcm_pf_epoch >= 2
+				}
+			}
+		}
+		# Root is the player; the finder only ever runs for them.
+		if = {
+			limit = { exists = var:bcm_pf_fresh_g }
+			remove_variable = bcm_pf_fresh_g
+		}
+	}
+	if = {
+		limit = {
+			NOT = {
+				AND = {
+					has_global_variable = bcm_pf_epoch
+					global_var:bcm_pf_epoch = 3
 				}
 			}
 		}
@@ -906,12 +1039,7 @@ bcm_run_lobby_setup = {
 			limit = { has_global_variable = bcm_trmm_stamp }
 			remove_global_variable = bcm_trmm_stamp
 		}
-		# Root is the player; the finder only ever runs for them.
-		if = {
-			limit = { exists = var:bcm_pf_fresh_g }
-			remove_variable = bcm_pf_fresh_g
-		}
-		set_global_variable = { name = bcm_pf_epoch value = 2 }
+		set_global_variable = { name = bcm_pf_epoch value = 3 }
 	}
 
 	# Recommended urban rights coverage: one pass over every province definition,

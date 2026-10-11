@@ -98,6 +98,8 @@ these are prepared, all are cheap, and the owner has agreed to the hover one.
    и еды на месте.
 5. **И то, что ждёт с 09-19: починка городских прав.** Провинции, которые были
    пустыми, должны показывать списки, и свежезанятые тоже.
+6. **0.3.0:** районы одной провинции (Чернигов) одного цвета на карте прав,
+   проценты в подсказке одинаковые.
 
 **`where_to_produce`, twenty-eighth load.** Four small things and one question,
 all of it one glance with the results window open. Not worth a run of its own.
