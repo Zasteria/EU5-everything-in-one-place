@@ -39,6 +39,8 @@ the engine, CMF and CM work, [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md)
 for the reference tree and the rebuild loop,
 [`docs/WORKSHOP.md`](docs/WORKSHOP.md) when putting a mod out.
 
+**The owner is Константин, he** — not «Lena»; masculine in Russian.
+
 ## Rules that exist because breaking them is silent
 
 - **Only the player can run the game.** Nothing here can be tested from a
@@ -50,8 +52,7 @@ for the reference tree and the rebuild loop,
   the same session.** He reports it once, in passing; a session that does not
   write it down leaves the next one calling the thing untested.
 - **End anything that changed the tree with two short lists: what changed, and
-  what he has to check in the game.** His own words, 2026-09-02, after a summary
-  that left him unable to tell whether a run was owed. **Where nothing needs
+  what he has to check in the game.** His words, 09-02. **Where nothing needs
   one, say so outright** — «проверять нечего» is an answer he can act on. Where
   one is owed, name the ground, the presses and what a right answer looks like;
   «протестируй» is not a check.
