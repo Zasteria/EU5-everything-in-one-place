@@ -781,6 +781,19 @@ _SCAN_SHOUTS = (
 )
 
 
+def _slow_the_poll(text: str) -> str:
+    """The «ready?» loop between scoring and firing, every 1 s instead of 0.3 s:
+    a third of the walks while CM waits. Completion is still decided by
+    cm_q_sync_check; the step lengths only pace it."""
+    old = ("\t\t\tstate = {\n\t\t\t\tname = cm_q_round_probe\n\t\t\t\tduration = 0.15\n"
+           "\t\t\t\ton_finish = \"[PdxGuiTriggerAllAnimations('cm_q_probe')]\"\n"
+           "\t\t\t\tnext = cm_q_round_check\n\t\t\t}\n"
+           "\t\t\tstate = {\n\t\t\t\tname = cm_q_round_check\n\t\t\t\tduration = 0.15\n")
+    if text.count(old) != 1:
+        raise SystemExit("queue window: the poll loop has changed shape")
+    return text.replace(old, old.replace("duration = 0.15", "duration = 0.5"), 1)
+
+
 def _gate_scan_shouts(text: str) -> str:
     """One shout per queue that has something in it, instead of eleven every
     sweep. Each shout moves to its own zero-size widget that turns visible when
@@ -922,6 +935,7 @@ EDITS = (
      _pf_log_close),
     (CMM, "say the refresh button's click in debug.log", _pf_log_click),
     (FOOD, "subsidize every idle or loss-making farm", _subsidize_idle_farms),
+    (QUEUE, "poll the queue every second, not every 0.3 s", _slow_the_poll),
     (QUEUE, "shout only into queues with entries", _gate_scan_shouts),
     (FEATURE, "count the ready-polls and log each cycle", _count_rounds_init),
     (HIDDEN_GUIS, "count each ready-poll", _count_rounds),
@@ -1027,7 +1041,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 36
+PERF_REVISION = 37
 
 
 def metadata() -> str:
