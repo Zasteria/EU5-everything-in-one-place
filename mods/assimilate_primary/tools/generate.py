@@ -43,6 +43,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "tools"))
 
 import refs  # noqa: E402
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import council  # noqa: E402
+
 MOD = refs.REPO / "mods/assimilate_primary"
 SOURCE = "in_game/common/cabinet_actions/promote_culture.txt"
 OUT = MOD / SOURCE
@@ -76,106 +79,62 @@ RULE = """\t\t\t# assimilate_primary: for a player whose cabinet is automated, a
 """ % (round(LEAD * 100), LEAD)
 
 
-COUNCIL = MOD / "in_game/common/on_action/assimilate_primary_council_on_actions.txt"
-DECISIONS = MOD / "in_game/common/decisions/assimilate_primary_decisions.txt"
-CMF_EFFECTS = MOD / "in_game/common/scripted_effects/bag_asp_cmm_effects.txt"
-CMF_EFFECTS_TEXT = """# assimilate_primary: the mod's CMF page. One checkbox sets the council's
-# «Действия совета» automation (cabinetactions) when clicked, to see what it
-# does. After any change here:
-# python3 tools/check_cmm.py mods/assimilate_primary/in_game/common
-# Rebuilt by tools/generate.py.
-
-# Scope: country
-bag_asp_register = {
-\tcmm_register_bool_setting = {
-\t\tmod_id = bag_asp
-\t\tsetting_id = cabinetactions
-\t\ttab_id = main
-\t\tgroup_id = council
-\t\tdefault_value = 0
-\t}
-}
-
-# Scope: country. var:cmf_callback names what was clicked; switch as in
-# war_sliders.
-bag_asp_handle_callback = {
-\tswitch = {
-\t\ttrigger = var:cmf_callback
-\t\tflag:bag_asp__cabinetactions = {
-\t\t\tif = {
-\t\t\t\tlimit = { is_system_automated = cabinetactions }
-\t\t\t\tdebug_log = "assimilate_primary: cabinetactions was on before the click"
-\t\t\t}
-\t\t\telse = {
-\t\t\t\tdebug_log = "assimilate_primary: cabinetactions was off before the click"
-\t\t\t}
-\t\t\tcmm_sync_bool_alias = {
-\t\t\t\tsetting = bag_asp__cabinetactions
-\t\t\t\talias = bag_asp_cabinetactions_on
-\t\t\t}
-\t\t\tif = {
-\t\t\t\tlimit = { has_variable = bag_asp_cabinetactions_on }
-\t\t\t\tset_automated_system = { system = cabinetactions activate = yes }
-\t\t\t}
-\t\t\telse = {
-\t\t\t\tset_automated_system = { system = cabinetactions activate = no }
-\t\t\t}
-\t\t\tif = {
-\t\t\t\tlimit = { is_system_automated = cabinetactions }
-\t\t\t\tdebug_log = "assimilate_primary: cabinetactions is on after the click"
-\t\t\t}
-\t\t\telse = {
-\t\t\t\tdebug_log = "assimilate_primary: cabinetactions is off after the click"
-\t\t\t}
-\t\t}
-\t}
-}
-"""
-
-CMF_ON_ACTIONS = MOD / "in_game/common/on_action/bag_asp_cmf_on_actions.txt"
-CMF_ON_ACTIONS_TEXT = """# assimilate_primary: the CMF page and its checkbox. The engine merges
-# on_actions lists, so these add to CMF's own. Rebuilt by tools/generate.py.
-cmf_on_mod_registration = {
-\ton_actions = {
-\t\tbag_asp_on_register
-\t}
-}
-
-cmf_on_callback = {
-\ton_actions = {
-\t\tbag_asp_on_callback
-\t}
-}
-
-# Scope: country
-bag_asp_on_register = {
-\teffect = {
-\t\tbag_asp_register = yes
-\t}
-}
-
-# Scope: country
-bag_asp_on_callback = {
-\teffect = {
-\t\tbag_asp_handle_callback = yes
-\t}
-}
-"""
+# Files the council automation used to have under other names.
+STALE = [
+    MOD / "in_game/common/on_action/assimilate_primary_council_on_actions.txt",
+    MOD / "in_game/common/decisions/assimilate_primary_decisions.txt",
+]
 
 LOC = {
     "english": {
-        "bag_asp_name": "Assimilate Into Primary Culture",
-        "bag_asp_desc": "Cabinet automation assimilates into the primary culture.",
+        "bag_asp_name": "Council Automation",
+        "bag_asp_desc": "The mod's own council automation: idle seats get actions down a priority list you set here. Cabinet assimilation targets the primary culture.",
         "bag_asp__main_name": "Council",
-        "bag_asp__main__council_name": "Automation",
+        "bag_asp__main__council_name": "Own automation",
+        "bag_asp__main__debug_name": "Debug",
+        "bag_asp__actions_name": "Actions",
+        "bag_asp__auto_name": "Own council automation",
+        "bag_asp__auto_desc": "On: switches the game's «Council» automation off and gives idle seats actions down the «Priority» list. Each assignment goes to debug.log.",
+        "bag_asp__period_name": "Fill seats every, months",
+        "bag_asp__period_desc": "How often idle seats get an action.",
+        "bag_asp__review_name": "Re-choose standing actions every, months",
+        "bag_asp__review_desc": "Actions that never finish (stability, legitimacy, diplomacy and the like) are stopped and chosen again this often. 0: never.",
+        "bag_asp__actions__available_name": "Available",
+        "bag_asp__actions__priority_name": "Priority",
+        "bag_asp__available__use_name": "In use",
+        "bag_asp__available_item_column_name": "Action",
+        "bag_asp__priority__ability_name": "Skill",
+        "bag_asp__priority_item_column_name": "Action",
+        "bag_asp__available_name": "Available",
+        "bag_asp__available_desc": "Every common action this country can see. Ticked ones are in use.",
+        "bag_asp__priority_name": "Priority",
+        "bag_asp__priority_desc": "The actions in use, tried from the top.",
         "bag_asp__cabinetactions_name": "Automate cabinet actions (cabinetactions)",
         "bag_asp__cabinetactions_desc": "Sets the game's cabinetactions automation switch when clicked. What it was before and after goes to debug.log.",
     },
     "russian": {
-        "bag_asp_name": "Ассимиляция в основную культуру",
-        "bag_asp_desc": "Автоматика совета ассимилирует в основную культуру.",
+        "bag_asp_name": "Автоматика совета",
+        "bag_asp_desc": "Своя автоматика совета: пустые места получают действия по списку приоритетов, который задаётся здесь. Ассимиляция советом идёт в основную культуру.",
         "bag_asp__main_name": "Совет",
-        "bag_asp__main__council_name": "Автоматика",
+        "bag_asp__main__council_name": "Своя автоматика",
+        "bag_asp__main__debug_name": "Отладка",
+        "bag_asp__actions_name": "Действия",
+        "bag_asp__auto_name": "Своя автоматика совета",
+        "bag_asp__auto_desc": "Включено: игровая автоматика «Совет» выключается, а пустые места получают действия по списку «Приоритет». Каждое назначение пишется в debug.log.",
+        "bag_asp__period_name": "Заполнять места раз в, мес.",
+        "bag_asp__period_desc": "Как часто пустые места получают действие.",
+        "bag_asp__review_name": "Пересматривать постоянные действия раз в, мес.",
+        "bag_asp__review_desc": "Действия, которые не заканчиваются сами (стабильность, легитимность, дипломатия и подобные), снимаются и выбираются заново с этой частотой. 0 — никогда.",
+        "bag_asp__actions__available_name": "Доступные",
+        "bag_asp__actions__priority_name": "Приоритет",
+        "bag_asp__available__use_name": "Использовать",
+        "bag_asp__available_item_column_name": "Действие",
+        "bag_asp__priority__ability_name": "Навык",
+        "bag_asp__priority_item_column_name": "Действие",
+        "bag_asp__available_name": "Доступные",
+        "bag_asp__available_desc": "Все общие действия, которые видит эта страна. Отмеченные используются.",
+        "bag_asp__priority_name": "Приоритет",
+        "bag_asp__priority_desc": "Используемые действия, пробуются сверху вниз.",
         "bag_asp__cabinetactions_name": "Автоматика действий совета (cabinetactions)",
         "bag_asp__cabinetactions_desc": "При нажатии ставит игровой переключатель автоматики cabinetactions. Каким он был до и стал после, пишется в debug.log.",
     },
@@ -183,7 +142,8 @@ LOC = {
 
 
 def loc_text(language: str) -> str:
-    rows = "".join(f' {k}: "{v}"\n' for k, v in LOC[language].items())
+    items = {**LOC[language], **council.loc_rows(refs.GAME, language)}
+    rows = "".join(f' {k}: "{v}"\n' for k, v in items.items())
     return f"l_{language}:\n{rows}"
 
 
@@ -224,14 +184,12 @@ def main() -> None:
         raise SystemExit("promote_culture: the province selection has no `enabled`")
     end = block_end(text, enabled)
     write(OUT, HEAD + text[:end].rstrip("\t") + RULE + "\t\t" + text[end:])
-    if COUNCIL.exists():
-        COUNCIL.unlink()
-        print(f"{COUNCIL.relative_to(refs.REPO)}: removed (0.4.0)")
-    if DECISIONS.exists():
-        DECISIONS.unlink()
-        print(f"{DECISIONS.relative_to(refs.REPO)}: removed (0.4.0)")
-    write(CMF_EFFECTS, CMF_EFFECTS_TEXT)
-    write(CMF_ON_ACTIONS, CMF_ON_ACTIONS_TEXT)
+    for path in STALE:
+        if path.exists():
+            path.unlink()
+            print(f"{path.relative_to(refs.REPO)}: removed")
+    for rel, text in council.build(refs.GAME).items():
+        write(MOD / rel, text)
     for language in LOC:
         write(MOD / f"main_menu/localization/{language}/assimilate_primary_l_{language}.yml",
               loc_text(language))

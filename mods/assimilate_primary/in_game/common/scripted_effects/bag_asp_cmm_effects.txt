@@ -1,17 +1,493 @@
-﻿# assimilate_primary: the mod's CMF page. One checkbox sets the council's
-# «Действия совета» automation (cabinetactions) when clicked, to see what it
-# does. After any change here:
+﻿# assimilate_primary: the mod's CMF page. After any change here:
 # python3 tools/check_cmm.py mods/assimilate_primary/in_game/common
-# Rebuilt by tools/generate.py.
+# Rebuilt by tools/generate.py (tools/council.py).
 
 # Scope: country
 bag_asp_register = {
 	cmm_register_bool_setting = {
 		mod_id = bag_asp
-		setting_id = cabinetactions
+		setting_id = auto
 		tab_id = main
 		group_id = council
 		default_value = 0
+	}
+	cmm_register_numeric_setting = {
+		mod_id = bag_asp
+		setting_id = period
+		tab_id = main
+		group_id = council
+		default_value = 1
+		min_value = 1
+		max_value = 12
+		step_value = 1
+	}
+	cmm_register_numeric_setting = {
+		mod_id = bag_asp
+		setting_id = review
+		tab_id = main
+		group_id = council
+		default_value = 12
+		min_value = 0
+		max_value = 60
+		step_value = 1
+	}
+
+	cmm_register_settings_list = {
+		mod_id = bag_asp
+		setting_id = available
+		tab_id = actions
+		item_count = 20
+		is_ordered = 0
+	}
+	cmm_register_list_bool_field = {
+		mod_id = bag_asp
+		setting_id = available
+		field_id = use
+		default_value = 1
+	}
+	cmm_register_settings_list = {
+		mod_id = bag_asp
+		setting_id = priority
+		tab_id = actions
+		item_count = 20
+		is_ordered = 1
+	}
+	cmm_register_list_text_field = {
+		mod_id = bag_asp
+		setting_id = priority
+		field_id = ability
+	}
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 1 value = flag:bag_asp_integrate_province }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 1 value = flag:bag_asp_integrate_province }
+	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 1 value = flag:bag_asp_ability_mil }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 2 value = flag:bag_asp_integrate_area }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 2 value = flag:bag_asp_integrate_area }
+	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 2 value = flag:bag_asp_ability_mil }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 3 value = flag:bag_asp_reduce_war_exhaustion }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 3 value = flag:bag_asp_reduce_war_exhaustion }
+	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 3 value = flag:bag_asp_ability_dip }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 4 value = flag:bag_asp_stabilize_country }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 4 value = flag:bag_asp_stabilize_country }
+	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 4 value = flag:bag_asp_ability_mil }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 5 value = flag:bag_asp_increase_control_province }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 5 value = flag:bag_asp_increase_control_province }
+	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 5 value = flag:bag_asp_ability_adm }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 6 value = flag:bag_asp_increase_control_area }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 6 value = flag:bag_asp_increase_control_area }
+	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 6 value = flag:bag_asp_ability_adm }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 7 value = flag:bag_asp_send_secret_royal_inspectors }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 7 value = flag:bag_asp_send_secret_royal_inspectors }
+	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 7 value = flag:bag_asp_ability_adm }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 8 value = flag:bag_asp_promote_culture }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 8 value = flag:bag_asp_promote_culture }
+	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 8 value = flag:bag_asp_ability_dip }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 9 value = flag:bag_asp_promote_religion }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 9 value = flag:bag_asp_promote_religion }
+	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 9 value = flag:bag_asp_ability_mil }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 10 value = flag:bag_asp_pacify_population }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 10 value = flag:bag_asp_pacify_population }
+	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 10 value = flag:bag_asp_ability_mil }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 11 value = flag:bag_asp_recovery_effort }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 11 value = flag:bag_asp_recovery_effort }
+	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 11 value = flag:bag_asp_ability_dip }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 12 value = flag:bag_asp_appease_estate }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 12 value = flag:bag_asp_appease_estate }
+	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 12 value = flag:bag_asp_ability_dip }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 13 value = flag:bag_asp_alleviate_concerns }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 13 value = flag:bag_asp_alleviate_concerns }
+	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 13 value = flag:bag_asp_ability_dip }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 14 value = flag:bag_asp_reduce_inflation }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 14 value = flag:bag_asp_reduce_inflation }
+	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 14 value = flag:bag_asp_ability_adm }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 15 value = flag:bag_asp_develop_province }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 15 value = flag:bag_asp_develop_province }
+	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 15 value = flag:bag_asp_ability_adm }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 16 value = flag:bag_asp_study_institutions }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 16 value = flag:bag_asp_study_institutions }
+	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 16 value = flag:bag_asp_ability_adm }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 17 value = flag:bag_asp_pop_promote_action }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 17 value = flag:bag_asp_pop_promote_action }
+	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 17 value = flag:bag_asp_ability_adm }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 18 value = flag:bag_asp_strengthen_government }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 18 value = flag:bag_asp_strengthen_government }
+	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 18 value = flag:bag_asp_ability_mil }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 19 value = flag:bag_asp_diplomatic_endeavors }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 19 value = flag:bag_asp_diplomatic_endeavors }
+	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 19 value = flag:bag_asp_ability_dip }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 20 value = flag:bag_asp_counter_espionage_action }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 20 value = flag:bag_asp_counter_espionage_action }
+	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 20 value = flag:bag_asp_ability_dip }
+
+	cmm_register_bool_setting = {
+		mod_id = bag_asp
+		setting_id = cabinetactions
+		tab_id = main
+		group_id = debug
+		default_value = 0
+	}
+
+	bag_asp_sync = yes
+	bag_asp_rebuild = yes
+}
+
+# Scope: country. Settings into plain variables the pulse reads.
+bag_asp_sync = {
+	cmm_sync_bool_alias = { setting = bag_asp__auto alias = bag_asp_auto_on }
+	cmm_sync_setting_alias = { setting = bag_asp__period alias = bag_asp_period }
+	cmm_sync_setting_alias = { setting = bag_asp__review alias = bag_asp_review }
+}
+
+# Scope: country. The two lists into the order the pulse walks, and which rows
+# show: «Доступные» only what this country can see, «Приоритет» only what is
+# also in use.
+bag_asp_rebuild = {
+	if = {
+		limit = {
+			has_variable_list = cmm_list_items_bag_asp__available
+			has_variable_list = cmm_list_items_bag_asp__priority
+		}
+		cmm_build_list_bool_list = { setting = bag_asp__available field_slot = 1 list_name = bag_asp_used }
+		cmm_build_list_ordered_values = { setting = bag_asp__priority list_name = bag_asp_order }
+		if = {
+			limit = { cabinet_action:integrate_province = { is_visible_for = root } }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = available item = 1 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = available item = 1 }
+		}
+		if = {
+			limit = {
+				cabinet_action:integrate_province = { is_visible_for = root }
+				is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_integrate_province }
+			}
+			cmm_show_list_item = { mod_id = bag_asp setting_id = priority item = 1 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 1 }
+		}
+		if = {
+			limit = { cabinet_action:integrate_area = { is_visible_for = root } }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = available item = 2 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = available item = 2 }
+		}
+		if = {
+			limit = {
+				cabinet_action:integrate_area = { is_visible_for = root }
+				is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_integrate_area }
+			}
+			cmm_show_list_item = { mod_id = bag_asp setting_id = priority item = 2 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 2 }
+		}
+		if = {
+			limit = { cabinet_action:reduce_war_exhaustion = { is_visible_for = root } }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = available item = 3 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = available item = 3 }
+		}
+		if = {
+			limit = {
+				cabinet_action:reduce_war_exhaustion = { is_visible_for = root }
+				is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_reduce_war_exhaustion }
+			}
+			cmm_show_list_item = { mod_id = bag_asp setting_id = priority item = 3 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 3 }
+		}
+		if = {
+			limit = { cabinet_action:stabilize_country = { is_visible_for = root } }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = available item = 4 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = available item = 4 }
+		}
+		if = {
+			limit = {
+				cabinet_action:stabilize_country = { is_visible_for = root }
+				is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_stabilize_country }
+			}
+			cmm_show_list_item = { mod_id = bag_asp setting_id = priority item = 4 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 4 }
+		}
+		if = {
+			limit = { cabinet_action:increase_control_province = { is_visible_for = root } }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = available item = 5 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = available item = 5 }
+		}
+		if = {
+			limit = {
+				cabinet_action:increase_control_province = { is_visible_for = root }
+				is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_increase_control_province }
+			}
+			cmm_show_list_item = { mod_id = bag_asp setting_id = priority item = 5 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 5 }
+		}
+		if = {
+			limit = { cabinet_action:increase_control_area = { is_visible_for = root } }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = available item = 6 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = available item = 6 }
+		}
+		if = {
+			limit = {
+				cabinet_action:increase_control_area = { is_visible_for = root }
+				is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_increase_control_area }
+			}
+			cmm_show_list_item = { mod_id = bag_asp setting_id = priority item = 6 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 6 }
+		}
+		if = {
+			limit = { cabinet_action:send_secret_royal_inspectors = { is_visible_for = root } }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = available item = 7 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = available item = 7 }
+		}
+		if = {
+			limit = {
+				cabinet_action:send_secret_royal_inspectors = { is_visible_for = root }
+				is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_send_secret_royal_inspectors }
+			}
+			cmm_show_list_item = { mod_id = bag_asp setting_id = priority item = 7 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 7 }
+		}
+		if = {
+			limit = { cabinet_action:promote_culture = { is_visible_for = root } }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = available item = 8 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = available item = 8 }
+		}
+		if = {
+			limit = {
+				cabinet_action:promote_culture = { is_visible_for = root }
+				is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_promote_culture }
+			}
+			cmm_show_list_item = { mod_id = bag_asp setting_id = priority item = 8 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 8 }
+		}
+		if = {
+			limit = { cabinet_action:promote_religion = { is_visible_for = root } }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = available item = 9 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = available item = 9 }
+		}
+		if = {
+			limit = {
+				cabinet_action:promote_religion = { is_visible_for = root }
+				is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_promote_religion }
+			}
+			cmm_show_list_item = { mod_id = bag_asp setting_id = priority item = 9 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 9 }
+		}
+		if = {
+			limit = { cabinet_action:pacify_population = { is_visible_for = root } }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = available item = 10 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = available item = 10 }
+		}
+		if = {
+			limit = {
+				cabinet_action:pacify_population = { is_visible_for = root }
+				is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_pacify_population }
+			}
+			cmm_show_list_item = { mod_id = bag_asp setting_id = priority item = 10 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 10 }
+		}
+		if = {
+			limit = { cabinet_action:recovery_effort = { is_visible_for = root } }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = available item = 11 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = available item = 11 }
+		}
+		if = {
+			limit = {
+				cabinet_action:recovery_effort = { is_visible_for = root }
+				is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_recovery_effort }
+			}
+			cmm_show_list_item = { mod_id = bag_asp setting_id = priority item = 11 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 11 }
+		}
+		if = {
+			limit = { cabinet_action:appease_estate = { is_visible_for = root } }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = available item = 12 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = available item = 12 }
+		}
+		if = {
+			limit = {
+				cabinet_action:appease_estate = { is_visible_for = root }
+				is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_appease_estate }
+			}
+			cmm_show_list_item = { mod_id = bag_asp setting_id = priority item = 12 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 12 }
+		}
+		if = {
+			limit = { cabinet_action:alleviate_concerns = { is_visible_for = root } }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = available item = 13 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = available item = 13 }
+		}
+		if = {
+			limit = {
+				cabinet_action:alleviate_concerns = { is_visible_for = root }
+				is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_alleviate_concerns }
+			}
+			cmm_show_list_item = { mod_id = bag_asp setting_id = priority item = 13 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 13 }
+		}
+		if = {
+			limit = { cabinet_action:reduce_inflation = { is_visible_for = root } }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = available item = 14 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = available item = 14 }
+		}
+		if = {
+			limit = {
+				cabinet_action:reduce_inflation = { is_visible_for = root }
+				is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_reduce_inflation }
+			}
+			cmm_show_list_item = { mod_id = bag_asp setting_id = priority item = 14 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 14 }
+		}
+		if = {
+			limit = { cabinet_action:develop_province = { is_visible_for = root } }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = available item = 15 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = available item = 15 }
+		}
+		if = {
+			limit = {
+				cabinet_action:develop_province = { is_visible_for = root }
+				is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_develop_province }
+			}
+			cmm_show_list_item = { mod_id = bag_asp setting_id = priority item = 15 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 15 }
+		}
+		if = {
+			limit = { cabinet_action:study_institutions = { is_visible_for = root } }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = available item = 16 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = available item = 16 }
+		}
+		if = {
+			limit = {
+				cabinet_action:study_institutions = { is_visible_for = root }
+				is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_study_institutions }
+			}
+			cmm_show_list_item = { mod_id = bag_asp setting_id = priority item = 16 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 16 }
+		}
+		if = {
+			limit = { cabinet_action:pop_promote_action = { is_visible_for = root } }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = available item = 17 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = available item = 17 }
+		}
+		if = {
+			limit = {
+				cabinet_action:pop_promote_action = { is_visible_for = root }
+				is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_pop_promote_action }
+			}
+			cmm_show_list_item = { mod_id = bag_asp setting_id = priority item = 17 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 17 }
+		}
+		if = {
+			limit = { cabinet_action:strengthen_government = { is_visible_for = root } }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = available item = 18 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = available item = 18 }
+		}
+		if = {
+			limit = {
+				cabinet_action:strengthen_government = { is_visible_for = root }
+				is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_strengthen_government }
+			}
+			cmm_show_list_item = { mod_id = bag_asp setting_id = priority item = 18 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 18 }
+		}
+		if = {
+			limit = { cabinet_action:diplomatic_endeavors = { is_visible_for = root } }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = available item = 19 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = available item = 19 }
+		}
+		if = {
+			limit = {
+				cabinet_action:diplomatic_endeavors = { is_visible_for = root }
+				is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_diplomatic_endeavors }
+			}
+			cmm_show_list_item = { mod_id = bag_asp setting_id = priority item = 19 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 19 }
+		}
+		if = {
+			limit = { cabinet_action:counter_espionage_action = { is_visible_for = root } }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = available item = 20 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = available item = 20 }
+		}
+		if = {
+			limit = {
+				cabinet_action:counter_espionage_action = { is_visible_for = root }
+				is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_counter_espionage_action }
+			}
+			cmm_show_list_item = { mod_id = bag_asp setting_id = priority item = 20 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 20 }
+		}
 	}
 }
 
@@ -20,13 +496,28 @@ bag_asp_register = {
 bag_asp_handle_callback = {
 	switch = {
 		trigger = var:cmf_callback
+		flag:bag_asp__auto = {
+			bag_asp_sync = yes
+			if = {
+				limit = { has_variable = bag_asp_auto_on }
+				# Ours and the game's «Совет» would fight over the same seats.
+				set_automated_system = { system = cabinet activate = no }
+				debug_log = "bag_asp: own council automation on, the game's «Совет» switched off"
+				bag_asp_run = yes
+			}
+			else = {
+				debug_log = "bag_asp: own council automation off"
+			}
+		}
+		flag:bag_asp__period = { bag_asp_sync = yes }
+		flag:bag_asp__review = { bag_asp_sync = yes }
 		flag:bag_asp__cabinetactions = {
 			if = {
 				limit = { is_system_automated = cabinetactions }
-				debug_log = "assimilate_primary: cabinetactions was on before the click"
+				debug_log = "bag_asp: cabinetactions was on before the click"
 			}
 			else = {
-				debug_log = "assimilate_primary: cabinetactions was off before the click"
+				debug_log = "bag_asp: cabinetactions was off before the click"
 			}
 			cmm_sync_bool_alias = {
 				setting = bag_asp__cabinetactions
@@ -41,10 +532,10 @@ bag_asp_handle_callback = {
 			}
 			if = {
 				limit = { is_system_automated = cabinetactions }
-				debug_log = "assimilate_primary: cabinetactions is on after the click"
+				debug_log = "bag_asp: cabinetactions is on after the click"
 			}
 			else = {
-				debug_log = "assimilate_primary: cabinetactions is off after the click"
+				debug_log = "bag_asp: cabinetactions is off after the click"
 			}
 		}
 	}
