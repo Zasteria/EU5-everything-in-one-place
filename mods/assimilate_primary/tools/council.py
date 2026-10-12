@@ -658,18 +658,6 @@ bag_asp_plan = {{
 \t\tdebug_log = "bag_asp: no action is ticked in use"
 \t}}
 \tbag_asp_mark_busy = yes
-\t# A seat the emergency put on recovery keeps it until the action ends.
-\tif = {{
-\t\tlimit = {{ is_target_in_variable_list = {{ name = bag_asp_used target = flag:bag_asp_recovery_effort }} }}
-\t\tevery_cabinet = {{
-\t\t\tlimit = {{
-\t\t\t\texists = cabinet_member
-\t\t\t\thas_cabinet_action = yes
-\t\t\t\tcabinet_action = cabinet_action:recovery_effort
-\t\t\t}}
-\t\t\tcabinet_member = {{ set_variable = {{ name = bag_asp_claimed value = yes }} }}
-\t\t}}
-\t}}
 \tif = {{
 \t\tlimit = {{ has_variable = bag_asp_fill_only }}
 \t\tevery_cabinet = {{
@@ -742,12 +730,16 @@ bag_asp_clear_busy = {{
     run += tries
     seat_rank = "\n".join(
         f"\t\t\telse_if = {{ limit = {{ cabinet_action = cabinet_action:{k} }} add = scope:actor.var:bag_asp_rank_{k} }}"
-        for k, *_ in POOL)
+        for k, *_ in POOL if k != "recovery_effort")
+    seat_below = "\n".join(
+        f"\t\t\t\t\t\tAND = {{ cabinet_action = cabinet_action:{k} scope:actor.var:bag_asp_rank_{k} > scope:actor.var:bag_asp_rank_recovery_effort }}"
+        for k, *_ in POOL if k != "recovery_effort")
     run += f"""
 # Scope: country. While the game's «devastated locations» alert shows, every
 # couple of seconds (bag_asp_devastation_watch.gui): one province below zero
-# prosperity without recovery gets it now, from the seat whose action ranks
-# lowest in «Приоритет» (an empty one first, then one outside the pool).
+# prosperity without recovery gets it now: an empty seat first, else the seat
+# whose action ranks lowest in «Приоритет» — only among actions ranked below
+# recovery (unticked ones count as below). Actions outside the pool stay.
 bag_asp_emergency = {{
 \tif = {{
 \t\tlimit = {{ has_variable = bag_asp_auto_on }}
@@ -759,16 +751,15 @@ bag_asp_emergency = {{
 \t\t\tordered_cabinet = {{
 \t\t\t\tlimit = {{
 \t\t\t\t\texists = cabinet_member
-\t\t\t\t\tNOT = {{
-\t\t\t\t\t\thas_cabinet_action = yes
-\t\t\t\t\t\tcabinet_action = cabinet_action:recovery_effort
+\t\t\t\t\tOR = {{
+\t\t\t\t\t\thas_cabinet_action = no
+{seat_below}
 \t\t\t\t\t}}
 \t\t\t\t}}
 \t\t\t\torder_by = {{
 \t\t\t\t\tvalue = 0
 \t\t\t\t\tif = {{ limit = {{ has_cabinet_action = no }} add = 1000 }}
 {seat_rank.replace(chr(9) * 3, chr(9) * 5)}
-\t\t\t\t\telse = {{ add = 500 }}
 \t\t\t\t\tadd = {{
 \t\t\t\t\t\tvalue = cabinet_member.dip
 \t\t\t\t\t\tdivide = 100
