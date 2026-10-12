@@ -24,8 +24,11 @@ applied to every country.
 without this mod. A probe (in CM, now removed at his word) read «Совет»
 (`cabinet`) and «Члены совета» (`cabinetmembers`) on and «Действия совета»
 (`cabinetactions`) off, every month; the 1.4 panel has no switch for the last.
-What turned it off is not known. Each month, for a player whose «Совет» is on,
-the mod switches `cabinetactions` back on and says so in debug.log.
+What turned it off is not known. 0.3.0 switched `cabinetactions` back on every
+month. 0.4.0, his word 12.10: the monthly switch is gone, he believes that bug
+was something else. In its place two decisions (other_decisions) switch
+«Действия совета» on or off by hand, so the hidden switch is reachable without
+a window of our own.
 
     python3 mods/assimilate_primary/tools/generate.py
 """
@@ -73,29 +76,74 @@ RULE = """\t\t\t# assimilate_primary: for a player whose cabinet is automated, a
 
 
 COUNCIL = MOD / "in_game/common/on_action/assimilate_primary_council_on_actions.txt"
-COUNCIL_TEXT = """# assimilate_primary: the council's hidden «Действия совета» automation
-# (cabinetactions) back on wherever the panel's «Совет» (cabinet) is on. Off,
-# seats are filled and never given an action (his run 05.10). The engine merges
-# on_actions lists, so this adds to monthly_country_pulse, it does not replace it.
-# Rebuilt by tools/generate.py.
-monthly_country_pulse = {
-\ton_actions = {
-\t\tassimilate_primary_council_pulse
+DECISIONS = MOD / "in_game/common/decisions/assimilate_primary_decisions.txt"
+DECISIONS_TEXT = """# assimilate_primary: the council's hidden «Действия совета» automation
+# (cabinetactions) has no switch in the 1.4 automation panel. These two
+# decisions are that switch, for the player only. Rebuilt by tools/generate.py.
+assimilate_primary_cabinetactions_on = {
+\tdecision_category = other_decisions
+
+\tpotential = {
+\t\tis_ai = no
+\t\tNOT = { is_system_automated = cabinetactions }
+\t}
+
+\tai_will_do = {
+\t\tvalue = 0
+\t}
+
+\toption = {
+\t\tname = assimilate_primary_cabinetactions_on.a
+\t\teffect = {
+\t\t\tset_automated_system = { system = cabinetactions activate = yes }
+\t\t}
 \t}
 }
 
-assimilate_primary_council_pulse = {
-\ttrigger = {
+assimilate_primary_cabinetactions_off = {
+\tdecision_category = other_decisions
+
+\tpotential = {
 \t\tis_ai = no
-\t\tis_system_automated = cabinet
-\t\tNOT = { is_system_automated = cabinetactions }
+\t\tis_system_automated = cabinetactions
 \t}
-\teffect = {
-\t\tset_automated_system = { system = cabinetactions activate = yes }
-\t\tdebug_log = "assimilate_primary: cabinetactions was off with cabinet on, switched back on"
+
+\tai_will_do = {
+\t\tvalue = 0
+\t}
+
+\toption = {
+\t\tname = assimilate_primary_cabinetactions_off.a
+\t\teffect = {
+\t\t\tset_automated_system = { system = cabinetactions activate = no }
+\t\t}
 \t}
 }
 """
+
+LOC = {
+    "english": {
+        "assimilate_primary_cabinetactions_on.title": "Automate Cabinet Actions",
+        "assimilate_primary_cabinetactions_on.desc": "Let the cabinet automation choose actions for every seat. The automation panel has no switch for this one.",
+        "assimilate_primary_cabinetactions_on.a": "Switch it on.",
+        "assimilate_primary_cabinetactions_off.title": "Stop Automating Cabinet Actions",
+        "assimilate_primary_cabinetactions_off.desc": "Cabinet actions are chosen by the automation. Switch it off and choose them yourself.",
+        "assimilate_primary_cabinetactions_off.a": "Switch it off.",
+    },
+    "russian": {
+        "assimilate_primary_cabinetactions_on.title": "Включить автоматику «Действий совета»",
+        "assimilate_primary_cabinetactions_on.desc": "Автоматика сама назначает действия всем местам в совете. В панели автоматизации этого переключателя нет.",
+        "assimilate_primary_cabinetactions_on.a": "Включить.",
+        "assimilate_primary_cabinetactions_off.title": "Выключить автоматику «Действий совета»",
+        "assimilate_primary_cabinetactions_off.desc": "Действия совета сейчас назначает автоматика. Выключите её, чтобы назначать их вручную.",
+        "assimilate_primary_cabinetactions_off.a": "Выключить.",
+    },
+}
+
+
+def loc_text(language: str) -> str:
+    rows = "".join(f' {k}: "{v}"\n' for k, v in LOC[language].items())
+    return f"l_{language}:\n{rows}"
 
 
 def write(path: Path, text: str) -> None:
@@ -135,7 +183,13 @@ def main() -> None:
         raise SystemExit("promote_culture: the province selection has no `enabled`")
     end = block_end(text, enabled)
     write(OUT, HEAD + text[:end].rstrip("\t") + RULE + "\t\t" + text[end:])
-    write(COUNCIL, COUNCIL_TEXT)
+    if COUNCIL.exists():
+        COUNCIL.unlink()
+        print(f"{COUNCIL.relative_to(refs.REPO)}: removed (0.4.0)")
+    write(DECISIONS, DECISIONS_TEXT)
+    for language in LOC:
+        write(MOD / f"main_menu/localization/{language}/assimilate_primary_l_{language}.yml",
+              loc_text(language))
 
 
 if __name__ == "__main__":

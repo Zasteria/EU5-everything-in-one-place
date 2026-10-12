@@ -16,7 +16,7 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`glorpui_hints_1_3`](../mods/glorpui_hints_1_3/CLAUDE.md) | 1.1.1 для 1.3, свой предмет | — |
 | [`centered_towns`](../mods/centered_towns/CLAUDE.md) | 0.2.0 (10-04): позиции Better label placement под новыми именами файлов 1.4 | 0.2.0 |
 | [`quiet_alerts`](../mods/quiet_alerts/CLAUDE.md) | 10-02: 0.3.0 не в игре. Красные и оранжевые с жёлтым звуком, галочка в CMF | всё |
-| [`assimilate_primary`](../mods/assimilate_primary/CLAUDE.md) | 0.3.0 (10-05): + включает скрытые «Действия совета» | 0.2.x |
+| [`assimilate_primary`](../mods/assimilate_primary/CLAUDE.md) | 0.4.0 (10-12): «Действия совета» — решением вручную, не раз в месяц | 0.2.x |
 | [`perf_probe`](../mods/perf_probe/CLAUDE.md), [`speed_5`](../mods/speed_5/CLAUDE.md), [`speed_10`](../mods/speed_10/CLAUDE.md) | 0.1.0: профилировщик; паузы; 10 скоростей | всё |
 | [`auto_marry`](../mods/auto_marry/CLAUDE.md) | автоженитьба под 1.4 | всё |
 | [`war_sliders`](../mods/war_sliders/CLAUDE.md) | **0.7.3**: сам после мира и восстания, кнопка CMF; к мастерской | автозапуск |
