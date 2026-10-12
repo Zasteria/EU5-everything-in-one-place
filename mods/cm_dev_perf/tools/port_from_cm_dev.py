@@ -759,6 +759,77 @@ SUBSIDY_DESC = {
 }
 
 
+# +perf34, his call 10-12: fewer whole-tree walks in the queue drain. Every
+# `PdxGuiTriggerAllAnimations` visits every widget in the game, and the count
+# grows over a session (docs/investigations/cm_performance.md). Neither edit
+# changes what CM scores, approves or builds.
+QUEUE = "in_game/gui/cm_construct_queue_window.gui"
+
+# Each scan shout and the list its rows hang from (the outer datamodel).
+_SCAN_SHOUTS = (
+    ("cm_q_construct", "cm_q_locations"),
+    ("cm_q_construct_upgrade", "cm_gui_upgrade_locations"),
+    ("cm_q_construct_urbanize", "cm_q_urbanize_locations"),
+    ("cm_q_construct_food", "cm_q_food_locations"),
+    ("cm_q_construct_food_rgo", "cm_q_food_rgo_locations"),
+    ("cm_q_construct_rgo", "cm_q_rgo_locations"),
+    ("cm_q_construct_foreign", "cm_q_fb_locations"),
+    ("cm_q_construct_rank", "cm_q_rank_locations"),
+    ("cm_ab_construct_build", "cm_ab_b_locations"),
+    ("cm_ab_construct_upgrade", "cm_ab_u_locations"),
+    ("cm_ab_construct_rgo", "cm_ab_r_locations"),
+)
+
+
+def _slow_the_poll(text: str) -> str:
+    """The «ready?» loop between scoring and firing, every 1 s instead of 0.3 s:
+    a third of the walks while CM waits. Completion is still decided by
+    cm_q_sync_check; the step lengths only pace it."""
+    old = ("\t\t\tstate = {\n\t\t\t\tname = cm_q_round_probe\n\t\t\t\tduration = 0.15\n"
+           "\t\t\t\ton_finish = \"[PdxGuiTriggerAllAnimations('cm_q_probe')]\"\n"
+           "\t\t\t\tnext = cm_q_round_check\n\t\t\t}\n"
+           "\t\t\tstate = {\n\t\t\t\tname = cm_q_round_check\n\t\t\t\tduration = 0.15\n")
+    if text.count(old) != 1:
+        raise SystemExit("queue window: the poll loop has changed shape")
+    return text.replace(old, old.replace("duration = 0.15", "duration = 0.5"), 1)
+
+
+def _gate_scan_shouts(text: str) -> str:
+    """One shout per queue that has something in it, instead of eleven every
+    sweep. Each shout moves to its own zero-size widget that turns visible when
+    the sweep arms and its list is non-empty, so its `_show` fires on the same
+    edge and after the same 0.3 s the driver's did. The gate reads the
+    variable cm_q_scan_gate tests, not the trigger, so the eleven cost three
+    cheap reads a frame each, against the driver's one trigger."""
+    shouts = "".join(
+        f"\t\t\t\ton_finish = \"[PdxGuiTriggerAllAnimations('{name}')]\"\n" for name, _ in _SCAN_SHOUTS)
+    old = "\t\t\t\tname = _show\n\t\t\t\tduration = 0.3\n" + shouts + "\t\t\t\tnext = cm_q_scan_done\n"
+    if text.count(old) != 1:
+        raise SystemExit("queue window: the scan driver's shouts have changed")
+    text = text.replace(old, "\t\t\t\tname = _show\n\t\t\t\tduration = 0.3\n"
+                             "\t\t\t\t# cm_dev_perf +perf34: the shouts are in the widgets below\n"
+                             "\t\t\t\tnext = cm_q_scan_done\n", 1)
+    anchor = "\t\t# Per-cycle poll driver:"
+    if text.count(anchor) != 1:
+        raise SystemExit("queue window: the poll driver's comment has moved")
+    armed = "GetPlayer.MakeScope.GetVariable('cm_q_scan_armed').IsSet"
+    gated = ("\t\t# cm_dev_perf +perf34: each scan shout only when its queue has entries. Every shout\n"
+             "\t\t# walks every widget in the game, and most months most queues are empty.\n")
+    for name, list_name in _SCAN_SHOUTS:
+        gated += (
+            "\t\twidget = {\n"
+            "\t\t\tsize = { 0 0 }\n"
+            "\t\t\tvisible_at_creation = no\n"
+            f"\t\t\tvisible = \"[And3(GetPlayer.Exists, {armed}, DataModelHasItems(GetPlayer.MakeScope.GetList('{list_name}')))]\"\n"
+            "\t\t\tstate = {\n"
+            "\t\t\t\tname = _show\n"
+            "\t\t\t\tduration = 0.3\n"
+            f"\t\t\t\ton_finish = \"[PdxGuiTriggerAllAnimations('{name}')]\"\n"
+            "\t\t\t}\n"
+            "\t\t}\n")
+    return text.replace(anchor, gated + anchor, 1)
+
+
 def _write_subsidy_desc() -> None:
     for lang, words in SUBSIDY_DESC.items():
         path = MOD / f"main_menu/localization/{lang}/cm_cmm_l_{lang}.yml"
@@ -807,6 +878,8 @@ EDITS = (
      _pf_log_close),
     (CMM, "say the refresh button's click in debug.log", _pf_log_click),
     (FOOD, "subsidize every idle or loss-making farm", _subsidize_idle_farms),
+    (QUEUE, "poll the queue every second, not every 0.3 s", _slow_the_poll),
+    (QUEUE, "shout only into queues with entries", _gate_scan_shouts),
 )
 
 
@@ -909,7 +982,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 33
+PERF_REVISION = 34
 
 
 def metadata() -> str:
