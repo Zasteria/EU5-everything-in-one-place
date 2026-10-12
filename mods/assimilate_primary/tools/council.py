@@ -63,7 +63,34 @@ POOL = [
     ("strengthen_government", "country", None, ""),
     ("diplomatic_endeavors", "country", None, ""),
     ("counter_espionage_action", "country", None, ""),
+    # Appended, not inserted: CMF keeps a list's rows by position, and a saved
+    # game's order of the first twenty must not shift.
+    ("noblesse_oblige_cabinet_action", "province", "province_tax_base", ""),
+    # His ask 12.10: diplomatic endeavors serves two ends, so two rows he can
+    # rank apart. The action has no target; this row only takes a seat while
+    # someone is near a coalition against him.
+    ("diplomatic_antagonism", "country", None,
+     "OR = { has_countries_with_near_coalition_grade_antagonism = yes has_countries_with_coalition_grade_antagonism = yes }"),
 ]
+
+# A row that is not an action of its own: the action it places.
+ROW_ACTION = {"diplomatic_antagonism": "diplomatic_endeavors"}
+
+# Rows of one action told apart in their label, and their tooltips.
+ROW_NOTE = {
+    "diplomatic_endeavors": {
+        "english": (" (opinion)", "For improving opinion with your targets. Taken whenever a seat is free for it."),
+        "russian": (" (мнение)", "Для улучшения мнения у ваших целей. Берёт место всегда, когда оно свободно."),
+    },
+    "diplomatic_antagonism": {
+        "english": (" (antagonism)", "For lowering antagonism: diplomatic reputation reduces it. Taken only while a country is near a coalition against you."),
+        "russian": (" (неприязнь)", "Для снижения неприязни: её уменьшает дипломатическая репутация. Берёт место, только пока кто-то близок к коалиции против вас."),
+    },
+}
+
+
+def act(row: str) -> str:
+    return ROW_ACTION.get(row, row)
 
 LEAD = 0.3  # his rule 05.10, the same as the vanilla-automation patch
 
@@ -112,10 +139,70 @@ INTEGRATION = """{
 \t\t\t\t\t}
 \t\t\t\t}"""
 
-# The three lists over the pool; «Тонкие настройки» is a skeleton for now (his
-# ask 12.10: the tab first, each action's own settings later).
+# The three lists over the pool. «Тонкие настройки» lists every action; the
+# settings an action has are CMF groups under the list (FINE).
 LISTS = ("available", "priority", "tuning")
 TUNING_NONE = {"english": "none yet", "russian": "пока нет"}
+TUNING_BELOW = {"english": "below the list", "russian": "под списком"}
+# Rows whose settings sit under the «Тонкие настройки» list, as CMF groups.
+TUNED = ("promote_culture", "promote_religion")
+
+# The control actions «Ускорять контролем» puts on a province being assimilated,
+# in the order tried: the game hides each where the other is (their visible).
+SPEEDUP = ("noblesse_oblige_cabinet_action", "increase_control_province")
+
+# One row past the pool in «Тонкие настройки» only: the value shift, not handed
+# out yet. Its cell is the probe of 12.10 — what the game says the advisor on
+# it can reach — read for the rule «push only if at least one whole point is
+# left» (his ask 12.10).
+SV_ROW = len(POOL) + 1
+SV_PROBE = "[GetPlayer.MakeScope.GetVariable('bag_asp_sv_cab').GetCabinet.{f}]"
+SV_FIELDS = {
+    "english": ("now", "max reachable", "total", "inertia", "a month"),
+    "russian": ("сейчас", "предел", "всего", "инерция", "за месяц"),
+}
+
+# The CMF settings of «Тонкие настройки», his ask 12.10. Each: (setting, group,
+# kind, options). Groups are named after the action, by its game name.
+FINE = [
+    ("culture_target", "promote_culture", "dropdown", 2),
+    ("culture_speedup", "promote_culture", "bool", 0),
+    ("religion_target", "promote_religion", "dropdown", 2),
+]
+FINE_LOC = {
+    "english": {
+        "bag_asp__culture_target_name": "Assimilate into",
+        "bag_asp__culture_target_desc": "Which culture the council assimilates provinces into.",
+        "bag_asp__culture_target_option_1_name": "Primary culture",
+        "bag_asp__culture_target_option_1_desc": "The country's primary culture. Where an accepted culture already leads it by 30 points, the province is left alone.",
+        "bag_asp__culture_target_option_2_name": "Accepted culture",
+        "bag_asp__culture_target_option_2_desc": "The accepted culture most widespread in the country. With none accepted, the primary.",
+        "bag_asp__culture_speedup_name": "Speed it up with control",
+        "bag_asp__culture_speedup_desc": "Assimilation runs faster where control is high. On: each province being assimilated also gets [ShowCabinetActionName('noblesse_oblige_cabinet_action')], or [ShowCabinetActionName('increase_control_province')] where that does not fit, on a free seat; when all seats are handed out, also on one whose action ranks lower in «Priority». The game forbids both on one province.",
+        "bag_asp__religion_target_name": "Convert into",
+        "bag_asp__religion_target_desc": "Which religion the council converts provinces into.",
+        "bag_asp__religion_target_option_1_name": "State religion",
+        "bag_asp__religion_target_option_1_desc": "The country's own religion.",
+        "bag_asp__religion_target_option_2_name": "Another of its group",
+        "bag_asp__religion_target_option_2_desc": "The most widespread other religion of the state religion's group in the country; the game allows no other. With none present, the state religion.",
+    },
+    "russian": {
+        "bag_asp__culture_target_name": "Ассимилировать в",
+        "bag_asp__culture_target_desc": "В какую культуру совет ассимилирует провинции.",
+        "bag_asp__culture_target_option_1_name": "Основную культуру",
+        "bag_asp__culture_target_option_1_desc": "Основная культура страны. Где признанная уже опережает её на 30 пунктов, провинция не трогается.",
+        "bag_asp__culture_target_option_2_name": "Признанную культуру",
+        "bag_asp__culture_target_option_2_desc": "Самая распространённая в стране признанная культура. Если признанных нет, основная.",
+        "bag_asp__culture_speedup_name": "Ускорять контролем",
+        "bag_asp__culture_speedup_desc": "Ассимиляция идёт быстрее при высоком контроле. Включено: в каждую ассимилируемую провинцию ставится ещё [ShowCabinetActionName('noblesse_oblige_cabinet_action')], а где он не подходит, [ShowCabinetActionName('increase_control_province')], на свободное место; при перераспределении всех мест также на место, чьё действие ниже в «Приоритете». Оба в одну провинцию игра не даёт.",
+        "bag_asp__religion_target_name": "Обращать в",
+        "bag_asp__religion_target_desc": "В какую религию совет обращает провинции.",
+        "bag_asp__religion_target_option_1_name": "Государственную",
+        "bag_asp__religion_target_option_1_desc": "Религия страны.",
+        "bag_asp__religion_target_option_2_name": "Другую из её группы",
+        "bag_asp__religion_target_option_2_desc": "Самая распространённая в стране другая религия той же группы: другую игра не даёт. Если такой нет, государственная.",
+    },
+}
 
 ABILITY = {
     "english": {"adm": "ADM", "dip": "DIP", "mil": "MIL"},
@@ -264,7 +351,12 @@ def flag_of(sel: str, default: str = "target") -> str:
     return value(sel, "target_flag") or default
 
 
-def try_effect(key: str, kind: str, order: str | None, gate: str, actions: dict[str, str]) -> str:
+def try_effect(row: str, kind: str, order: str | None, gate: str, actions: dict[str, str],
+               at: str | None = None) -> str:
+    """bag_asp_try_<row>: put this row's action on scope:bag_asp_seat if a
+    target fits. With `at`, only on that one province (a scope), and the
+    effect is bag_asp_try_at_<row>."""
+    key = act(row)
     action = actions[key]
     if order == "INTEGRATION":
         order = INTEGRATION
@@ -281,7 +373,7 @@ def try_effect(key: str, kind: str, order: str | None, gate: str, actions: dict[
     limit = "\n".join("\t\t\t" + c for c in cond)
     done = (f"\t\t\t\tscope:bag_asp_seat = {{ cabinet_member = {{ set_variable = {{ name = bag_asp_claimed value = yes }} }} }}\n"
             f"\t\t\t\tscope:actor = {{ set_variable = {{ name = bag_asp_placed value = yes }} }}\n"
-            f"\t\t\t\tdebug_log = \"bag_asp: seat set to {key}\"")
+            f"\t\t\t\tdebug_log = \"bag_asp: seat set to {row}\"")
 
     def assign(params: str, flag: str = "") -> str:
         mark = ""
@@ -301,7 +393,12 @@ def try_effect(key: str, kind: str, order: str | None, gate: str, actions: dict[
     elif kind in ("province", "capital"):
         sel = select(action, "province")
         flag = flag_of(sel)
-        if kind == "province":
+        if at:
+            inner = (f"\t\t{at} = {{\n\t\t\tif = {{\n\t\t\t\tlimit = {{\n"
+                     f"{target_test(sel, 5, actions, key)}\n\t\t\t\t}}\n"
+                     f"\t\t\t\tsave_temporary_scope_as = bag_asp_pick\n"
+                     f"{assign(f' {flag} = scope:bag_asp_pick', flag)}\n\t\t\t}}\n\t\t}}")
+        elif kind == "province":
             inner = (f"\t\tscope:actor = {{\n\t\t\tordered_province = {{\n\t\t\t\tlimit = {{\n"
                      f"{target_test(sel, 5, actions, key)}\n\t\t\t\t}}\n\t\t\t\torder_by = {order}\n"
                      f"\t\t\t\tsave_temporary_scope_as = bag_asp_pick\n"
@@ -325,13 +422,22 @@ def try_effect(key: str, kind: str, order: str | None, gate: str, actions: dict[
         pflag = flag_of(sel)
         rule = (f"\t\t\t\t\t# His rule 05.10: where an accepted culture leads the primary by\n"
                 f"\t\t\t\t\t# {round(LEAD * 100)} points, do not push the primary.\n"
-                f"\t\t\t\t\tNAND = {{\n\t\t\t\t\t\texists = dominant_culture\n"
-                f"\t\t\t\t\t\tNOT = {{ dominant_culture = scope:actor.culture }}\n"
-                f"\t\t\t\t\t\tdominant_culture = {{ is_primary_or_accepted_in = scope:actor }}\n"
-                f"\t\t\t\t\t\t\"culture_percentage(dominant_culture)\" >= {{\n"
-                f"\t\t\t\t\t\t\tvalue = \"culture_percentage(scope:actor.culture)\"\n"
-                f"\t\t\t\t\t\t\tadd = {LEAD}\n\t\t\t\t\t\t}}\n\t\t\t\t\t}}")
-        inner = (f"\t\tscope:actor.culture = {{ save_scope_as = {cflag} }}\n"
+                f"\t\t\t\t\ttrigger_if = {{\n\t\t\t\t\t\tlimit = {{ scope:{cflag} = scope:actor.culture }}\n"
+                f"\t\t\t\t\t\tNAND = {{\n\t\t\t\t\t\t\texists = dominant_culture\n"
+                f"\t\t\t\t\t\t\tNOT = {{ dominant_culture = scope:actor.culture }}\n"
+                f"\t\t\t\t\t\t\tdominant_culture = {{ is_primary_or_accepted_in = scope:actor }}\n"
+                f"\t\t\t\t\t\t\t\"culture_percentage(dominant_culture)\" >= {{\n"
+                f"\t\t\t\t\t\t\t\tvalue = \"culture_percentage(scope:actor.culture)\"\n"
+                f"\t\t\t\t\t\t\t\tadd = {LEAD}\n\t\t\t\t\t\t\t}}\n\t\t\t\t\t\t}}\n\t\t\t\t\t}}")
+        # His ask 12.10: into the primary culture (option 1, the default) or an
+        # accepted one, the most widespread in the country (option 2).
+        inner = (f"\t\tif = {{\n\t\t\tlimit = {{\n\t\t\t\tscope:actor = {{\n"
+                 f"\t\t\t\t\tvar:bag_asp_culture_target = 2\n\t\t\t\t\tany_accepted_culture = {{ always = yes }}\n"
+                 f"\t\t\t\t}}\n\t\t\t}}\n"
+                 f"\t\t\tscope:actor = {{\n\t\t\t\tordered_accepted_culture = {{\n"
+                 f"\t\t\t\t\torder_by = \"scope:actor.culture_percentage_in_country(this)\"\n"
+                 f"\t\t\t\t\tsave_scope_as = {cflag}\n\t\t\t\t}}\n\t\t\t}}\n\t\t}}\n"
+                 f"\t\telse = {{\n\t\t\tscope:actor.culture = {{ save_scope_as = {cflag} }}\n\t\t}}\n"
                  f"\t\tscope:actor = {{\n\t\t\tordered_province = {{\n\t\t\t\tlimit = {{\n"
                  f"{target_test(sel, 5, actions, key)}\n{rule}\n\t\t\t\t}}\n\t\t\t\torder_by = {order}\n"
                  f"\t\t\t\tsave_temporary_scope_as = bag_asp_pick\n"
@@ -340,7 +446,20 @@ def try_effect(key: str, kind: str, order: str | None, gate: str, actions: dict[
         sel = select(action, "province")
         rflag = flag_of(select(action, "religion"))
         pflag = flag_of(sel)
-        inner = (f"\t\tscope:actor.religion = {{ save_scope_as = {rflag} }}\n"
+        # His ask 12.10: into the state religion (option 1, the default) or the
+        # most widespread other religion of its group in the country (option 2:
+        # the game offers no other).
+        other = ("NOT = { this = scope:actor.religion } group = scope:actor.religion.group "
+                 "is_religion_enabled = yes")
+        inner = (f"\t\tif = {{\n\t\t\tlimit = {{\n\t\t\t\tscope:actor = {{\n"
+                 f"\t\t\t\t\tvar:bag_asp_religion_target = 2\n"
+                 f"\t\t\t\t\tany_present_religion_in_country = {{ {other} }}\n"
+                 f"\t\t\t\t}}\n\t\t\t}}\n"
+                 f"\t\t\tscope:actor = {{\n\t\t\t\tordered_present_religion_in_country = {{\n"
+                 f"\t\t\t\t\tlimit = {{ {other} }}\n"
+                 f"\t\t\t\t\torder_by = \"scope:actor.religion_percentage_in_country(this)\"\n"
+                 f"\t\t\t\t\tsave_scope_as = {rflag}\n\t\t\t\t}}\n\t\t\t}}\n\t\t}}\n"
+                 f"\t\telse = {{\n\t\t\tscope:actor.religion = {{ save_scope_as = {rflag} }}\n\t\t}}\n"
                  f"\t\tscope:actor = {{\n\t\t\tordered_province = {{\n\t\t\t\tlimit = {{\n"
                  f"{target_test(sel, 5, actions, key)}\n\t\t\t\t}}\n\t\t\t\torder_by = {order}\n"
                  f"\t\t\t\tsave_temporary_scope_as = bag_asp_pick\n"
@@ -355,26 +474,36 @@ def try_effect(key: str, kind: str, order: str | None, gate: str, actions: dict[
                  f"{assign(f' {flag} = scope:bag_asp_pick', flag)}\n\t\t\t}}\n\t\t}}")
     else:
         raise SystemExit(f"council: unknown kind {kind}")
-    return (f"# Scope: country (scope:actor); the seat is scope:bag_asp_seat.\n"
-            f"bag_asp_try_{key} = {{\n\tif = {{\n\t\tlimit = {{\n{limit}\n\t\t}}\n{inner}\n\t}}\n}}\n")
+    name = f"bag_asp_try_at_{row}" if at else f"bag_asp_try_{row}"
+    where = f"; the province is {at}" if at else ""
+    return (f"# Scope: country (scope:actor); the seat is scope:bag_asp_seat{where}.\n"
+            f"{name} = {{\n\tif = {{\n\t\tlimit = {{\n{limit}\n\t\t}}\n{inner}\n\t}}\n}}\n")
 
 
-def place_effect(key: str, actions: dict[str, str]) -> str:
-    """Seats already on this action are kept; then free seats take it, the
-    advisor best in its skill first, while it still finds a target."""
-    action = actions[key]
-    ability = value(action, "ability") or "adm"
+def seat_test(action: str, tabs: int) -> str:
+    """A free seat this action can use."""
     seat = ["bag_asp_free_seat = yes"]
     if value(action, "require_matching_character_religion") == "yes":
         seat.append("cabinet_member = { religion = scope:actor.religion }")
-    seat = "\n".join("\t\t\t\t" + s for s in seat)
+    return "\n".join("\t" * tabs + s for s in seat)
+
+
+def place_effect(row: str, gate: str, actions: dict[str, str]) -> str:
+    """Seats already on this action are kept (while the row's gate holds);
+    then free seats take it, the advisor best in its skill first, while it
+    still finds a target."""
+    key = act(row)
+    action = actions[key]
+    ability = value(action, "ability") or "adm"
+    seat = seat_test(action, 4)
+    keep_gate = f"\n\t\t\tscope:actor = {{ {gate} }}" if gate else ""
     return f"""# Scope: country (scope:actor).
-bag_asp_place_{key} = {{
+bag_asp_place_{row} = {{
 \tevery_cabinet = {{
 \t\tlimit = {{
 \t\t\tbag_asp_free_seat = yes
 \t\t\thas_cabinet_action = yes
-\t\t\tcabinet_action = cabinet_action:{key}
+\t\t\tcabinet_action = cabinet_action:{key}{keep_gate}
 \t\t}}
 \t\tcabinet_member = {{ set_variable = {{ name = bag_asp_claimed value = yes }} }}
 \t}}
@@ -391,7 +520,7 @@ bag_asp_place_{key} = {{
 \t\t\t}}
 \t\t\torder_by = cabinet_member.{ability}
 \t\t\tsave_scope_as = bag_asp_seat
-\t\t\tbag_asp_try_{key} = yes
+\t\t\tbag_asp_try_{row} = yes
 \t\t}}
 \t}}
 \tif = {{
@@ -402,14 +531,60 @@ bag_asp_place_{key} = {{
 """
 
 
+def speedup_effect(actions: dict[str, str]) -> str:
+    first = actions[SPEEDUP[0]]
+    ability = value(first, "ability") or "adm"
+    if any((value(actions[k], "ability") or "adm") != ability for k in SPEEDUP):
+        raise SystemExit("council: the speedup's control actions no longer share a skill")
+    tries = f"\t\t\t\t\t\tbag_asp_try_at_{SPEEDUP[0]} = yes\n"
+    for k in SPEEDUP[1:]:
+        tries += (f"\t\t\t\t\t\tif = {{\n\t\t\t\t\t\t\tlimit = {{ scope:actor = {{ NOT = {{ has_variable = bag_asp_placed }} }} }}\n"
+                  f"\t\t\t\t\t\t\tbag_asp_try_at_{k} = yes\n\t\t\t\t\t\t}}\n")
+    return f"""
+# Scope: country (scope:actor). His ask 12.10, with «Ускорять контролем» on:
+# each province being assimilated also gets a control action, the first of
+# {", ".join(SPEEDUP)} that fits, on a free seat, the best in its
+# skill first. Free means not chosen yet in this pass: in a full hand-out, a seat
+# a lower row would have taken; in a fill, an empty one.
+bag_asp_speedup = {{
+\tif = {{
+\t\tlimit = {{ has_variable = bag_asp_speedup_on }}
+\t\tevery_cabinet = {{
+\t\t\tlimit = {{
+\t\t\t\thas_cabinet_action = yes
+\t\t\t\tcabinet_action = cabinet_action:promote_culture
+\t\t\t}}
+\t\t\tinteraction_target:{flag_of(select(actions["promote_culture"], "province"))} ?= {{
+\t\t\t\tsave_scope_as = bag_asp_at
+\t\t\t\tscope:actor = {{
+\t\t\t\t\tordered_cabinet = {{
+\t\t\t\t\t\tlimit = {{
+{seat_test(first, 7)}
+\t\t\t\t\t\t}}
+\t\t\t\t\t\torder_by = cabinet_member.{ability}
+\t\t\t\t\t\tsave_scope_as = bag_asp_seat
+{tries}\t\t\t\t\t}}
+\t\t\t\t\tif = {{
+\t\t\t\t\t\tlimit = {{ has_variable = bag_asp_placed }}
+\t\t\t\t\t\tremove_variable = bag_asp_placed
+\t\t\t\t\t\tdebug_log = "bag_asp: assimilation sped up with a control action"
+\t\t\t\t\t}}
+\t\t\t\t}}
+\t\t\t}}
+\t\t}}
+\t}}
+}}
+"""
+
+
 def build(game: Path) -> dict[str, str]:
     """Generated files, by path under the mod, and localization rows."""
     actions = load_actions(game)
-    missing = [k for k, *_ in POOL if k not in actions]
+    missing = [act(k) for k, *_ in POOL if act(k) not in actions]
     if missing:
         raise SystemExit(f"council: the game has no cabinet action {', '.join(missing)}")
     for k, *_ in POOL:
-        if value(actions[k], "forbid_for_automation") == "yes":
+        if value(actions[act(k)], "forbid_for_automation") == "yes":
             raise SystemExit(f"council: {k} is forbidden for automation in the game now")
     n = len(POOL)
     if n > 50:
@@ -478,7 +653,7 @@ bag_asp_register = {{
 \t\tmod_id = {MOD_ID}
 \t\tsetting_id = tuning
 \t\ttab_id = fine
-\t\titem_count = {n}
+\t\titem_count = {SV_ROW}
 \t\tis_ordered = 0
 \t}}
 \tcmm_register_list_text_field = {{
@@ -487,13 +662,23 @@ bag_asp_register = {{
 \t\tfield_id = settings
 \t}}
 """]
+    for setting, group, kind, opt in FINE:
+        if kind == "dropdown":
+            reg.append(f"\tcmm_register_dropdown_setting = {{\n\t\tmod_id = {MOD_ID}\n\t\tsetting_id = {setting}\n"
+                       f"\t\ttab_id = fine\n\t\tgroup_id = {group}\n\t\tdefault_index = 1\n\t\toption_count = {opt}\n\t}}\n")
+        else:
+            reg.append(f"\tcmm_register_bool_setting = {{\n\t\tmod_id = {MOD_ID}\n\t\tsetting_id = {setting}\n"
+                       f"\t\ttab_id = fine\n\t\tgroup_id = {group}\n\t\tdefault_value = {opt}\n\t}}\n")
     for i, (k, *_) in enumerate(POOL, 1):
-        ability = value(actions[k], "ability") or "adm"
+        ability = value(actions[act(k)], "ability") or "adm"
+        tuning = "below" if k in TUNED else "none"
         reg.append(f"\tcmm_set_list_item_value = {{ mod_id = {MOD_ID} setting_id = available item = {i} value = flag:bag_asp_{k} }}\n"
                    f"\tcmm_set_list_item_value = {{ mod_id = {MOD_ID} setting_id = priority item = {i} value = flag:bag_asp_{k} }}\n"
                    f"\tcmm_set_list_text_value = {{ mod_id = {MOD_ID} setting_id = priority field_id = ability item = {i} value = flag:bag_asp_ability_{ability} }}\n"
                    f"\tcmm_set_list_item_value = {{ mod_id = {MOD_ID} setting_id = tuning item = {i} value = flag:bag_asp_{k} }}\n"
-                   f"\tcmm_set_list_text_value = {{ mod_id = {MOD_ID} setting_id = tuning field_id = settings item = {i} value = flag:bag_asp_tuning_none }}\n")
+                   f"\tcmm_set_list_text_value = {{ mod_id = {MOD_ID} setting_id = tuning field_id = settings item = {i} value = flag:bag_asp_tuning_{tuning} }}\n")
+    reg.append(f"\tcmm_set_list_item_value = {{ mod_id = {MOD_ID} setting_id = tuning item = {SV_ROW} value = flag:bag_asp_change_societal_values }}\n"
+               f"\tbag_asp_sv_probe = yes\n")
     reg.append(f"""
 \tbag_asp_sync = yes
 \tbag_asp_rebuild = yes
@@ -504,6 +689,30 @@ bag_asp_sync = {{
 \tcmm_sync_bool_alias = {{ setting = {MOD_ID}__auto alias = bag_asp_auto_on }}
 \tcmm_sync_setting_alias = {{ setting = {MOD_ID}__period alias = bag_asp_period }}
 \tcmm_sync_setting_alias = {{ setting = {MOD_ID}__review alias = bag_asp_review }}
+\tcmm_sync_setting_alias = {{ setting = {MOD_ID}__culture_target alias = bag_asp_culture_target }}
+\tcmm_sync_bool_alias = {{ setting = {MOD_ID}__culture_speedup alias = bag_asp_speedup_on }}
+\tcmm_sync_setting_alias = {{ setting = {MOD_ID}__religion_target alias = bag_asp_religion_target }}
+}}
+
+# Scope: country. The probe in the value-shift row of «Тонкие настройки»: the
+# seat on the value shift, if any, for the row's text to read.
+bag_asp_sv_probe = {{
+\tif = {{
+\t\tlimit = {{ any_cabinet = {{ has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }} }}
+\t\trandom_cabinet = {{
+\t\t\tlimit = {{ has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }}
+\t\t\tsave_temporary_scope_as = bag_asp_sv_seat
+\t\t}}
+\t\tset_variable = {{ name = bag_asp_sv_cab value = scope:bag_asp_sv_seat }}
+\t\tcmm_set_list_text_value = {{ mod_id = {MOD_ID} setting_id = tuning field_id = settings item = {SV_ROW} value = flag:bag_asp_sv_probe }}
+\t}}
+\telse = {{
+\t\tif = {{
+\t\t\tlimit = {{ has_variable = bag_asp_sv_cab }}
+\t\t\tremove_variable = bag_asp_sv_cab
+\t\t}}
+\t\tcmm_set_list_text_value = {{ mod_id = {MOD_ID} setting_id = tuning field_id = settings item = {SV_ROW} value = flag:bag_asp_sv_probe_none }}
+\t}}
 }}
 
 # Scope: country. The two lists into the order the pulse walks, and which rows
@@ -520,7 +729,7 @@ bag_asp_rebuild = {{
 """)
     for i, (k, *_) in enumerate(POOL, 1):
         reg.append(f"""\t\tif = {{
-\t\t\tlimit = {{ cabinet_action:{k} = {{ is_visible_for = root }} }}
+\t\t\tlimit = {{ cabinet_action:{act(k)} = {{ is_visible_for = root }} }}
 \t\t\tcmm_show_list_item = {{ mod_id = {MOD_ID} setting_id = available item = {i} }}
 \t\t\tcmm_show_list_item = {{ mod_id = {MOD_ID} setting_id = tuning item = {i} }}
 \t\t}}
@@ -530,7 +739,7 @@ bag_asp_rebuild = {{
 \t\t}}
 \t\tif = {{
 \t\t\tlimit = {{
-\t\t\t\tcabinet_action:{k} = {{ is_visible_for = root }}
+\t\t\t\tcabinet_action:{act(k)} = {{ is_visible_for = root }}
 \t\t\t\tis_target_in_variable_list = {{ name = bag_asp_used target = flag:bag_asp_{k} }}
 \t\t\t}}
 \t\t\tcmm_show_list_item = {{ mod_id = {MOD_ID} setting_id = priority item = {i} }}
@@ -589,12 +798,17 @@ bag_asp_handle_callback = {{
 \t\t}}
 \t\tflag:{MOD_ID}__period = {{ bag_asp_sync = yes }}
 \t\tflag:{MOD_ID}__review = {{ bag_asp_sync = yes }}
+\t\tflag:{MOD_ID}__culture_target = {{ bag_asp_sync = yes }}
+\t\tflag:{MOD_ID}__culture_speedup = {{ bag_asp_sync = yes }}
+\t\tflag:{MOD_ID}__religion_target = {{ bag_asp_sync = yes }}
 \t}}
 }}
 """)
     effects = "".join(reg)
 
-    switch = "\n".join(f"\t\t\t\t\tflag:bag_asp_{k} = {{ bag_asp_place_{k} = yes }}" for k, *_ in POOL)
+    switch = "\n".join(
+        f"\t\t\t\t\tflag:bag_asp_{k} = {{ bag_asp_place_{k} = yes" + (" bag_asp_speedup = yes" if k == "promote_culture" else "") + " }"
+        for k, *_ in POOL)
     run = f"""# assimilate_primary: the mod's own council automation, the monthly pass.
 # Rebuilt by tools/generate.py (tools/council.py).
 
@@ -618,6 +832,7 @@ bag_asp_tick = {{
 \tchange_variable = {{ name = bag_asp_months add = 1 }}
 \tchange_variable = {{ name = bag_asp_review_months add = 1 }}
 \tdebug_log = "bag_asp: month"
+\tbag_asp_sv_probe = yes
 \tif = {{
 \t\tlimit = {{
 \t\t\tvar:bag_asp_review > 0
@@ -709,6 +924,7 @@ bag_asp_plan = {{
 """
     BUSY.clear()
     tries = "\n".join(try_effect(k, kind, order, gate, actions) for k, kind, order, gate in POOL)
+    tries += "\n" + "\n".join(try_effect(k, "province", None, "", actions, at="scope:bag_asp_at") for k in SPEEDUP)
     def pass_(effect: str) -> str:
         return "\n".join(
             f"\t\tif = {{\n\t\t\tlimit = {{ cabinet_action = cabinet_action:{k} }}\n"
@@ -732,12 +948,21 @@ bag_asp_clear_busy = {{
 
 """
     run += tries
+    # A seat's rank is its action's row; where two rows share an action, the
+    # row whose gate holds now, gated rows tried first.
+    shared = {act(k) for k, *_ in POOL if act(k) != k}
+    rows = sorted((r for r in POOL if r[0] != "recovery_effort"),
+                  key=lambda r: not (act(r[0]) in shared and r[3]))
+
+    def seat_is(k: str, gate: str) -> str:
+        own = f"cabinet_action = cabinet_action:{act(k)}"
+        return own + (f" scope:actor = {{ {gate} }}" if act(k) in shared and gate else "")
     seat_rank = "\n".join(
-        f"\t\t\telse_if = {{ limit = {{ cabinet_action = cabinet_action:{k} }} add = scope:actor.var:bag_asp_rank_{k} }}"
-        for k, *_ in POOL if k != "recovery_effort")
+        f"\t\t\telse_if = {{ limit = {{ {seat_is(k, g)} }} add = scope:actor.var:bag_asp_rank_{k} }}"
+        for k, _, _, g in rows)
     seat_below = "\n".join(
-        f"\t\t\t\t\t\t\tAND = {{ cabinet_action = cabinet_action:{k} scope:actor.var:bag_asp_rank_{k} > scope:actor.var:bag_asp_rank_recovery_effort }}"
-        for k, *_ in POOL if k != "recovery_effort")
+        f"\t\t\t\t\t\t\tAND = {{ {seat_is(k, g)} scope:actor.var:bag_asp_rank_{k} > scope:actor.var:bag_asp_rank_recovery_effort }}"
+        for k, _, _, g in rows)
     run += f"""
 # Scope: country. While the «devastated locations» alert shows (its banner,
 # bag_alert_banner.gui): as it appears, then every second. Costs a look
@@ -820,7 +1045,8 @@ bag_asp_emergency = {{
 \t}}
 }}
 """
-    run += "\n" + "\n".join(place_effect(k, actions) for k, *_ in POOL)
+    run += "\n" + "\n".join(place_effect(k, gate, actions) for k, _, _, gate in POOL)
+    run += speedup_effect(actions)
 
     on_actions = f"""# assimilate_primary: the CMF page and the monthly pass. The engine merges
 # on_actions lists, so these add to CMF's own.
@@ -931,13 +1157,27 @@ def loc_rows(game: Path, language: str) -> dict[str, str]:
     names = dict(re.findall(r'^ (\w+):\d* "(.*)"\s*$', src, re.M))
     rows = {}
     for i, (k, *_) in enumerate(POOL, 1):
-        if k not in names:
-            raise SystemExit(f"council: the game has no {language} name for {k}")
+        if act(k) not in names:
+            raise SystemExit(f"council: the game has no {language} name for {act(k)}")
         # The game's own linked name, as CM writes its building rows
         # ([ShowBuildingTypeName]): it hovers the game's tooltip of the action.
-        name = f"[ShowCabinetActionName('{k}')]"
+        suffix, desc = ROW_NOTE.get(k, {}).get(language, ("", ""))
+        name = f"[ShowCabinetActionName('{act(k)}')]{suffix}"
         for s in LISTS:
             rows[f"{MOD_ID}__{s}_i{i}_name"] = name
+            if desc:
+                rows[f"{MOD_ID}__{s}_i{i}_desc"] = desc
+    rows[f"{MOD_ID}__tuning_i{SV_ROW}_name"] = "[ShowCabinetActionName('change_societal_values')]"
+    now, top, total, inertia, month = SV_FIELDS[language]
+    probe = lambda f: SV_PROBE.format(f=f)
+    rows["bag_asp_sv_probe"] = (f"{probe('GetSocietalValueName')}: {now} {probe('GetSocietalValueCurrentNumber|2')}, "
+                                f"{top} {probe('GetMaxSocietalValueReachable|2')}, {total} {probe('GetSocietalValueTotal|2')}, "
+                                f"{inertia} {probe('GetSocietalValueTotalInertia|2')}, {month} {probe('GetSocietalValueMonthlyProgress|2')}")
+    rows["bag_asp_sv_probe_none"] = {"english": "probe: no advisor is on it", "russian": "замер: никто им не занят"}[language]
+    rows["bag_asp_tuning_below"] = TUNING_BELOW[language]
+    rows.update(FINE_LOC[language])
+    for group in {g for _, g, *_ in FINE}:
+        rows[f"{MOD_ID}__fine__{group}_name"] = f"[ShowCabinetActionName('{group}')]"
     for ab, text in ABILITY[language].items():
         rows[f"bag_asp_ability_{ab}"] = text
     rows["bag_asp_tuning_none"] = TUNING_NONE[language]

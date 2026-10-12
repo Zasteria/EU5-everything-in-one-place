@@ -21,6 +21,7 @@ bag_asp_tick = {
 	change_variable = { name = bag_asp_months add = 1 }
 	change_variable = { name = bag_asp_review_months add = 1 }
 	debug_log = "bag_asp: month"
+	bag_asp_sv_probe = yes
 	if = {
 		limit = {
 			var:bag_asp_review > 0
@@ -95,7 +96,7 @@ bag_asp_plan = {
 					flag:bag_asp_increase_control_province = { bag_asp_place_increase_control_province = yes }
 					flag:bag_asp_increase_control_area = { bag_asp_place_increase_control_area = yes }
 					flag:bag_asp_send_secret_royal_inspectors = { bag_asp_place_send_secret_royal_inspectors = yes }
-					flag:bag_asp_promote_culture = { bag_asp_place_promote_culture = yes }
+					flag:bag_asp_promote_culture = { bag_asp_place_promote_culture = yes bag_asp_speedup = yes }
 					flag:bag_asp_promote_religion = { bag_asp_place_promote_religion = yes }
 					flag:bag_asp_pacify_population = { bag_asp_place_pacify_population = yes }
 					flag:bag_asp_recovery_effort = { bag_asp_place_recovery_effort = yes }
@@ -108,6 +109,8 @@ bag_asp_plan = {
 					flag:bag_asp_strengthen_government = { bag_asp_place_strengthen_government = yes }
 					flag:bag_asp_diplomatic_endeavors = { bag_asp_place_diplomatic_endeavors = yes }
 					flag:bag_asp_counter_espionage_action = { bag_asp_place_counter_espionage_action = yes }
+					flag:bag_asp_noblesse_oblige_cabinet_action = { bag_asp_place_noblesse_oblige_cabinet_action = yes }
+					flag:bag_asp_diplomatic_antagonism = { bag_asp_place_diplomatic_antagonism = yes }
 				}
 			}
 		}
@@ -518,7 +521,23 @@ bag_asp_try_promote_culture = {
 		limit = {
 			cabinet_action:promote_culture = { is_available_for = scope:actor }
 		}
-		scope:actor.culture = { save_scope_as = target }
+		if = {
+			limit = {
+				scope:actor = {
+					var:bag_asp_culture_target = 2
+					any_accepted_culture = { always = yes }
+				}
+			}
+			scope:actor = {
+				ordered_accepted_culture = {
+					order_by = "scope:actor.culture_percentage_in_country(this)"
+					save_scope_as = target
+				}
+			}
+		}
+		else = {
+			scope:actor.culture = { save_scope_as = target }
+		}
 		scope:actor = {
 			ordered_province = {
 				limit = {
@@ -559,13 +578,16 @@ bag_asp_try_promote_culture = {
 					}
 					# His rule 05.10: where an accepted culture leads the primary by
 					# 30 points, do not push the primary.
-					NAND = {
-						exists = dominant_culture
-						NOT = { dominant_culture = scope:actor.culture }
-						dominant_culture = { is_primary_or_accepted_in = scope:actor }
-						"culture_percentage(dominant_culture)" >= {
-							value = "culture_percentage(scope:actor.culture)"
-							add = 0.3
+					trigger_if = {
+						limit = { scope:target = scope:actor.culture }
+						NAND = {
+							exists = dominant_culture
+							NOT = { dominant_culture = scope:actor.culture }
+							dominant_culture = { is_primary_or_accepted_in = scope:actor }
+							"culture_percentage(dominant_culture)" >= {
+								value = "culture_percentage(scope:actor.culture)"
+								add = 0.3
+							}
 						}
 					}
 				}
@@ -593,7 +615,24 @@ bag_asp_try_promote_religion = {
 		limit = {
 			cabinet_action:promote_religion = { is_available_for = scope:actor }
 		}
-		scope:actor.religion = { save_scope_as = target_religion }
+		if = {
+			limit = {
+				scope:actor = {
+					var:bag_asp_religion_target = 2
+					any_present_religion_in_country = { NOT = { this = scope:actor.religion } group = scope:actor.religion.group is_religion_enabled = yes }
+				}
+			}
+			scope:actor = {
+				ordered_present_religion_in_country = {
+					limit = { NOT = { this = scope:actor.religion } group = scope:actor.religion.group is_religion_enabled = yes }
+					order_by = "scope:actor.religion_percentage_in_country(this)"
+					save_scope_as = target_religion
+				}
+			}
+		}
+		else = {
+			scope:actor.religion = { save_scope_as = target_religion }
+		}
 		scope:actor = {
 			ordered_province = {
 				limit = {
@@ -934,6 +973,127 @@ bag_asp_try_counter_espionage_action = {
 	}
 }
 
+# Scope: country (scope:actor); the seat is scope:bag_asp_seat.
+bag_asp_try_noblesse_oblige_cabinet_action = {
+	if = {
+		limit = {
+			cabinet_action:noblesse_oblige_cabinet_action = { is_available_for = scope:actor }
+			scope:actor = { NOT = { any_cabinet = { has_cabinet_action = yes cabinet_action = cabinet_action:noblesse_oblige_cabinet_action } } }
+		}
+		scope:actor = {
+			ordered_province = {
+				limit = {
+					NOT = { has_variable = bag_asp_busy_noblesse_oblige_cabinet_action }
+					province_average_control < 0.95
+					NOT = { has_variable = bag_asp_busy_noblesse_oblige_cabinet_action }
+					NOT = { has_variable = bag_asp_busy_increase_control_province }
+					NOT = { area ?= { has_variable = bag_asp_busy_increase_control_area } }
+				}
+				order_by = province_tax_base
+				save_temporary_scope_as = bag_asp_pick
+				scope:bag_asp_seat = {
+					if = {
+						limit = { has_cabinet_action = yes }
+						stop_cabinet_action = {}
+					}
+					set_cabinet_action = { type = cabinet_action:noblesse_oblige_cabinet_action selected_province = scope:bag_asp_pick }
+				}
+				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_noblesse_oblige_cabinet_action value = yes } }
+				scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
+				scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
+				debug_log = "bag_asp: seat set to noblesse_oblige_cabinet_action"
+			}
+		}
+	}
+}
+
+# Scope: country (scope:actor); the seat is scope:bag_asp_seat.
+bag_asp_try_diplomatic_antagonism = {
+	if = {
+		limit = {
+			cabinet_action:diplomatic_endeavors = { is_available_for = scope:actor }
+			scope:actor = { OR = { has_countries_with_near_coalition_grade_antagonism = yes has_countries_with_coalition_grade_antagonism = yes } }
+			scope:actor = { NOT = { any_cabinet = { has_cabinet_action = yes cabinet_action = cabinet_action:diplomatic_endeavors } } }
+		}
+		scope:bag_asp_seat = {
+			if = {
+				limit = { has_cabinet_action = yes }
+				stop_cabinet_action = {}
+			}
+			set_cabinet_action = { type = cabinet_action:diplomatic_endeavors }
+		}
+		scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
+		scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
+		debug_log = "bag_asp: seat set to diplomatic_antagonism"
+	}
+}
+
+# Scope: country (scope:actor); the seat is scope:bag_asp_seat; the province is scope:bag_asp_at.
+bag_asp_try_at_noblesse_oblige_cabinet_action = {
+	if = {
+		limit = {
+			cabinet_action:noblesse_oblige_cabinet_action = { is_available_for = scope:actor }
+			scope:actor = { NOT = { any_cabinet = { has_cabinet_action = yes cabinet_action = cabinet_action:noblesse_oblige_cabinet_action } } }
+		}
+		scope:bag_asp_at = {
+			if = {
+				limit = {
+					NOT = { has_variable = bag_asp_busy_noblesse_oblige_cabinet_action }
+					province_average_control < 0.95
+					NOT = { has_variable = bag_asp_busy_noblesse_oblige_cabinet_action }
+					NOT = { has_variable = bag_asp_busy_increase_control_province }
+					NOT = { area ?= { has_variable = bag_asp_busy_increase_control_area } }
+				}
+				save_temporary_scope_as = bag_asp_pick
+				scope:bag_asp_seat = {
+					if = {
+						limit = { has_cabinet_action = yes }
+						stop_cabinet_action = {}
+					}
+					set_cabinet_action = { type = cabinet_action:noblesse_oblige_cabinet_action selected_province = scope:bag_asp_pick }
+				}
+				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_noblesse_oblige_cabinet_action value = yes } }
+				scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
+				scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
+				debug_log = "bag_asp: seat set to noblesse_oblige_cabinet_action"
+			}
+		}
+	}
+}
+
+# Scope: country (scope:actor); the seat is scope:bag_asp_seat; the province is scope:bag_asp_at.
+bag_asp_try_at_increase_control_province = {
+	if = {
+		limit = {
+			cabinet_action:increase_control_province = { is_available_for = scope:actor }
+			scope:actor = { NOT = { any_cabinet = { has_cabinet_action = yes cabinet_action = cabinet_action:increase_control_province } } }
+		}
+		scope:bag_asp_at = {
+			if = {
+				limit = {
+					NOT = { has_variable = bag_asp_busy_increase_control_province }
+					province_average_control < 0.95
+					NOT = { has_variable = bag_asp_busy_increase_control_province }
+					NOT = { has_variable = bag_asp_busy_noblesse_oblige_cabinet_action }
+					NOT = { area ?= { has_variable = bag_asp_busy_increase_control_area } }
+				}
+				save_temporary_scope_as = bag_asp_pick
+				scope:bag_asp_seat = {
+					if = {
+						limit = { has_cabinet_action = yes }
+						stop_cabinet_action = {}
+					}
+					set_cabinet_action = { type = cabinet_action:increase_control_province selected_province = scope:bag_asp_pick }
+				}
+				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_increase_control_province value = yes } }
+				scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
+				scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
+				debug_log = "bag_asp: seat set to increase_control_province"
+			}
+		}
+	}
+}
+
 # Scope: country. While the «devastated locations» alert shows (its banner,
 # bag_alert_banner.gui): as it appears, then every second. Costs a look
 # over the provinces unless one has a location below zero and no recovery;
@@ -975,6 +1135,7 @@ bag_asp_emergency = {
 						exists = cabinet_member
 						OR = {
 							has_cabinet_action = no
+							AND = { cabinet_action = cabinet_action:diplomatic_endeavors scope:actor = { OR = { has_countries_with_near_coalition_grade_antagonism = yes has_countries_with_coalition_grade_antagonism = yes } } scope:actor.var:bag_asp_rank_diplomatic_antagonism > scope:actor.var:bag_asp_rank_recovery_effort }
 							AND = { cabinet_action = cabinet_action:integrate_province scope:actor.var:bag_asp_rank_integrate_province > scope:actor.var:bag_asp_rank_recovery_effort }
 							AND = { cabinet_action = cabinet_action:integrate_area scope:actor.var:bag_asp_rank_integrate_area > scope:actor.var:bag_asp_rank_recovery_effort }
 							AND = { cabinet_action = cabinet_action:reduce_war_exhaustion scope:actor.var:bag_asp_rank_reduce_war_exhaustion > scope:actor.var:bag_asp_rank_recovery_effort }
@@ -994,11 +1155,13 @@ bag_asp_emergency = {
 							AND = { cabinet_action = cabinet_action:strengthen_government scope:actor.var:bag_asp_rank_strengthen_government > scope:actor.var:bag_asp_rank_recovery_effort }
 							AND = { cabinet_action = cabinet_action:diplomatic_endeavors scope:actor.var:bag_asp_rank_diplomatic_endeavors > scope:actor.var:bag_asp_rank_recovery_effort }
 							AND = { cabinet_action = cabinet_action:counter_espionage_action scope:actor.var:bag_asp_rank_counter_espionage_action > scope:actor.var:bag_asp_rank_recovery_effort }
+							AND = { cabinet_action = cabinet_action:noblesse_oblige_cabinet_action scope:actor.var:bag_asp_rank_noblesse_oblige_cabinet_action > scope:actor.var:bag_asp_rank_recovery_effort }
 						}
 					}
 					order_by = {
 						value = 0
 						if = { limit = { has_cabinet_action = no } add = 1000 }
+						else_if = { limit = { cabinet_action = cabinet_action:diplomatic_endeavors scope:actor = { OR = { has_countries_with_near_coalition_grade_antagonism = yes has_countries_with_coalition_grade_antagonism = yes } } } add = scope:actor.var:bag_asp_rank_diplomatic_antagonism }
 						else_if = { limit = { cabinet_action = cabinet_action:integrate_province } add = scope:actor.var:bag_asp_rank_integrate_province }
 						else_if = { limit = { cabinet_action = cabinet_action:integrate_area } add = scope:actor.var:bag_asp_rank_integrate_area }
 						else_if = { limit = { cabinet_action = cabinet_action:reduce_war_exhaustion } add = scope:actor.var:bag_asp_rank_reduce_war_exhaustion }
@@ -1018,6 +1181,7 @@ bag_asp_emergency = {
 						else_if = { limit = { cabinet_action = cabinet_action:strengthen_government } add = scope:actor.var:bag_asp_rank_strengthen_government }
 						else_if = { limit = { cabinet_action = cabinet_action:diplomatic_endeavors } add = scope:actor.var:bag_asp_rank_diplomatic_endeavors }
 						else_if = { limit = { cabinet_action = cabinet_action:counter_espionage_action } add = scope:actor.var:bag_asp_rank_counter_espionage_action }
+						else_if = { limit = { cabinet_action = cabinet_action:noblesse_oblige_cabinet_action } add = scope:actor.var:bag_asp_rank_noblesse_oblige_cabinet_action }
 						add = {
 							value = cabinet_member.dip
 							divide = 100
@@ -1154,6 +1318,7 @@ bag_asp_place_stabilize_country = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:stabilize_country
+			scope:actor = { stability < 50 }
 		}
 		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
 	}
@@ -1475,6 +1640,7 @@ bag_asp_place_reduce_inflation = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:reduce_inflation
+			scope:actor = { inflation > 0 }
 		}
 		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
 	}
@@ -1689,5 +1855,109 @@ bag_asp_place_counter_espionage_action = {
 	if = {
 		limit = { has_variable = bag_asp_placed }
 		remove_variable = bag_asp_placed
+	}
+}
+
+# Scope: country (scope:actor).
+bag_asp_place_noblesse_oblige_cabinet_action = {
+	every_cabinet = {
+		limit = {
+			bag_asp_free_seat = yes
+			has_cabinet_action = yes
+			cabinet_action = cabinet_action:noblesse_oblige_cabinet_action
+		}
+		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+	}
+	set_variable = { name = bag_asp_placed value = yes }
+	while = {
+		limit = {
+			has_variable = bag_asp_placed
+			any_cabinet = { bag_asp_free_seat = yes }
+		}
+		remove_variable = bag_asp_placed
+		ordered_cabinet = {
+			limit = {
+				bag_asp_free_seat = yes
+			}
+			order_by = cabinet_member.adm
+			save_scope_as = bag_asp_seat
+			bag_asp_try_noblesse_oblige_cabinet_action = yes
+		}
+	}
+	if = {
+		limit = { has_variable = bag_asp_placed }
+		remove_variable = bag_asp_placed
+	}
+}
+
+# Scope: country (scope:actor).
+bag_asp_place_diplomatic_antagonism = {
+	every_cabinet = {
+		limit = {
+			bag_asp_free_seat = yes
+			has_cabinet_action = yes
+			cabinet_action = cabinet_action:diplomatic_endeavors
+			scope:actor = { OR = { has_countries_with_near_coalition_grade_antagonism = yes has_countries_with_coalition_grade_antagonism = yes } }
+		}
+		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+	}
+	set_variable = { name = bag_asp_placed value = yes }
+	while = {
+		limit = {
+			has_variable = bag_asp_placed
+			any_cabinet = { bag_asp_free_seat = yes }
+		}
+		remove_variable = bag_asp_placed
+		ordered_cabinet = {
+			limit = {
+				bag_asp_free_seat = yes
+			}
+			order_by = cabinet_member.dip
+			save_scope_as = bag_asp_seat
+			bag_asp_try_diplomatic_antagonism = yes
+		}
+	}
+	if = {
+		limit = { has_variable = bag_asp_placed }
+		remove_variable = bag_asp_placed
+	}
+}
+
+# Scope: country (scope:actor). His ask 12.10, with «Ускорять контролем» on:
+# each province being assimilated also gets a control action, the first of
+# noblesse_oblige_cabinet_action, increase_control_province that fits, on a free seat, the best in its
+# skill first. Free means not chosen yet in this pass: in a full hand-out, a seat
+# a lower row would have taken; in a fill, an empty one.
+bag_asp_speedup = {
+	if = {
+		limit = { has_variable = bag_asp_speedup_on }
+		every_cabinet = {
+			limit = {
+				has_cabinet_action = yes
+				cabinet_action = cabinet_action:promote_culture
+			}
+			interaction_target:target_1 ?= {
+				save_scope_as = bag_asp_at
+				scope:actor = {
+					ordered_cabinet = {
+						limit = {
+							bag_asp_free_seat = yes
+						}
+						order_by = cabinet_member.adm
+						save_scope_as = bag_asp_seat
+						bag_asp_try_at_noblesse_oblige_cabinet_action = yes
+						if = {
+							limit = { scope:actor = { NOT = { has_variable = bag_asp_placed } } }
+							bag_asp_try_at_increase_control_province = yes
+						}
+					}
+					if = {
+						limit = { has_variable = bag_asp_placed }
+						remove_variable = bag_asp_placed
+						debug_log = "bag_asp: assimilation sped up with a control action"
+					}
+				}
+			}
+		}
 	}
 }
