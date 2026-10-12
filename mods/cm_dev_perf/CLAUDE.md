@@ -17,8 +17,8 @@ cm`), чтобы сохранения и настройки CMF работали
 +perf4–33 — `docs/archive/cm_dev_perf_beta_0927_1002.md`: окна беты, `cmf_is_host`,
 журнал; окна на Río (порядок CM Perf → Río → [`cm_rio_patch`](../cm_rio_patch/CLAUDE.md)
 → glorpui_hints → ru_loc_fix); карта губернаторов; запас золота; субсидии фермам.
-**+perf34–37 (10-12)** — [`docs/archive/cm_dev_perf_perf34_37.md`](../../docs/archive/cm_dev_perf_perf34_37.md): крик скана только в непустые очереди, опрос «готово?» раз в 1 с, **строка в `debug.log` на каждый цикл** — `CM perf cycle: staged N scored M rounds R rescans K skipped S approved A`; норма — `staged` = `scored`, `skipped 0`, `approved 1`.
-**+perf38 (10-12): права как в `cm_maps` 0.3.0 и грамоты 1.4.** Карта прав считает по провинции (правки из генератора `cm_maps`, `cm_trmm_version_value` 101). Автовыдача специализации до эпохи 3 даёт грамоту той же отрасли (`cm_atr_ur_pick_charter`); **+perf39:** с эпохи 3 грамота меняется на своё королевское право (`cm_atr_ur_upgrade_charters`, отзыв и выдача скриптом: апгрейд движка есть только в интерфейсе). Не проверено.
+**+perf34–37 (10-12)** — [`docs/archive/cm_dev_perf_perf34_37.md`](../../docs/archive/cm_dev_perf_perf34_37.md): крик скана в непустые очереди, опрос раз в 1 с, **строка в `debug.log` на каждый цикл** — `CM perf cycle: staged N scored M rounds R rescans K skipped S approved A`; норма — `staged` = `scored`, `skipped 0`, `approved 1` — так во всех 69 циклах 10-12.
+**+perf38 (10-12): права как в `cm_maps` 0.3.0 и грамоты 1.4.** Карта прав считает по провинции (правки из генератора `cm_maps`, `cm_trmm_version_value` 101). Автовыдача специализации до эпохи 3 даёт грамоту той же отрасли (`cm_atr_ur_pick_charter`); **+perf39:** с эпохи 3 грамота меняется на своё королевское право (`cm_atr_ur_upgrade_charters`, отзыв и выдача скриптом). Не проверено.
 
 ## Автостройка: здания беты и National Destinies (`tools/buildings.py`)
 
