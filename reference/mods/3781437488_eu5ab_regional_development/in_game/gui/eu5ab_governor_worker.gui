@@ -1,0 +1,145 @@
+﻿# Persistent GUI worker: independent of the details window and game date.
+widget = {
+    name = "eu5ab_governor_worker"
+    # Instantiate the persistent root even before a player country is available.
+    visible = "[EqualTo_CFixedPoint('(CFixedPoint)0', '(CFixedPoint)0')]"
+    size = { 0 0 }
+    widget = {
+        size = { 0 0 }
+        # Keep the timer alive between requests. A manual restart can clear/set
+        # scan_active within one frame, so it must not require a visibility edge.
+        visible_at_creation = no
+        visible = "[GetPlayer.Exists]"
+        # EU5 discards duration-only states as having no valid properties.
+        # Alpha animates a zero-size widget; it never changes the visible UI.
+        state = { name = _show alpha = 1 duration = 0.1 next = eu5ab_layout_pulse }
+        state = {
+            name = eu5ab_layout_init
+            trigger_on_create = yes
+            alpha = 1
+            duration = 0.1
+            next = eu5ab_layout_pulse
+        }
+        state = {
+            name = eu5ab_layout_pulse
+            alpha = 0
+            duration = 0.1
+            on_finish = "[PdxGuiTriggerAllAnimations('eu5ab_layout_pulse_send')]"
+            next = eu5ab_layout_pulse_wait
+        }
+        state = { name = eu5ab_layout_pulse_wait alpha = 1 duration = 0.1 next = eu5ab_layout_pulse }
+        # Keep the controller alive for immediate manual restarts, but only
+        # instantiate a command sender while the server accepts this request.
+        widget = {
+            datamodel = "[DataModelRepeatedItem(Select_int32(And(GetPlayer.Exists, GetScriptedGui('eu5ab_gui_layout_tick').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End)), '(int32)1', '(int32)0'))]"
+            item = { widget = {
+                state = { name = _show alpha = 1 }
+                state = { name = eu5ab_layout_pulse_send alpha = 0 duration = 0.01
+                    on_finish = "[GetScriptedGui('eu5ab_gui_layout_tick').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+                    next = eu5ab_layout_pulse_send_wait }
+                state = { name = eu5ab_layout_pulse_send_wait alpha = 1 duration = 0.01 }
+            } }
+        }
+    }
+    # Separate timer: detect a stopped pulse chain even while the game is paused.
+    widget = {
+        size = { 0 0 }
+        visible_at_creation = no
+        visible = "[GetPlayer.Exists]"
+        state = { name = _show alpha = 1 duration = 0.1 next = eu5ab_layout_liveness }
+        state = {
+            name = eu5ab_layout_liveness_init
+            trigger_on_create = yes
+            alpha = 1
+            duration = 0.1
+            next = eu5ab_layout_liveness
+        }
+        state = {
+            name = eu5ab_layout_liveness
+            alpha = 0
+            duration = 5
+            on_finish = "[PdxGuiTriggerAllAnimations('eu5ab_layout_liveness_send')]"
+            next = eu5ab_layout_liveness_wait
+        }
+        state = { name = eu5ab_layout_liveness_wait alpha = 1 duration = 0.1 next = eu5ab_layout_liveness }
+        widget = {
+            datamodel = "[DataModelRepeatedItem(Select_int32(And(GetPlayer.Exists, GetScriptedGui('eu5ab_gui_layout_check_liveness').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End)), '(int32)1', '(int32)0'))]"
+            item = { widget = {
+                state = { name = _show alpha = 1 }
+                state = { name = eu5ab_layout_liveness_send alpha = 0 duration = 0.01
+                    on_finish = "[GetScriptedGui('eu5ab_gui_layout_check_liveness').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+                    next = eu5ab_layout_liveness_send_wait }
+                state = { name = eu5ab_layout_liveness_send_wait alpha = 1 duration = 0.01 }
+            } }
+        }
+    }
+    widget = {
+        size = { 0 0 }
+        # Keep the timer alive between requests. A manual restart can clear/set
+        # scan_active within one frame, so it must not require a visibility edge.
+        visible_at_creation = no
+        visible = "[GetPlayer.Exists]"
+        # EU5 discards duration-only states as having no valid properties.
+        # Alpha animates a zero-size widget; it never changes the visible UI.
+        state = { name = _show alpha = 1 duration = 0.1 next = eu5ab_naval_layout_pulse }
+        state = {
+            name = eu5ab_naval_layout_init
+            trigger_on_create = yes
+            alpha = 1
+            duration = 0.1
+            next = eu5ab_naval_layout_pulse
+        }
+        state = {
+            name = eu5ab_naval_layout_pulse
+            alpha = 0
+            duration = 0.1
+            on_finish = "[PdxGuiTriggerAllAnimations('eu5ab_naval_layout_pulse_send')]"
+            next = eu5ab_naval_layout_pulse_wait
+        }
+        state = { name = eu5ab_naval_layout_pulse_wait alpha = 1 duration = 0.1 next = eu5ab_naval_layout_pulse }
+        # Keep the controller alive for immediate manual restarts, but only
+        # instantiate a command sender while the server accepts this request.
+        widget = {
+            datamodel = "[DataModelRepeatedItem(Select_int32(And(GetPlayer.Exists, GetScriptedGui('eu5ab_gui_naval_layout_tick').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End)), '(int32)1', '(int32)0'))]"
+            item = { widget = {
+                state = { name = _show alpha = 1 }
+                state = { name = eu5ab_naval_layout_pulse_send alpha = 0 duration = 0.01
+                    on_finish = "[GetScriptedGui('eu5ab_gui_naval_layout_tick').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+                    next = eu5ab_naval_layout_pulse_send_wait }
+                state = { name = eu5ab_naval_layout_pulse_send_wait alpha = 1 duration = 0.01 }
+            } }
+        }
+    }
+    # Separate timer: detect a stopped pulse chain even while the game is paused.
+    widget = {
+        size = { 0 0 }
+        visible_at_creation = no
+        visible = "[GetPlayer.Exists]"
+        state = { name = _show alpha = 1 duration = 0.1 next = eu5ab_naval_layout_liveness }
+        state = {
+            name = eu5ab_naval_layout_liveness_init
+            trigger_on_create = yes
+            alpha = 1
+            duration = 0.1
+            next = eu5ab_naval_layout_liveness
+        }
+        state = {
+            name = eu5ab_naval_layout_liveness
+            alpha = 0
+            duration = 5
+            on_finish = "[PdxGuiTriggerAllAnimations('eu5ab_naval_layout_liveness_send')]"
+            next = eu5ab_naval_layout_liveness_wait
+        }
+        state = { name = eu5ab_naval_layout_liveness_wait alpha = 1 duration = 0.1 next = eu5ab_naval_layout_liveness }
+        widget = {
+            datamodel = "[DataModelRepeatedItem(Select_int32(And(GetPlayer.Exists, GetScriptedGui('eu5ab_gui_naval_layout_check_liveness').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End)), '(int32)1', '(int32)0'))]"
+            item = { widget = {
+                state = { name = _show alpha = 1 }
+                state = { name = eu5ab_naval_layout_liveness_send alpha = 0 duration = 0.01
+                    on_finish = "[GetScriptedGui('eu5ab_gui_naval_layout_check_liveness').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+                    next = eu5ab_naval_layout_liveness_send_wait }
+                state = { name = eu5ab_naval_layout_liveness_send_wait alpha = 1 duration = 0.01 }
+            } }
+        }
+    }
+}

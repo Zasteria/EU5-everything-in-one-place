@@ -1,0 +1,55 @@
+﻿l_russian:
+ # Source relative paths in base game installation:
+ #   EN: game/main_menu/localization/english/diplomacy_l_english.yml
+ #   RU: game/main_menu/localization/russian/diplomacy_l_russian.yml
+
+ # Fix for Peace Treaty: Gain Relation (Право на проход войск, базирование флота и т.д.)
+ # Base game bugs:
+ # 1) Used [RELATION_TYPE.GetNameWithContext(...)] instead of $RELATION$. Since RELATION_TYPE context
+ #    is not passed by the peace treaty engine, the relation name was completely missing ("").
+ # 2) In _short, duplicated ending "предлагает [COUNTRY.Custom('end_etyut')]" produced "предлагает ет".
+ # 3) Bound verb ending to recipient [COUNTRY...] instead of grammatical subject [TARGET_COUNTRY...].
+ # 4) Changed verb from "предлагает" (offer) to "предоставляет" (grants/gives), matching treaty semantics and standard EU5 terminology.
+
+ # EN: PEACE_TREATY_GAIN_RELATION: "[TARGET_COUNTRY.GetNameWithFlag] gives $RELATION$ to [COUNTRY.GetName]"
+ # RU: PEACE_TREATY_GAIN_RELATION: "[TARGET_COUNTRY.GetNameWithFlag] предлага[COUNTRY.Custom('end_etyut')] #ONCLICK:COUNTRY,[COUNTRY.Custom('CL_tt')] #TOOLTIP:COUNTRY,[COUNTRY.Custom('CL_tt')],X [COUNTRY.Custom('CL_DAT')|L]#!#! [RELATION_TYPE.GetNameWithContext(TARGET_COUNTRY.Self, COUNTRY.Self)]"
+ PEACE_TREATY_GAIN_RELATION: "[TARGET_COUNTRY.GetNameWithFlag] предоставля[TARGET_COUNTRY.Custom('end_etyut')] $RELATION$ #ONCLICK:COUNTRY,[COUNTRY.Custom('CL_tt')] #TOOLTIP:COUNTRY,[COUNTRY.Custom('CL_tt')],X [COUNTRY.Custom('CL_DAT')|L]#!#!"
+
+ # EN: PEACE_TREATY_GAIN_RELATION_short: "[TARGET_COUNTRY.GetNameWithFlag] gives $RELATION$ to [COUNTRY.GetName]"
+ # RU: PEACE_TREATY_GAIN_RELATION_short: "[TARGET_COUNTRY.GetNameWithFlag] предлагает [COUNTRY.Custom('end_etyut')] #ONCLICK:COUNTRY,[COUNTRY.Custom('CL_tt')] #TOOLTIP:COUNTRY,[COUNTRY.Custom('CL_tt')],X [COUNTRY.Custom('CL_DAT')|L]#!#! [RELATION_TYPE.GetNameWithContext(TARGET_COUNTRY.Self, COUNTRY.Self)]"
+ PEACE_TREATY_GAIN_RELATION_short: "[TARGET_COUNTRY.GetNameWithFlag] предоставля[TARGET_COUNTRY.Custom('end_etyut')] $RELATION$ #ONCLICK:COUNTRY,[COUNTRY.Custom('CL_tt')] #TOOLTIP:COUNTRY,[COUNTRY.Custom('CL_tt')],X [COUNTRY.Custom('CL_DAT')|L]#!#!"
+
+ # Fix for War Reparations in peace treaties ("выплачива" -> "выплачивает")
+ # EN: PEACE_TREATY_WAR_REPARATIONS_short: "[TARGET_COUNTRY.GetNameWithFlagWithNoTooltip] pays [Localize('game_concept_war_reparations')] to [COUNTRY.GetNameWithNoTooltip]"
+ # RU: PEACE_TREATY_WAR_REPARATIONS_short: "@[TARGET_COUNTRY.GetFlag]! [TARGET_COUNTRY.GetNameWithFlagWithNoTooltip] выплачива[TARGET_COUNTRY.Custom('etyut')] [Localize('game_concept_war_reparations')|l] [COUNTRY.Custom('CL_DAT')]"
+ PEACE_TREATY_WAR_REPARATIONS_short: "@[TARGET_COUNTRY.GetFlag]! [TARGET_COUNTRY.GetNameWithFlagWithNoTooltip] выплачива[TARGET_COUNTRY.Custom('end_etyut')] [Localize('game_concept_war_reparations')|l] [COUNTRY.Custom('CL_DAT')]"
+
+ # Fix for Annex Revolter strings in peace treaties ("присоединя" -> "присоединяет")
+ # EN: PEACE_TREATY_ANNEX_REVOLTER: "[COUNTRY.GetName] annexes the [revolter|e] [TARGET_COUNTRY.GetNameWithFlag]"
+ # RU: PEACE_TREATY_ANNEX_REVOLTER: "[COUNTRY.GetName] присоединя[COUNTRY.Custom('etyut')] [Concept('revolter', 'мятежные')|e] земли @[TARGET_COUNTRY.GetFlag]!#ONCLICK:COUNTRY,[TARGET_COUNTRY.Custom('CL_tt')] #TOOLTIP:COUNTRY,[TARGET_COUNTRY.Custom('CL_tt')],X [TARGET_COUNTRY.Custom('CL_GEN')|L]#!#!"
+ PEACE_TREATY_ANNEX_REVOLTER: "[COUNTRY.GetName] присоединя[COUNTRY.Custom('end_etyut')] [Concept('revolter', 'мятежные')|e] земли @[TARGET_COUNTRY.GetFlag]!#ONCLICK:COUNTRY,[TARGET_COUNTRY.Custom('CL_tt')] #TOOLTIP:COUNTRY,[TARGET_COUNTRY.Custom('CL_tt')],X [TARGET_COUNTRY.Custom('CL_GEN')|L]#!#!"
+
+ # EN: PEACE_TREATY_ANNEX_REVOLTER_short: "[COUNTRY.GetNameWithNoTooltip] annexes the revolter [TARGET_COUNTRY.GetNameWithFlagWithNoTooltip]"
+ # RU: PEACE_TREATY_ANNEX_REVOLTER_short: "[COUNTRY.GetNameWithNoTooltip] присоединя[COUNTRY.Custom('etyut')] мятежные земли @[TARGET_COUNTRY.GetFlag]! [TARGET_COUNTRY.Custom('CL_GEN')]"
+ PEACE_TREATY_ANNEX_REVOLTER_short: "[COUNTRY.GetNameWithNoTooltip] присоединя[COUNTRY.Custom('end_etyut')] мятежные земли @[TARGET_COUNTRY.GetFlag]! [TARGET_COUNTRY.Custom('CL_GEN')]"
+
+ # EN: PEACE_TREATY_ANNEX_ALL_REVOLTERS: "[COUNTRY.GetName] annexes all of the [revolter|e] countries in the war"
+ # RU: PEACE_TREATY_ANNEX_ALL_REVOLTERS: "[COUNTRY.GetNameWithNoTooltip] присоединя[COUNTRY.Custom('etyut')] все мятежные державы, участвующие в войне"
+ PEACE_TREATY_ANNEX_ALL_REVOLTERS: "[COUNTRY.GetNameWithNoTooltip] присоединя[COUNTRY.Custom('end_etyut')] все мятежные державы, участвующие в войне"
+
+ # EN: PEACE_TREATY_ANNEX_ALL_REVOLTERS_short: "[COUNTRY.GetNameWithNoTooltip] annexes all of the revolters"
+ # RU: PEACE_TREATY_ANNEX_ALL_REVOLTERS_short: "[COUNTRY.GetNameWithNoTooltip] присоединя[COUNTRY.Custom('etyut')] всех мятежников"
+ PEACE_TREATY_ANNEX_ALL_REVOLTERS_short: "[COUNTRY.GetNameWithNoTooltip] присоединя[COUNTRY.Custom('end_etyut')] всех мятежников"
+
+ # Fix for Triggers checking existing relations (preventing empty quotes «»)
+ # EN: ALREADY_GIVING_RELATION: "@trigger_no! We are already giving $RELATION$ to [TARGET_COUNTRY.GetName]."
+ # RU: ALREADY_GIVING_RELATION: "@trigger_no! Мы уже заключили отношения типа «[RELATION_TYPE.GetNameWithContext(COUNTRY.Self,TARGET_COUNTRY.Self)]» [TARGET_COUNTRY.Custom('endlong_predlog_sso')] #ONCLICK:COUNTRY,[TARGET_COUNTRY.Custom('CL_tt')] #TOOLTIP:COUNTRY,[TARGET_COUNTRY.Custom('CL_tt')],X [TARGET_COUNTRY.Custom('CL_INST')|L]#!#!."
+ ALREADY_GIVING_RELATION: "@trigger_no! Мы уже заключили отношения типа «$RELATION$» [TARGET_COUNTRY.Custom('endlong_predlog_sso')] #ONCLICK:COUNTRY,[TARGET_COUNTRY.Custom('CL_tt')] #TOOLTIP:COUNTRY,[TARGET_COUNTRY.Custom('CL_tt')],X [TARGET_COUNTRY.Custom('CL_INST')|L]#!#!."
+
+ # EN: ALREADY_RECEIVING_RELATION: "@trigger_no! We are already receiving $RELATION$ from [TARGET_COUNTRY.GetName]."
+ # RU: ALREADY_RECEIVING_RELATION: "@trigger_no! Мы уже в отношениях типа «[RELATION_TYPE.GetNameWithContext(TARGET_COUNTRY.Self,COUNTRY.Self)]» [TARGET_COUNTRY.Custom('endlong_predlog_sso')] #ONCLICK:COUNTRY,[TARGET_COUNTRY.Custom('CL_tt')] #TOOLTIP:COUNTRY,[TARGET_COUNTRY.Custom('CL_tt')],X [TARGET_COUNTRY.Custom('CL_INST')|L]#!#!."
+ ALREADY_RECEIVING_RELATION: "@trigger_no! Мы уже в отношениях типа «$RELATION$» [TARGET_COUNTRY.Custom('endlong_predlog_sso')] #ONCLICK:COUNTRY,[TARGET_COUNTRY.Custom('CL_tt')] #TOOLTIP:COUNTRY,[TARGET_COUNTRY.Custom('CL_tt')],X [TARGET_COUNTRY.Custom('CL_INST')|L]#!#!."
+
+ # EN: ALREADY_HAVE_RELATION: "@trigger_no! We already have a $RELATION$ with [TARGET_COUNTRY.GetName]."
+ # RU: ALREADY_HAVE_RELATION: "@trigger_no! У нас уже есть отношения типа «[RELATION_TYPE.GetNameWithContext(COUNTRY.Self,TARGET_COUNTRY.Self)]» [TARGET_COUNTRY.Custom('endlong_predlog_sso')] #ONCLICK:COUNTRY,[TARGET_COUNTRY.Custom('CL_tt')] #TOOLTIP:COUNTRY,[TARGET_COUNTRY.Custom('CL_tt')],X [TARGET_COUNTRY.Custom('CL_INST')|L]#!#!."
+ ALREADY_HAVE_RELATION: "@trigger_no! У нас уже есть отношения типа «$RELATION$» [TARGET_COUNTRY.Custom('endlong_predlog_sso')] #ONCLICK:COUNTRY,[TARGET_COUNTRY.Custom('CL_tt')] #TOOLTIP:COUNTRY,[TARGET_COUNTRY.Custom('CL_tt')],X [TARGET_COUNTRY.Custom('CL_INST')|L]#!#!."

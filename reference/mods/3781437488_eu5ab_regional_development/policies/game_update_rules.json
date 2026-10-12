@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "mechanic_sources": {
+    "template_ui": {
+      "patterns": ["game/in_game/gui/shared/*.gui", "game/main_menu/gui/shared/*.gui", "game/main_menu/gui/editbox.gui", "game/in_game/gui/trade_overview.gui", "game/in_game/gui/hud_bot.gui", "clausewitz/loading_screen/gui/toolstypes.gui"],
+      "consumers": ["src/eu5autobuild/generator.py", "src/eu5autobuild/governor_generator.py", "src/eu5autobuild/governor_layout_ui.py"],
+      "note": "跟踪模板、重命名、覆盖范围、建造报告与总督窗口使用的共享控件及地图分类。1.4 的通用动作按钮改用 button_regular/scripted_action_tooltip；绑定文案读取真实模板名。原版定义存在不代表界面布局、数据上下文和快捷键已实机验收，参见 docs/zh-CN/runtime_validation.md。"
+    },
+    "manual_decisions": {
+      "patterns": ["game/in_game/common/decisions/*.txt", "game/in_game/common/decision_categories/*.txt", "game/in_game/common/generic_actions/readme.txt", "game/in_game/common/generic_actions/canal_actions.txt", "game/in_game/events/readme.txt", "game/in_game/gui/decisions_lateralview.gui", "game/in_game/gui/eventwindow.gui"],
+      "consumers": ["src/eu5autobuild/manual_decisions.py", "src/eu5autobuild/decision_state.py", "src/eu5autobuild/assets/eventwindow_1_4.gui", "src/eu5autobuild/assets/decisions_lateralview_1_4.gui"],
+      "note": "仅两个玩家决议：保留配置的重置与当月深算。入口使用原生决议外观，列表 GUI 仅为这两个条目改用 scripted GUI 单击打开确认事件；旧通用动作定义由空文件覆盖，避免重复入口。通过无提示名称与本语言 .title 文案匹配，保留日期及重复打开门禁。事件窗口仅替换深算事件的选项交互，继续按钮不结算事件，结果完成后才允许关闭。原版 eventwindow.gui 和 decisions_lateralview.gui 更新时须重新对照模板；不能假定仅脚本选项即可保持事件。"
+    },
+    "rgo_military_goods": {
+      "patterns": ["game/in_game/common/goods/00_raw_materials.txt", "game/in_game/common/goods_demand/army_demands.txt", "game/in_game/common/goods_demand/pop_demands.txt"],
+      "consumers": ["src/eu5autobuild/generator.py", "src/eu5autobuild/rgo_automation.py", "src/eu5autobuild/rgo_cost.py", "src/eu5autobuild/rgo_pending.py", "src/eu5autobuild/rgo_batch.py"],
+      "note": "用户确认：骆驼沿用马匹的现有规则，保留军需组的固定战略加分和边防、军工模板中的现有顺序及短缺偏好；不增加本国兵种、文化或地区限制。数值仍由 automation_rules.json 和 templates.json 提供。原生商品类别与市场读数用于通用 RGO 路径；实际开工、取消及竣工验收由 native_construction_queue 跟踪。"
+    },
+    "industry_and_cabinet": {
+      "patterns": ["game/in_game/common/cabinet_actions/*.txt", "game/in_game/common/industry_types/*.txt"],
+      "consumers": ["src/eu5autobuild/industry_promotion.py", "src/eu5autobuild/building_capacity.py", "src/eu5autobuild/generator.py", ".metadata/eu5ab_industry_types.json"],
+      "note": "鼓励产业的商品映射从原生行业定义提取；按本国扶持地区及所选配方的直接产出基价占比，最多加 500 规划分，与城市特权独立叠加。沿用容量采样批次，不增加开工等待；漏采不给偏好分。内阁其他行动变化仍只做相关性审阅。"
+    },
+    "constants_and_modifiers": {
+      "patterns": ["game/main_menu/common/script_values/*.txt", "game/main_menu/common/static_modifiers/*.txt", "game/in_game/common/pop_types/*.txt"],
+      "consumers": ["src/eu5autobuild/game_data.py", "src/eu5autobuild/food_infrastructure.py", "src/eu5autobuild/governor_model.py"],
+      "note": "检查岗位、食物保存、控制力、邻近度及总督公式；不会自动改写行为。"
+    },
+    "governor_rules": {
+      "patterns": ["game/in_game/common/script_values/building_caps.txt", "game/in_game/common/laws/00_monarchy.txt", "game/in_game/common/on_action/_hardcoded.txt", "game/main_menu/common/modifier_type_definitions/00_modifier_types.txt", "game/in_game/common/road_types/*.txt"],
+      "consumers": ["src/eu5autobuild/governor_generator.py", "src/eu5autobuild/governor_refresh.py", "src/eu5autobuild/governor_layout_generator.py", "src/eu5autobuild/generator.py"],
+      "note": "已确认：读取当前全部邻近度效果（包括临时效果）；只移动普通地方或海军总督，另一类与特殊来源保持固定。容量按 1.4 含 DLC 条件计算；道路规划、评分权重和每类默认 80% 迁移门槛不变；仅建议。"
+    },
+    "building_queue_ui": {
+      "patterns": ["game/in_game/gui/*build*.gui", "game/in_game/gui/*construction*.gui", "game/in_game/gui/location_window.gui", "game/in_game/gui/production_lateralview.gui", "game/in_game/gui/expand_raw_goods_lateralview.gui"],
+      "consumers": ["src/eu5autobuild/construction_slots.py", "src/eu5autobuild/queue_bridge.py", "src/eu5autobuild/generator.py", "src/eu5autobuild/queued_workforce.py", "src/eu5autobuild/project_tracking.py", "src/eu5autobuild/rgo_pending.py", "src/eu5autobuild/rgo_batch.py", "src/eu5autobuild/rgo_queue.py", "src/eu5autobuild/gui_integer.py", "src/eu5autobuild/upgrade_queue.py", "src/eu5autobuild/worker_upgrades.py", "src/eu5autobuild/production_forecast.py"],
+      "note": "RGO 使用原生计数，不能以民用工程数减建筑在建数代替。槽位按地点上限与总占用检查；民用总数包含阶层和外资项目，CountMyKindInLocation 不等于总占用。升级目标在建与前身升级中不得重复计数。混合工程调度需推进日期验证实际进度。当前规则和待验证事项见 docs/zh-CN/runtime_validation.md。"
+    },
+    "connections_and_canals": {
+      "patterns": ["game/in_game/map_data/adjacencies.csv", "game/in_game/common/decisions/*canal*.txt"],
+      "consumers": ["src/eu5autobuild/governor_connections.py", "src/eu5autobuild/governor_transport.py"],
+      "note": "海峡快照只提取 sea；运河及其他连接类型需要单独审阅。"
+    }
+  },
+  "cmf_patterns": [
+    "loading_screen/data_binding/*.txt",
+    "in_game/common/scripted_effects/*.txt",
+    "in_game/common/scripted_triggers/*.txt",
+    "in_game/common/scripted_guis/*.txt",
+    "in_game/common/on_action/*.txt",
+    "in_game/gui/**/*.gui"
+  ],
+  "cmf_required_symbols": [
+    "cmf_add_action_bar_element",
+    "cmm_register_bool_setting",
+    "cmm_register_numeric_setting",
+    "cmm_register_slider_setting",
+    "cmm_register_dropdown_setting",
+    "cmm_register_button_setting",
+    "cmm_register_settings_list",
+    "cmm_set_setting_value",
+    "cmm_set_list_field_value"
+  ],
+  "building_decisions": {
+    "silk_production_guild": {"status": "reviewed", "reason": "用户将通用优先级调整为 0；仍保留在纺织风味模板的显式允许列表，复制时按 1 分规则启用。分数来源仍为 video_building_priorities.json。"},
+    "village_granary": {"status": "reviewed", "same_priority_as": "granary", "reason": "用户确定通用优先级与粮仓一致；粮仓风味。"},
+    "maghreb_palm_irrigation": {"status": "reviewed", "reason": "用户确定通用 7 分，食品与发展用途；粮仓及食物优先风味。"},
+    "al_qaysariyya_market": {"status": "reviewed", "same_priority_as": "marketplace", "reason": "用户确定与普通贸易建筑一致；贸易中心风味。"},
+    "sacred_council": {"status": "reviewed", "reason": "圣堂：行政与宗教用途；现有风味无对应项，保留在自定义目录，通用默认 0。"},
+    "khan_ordu": {"status": "reviewed", "reason": "汗帐：团结与内阁效率；现有风味无对应项，保留在自定义目录，通用默认 0。"},
+    "chieftain_hall": {"status": "reviewed", "reason": "酋帐：凝聚力与内阁效率；现有风味无对应项，保留在自定义目录，通用默认 0。"},
+    "patrician_hall": {"status": "reviewed", "reason": "贵人议厅加入贸易中心及贸易建筑组；通用默认 0，沿用风味显式允许时按 1 分启用的规则。"},
+    "pirate_stronghold": {"status": "reviewed", "reason": "海盗基地加入海军基地及海军建筑组；通用默认 0，沿用风味显式允许时按 1 分启用的规则。"},
+    "temple_militia": {"status": "reviewed", "reason": "教会卫队驻地加入边防区及防御建筑组；通用默认 0，沿用风味显式允许时按 1 分启用的规则。"},
+    "monument_palau_generalitat": {"status": "reviewed", "reason": "加泰罗尼亚政府宫：阶层权力用途；现有风味无对应项，保留在自定义目录，通用默认 0。"},
+    "monument_llotja_de_mar_barcelona": {"status": "reviewed", "reason": "海事交易厅加入贸易中心及贸易建筑组；通用默认 0，沿用风味显式允许时按 1 分启用的规则。"},
+    "monument_sa_llotja_de_palma": {"status": "reviewed", "reason": "帕尔马交易厅加入贸易中心及贸易建筑组；通用默认 0，沿用风味显式允许时按 1 分启用的规则。"},
+    "monument_consulado_de_bilbao": {"status": "reviewed", "reason": "毕尔巴鄂仲裁庭加入贸易中心及贸易建筑组；通用默认 0，沿用风味显式允许时按 1 分启用的规则。"},
+    "monument_bou_inania_madrasa": {"status": "reviewed", "reason": "伊纳尼耶回学院：教育用途；现有风味无对应项，保留在自定义目录，通用默认 0。"},
+    "monument_chellah": {"status": "reviewed", "reason": "切拉赫圣陵：文化与正统性；现有风味无对应项，保留在自定义目录，通用默认 0。"},
+    "monument_ksar_ait_benhaddou": {"status": "reviewed", "reason": "阿伊特本哈杜城加入边防区及防御建筑组；通用默认 0，沿用风味显式允许时按 1 分启用的规则。"},
+    "bardic_school": {"status": "excluded", "reason": "1.4 为阶层建筑，移出自动目录；仅支持 1.4 新开局，无旧存档迁移要求。"},
+    "itinerant_court_seat": {"status": "excluded", "reason": "交由原版巡回宫廷机制产生，不能自动建造。"}
+  },
+  "generic_goods": {},
+  "open_adaptations": [
+    {"id": "template_ui", "reason": "需实机验证模板编辑、覆盖树、报告、暂停与删除、重命名后的弹窗名称、键盘与缩放、读档和换国。详见 docs/zh-CN/runtime_validation.md。"},
+    {"id": "manual_decisions", "reason": "两个玩家决议分别用于保留配置的重置和当月全量深算；深算冻结计划并在同一事件等待结果。需实机验证事件保持打开时的 GUI 回传、结果与关闭路径、零项目、存读档、换国隔离、23 日开工与次月恢复，以及多人游戏的暂停与回传。详见 docs/zh-CN/runtime_validation.md。"},
+    {"id": "cmf_2_5_settings", "reason": "设置值写入与动作栏 active 字段同步使用 CMF 2.5 公开接口，保留设置镜像同步、回调、预算刷新及换国流程；依赖范围为 2.5.*。需游戏内验证性能预设、数值步长与重置、设置和界面刷新，以及动作栏切换、换国和读档后的显示。"},
+    {"id": "promote_industry", "reason": "产业偏好按本国扶持地区和直接产出基价占比计算，最多增加 500 规划分，与城市特权独立相加，复用地点容量采样批次。完整自动采样到正式排名的路径、撤销或换区后的下一轮刷新仍待实机验证。详见 docs/zh-CN/runtime_validation.md。"},
+    {"id": "governor_control", "reason": "总督使用 1.4 名额、候选过滤、完整当前邻近度来源与迁移计算。推荐界面、临时效果失效及原生建筑和道路回调仍待游戏内验证；不扩展军力或经济回本评分。"},
+    {"id": "native_construction_queue", "reason": "RGO 使用原生精确计数；升级分类、容量豁免和同职业旧岗位抵扣要求有未被预订的前身等级，目标在建与前身升级中不得重复计数。批次使用地点扫描结果，原生拒绝后释放预留并继续，不追加开工前采样等待。仍需实机验证自动回执、混合工程进度、实际扣款、原生批量升级、前身预订、重排、取消、存读档、竣工及满员释放，包括骆驼。详见 docs/zh-CN/runtime_validation.md。"}
+  ]
+}
