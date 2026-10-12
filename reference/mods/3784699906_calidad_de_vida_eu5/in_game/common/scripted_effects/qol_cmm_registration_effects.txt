@@ -460,6 +460,40 @@ qol_register_cmf_mod = {
 		alias = qol_ace_exp_all
 	}
 
+	# Patriarch education scope: same shape as the expensive one (1 = off,
+	# 2 = heirs only, 3 = heirs + crown estate, 4 = all children), but the
+	# assignment additionally needs orthodox_education's potential + allow.
+	# The scripted GUI registered below hides the row when the country is
+	# not an orthodox country with the Fate of the Phoenix DLC.
+	cmm_register_dropdown_setting = {
+		mod_id = qol
+		setting_id = auto_ce_orthodox_scope
+		tab_id = education
+		group_id = auto_ce
+		default_index = 1
+		option_count = 4
+	}
+	cmm_sync_dropdown_option_alias = {
+		setting = qol__auto_ce_orthodox_scope
+		index = 2
+		alias = qol_ace_orth_heirs
+	}
+	cmm_sync_dropdown_option_alias = {
+		setting = qol__auto_ce_orthodox_scope
+		index = 3
+		alias = qol_ace_orth_heirs_crown
+	}
+	cmm_sync_dropdown_option_alias = {
+		setting = qol__auto_ce_orthodox_scope
+		index = 4
+		alias = qol_ace_orth_all
+	}
+	# Enables the qol__auto_ce_orthodox_scope_on_changed is_shown check.
+	cmm_add_scripted_gui = {
+		mod_id = qol
+		setting_id = auto_ce_orthodox_scope
+	}
+
 	# Re-evaluate every eligible child immediately (including processed ones).
 	cmm_register_button_setting = {
 		mod_id = qol
@@ -488,6 +522,10 @@ qol_register_cmf_mod = {
 
 	# Cabinet action "at max" alerts toggle (same tab/group, see qol_cabinet_cmm_effects.txt).
 	qol_cab_register_settings = yes
+
+	# Post-war maintenance: one toggle per branch, in a "Military"
+	# tab of its own (see qol_pmw_cmm_effects.txt).
+	qol_pmw_register_settings = yes
 }
 
 # Callback handler for cmf_on_callback (setting toggles, alert clicks, button clicks).
@@ -625,6 +663,24 @@ qol_handle_cmf_callback = {
 		}
 	}
 	else_if = {
+		limit = { var:cmf_callback = flag:qol__auto_ce_orthodox_scope }
+		cmm_sync_dropdown_option_alias = {
+			setting = qol__auto_ce_orthodox_scope
+			index = 2
+			alias = qol_ace_orth_heirs
+		}
+		cmm_sync_dropdown_option_alias = {
+			setting = qol__auto_ce_orthodox_scope
+			index = 3
+			alias = qol_ace_orth_heirs_crown
+		}
+		cmm_sync_dropdown_option_alias = {
+			setting = qol__auto_ce_orthodox_scope
+			index = 4
+			alias = qol_ace_orth_all
+		}
+	}
+	else_if = {
 		limit = { var:cmf_callback = flag:qol__auto_ce_run_now }
 		qol_ace_run_now = yes
 	}
@@ -635,4 +691,7 @@ qol_handle_cmf_callback = {
 
 	# Cabinet action alerts: same pattern (setting sync + alert left-click dismiss).
 	qol_cab_handle_cmf_callback = yes
+
+	# Post-war maintenance toggles: same switch pattern, own file.
+	qol_pmw_handle_cmf_callback = yes
 }

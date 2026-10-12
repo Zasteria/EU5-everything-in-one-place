@@ -41,6 +41,8 @@ bcm_run_lobby_setup = {
 	# the mark on every slice; dropping the governor cache costs one recompute
 	# the next time that map is opened. Epoch 2 is the second such retirement:
 	# 1 was the accuracy fix alone, and a save that took it still owes the mark.
+	# Epoch 3 (2026-10-11) scores the rights per province: every stored best
+	# right is retired, the governor cache is not.
 	#
 	# The version constants live in a file this port generates from CM, so the
 	# stamp is here instead, where a CM update cannot carry it away.
@@ -49,7 +51,22 @@ bcm_run_lobby_setup = {
 			NOT = {
 				AND = {
 					has_global_variable = bcm_pf_epoch
-					global_var:bcm_pf_epoch = 2
+					global_var:bcm_pf_epoch >= 2
+				}
+			}
+		}
+		# Root is the player; the finder only ever runs for them.
+		if = {
+			limit = { exists = var:bcm_pf_fresh_g }
+			remove_variable = bcm_pf_fresh_g
+		}
+	}
+	if = {
+		limit = {
+			NOT = {
+				AND = {
+					has_global_variable = bcm_pf_epoch
+					global_var:bcm_pf_epoch = 3
 				}
 			}
 		}
@@ -57,12 +74,7 @@ bcm_run_lobby_setup = {
 			limit = { has_global_variable = bcm_trmm_stamp }
 			remove_global_variable = bcm_trmm_stamp
 		}
-		# Root is the player; the finder only ever runs for them.
-		if = {
-			limit = { exists = var:bcm_pf_fresh_g }
-			remove_variable = bcm_pf_fresh_g
-		}
-		set_global_variable = { name = bcm_pf_epoch value = 2 }
+		set_global_variable = { name = bcm_pf_epoch value = 3 }
 	}
 
 	# Recommended urban rights coverage: one pass over every province definition,
