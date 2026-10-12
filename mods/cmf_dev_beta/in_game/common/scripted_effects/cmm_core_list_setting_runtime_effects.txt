@@ -830,13 +830,19 @@ _cmm_apply_list_change_internal = {
 		}
 		if = {
 			limit = { AND = { has_variable = cmm_list_action_to_apply var:cmm_setting_list_is_ordered_$setting$ = 1 var:cmm_list_action_to_apply = 1 var:cmm_list_position_to_apply > 0 } }
-			set_local_variable = { name = cmm_list_target_index value = { value = var:cmm_list_position_to_apply subtract = 1 } }
-			_cmm_reorder_list_setting = { setting = $setting$ vt = $vt$ lt = $lt$ }
+			_cmf_beta_shown_neighbour_up = { setting = $setting$ lt = $lt$ }
+			if = {
+				limit = { local_var:cmm_list_target_index >= 0 }
+				_cmm_reorder_list_setting = { setting = $setting$ vt = $vt$ lt = $lt$ }
+			}
 		}
 		else_if = {
 			limit = { AND = { has_variable = cmm_list_action_to_apply var:cmm_setting_list_is_ordered_$setting$ = 1 var:cmm_list_action_to_apply = 2 var:cmm_list_position_to_apply < var:cmm_setting_list_last_index_$setting$ } }
-			set_local_variable = { name = cmm_list_target_index value = { value = var:cmm_list_position_to_apply add = 1 } }
-			_cmm_reorder_list_setting = { setting = $setting$ vt = $vt$ lt = $lt$ }
+			_cmf_beta_shown_neighbour_down = { setting = $setting$ lt = $lt$ }
+			if = {
+				limit = { local_var:cmm_list_target_index >= 0 }
+				_cmm_reorder_list_setting = { setting = $setting$ vt = $vt$ lt = $lt$ }
+			}
 		}
 		else_if = {
 			limit = { AND = { has_variable = cmm_list_action_to_apply var:cmm_setting_list_is_ordered_$setting$ = 1 var:cmm_list_action_to_apply = 3 var:cmm_list_position_to_apply > 0 } }
@@ -1591,5 +1597,48 @@ _cmm_resolve_list_item_and_call = {
 	else_if = {
 		limit = { scope:cmm_list_current_item = flag:$setting$_i50 }
 		_cmm_save_list_item_value_and_call = { setting = $setting$ item = 50 effect = $effect$ }
+	}
+}
+
+# cmf_dev_beta: the nearest row that is shown above the marked one, as
+# local_var:cmm_list_target_index (-1 when there is none). A hidden row stays in
+# the list, so a step of one position can land on it and change nothing seen.
+_cmf_beta_shown_neighbour_up = {
+	set_local_variable = { name = cmm_list_target_index value = -1 }
+	set_local_variable = { name = cmm_list_scan_index value = 0 }
+	set_local_variable = { name = cmm_list_scan_marked value = var:cmm_list_position_to_apply }
+	every_$lt$_list = {
+		variable = cmm_list_items_$setting$
+		save_scope_as = cmm_list_scan_item
+		if = {
+			limit = {
+				NOT = { root = { is_key_in_variable_map = { name = cmm_list_item_hidden target = scope:cmm_list_scan_item } } }
+				local_var:cmm_list_scan_index < local_var:cmm_list_scan_marked
+			}
+			set_local_variable = { name = cmm_list_target_index value = local_var:cmm_list_scan_index }
+		}
+		change_local_variable = { name = cmm_list_scan_index add = 1 }
+	}
+}
+
+# cmf_dev_beta: the nearest row that is shown below the marked one, as
+# local_var:cmm_list_target_index (-1 when there is none). A hidden row stays in
+# the list, so a step of one position can land on it and change nothing seen.
+_cmf_beta_shown_neighbour_down = {
+	set_local_variable = { name = cmm_list_target_index value = -1 }
+	set_local_variable = { name = cmm_list_scan_index value = 0 }
+	set_local_variable = { name = cmm_list_scan_marked value = var:cmm_list_position_to_apply }
+	every_$lt$_list = {
+		variable = cmm_list_items_$setting$
+		save_scope_as = cmm_list_scan_item
+		if = {
+			limit = {
+				NOT = { root = { is_key_in_variable_map = { name = cmm_list_item_hidden target = scope:cmm_list_scan_item } } }
+				local_var:cmm_list_scan_index > local_var:cmm_list_scan_marked
+				local_var:cmm_list_target_index < 0
+			}
+			set_local_variable = { name = cmm_list_target_index value = local_var:cmm_list_scan_index }
+		}
+		change_local_variable = { name = cmm_list_scan_index add = 1 }
 	}
 }

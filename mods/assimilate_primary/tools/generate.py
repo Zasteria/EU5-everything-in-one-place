@@ -29,7 +29,10 @@ month. 0.4.0, his word 12.10: no monthly switch; he doubts the switch is a real
 player setting at all («возможно только у ботов») and wants to see what it does.
 So a checkbox on the mod's CMF page sets it when clicked and writes the state it
 found and the state it left in debug.log. Technical switches belong in CMF, not
-in game windows such as decisions (his word 12.10).
+in game windows such as decisions (his word 12.10). His run 12.10 answered it:
+`cabinetactions` is not a value of the game's automated systems at all
+(«Failed to read enum! Type: EAutomatedSystems»), so the checkbox and this rule's
+use of it are gone; the rule reads «Совет» (`cabinet`) only.
 
     python3 mods/assimilate_primary/tools/generate.py
 """
@@ -64,10 +67,7 @@ RULE = """\t\t\t# assimilate_primary: for a player whose cabinet is automated, a
 \t\t\t\tlimit = {
 \t\t\t\t\tscope:actor = {
 \t\t\t\t\t\tis_ai = no
-\t\t\t\t\t\tOR = {
-\t\t\t\t\t\t\tis_system_automated = cabinetactions
-\t\t\t\t\t\t\tis_system_automated = cabinet
-\t\t\t\t\t\t}
+\t\t\t\t\t\tis_system_automated = cabinet
 \t\t\t\t\t}
 \t\t\t\t\tNOT = { scope:target = scope:actor.culture }
 \t\t\t\t}
@@ -88,17 +88,16 @@ STALE = [
 LOC = {
     "english": {
         "bag_asp_name": "Council Automation",
-        "bag_asp_desc": "The mod's own council automation: idle seats get actions down a priority list you set here. Cabinet assimilation targets the primary culture.",
+        "bag_asp_desc": "The mod's own council automation: seats get actions down a priority list you set here. Cabinet assimilation targets the primary culture.",
         "bag_asp__main_name": "Council",
         "bag_asp__main__council_name": "Own automation",
-        "bag_asp__main__debug_name": "Debug",
         "bag_asp__actions_name": "Actions",
         "bag_asp__auto_name": "Own council automation",
-        "bag_asp__auto_desc": "On: switches the game's «Council» automation off and gives idle seats actions down the «Priority» list. Each assignment goes to debug.log.",
-        "bag_asp__period_name": "Fill seats every, months",
-        "bag_asp__period_desc": "How often idle seats get an action.",
-        "bag_asp__review_name": "Re-choose standing actions every, months",
-        "bag_asp__review_desc": "Actions that never finish (stability, legitimacy, diplomacy and the like) are stopped and chosen again this often. 0: never.",
+        "bag_asp__auto_desc": "On: switches the game's «Council» automation off and hands every seat out down the «Priority» list at once, then on the schedule below. Each assignment goes to debug.log.",
+        "bag_asp__period_name": "Fill empty seats every, months",
+        "bag_asp__period_desc": "How often a seat left without an action (a finished one, a new advisor) gets one. Seats that work are not touched.",
+        "bag_asp__review_name": "Hand out all seats every, months",
+        "bag_asp__review_desc": "How often every seat is handed out again down «Priority»: the top action takes the best-skilled free advisor, and a seat whose action is no longer among the chosen gets a new one. A seat already on a chosen action keeps it. 0: never.",
         "bag_asp__actions__available_name": "Available",
         "bag_asp__actions__priority_name": "Priority",
         "bag_asp__available__use_name": "In use",
@@ -109,22 +108,19 @@ LOC = {
         "bag_asp__available_desc": "Every common action this country can see. Ticked ones are in use.",
         "bag_asp__priority_name": "Priority",
         "bag_asp__priority_desc": "The actions in use, tried from the top.",
-        "bag_asp__cabinetactions_name": "Automate cabinet actions (cabinetactions)",
-        "bag_asp__cabinetactions_desc": "Sets the game's cabinetactions automation switch when clicked. What it was before and after goes to debug.log.",
     },
     "russian": {
         "bag_asp_name": "Автоматика совета",
-        "bag_asp_desc": "Своя автоматика совета: пустые места получают действия по списку приоритетов, который задаётся здесь. Ассимиляция советом идёт в основную культуру.",
+        "bag_asp_desc": "Своя автоматика совета: места получают действия по списку приоритетов, который задаётся здесь. Ассимиляция советом идёт в основную культуру.",
         "bag_asp__main_name": "Совет",
         "bag_asp__main__council_name": "Своя автоматика",
-        "bag_asp__main__debug_name": "Отладка",
         "bag_asp__actions_name": "Действия",
         "bag_asp__auto_name": "Своя автоматика совета",
-        "bag_asp__auto_desc": "Включено: игровая автоматика «Совет» выключается, а пустые места получают действия по списку «Приоритет». Каждое назначение пишется в debug.log.",
-        "bag_asp__period_name": "Заполнять места раз в, мес.",
-        "bag_asp__period_desc": "Как часто пустые места получают действие.",
-        "bag_asp__review_name": "Пересматривать постоянные действия раз в, мес.",
-        "bag_asp__review_desc": "Действия, которые не заканчиваются сами (стабильность, легитимность, дипломатия и подобные), снимаются и выбираются заново с этой частотой. 0 — никогда.",
+        "bag_asp__auto_desc": "Включено: игровая автоматика «Совет» выключается, все места сразу распределяются по списку «Приоритет», дальше — по расписанию ниже. Каждое назначение пишется в debug.log.",
+        "bag_asp__period_name": "Заполнять пустые места раз в, мес.",
+        "bag_asp__period_desc": "Как часто место без действия (закончилось, новый советник) получает действие. Занятые места не трогаются.",
+        "bag_asp__review_name": "Перераспределять все места раз в, мес.",
+        "bag_asp__review_desc": "Как часто все места заново раздаются по «Приоритету»: верхнее действие берёт свободного советника с лучшим навыком, а место, чьё действие больше не среди выбранных, получает новое. Место, уже занятое выбранным действием, его сохраняет. 0 — никогда.",
         "bag_asp__actions__available_name": "Доступные",
         "bag_asp__actions__priority_name": "Приоритет",
         "bag_asp__available__use_name": "Использовать",
@@ -135,8 +131,6 @@ LOC = {
         "bag_asp__available_desc": "Все общие действия, которые видит эта страна. Отмеченные используются.",
         "bag_asp__priority_name": "Приоритет",
         "bag_asp__priority_desc": "Используемые действия, пробуются сверху вниз.",
-        "bag_asp__cabinetactions_name": "Автоматика действий совета (cabinetactions)",
-        "bag_asp__cabinetactions_desc": "При нажатии ставит игровой переключатель автоматики cabinetactions. Каким он был до и стал после, пишется в debug.log.",
     },
 }
 

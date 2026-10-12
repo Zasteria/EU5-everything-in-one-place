@@ -118,14 +118,6 @@ bag_asp_register = {
 	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 20 value = flag:bag_asp_counter_espionage_action }
 	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 20 value = flag:bag_asp_ability_dip }
 
-	cmm_register_bool_setting = {
-		mod_id = bag_asp
-		setting_id = cabinetactions
-		tab_id = main
-		group_id = debug
-		default_value = 0
-	}
-
 	bag_asp_sync = yes
 	bag_asp_rebuild = yes
 }
@@ -503,7 +495,9 @@ bag_asp_handle_callback = {
 				# Ours and the game's «Совет» would fight over the same seats.
 				set_automated_system = { system = cabinet activate = no }
 				debug_log = "bag_asp: own council automation on, the game's «Совет» switched off"
-				bag_asp_run = yes
+				set_variable = { name = bag_asp_months value = 0 }
+				set_variable = { name = bag_asp_review_months value = 0 }
+				bag_asp_plan_all = yes
 			}
 			else = {
 				debug_log = "bag_asp: own council automation off"
@@ -511,32 +505,5 @@ bag_asp_handle_callback = {
 		}
 		flag:bag_asp__period = { bag_asp_sync = yes }
 		flag:bag_asp__review = { bag_asp_sync = yes }
-		flag:bag_asp__cabinetactions = {
-			if = {
-				limit = { is_system_automated = cabinetactions }
-				debug_log = "bag_asp: cabinetactions was on before the click"
-			}
-			else = {
-				debug_log = "bag_asp: cabinetactions was off before the click"
-			}
-			cmm_sync_bool_alias = {
-				setting = bag_asp__cabinetactions
-				alias = bag_asp_cabinetactions_on
-			}
-			if = {
-				limit = { has_variable = bag_asp_cabinetactions_on }
-				set_automated_system = { system = cabinetactions activate = yes }
-			}
-			else = {
-				set_automated_system = { system = cabinetactions activate = no }
-			}
-			if = {
-				limit = { is_system_automated = cabinetactions }
-				debug_log = "bag_asp: cabinetactions is on after the click"
-			}
-			else = {
-				debug_log = "bag_asp: cabinetactions is off after the click"
-			}
-		}
 	}
 }

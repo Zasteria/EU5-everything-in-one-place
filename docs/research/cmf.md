@@ -109,6 +109,11 @@ height and write rows in place:
 | `cmm_for_each_list_item` | calls an effect per row with the ordinal already resolved as `$i$` |
 | `cmm_build_list_bool_list` | the values of the rows whose bool field is set |
 
+**A hidden row stays in an ordered list, and CMF's arrows move by raw
+position:** «up» under a hidden row swaps the two and nothing on screen moves
+(his «2 in 5», 10-12, CM's town rights and the council priority). `cmf_dev_beta`
++beta7 steps to the nearest shown row; with the workshop CMF it is still there.
+
 Item ordinals must be literals — `item = var:x` is pasted into the macro verbatim
 and dies at load with "More than one colon in event target link". CMF turns
 counters into literals with a `switch`, and so should anything built on it.

@@ -1,16 +1,22 @@
 """The mod's own council automation: CMF page, lists and the monthly pass.
 
-His ask 12.10: a checkbox turns on our automation; every so often idle seats get
-an action, picked down a priority list he orders in CMF. Common actions only,
+His ask 12.10: a checkbox turns on our automation; every so often the seats get
+actions, picked down a priority list he orders in CMF. Common actions only,
 nothing country-specific and nothing as pointed as settling the frontier. Two
 lists: «Доступные» (every pool action this country can see, a checkbox puts it
 in use) and «Приоритет» (the actions in use, in the order they are tried).
 
+His run 12.10: seats he had given other actions kept them with integration on
+top of the list. So the pass owns every seat: on the checkbox and every `review`
+months each action down the list keeps the seats already on it and then takes
+free ones, the advisor best in its skill first; a seat left over keeps what it
+had. Between those, every `period` months only empty seats are filled.
+
 What is copied from the game rather than written here: each target's validity
 is the action's own `visible` and `enabled` from its `select_trigger`, pasted
 into the search, so a target the game would grey out is never picked. The order
-in which targets are tried, and the gates of standing actions, are this file's
-guesses at vanilla (the game scores 62 of 74 actions inside the engine).
+in which targets are tried, and the gates in POOL, are this file's guesses at
+vanilla (the game scores 62 of 74 actions inside the engine).
 
 Not measured: whether `set_cabinet_action` takes every target flag by its name
 (vanilla calls it with `target` only, `on_action_effects.txt:290`), and whether a
@@ -58,6 +64,8 @@ POOL = [
 ]
 
 LEAD = 0.3  # his rule 05.10, the same as the vanilla-automation patch
+
+SKILL = {"english": "Advisor skill", "russian": "Навык советника"}
 
 ABILITY = {
     "english": {"adm": "ADM", "dip": "DIP", "mil": "MIL"},
@@ -211,19 +219,14 @@ def try_effect(key: str, kind: str, order: str | None, gate: str, actions: dict[
     # Unset in the file counts as one seat at a time: otherwise an action with no
     # condition on its target (pop_promote_action) takes every seat left.
     multiple = value(action, "allow_multiple") == "yes"
-    religion = value(action, "require_matching_character_religion") == "yes"
-    cond = [
-        "scope:actor = { NOT = { has_variable = bag_asp_filled } }",
-        f"cabinet_action:{key} = {{ is_available_for = scope:actor }}",
-    ]
+    cond = [f"cabinet_action:{key} = {{ is_available_for = scope:actor }}"]
     if gate:
         cond.append(f"scope:actor = {{ {gate} }}")
     if not multiple:
         cond.append(f"scope:actor = {{ NOT = {{ any_cabinet = {{ has_cabinet_action = yes cabinet_action = cabinet_action:{key} }} }} }}")
-    if religion:
-        cond.append("cabinet_member = { religion = scope:actor.religion }")
     limit = "\n".join("\t\t\t" + c for c in cond)
-    done = (f"\t\t\t\tscope:actor = {{ set_variable = {{ name = bag_asp_filled value = yes }} }}\n"
+    done = (f"\t\t\t\tscope:bag_asp_seat = {{ cabinet_member = {{ set_variable = {{ name = bag_asp_claimed value = yes }} }} }}\n"
+            f"\t\t\t\tscope:actor = {{ set_variable = {{ name = bag_asp_placed value = yes }} }}\n"
             f"\t\t\t\tdebug_log = \"bag_asp: seat set to {key}\"")
 
     def assign(params: str, flag: str = "") -> str:
@@ -231,8 +234,13 @@ def try_effect(key: str, kind: str, order: str | None, gate: str, actions: dict[
         if flag:
             BUSY.add((key, flag))
             mark = f"\t\t\t\tscope:bag_asp_pick = {{ set_variable = {{ name = bag_asp_busy_{key} value = yes }} }}\n"
-        return (f"\t\t\t\tscope:bag_asp_seat = {{ set_cabinet_action = {{ type = cabinet_action:{key}{params} }} }}\n"
-                + mark + done)
+        # A seat taken from a lower action is stopped first; set_cabinet_action
+        # is not known to replace a running action by itself.
+        return (f"\t\t\t\tscope:bag_asp_seat = {{\n"
+                f"\t\t\t\t\tif = {{\n\t\t\t\t\t\tlimit = {{ has_cabinet_action = yes }}\n"
+                f"\t\t\t\t\t\tstop_cabinet_action = {{}}\n\t\t\t\t\t}}\n"
+                f"\t\t\t\t\tset_cabinet_action = {{ type = cabinet_action:{key}{params} }}\n"
+                f"\t\t\t\t}}\n" + mark + done)
 
     if kind == "country":
         inner = assign("").replace("\t\t\t\t", "\t\t", 1).replace("\n\t\t\t\t", "\n\t\t")
@@ -293,13 +301,51 @@ def try_effect(key: str, kind: str, order: str | None, gate: str, actions: dict[
                  f"{assign(f' {flag} = scope:bag_asp_pick', flag)}\n\t\t\t}}\n\t\t}}")
     else:
         raise SystemExit(f"council: unknown kind {kind}")
-    return (f"# Scope: cabinet (a seat), saved as scope:bag_asp_seat; scope:actor = country.\n"
+    return (f"# Scope: country (scope:actor); the seat is scope:bag_asp_seat.\n"
             f"bag_asp_try_{key} = {{\n\tif = {{\n\t\tlimit = {{\n{limit}\n\t\t}}\n{inner}\n\t}}\n}}\n")
 
 
-def standing(action: str) -> bool:
-    """An action with no is_finished holds its seat until something stops it."""
-    return child(action, "is_finished") is None
+def place_effect(key: str, actions: dict[str, str]) -> str:
+    """Seats already on this action are kept; then free seats take it, the
+    advisor best in its skill first, while it still finds a target."""
+    action = actions[key]
+    ability = value(action, "ability") or "adm"
+    seat = ["bag_asp_free_seat = yes"]
+    if value(action, "require_matching_character_religion") == "yes":
+        seat.append("cabinet_member = { religion = scope:actor.religion }")
+    seat = "\n".join("\t\t\t\t" + s for s in seat)
+    return f"""# Scope: country (scope:actor).
+bag_asp_place_{key} = {{
+\tevery_cabinet = {{
+\t\tlimit = {{
+\t\t\tbag_asp_free_seat = yes
+\t\t\thas_cabinet_action = yes
+\t\t\tcabinet_action = cabinet_action:{key}
+\t\t}}
+\t\tcabinet_member = {{ set_variable = {{ name = bag_asp_claimed value = yes }} }}
+\t}}
+\tset_variable = {{ name = bag_asp_placed value = yes }}
+\twhile = {{
+\t\tlimit = {{
+\t\t\thas_variable = bag_asp_placed
+\t\t\tany_cabinet = {{ bag_asp_free_seat = yes }}
+\t\t}}
+\t\tremove_variable = bag_asp_placed
+\t\tordered_cabinet = {{
+\t\t\tlimit = {{
+{seat}
+\t\t\t}}
+\t\t\torder_by = cabinet_member.{ability}
+\t\t\tsave_scope_as = bag_asp_seat
+\t\t\tbag_asp_try_{key} = yes
+\t\t}}
+\t}}
+\tif = {{
+\t\tlimit = {{ has_variable = bag_asp_placed }}
+\t\tremove_variable = bag_asp_placed
+\t}}
+}}
+"""
 
 
 def build(game: Path) -> dict[str, str]:
@@ -381,14 +427,6 @@ bag_asp_register = {{
                    f"\tcmm_set_list_item_value = {{ mod_id = {MOD_ID} setting_id = priority item = {i} value = flag:bag_asp_{k} }}\n"
                    f"\tcmm_set_list_text_value = {{ mod_id = {MOD_ID} setting_id = priority field_id = ability item = {i} value = flag:bag_asp_ability_{ability} }}\n")
     reg.append(f"""
-\tcmm_register_bool_setting = {{
-\t\tmod_id = {MOD_ID}
-\t\tsetting_id = cabinetactions
-\t\ttab_id = main
-\t\tgroup_id = debug
-\t\tdefault_value = 0
-\t}}
-
 \tbag_asp_sync = yes
 \tbag_asp_rebuild = yes
 }}
@@ -446,7 +484,9 @@ bag_asp_handle_callback = {{
 \t\t\t\t# Ours and the game's «Совет» would fight over the same seats.
 \t\t\t\tset_automated_system = {{ system = cabinet activate = no }}
 \t\t\t\tdebug_log = "bag_asp: own council automation on, the game's «Совет» switched off"
-\t\t\t\tbag_asp_run = yes
+\t\t\t\tset_variable = {{ name = bag_asp_months value = 0 }}
+\t\t\t\tset_variable = {{ name = bag_asp_review_months value = 0 }}
+\t\t\t\tbag_asp_plan_all = yes
 \t\t\t}}
 \t\t\telse = {{
 \t\t\t\tdebug_log = "bag_asp: own council automation off"
@@ -454,125 +494,118 @@ bag_asp_handle_callback = {{
 \t\t}}
 \t\tflag:{MOD_ID}__period = {{ bag_asp_sync = yes }}
 \t\tflag:{MOD_ID}__review = {{ bag_asp_sync = yes }}
-\t\tflag:{MOD_ID}__cabinetactions = {{
-\t\t\tif = {{
-\t\t\t\tlimit = {{ is_system_automated = cabinetactions }}
-\t\t\t\tdebug_log = "bag_asp: cabinetactions was on before the click"
-\t\t\t}}
-\t\t\telse = {{
-\t\t\t\tdebug_log = "bag_asp: cabinetactions was off before the click"
-\t\t\t}}
-\t\t\tcmm_sync_bool_alias = {{
-\t\t\t\tsetting = {MOD_ID}__cabinetactions
-\t\t\t\talias = bag_asp_cabinetactions_on
-\t\t\t}}
-\t\t\tif = {{
-\t\t\t\tlimit = {{ has_variable = bag_asp_cabinetactions_on }}
-\t\t\t\tset_automated_system = {{ system = cabinetactions activate = yes }}
-\t\t\t}}
-\t\t\telse = {{
-\t\t\t\tset_automated_system = {{ system = cabinetactions activate = no }}
-\t\t\t}}
-\t\t\tif = {{
-\t\t\t\tlimit = {{ is_system_automated = cabinetactions }}
-\t\t\t\tdebug_log = "bag_asp: cabinetactions is on after the click"
-\t\t\t}}
-\t\t\telse = {{
-\t\t\t\tdebug_log = "bag_asp: cabinetactions is off after the click"
-\t\t\t}}
-\t\t}}
 \t}}
 }}
 """)
     effects = "".join(reg)
 
-    stand = [k for k, *_ in POOL if standing(actions[k])]
-    stand_or = "\n".join(f"\t\t\t\tcabinet_action = cabinet_action:{k}" for k in stand)
-    switch = "\n".join(f"\t\t\t\t\t\t\tflag:bag_asp_{k} = {{ bag_asp_try_{k} = yes }}" for k, *_ in POOL)
+    switch = "\n".join(f"\t\t\t\t\tflag:bag_asp_{k} = {{ bag_asp_place_{k} = yes }}" for k, *_ in POOL)
     run = f"""# assimilate_primary: the mod's own council automation, the monthly pass.
 # Rebuilt by tools/generate.py (tools/council.py).
 
-# Scope: country. Every month for a player with the checkbox on; the work runs
-# every `period` months, and every `review` months (0 = never) the standing
-# actions, which never finish on their own, are stopped and re-chosen.
+# Scope: country. Every month for a player with the checkbox on, from CMF's
+# monthly pulse (the one CM's auto-build runs on). Every `review` months
+# (0 = never) all seats are handed out again; otherwise every `period` months
+# only seats without an action are filled.
 bag_asp_tick = {{
 \tif = {{
 \t\tlimit = {{ NOT = {{ has_variable = bag_asp_period }} }}
 \t\tbag_asp_sync = yes
 \t}}
+\tif = {{
+\t\tlimit = {{ NOT = {{ has_variable = bag_asp_months }} }}
+\t\tset_variable = {{ name = bag_asp_months value = 0 }}
+\t}}
+\tif = {{
+\t\tlimit = {{ NOT = {{ has_variable = bag_asp_review_months }} }}
+\t\tset_variable = {{ name = bag_asp_review_months value = 0 }}
+\t}}
 \tchange_variable = {{ name = bag_asp_months add = 1 }}
 \tchange_variable = {{ name = bag_asp_review_months add = 1 }}
+\tdebug_log = "bag_asp: month"
 \tif = {{
 \t\tlimit = {{
 \t\t\tvar:bag_asp_review > 0
 \t\t\tvar:bag_asp_review_months >= var:bag_asp_review
 \t\t}}
 \t\tset_variable = {{ name = bag_asp_review_months value = 0 }}
-\t\tbag_asp_review_seats = yes
-\t\tset_variable = {{ name = bag_asp_months value = var:bag_asp_period }}
+\t\tset_variable = {{ name = bag_asp_months value = 0 }}
+\t\tbag_asp_plan_all = yes
 \t}}
-\tif = {{
+\telse_if = {{
 \t\tlimit = {{ var:bag_asp_months >= var:bag_asp_period }}
 \t\tset_variable = {{ name = bag_asp_months value = 0 }}
-\t\tbag_asp_run = yes
+\t\tbag_asp_plan_fill = yes
 \t}}
 }}
 
-# Scope: country. Stop the standing actions of the pool so the next pass
-# re-chooses those seats down the priority list.
-bag_asp_review_seats = {{
-\tevery_cabinet = {{
-\t\tlimit = {{
-\t\t\thas_cabinet_action = yes
-\t\t\tOR = {{
-{stand_or}
-\t\t\t}}
-\t\t}}
-\t\tstop_cabinet_action = {{}}
-\t\tdebug_log = "bag_asp: review, a standing action stopped to be re-chosen"
-\t}}
+# Scope: country. Every seat handed out down «Приоритет».
+bag_asp_plan_all = {{
+\tdebug_log = "bag_asp: handing out every seat"
+\tbag_asp_plan = yes
 }}
 
-# Scope: country. Every seat with a member and no action gets the first action
-# down «Приоритет» that is in use, allowed now and has a target.
-bag_asp_run = {{
+# Scope: country. Only seats without an action: the others are taken as chosen.
+bag_asp_plan_fill = {{
+\tdebug_log = "bag_asp: filling empty seats"
+\tset_variable = {{ name = bag_asp_fill_only value = yes }}
+\tbag_asp_plan = yes
+\tremove_variable = bag_asp_fill_only
+}}
+
+# Scope: country. Down «Приоритет», each action in use first keeps the seats
+# already on it, then takes free seats, the advisor best in its skill first,
+# while it has a target and a free seat is left. A seat is free until this pass
+# chose it; at the end, seats nothing could take keep what they had.
+bag_asp_plan = {{
 \tsave_scope_as = actor
 \tif = {{
 \t\tlimit = {{ NOT = {{ has_variable_list = bag_asp_order }} }}
 \t\tbag_asp_rebuild = yes
 \t}}
+\tif = {{
+\t\tlimit = {{ NOT = {{ any_in_list = {{ variable = bag_asp_used }} }} }}
+\t\tdebug_log = "bag_asp: no action is ticked in use"
+\t}}
 \tbag_asp_mark_busy = yes
-\tevery_cabinet = {{
-\t\tlimit = {{
-\t\t\thas_cabinet_action = no
-\t\t\texists = cabinet_member
+\tif = {{
+\t\tlimit = {{ has_variable = bag_asp_fill_only }}
+\t\tevery_cabinet = {{
+\t\t\tlimit = {{
+\t\t\t\thas_cabinet_action = yes
+\t\t\t\texists = cabinet_member
+\t\t\t}}
+\t\t\tcabinet_member = {{ set_variable = {{ name = bag_asp_claimed value = yes }} }}
 \t\t}}
-\t\tsave_scope_as = bag_asp_seat
-\t\tscope:actor = {{
-\t\t\tevery_in_list = {{
-\t\t\t\tvariable = bag_asp_order
-\t\t\t\tsave_temporary_scope_as = bag_asp_item
-\t\t\t\tif = {{
-\t\t\t\t\tlimit = {{
-\t\t\t\t\t\tscope:actor = {{
-\t\t\t\t\t\t\tNOT = {{ has_variable = bag_asp_filled }}
-\t\t\t\t\t\t\tis_target_in_variable_list = {{ name = bag_asp_used target = scope:bag_asp_item }}
-\t\t\t\t\t\t}}
-\t\t\t\t\t}}
-\t\t\t\t\tscope:bag_asp_seat = {{
-\t\t\t\t\t\tswitch = {{
-\t\t\t\t\t\t\ttrigger = scope:bag_asp_item
-{switch}
-\t\t\t\t\t\t}}
-\t\t\t\t\t}}
+\t}}
+\tevery_in_list = {{
+\t\tvariable = bag_asp_order
+\t\tsave_temporary_scope_as = bag_asp_item
+\t\tif = {{
+\t\t\tlimit = {{
+\t\t\t\tscope:actor = {{
+\t\t\t\t\tis_target_in_variable_list = {{ name = bag_asp_used target = scope:bag_asp_item }}
+\t\t\t\t\tany_cabinet = {{ bag_asp_free_seat = yes }}
 \t\t\t\t}}
 \t\t\t}}
-\t\t\tif = {{
-\t\t\t\tlimit = {{ has_variable = bag_asp_filled }}
-\t\t\t\tremove_variable = bag_asp_filled
+\t\t\tscope:actor = {{
+\t\t\t\tswitch = {{
+\t\t\t\t\ttrigger = scope:bag_asp_item
+{switch}
+\t\t\t\t}}
 \t\t\t}}
-\t\t\telse = {{
-\t\t\t\tdebug_log = "bag_asp: a seat stays empty, nothing in use fits"
+\t\t}}
+\t}}
+\tif = {{
+\t\tlimit = {{ any_cabinet = {{ bag_asp_free_seat = yes }} }}
+\t\tdebug_log = "bag_asp: a seat is left as it was, nothing in use fits it"
+\t}}
+\tevery_cabinet = {{
+\t\tlimit = {{ exists = cabinet_member }}
+\t\tcabinet_member = {{
+\t\t\tif = {{
+\t\t\t\tlimit = {{ has_variable = bag_asp_claimed }}
+\t\t\t\tremove_variable = bag_asp_claimed
 \t\t\t}}
 \t\t}}
 \t}}
@@ -605,9 +638,10 @@ bag_asp_clear_busy = {{
 
 """
     run += tries
+    run += "\n" + "\n".join(place_effect(k, actions) for k, *_ in POOL)
 
     on_actions = f"""# assimilate_primary: the CMF page and the monthly pass. The engine merges
-# on_actions lists, so these add to CMF's own and the game's.
+# on_actions lists, so these add to CMF's own.
 # Rebuilt by tools/generate.py (tools/council.py).
 cmf_on_mod_registration = {{
 \ton_actions = {{
@@ -621,7 +655,11 @@ cmf_on_callback = {{
 \t}}
 }}
 
-monthly_country_pulse = {{
+# CMF's own monthly pulse for players, the one CM's auto-build runs on in his
+# games. 0.5.0 joined the game's monthly_country_pulse, and in his run of 12.10
+# nothing the pass writes came in a dozen months; whether that leaf ran at all is
+# not known, so the pulse moved to the proven one and the tick logs each month.
+cmf_monthly_human_country_pulse = {{
 \ton_actions = {{
 \t\tbag_asp_on_month
 \t}}
@@ -644,7 +682,6 @@ bag_asp_on_callback = {{
 # Scope: country
 bag_asp_on_month = {{
 \ttrigger = {{
-\t\tis_ai = no
 \t\thas_variable = bag_asp_auto_on
 \t}}
 \teffect = {{
@@ -668,7 +705,17 @@ bag_asp_on_month = {{
 """
     guis = "# assimilate_primary: the two lists' callbacks. Rebuilt by tools/generate.py.\n\n" + guis
 
+    triggers = """# assimilate_primary: triggers of the council pass. Rebuilt by tools/generate.py.
+
+# Scope: cabinet (a seat). It has an advisor whom this pass has not chosen yet.
+bag_asp_free_seat = {
+\texists = cabinet_member
+\tcabinet_member = { NOT = { has_variable = bag_asp_claimed } }
+}
+"""
+
     return {
+        "in_game/common/scripted_triggers/bag_asp_council_triggers.txt": triggers,
         "in_game/common/scripted_effects/bag_asp_cmm_effects.txt": effects,
         "in_game/common/scripted_effects/bag_asp_council_effects.txt": run,
         "in_game/common/on_action/bag_asp_cmf_on_actions.txt": on_actions,
@@ -685,9 +732,10 @@ NAMES = {
 
 
 def loc_rows(game: Path, language: str) -> dict[str, str]:
-    """List row labels copied from the game's own action names."""
+    """List row labels and hovers copied from the game's own action texts."""
     src = (game / f"main_menu/localization/{language}/government_l_{language}.yml").read_text(encoding="utf-8-sig")
     names = dict(re.findall(r'^ (\w+):\d* "(.*)"\s*$', src, re.M))
+    actions = load_actions(game)
     rows = {}
     for i, (k, *_) in enumerate(POOL, 1):
         name = NAMES[language].get(k) or names.get(k)
@@ -695,6 +743,15 @@ def loc_rows(game: Path, language: str) -> dict[str, str]:
             raise SystemExit(f"council: no plain {language} name for {k}; write one by hand")
         rows[f"{MOD_ID}__available_i{i}_name"] = name
         rows[f"{MOD_ID}__priority_i{i}_name"] = name
+        # The row's hover: the game's own description of the action, and the
+        # skill that speeds it (the one the pass ranks advisors by).
+        desc = names.get(f"{k}_desc")
+        if not desc or "$" in desc:
+            raise SystemExit(f"council: no plain {language} description for {k}")
+        ability = ABILITY[language][value(actions[k], "ability") or "adm"]
+        hover = f"{desc}\\n\\n{SKILL[language]}: {ability}"
+        rows[f"{MOD_ID}__available_i{i}_desc"] = hover
+        rows[f"{MOD_ID}__priority_i{i}_desc"] = hover
     for ab, text in ABILITY[language].items():
         rows[f"bag_asp_ability_{ab}"] = text
     return rows

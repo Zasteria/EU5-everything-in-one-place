@@ -25,6 +25,13 @@ scripted GUI is not shown (CM's «Пересчитать» while the finder map 
 stands as an empty 34 px square that cannot be clicked — his screenshot 10-05,
 bottom-left. The top bar is tabs and does not have it.
 
+**The up/down arrows of an ordered list step onto hidden rows** (+beta7, 10-12).
+A hidden row (`cmm_hide_list_item`) stays in the list and only its widget is
+not drawn, while the arrows move by raw position: «up» under a hidden row swaps
+the two and nothing on screen changes. His «works 2 times in 5» on CM's town
+rights and on the council priority, 10-12 — both lists hide rows. The arrows now
+swap with the nearest row that is shown.
+
     python3 mods/cmf_dev_beta/tools/port_from_cmf_dev.py
 """
 
@@ -49,7 +56,7 @@ _spec = importlib.util.spec_from_file_location(
 beta = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(beta)
 
-REVISION = 6
+REVISION = 7
 
 
 def metadata() -> str:
@@ -63,7 +70,8 @@ def metadata() -> str:
         f"Community Mod Framework {version} (the authors' 1.4 port) with two fixes: CMF's "
         "own is_host is called as cmf_is_host, since the game's native is_host is false "
         "in single player; the bottom action bar no longer keeps empty slots for hidden "
-        "buttons. Load this INSTEAD of CMF and CMF Dev.")
+        "buttons; ordered-list arrows step over hidden rows. Load this INSTEAD of CMF and "
+        "CMF Dev.")
     base["relationships"] = []
     return json.dumps(base, indent=4, ensure_ascii=False) + "\n"
 
@@ -113,6 +121,62 @@ def bar_ignores_hidden() -> None:
     path.write_text("\ufeff" + text, encoding="utf-8")
 
 
+LIST_RUNTIME = "in_game/common/scripted_effects/cmm_core_list_setting_runtime_effects.txt"
+STEPS = {
+    "up": "\t\t\tset_local_variable = { name = cmm_list_target_index value = "
+          "{ value = var:cmm_list_position_to_apply subtract = 1 } }\n",
+    "down": "\t\t\tset_local_variable = { name = cmm_list_target_index value = "
+            "{ value = var:cmm_list_position_to_apply add = 1 } }\n",
+}
+REORDER = "\t\t\t_cmm_reorder_list_setting = { setting = $setting$ vt = $vt$ lt = $lt$ }\n"
+NEIGHBOUR = """
+# cmf_dev_beta: the nearest row that is shown {where} the marked one, as
+# local_var:cmm_list_target_index (-1 when there is none). A hidden row stays in
+# the list, so a step of one position can land on it and change nothing seen.
+_cmf_beta_shown_neighbour_{dir} = {{
+\tset_local_variable = {{ name = cmm_list_target_index value = -1 }}
+\tset_local_variable = {{ name = cmm_list_scan_index value = 0 }}
+\tset_local_variable = {{ name = cmm_list_scan_marked value = var:cmm_list_position_to_apply }}
+\tevery_$lt$_list = {{
+\t\tvariable = cmm_list_items_$setting$
+\t\tsave_scope_as = cmm_list_scan_item
+\t\tif = {{
+\t\t\tlimit = {{
+\t\t\t\tNOT = {{ root = {{ is_key_in_variable_map = {{ name = cmm_list_item_hidden target = scope:cmm_list_scan_item }} }} }}
+{test}
+\t\t\t}}
+\t\t\tset_local_variable = {{ name = cmm_list_target_index value = local_var:cmm_list_scan_index }}
+\t\t}}
+\t\tchange_local_variable = {{ name = cmm_list_scan_index add = 1 }}
+\t}}
+}}
+"""
+TESTS = {
+    # the last shown row above wins
+    "up": ("above", "\t\t\t\tlocal_var:cmm_list_scan_index < local_var:cmm_list_scan_marked"),
+    # the first shown row below wins
+    "down": ("below", "\t\t\t\tlocal_var:cmm_list_scan_index > local_var:cmm_list_scan_marked\n"
+                      "\t\t\t\tlocal_var:cmm_list_target_index < 0"),
+}
+
+
+def arrows_skip_hidden() -> None:
+    """Ordered-list up/down swap with the nearest shown row, not the next position."""
+    path = MOD / LIST_RUNTIME
+    text = path.read_text(encoding="utf-8-sig")
+    for direction, step in STEPS.items():
+        if text.count(step + REORDER) != 1:
+            raise SystemExit(f"{LIST_RUNTIME}: the {direction} arrow's step moved")
+        text = text.replace(step + REORDER, (
+            f"\t\t\t_cmf_beta_shown_neighbour_{direction} = {{ setting = $setting$ lt = $lt$ }}\n"
+            "\t\t\tif = {\n"
+            "\t\t\t\tlimit = { local_var:cmm_list_target_index >= 0 }\n"
+            "\t" + REORDER + "\t\t\t}\n"))
+    for direction, (where, test) in TESTS.items():
+        text += NEIGHBOUR.format(dir=direction, where=where, test=test)
+    path.write_text("\ufeff" + text, encoding="utf-8")
+
+
 def main() -> int:
     for name in ("in_game", "main_menu", "loading_screen", ".metadata"):
         if (MOD / name).exists():
@@ -122,6 +186,7 @@ def main() -> int:
             shutil.copytree(SRC / name, MOD / name)
     host_calls = own_host_trigger()
     bar_ignores_hidden()
+    arrows_skip_hidden()
     (MOD / ".metadata").mkdir(parents=True, exist_ok=True)
     (MOD / ".metadata/metadata.json").write_text("﻿" + metadata(), encoding="utf-8")
     thumb = SRC / ".metadata/thumbnail.png"
