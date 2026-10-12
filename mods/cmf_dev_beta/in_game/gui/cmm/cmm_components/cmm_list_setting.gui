@@ -280,13 +280,32 @@
 				}
 			}
 
-			# cmf_dev_beta: type a place among the shown rows, Enter moves the row there.
+			# cmf_dev_beta: the row's place among the shown rows, as the game's mod list
+			# draws a load order (mods_gui.gui, selected_mod_item): a number; a click
+			# opens a box over it, Enter moves the row there and closes the box.
 			widget = {
 				size = { 44 28 }
 				minimumsize = { 44 28 }
 				visible = "[CMMListItemSettingIsOrdered(Scope.GetFlagName)]"
-				enabled = "[CMMListItemCanEdit(Scope.GetFlagName)]"
 				tooltip = "CMF_BETA_LIST_TYPE_POSITION"
+
+				# The place: cmf_beta_list_place, kept by cmf_beta_list_renumber after
+				# every reorder, so every row's number follows the move (his ask 10-12:
+				# +beta10 left the typed number in the box of the row that moved in).
+				button_default = {
+					size = { 44 28 }
+					parentanchor = center
+					widgetanchor = center
+					visible = "[Not(GetVariableSystem.Exists(Concatenate('cmf_beta_edit_place_', Scope.GetFlagName)))]"
+					enabled = "[CMMListItemCanEdit(Scope.GetFlagName)]"
+					onclick = "[GetVariableSystem.Set(Concatenate('cmf_beta_edit_place_', Scope.GetFlagName), 'yes')]"
+
+					text_single = {
+						parentanchor = center
+						align = center|nobaseline
+						text = "[ToString_int32(CMMMapInt('cmf_beta_list_place', Scope.GetFlagName))]"
+					}
+				}
 
 				# The game's editbox_single (main_menu/gui/editbox.gui) stretches and keeps
 				# 12 px each side; here it has a size of its own and room for two digits.
@@ -299,33 +318,33 @@
 					focuspolicy = all
 					alwaystransparent = no
 					multiline = no
+					visible = "[GetVariableSystem.Exists(Concatenate('cmf_beta_edit_place_', Scope.GetFlagName))]"
+					focus_on_visible = yes
 					text = ""
 
-					# +beta8 put four handlers on onreturnpressed, the first a console
-					# command, and Enter did nothing (10-12). Now Enter has one handler,
-					# and the state below runs the arrows' own path: mark the row, mark
-					# the place (CMF_BETA_MarkListPlace_<N>, a scripted GUI per number,
-					# as CMM_MarkListPosition_<N>), report the change. Several on_start
-					# in one state are proven (cmf_alert_prune_driver, the arrows' on_action).
+					# Enter has one handler; the state runs the arrows' own path: mark
+					# the row, mark the place (CMF_BETA_MarkListPlace_<N>, a scripted GUI
+					# per number, as CMM_MarkListPosition_<N>), report the change, close.
+					# +beta10: this moved the row (10-12); PdxClearEditBoxText did not
+					# clear, so the box now closes instead.
 					state = {
 						name = cmf_beta_place_go
-						on_start = "[CMMExecuteGui('cmf_beta_place_probe')]"
 						on_start = "[CMMExecuteGuiSuffix('CMM_MarkListPosition_', ToString_int32(PdxGuiWidget.GetIndexInDataModel))]"
 						on_start = "[CMMExecuteGuiSuffix('CMF_BETA_MarkListPlace_', GetTextFromSelfOrAnyChildEditbox(PdxGuiWidget.Self))]"
 						on_start = "[CMMExecuteListItemSettingChanged(Scope.GetFlagName)]"
 						on_start = "[PdxClearEditBoxText(PdxGuiWidget.Self)]"
+						on_start = "[GetVariableSystem.Clear(Concatenate('cmf_beta_edit_place_', Scope.GetFlagName))]"
 						on_start = "[PdxGuiTriggerAllAnimations('cmm_recache_delay')]"
 					}
 
 					blockoverride "editbox_properties" {
 						onreturnpressed = "[PdxGuiWidget.TriggerAnimation('cmf_beta_place_go')]"
+						onfocusout = "[GetVariableSystem.Clear(Concatenate('cmf_beta_edit_place_', Scope.GetFlagName))]"
 						maxcharacters = 2
 					}
 
-					# Empty, the box shows the row's place among the shown rows
-					# (cmf_beta_list_place, kept by cmf_beta_list_renumber); 0 = not counted yet.
 					blockoverride "editbox_label" {
-						text = "[ToString_int32(CMMMapInt('cmf_beta_list_place', Scope.GetFlagName))]"
+						text = ""
 					}
 				}
 			}

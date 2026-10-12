@@ -64,7 +64,7 @@ _spec = importlib.util.spec_from_file_location(
 beta = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(beta)
 
-REVISION = 10
+REVISION = 11
 
 
 def metadata() -> str:
@@ -193,13 +193,32 @@ HEADER_BOX = ("\t\t\t\t# cmf_dev_beta: room for the typed position below.\n"
               "\t\t\t\t\tvisible = \"[CMMListSettingIsOrdered(Scope.GetFlagName)]\"\n\t\t\t\t}\n")
 ROW_ARROWS = ("\t\t\twidget = {\n\t\t\t\tsize = { 56 28 }\n\t\t\t\tminimumsize = { 56 28 }\n"
               "\t\t\t\tvisible = \"[CMMListItemSettingIsOrdered(Scope.GetFlagName)]\"\n")
-ROW_BOX = """\t\t\t# cmf_dev_beta: type a place among the shown rows, Enter moves the row there.
+ROW_BOX = """\t\t\t# cmf_dev_beta: the row's place among the shown rows, as the game's mod list
+\t\t\t# draws a load order (mods_gui.gui, selected_mod_item): a number; a click
+\t\t\t# opens a box over it, Enter moves the row there and closes the box.
 \t\t\twidget = {
 \t\t\t\tsize = { 44 28 }
 \t\t\t\tminimumsize = { 44 28 }
 \t\t\t\tvisible = "[CMMListItemSettingIsOrdered(Scope.GetFlagName)]"
-\t\t\t\tenabled = "[CMMListItemCanEdit(Scope.GetFlagName)]"
 \t\t\t\ttooltip = "CMF_BETA_LIST_TYPE_POSITION"
+
+\t\t\t\t# The place: cmf_beta_list_place, kept by cmf_beta_list_renumber after
+\t\t\t\t# every reorder, so every row's number follows the move (his ask 10-12:
+\t\t\t\t# +beta10 left the typed number in the box of the row that moved in).
+\t\t\t\tbutton_default = {
+\t\t\t\t\tsize = { 44 28 }
+\t\t\t\t\tparentanchor = center
+\t\t\t\t\twidgetanchor = center
+\t\t\t\t\tvisible = "[Not(GetVariableSystem.Exists(Concatenate('cmf_beta_edit_place_', Scope.GetFlagName)))]"
+\t\t\t\t\tenabled = "[CMMListItemCanEdit(Scope.GetFlagName)]"
+\t\t\t\t\tonclick = "[GetVariableSystem.Set(Concatenate('cmf_beta_edit_place_', Scope.GetFlagName), 'yes')]"
+
+\t\t\t\t\ttext_single = {
+\t\t\t\t\t\tparentanchor = center
+\t\t\t\t\t\talign = center|nobaseline
+\t\t\t\t\t\ttext = "[ToString_int32(CMMMapInt('cmf_beta_list_place', Scope.GetFlagName))]"
+\t\t\t\t\t}
+\t\t\t\t}
 
 \t\t\t\t# The game's editbox_single (main_menu/gui/editbox.gui) stretches and keeps
 \t\t\t\t# 12 px each side; here it has a size of its own and room for two digits.
@@ -212,33 +231,33 @@ ROW_BOX = """\t\t\t# cmf_dev_beta: type a place among the shown rows, Enter move
 \t\t\t\t\tfocuspolicy = all
 \t\t\t\t\talwaystransparent = no
 \t\t\t\t\tmultiline = no
+\t\t\t\t\tvisible = "[GetVariableSystem.Exists(Concatenate('cmf_beta_edit_place_', Scope.GetFlagName))]"
+\t\t\t\t\tfocus_on_visible = yes
 \t\t\t\t\ttext = ""
 
-\t\t\t\t\t# +beta8 put four handlers on onreturnpressed, the first a console
-\t\t\t\t\t# command, and Enter did nothing (10-12). Now Enter has one handler,
-\t\t\t\t\t# and the state below runs the arrows' own path: mark the row, mark
-\t\t\t\t\t# the place (CMF_BETA_MarkListPlace_<N>, a scripted GUI per number,
-\t\t\t\t\t# as CMM_MarkListPosition_<N>), report the change. Several on_start
-\t\t\t\t\t# in one state are proven (cmf_alert_prune_driver, the arrows' on_action).
+\t\t\t\t\t# Enter has one handler; the state runs the arrows' own path: mark
+\t\t\t\t\t# the row, mark the place (CMF_BETA_MarkListPlace_<N>, a scripted GUI
+\t\t\t\t\t# per number, as CMM_MarkListPosition_<N>), report the change, close.
+\t\t\t\t\t# +beta10: this moved the row (10-12); PdxClearEditBoxText did not
+\t\t\t\t\t# clear, so the box now closes instead.
 \t\t\t\t\tstate = {
 \t\t\t\t\t\tname = cmf_beta_place_go
-\t\t\t\t\t\ton_start = "[CMMExecuteGui('cmf_beta_place_probe')]"
 \t\t\t\t\t\ton_start = "[CMMExecuteGuiSuffix('CMM_MarkListPosition_', ToString_int32(PdxGuiWidget.GetIndexInDataModel))]"
 \t\t\t\t\t\ton_start = "[CMMExecuteGuiSuffix('CMF_BETA_MarkListPlace_', GetTextFromSelfOrAnyChildEditbox(PdxGuiWidget.Self))]"
 \t\t\t\t\t\ton_start = "[CMMExecuteListItemSettingChanged(Scope.GetFlagName)]"
 \t\t\t\t\t\ton_start = "[PdxClearEditBoxText(PdxGuiWidget.Self)]"
+\t\t\t\t\t\ton_start = "[GetVariableSystem.Clear(Concatenate('cmf_beta_edit_place_', Scope.GetFlagName))]"
 \t\t\t\t\t\ton_start = "[PdxGuiTriggerAllAnimations('cmm_recache_delay')]"
 \t\t\t\t\t}
 
 \t\t\t\t\tblockoverride "editbox_properties" {
 \t\t\t\t\t\tonreturnpressed = "[PdxGuiWidget.TriggerAnimation('cmf_beta_place_go')]"
+\t\t\t\t\t\tonfocusout = "[GetVariableSystem.Clear(Concatenate('cmf_beta_edit_place_', Scope.GetFlagName))]"
 \t\t\t\t\t\tmaxcharacters = 2
 \t\t\t\t\t}
 
-\t\t\t\t\t# Empty, the box shows the row's place among the shown rows
-\t\t\t\t\t# (cmf_beta_list_place, kept by cmf_beta_list_renumber); 0 = not counted yet.
 \t\t\t\t\tblockoverride "editbox_label" {
-\t\t\t\t\t\ttext = "[ToString_int32(CMMMapInt('cmf_beta_list_place', Scope.GetFlagName))]"
+\t\t\t\t\t\ttext = ""
 \t\t\t\t\t}
 \t\t\t\t}
 \t\t\t}
@@ -299,7 +318,7 @@ _cmf_beta_list_place_target = {
 PLACE_SGUI = ("# cmf_dev_beta: the typed place of an ordered list row, one scripted GUI per\n"
               "# number as CMF's CMM_MarkListPosition_<N>; text that is not a number names\n"
               "# none, and nothing moves. Scope: country\n"
-              "cmf_beta_place_probe = { effect = { debug_log = \"cmf_beta: Enter in a place box\" } }\n\n"
+              "\n"
               + "".join(f"CMF_BETA_MarkListPlace_{n} = {{ effect = {{ set_variable = {{ name = cmf_beta_list_place_to_apply value = {n} }} "
                         f"set_variable = {{ name = cmm_list_action_to_apply value = {PLACE_ACTION} }} }} }}\n"
                         for n in range(0, 100)))
@@ -338,9 +357,9 @@ _cmf_beta_list_renumber = {
 """
 REORDER_END = "\tclear_variable_list = cmm_list_rebuild_temp\n}\n"
 MOVE_LOC = {
-    "english": ('CMF_BETA_LIST_TYPE_POSITION: "Type a place and press Enter: the row moves there"\n'
+    "english": ('CMF_BETA_LIST_TYPE_POSITION: "Click, type a place and press Enter: the row moves there"\n'
                 'CMF_BETA_LIST_POSITION_LABEL: "#"\n'),
-    "russian": ('CMF_BETA_LIST_TYPE_POSITION: "Впишите место и нажмите Enter: строка встанет туда"\n'
+    "russian": ('CMF_BETA_LIST_TYPE_POSITION: "Нажмите, впишите место и нажмите Enter: строка встанет туда"\n'
                 'CMF_BETA_LIST_POSITION_LABEL: "№"\n'),
 }
 

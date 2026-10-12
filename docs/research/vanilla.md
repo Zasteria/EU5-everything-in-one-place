@@ -74,3 +74,15 @@ Alerts (3605651135, игра 1.0) заменяет `alertmanager.gui` целик
 `Cabinet.GetAIDebugTooltip` есть в дампе, ваниль его нигде не рисует —
 возможно, разбор оценки автоматики по месту. Подсказка рисуется только при
 наведении.
+
+## Сдвиг ценностей советником (1.4, из файлов, в игре не мерено)
+
+`change_societal_values` — действие движка: в файле только `ability = dip`,
+`societal_values = 0.1`, `forbid_for_automation = yes`, без `select_trigger`.
+Пару и сторону выбирает окно `select_societal_value.gui`
+(`SocietalValueCandidate.SelectLeftCandidate` / `SelectRightCandidate`).
+Чем задать их из `set_cabinet_action`, в дампах нет; скрипт видит
+`societal_value_cabinet_action` (у действия есть ценность) и
+`societal_value_progress`, интерфейс — `Cabinet.GetSocietalValue`,
+`GetMaxSocietalValueReachable`, `HasReachedMaxSocietalValue`. Сдвиг скриптом в
+обход совета — `change_societal_value = { type = <пара> value = <±> }`.

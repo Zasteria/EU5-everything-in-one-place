@@ -41,7 +41,6 @@ GENERATORS = (
     ("cm_perf", "mods/cm_perf/tools/port_from_cm.py"),
     ("cm_dev_perf", "mods/cm_dev_perf/tools/port_from_cm_dev.py"),
     ("cmf_dev_beta", "mods/cmf_dev_beta/tools/port_from_cmf_dev.py"),
-    ("quiet_alerts", "mods/quiet_alerts/tools/generate.py"),
     ("assimilate_primary", "mods/assimilate_primary/tools/generate.py"),
     ("centered_towns", "mods/centered_towns/tools/generate.py"),
     ("nd_ru", "mods/nd_ru/tools/generate_ru.py"),

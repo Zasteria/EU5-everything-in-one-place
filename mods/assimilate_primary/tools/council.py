@@ -920,8 +920,7 @@ bag_asp_free_seat = {
         "in_game/common/scripted_effects/bag_asp_council_effects.txt": run,
         "in_game/common/on_action/bag_asp_cmf_on_actions.txt": on_actions,
         "in_game/common/scripted_guis/bag_asp_scripted_gui.txt": guis,
-        # The watch is a child of the game's alert banner, shared with
-        # quiet_alerts: tools/alert_banner.py.
+        # The watch is a child of the game's alert banner: tools/alert_banner.py.
         alert_banner.PATH: alert_banner.build(game),
     }
 

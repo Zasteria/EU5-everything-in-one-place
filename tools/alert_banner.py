@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
-"""The game's `type alert_banner`, copied whole, with the children our mods hang on it.
+"""The game's `type alert_banner`, copied whole, with the child `assimilate_primary` hangs on it.
 
-Two mods need a child on every alert banner: `quiet_alerts` plays the yellow
-sound on red and orange ones, `assimilate_primary` wakes its council when the
-«devastated locations» one appears. A type has one definition, so both mods ship
-this same file under the same path, built here: whichever loads last replaces
-the other's copy with an identical one, and a mod installed alone still works
-(the other's child asks for a setting or a variable that is then never set).
+The child wakes the council automation when the «devastated locations» banner
+appears. A type has one definition: a second mod that copies it replaces this
+one or is replaced. `quiet_alerts` shared this file until it was dropped (10-12,
+docs/archive/quiet_alerts.md); a mod that needs the type again builds its copy
+here, so both ship one identical file under PATH.
 
     import alert_banner
-    text = alert_banner.build(refs.GAME)     # the file, for PATH in each mod
+    text = alert_banner.build(refs.GAME)     # the file, for PATH in the mod
 
-Rebuilt by `mods/quiet_alerts/tools/generate.py` and
-`mods/assimilate_primary/tools/generate.py`.
+Rebuilt by `mods/assimilate_primary/tools/generate.py`.
 """
 
 from __future__ import annotations
@@ -22,31 +20,11 @@ from pathlib import Path
 PATH = "in_game/gui/bag_alert_banner.gui"
 ALERTS = "in_game/gui/alertmanager.gui"
 
-HEAD = """# The game's `type alert_banner` (alertmanager.gui), copied whole, with two
-# children: quiet_alerts' red/orange sound and assimilate_primary's
-# devastated-locations watch. Both mods ship this same file; built by
+HEAD = """# The game's `type alert_banner` (alertmanager.gui), copied whole, with
+# assimilate_primary's devastated-locations watch. Built by
 # tools/alert_banner.py, do not edit by hand.
 
 types BagAlertBanner {
-"""
-
-# quiet_alerts: born hidden, so a banner that is red or orange when it appears
-# still goes hidden -> shown and fires _show (the CM pattern, cm_hidden_window).
-# The engine's own sound for these is "" in quiet_alerts' defines.
-SOUND_CHILD = """
-\t\t# quiet_alerts: born hidden, so a banner that is red or orange when it
-\t\t# appears still goes hidden -> shown and fires _show (the CM pattern,
-\t\t# cm_hidden_window.gui). The engine's own sound for these is "" in defines.
-\t\twidget = {
-\t\t\tname = "quiet_alerts_sound"
-\t\t\tsize = { 0 0 }
-\t\t\tvisible_at_creation = no
-\t\t\tvisible = "[And(Or(AlertEntry.GetDescription.IsPriority('red'), AlertEntry.GetDescription.IsPriority('orange')), CMMIsSettingEnabled('bag_qal__red_orange_sound'))]"
-\t\t\tstate = {
-\t\t\t\tname = _show
-\t\t\t\tstart_sound = { soundeffect = "UI_alert_appear_yellow" }
-\t\t\t}
-\t\t}
 """
 
 # assimilate_primary: lives only on the «devastated locations» banner (its
@@ -97,4 +75,4 @@ def build(game: Path) -> str:
                 break
         i += 1
     body = text[start:i].rstrip("\t")
-    return HEAD + body + SOUND_CHILD + DEVASTATION_CHILD + "\t}\n}\n"
+    return HEAD + body + DEVASTATION_CHILD + "\t}\n}\n"

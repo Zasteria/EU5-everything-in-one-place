@@ -25,7 +25,7 @@
 - Месяц — `cmf_monthly_human_country_pulse`. В `debug.log`: `bag_asp: month`,
   `handing out every seat` / `filling empty seats`, `seat set to <действие>`.
 - **Экстренное восстановление** (0.8.4): ребёнок плашки «разорённые районы»
-  (`bag_alert_banner.gui`, общий с `quiet_alerts`, `tools/alert_banner.py`;
+  (`bag_alert_banner.gui`, `tools/alert_banner.py`; `quiet_alerts` снят 10-12;
   узнаёт по `GetTitleKey`) при включённой автоматике — при появлении и раз в
   1 с — зовёт `bag_asp_emergency`: каждой провинции с районом < 0 без
   восстановления — пустое место или самое низкое действие **ниже

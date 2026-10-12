@@ -364,7 +364,7 @@ CMF прячет такие настройки за `cmf_core__enable_unrestrict
 `float`, не `uint32`. 0.8.0 `assimilate_primary` сравнивал счётчик по имени — на
 паузе и после неё ничего (10-12). **Одно уведомление** узнаёт ребёнок `type
 alert_banner`: `AlertEntry.GetDescription.GetTitleKey` — его `title` из
-`alert_descriptions`. Тип общий у двух модов — `tools/alert_banner.py`.
+`alert_descriptions`. Копию типа строит `tools/alert_banner.py`.
 
 ## Привод к ванильному ползунку: форма, которая работает
 
