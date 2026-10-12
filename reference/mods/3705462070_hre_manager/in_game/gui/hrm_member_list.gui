@@ -1,0 +1,701 @@
+### HRE Manager — Member list panel (custom tab content)
+
+template hrm_member_list_content {
+	vbox = {
+		layoutpolicy_horizontal = expanding
+		margin = { 5 5 }
+
+
+		# Sub-tabs (vanilla pattern: single variable with values)
+		hbox = {
+			layoutpolicy_horizontal = expanding
+			margin = { 5 2 }
+			spacing = 3
+
+			button_main_tab_alt = {
+				size = { 100 24 }
+				blockoverride "tab_text" { text = "HRM_SUBTAB_ALL" }
+				onclick = "[GetVariableSystem.Set('hrm_subtab', 'all')]"
+				down = "[Or(GetVariableSystem.HasValue('hrm_subtab', 'all'), Not(GetVariableSystem.Exists('hrm_subtab')))]"
+			}
+			button_main_tab_alt = {
+				size = { 100 24 }
+				blockoverride "tab_text" { text = "HRM_SUBTAB_HERETICS" }
+				onclick = "[GetVariableSystem.Set('hrm_subtab', 'heretics')]"
+				onclick = "[GetScriptedGui('hrm_sgui_build_heretics').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+				down = "[GetVariableSystem.HasValue('hrm_subtab', 'heretics')]"
+			}
+			button_main_tab_alt = {
+				size = { 110 24 }
+				blockoverride "tab_text" { text = "HRM_SUBTAB_SUBJUGATED" }
+				onclick = "[GetVariableSystem.Set('hrm_subtab', 'subjugated')]"
+				onclick = "[GetScriptedGui('hrm_sgui_build_subjugated').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+				down = "[GetVariableSystem.HasValue('hrm_subtab', 'subjugated')]"
+			}
+			button_main_tab_alt = {
+				size = { 120 24 }
+				blockoverride "tab_text" { text = "HRM_SUBTAB_GERMAN" }
+				onclick = "[GetVariableSystem.Set('hrm_subtab', 'german')]"
+				onclick = "[GetScriptedGui('hrm_sgui_build_foreign_german').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+				down = "[GetVariableSystem.HasValue('hrm_subtab', 'german')]"
+			}
+
+			expand = {}
+		}
+
+		# Column headers — All members
+		hbox = {
+			visible = "[Or(GetVariableSystem.HasValue('hrm_subtab', 'all'), Not(GetVariableSystem.Exists('hrm_subtab')))]"
+			layoutpolicy_horizontal = expanding
+			minimumsize = { -1 28 }
+			margin = { 5 0 }
+
+			background = {
+				using = tile_background_squared_texture
+				modify_texture = {
+					using = color_dark_brown_texture
+					alpha = 0.6
+				}
+			}
+
+			widget = { size = { 40 28 } }
+			widget = {
+				size = { 140 28 }
+				text_single = {
+					parentanchor = vcenter
+					text = "HRM_COL_NAME"
+					fontsize = 12
+				}
+			}
+			widget = {
+				size = { 70 28 }
+				button = {
+					size = { 70 28 }
+					onclick = "[GetScriptedGui('hrm_sgui_sort_by_opinion').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+					onclick = "[GetScriptedGui('hrm_sgui_build_all_list').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+					tooltip = "HRM_SORT_TT"
+				}
+				text_single = {
+					visible = "[And(And(Not(GetPlayer.MakeScope.Var('hrm_sort_tax').IsSet), Not(GetPlayer.MakeScope.Var('hrm_sort_prov').IsSet)), Not(GetPlayer.MakeScope.Var('hrm_sort_asc').IsSet))]"
+					parentanchor = vcenter
+					size = { 70 -1 }
+					fontsize = 12
+					align = center|nobaseline
+					text = "HRM_COL_OPINION_DESC"
+					alwaystransparent = yes
+				}
+				text_single = {
+					visible = "[And(And(Not(GetPlayer.MakeScope.Var('hrm_sort_tax').IsSet), Not(GetPlayer.MakeScope.Var('hrm_sort_prov').IsSet)), GetPlayer.MakeScope.Var('hrm_sort_asc').IsSet)]"
+					parentanchor = vcenter
+					size = { 70 -1 }
+					fontsize = 12
+					align = center|nobaseline
+					text = "HRM_COL_OPINION_ASC"
+					alwaystransparent = yes
+				}
+				text_single = {
+					visible = "[Not(And(Not(GetPlayer.MakeScope.Var('hrm_sort_tax').IsSet), Not(GetPlayer.MakeScope.Var('hrm_sort_prov').IsSet)))]"
+					parentanchor = vcenter
+					size = { 70 -1 }
+					fontsize = 12
+					align = center|nobaseline
+					text = "HRM_COL_OPINION"
+					alwaystransparent = yes
+				}
+			}
+			widget = {
+				size = { 70 28 }
+				button = {
+					size = { 70 28 }
+					onclick = "[GetScriptedGui('hrm_sgui_sort_by_tax').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+					onclick = "[GetScriptedGui('hrm_sgui_build_all_list').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+					tooltip = "HRM_SORT_TT"
+				}
+				text_single = {
+					visible = "[And(GetPlayer.MakeScope.Var('hrm_sort_tax').IsSet, Not(GetPlayer.MakeScope.Var('hrm_sort_asc').IsSet))]"
+					parentanchor = vcenter
+					size = { 70 -1 }
+					fontsize = 12
+					align = center|nobaseline
+					text = "HRM_COL_DEV_DESC"
+					alwaystransparent = yes
+				}
+				text_single = {
+					visible = "[And(GetPlayer.MakeScope.Var('hrm_sort_tax').IsSet, GetPlayer.MakeScope.Var('hrm_sort_asc').IsSet)]"
+					parentanchor = vcenter
+					size = { 70 -1 }
+					fontsize = 12
+					align = center|nobaseline
+					text = "HRM_COL_DEV_ASC"
+					alwaystransparent = yes
+				}
+				text_single = {
+					visible = "[Not(GetPlayer.MakeScope.Var('hrm_sort_tax').IsSet)]"
+					parentanchor = vcenter
+					size = { 70 -1 }
+					fontsize = 12
+					align = center|nobaseline
+					text = "HRM_COL_DEV"
+					alwaystransparent = yes
+				}
+			}
+			widget = {
+				size = { 55 28 }
+				button = {
+					size = { 55 28 }
+					onclick = "[GetScriptedGui('hrm_sgui_sort_by_provinces').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+					onclick = "[GetScriptedGui('hrm_sgui_build_all_list').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+					tooltip = "HRM_SORT_TT"
+				}
+				text_single = {
+					visible = "[And(GetPlayer.MakeScope.Var('hrm_sort_prov').IsSet, Not(GetPlayer.MakeScope.Var('hrm_sort_asc').IsSet))]"
+					parentanchor = vcenter
+					size = { 55 -1 }
+					fontsize = 12
+					align = center|nobaseline
+					text = "HRM_COL_PROV_DESC"
+					alwaystransparent = yes
+				}
+				text_single = {
+					visible = "[And(GetPlayer.MakeScope.Var('hrm_sort_prov').IsSet, GetPlayer.MakeScope.Var('hrm_sort_asc').IsSet)]"
+					parentanchor = vcenter
+					size = { 55 -1 }
+					fontsize = 12
+					align = center|nobaseline
+					text = "HRM_COL_PROV_ASC"
+					alwaystransparent = yes
+				}
+				text_single = {
+					visible = "[Not(GetPlayer.MakeScope.Var('hrm_sort_prov').IsSet)]"
+					parentanchor = vcenter
+					size = { 55 -1 }
+					fontsize = 12
+					align = center|nobaseline
+					text = "HRM_COL_PROVINCES"
+					alwaystransparent = yes
+				}
+			}
+			widget = {
+				size = { 30 28 }
+			}
+			expand = {}
+		}
+
+		# Enforce religious unity button — above heretics list
+		hbox = {
+			visible = "[GetVariableSystem.HasValue('hrm_subtab', 'heretics')]"
+			layoutpolicy_horizontal = expanding
+			margin = { 5 2 }
+
+			action_button_diamond = {
+				size = { 490 30 }
+				text = "enforce_religious_unity"
+				actor = "[InternationalOrganizationsView.GetPlayer]"
+				left_action = {
+					action_name = "enforce_religious_unity"
+					action_direction = "offer"
+				}
+			}
+		}
+
+		# Column headers — Heretics
+		hbox = {
+			visible = "[GetVariableSystem.HasValue('hrm_subtab', 'heretics')]"
+			layoutpolicy_horizontal = expanding
+			minimumsize = { -1 28 }
+			margin = { 5 0 }
+			background = {
+				using = tile_background_squared_texture
+				modify_texture = { using = color_dark_brown_texture alpha = 0.6 }
+			}
+			widget = { size = { 40 28 } }
+			widget = {
+				size = { 140 28 }
+				text_single = { parentanchor = vcenter text = "HRM_COL_NAME" fontsize = 12 }
+			}
+			widget = {
+				size = { 200 28 }
+				text_single = { parentanchor = vcenter text = "HRM_COL_RELIGION" fontsize = 12 }
+			}
+			expand = {}
+		}
+
+		# Column headers — Subjugated
+		hbox = {
+			visible = "[GetVariableSystem.HasValue('hrm_subtab', 'subjugated')]"
+			layoutpolicy_horizontal = expanding
+			minimumsize = { -1 28 }
+			margin = { 5 0 }
+			background = {
+				using = tile_background_squared_texture
+				modify_texture = { using = color_dark_brown_texture alpha = 0.6 }
+			}
+			widget = { size = { 40 28 } }
+			widget = {
+				size = { 140 28 }
+				text_single = { parentanchor = vcenter text = "HRM_COL_NAME" fontsize = 12 }
+			}
+			widget = {
+				size = { 200 28 }
+				text_single = { parentanchor = vcenter text = "HRM_COL_OVERLORD" fontsize = 12 }
+			}
+			expand = {}
+		}
+
+		# Column headers — Foreign German
+		hbox = {
+			visible = "[GetVariableSystem.HasValue('hrm_subtab', 'german')]"
+			layoutpolicy_horizontal = expanding
+			minimumsize = { -1 28 }
+			margin = { 5 0 }
+			background = {
+				using = tile_background_squared_texture
+				modify_texture = { using = color_dark_brown_texture alpha = 0.6 }
+			}
+			widget = { size = { 40 28 } }
+			widget = {
+				size = { 140 28 }
+				text_single = { parentanchor = vcenter text = "HRM_COL_LOCATION" fontsize = 12 }
+			}
+			widget = {
+				size = { 200 28 }
+				text_single = { parentanchor = vcenter text = "HRM_COL_OWNER" fontsize = 12 }
+			}
+			expand = {}
+		}
+
+		# === ALL MEMBERS VIEW ===
+		# Auto-build list on first open
+		state = {
+			name = hrm_init_all
+			trigger_on_create = yes
+			on_finish = "[GetScriptedGui('hrm_sgui_build_all_list').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+		}
+
+		# === ALL MEMBERS ===
+		scrollarea = {
+			visible = "[Or(GetVariableSystem.HasValue('hrm_subtab', 'all'), Not(GetVariableSystem.Exists('hrm_subtab')))]"
+			layoutpolicy_horizontal = expanding
+			minimumsize = { -1 500 }
+			maximumsize = { -1 500 }
+			scrollbarpolicy_horizontal = always_off
+			autoresizeviewport = yes
+			scrollbar_vertical = { using = Scrollbar_Vertical }
+			scrollwidget = {
+				vbox = {
+					layoutpolicy_horizontal = expanding
+					fixedgridbox = {
+						layoutpolicy_horizontal = expanding
+						addcolumn = 500
+						addrow = 30
+						datamodel = "[GetPlayer.MakeScope.GetList('hrm_all_members')]"
+						item = {
+							widget = {
+								size = { 500 30 }
+								datacontext = "[Scope.Country]"
+								using = hrm_country_row_content
+							}
+						}
+					}
+				}
+			}
+		}
+
+		# === HERETICS ===
+		scrollarea = {
+			visible = "[GetVariableSystem.HasValue('hrm_subtab', 'heretics')]"
+			layoutpolicy_horizontal = expanding
+			minimumsize = { -1 500 }
+			maximumsize = { -1 500 }
+			scrollbarpolicy_horizontal = always_off
+			autoresizeviewport = yes
+			scrollbar_vertical = { using = Scrollbar_Vertical }
+			scrollwidget = {
+				vbox = {
+					layoutpolicy_horizontal = expanding
+					fixedgridbox = {
+						layoutpolicy_horizontal = expanding
+						addcolumn = 500
+						addrow = 30
+						datamodel = "[GetPlayer.MakeScope.GetList('hrm_heretics')]"
+						item = {
+							widget = {
+								size = { 500 30 }
+								datacontext = "[Scope.Country]"
+
+								background = {
+									using = tile_background_squared_texture
+									modify_texture = { using = color_paper_texture }
+									alpha = 0.5
+								}
+
+								hbox = {
+									size = { 100% 100% }
+									margin = { 5 0 }
+									spacing = 3
+
+									button = {
+										size = { 36 24 }
+										onclick = "[OpenDiplomacy(Country.Self)]"
+										ondoubleclick = "[PanToCountry(Country.Self)]"
+										country_flag_small = {}
+									}
+
+									button = {
+										size = { 140 28 }
+										onclick = "[PanToCountry(Country.Self)]"
+										text_single = {
+											parentanchor = vcenter
+											size = { 140 -1 }
+											autoresize = no
+											fontsize = 13
+											align = left|nobaseline
+											text = "[Country.GetNameWithNoTooltip]"
+											alwaystransparent = yes
+										}
+									}
+
+									# Religion icon + name
+									hbox = {
+										spacing = 3
+										icon = {
+											size = { 22 22 }
+											texture = "[GetReligionIcon(Country.GetReligion.Self)]"
+										}
+										text_single = {
+											autoresize = yes
+											fontsize = 12
+											align = left|nobaseline
+											text = "[Country.GetReligion.GetNameWithNoTooltip]"
+										}
+									}
+
+									expand = {}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		# === SUBJUGATED ===
+		scrollarea = {
+			visible = "[GetVariableSystem.HasValue('hrm_subtab', 'subjugated')]"
+			layoutpolicy_horizontal = expanding
+			minimumsize = { -1 500 }
+			maximumsize = { -1 500 }
+			scrollbarpolicy_horizontal = always_off
+			autoresizeviewport = yes
+			scrollbar_vertical = { using = Scrollbar_Vertical }
+			scrollwidget = {
+				vbox = {
+					layoutpolicy_horizontal = expanding
+					fixedgridbox = {
+						layoutpolicy_horizontal = expanding
+						addcolumn = 500
+						addrow = 30
+						datamodel = "[GetPlayer.MakeScope.GetList('hrm_subjugated')]"
+						item = {
+							widget = {
+								size = { 500 30 }
+								datacontext = "[Scope.Country]"
+
+								background = {
+									using = tile_background_squared_texture
+									modify_texture = { using = color_paper_texture }
+									alpha = 0.5
+								}
+
+								hbox = {
+									size = { 100% 100% }
+									margin = { 5 0 }
+									spacing = 3
+
+									button = {
+										size = { 36 24 }
+										onclick = "[OpenDiplomacy(Country.Self)]"
+										ondoubleclick = "[PanToCountry(Country.Self)]"
+										country_flag_small = {}
+									}
+
+									button = {
+										size = { 140 28 }
+										onclick = "[PanToCountry(Country.Self)]"
+										text_single = {
+											parentanchor = vcenter
+											size = { 140 -1 }
+											autoresize = no
+											fontsize = 13
+											align = left|nobaseline
+											text = "[Country.GetNameWithNoTooltip]"
+											alwaystransparent = yes
+										}
+									}
+
+									# Overlord flag
+									button = {
+										size = { 36 24 }
+										onclick = "[OpenDiplomacy(Country.GetDiplomacy.GetOverlord.Self)]"
+										datacontext = "[GetCountryCoatOfArms(Country.GetDiplomacy.GetOverlord.Self)]"
+										icon = {
+											size = { 100% 100% }
+											texture = "[CoatOfArmsWrapper.GetTexture('(int32)72','(int32)48')]"
+											frame = "[CoatOfArmsWrapper.GetFrame('(int32)72','(int32)48')]"
+											framesize = "[CoatOfArmsWrapper.GetFrameSizeOrFallback('(int32)72','(int32)48','(float)0.5')]"
+											texture_density = 2
+										}
+										icon = {
+											size = { 100% 100% }
+											texture = "gfx/interface/component_decoration/flag_frames/frame_2.dds"
+											texture_density = 2
+										}
+									}
+									text_single = {
+										autoresize = yes
+										fontsize = 12
+										align = left|nobaseline
+										raw_text = "[Country.GetDiplomacy.GetOverlord.GetNameWithNoTooltip]"
+									}
+
+									expand = {}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		# === FOREIGN GERMAN LOCATIONS ===
+		scrollarea = {
+			visible = "[GetVariableSystem.HasValue('hrm_subtab', 'german')]"
+			layoutpolicy_horizontal = expanding
+			minimumsize = { -1 500 }
+			maximumsize = { -1 500 }
+			scrollbarpolicy_horizontal = always_off
+			autoresizeviewport = yes
+			scrollbar_vertical = { using = Scrollbar_Vertical }
+			scrollwidget = {
+				vbox = {
+					layoutpolicy_horizontal = expanding
+					fixedgridbox = {
+						layoutpolicy_horizontal = expanding
+						addcolumn = 500
+						addrow = 30
+						datamodel = "[GetPlayer.MakeScope.GetList('hrm_foreign_german')]"
+						item = {
+							widget = {
+								size = { 500 30 }
+								datacontext = "[Scope.Location]"
+
+								background = {
+									using = tile_background_squared_texture
+									modify_texture = { using = color_paper_texture }
+									alpha = 0.5
+								}
+
+								hbox = {
+									size = { 100% 100% }
+									margin = { 5 0 }
+									spacing = 3
+
+									button = {
+										size = { 36 24 }
+										onclick = "[ShowLocation(Location.Self)]"
+										icon = {
+											size = { 24 24 }
+											parentanchor = center
+											texture = "[Location.GetRankIcon]"
+										}
+									}
+
+									button = {
+										size = { 140 28 }
+										onclick = "[PanToLocation(Location.Self)]"
+										text_single = {
+											parentanchor = vcenter
+											size = { 140 -1 }
+											autoresize = no
+											fontsize = 13
+											align = left|nobaseline
+											text = "[Location.GetNameWithNoTooltip]"
+											alwaystransparent = yes
+										}
+									}
+
+									# Owner
+									widget = {
+										size = { 140 28 }
+										datacontext = "[Location.GetOwner]"
+										hbox = {
+											spacing = 3
+											country_flag_small = {}
+											text_single = {
+												autoresize = no
+												size = { 100 -1 }
+												fontsize = 12
+												align = left|nobaseline
+												text = "[Country.GetNameWithNoTooltip]"
+											}
+										}
+									}
+
+									expand = {}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+	}
+}
+
+template hrm_country_row_content {
+	background = {
+		using = tile_background_squared_texture
+		modify_texture = {
+			using = color_paper_texture
+		}
+		alpha = 0.5
+	}
+
+	hbox = {
+		size = { 100% 100% }
+		margin = { 5 0 }
+		spacing = 3
+
+		button = {
+			size = { 36 24 }
+			onclick = "[OpenDiplomacy(Country.Self)]"
+			ondoubleclick = "[PanToCountry(Country.Self)]"
+			country_flag_small = {}
+		}
+
+		button = {
+			size = { 140 28 }
+			onclick = "[PanToCountry(Country.Self)]"
+			text_single = {
+				parentanchor = vcenter
+				size = { 140 -1 }
+				autoresize = no
+				fontsize = 13
+				align = left|nobaseline
+				text = "[Country.GetNameWithNoTooltip]"
+				alwaystransparent = yes
+			}
+		}
+
+		widget = {
+			size = { 70 28 }
+			tooltipwidget = {
+				ContextualTooltipType = {
+					blockoverride "title_text" {
+						raw_text = "[Country.GetNameWithNoTooltip]"
+					}
+					blockoverride "concept_link" {
+						text = "[opinion|e]"
+					}
+					blockoverride "tooltip_content" {
+						TooltipScrolledStringPairList = {
+							textcontext = "[GetTheirOpinionPlayerTooltip(Country.Self)]"
+						}
+					}
+				}
+			}
+			text_single = {
+				visible = "[GreaterThan_CFixedPoint(GetTheirOpinionPlayer(Country.Self), '(CFixedPoint)0')]"
+				parentanchor = vcenter
+				size = { 70 -1 }
+				fontsize = 13
+				align = center|nobaseline
+				raw_text = "#G [GetTheirOpinionPlayer(Country.Self)|+=0]#!"
+			}
+			text_single = {
+				visible = "[EqualTo_CFixedPoint(GetTheirOpinionPlayer(Country.Self), '(CFixedPoint)0')]"
+				parentanchor = vcenter
+				size = { 70 -1 }
+				fontsize = 13
+				align = center|nobaseline
+				raw_text = "[GetTheirOpinionPlayer(Country.Self)|0]"
+			}
+			text_single = {
+				visible = "[Not(GreaterThanOrEqualTo_CFixedPoint(GetTheirOpinionPlayer(Country.Self), '(CFixedPoint)0'))]"
+				parentanchor = vcenter
+				size = { 70 -1 }
+				fontsize = 13
+				align = center|nobaseline
+				raw_text = "#R [GetTheirOpinionPlayer(Country.Self)|+=0]#!"
+			}
+		}
+
+		widget = {
+			size = { 70 28 }
+			text_single = {
+				parentanchor = vcenter
+				size = { 70 -1 }
+				fontsize = 12
+				align = center|nobaseline
+				raw_text = "[Country.GetTotalTaxBase]"
+			}
+		}
+
+		widget = {
+			size = { 55 28 }
+			text_single = {
+				parentanchor = vcenter
+				size = { 55 -1 }
+				fontsize = 12
+				align = center|nobaseline
+				raw_text = "[Country.GetOwnedLocationCount]"
+			}
+		}
+
+		expand = {}
+
+		# Improve / Cancel toggle button
+		widget = {
+			size = { 120 28 }
+			datacontext = "[Country.GetQuickDiplomaticActions]"
+			visible = "[QuickDiplomaticActions.HasSpecificAction('improve_relation')]"
+			datacontext = "[QuickDiplomaticActions.GetSpecificAction('improve_relation')]"
+
+			button_regular = {
+				size = { 120 26 }
+				parentanchor = vcenter
+				enabled = "[DiplomaticActionItem.IsEnabled]"
+
+				action_tooltip = {
+					click_type = left
+					click_mode = single
+					title = "[DiplomaticActionItem.GetTitle]"
+					enabled = "[DiplomaticActionItem.IsEnabled]"
+					conditions = "[DiplomaticActionItem.GetTooltip]"
+					on_action = "[DiplomaticActionItem.OnClick]"
+				}
+				tooltipwidget = { BasicFunctionalTooltip = {} }
+
+				hbox = {
+					margin = { 5 0 }
+					spacing = 3
+					icon = {
+						size = { 18 18 }
+						texture = "gfx/interface/icons/flat_icons/foreigncountry/opinion.dds"
+						alwaystransparent = yes
+					}
+					text_single = {
+						layoutpolicy_horizontal = expanding
+						autoresize = no
+						fontsize = 11
+						fontsize_min = 9
+						align = center|nobaseline
+						text = "[DiplomaticActionItem.GetTitle]"
+						alwaystransparent = yes
+					}
+				}
+			}
+		}
+	}
+}

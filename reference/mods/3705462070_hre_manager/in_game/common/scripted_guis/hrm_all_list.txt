@@ -1,0 +1,129 @@
+hrm_sgui_build_all_list = {
+	scope = country
+	effect = {
+		clear_variable_list = hrm_all_members
+		save_scope_as = hrm_actor
+
+		# Default: opinion
+		if = {
+			limit = {
+				NOT = { has_variable = hrm_sort_tax }
+				NOT = { has_variable = hrm_sort_prov }
+			}
+			if = {
+				limit = { has_variable = hrm_sort_asc }
+				ordered_country_in_diplomatic_range = {
+					limit = { NOT = { this = scope:hrm_actor } is_member_of_international_organization_of_type = { type = hre } }
+					order_by = this_opinion_of_prev
+					max = 999
+					scope:hrm_actor = { add_to_variable_list = { name = hrm_all_members target = prev } }
+				}
+			}
+			else = {
+				ordered_country_in_diplomatic_range = {
+					limit = { NOT = { this = scope:hrm_actor } is_member_of_international_organization_of_type = { type = hre } }
+					order_by = { value = 0 subtract = this_opinion_of_prev }
+					max = 999
+					scope:hrm_actor = { add_to_variable_list = { name = hrm_all_members target = prev } }
+				}
+			}
+		}
+
+		# Tax base
+		if = {
+			limit = { has_variable = hrm_sort_tax }
+			if = {
+				limit = { has_variable = hrm_sort_asc }
+				ordered_country_in_diplomatic_range = {
+					limit = { NOT = { this = scope:hrm_actor } is_member_of_international_organization_of_type = { type = hre } }
+					order_by = { value = 0 subtract = country_tax_base }
+					max = 999
+					scope:hrm_actor = { add_to_variable_list = { name = hrm_all_members target = prev } }
+				}
+			}
+			else = {
+				ordered_country_in_diplomatic_range = {
+					limit = { NOT = { this = scope:hrm_actor } is_member_of_international_organization_of_type = { type = hre } }
+					order_by = country_tax_base
+					max = 999
+					scope:hrm_actor = { add_to_variable_list = { name = hrm_all_members target = prev } }
+				}
+			}
+		}
+
+		# Province count
+		if = {
+			limit = { has_variable = hrm_sort_prov }
+			if = {
+				limit = { has_variable = hrm_sort_asc }
+				ordered_country_in_diplomatic_range = {
+					limit = { NOT = { this = scope:hrm_actor } is_member_of_international_organization_of_type = { type = hre } }
+					order_by = { value = 0 subtract = hrm_owned_location_count }
+					max = 999
+					scope:hrm_actor = { add_to_variable_list = { name = hrm_all_members target = prev } }
+				}
+			}
+			else = {
+				ordered_country_in_diplomatic_range = {
+					limit = { NOT = { this = scope:hrm_actor } is_member_of_international_organization_of_type = { type = hre } }
+					order_by = hrm_owned_location_count
+					max = 999
+					scope:hrm_actor = { add_to_variable_list = { name = hrm_all_members target = prev } }
+				}
+			}
+		}
+	}
+}
+
+hrm_sgui_sort_by_opinion = {
+	scope = country
+	effect = {
+		if = {
+			limit = {
+				NOT = { has_variable = hrm_sort_tax }
+				NOT = { has_variable = hrm_sort_prov }
+			}
+			# Already opinion — toggle direction
+			if = { limit = { has_variable = hrm_sort_asc } remove_variable = hrm_sort_asc }
+			else = { set_variable = { name = hrm_sort_asc value = 1 } }
+		}
+		else = {
+			# Switch to opinion
+			remove_variable = hrm_sort_tax
+			remove_variable = hrm_sort_prov
+			remove_variable = hrm_sort_asc
+		}
+	}
+}
+
+hrm_sgui_sort_by_tax = {
+	scope = country
+	effect = {
+		if = {
+			limit = { has_variable = hrm_sort_tax }
+			if = { limit = { has_variable = hrm_sort_asc } remove_variable = hrm_sort_asc }
+			else = { set_variable = { name = hrm_sort_asc value = 1 } }
+		}
+		else = {
+			remove_variable = hrm_sort_prov
+			set_variable = { name = hrm_sort_tax value = 1 }
+			remove_variable = hrm_sort_asc
+		}
+	}
+}
+
+hrm_sgui_sort_by_provinces = {
+	scope = country
+	effect = {
+		if = {
+			limit = { has_variable = hrm_sort_prov }
+			if = { limit = { has_variable = hrm_sort_asc } remove_variable = hrm_sort_asc }
+			else = { set_variable = { name = hrm_sort_asc value = 1 } }
+		}
+		else = {
+			remove_variable = hrm_sort_tax
+			set_variable = { name = hrm_sort_prov value = 1 }
+			remove_variable = hrm_sort_asc
+		}
+	}
+}
