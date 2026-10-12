@@ -559,6 +559,8 @@ bag_asp_rebuild = {{
 \t\t\t}}}}
 \t\t}}}}
 {rank_unused}
+\t\t# The «№» box of each row shows its place among the shown rows (cmf_dev_beta).
+\t\tcmf_beta_list_renumber = {{{{ setting = bag_asp__priority }}}}
 """.replace("{{", "{").replace("}}", "}"))
     reg.append("\t}\n}\n")
 

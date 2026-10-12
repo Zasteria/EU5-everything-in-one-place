@@ -64,7 +64,7 @@ _spec = importlib.util.spec_from_file_location(
 beta = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(beta)
 
-REVISION = 8
+REVISION = 9
 
 
 def metadata() -> str:
@@ -228,8 +228,10 @@ ROW_BOX = """\t\t\t# cmf_dev_beta: type a place among the shown rows, Enter move
 \t\t\t\t\t\tmaxcharacters = 2
 \t\t\t\t\t}
 
+\t\t\t\t\t# Empty, the box shows the row's place among the shown rows
+\t\t\t\t\t# (cmf_beta_list_place, kept by cmf_beta_list_renumber); 0 = not counted yet.
 \t\t\t\t\tblockoverride "editbox_label" {
-\t\t\t\t\t\ttext = "CMF_BETA_LIST_POSITION_LABEL"
+\t\t\t\t\t\ttext = "[ToString_int32(CMMMapInt('cmf_beta_list_place', Scope.GetFlagName))]"
 \t\t\t\t\t}
 \t\t\t\t}
 \t\t\t}
@@ -241,6 +243,7 @@ MOVE_EFFECT = """
 # Called through the console by the typed-position box of an ordered list row.
 # Scope: country
 cmf_beta_list_move_to = {
+\tdebug_log = "cmf_beta: a typed place reached the script"
 \tset_local_variable = { name = cmf_beta_to value = $to$ }
 \tif = {
 \t\tlimit = { local_var:cmf_beta_to < 1 }
@@ -287,6 +290,40 @@ _cmf_beta_list_move_to = {
 \t_cmm_reorder_list_setting = { setting = $setting$ vt = $vt$ lt = $lt$ }
 }
 """
+RENUMBER = """
+# cmf_dev_beta: number the shown rows of one list 1, 2, 3… into the country's
+# variable map cmf_beta_list_place, keyed by the row's flag; the typed-place box
+# shows it. Runs after every reorder; a mod that hides or shows rows calls
+# cmf_beta_list_renumber = { setting = <mod_id>__<setting_id> } after them.
+# Scope: country
+cmf_beta_list_renumber = {
+\tset_local_variable = { name = cmm_tmp_flag value = flag:$setting$ }
+\tif = {
+\t\tlimit = { "variable_map(cmm_is_global|local_var:cmm_tmp_flag)" >= 1 }
+\t\t_cmf_beta_list_renumber = { setting = $setting$ lt = in_global }
+\t}
+\telse = {
+\t\t_cmf_beta_list_renumber = { setting = $setting$ lt = in }
+\t}
+}
+
+_cmf_beta_list_renumber = {
+\tset_local_variable = { name = cmf_beta_place value = 0 }
+\tevery_$lt$_list = {
+\t\tvariable = cmm_list_items_$setting$
+\t\tsave_scope_as = cmf_beta_place_item
+\t\tif = {
+\t\t\tlimit = { root = { is_key_in_variable_map = { name = cmm_list_item_hidden target = scope:cmf_beta_place_item } } }
+\t\t\troot = { add_to_variable_map = { name = cmf_beta_list_place key = scope:cmf_beta_place_item value = 0 } }
+\t\t}
+\t\telse = {
+\t\t\tchange_local_variable = { name = cmf_beta_place add = 1 }
+\t\t\troot = { add_to_variable_map = { name = cmf_beta_list_place key = scope:cmf_beta_place_item value = local_var:cmf_beta_place } }
+\t\t}
+\t}
+}
+"""
+REORDER_END = "\tclear_variable_list = cmm_list_rebuild_temp\n}\n"
 MOVE_LOC = {
     "english": ('CMF_BETA_LIST_TYPE_POSITION: "Type a place and press Enter: the row moves there"\n'
                 'CMF_BETA_LIST_POSITION_LABEL: "#"\n'),
@@ -308,7 +345,12 @@ def typed_position() -> None:
     text = text[:end] + "\n" + ROW_BOX + text[end:].lstrip("\n")
     path.write_text("\ufeff" + text, encoding="utf-8")
     runtime = MOD / LIST_RUNTIME
-    runtime.write_text("\ufeff" + runtime.read_text(encoding="utf-8-sig") + MOVE_EFFECT, encoding="utf-8")
+    body = runtime.read_text(encoding="utf-8-sig")
+    if body.count(REORDER_END) != 1:
+        raise SystemExit(f"{LIST_RUNTIME}: the reorder's end moved")
+    body = body.replace(REORDER_END, "\tclear_variable_list = cmm_list_rebuild_temp\n"
+                        "\t_cmf_beta_list_renumber = { setting = $setting$ lt = $lt$ }\n}\n", 1)
+    runtime.write_text("\ufeff" + body + MOVE_EFFECT + RENUMBER, encoding="utf-8")
     for language, rows in MOVE_LOC.items():
         out = MOD / f"main_menu/localization/{language}/cmf_beta_l_{language}.yml"
         out.parent.mkdir(parents=True, exist_ok=True)
