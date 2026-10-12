@@ -329,6 +329,44 @@ def unknown_concept_fault(value: str, known: set[str]) -> str | None:
     return "links %s, which no concept defines" % ", ".join(gone) if gone else None
 
 
+CUSTOM_CALL = re.compile(r"\.Custom\('([^']+)'\)")
+CUSTOM_DUMPED = re.compile(r"^([A-Za-z0-9_]+):\s*$", re.M)
+CUSTOM_DEFINED = re.compile(r"^\s*([A-Za-z0-9_]+)\s*=\s*\{", re.M)
+
+
+def defined_customs() -> set[str]:
+    """Every custom localization the game has: the engine's own list
+    (`docs/custom_localization.log`, its runtime registry) and, in case the dump
+    is older than the files, every block in `common/customizable_localization/`."""
+    known: set[str] = set()
+    dump = refs.GAME / "docs/custom_localization.log"
+    if dump.exists():
+        known.update(CUSTOM_DUMPED.findall(dump.read_text(encoding="utf-8", errors="replace")))
+    for path in sorted(refs.GAME.glob("**/common/customizable_localization/*.txt")):
+        known.update(CUSTOM_DEFINED.findall(path.read_text(encoding="utf-8-sig", errors="replace")))
+    return known
+
+
+def unknown_custom_fault(value: str, known: set[str]) -> str | None:
+    """`Custom('name')` where the game defines no custom localization of that name.
+
+    The Russian files call a family of names the game never declares —
+    `end_predlog_vvo` (141 calls), `end_predlog_sso`, `endlong_predlog_sso`,
+    `end_youtut`, `end_etyat` and more, about four hundred calls in all — while
+    the engine's own registry, `custom_localization.log`, has only `predlog_vvo`,
+    `end_etut`, `end_ityat` and the rest. Found 2026-10-12 because Russian
+    Localization Fix 1.0.2 (Workshop 3813229007) planned an `end_predlog_sso`
+    of its own and never shipped it. With no such name there is nothing for the
+    call to run — «Хорошие отношения Папством», the «с» gone — though no log of
+    this has been read yet. Checked against the engine's list, not English; a
+    name English calls too (`GetWarOfReligionsPosition`) is let through in
+    `scan`, since that one is the engine's and not a Russian slip.
+    """
+    gone = sorted(set(CUSTOM_CALL.findall(value)) - known)
+    return "Custom(%s), which no custom localization defines" % ", ".join(
+        "'%s'" % name for name in gone) if gone else None
+
+
 def dumped_names() -> set[str]:
     """Every name the engine dumped, split at the dots.
 
@@ -806,7 +844,8 @@ def wrong_type_fault(value: str, english: str | None) -> str | None:
 
 
 HARD = ("brackets", "cyrillic_code", "custom_on_text", "filter_nested", "unknown_root",
-        "unknown_member", "missing_ref", "foreign_context", "wrong_type", "unknown_concept")
+        "unknown_member", "missing_ref", "foreign_context", "wrong_type", "unknown_concept",
+        "unknown_custom")
 ADVISORY = ("scope", "arguments", "member_on_root", "declension_ref", "dropped_value")
 RULES = HARD + ADVISORY
 
@@ -826,6 +865,13 @@ def scan(russian: dict[str, Entry], english: dict[str, Entry],
     concepts: set[str] = set()
     if "unknown_concept" in rules:
         concepts = defined_concepts(english)
+    customs: set[str] = set()
+    if "unknown_custom" in rules:
+        customs = defined_customs()
+        # A name English calls too is the engine's business, not a Russian slip
+        # (`GetWarOfReligionsPosition` is in neither list and English uses it).
+        for entry in english.values():
+            customs.update(CUSTOM_CALL.findall(entry.value))
     repairs: dict[str, str] = {}
     if "missing_ref" in rules:
         repairs = misspelled_refs(russian, english)
@@ -858,6 +904,7 @@ def scan(russian: dict[str, Entry], english: dict[str, Entry],
             ("foreign_context", lambda: foreign_context_fault(entry.value, pair.value) if pair else None),
             ("wrong_type", lambda: wrong_type_fault(entry.value, pair.value if pair else None)),
             ("unknown_concept", lambda: unknown_concept_fault(entry.value, concepts) if pair else None),
+            ("unknown_custom", lambda: unknown_custom_fault(entry.value, customs)),
             ("scope", lambda: scope_difference(entry.value, pair.value) if pair else None),
             ("arguments", lambda: argument_difference(entry.value, pair.value) if pair else None),
             ("member_on_root", lambda: member_on_root_fault(entry.value, en_pairs, en_roots)),

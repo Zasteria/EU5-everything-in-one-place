@@ -17,8 +17,8 @@ This tool is that loop, minus the parts a machine can do.
 `status` needs no Steam, no account and no game — it asks Steam's public
 `GetPublishedFileDetails` for the tracked ids and compares the answer against
 `reference/workshop_generated_state.json`, which is what the last sync wrote
-down. That is why it can run on GitHub on a schedule and open an issue saying
-which mod moved: see `.github/workflows/workshop-check.yml`.
+down. A GitHub workflow used to run it daily and keep an issue open; the owner
+had no use for it and it was removed 2026-10-12.
 
 `sync` needs the files, and the files only exist on a machine that owns the
 game. **Anonymous download does not work** — `steamcmd +login anonymous

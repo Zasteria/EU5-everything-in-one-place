@@ -305,7 +305,10 @@ def repairs(russian: dict, english: dict) -> tuple[dict[str, str], list[str], di
         fixed[key] = value
 
     # Every shipped value has to survive the rules it was written to satisfy.
-    entries = {k: locscan.Entry(k, v, OUT, 0) for k, v in fixed.items()}
+    # A key we also translate is exempt: the translation replaces the repair
+    # (`main`), and is checked against the same rules in `translate.build`.
+    translated = set(translate.read_sources())
+    entries = {k: locscan.Entry(k, v, OUT, 0) for k, v in fixed.items() if k not in translated}
     for finding in locscan.scan(entries, english, locscan.HARD):
         complaints.append("the fix for %s still trips %s: %s"
                           % (finding.key, finding.rule, finding.detail))
