@@ -8,6 +8,11 @@
 cm_atr_ur_specialization_pass = {
 	if = {
 		limit = { cm_town_rights_grant_affordable = yes }
+		# cm_dev_perf +perf39: charters become royal rights first, then new grants
+		if = {
+			limit = { has_advance = town_rights_enable }
+			cm_atr_ur_upgrade_charters = yes
+		}
 		set_local_variable = { name = cm_atr_ur_win value = cm_atr_ur_window_ratio }
 		ordered_in_list = {
 			variable = cm_slice_locations
@@ -262,4 +267,112 @@ cm_atr_ur_pick_charter = {
 			}
 		}
 	}
+}
+
+# cm_dev_perf +perf39: once the royal rights open, each 1.4 charter in the slice becomes
+# its royal right, the engine's upgrade path (`upgrades_to`). Root is the country,
+# scope:cm_country set.
+cm_atr_ur_upgrade_charters = {
+	every_in_list = {
+		variable = cm_slice_locations
+		if = {
+			limit = {
+				has_town_rights = town_rights_type:tooling_charter
+				cm_trmm_right_fits_location = { RIGHT = royal_tooling_rights ALLOW = cm_can_grant_specialization_right_at_location }
+				scope:cm_country = { cm_town_rights_grant_affordable = yes }
+			}
+			revoke_town_rights_of_type = town_rights_type:tooling_charter
+			grant_town_rights = town_rights_type:royal_tooling_rights
+			cm_atr_ur_upgrade_paid = yes
+		}
+		if = {
+			limit = {
+				has_town_rights = town_rights_type:jewelry_charter
+				cm_trmm_right_fits_location = { RIGHT = royal_jewelry_rights ALLOW = cm_can_grant_specialization_right_at_location }
+				scope:cm_country = { cm_town_rights_grant_affordable = yes }
+			}
+			revoke_town_rights_of_type = town_rights_type:jewelry_charter
+			grant_town_rights = town_rights_type:royal_jewelry_rights
+			cm_atr_ur_upgrade_paid = yes
+		}
+		if = {
+			limit = {
+				has_town_rights = town_rights_type:naval_charter
+				cm_trmm_right_fits_location = { RIGHT = royal_naval_rights ALLOW = cm_can_grant_specialization_right_at_location }
+				scope:cm_country = { cm_town_rights_grant_affordable = yes }
+			}
+			revoke_town_rights_of_type = town_rights_type:naval_charter
+			grant_town_rights = town_rights_type:royal_naval_rights
+			cm_atr_ur_upgrade_paid = yes
+		}
+		if = {
+			limit = {
+				has_town_rights = town_rights_type:textile_charter
+				cm_trmm_right_fits_location = { RIGHT = royal_textile_rights ALLOW = cm_can_grant_specialization_right_at_location }
+				scope:cm_country = { cm_town_rights_grant_affordable = yes }
+			}
+			revoke_town_rights_of_type = town_rights_type:textile_charter
+			grant_town_rights = town_rights_type:royal_textile_rights
+			cm_atr_ur_upgrade_paid = yes
+		}
+		if = {
+			limit = {
+				has_town_rights = town_rights_type:weaponry_charter
+				cm_trmm_right_fits_location = { RIGHT = royal_weaponry_rights ALLOW = cm_can_grant_specialization_right_at_location }
+				scope:cm_country = { cm_town_rights_grant_affordable = yes }
+			}
+			revoke_town_rights_of_type = town_rights_type:weaponry_charter
+			grant_town_rights = town_rights_type:royal_weaponry_rights
+			cm_atr_ur_upgrade_paid = yes
+		}
+		if = {
+			limit = {
+				has_town_rights = town_rights_type:book_charter
+				cm_trmm_right_fits_location = { RIGHT = royal_book_rights ALLOW = cm_can_grant_specialization_right_at_location }
+				scope:cm_country = { cm_town_rights_grant_affordable = yes }
+			}
+			revoke_town_rights_of_type = town_rights_type:book_charter
+			grant_town_rights = town_rights_type:royal_book_rights
+			cm_atr_ur_upgrade_paid = yes
+		}
+		if = {
+			limit = {
+				has_town_rights = town_rights_type:artisan_charter
+				cm_trmm_right_fits_location = { RIGHT = royal_artisan_rights ALLOW = cm_can_grant_specialization_right_at_location }
+				scope:cm_country = { cm_town_rights_grant_affordable = yes }
+			}
+			revoke_town_rights_of_type = town_rights_type:artisan_charter
+			grant_town_rights = town_rights_type:royal_artisan_rights
+			cm_atr_ur_upgrade_paid = yes
+		}
+		if = {
+			limit = {
+				has_town_rights = town_rights_type:brewing_charter
+				cm_trmm_right_fits_location = { RIGHT = royal_brewing_rights ALLOW = cm_can_grant_specialization_right_at_location }
+				scope:cm_country = { cm_town_rights_grant_affordable = yes }
+			}
+			revoke_town_rights_of_type = town_rights_type:brewing_charter
+			grant_town_rights = town_rights_type:royal_brewing_rights
+			cm_atr_ur_upgrade_paid = yes
+		}
+		if = {
+			limit = {
+				has_town_rights = town_rights_type:masonry_charter
+				cm_trmm_right_fits_location = { RIGHT = royal_masonry_rights ALLOW = cm_can_grant_specialization_right_at_location }
+				scope:cm_country = { cm_town_rights_grant_affordable = yes }
+			}
+			revoke_town_rights_of_type = town_rights_type:masonry_charter
+			grant_town_rights = town_rights_type:royal_masonry_rights
+			cm_atr_ur_upgrade_paid = yes
+		}
+	}
+}
+
+# The upgrade's price, unless grants are free. Root is the location.
+cm_atr_ur_upgrade_paid = {
+	if = {
+		limit = { NOT = { cm_town_rights_grants_are_free = yes } }
+		scope:cm_country = { pay_price = price:upgrade_town_rights }
+	}
+	scope:cm_country = { set_variable = { name = cm_trmm_refresh_armed value = yes } }
 }

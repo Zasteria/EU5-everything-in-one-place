@@ -977,6 +977,49 @@ def _grant_charters(text: str) -> str:
             "# country that has the charters and not yet the royal rights. Charters carry half the\n"
             "# royal bonus on the same goods, so fit and value rank them as the royal ones.\n")
     text = text[:end] + "\n" + note + charter + text[end:]
+    # His ask 10-12: «перевыдачу городских прав по достижению открытия более сильных
+    # вариантов». The game's own upgrade (town_rights.gui, TownRights.Upgrade) is a GUI
+    # action with no script effect; script swaps the charter for its royal right and
+    # pays the upgrade's price (prices/00_hardcoded.txt, upgrade_town_rights).
+    swaps = "".join(
+        f"\t\tif = {{\n"
+        f"\t\t\tlimit = {{\n"
+        f"\t\t\t\thas_town_rights = town_rights_type:{ch}\n"
+        f"\t\t\t\tcm_trmm_right_fits_location = {{ RIGHT = {royal} ALLOW = cm_can_grant_specialization_right_at_location }}\n"
+        f"\t\t\t\tscope:cm_country = {{ cm_town_rights_grant_affordable = yes }}\n"
+        f"\t\t\t}}\n"
+        f"\t\t\trevoke_town_rights_of_type = town_rights_type:{ch}\n"
+        f"\t\t\tgrant_town_rights = town_rights_type:{royal}\n"
+        f"\t\t\tcm_atr_ur_upgrade_paid = yes\n"
+        f"\t\t}}\n"
+        for royal, ch in pairs.items())
+    upgrade = ("\n# cm_dev_perf +perf39: once the royal rights open, each 1.4 charter in the slice becomes\n"
+               "# its royal right, the engine's upgrade path (`upgrades_to`). Root is the country,\n"
+               "# scope:cm_country set.\n"
+               "cm_atr_ur_upgrade_charters = {\n"
+               "\tevery_in_list = {\n"
+               "\t\tvariable = cm_slice_locations\n"
+               + swaps +
+               "\t}\n}\n\n"
+               "# The upgrade's price, unless grants are free. Root is the location.\n"
+               "cm_atr_ur_upgrade_paid = {\n"
+               "\tif = {\n"
+               "\t\tlimit = { NOT = { cm_town_rights_grants_are_free = yes } }\n"
+               "\t\tscope:cm_country = { pay_price = price:upgrade_town_rights }\n"
+               "\t}\n"
+               "\tscope:cm_country = { set_variable = { name = cm_trmm_refresh_armed value = yes } }\n"
+               "}\n")
+    text = text + upgrade
+    head = ("cm_atr_ur_specialization_pass = {\n\tif = {\n"
+            "\t\tlimit = { cm_town_rights_grant_affordable = yes }\n")
+    if text.count(head) != 1:
+        raise SystemExit("charters: the specialization pass's head has moved")
+    text = text.replace(head, head +
+        "\t\t# cm_dev_perf +perf39: charters become royal rights first, then new grants\n"
+        "\t\tif = {\n"
+        "\t\t\tlimit = { has_advance = town_rights_enable }\n"
+        "\t\t\tcm_atr_ur_upgrade_charters = yes\n"
+        "\t\t}\n", 1)
     old = "\t\t\t\tcm_atr_ur_pick_specialization = yes\n"
     if text.count(old) != 1:
         raise SystemExit("charters: the pass's call to the draw has moved")
@@ -1188,7 +1231,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 38
+PERF_REVISION = 39
 
 
 def metadata() -> str:
