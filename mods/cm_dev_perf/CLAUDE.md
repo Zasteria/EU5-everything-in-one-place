@@ -22,6 +22,9 @@ cm`), чтобы сохранения и настройки CMF работали
 (11 виджетов-ворот, `_gate_scan_shouts`). Что строить, не меняет. Не проверено;
 сломанные ворота — категория перестаёт строить. Пункт 3 (строки без крика) —
 после прогона: [`cm_performance.md`](../../docs/investigations/cm_performance.md).
+**+perf35: строка в `debug.log` на каждый цикл, всегда** — `CM perf cycle: staged N
+scored M rounds R rescans K`. `scored < staged` — очередь, которую не позвали
+(сломанные ворота +perf34); `rounds` — опросы «готово?», каждый — обход дерева.
 
 ## Автостройка: здания беты и National Destinies (`tools/buildings.py`)
 

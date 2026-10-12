@@ -830,6 +830,53 @@ def _gate_scan_shouts(text: str) -> str:
     return text.replace(anchor, gated + anchor, 1)
 
 
+# +perf35, his call 10-12 («стоит использовать какие-то инструменты отладки, а не
+# забеги»): one line a cycle in debug.log, always on, that says whether the
+# drain did its job. Every staged entry scores exactly once, so `scored` short of
+# `staged` is a queue whose rows were never called — a broken gate of +perf34's
+# — and `rounds` is the ready-polls the cycle took, each one a whole-tree walk.
+FEATURE = "in_game/common/scripted_effects/cm_feature_effects.txt"
+HIDDEN_GUIS = "in_game/common/scripted_guis/cm_hidden_window_scripted_gui.txt"
+
+
+def _count_rounds_init(text: str) -> str:
+    old = "\t\tset_variable = { name = cm_q_rescans value = 0 }\n"
+    if text.count(old) != 1:
+        raise SystemExit("feature effects: the cycle's counters have moved")
+    text = text.replace(old, old + "\t\tset_variable = { name = cm_perf_rounds value = 0 } # cm_dev_perf +perf35\n", 1)
+    old = "cm_q_reset_cycle_state = {\n"
+    if text.count(old) != 1:
+        raise SystemExit("feature effects: cm_q_reset_cycle_state has moved")
+    log = (
+        "\t# cm_dev_perf +perf35: one line a cycle in debug.log, always on\n"
+        "\tif = {\n"
+        "\t\tlimit = {\n"
+        "\t\t\tis_human = yes\n"
+        "\t\t\thas_variable = cm_q_staged\n"
+        "\t\t\thas_variable = cm_q_processed\n"
+        "\t\t\thas_variable = cm_q_rescans\n"
+        "\t\t\thas_variable = cm_perf_rounds\n"
+        "\t\t}\n"
+        "\t\tset_global_variable = { name = cm_perf_log_v1 value = var:cm_q_staged }\n"
+        "\t\tset_global_variable = { name = cm_perf_log_v2 value = var:cm_q_processed }\n"
+        "\t\tset_global_variable = { name = cm_perf_log_v3 value = var:cm_perf_rounds }\n"
+        "\t\tset_global_variable = { name = cm_perf_log_v4 value = var:cm_q_rescans }\n"
+        "\t\tdebug_log = \"CM perf cycle: staged "
+        + " scored ".join(f"[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v{n}')|0]" for n in (1, 2))
+        + " rounds [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v3')|0]"
+        + " rescans [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v4')|0]\"\n"
+        "\t}\n")
+    return text.replace(old, old + log, 1)
+
+
+def _count_rounds(text: str) -> str:
+    old = "cm_q_sync_check = {\n\tis_valid = {\n\t\talways = yes\n\t}\n\teffect = {\n"
+    if text.count(old) != 1:
+        raise SystemExit("hidden window guis: cm_q_sync_check has changed shape")
+    return text.replace(old, old + "\t\tif = { limit = { has_variable = cm_perf_rounds } "
+                                   "change_variable = { name = cm_perf_rounds add = 1 } } # cm_dev_perf +perf35\n", 1)
+
+
 def _write_subsidy_desc() -> None:
     for lang, words in SUBSIDY_DESC.items():
         path = MOD / f"main_menu/localization/{lang}/cm_cmm_l_{lang}.yml"
@@ -880,6 +927,8 @@ EDITS = (
     (FOOD, "subsidize every idle or loss-making farm", _subsidize_idle_farms),
     (QUEUE, "poll the queue every second, not every 0.3 s", _slow_the_poll),
     (QUEUE, "shout only into queues with entries", _gate_scan_shouts),
+    (FEATURE, "count the ready-polls and log each cycle", _count_rounds_init),
+    (HIDDEN_GUIS, "count each ready-poll", _count_rounds),
 )
 
 
@@ -982,7 +1031,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 34
+PERF_REVISION = 35
 
 
 def metadata() -> str:

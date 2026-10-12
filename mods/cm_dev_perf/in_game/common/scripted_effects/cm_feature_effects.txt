@@ -80,6 +80,7 @@ cm_run_construction_cycle = {
 		set_variable = { name = cm_q_progress_last value = 0 }
 		set_variable = { name = cm_q_stall_rounds value = 0 }
 		set_variable = { name = cm_q_rescans value = 0 }
+		set_variable = { name = cm_perf_rounds value = 0 } # cm_dev_perf +perf35
 		cm_q_reset_market_committed_for_cycle = yes
 		# This cycle's markets, picked before anything stages: every sweep below walks the
 		# cm_slice_locations the pick builds. A Run Now reuses the slice it finds, so the
@@ -245,6 +246,21 @@ cm_clear_queue_pair = {
 # outliving their cycle, and clearing the per-location scoring state keeps an aborted
 # cycle's scores out of the next approval pass. Root is the country.
 cm_q_reset_cycle_state = {
+	# cm_dev_perf +perf35: one line a cycle in debug.log, always on
+	if = {
+		limit = {
+			is_human = yes
+			has_variable = cm_q_staged
+			has_variable = cm_q_processed
+			has_variable = cm_q_rescans
+			has_variable = cm_perf_rounds
+		}
+		set_global_variable = { name = cm_perf_log_v1 value = var:cm_q_staged }
+		set_global_variable = { name = cm_perf_log_v2 value = var:cm_q_processed }
+		set_global_variable = { name = cm_perf_log_v3 value = var:cm_perf_rounds }
+		set_global_variable = { name = cm_perf_log_v4 value = var:cm_q_rescans }
+		debug_log = "CM perf cycle: staged [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v1')|0] scored [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v2')|0] rounds [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v3')|0] rescans [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v4')|0]"
+	}
 	every_in_list = {
 		variable = cm_q_approved_build_locations
 		save_scope_as = cm_q_reset_loc
