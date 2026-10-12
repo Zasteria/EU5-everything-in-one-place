@@ -353,6 +353,12 @@ automatically **at the start of a conflict**»: опускающей полов�
 CMF прячет такие настройки за `cmf_core__enable_unrestricted_tools` — то есть
 считает их читерскими, а не недоступными: в обычной игре они работают.
 
+**Но каждая `effect` из консоли стоит 7–10 с:** игра заново проверяет весь
+скрипт — между `Running console command` и `console_success` в его `debug.log`
+10-12 тысячи строк «Adding effect after PostInitAndValidate» и «is set but is
+never used». Для того, что жмут часто, консоль не годится; сценарный GUI
+(`GetScriptedGui(...).Execute`) — мгновенно.
+
 
 ## Уведомления игры из виджета: только по цвету
 
