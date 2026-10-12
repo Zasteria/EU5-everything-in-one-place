@@ -285,7 +285,7 @@
 				size = { 44 28 }
 				minimumsize = { 44 28 }
 				visible = "[CMMListItemSettingIsOrdered(Scope.GetFlagName)]"
-				enabled = "[And(CMMListItemCanEdit(Scope.GetFlagName), Not(GameIsMultiplayer))]"
+				enabled = "[CMMListItemCanEdit(Scope.GetFlagName)]"
 				tooltip = "CMF_BETA_LIST_TYPE_POSITION"
 
 				# The game's editbox_single (main_menu/gui/editbox.gui) stretches and keeps
@@ -301,11 +301,24 @@
 					multiline = no
 					text = ""
 
+					# +beta8 put four handlers on onreturnpressed, the first a console
+					# command, and Enter did nothing (10-12). Now Enter has one handler,
+					# and the state below runs the arrows' own path: mark the row, mark
+					# the place (CMF_BETA_MarkListPlace_<N>, a scripted GUI per number,
+					# as CMM_MarkListPosition_<N>), report the change. Several on_start
+					# in one state are proven (cmf_alert_prune_driver, the arrows' on_action).
+					state = {
+						name = cmf_beta_place_go
+						on_start = "[CMMExecuteGui('cmf_beta_place_probe')]"
+						on_start = "[CMMExecuteGuiSuffix('CMM_MarkListPosition_', ToString_int32(PdxGuiWidget.GetIndexInDataModel))]"
+						on_start = "[CMMExecuteGuiSuffix('CMF_BETA_MarkListPlace_', GetTextFromSelfOrAnyChildEditbox(PdxGuiWidget.Self))]"
+						on_start = "[CMMExecuteListItemSettingChanged(Scope.GetFlagName)]"
+						on_start = "[PdxClearEditBoxText(PdxGuiWidget.Self)]"
+						on_start = "[PdxGuiTriggerAllAnimations('cmm_recache_delay')]"
+					}
+
 					blockoverride "editbox_properties" {
-						onreturnpressed = "[ExecuteConsoleCommand(Concatenate('effect c:', Concatenate(Player.GetTag, Concatenate(' = { cmf_beta_list_move_to = { setting = ', Concatenate(CMMListItemOwnerSettingKey(Scope.GetFlagName), Concatenate(' from = ', Concatenate(ToString_int32(PdxGuiWidget.GetIndexInDataModel), Concatenate(' to = ', Concatenate(GetTextFromSelfOrAnyChildEditbox(PdxGuiWidget.Self), ' } }')))))))))]"
-						onreturnpressed = "[CMMExecuteListItemSettingChanged(Scope.GetFlagName)]"
-						onreturnpressed = "[PdxClearEditBoxText(PdxGuiWidget.Self)]"
-						onreturnpressed = "[PdxGuiTriggerAllAnimations('cmm_recache_delay')]"
+						onreturnpressed = "[PdxGuiWidget.TriggerAnimation('cmf_beta_place_go')]"
 						maxcharacters = 2
 					}
 

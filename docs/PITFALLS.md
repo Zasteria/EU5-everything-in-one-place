@@ -103,3 +103,8 @@ had already been redesigned around their absence. The game prints its whole API
 — `python3 tools/api.py <name>` answers in a second, and
 `reference/game/docs/` is where those dumps live. Ask it before concluding
 anything is impossible.
+
+**A name in the dumps is not a call that works.** Read its return type and one
+vanilla call before writing it: 10-12 a watch passed an alert's name to a
+function that takes a colour, and compared a `uint32` with `IntToUnsigned`,
+which returns `float` — the window never showed, and nothing logged it.

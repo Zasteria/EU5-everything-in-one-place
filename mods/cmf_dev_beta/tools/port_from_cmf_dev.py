@@ -64,7 +64,7 @@ _spec = importlib.util.spec_from_file_location(
 beta = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(beta)
 
-REVISION = 9
+REVISION = 10
 
 
 def metadata() -> str:
@@ -193,18 +193,12 @@ HEADER_BOX = ("\t\t\t\t# cmf_dev_beta: room for the typed position below.\n"
               "\t\t\t\t\tvisible = \"[CMMListSettingIsOrdered(Scope.GetFlagName)]\"\n\t\t\t\t}\n")
 ROW_ARROWS = ("\t\t\twidget = {\n\t\t\t\tsize = { 56 28 }\n\t\t\t\tminimumsize = { 56 28 }\n"
               "\t\t\t\tvisible = \"[CMMListItemSettingIsOrdered(Scope.GetFlagName)]\"\n")
-MOVE_COMMAND = ("ExecuteConsoleCommand(Concatenate('effect c:', Concatenate(Player.GetTag, "
-                "Concatenate(' = { cmf_beta_list_move_to = { setting = ', "
-                "Concatenate(CMMListItemOwnerSettingKey(Scope.GetFlagName), "
-                "Concatenate(' from = ', Concatenate(ToString_int32(PdxGuiWidget.GetIndexInDataModel), "
-                "Concatenate(' to = ', Concatenate(GetTextFromSelfOrAnyChildEditbox(PdxGuiWidget.Self), "
-                "' } }')))))))))")
 ROW_BOX = """\t\t\t# cmf_dev_beta: type a place among the shown rows, Enter moves the row there.
 \t\t\twidget = {
 \t\t\t\tsize = { 44 28 }
 \t\t\t\tminimumsize = { 44 28 }
 \t\t\t\tvisible = "[CMMListItemSettingIsOrdered(Scope.GetFlagName)]"
-\t\t\t\tenabled = "[And(CMMListItemCanEdit(Scope.GetFlagName), Not(GameIsMultiplayer))]"
+\t\t\t\tenabled = "[CMMListItemCanEdit(Scope.GetFlagName)]"
 \t\t\t\ttooltip = "CMF_BETA_LIST_TYPE_POSITION"
 
 \t\t\t\t# The game's editbox_single (main_menu/gui/editbox.gui) stretches and keeps
@@ -220,11 +214,24 @@ ROW_BOX = """\t\t\t# cmf_dev_beta: type a place among the shown rows, Enter move
 \t\t\t\t\tmultiline = no
 \t\t\t\t\ttext = ""
 
+\t\t\t\t\t# +beta8 put four handlers on onreturnpressed, the first a console
+\t\t\t\t\t# command, and Enter did nothing (10-12). Now Enter has one handler,
+\t\t\t\t\t# and the state below runs the arrows' own path: mark the row, mark
+\t\t\t\t\t# the place (CMF_BETA_MarkListPlace_<N>, a scripted GUI per number,
+\t\t\t\t\t# as CMM_MarkListPosition_<N>), report the change. Several on_start
+\t\t\t\t\t# in one state are proven (cmf_alert_prune_driver, the arrows' on_action).
+\t\t\t\t\tstate = {
+\t\t\t\t\t\tname = cmf_beta_place_go
+\t\t\t\t\t\ton_start = "[CMMExecuteGui('cmf_beta_place_probe')]"
+\t\t\t\t\t\ton_start = "[CMMExecuteGuiSuffix('CMM_MarkListPosition_', ToString_int32(PdxGuiWidget.GetIndexInDataModel))]"
+\t\t\t\t\t\ton_start = "[CMMExecuteGuiSuffix('CMF_BETA_MarkListPlace_', GetTextFromSelfOrAnyChildEditbox(PdxGuiWidget.Self))]"
+\t\t\t\t\t\ton_start = "[CMMExecuteListItemSettingChanged(Scope.GetFlagName)]"
+\t\t\t\t\t\ton_start = "[PdxClearEditBoxText(PdxGuiWidget.Self)]"
+\t\t\t\t\t\ton_start = "[PdxGuiTriggerAllAnimations('cmm_recache_delay')]"
+\t\t\t\t\t}
+
 \t\t\t\t\tblockoverride "editbox_properties" {
-\t\t\t\t\t\tonreturnpressed = "[%s]"
-\t\t\t\t\t\tonreturnpressed = "[CMMExecuteListItemSettingChanged(Scope.GetFlagName)]"
-\t\t\t\t\t\tonreturnpressed = "[PdxClearEditBoxText(PdxGuiWidget.Self)]"
-\t\t\t\t\t\tonreturnpressed = "[PdxGuiTriggerAllAnimations('cmm_recache_delay')]"
+\t\t\t\t\t\tonreturnpressed = "[PdxGuiWidget.TriggerAnimation('cmf_beta_place_go')]"
 \t\t\t\t\t\tmaxcharacters = 2
 \t\t\t\t\t}
 
@@ -236,32 +243,32 @@ ROW_BOX = """\t\t\t# cmf_dev_beta: type a place among the shown rows, Enter move
 \t\t\t\t}
 \t\t\t}
 
-""" % MOVE_COMMAND
+"""
+PLACE_ACTION = 51
+ACTION_TOP = ("\t\telse_if = {\n\t\t\tlimit = { AND = { has_variable = cmm_list_action_to_apply "
+              "var:cmm_setting_list_is_ordered_$setting$ = 1 var:cmm_list_action_to_apply = 3 ")
+PLACE_DISPATCH = (
+    "\t\t# cmf_dev_beta: the typed place (CMF_BETA_MarkListPlace_<N>).\n"
+    "\t\telse_if = {\n"
+    "\t\t\tlimit = { AND = { has_variable = cmm_list_action_to_apply "
+    f"var:cmm_setting_list_is_ordered_$setting$ = 1 var:cmm_list_action_to_apply = {PLACE_ACTION} "
+    "has_variable = cmf_beta_list_place_to_apply } }\n"
+    "\t\t\t_cmf_beta_list_place_target = { setting = $setting$ lt = $lt$ }\n"
+    "\t\t\t_cmm_reorder_list_setting = { setting = $setting$ vt = $vt$ lt = $lt$ }\n"
+    "\t\t}\n")
 MOVE_EFFECT = """
-# cmf_dev_beta: move row `from` (its index in the whole list) to place `to` among
-# the shown rows; 1 and below is the top, past the last shown row the bottom.
-# Called through the console by the typed-position box of an ordered list row.
+# cmf_dev_beta: the reinsert index (local_var:cmm_list_target_index, as the
+# reorder wants it: among the rows other than the marked one) of place
+# var:cmf_beta_list_place_to_apply among the shown rows; 1 and below is the top,
+# past the last shown row the bottom.
 # Scope: country
-cmf_beta_list_move_to = {
-\tdebug_log = "cmf_beta: a typed place reached the script"
-\tset_local_variable = { name = cmf_beta_to value = $to$ }
+_cmf_beta_list_place_target = {
+\tset_local_variable = { name = cmf_beta_to value = var:cmf_beta_list_place_to_apply }
+\tremove_variable = cmf_beta_list_place_to_apply
 \tif = {
 \t\tlimit = { local_var:cmf_beta_to < 1 }
 \t\tset_local_variable = { name = cmf_beta_to value = 1 }
 \t}
-\tset_variable = { name = cmm_list_position_to_apply value = $from$ }
-\tset_local_variable = { name = cmm_tmp_flag value = flag:$setting$ }
-\tif = {
-\t\tlimit = { "variable_map(cmm_is_global|local_var:cmm_tmp_flag)" >= 1 }
-\t\t_cmf_beta_list_move_to = { setting = $setting$ vt = global_variable lt = in_global }
-\t}
-\telse = {
-\t\t_cmf_beta_list_move_to = { setting = $setting$ vt = variable lt = in }
-\t}
-\tremove_variable = cmm_list_position_to_apply
-}
-
-_cmf_beta_list_move_to = {
 \tset_local_variable = { name = cmm_list_target_index value = 9999 }
 \tset_local_variable = { name = cmm_list_scan_index value = 0 }
 \tset_local_variable = { name = cmm_list_scan_raw value = 0 }
@@ -287,9 +294,15 @@ _cmf_beta_list_move_to = {
 \t\t}
 \t\tchange_local_variable = { name = cmm_list_scan_raw add = 1 }
 \t}
-\t_cmm_reorder_list_setting = { setting = $setting$ vt = $vt$ lt = $lt$ }
 }
 """
+PLACE_SGUI = ("# cmf_dev_beta: the typed place of an ordered list row, one scripted GUI per\n"
+              "# number as CMF's CMM_MarkListPosition_<N>; text that is not a number names\n"
+              "# none, and nothing moves. Scope: country\n"
+              "cmf_beta_place_probe = { effect = { debug_log = \"cmf_beta: Enter in a place box\" } }\n\n"
+              + "".join(f"CMF_BETA_MarkListPlace_{n} = {{ effect = {{ set_variable = {{ name = cmf_beta_list_place_to_apply value = {n} }} "
+                        f"set_variable = {{ name = cmm_list_action_to_apply value = {PLACE_ACTION} }} }} }}\n"
+                        for n in range(0, 100)))
 RENUMBER = """
 # cmf_dev_beta: number the shown rows of one list 1, 2, 3… into the country's
 # variable map cmf_beta_list_place, keyed by the row's flag; the typed-place box
@@ -350,7 +363,12 @@ def typed_position() -> None:
         raise SystemExit(f"{LIST_RUNTIME}: the reorder's end moved")
     body = body.replace(REORDER_END, "\tclear_variable_list = cmm_list_rebuild_temp\n"
                         "\t_cmf_beta_list_renumber = { setting = $setting$ lt = $lt$ }\n}\n", 1)
+    if body.count(ACTION_TOP) != 1:
+        raise SystemExit(f"{LIST_RUNTIME}: the move-to-top branch moved")
+    body = body.replace(ACTION_TOP, PLACE_DISPATCH + ACTION_TOP, 1)
     runtime.write_text("\ufeff" + body + MOVE_EFFECT + RENUMBER, encoding="utf-8")
+    sgui = MOD / "in_game/common/scripted_guis/cmf_beta_list_place_scripted_gui.txt"
+    sgui.write_text("\ufeff" + PLACE_SGUI, encoding="utf-8")
     for language, rows in MOVE_LOC.items():
         out = MOD / f"main_menu/localization/{language}/cmf_beta_l_{language}.yml"
         out.parent.mkdir(parents=True, exist_ok=True)

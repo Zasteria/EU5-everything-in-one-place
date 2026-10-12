@@ -1,24 +1,35 @@
-﻿# assimilate_primary: watches the game's yellow «devastated locations» alert
-# (has_devastated_locations, in_game/gui/alertmanager.gui). Nothing lives here
-# but one number the engine already has; while the alert shows, the council's
-# emergency runs every two seconds. Rebuilt by tools/generate.py.
+﻿# assimilate_primary: wakes the council's emergency while a yellow alert shows.
+# The «devastated locations» alert is yellow (common/alert_descriptions), and
+# no global reads one alert by name: GetAlertOfTypeShowingCount and
+# IsAnyAlertOfTypeShowing take a priority, as outliner_entries.gui uses it. The
+# script then looks for a province below zero itself. Shape from CMF's
+# cmf_alert_prune_driver.gui: the root stays shown, the child toggles, pinned
+# with visible_at_creation = no so it gets a first _show. Rebuilt by
+# tools/generate.py.
 widget = {
 	name = "bag_asp_devastation_watch"
 	size = { 0 0 }
-	visible = "[And(GetPlayer.Exists, GreaterThan_uint32(GetAlertOfTypeShowingCount('has_devastated_locations'), IntToUnsigned('(int32)0')))]"
+	datacontext = "[GetPlayer]"
+	visible = "[Country.IsValid]"
 
-	state = {
-		name = _show
-		duration = 0.1
-		on_finish = "[GetScriptedGui('bag_asp_devastated_seen').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-		on_finish = "[GetScriptedGui('bag_asp_devastated').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-		next = bag_asp_devastation_again
-	}
+	widget = {
+		size = { 0 0 }
+		visible = "[IsAnyAlertOfTypeShowing('ALERT_PRIORITY_YELLOW')]"
+		visible_at_creation = no
 
-	state = {
-		name = bag_asp_devastation_again
-		duration = 2
-		on_finish = "[GetScriptedGui('bag_asp_devastated').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-		next = bag_asp_devastation_again
+		state = {
+			name = _show
+			duration = 0.1
+			on_finish = "[GetScriptedGui('bag_asp_devastated_seen').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			on_finish = "[GetScriptedGui('bag_asp_devastated').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			next = bag_asp_devastation_again
+		}
+
+		state = {
+			name = bag_asp_devastation_again
+			duration = 2
+			on_finish = "[GetScriptedGui('bag_asp_devastated').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			next = bag_asp_devastation_again
+		}
 	}
 }

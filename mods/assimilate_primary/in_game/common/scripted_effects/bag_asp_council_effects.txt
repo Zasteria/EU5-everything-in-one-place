@@ -934,19 +934,30 @@ bag_asp_try_counter_espionage_action = {
 	}
 }
 
-# Scope: country. While the game's «devastated locations» alert shows, every
-# couple of seconds (bag_asp_devastation_watch.gui): one province below zero
+# Scope: country. While any yellow alert shows (the devastated one is yellow),
+# every two seconds (bag_asp_devastation_watch.gui). Costs one look over the
+# provinces unless one has a location below zero and no recovery; then one
+# province below zero
 # prosperity without recovery gets it now: an empty seat first, else the seat
 # whose action ranks lowest in «Приоритет» — only among actions ranked below
 # recovery (unticked ones count as below). Actions outside the pool stay.
 bag_asp_emergency = {
 	if = {
-		limit = { has_variable = bag_asp_auto_on }
+		limit = {
+			has_variable = bag_asp_auto_on
+			is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_recovery_effort }
+			any_province = { any_location_in_province = { prosperity < 0 } }
+		}
 		save_scope_as = actor
-		bag_asp_rebuild = yes
+		bag_asp_mark_busy = yes
 		if = {
-			limit = { is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_recovery_effort } }
-			bag_asp_mark_busy = yes
+			limit = {
+				any_province = {
+					NOT = { has_variable = bag_asp_busy_recovery_effort }
+					any_location_in_province = { prosperity < 0 }
+				}
+			}
+			bag_asp_rebuild = yes
 			ordered_cabinet = {
 				limit = {
 					exists = cabinet_member
@@ -1017,8 +1028,8 @@ bag_asp_emergency = {
 				debug_log = "bag_asp: emergency, a seat moved to recovery"
 				remove_variable = bag_asp_placed
 			}
-			bag_asp_clear_busy = yes
 		}
+		bag_asp_clear_busy = yes
 	}
 }
 

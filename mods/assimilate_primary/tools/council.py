@@ -737,19 +737,30 @@ bag_asp_clear_busy = {{
         f"\t\t\t\t\t\tAND = {{ cabinet_action = cabinet_action:{k} scope:actor.var:bag_asp_rank_{k} > scope:actor.var:bag_asp_rank_recovery_effort }}"
         for k, *_ in POOL if k != "recovery_effort")
     run += f"""
-# Scope: country. While the game's «devastated locations» alert shows, every
-# couple of seconds (bag_asp_devastation_watch.gui): one province below zero
+# Scope: country. While any yellow alert shows (the devastated one is yellow),
+# every two seconds (bag_asp_devastation_watch.gui). Costs one look over the
+# provinces unless one has a location below zero and no recovery; then one
+# province below zero
 # prosperity without recovery gets it now: an empty seat first, else the seat
 # whose action ranks lowest in «Приоритет» — only among actions ranked below
 # recovery (unticked ones count as below). Actions outside the pool stay.
 bag_asp_emergency = {{
 \tif = {{
-\t\tlimit = {{ has_variable = bag_asp_auto_on }}
+\t\tlimit = {{
+\t\t\thas_variable = bag_asp_auto_on
+\t\t\tis_target_in_variable_list = {{ name = bag_asp_used target = flag:bag_asp_recovery_effort }}
+\t\t\tany_province = {{ any_location_in_province = {{ prosperity < 0 }} }}
+\t\t}}
 \t\tsave_scope_as = actor
-\t\tbag_asp_rebuild = yes
+\t\tbag_asp_mark_busy = yes
 \t\tif = {{
-\t\t\tlimit = {{ is_target_in_variable_list = {{ name = bag_asp_used target = flag:bag_asp_recovery_effort }} }}
-\t\t\tbag_asp_mark_busy = yes
+\t\t\tlimit = {{
+\t\t\t\tany_province = {{
+\t\t\t\t\tNOT = {{ has_variable = bag_asp_busy_recovery_effort }}
+\t\t\t\t\tany_location_in_province = {{ prosperity < 0 }}
+\t\t\t\t}}
+\t\t\t}}
+\t\t\tbag_asp_rebuild = yes
 \t\t\tordered_cabinet = {{
 \t\t\t\tlimit = {{
 \t\t\t\t\texists = cabinet_member
@@ -784,8 +795,8 @@ bag_asp_emergency = {{
 \t\t\t\tdebug_log = "bag_asp: emergency, a seat moved to recovery"
 \t\t\t\tremove_variable = bag_asp_placed
 \t\t\t}}
-\t\t\tbag_asp_clear_busy = yes
 \t\t}}
+\t\tbag_asp_clear_busy = yes
 \t}}
 }}
 """
@@ -855,8 +866,8 @@ bag_asp_on_month = {{
 
 """
     guis = "# assimilate_primary: the lists' callbacks. Rebuilt by tools/generate.py.\n\n" + guis
-    guis += f"""# Called by bag_asp_devastation_watch.gui while the game's «devastated
-# locations» alert shows: once as it appears, then every two seconds.
+    guis += f"""# Called by bag_asp_devastation_watch.gui while a yellow alert shows: once as
+# it appears, then every two seconds.
 bag_asp_devastated = {{
 \tscope = country
 \tis_shown = {{ always = yes }}
@@ -865,37 +876,48 @@ bag_asp_devastated = {{
 \t}}
 }}
 
-# Called once as the alert appears: the probe that says the window sees it.
+# Called once as a yellow alert appears: the probe that says the window sees it.
 bag_asp_devastated_seen = {{
 \tscope = country
 \tis_shown = {{ always = yes }}
 \teffect = {{
-\t\tdebug_log = "bag_asp: the devastated locations alert is showing"
+\t\tdebug_log = "bag_asp: a yellow alert is showing"
 \t}}
 }}
 """
-    watch = """# assimilate_primary: watches the game's yellow «devastated locations» alert
-# (has_devastated_locations, in_game/gui/alertmanager.gui). Nothing lives here
-# but one number the engine already has; while the alert shows, the council's
-# emergency runs every two seconds. Rebuilt by tools/generate.py.
+    watch = """# assimilate_primary: wakes the council's emergency while a yellow alert shows.
+# The «devastated locations» alert is yellow (common/alert_descriptions), and
+# no global reads one alert by name: GetAlertOfTypeShowingCount and
+# IsAnyAlertOfTypeShowing take a priority, as outliner_entries.gui uses it. The
+# script then looks for a province below zero itself. Shape from CMF's
+# cmf_alert_prune_driver.gui: the root stays shown, the child toggles, pinned
+# with visible_at_creation = no so it gets a first _show. Rebuilt by
+# tools/generate.py.
 widget = {
 	name = "bag_asp_devastation_watch"
 	size = { 0 0 }
-	visible = "[And(GetPlayer.Exists, GreaterThan_uint32(GetAlertOfTypeShowingCount('has_devastated_locations'), IntToUnsigned('(int32)0')))]"
+	datacontext = "[GetPlayer]"
+	visible = "[Country.IsValid]"
 
-	state = {
-		name = _show
-		duration = 0.1
-		on_finish = "[GetScriptedGui('bag_asp_devastated_seen').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-		on_finish = "[GetScriptedGui('bag_asp_devastated').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-		next = bag_asp_devastation_again
-	}
+	widget = {
+		size = { 0 0 }
+		visible = "[IsAnyAlertOfTypeShowing('ALERT_PRIORITY_YELLOW')]"
+		visible_at_creation = no
 
-	state = {
-		name = bag_asp_devastation_again
-		duration = 2
-		on_finish = "[GetScriptedGui('bag_asp_devastated').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-		next = bag_asp_devastation_again
+		state = {
+			name = _show
+			duration = 0.1
+			on_finish = "[GetScriptedGui('bag_asp_devastated_seen').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			on_finish = "[GetScriptedGui('bag_asp_devastated').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			next = bag_asp_devastation_again
+		}
+
+		state = {
+			name = bag_asp_devastation_again
+			duration = 2
+			on_finish = "[GetScriptedGui('bag_asp_devastated').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			next = bag_asp_devastation_again
+		}
 	}
 }
 """

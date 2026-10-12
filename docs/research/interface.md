@@ -354,6 +354,16 @@ CMF прячет такие настройки за `cmf_core__enable_unrestrict
 считает их читерскими, а не недоступными: в обычной игре они работают.
 
 
+## Уведомления игры из виджета: только по цвету
+
+`GetAlertOfTypeShowingCount(x)` и `IsAnyAlertOfTypeShowing(x)` берут **цвет**
+(`'ALERT_PRIORITY_YELLOW'`, как `outliner_entries.gui`), не имя уведомления.
+Объект одного уведомления (`AlertHasDevastatedLocations` и т. п.) есть только в
+`datacontext` его плашки в `alertmanager.gui`, глобального доступа нет. Цвет
+каждого — `common/alert_descriptions/00_default.txt`. `IntToUnsigned` возвращает
+`float`, не `uint32`. 0.8.0 `assimilate_primary` сравнивал счётчик по имени — на
+паузе и после неё ничего (10-12).
+
 ## Привод к ванильному ползунку: форма, которая работает
 
 Прогоны 2026-09-16 и 09-17, `war_sliders`. Ползунки экономики скриптом не
