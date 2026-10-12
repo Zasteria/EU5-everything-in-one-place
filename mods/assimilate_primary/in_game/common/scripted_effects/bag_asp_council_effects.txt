@@ -57,10 +57,9 @@ bag_asp_plan_fill = {
 # chose it; at the end, seats nothing could take keep what they had.
 bag_asp_plan = {
 	save_scope_as = actor
-	if = {
-		limit = { NOT = { has_variable_list = bag_asp_order } }
-		bag_asp_rebuild = yes
-	}
+	# The lists may have moved without their callback (a typed place goes
+	# through the console), so the order is read afresh every pass.
+	bag_asp_rebuild = yes
 	if = {
 		limit = { NOT = { any_in_list = { variable = bag_asp_used } } }
 		debug_log = "bag_asp: no action is ticked in use"
@@ -270,7 +269,29 @@ bag_asp_try_integrate_province = {
 						integration_level = conquered
 					}
 				}
-				order_by = population
+				order_by = {
+					value = 0
+					every_location_in_province = {
+						limit = {
+							integration_level = conquered
+							culture_percentage = { culture = scope:actor.culture value >= 0.5 }
+						}
+						add = 10000
+					}
+					every_location_in_province = {
+						limit = {
+							integration_level = conquered
+							NOT = { culture_percentage = { culture = scope:actor.culture value >= 0.5 } }
+							dominant_culture ?= { is_primary_or_accepted_in = scope:actor }
+							culture_percentage = { culture = dominant_culture value >= 0.5 }
+						}
+						add = 100
+					}
+					add = {
+						value = population
+						max = 99
+					}
+				}
 				save_temporary_scope_as = bag_asp_pick
 				scope:bag_asp_seat = {
 					if = {
@@ -306,7 +327,29 @@ bag_asp_try_integrate_area = {
 						NOT = { has_variable = bag_asp_busy_integrate_area }
 					}
 				}
-				order_by = population
+				order_by = {
+					value = 0
+					every_location_in_province = {
+						limit = {
+							integration_level = conquered
+							culture_percentage = { culture = scope:actor.culture value >= 0.5 }
+						}
+						add = 10000
+					}
+					every_location_in_province = {
+						limit = {
+							integration_level = conquered
+							NOT = { culture_percentage = { culture = scope:actor.culture value >= 0.5 } }
+							dominant_culture ?= { is_primary_or_accepted_in = scope:actor }
+							culture_percentage = { culture = dominant_culture value >= 0.5 }
+						}
+						add = 100
+					}
+					add = {
+						value = population
+						max = 99
+					}
+				}
 				area = { save_temporary_scope_as = bag_asp_pick }
 				scope:bag_asp_seat = {
 					if = {

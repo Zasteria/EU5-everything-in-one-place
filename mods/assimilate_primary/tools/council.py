@@ -41,8 +41,8 @@ MOD_ID = "bag_asp"
 # gate: extra country-scope condition for picking it; the game's own allow is
 # checked anyway through is_available_for.
 POOL = [
-    ("integrate_province", "province", "population", ""),
-    ("integrate_area", "area", "population", ""),
+    ("integrate_province", "province", "INTEGRATION", ""),
+    ("integrate_area", "area", "INTEGRATION", ""),
     ("reduce_war_exhaustion", "country", None, ""),
     ("stabilize_country", "country", None, "stability < 50"),
     ("increase_control_province", "province", "province_tax_base", ""),
@@ -65,7 +65,41 @@ POOL = [
 
 LEAD = 0.3  # his rule 05.10, the same as the vanilla-automation patch
 
-SKILL = {"english": "Advisor skill", "russian": "Навык советника"}
+# Which province to integrate first, his rule 12.10, not a setting: first by how
+# many of its conquered locations are at least half the primary culture (they
+# integrate about twice as fast), then by how many are at least half an accepted
+# culture (no assimilating afterwards), then by population. A tier counts a
+# location once; the weights keep the tiers apart (a province has far fewer
+# than 100 locations, population is capped below the second weight) and stay
+# small: the range of a fixed-point script value is not measured here.
+INTEGRATION = """{
+\t\t\t\t\tvalue = 0
+\t\t\t\t\tevery_location_in_province = {
+\t\t\t\t\t\tlimit = {
+\t\t\t\t\t\t\tintegration_level = conquered
+\t\t\t\t\t\t\tculture_percentage = { culture = scope:actor.culture value >= 0.5 }
+\t\t\t\t\t\t}
+\t\t\t\t\t\tadd = 10000
+\t\t\t\t\t}
+\t\t\t\t\tevery_location_in_province = {
+\t\t\t\t\t\tlimit = {
+\t\t\t\t\t\t\tintegration_level = conquered
+\t\t\t\t\t\t\tNOT = { culture_percentage = { culture = scope:actor.culture value >= 0.5 } }
+\t\t\t\t\t\t\tdominant_culture ?= { is_primary_or_accepted_in = scope:actor }
+\t\t\t\t\t\t\tculture_percentage = { culture = dominant_culture value >= 0.5 }
+\t\t\t\t\t\t}
+\t\t\t\t\t\tadd = 100
+\t\t\t\t\t}
+\t\t\t\t\tadd = {
+\t\t\t\t\t\tvalue = population
+\t\t\t\t\t\tmax = 99
+\t\t\t\t\t}
+\t\t\t\t}"""
+
+# The three lists over the pool; «Тонкие настройки» is a skeleton for now (his
+# ask 12.10: the tab first, each action's own settings later).
+LISTS = ("available", "priority", "tuning")
+TUNING_NONE = {"english": "none yet", "russian": "пока нет"}
 
 ABILITY = {
     "english": {"adm": "ADM", "dip": "DIP", "mil": "MIL"},
@@ -216,6 +250,8 @@ def flag_of(sel: str, default: str = "target") -> str:
 
 def try_effect(key: str, kind: str, order: str | None, gate: str, actions: dict[str, str]) -> str:
     action = actions[key]
+    if order == "INTEGRATION":
+        order = INTEGRATION
     # Unset in the file counts as one seat at a time: otherwise an action with no
     # condition on its target (pop_promote_action) takes every seat left.
     multiple = value(action, "allow_multiple") == "yes"
@@ -420,12 +456,26 @@ bag_asp_register = {{
 \t\tsetting_id = priority
 \t\tfield_id = ability
 \t}}
+\tcmm_register_settings_list = {{
+\t\tmod_id = {MOD_ID}
+\t\tsetting_id = tuning
+\t\ttab_id = fine
+\t\titem_count = {n}
+\t\tis_ordered = 0
+\t}}
+\tcmm_register_list_text_field = {{
+\t\tmod_id = {MOD_ID}
+\t\tsetting_id = tuning
+\t\tfield_id = settings
+\t}}
 """]
     for i, (k, *_) in enumerate(POOL, 1):
         ability = value(actions[k], "ability") or "adm"
         reg.append(f"\tcmm_set_list_item_value = {{ mod_id = {MOD_ID} setting_id = available item = {i} value = flag:bag_asp_{k} }}\n"
                    f"\tcmm_set_list_item_value = {{ mod_id = {MOD_ID} setting_id = priority item = {i} value = flag:bag_asp_{k} }}\n"
-                   f"\tcmm_set_list_text_value = {{ mod_id = {MOD_ID} setting_id = priority field_id = ability item = {i} value = flag:bag_asp_ability_{ability} }}\n")
+                   f"\tcmm_set_list_text_value = {{ mod_id = {MOD_ID} setting_id = priority field_id = ability item = {i} value = flag:bag_asp_ability_{ability} }}\n"
+                   f"\tcmm_set_list_item_value = {{ mod_id = {MOD_ID} setting_id = tuning item = {i} value = flag:bag_asp_{k} }}\n"
+                   f"\tcmm_set_list_text_value = {{ mod_id = {MOD_ID} setting_id = tuning field_id = settings item = {i} value = flag:bag_asp_tuning_none }}\n")
     reg.append(f"""
 \tbag_asp_sync = yes
 \tbag_asp_rebuild = yes
@@ -454,9 +504,11 @@ bag_asp_rebuild = {{
         reg.append(f"""\t\tif = {{
 \t\t\tlimit = {{ cabinet_action:{k} = {{ is_visible_for = root }} }}
 \t\t\tcmm_show_list_item = {{ mod_id = {MOD_ID} setting_id = available item = {i} }}
+\t\t\tcmm_show_list_item = {{ mod_id = {MOD_ID} setting_id = tuning item = {i} }}
 \t\t}}
 \t\telse = {{
 \t\t\tcmm_hide_list_item = {{ mod_id = {MOD_ID} setting_id = available item = {i} }}
+\t\t\tcmm_hide_list_item = {{ mod_id = {MOD_ID} setting_id = tuning item = {i} }}
 \t\t}}
 \t\tif = {{
 \t\t\tlimit = {{
@@ -559,10 +611,9 @@ bag_asp_plan_fill = {{
 # chose it; at the end, seats nothing could take keep what they had.
 bag_asp_plan = {{
 \tsave_scope_as = actor
-\tif = {{
-\t\tlimit = {{ NOT = {{ has_variable_list = bag_asp_order }} }}
-\t\tbag_asp_rebuild = yes
-\t}}
+\t# The lists may have moved without their callback (a typed place goes
+\t# through the console), so the order is read afresh every pass.
+\tbag_asp_rebuild = yes
 \tif = {{
 \t\tlimit = {{ NOT = {{ any_in_list = {{ variable = bag_asp_used }} }} }}
 \t\tdebug_log = "bag_asp: no action is ticked in use"
@@ -691,7 +742,7 @@ bag_asp_on_month = {{
 """
 
     guis = ""
-    for s in ("available", "priority"):
+    for s in LISTS:
         guis += f"""# The list draws only while this exists, and a list change is committed here.
 {MOD_ID}__{s}_on_changed = {{
 \tscope = country
@@ -723,35 +774,20 @@ bag_asp_free_seat = {
     }
 
 
-# Names the game builds from references, written out (a label that is only a
-# reference can render blank, docs/pitfalls/localization.md).
-NAMES = {
-    "english": {"reduce_war_exhaustion": "Reduce War Exhaustion"},
-    "russian": {},
-}
-
-
 def loc_rows(game: Path, language: str) -> dict[str, str]:
-    """List row labels and hovers copied from the game's own action texts."""
+    """List row labels: the game's own linked action names."""
     src = (game / f"main_menu/localization/{language}/government_l_{language}.yml").read_text(encoding="utf-8-sig")
     names = dict(re.findall(r'^ (\w+):\d* "(.*)"\s*$', src, re.M))
-    actions = load_actions(game)
     rows = {}
     for i, (k, *_) in enumerate(POOL, 1):
-        name = NAMES[language].get(k) or names.get(k)
-        if not name or "$" in name or "[" in name:
-            raise SystemExit(f"council: no plain {language} name for {k}; write one by hand")
-        rows[f"{MOD_ID}__available_i{i}_name"] = name
-        rows[f"{MOD_ID}__priority_i{i}_name"] = name
-        # The row's hover: the game's own description of the action, and the
-        # skill that speeds it (the one the pass ranks advisors by).
-        desc = names.get(f"{k}_desc")
-        if not desc or "$" in desc:
-            raise SystemExit(f"council: no plain {language} description for {k}")
-        ability = ABILITY[language][value(actions[k], "ability") or "adm"]
-        hover = f"{desc}\\n\\n{SKILL[language]}: {ability}"
-        rows[f"{MOD_ID}__available_i{i}_desc"] = hover
-        rows[f"{MOD_ID}__priority_i{i}_desc"] = hover
+        if k not in names:
+            raise SystemExit(f"council: the game has no {language} name for {k}")
+        # The game's own linked name, as CM writes its building rows
+        # ([ShowBuildingTypeName]): it hovers the game's tooltip of the action.
+        name = f"[ShowCabinetActionName('{k}')]"
+        for s in LISTS:
+            rows[f"{MOD_ID}__{s}_i{i}_name"] = name
     for ab, text in ABILITY[language].items():
         rows[f"bag_asp_ability_{ab}"] = text
+    rows["bag_asp_tuning_none"] = TUNING_NONE[language]
     return rows

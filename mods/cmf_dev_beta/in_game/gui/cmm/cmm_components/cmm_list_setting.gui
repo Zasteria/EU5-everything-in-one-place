@@ -77,6 +77,13 @@
 					visible = "[CMMListSettingIsOrdered(Scope.GetFlagName)]"
 				}
 
+				# cmf_dev_beta: room for the typed position below.
+				widget = {
+					size = { 44 0 }
+					minimumsize = { 44 0 }
+					visible = "[CMMListSettingIsOrdered(Scope.GetFlagName)]"
+				}
+
 				text_single = {
 					layoutpolicy_horizontal = expanding
 					fontsize = 14
@@ -269,6 +276,41 @@
 								}
 							}
 						}
+					}
+				}
+			}
+
+			# cmf_dev_beta: type a place among the shown rows, Enter moves the row there.
+			widget = {
+				size = { 44 28 }
+				minimumsize = { 44 28 }
+				visible = "[CMMListItemSettingIsOrdered(Scope.GetFlagName)]"
+				enabled = "[And(CMMListItemCanEdit(Scope.GetFlagName), Not(GameIsMultiplayer))]"
+				tooltip = "CMF_BETA_LIST_TYPE_POSITION"
+
+				# The game's editbox_single (main_menu/gui/editbox.gui) stretches and keeps
+				# 12 px each side; here it has a size of its own and room for two digits.
+				editbox_single = {
+					size = { 44 28 }
+					margin = { 6 0 }
+					align = center|nobaseline
+					parentanchor = center
+					widgetanchor = center
+					focuspolicy = all
+					alwaystransparent = no
+					multiline = no
+					text = ""
+
+					blockoverride "editbox_properties" {
+						onreturnpressed = "[ExecuteConsoleCommand(Concatenate('effect c:', Concatenate(Player.GetTag, Concatenate(' = { cmf_beta_list_move_to = { setting = ', Concatenate(CMMListItemOwnerSettingKey(Scope.GetFlagName), Concatenate(' from = ', Concatenate(ToString_int32(PdxGuiWidget.GetIndexInDataModel), Concatenate(' to = ', Concatenate(GetTextFromSelfOrAnyChildEditbox(PdxGuiWidget.Self), ' } }')))))))))]"
+						onreturnpressed = "[CMMExecuteListItemSettingChanged(Scope.GetFlagName)]"
+						onreturnpressed = "[PdxClearEditBoxText(PdxGuiWidget.Self)]"
+						onreturnpressed = "[PdxGuiTriggerAllAnimations('cmm_recache_delay')]"
+						maxcharacters = 2
+					}
+
+					blockoverride "editbox_label" {
+						text = "CMF_BETA_LIST_POSITION_LABEL"
 					}
 				}
 			}

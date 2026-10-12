@@ -32,6 +32,14 @@ the two and nothing on screen changes. His «works 2 times in 5» on CM's town
 rights and on the council priority, 10-12 — both lists hide rows. The arrows now
 swap with the nearest row that is shown.
 
+**A typed position for an ordered list** (+beta8, 10-12, his ask: «как порядок
+в мод-листе игры»). A box beside the arrows takes a number; Enter moves the row
+to that place among the shown rows (1 = the top, past the end = the bottom). The
+number reaches script the way CMF's own text setting sends its text: the console
+command `effect c:<tag> = { cmf_beta_list_move_to = { ... to = <typed> } }`,
+so the typed digits become a literal macro argument. Single player only, like
+CMF's text setting.
+
     python3 mods/cmf_dev_beta/tools/port_from_cmf_dev.py
 """
 
@@ -56,7 +64,7 @@ _spec = importlib.util.spec_from_file_location(
 beta = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(beta)
 
-REVISION = 7
+REVISION = 8
 
 
 def metadata() -> str:
@@ -70,8 +78,8 @@ def metadata() -> str:
         f"Community Mod Framework {version} (the authors' 1.4 port) with two fixes: CMF's "
         "own is_host is called as cmf_is_host, since the game's native is_host is false "
         "in single player; the bottom action bar no longer keeps empty slots for hidden "
-        "buttons; ordered-list arrows step over hidden rows. Load this INSTEAD of CMF and "
-        "CMF Dev.")
+        "buttons; ordered-list arrows step over hidden rows, and a typed number moves a row. "
+        "Load this INSTEAD of CMF and CMF Dev.")
     base["relationships"] = []
     return json.dumps(base, indent=4, ensure_ascii=False) + "\n"
 
@@ -177,6 +185,137 @@ def arrows_skip_hidden() -> None:
     path.write_text("\ufeff" + text, encoding="utf-8")
 
 
+LIST_GUI = "in_game/gui/cmm/cmm_components/cmm_list_setting.gui"
+HEADER_ARROWS = ("\t\t\t\twidget = {\n\t\t\t\t\tsize = { 56 0 }\n\t\t\t\t\tminimumsize = { 56 0 }\n"
+                 "\t\t\t\t\tvisible = \"[CMMListSettingIsOrdered(Scope.GetFlagName)]\"\n\t\t\t\t}\n")
+HEADER_BOX = ("\t\t\t\t# cmf_dev_beta: room for the typed position below.\n"
+              "\t\t\t\twidget = {\n\t\t\t\t\tsize = { 44 0 }\n\t\t\t\t\tminimumsize = { 44 0 }\n"
+              "\t\t\t\t\tvisible = \"[CMMListSettingIsOrdered(Scope.GetFlagName)]\"\n\t\t\t\t}\n")
+ROW_ARROWS = ("\t\t\twidget = {\n\t\t\t\tsize = { 56 28 }\n\t\t\t\tminimumsize = { 56 28 }\n"
+              "\t\t\t\tvisible = \"[CMMListItemSettingIsOrdered(Scope.GetFlagName)]\"\n")
+MOVE_COMMAND = ("ExecuteConsoleCommand(Concatenate('effect c:', Concatenate(Player.GetTag, "
+                "Concatenate(' = { cmf_beta_list_move_to = { setting = ', "
+                "Concatenate(CMMListItemOwnerSettingKey(Scope.GetFlagName), "
+                "Concatenate(' from = ', Concatenate(ToString_int32(PdxGuiWidget.GetIndexInDataModel), "
+                "Concatenate(' to = ', Concatenate(GetTextFromSelfOrAnyChildEditbox(PdxGuiWidget.Self), "
+                "' } }')))))))))")
+ROW_BOX = """\t\t\t# cmf_dev_beta: type a place among the shown rows, Enter moves the row there.
+\t\t\twidget = {
+\t\t\t\tsize = { 44 28 }
+\t\t\t\tminimumsize = { 44 28 }
+\t\t\t\tvisible = "[CMMListItemSettingIsOrdered(Scope.GetFlagName)]"
+\t\t\t\tenabled = "[And(CMMListItemCanEdit(Scope.GetFlagName), Not(GameIsMultiplayer))]"
+\t\t\t\ttooltip = "CMF_BETA_LIST_TYPE_POSITION"
+
+\t\t\t\t# The game's editbox_single (main_menu/gui/editbox.gui) stretches and keeps
+\t\t\t\t# 12 px each side; here it has a size of its own and room for two digits.
+\t\t\t\teditbox_single = {
+\t\t\t\t\tsize = { 44 28 }
+\t\t\t\t\tmargin = { 6 0 }
+\t\t\t\t\talign = center|nobaseline
+\t\t\t\t\tparentanchor = center
+\t\t\t\t\twidgetanchor = center
+\t\t\t\t\tfocuspolicy = all
+\t\t\t\t\talwaystransparent = no
+\t\t\t\t\tmultiline = no
+\t\t\t\t\ttext = ""
+
+\t\t\t\t\tblockoverride "editbox_properties" {
+\t\t\t\t\t\tonreturnpressed = "[%s]"
+\t\t\t\t\t\tonreturnpressed = "[CMMExecuteListItemSettingChanged(Scope.GetFlagName)]"
+\t\t\t\t\t\tonreturnpressed = "[PdxClearEditBoxText(PdxGuiWidget.Self)]"
+\t\t\t\t\t\tonreturnpressed = "[PdxGuiTriggerAllAnimations('cmm_recache_delay')]"
+\t\t\t\t\t\tmaxcharacters = 2
+\t\t\t\t\t}
+
+\t\t\t\t\tblockoverride "editbox_label" {
+\t\t\t\t\t\ttext = "CMF_BETA_LIST_POSITION_LABEL"
+\t\t\t\t\t}
+\t\t\t\t}
+\t\t\t}
+
+""" % MOVE_COMMAND
+MOVE_EFFECT = """
+# cmf_dev_beta: move row `from` (its index in the whole list) to place `to` among
+# the shown rows; 1 and below is the top, past the last shown row the bottom.
+# Called through the console by the typed-position box of an ordered list row.
+# Scope: country
+cmf_beta_list_move_to = {
+\tset_local_variable = { name = cmf_beta_to value = $to$ }
+\tif = {
+\t\tlimit = { local_var:cmf_beta_to < 1 }
+\t\tset_local_variable = { name = cmf_beta_to value = 1 }
+\t}
+\tset_variable = { name = cmm_list_position_to_apply value = $from$ }
+\tset_local_variable = { name = cmm_tmp_flag value = flag:$setting$ }
+\tif = {
+\t\tlimit = { "variable_map(cmm_is_global|local_var:cmm_tmp_flag)" >= 1 }
+\t\t_cmf_beta_list_move_to = { setting = $setting$ vt = global_variable lt = in_global }
+\t}
+\telse = {
+\t\t_cmf_beta_list_move_to = { setting = $setting$ vt = variable lt = in }
+\t}
+\tremove_variable = cmm_list_position_to_apply
+}
+
+_cmf_beta_list_move_to = {
+\tset_local_variable = { name = cmm_list_target_index value = 9999 }
+\tset_local_variable = { name = cmm_list_scan_index value = 0 }
+\tset_local_variable = { name = cmm_list_scan_raw value = 0 }
+\tset_local_variable = { name = cmm_list_scan_shown value = 0 }
+\tset_local_variable = { name = cmm_list_scan_marked value = var:cmm_list_position_to_apply }
+\tevery_$lt$_list = {
+\t\tvariable = cmm_list_items_$setting$
+\t\tsave_scope_as = cmm_list_scan_item
+\t\tif = {
+\t\t\tlimit = { NOT = { local_var:cmm_list_scan_raw = local_var:cmm_list_scan_marked } }
+\t\t\tif = {
+\t\t\t\tlimit = { NOT = { root = { is_key_in_variable_map = { name = cmm_list_item_hidden target = scope:cmm_list_scan_item } } } }
+\t\t\t\tchange_local_variable = { name = cmm_list_scan_shown add = 1 }
+\t\t\t\tif = {
+\t\t\t\t\tlimit = {
+\t\t\t\t\t\tlocal_var:cmm_list_scan_shown = local_var:cmf_beta_to
+\t\t\t\t\t\tlocal_var:cmm_list_target_index = 9999
+\t\t\t\t\t}
+\t\t\t\t\tset_local_variable = { name = cmm_list_target_index value = local_var:cmm_list_scan_index }
+\t\t\t\t}
+\t\t\t}
+\t\t\tchange_local_variable = { name = cmm_list_scan_index add = 1 }
+\t\t}
+\t\tchange_local_variable = { name = cmm_list_scan_raw add = 1 }
+\t}
+\t_cmm_reorder_list_setting = { setting = $setting$ vt = $vt$ lt = $lt$ }
+}
+"""
+MOVE_LOC = {
+    "english": ('CMF_BETA_LIST_TYPE_POSITION: "Type a place and press Enter: the row moves there"\n'
+                'CMF_BETA_LIST_POSITION_LABEL: "#"\n'),
+    "russian": ('CMF_BETA_LIST_TYPE_POSITION: "Впишите место и нажмите Enter: строка встанет туда"\n'
+                'CMF_BETA_LIST_POSITION_LABEL: "№"\n'),
+}
+
+
+def typed_position() -> None:
+    """A number box beside an ordered row's arrows moves the row to that place."""
+    path = MOD / LIST_GUI
+    text = path.read_text(encoding="utf-8-sig")
+    if text.count(HEADER_ARROWS) != 1 or text.count(ROW_ARROWS) != 1:
+        raise SystemExit(f"{LIST_GUI}: the arrows' column moved")
+    text = text.replace(HEADER_ARROWS, HEADER_ARROWS + "\n" + HEADER_BOX, 1)
+    start = text.index(ROW_ARROWS)
+    _, end = beta._block(text, start + len("\t\t\twidget = {"), 0)
+    end = text.index("\n", end) + 1
+    text = text[:end] + "\n" + ROW_BOX + text[end:].lstrip("\n")
+    path.write_text("\ufeff" + text, encoding="utf-8")
+    runtime = MOD / LIST_RUNTIME
+    runtime.write_text("\ufeff" + runtime.read_text(encoding="utf-8-sig") + MOVE_EFFECT, encoding="utf-8")
+    for language, rows in MOVE_LOC.items():
+        out = MOD / f"main_menu/localization/{language}/cmf_beta_l_{language}.yml"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text("\ufeff" + f"l_{language}:\n" + "".join(" " + r + "\n" for r in rows.splitlines()),
+                       encoding="utf-8")
+
+
 def main() -> int:
     for name in ("in_game", "main_menu", "loading_screen", ".metadata"):
         if (MOD / name).exists():
@@ -187,6 +326,7 @@ def main() -> int:
     host_calls = own_host_trigger()
     bar_ignores_hidden()
     arrows_skip_hidden()
+    typed_position()
     (MOD / ".metadata").mkdir(parents=True, exist_ok=True)
     (MOD / ".metadata/metadata.json").write_text("﻿" + metadata(), encoding="utf-8")
     thumb = SRC / ".metadata/thumbnail.png"

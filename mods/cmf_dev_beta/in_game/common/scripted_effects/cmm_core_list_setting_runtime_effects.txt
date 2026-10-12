@@ -1642,3 +1642,54 @@ _cmf_beta_shown_neighbour_down = {
 		change_local_variable = { name = cmm_list_scan_index add = 1 }
 	}
 }
+
+# cmf_dev_beta: move row `from` (its index in the whole list) to place `to` among
+# the shown rows; 1 and below is the top, past the last shown row the bottom.
+# Called through the console by the typed-position box of an ordered list row.
+# Scope: country
+cmf_beta_list_move_to = {
+	set_local_variable = { name = cmf_beta_to value = $to$ }
+	if = {
+		limit = { local_var:cmf_beta_to < 1 }
+		set_local_variable = { name = cmf_beta_to value = 1 }
+	}
+	set_variable = { name = cmm_list_position_to_apply value = $from$ }
+	set_local_variable = { name = cmm_tmp_flag value = flag:$setting$ }
+	if = {
+		limit = { "variable_map(cmm_is_global|local_var:cmm_tmp_flag)" >= 1 }
+		_cmf_beta_list_move_to = { setting = $setting$ vt = global_variable lt = in_global }
+	}
+	else = {
+		_cmf_beta_list_move_to = { setting = $setting$ vt = variable lt = in }
+	}
+	remove_variable = cmm_list_position_to_apply
+}
+
+_cmf_beta_list_move_to = {
+	set_local_variable = { name = cmm_list_target_index value = 9999 }
+	set_local_variable = { name = cmm_list_scan_index value = 0 }
+	set_local_variable = { name = cmm_list_scan_raw value = 0 }
+	set_local_variable = { name = cmm_list_scan_shown value = 0 }
+	set_local_variable = { name = cmm_list_scan_marked value = var:cmm_list_position_to_apply }
+	every_$lt$_list = {
+		variable = cmm_list_items_$setting$
+		save_scope_as = cmm_list_scan_item
+		if = {
+			limit = { NOT = { local_var:cmm_list_scan_raw = local_var:cmm_list_scan_marked } }
+			if = {
+				limit = { NOT = { root = { is_key_in_variable_map = { name = cmm_list_item_hidden target = scope:cmm_list_scan_item } } } }
+				change_local_variable = { name = cmm_list_scan_shown add = 1 }
+				if = {
+					limit = {
+						local_var:cmm_list_scan_shown = local_var:cmf_beta_to
+						local_var:cmm_list_target_index = 9999
+					}
+					set_local_variable = { name = cmm_list_target_index value = local_var:cmm_list_scan_index }
+				}
+			}
+			change_local_variable = { name = cmm_list_scan_index add = 1 }
+		}
+		change_local_variable = { name = cmm_list_scan_raw add = 1 }
+	}
+	_cmm_reorder_list_setting = { setting = $setting$ vt = $vt$ lt = $lt$ }
+}
