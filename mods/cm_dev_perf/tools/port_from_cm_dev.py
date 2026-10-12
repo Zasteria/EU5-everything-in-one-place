@@ -781,19 +781,6 @@ _SCAN_SHOUTS = (
 )
 
 
-def _slow_the_poll(text: str) -> str:
-    """The «ready?» loop between scoring and firing, every 1 s instead of 0.3 s:
-    a third of the walks while CM waits. Completion is still decided by
-    cm_q_sync_check; the step lengths only pace it."""
-    old = ("\t\t\tstate = {\n\t\t\t\tname = cm_q_round_probe\n\t\t\t\tduration = 0.15\n"
-           "\t\t\t\ton_finish = \"[PdxGuiTriggerAllAnimations('cm_q_probe')]\"\n"
-           "\t\t\t\tnext = cm_q_round_check\n\t\t\t}\n"
-           "\t\t\tstate = {\n\t\t\t\tname = cm_q_round_check\n\t\t\t\tduration = 0.15\n")
-    if text.count(old) != 1:
-        raise SystemExit("queue window: the poll loop has changed shape")
-    return text.replace(old, old.replace("duration = 0.15", "duration = 0.5"), 1)
-
-
 def _gate_scan_shouts(text: str) -> str:
     """One shout per queue that has something in it, instead of eleven every
     sweep. Each shout moves to its own zero-size widget that turns visible when
@@ -861,10 +848,20 @@ def _count_rounds_init(text: str) -> str:
         "\t\tset_global_variable = { name = cm_perf_log_v2 value = var:cm_q_processed }\n"
         "\t\tset_global_variable = { name = cm_perf_log_v3 value = var:cm_perf_rounds }\n"
         "\t\tset_global_variable = { name = cm_perf_log_v4 value = var:cm_q_rescans }\n"
+        # +perf36: how the cycle ended. skipped 2 = the dispatcher's force reset, which
+        # drops the month unbuilt; approved 0 = it never reached the approval pass.
+        "\t\tset_global_variable = { name = cm_perf_log_v5 value = 0 }\n"
+        "\t\tif = { limit = { has_variable = cm_q_skipped_pulses } "
+        "set_global_variable = { name = cm_perf_log_v5 value = var:cm_q_skipped_pulses } }\n"
+        "\t\tset_global_variable = { name = cm_perf_log_v6 value = 0 }\n"
+        "\t\tif = { limit = { has_variable = cm_q_pass_done } "
+        "set_global_variable = { name = cm_perf_log_v6 value = 1 } }\n"
         "\t\tdebug_log = \"CM perf cycle: staged "
         + " scored ".join(f"[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v{n}')|0]" for n in (1, 2))
         + " rounds [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v3')|0]"
-        + " rescans [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v4')|0]\"\n"
+        + " rescans [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v4')|0]"
+        + " skipped [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v5')|0]"
+        + " approved [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_log_v6')|0]\"\n"
         "\t}\n")
     return text.replace(old, old + log, 1)
 
@@ -925,7 +922,6 @@ EDITS = (
      _pf_log_close),
     (CMM, "say the refresh button's click in debug.log", _pf_log_click),
     (FOOD, "subsidize every idle or loss-making farm", _subsidize_idle_farms),
-    (QUEUE, "poll the queue every second, not every 0.3 s", _slow_the_poll),
     (QUEUE, "shout only into queues with entries", _gate_scan_shouts),
     (FEATURE, "count the ready-polls and log each cycle", _count_rounds_init),
     (HIDDEN_GUIS, "count each ready-poll", _count_rounds),
@@ -1031,7 +1027,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 35
+PERF_REVISION = 36
 
 
 def metadata() -> str:
