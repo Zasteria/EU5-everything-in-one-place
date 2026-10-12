@@ -28,6 +28,11 @@ Steam folder. **Ask for** `mods.bat → 1`, `→ 2` and `mods.bat check`.
   design a different test until they have run.**
 - **Производительность 1.4** — отложена им 10-05, без просьбы не поднимать:
   [`investigations/perf_1_4.md`](investigations/perf_1_4.md), зонд `perf_probe`.
+  10-12 он снова отложил: `cm_dev_perf` +perf34 подтверждён прогоном, пункт 3 (строки без
+  крика) и строку длины месяца не делать, «если появятся проблемы производительности — тогда
+  и вернусь» ([`investigations/cm_performance.md`](investigations/cm_performance.md)).
+- **`cm_dev_perf` +perf38/39 в игре не видели:** карта прав по провинции, грамоты 1.4 и их
+  замена в эпохе 3 ([`../mods/cm_dev_perf/CLAUDE.md`](../mods/cm_dev_perf/CLAUDE.md)).
 
 ## Задача на будущее: подсказки по действию
 
