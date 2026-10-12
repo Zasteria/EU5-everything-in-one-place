@@ -887,6 +887,147 @@ def _count_rounds(text: str) -> str:
                                    "change_variable = { name = cm_perf_rounds add = 1 } } # cm_dev_perf +perf35\n", 1)
 
 
+# +perf38 (10-12, his «сделать в cm_dev_perf аналогичные изменения»): cm_maps
+# 0.3.0's rights scoring, taken from cm_maps' own generator so the two stay one
+# rule. The rights are scored for the province, not the location, and a
+# granted 1.4 charter is not the location's own bonus (cm_maps/tools/port_from_cm.py,
+# province_scored_edits, and its README «1.4»).
+_spec = importlib.util.spec_from_file_location(
+    "cm_maps_port", refs.REPO / "mods/cm_maps/tools/port_from_cm.py")
+maps = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(maps)
+
+TRMM_VALUES = "in_game/common/script_values/cm_town_right_map_mode_script_values.txt"
+MISC_VALUES = "in_game/common/script_values/cm_misc_script_values.txt"
+
+
+def _province_scored(text: str) -> str:
+    for path, old, new, label in maps.province_scored_edits():
+        if path != maps.TRMM_VALUES:
+            raise SystemExit(f"cm_maps edits a file this port does not map: {path}")
+        old, new = old.replace("bcm_", "cm_"), new.replace("bcm_", "cm_").replace(
+            "# cm_maps scores the province", "# cm_dev_perf (as cm_maps) scores the province")
+        if text.count(old) != 1:
+            raise SystemExit(f"rights values: {label} — matched {text.count(old)} times")
+        text = text.replace(old, new, 1)
+    return text
+
+
+def _retire_trmm(text: str) -> str:
+    """The stored best rights were scored the old way; a new version makes every
+    started save recompute on load (`cm_trmm_stamp`, cm_setup_triggers.txt).
+    Far above CM's own count, so a CM bump does not land on it."""
+    old = "cm_trmm_version_value = 1\n"
+    if text.count(old) != 1:
+        raise SystemExit("misc values: cm_trmm_version_value has moved")
+    return text.replace(old, "cm_trmm_version_value = 101 # cm_dev_perf +perf38: rights per province\n", 1)
+
+
+def _chip_words() -> None:
+    """The tooltip chips mark what is no longer in the score (cm_maps LOC_EDITS)."""
+    for lang in ("russian", "english"):
+        path = MOD / f"main_menu/localization/{lang}/cm_town_right_map_mode_l_{lang}.yml"
+        text = path.read_text(encoding="utf-8-sig")
+        for key, value in maps.LOC_EDITS[("bcm_trmm", lang)].items():
+            key = key.replace("bcm_", "cm_")
+            text, n = re.subn(rf'(?m)^( {re.escape(key)}:\s*\d*\s*)"(?:[^"\\]|\\.)*"',
+                              lambda m: f'{m.group(1)}"{value}"', text)
+            if n != 1:
+                raise SystemExit(f"{path.name}: {key} matched {n} times")
+        path.write_text("﻿" + text, encoding="utf-8")
+
+
+# +perf38 (10-12, his words): «в 1.4 добавились младшие аналоги всех
+# специализированных прав… мод должен уметь выдавать их, пока недоступны их
+# старшие аналоги». The nine charters (town_rights/01_discovery_charter.txt) open
+# with city_building_advance in age 1, each `upgrades_to` its royal right, which
+# opens with town_rights_enable in age 3; same goods, half the bonus. So the
+# specialization draw scores as before and grants the charter until the royal
+# rights open; a location holding either counts as specialized.
+ATR = "in_game/common/scripted_effects/cm_atr_ur_effects.txt"
+ATR_TRIGGERS = "in_game/common/scripted_triggers/cm_atr_ur_triggers.txt"
+ATR_ALLOW = "in_game/common/scripted_triggers/cm_auto_town_rights_allow_triggers.txt"
+CHARTER_ADVANCE = "city_building_advance"
+
+
+def _charters() -> dict[str, str]:
+    """royal right -> its charter, read from the game's files."""
+    text = (refs.GAME_COMMON / "town_rights/01_discovery_charter.txt").read_text(encoding="utf-8-sig")
+    pairs = dict((royal, charter) for charter, royal in
+                 re.findall(r"(?m)^([a-z_]+) = \{.*?^\tupgrades_to = ([a-z_]+)", text, re.S))
+    advances = (refs.GAME_COMMON / "advances/0_age_of_traditions.txt").read_text(encoding="utf-8-sig")
+    block = re.search(rf"(?ms)^{CHARTER_ADVANCE} = \{{.*?^\}}", advances)
+    if not block or any(f"unlock_town_rights = {c}" not in block.group(0) for c in pairs.values()):
+        raise SystemExit(f"charters: {CHARTER_ADVANCE} no longer unlocks all of them")
+    return pairs
+
+
+def _grant_charters(text: str) -> str:
+    pairs = _charters()
+    start = text.index("cm_atr_ur_pick_specialization = {\n")
+    end = text.index("\n}\n", start) + 3
+    pick = text[start:end]
+    missing = [r for r in pairs if f"RIGHT = {r} " not in pick]
+    if missing or len(pairs) != 9:
+        raise SystemExit(f"charters: the draw and the game disagree ({missing}, {len(pairs)})")
+    charter = pick.replace("cm_atr_ur_pick_specialization = {", "cm_atr_ur_pick_charter = {", 1)
+    for royal, ch in pairs.items():
+        charter = charter.replace(f"RIGHT = {royal} ", f"RIGHT = {ch} ")
+    note = ("# cm_dev_perf +perf38: the same draw granting the 1.4 charter of each right, for a\n"
+            "# country that has the charters and not yet the royal rights. Charters carry half the\n"
+            "# royal bonus on the same goods, so fit and value rank them as the royal ones.\n")
+    text = text[:end] + "\n" + note + charter + text[end:]
+    old = "\t\t\t\tcm_atr_ur_pick_specialization = yes\n"
+    if text.count(old) != 1:
+        raise SystemExit("charters: the pass's call to the draw has moved")
+    return text.replace(old,
+        "\t\t\t\tif = {\n"
+        "\t\t\t\t\tlimit = { scope:cm_country = { has_advance = town_rights_enable } }\n"
+        "\t\t\t\t\tcm_atr_ur_pick_specialization = yes\n"
+        "\t\t\t\t}\n"
+        "\t\t\t\telse = {\n"
+        "\t\t\t\t\tcm_atr_ur_pick_charter = yes # cm_dev_perf +perf38\n"
+        "\t\t\t\t}\n", 1)
+
+
+def _charter_counts(text: str) -> str:
+    """A charter is a specialization: one per location, as the royal right."""
+    old = "\t\thas_town_rights = town_rights_type:royal_masonry_rights\n\t}\n"
+    if text.count(old) != 1:
+        raise SystemExit("charters: cm_atr_ur_has_no_specialization has changed")
+    lines = "".join(f"\t\thas_town_rights = town_rights_type:{c} # cm_dev_perf +perf38\n"
+                    for c in _charters().values())
+    return text.replace(old, old[:-3] + lines + "\t}\n", 1)
+
+
+def _charter_allow(text: str) -> str:
+    """textile_charter carries the royal textile right's own allow (the Flemish right)."""
+    start = text.index("cm_can_grant_specialization_right_at_location = {\n")
+    head, text = text[:start], text[start:]
+    old = ("\ttrigger_else_if = {\n"
+           "\t\tlimit = { scope:cm_town_right = town_rights_type:royal_textile_rights }\n")
+    if text.count(old) != 1:
+        raise SystemExit("charters: the textile allow has moved")
+    return head + text.replace(old, old.replace(
+        "limit = { scope:cm_town_right = town_rights_type:royal_textile_rights }",
+        "limit = {\n\t\t\tOR = {\n"
+        "\t\t\t\tscope:cm_town_right = town_rights_type:royal_textile_rights\n"
+        "\t\t\t\tscope:cm_town_right = town_rights_type:textile_charter # cm_dev_perf +perf38\n"
+        "\t\t\t}\n\t\t}"), 1)
+
+
+def _charter_gate(text: str) -> str:
+    """The draw runs once the charters are open, not only the royal rights."""
+    old = ("\t\t\t\texists = var:cm_auto_grant_specialization\n"
+           "\t\t\t\thas_advance = town_rights_enable\n")
+    if text.count(old) != 1:
+        raise SystemExit("charters: the specialization gate has moved")
+    return text.replace(old,
+        "\t\t\t\texists = var:cm_auto_grant_specialization\n"
+        "\t\t\t\t# cm_dev_perf +perf38: the 1.4 charters open in age 1\n"
+        f"\t\t\t\tOR = {{ has_advance = town_rights_enable has_advance = {CHARTER_ADVANCE} }}\n", 1)
+
+
 def _write_subsidy_desc() -> None:
     for lang, words in SUBSIDY_DESC.items():
         path = MOD / f"main_menu/localization/{lang}/cm_cmm_l_{lang}.yml"
@@ -939,6 +1080,12 @@ EDITS = (
     (QUEUE, "shout only into queues with entries", _gate_scan_shouts),
     (FEATURE, "count the ready-polls and log each cycle", _count_rounds_init),
     (HIDDEN_GUIS, "count each ready-poll", _count_rounds),
+    (TRMM_VALUES, "score the rights per province, as cm_maps 0.3.0", _province_scored),
+    (MISC_VALUES, "retire the rights stored the old way", _retire_trmm),
+    (ATR, "grant the 1.4 charters until the royal rights open", _grant_charters),
+    (ATR_TRIGGERS, "a charter is a specialization", _charter_counts),
+    (ATR_ALLOW, "the textile charter's Flemish gate", _charter_allow),
+    (FEATURE, "run the draw once the charters are open", _charter_gate),
 )
 
 
@@ -1041,7 +1188,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 37
+PERF_REVISION = 38
 
 
 def metadata() -> str:
@@ -1078,6 +1225,7 @@ def main() -> int:
         target.write_text("﻿" + patched.lstrip("﻿"), encoding="utf-8")
     _write_setting_words()
     _write_subsidy_desc()
+    _chip_words()
     _split_glorp_shared()
     # The beta's buildings and National Destinies' in Custom auto-build (buildings.py).
     buildings.vanilla_checks(refs.GAME / "in_game/common/building_types")
