@@ -26,6 +26,8 @@ finished action empties its seat by itself. The debug.log lines say both.
 from __future__ import annotations
 
 import re
+
+import alert_banner  # tools/, put on sys.path by generate.py
 from pathlib import Path
 
 MOD_ID = "bag_asp"
@@ -734,16 +736,16 @@ bag_asp_clear_busy = {{
         f"\t\t\telse_if = {{ limit = {{ cabinet_action = cabinet_action:{k} }} add = scope:actor.var:bag_asp_rank_{k} }}"
         for k, *_ in POOL if k != "recovery_effort")
     seat_below = "\n".join(
-        f"\t\t\t\t\t\tAND = {{ cabinet_action = cabinet_action:{k} scope:actor.var:bag_asp_rank_{k} > scope:actor.var:bag_asp_rank_recovery_effort }}"
+        f"\t\t\t\t\t\t\tAND = {{ cabinet_action = cabinet_action:{k} scope:actor.var:bag_asp_rank_{k} > scope:actor.var:bag_asp_rank_recovery_effort }}"
         for k, *_ in POOL if k != "recovery_effort")
     run += f"""
-# Scope: country. While any yellow alert shows (the devastated one is yellow),
-# every two seconds (bag_asp_devastation_watch.gui). Costs one look over the
-# provinces unless one has a location below zero and no recovery; then one
-# province below zero
-# prosperity without recovery gets it now: an empty seat first, else the seat
-# whose action ranks lowest in «Приоритет» — only among actions ranked below
-# recovery (unticked ones count as below). Actions outside the pool stay.
+# Scope: country. While the «devastated locations» alert shows (its banner,
+# bag_alert_banner.gui): as it appears, then every ten seconds. Costs a look
+# over the provinces unless one has a location below zero and no recovery;
+# then each such province, most devastated first, gets recovery: an empty seat
+# first, else the seat whose action ranks lowest in «Приоритет» — only among
+# actions ranked below recovery (unticked ones count as below). Actions
+# outside the pool stay.
 bag_asp_emergency = {{
 \tif = {{
 \t\tlimit = {{
@@ -761,39 +763,57 @@ bag_asp_emergency = {{
 \t\t\t\t}}
 \t\t\t}}
 \t\t\tbag_asp_rebuild = yes
-\t\t\tordered_cabinet = {{
+\t\t\t# One province per seat, until none is left without recovery or no
+\t\t\t# seat below recovery is free to give.
+\t\t\tset_variable = {{ name = bag_asp_em_go value = yes }}
+\t\t\twhile = {{
 \t\t\t\tlimit = {{
-\t\t\t\t\texists = cabinet_member
-\t\t\t\t\tOR = {{
-\t\t\t\t\t\thas_cabinet_action = no
+\t\t\t\t\thas_variable = bag_asp_em_go
+\t\t\t\t\tany_province = {{
+\t\t\t\t\t\tNOT = {{ has_variable = bag_asp_busy_recovery_effort }}
+\t\t\t\t\t\tany_location_in_province = {{ prosperity < 0 }}
+\t\t\t\t\t}}
+\t\t\t\t}}
+\t\t\t\tremove_variable = bag_asp_em_go
+\t\t\t\tordered_cabinet = {{
+\t\t\t\t\tlimit = {{
+\t\t\t\t\t\texists = cabinet_member
+\t\t\t\t\t\tOR = {{
+\t\t\t\t\t\t\thas_cabinet_action = no
 {seat_below}
+\t\t\t\t\t\t}}
 \t\t\t\t\t}}
-\t\t\t\t}}
-\t\t\t\torder_by = {{
-\t\t\t\t\tvalue = 0
-\t\t\t\t\tif = {{ limit = {{ has_cabinet_action = no }} add = 1000 }}
-{seat_rank.replace(chr(9) * 3, chr(9) * 5)}
-\t\t\t\t\tadd = {{
-\t\t\t\t\t\tvalue = cabinet_member.dip
-\t\t\t\t\t\tdivide = 100
+\t\t\t\t\torder_by = {{
+\t\t\t\t\t\tvalue = 0
+\t\t\t\t\t\tif = {{ limit = {{ has_cabinet_action = no }} add = 1000 }}
+{seat_rank.replace(chr(9) * 3, chr(9) * 6)}
+\t\t\t\t\t\tadd = {{
+\t\t\t\t\t\t\tvalue = cabinet_member.dip
+\t\t\t\t\t\t\tdivide = 100
+\t\t\t\t\t\t}}
 \t\t\t\t\t}}
-\t\t\t\t}}
-\t\t\t\tsave_scope_as = bag_asp_seat
-\t\t\t\tbag_asp_try_recovery_effort = yes
-\t\t\t\tif = {{
-\t\t\t\t\tlimit = {{ exists = cabinet_member }}
-\t\t\t\t\tcabinet_member = {{
-\t\t\t\t\t\tif = {{
-\t\t\t\t\t\t\tlimit = {{ has_variable = bag_asp_claimed }}
-\t\t\t\t\t\t\tremove_variable = bag_asp_claimed
+\t\t\t\t\tsave_scope_as = bag_asp_seat
+\t\t\t\t\tbag_asp_try_recovery_effort = yes
+\t\t\t\t\tif = {{
+\t\t\t\t\t\tlimit = {{ exists = cabinet_member }}
+\t\t\t\t\t\tcabinet_member = {{
+\t\t\t\t\t\t\tif = {{
+\t\t\t\t\t\t\t\tlimit = {{ has_variable = bag_asp_claimed }}
+\t\t\t\t\t\t\t\tremove_variable = bag_asp_claimed
+\t\t\t\t\t\t\t}}
 \t\t\t\t\t\t}}
 \t\t\t\t\t}}
 \t\t\t\t}}
+\t\t\t\tif = {{
+\t\t\t\t\tlimit = {{ has_variable = bag_asp_placed }}
+\t\t\t\t\tdebug_log = "bag_asp: emergency, a seat moved to recovery"
+\t\t\t\t\tremove_variable = bag_asp_placed
+\t\t\t\t\tset_variable = {{ name = bag_asp_em_go value = yes }}
+\t\t\t\t}}
 \t\t\t}}
 \t\t\tif = {{
-\t\t\t\tlimit = {{ has_variable = bag_asp_placed }}
-\t\t\t\tdebug_log = "bag_asp: emergency, a seat moved to recovery"
-\t\t\t\tremove_variable = bag_asp_placed
+\t\t\t\tlimit = {{ has_variable = bag_asp_em_go }}
+\t\t\t\tremove_variable = bag_asp_em_go
 \t\t\t}}
 \t\t}}
 \t\tbag_asp_clear_busy = yes
@@ -866,8 +886,8 @@ bag_asp_on_month = {{
 
 """
     guis = "# assimilate_primary: the lists' callbacks. Rebuilt by tools/generate.py.\n\n" + guis
-    guis += f"""# Called by bag_asp_devastation_watch.gui while a yellow alert shows: once as
-# it appears, then every two seconds.
+    guis += f"""# Called by the «devastated locations» banner (bag_alert_banner.gui) while
+# the automation is on: once as it appears, then every ten seconds.
 bag_asp_devastated = {{
 \tscope = country
 \tis_shown = {{ always = yes }}
@@ -876,52 +896,15 @@ bag_asp_devastated = {{
 \t}}
 }}
 
-# Called once as a yellow alert appears: the probe that says the window sees it.
+# Called once as the banner appears: the probe that says the watch sees it.
 bag_asp_devastated_seen = {{
 \tscope = country
 \tis_shown = {{ always = yes }}
 \teffect = {{
-\t\tdebug_log = "bag_asp: a yellow alert is showing"
+\t\tdebug_log = "bag_asp: the devastated locations alert is showing"
 \t}}
 }}
 """
-    watch = """# assimilate_primary: wakes the council's emergency while a yellow alert shows.
-# The «devastated locations» alert is yellow (common/alert_descriptions), and
-# no global reads one alert by name: GetAlertOfTypeShowingCount and
-# IsAnyAlertOfTypeShowing take a priority, as outliner_entries.gui uses it. The
-# script then looks for a province below zero itself. Shape from CMF's
-# cmf_alert_prune_driver.gui: the root stays shown, the child toggles, pinned
-# with visible_at_creation = no so it gets a first _show. Rebuilt by
-# tools/generate.py.
-widget = {
-	name = "bag_asp_devastation_watch"
-	size = { 0 0 }
-	datacontext = "[GetPlayer]"
-	visible = "[Country.IsValid]"
-
-	widget = {
-		size = { 0 0 }
-		visible = "[IsAnyAlertOfTypeShowing('ALERT_PRIORITY_YELLOW')]"
-		visible_at_creation = no
-
-		state = {
-			name = _show
-			duration = 0.1
-			on_finish = "[GetScriptedGui('bag_asp_devastated_seen').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-			on_finish = "[GetScriptedGui('bag_asp_devastated').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-			next = bag_asp_devastation_again
-		}
-
-		state = {
-			name = bag_asp_devastation_again
-			duration = 2
-			on_finish = "[GetScriptedGui('bag_asp_devastated').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-			next = bag_asp_devastation_again
-		}
-	}
-}
-"""
-
     triggers = """# assimilate_primary: triggers of the council pass. Rebuilt by tools/generate.py.
 
 # Scope: cabinet (a seat). It has an advisor whom this pass has not chosen yet.
@@ -937,9 +920,9 @@ bag_asp_free_seat = {
         "in_game/common/scripted_effects/bag_asp_council_effects.txt": run,
         "in_game/common/on_action/bag_asp_cmf_on_actions.txt": on_actions,
         "in_game/common/scripted_guis/bag_asp_scripted_gui.txt": guis,
-        "in_game/gui/bag_asp_devastation_watch.gui": watch,
-        "in_game/gui/scripted_widgets/bag_asp_widgets.txt":
-            "gui/bag_asp_devastation_watch.gui = bag_asp_devastation_watch\n",
+        # The watch is a child of the game's alert banner, shared with
+        # quiet_alerts: tools/alert_banner.py.
+        alert_banner.PATH: alert_banner.build(game),
     }
 
 

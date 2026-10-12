@@ -1,8 +1,9 @@
-﻿# quiet_alerts: the game's `type alert_banner` (alertmanager.gui), copied whole,
-# plus the child that plays the red/orange sound while the CMF checkbox is on.
-# Rebuilt from the game by mods/quiet_alerts/tools/generate.py.
+﻿# The game's `type alert_banner` (alertmanager.gui), copied whole, with two
+# children: quiet_alerts' red/orange sound and assimilate_primary's
+# devastated-locations watch. Both mods ship this same file; built by
+# tools/alert_banner.py, do not edit by hand.
 
-types QuietAlerts {
+types BagAlertBanner {
 	type alert_banner = button {
 		ontextcontextchanged = "[SetAlertPriorityFromTextContext(PdxGuiWidget.AccessSelf)]"
 
@@ -79,6 +80,29 @@ types QuietAlerts {
 			state = {
 				name = _show
 				start_sound = { soundeffect = "UI_alert_appear_yellow" }
+			}
+		}
+
+		# assimilate_primary: the «devastated locations» banner wakes the council's
+		# emergency recovery; nothing on any other banner, nothing with the
+		# automation off.
+		widget = {
+			name = "bag_asp_devastation_watch"
+			size = { 0 0 }
+			visible_at_creation = no
+			visible = "[And(EqualTo_string(AlertEntry.GetDescription.GetTitleKey, 'ALERT_HAS_DEVASTATED_LOCATIONS'), GetPlayer.MakeScope.GetVariable('bag_asp_auto_on').IsSet)]"
+			state = {
+				name = _show
+				duration = 0.1
+				on_finish = "[GetScriptedGui('bag_asp_devastated_seen').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+				on_finish = "[GetScriptedGui('bag_asp_devastated').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+				next = bag_asp_devastation_again
+			}
+			state = {
+				name = bag_asp_devastation_again
+				duration = 10
+				on_finish = "[GetScriptedGui('bag_asp_devastated').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+				next = bag_asp_devastation_again
 			}
 		}
 	}

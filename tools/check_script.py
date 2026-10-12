@@ -683,8 +683,16 @@ def unresolved_interface(root: Path) -> list[str]:
                 found.append(f"{where}: `Custom('{name}')`, and no "
                              f"customizable_localization of that name — the cell "
                              f"comes out empty")
+        # **A file several mods ship alike** (tools/alert_banner.py) holds each
+        # mod's child; a name any of those mods defines is defined.
+        shared = set(guis)
+        for other in sorted((REPO / "mods").glob(f"*/{path.relative_to(root).as_posix()}")):
+            if other != path and other.read_text(encoding="utf-8-sig") == text:
+                for sgui in sorted(other.parents[1].glob("common/scripted_guis/*.txt")):
+                    shared |= set(re.findall(r"(?m)^([A-Za-z0-9_]+)\s*=\s*\{",
+                                             sgui.read_text(encoding="utf-8-sig")))
         for name in sorted(set(re.findall(r"GetScriptedGui\('(\w+)'\)", text))):
-            if name not in guis:
+            if name not in shared:
                 found.append(f"{where}: `GetScriptedGui('{name}')`, and no "
                              f"scripted GUI of that name — the button does nothing")
         for name in sorted(set(re.findall(r"Get(?:Global)?List\('(\w+)'\)", text))):
