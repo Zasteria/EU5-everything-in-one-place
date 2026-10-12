@@ -1,0 +1,51 @@
+﻿# assimilate_primary: the mod's CMF page. One checkbox sets the council's
+# «Действия совета» automation (cabinetactions) when clicked, to see what it
+# does. After any change here:
+# python3 tools/check_cmm.py mods/assimilate_primary/in_game/common
+# Rebuilt by tools/generate.py.
+
+# Scope: country
+bag_asp_register = {
+	cmm_register_bool_setting = {
+		mod_id = bag_asp
+		setting_id = cabinetactions
+		tab_id = main
+		group_id = council
+		default_value = 0
+	}
+}
+
+# Scope: country. var:cmf_callback names what was clicked; switch as in
+# war_sliders.
+bag_asp_handle_callback = {
+	switch = {
+		trigger = var:cmf_callback
+		flag:bag_asp__cabinetactions = {
+			if = {
+				limit = { is_system_automated = cabinetactions }
+				debug_log = "assimilate_primary: cabinetactions was on before the click"
+			}
+			else = {
+				debug_log = "assimilate_primary: cabinetactions was off before the click"
+			}
+			cmm_sync_bool_alias = {
+				setting = bag_asp__cabinetactions
+				alias = bag_asp_cabinetactions_on
+			}
+			if = {
+				limit = { has_variable = bag_asp_cabinetactions_on }
+				set_automated_system = { system = cabinetactions activate = yes }
+			}
+			else = {
+				set_automated_system = { system = cabinetactions activate = no }
+			}
+			if = {
+				limit = { is_system_automated = cabinetactions }
+				debug_log = "assimilate_primary: cabinetactions is on after the click"
+			}
+			else = {
+				debug_log = "assimilate_primary: cabinetactions is off after the click"
+			}
+		}
+	}
+}

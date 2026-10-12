@@ -25,10 +25,11 @@ without this mod. A probe (in CM, now removed at his word) read «Совет»
 (`cabinet`) and «Члены совета» (`cabinetmembers`) on and «Действия совета»
 (`cabinetactions`) off, every month; the 1.4 panel has no switch for the last.
 What turned it off is not known. 0.3.0 switched `cabinetactions` back on every
-month. 0.4.0, his word 12.10: the monthly switch is gone, he believes that bug
-was something else. In its place two decisions switch «Действия совета» on or
-off by hand, under «Правительственные» (the game folds «Прочие» shut), so the hidden switch is reachable without
-a window of our own.
+month. 0.4.0, his word 12.10: no monthly switch; he doubts the switch is a real
+player setting at all («возможно только у ботов») and wants to see what it does.
+So a checkbox on the mod's CMF page sets it when clicked and writes the state it
+found and the state it left in debug.log. Technical switches belong in CMF, not
+in game windows such as decisions (his word 12.10).
 
     python3 mods/assimilate_primary/tools/generate.py
 """
@@ -77,66 +78,106 @@ RULE = """\t\t\t# assimilate_primary: for a player whose cabinet is automated, a
 
 COUNCIL = MOD / "in_game/common/on_action/assimilate_primary_council_on_actions.txt"
 DECISIONS = MOD / "in_game/common/decisions/assimilate_primary_decisions.txt"
-DECISIONS_TEXT = """# assimilate_primary: the council's hidden «Действия совета» automation
-# (cabinetactions) has no switch in the 1.4 automation panel. These two
-# decisions are that switch, for the player only. Rebuilt by tools/generate.py.
-assimilate_primary_cabinetactions_on = {
-\tdecision_category = government_decisions
+CMF_EFFECTS = MOD / "in_game/common/scripted_effects/bag_asp_cmm_effects.txt"
+CMF_EFFECTS_TEXT = """# assimilate_primary: the mod's CMF page. One checkbox sets the council's
+# «Действия совета» automation (cabinetactions) when clicked, to see what it
+# does. After any change here:
+# python3 tools/check_cmm.py mods/assimilate_primary/in_game/common
+# Rebuilt by tools/generate.py.
 
-\tpotential = {
-\t\tis_ai = no
-\t\tNOT = { is_system_automated = cabinetactions }
-\t}
-
-\tai_will_do = {
-\t\tvalue = 0
-\t}
-
-\toption = {
-\t\tname = assimilate_primary_cabinetactions_on.a
-\t\teffect = {
-\t\t\tset_automated_system = { system = cabinetactions activate = yes }
-\t\t}
+# Scope: country
+bag_asp_register = {
+\tcmm_register_bool_setting = {
+\t\tmod_id = bag_asp
+\t\tsetting_id = cabinetactions
+\t\ttab_id = main
+\t\tgroup_id = council
+\t\tdefault_value = 0
 \t}
 }
 
-assimilate_primary_cabinetactions_off = {
-\tdecision_category = government_decisions
-
-\tpotential = {
-\t\tis_ai = no
-\t\tis_system_automated = cabinetactions
-\t}
-
-\tai_will_do = {
-\t\tvalue = 0
-\t}
-
-\toption = {
-\t\tname = assimilate_primary_cabinetactions_off.a
-\t\teffect = {
-\t\t\tset_automated_system = { system = cabinetactions activate = no }
+# Scope: country. var:cmf_callback names what was clicked; switch as in
+# war_sliders.
+bag_asp_handle_callback = {
+\tswitch = {
+\t\ttrigger = var:cmf_callback
+\t\tflag:bag_asp__cabinetactions = {
+\t\t\tif = {
+\t\t\t\tlimit = { is_system_automated = cabinetactions }
+\t\t\t\tdebug_log = "assimilate_primary: cabinetactions was on before the click"
+\t\t\t}
+\t\t\telse = {
+\t\t\t\tdebug_log = "assimilate_primary: cabinetactions was off before the click"
+\t\t\t}
+\t\t\tcmm_sync_bool_alias = {
+\t\t\t\tsetting = bag_asp__cabinetactions
+\t\t\t\talias = bag_asp_cabinetactions_on
+\t\t\t}
+\t\t\tif = {
+\t\t\t\tlimit = { has_variable = bag_asp_cabinetactions_on }
+\t\t\t\tset_automated_system = { system = cabinetactions activate = yes }
+\t\t\t}
+\t\t\telse = {
+\t\t\t\tset_automated_system = { system = cabinetactions activate = no }
+\t\t\t}
+\t\t\tif = {
+\t\t\t\tlimit = { is_system_automated = cabinetactions }
+\t\t\t\tdebug_log = "assimilate_primary: cabinetactions is on after the click"
+\t\t\t}
+\t\t\telse = {
+\t\t\t\tdebug_log = "assimilate_primary: cabinetactions is off after the click"
+\t\t\t}
 \t\t}
+\t}
+}
+"""
+
+CMF_ON_ACTIONS = MOD / "in_game/common/on_action/bag_asp_cmf_on_actions.txt"
+CMF_ON_ACTIONS_TEXT = """# assimilate_primary: the CMF page and its checkbox. The engine merges
+# on_actions lists, so these add to CMF's own. Rebuilt by tools/generate.py.
+cmf_on_mod_registration = {
+\ton_actions = {
+\t\tbag_asp_on_register
+\t}
+}
+
+cmf_on_callback = {
+\ton_actions = {
+\t\tbag_asp_on_callback
+\t}
+}
+
+# Scope: country
+bag_asp_on_register = {
+\teffect = {
+\t\tbag_asp_register = yes
+\t}
+}
+
+# Scope: country
+bag_asp_on_callback = {
+\teffect = {
+\t\tbag_asp_handle_callback = yes
 \t}
 }
 """
 
 LOC = {
     "english": {
-        "assimilate_primary_cabinetactions_on.title": "Automate Cabinet Actions",
-        "assimilate_primary_cabinetactions_on.desc": "Let the cabinet automation choose actions for every seat. The automation panel has no switch for this one.",
-        "assimilate_primary_cabinetactions_on.a": "Switch it on.",
-        "assimilate_primary_cabinetactions_off.title": "Stop Automating Cabinet Actions",
-        "assimilate_primary_cabinetactions_off.desc": "Cabinet actions are chosen by the automation. Switch it off and choose them yourself.",
-        "assimilate_primary_cabinetactions_off.a": "Switch it off.",
+        "bag_asp_name": "Assimilate Into Primary Culture",
+        "bag_asp_desc": "Cabinet automation assimilates into the primary culture.",
+        "bag_asp__main_name": "Council",
+        "bag_asp__main__council_name": "Automation",
+        "bag_asp__cabinetactions_name": "Automate cabinet actions (cabinetactions)",
+        "bag_asp__cabinetactions_desc": "Sets the game's cabinetactions automation switch when clicked. What it was before and after goes to debug.log.",
     },
     "russian": {
-        "assimilate_primary_cabinetactions_on.title": "Включить автоматику «Действий совета»",
-        "assimilate_primary_cabinetactions_on.desc": "Автоматика сама назначает действия всем местам в совете. В панели автоматизации этого переключателя нет.",
-        "assimilate_primary_cabinetactions_on.a": "Включить.",
-        "assimilate_primary_cabinetactions_off.title": "Выключить автоматику «Действий совета»",
-        "assimilate_primary_cabinetactions_off.desc": "Действия совета сейчас назначает автоматика. Выключите её, чтобы назначать их вручную.",
-        "assimilate_primary_cabinetactions_off.a": "Выключить.",
+        "bag_asp_name": "Ассимиляция в основную культуру",
+        "bag_asp_desc": "Автоматика совета ассимилирует в основную культуру.",
+        "bag_asp__main_name": "Совет",
+        "bag_asp__main__council_name": "Автоматика",
+        "bag_asp__cabinetactions_name": "Автоматика действий совета (cabinetactions)",
+        "bag_asp__cabinetactions_desc": "При нажатии ставит игровой переключатель автоматики cabinetactions. Каким он был до и стал после, пишется в debug.log.",
     },
 }
 
@@ -186,7 +227,11 @@ def main() -> None:
     if COUNCIL.exists():
         COUNCIL.unlink()
         print(f"{COUNCIL.relative_to(refs.REPO)}: removed (0.4.0)")
-    write(DECISIONS, DECISIONS_TEXT)
+    if DECISIONS.exists():
+        DECISIONS.unlink()
+        print(f"{DECISIONS.relative_to(refs.REPO)}: removed (0.4.0)")
+    write(CMF_EFFECTS, CMF_EFFECTS_TEXT)
+    write(CMF_ON_ACTIONS, CMF_ON_ACTIONS_TEXT)
     for language in LOC:
         write(MOD / f"main_menu/localization/{language}/assimilate_primary_l_{language}.yml",
               loc_text(language))
