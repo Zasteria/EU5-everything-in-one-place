@@ -866,3 +866,225 @@ to: \1 —
 why: `$ADVANCE$` arrives already in quotes with its age — «Кафедральный собор» (I эпоха) — so the trigger's own quotes doubled them: ««Кафедральный собор» (I эпоха)» (Lena's screenshot, 2026-10-04, sponsor_a_cathedral_decision). English quotes neither.
 from: «$ADVANCE$»
 to: $ADVANCE$
+
+# ---------------------------------------------------------------------------
+# Custom localizations the game never defines (`unknown_custom`). The Russian
+# calls `end_predlog_vvo`, `end_predlog_sso`, `end_youtut`, `end_etyat` and a
+# dozen more, about four hundred calls, while the engine's own registry
+# (`docs/custom_localization.log`) and every file under
+# `common/customizable_localization/` have only `predlog_vvo`, `end_etut`,
+# `end_ityat` and the like. Found 2026-10-12, reading Russian Localization Fix
+# 1.0.2 (Workshop 3813229007), which planned an `end_predlog_sso` of its own and
+# never shipped it. Each name goes to the defined one that says the same thing;
+# where the stem in front of it shows a different ending is meant, that stem is
+# handled first.
+# ---------------------------------------------------------------------------
+
+why: «призвал» is past tense; the ending wanted is the gender one, not «ёт/ут».
+from: призвал[COUNTRY.Custom('end_youtut')]
+to: призвал[COUNTRY.Custom('end_fem')]
+
+why: «предлагает/предлагают» — «ет/ют», where every other `end_etyat` stem (входит, просит, присоединится) takes «ит/ят».
+regex: предлага\[([^\[\]]+)\.Custom\('end_etyat'\)\]
+to: предлага[\1.Custom('end_etyut')]
+
+why: `endlong_astadut` («передаст/передадут») has 24 flavour keys and no custom localization to reach them. The present tense has both: «передаёт/передают».
+regex: перед\[([^\[\]]+)\.Custom\('endlong_astadut'\)\]
+to: переда[\1.Custom('endlong_etyut')]
+
+why: `end_predlog_*` is the short-name preposition the game defines as `predlog_*` («с/со», «в/во», «о/об»).
+regex: \.Custom\('end_(predlog_(?:sso|vvo|obo))'\)
+to: .Custom('\1')
+
+why: before a long name the game itself writes the preposition out, «в [longname_ru_PREP]» eleven times; there is no long-name `predlog_*`.
+regex: \[[^\[\]]+\.Custom\('endlong_predlog_sso'\)(?:\|[a-z]+)?\](?= (?:@\[[^\[\]]*\]!)?\[[^\[\]]*longname)
+to: с
+
+why: everywhere else `endlong_predlog_sso` stands before the short name's tooltip and `CL_INST`.
+regex: \.Custom\('endlong_predlog_sso'\)
+to: .Custom('predlog_sso')
+
+why: `endlong_`/`endrank_predlog_vvo` stand before a long name or a rank (`rank_ru_PREP`), where the game writes «в» itself.
+regex: \[[^\[\]]+\.Custom\('(?:endlong|endrank)_predlog_vvo'\)\|U\]
+to: В
+
+why: the same, lower case.
+regex: \[[^\[\]]+\.Custom\('(?:endlong|endrank)_predlog_vvo'\)(?:\|[a-z]+)?\]
+to: в
+
+why: «о» before a long name or a rank, as the game writes it.
+regex: \[[^\[\]]+\.Custom\('(?:endlong|endrank)_predlog_obo'\)(?:\|[a-z]+)?\]
+to: о
+
+why: «идёт/идут», «ведёт/ведут» — `_etut` gives «ет/ут», the same word with е for ё.
+regex: \.Custom\('(end|endlong|endrank)_youtut'\)
+to: .Custom('\1_etut')
+
+why: «передаёт/передают», «признаёт/признают» — `_etyut`, «ет/ют».
+regex: \.Custom\('(end|endlong|endrank)_youtyut'\)
+to: .Custom('\1_etyut')
+
+why: «входит/входят», «просит/просят» — `end_ityat`.
+regex: \.Custom\('end_etyat'\)
+to: .Custom('end_ityat')
+
+why: «становится/становятся» — `endlong_ityat`.
+from: .Custom('endlong_ityut')
+to: .Custom('endlong_ityat')
+
+why: the long name in the accusative is `longname_ru_ACC`.
+from: .Custom('endlong_ACC')
+to: .Custom('longname_ru_ACC')
+
+why: `RU_CL_GEN`, `RU_rank_ru_PREP` — a stray `RU_` in front of a defined name.
+regex: \.Custom\('RU_((?:CL|rank_ru)_[A-Z]+)'\)
+to: .Custom('\1')
+
+why: `CL_INS` — `CL_INST` with its last letter lost («ни с Францией»).
+from: .Custom('CL_INS')
+to: .Custom('CL_INST')
+
+why: `CL_КP` with a Cyrillic К — «поддержите лоялистов Франции» wants the genitive.
+from: .Custom('CL_КP')
+to: .Custom('CL_GEN')
+
+why: `CL_ТP` with a Cyrillic Т — «власть над Францией» wants the instrumental.
+from: .Custom('CL_ТP')
+to: .Custom('CL_INST')
+
+why: `fem` and `etyut` are the defined `end_fem` and `end_etyut` without their prefix.
+regex: \.Custom\('(fem|etyut)'\)
+to: .Custom('end_\1')
+
+why: `LR_RP')l]` — `LR_PREP` cut short and the `|` before its formatter lost.
+from: .Custom('LR_RP')l]
+to: .Custom('LR_PREP')|l]
+
+why: a country-rank tooltip asked of `rank_ru_tt`, which nothing defines. The rank word stays, the tooltip around it goes.
+regex: (?:#L )?#TOOLTIP:COUNTRY_RANK,\[[^\[\]]+\.Custom\('rank_ru_tt'\)\],X (\[[^\[\]]+\])#!#!
+to: \1
+
+why: `RL_*` is no custom localization; the ruler's title in each case is `GetRulerOrRegentTitle_*` (scope country), which the game defines.
+regex: \.Custom\('RL_(GEN|DAT|ACC|INST|PREP)'\)
+to: .Custom('GetRulerOrRegentTitle_\1')
+
+why: the order's effects, as English reads them.
+from: .Custom('GetOrderOfChivalryBonusTooltip')
+to: .GetActiveChivalricOrder.GetCharacterModifierText
+
+why: the order's name, as English reads it.
+from: .Custom('GetOrderOfChivalry')
+to: .GetActiveChivalricOrder.GetNameWithNoTooltip
+
+# ---------------------------------------------------------------------------
+# Round eleven, from Russian Localization Fix 1.0.2 — keys listed in
+# observed.txt with what that mod and the files say. Paradox's sentences kept;
+# only the part that asks for something the engine does not pass is replaced
+# by what English uses.
+#
+# The societal value helpers (`$SOCIETALVALUE_NAME_GEN$` and six siblings)
+# decline the pole through `AddTextIf` over `SOCIETAL_VALUE`,
+# `SocietalValueItem` or `$NAME$` read from inside the helper; the 09-26 log
+# saw `SOCIETAL_VALUE` come back nullptr through one of them. English names the
+# pole with `$NAME$` or the label accessor; ours does too, in quotes, which
+# spares the declension.
+# ---------------------------------------------------------------------------
+
+key: CURRENT_SOCIETAL_VALUE
+why: English passes `$NAME_ICON$`, not `$NAME$`.
+from: пользу $SOCIETALVALUE_NAME_GEN$
+to: пользу $NAME_ICON$
+
+key: CURRENT_SOCIETAL_VALUE
+why: English passes `$DRIFT_ICON$` for the direction of the drift.
+from: в сторону $SOCIETALVALUE_DRIFT_GEN$
+to: в сторону $DRIFT_ICON$
+
+why: the reform's requirement, «ед. прогресса централизации» — English «towards $NAME$».
+from: ед. прогресса $SOCIETALVALUE_NAME_GEN$
+to: ед. в сторону «$NAME$»
+
+why: «в пользу централизации» — English «towards $NAME$». The game puts a no-break space after «в», so the pair starts at «пользу».
+from: пользу $SOCIETALVALUE_NAME_GEN$
+to: пользу «$NAME$»
+
+why: «в сторону централизации» — English «towards $NAME$».
+from: в сторону $SOCIETALVALUE_NAME_GEN$
+to: в сторону «$NAME$»
+
+key: SOC_VAL_ITEM_POS_INFO_NDIR
+why: English «Perfectly balanced between $NAME$» — here `$NAME$` is the scale.
+from: баланс $SOCIETALVALUE_NAME_GEN$
+to: баланс по шкале «$NAME$»
+
+key: SOCVAL_ONE_SIDE
+why: English «When $NAME|Y$ is dominant».
+from: #Y $SOCIETALVALUE_NAME_GEN$#!
+to: позиция «$NAME|Y$»
+
+key: CHANGE_SOCIETAL_VALUE_EFFECT_THIRD_PAST
+why: the left pole whichever way the value moved; English «towards $ICON$$NAME$».
+from: в сторону $SOCIETALVALUE_LEFT_GEN$
+to: в сторону «$NAME$»
+
+why: the helper reads `SocietalValueItem`; English passes `SocietalValue`.
+from: $SOCIETALVALUE_LEFTITEM_WNTT_GEN$
+to: «[SocietalValue.GetLeftLabelWithNoTooltip]»
+
+why: the same, right pole.
+from: $SOCIETALVALUE_RIGHTITEM_WNTT_GEN$
+to: «[SocietalValue.GetRightLabelWithNoTooltip]»
+
+key: encourage_societal_value_towards
+why: English passes `$VALUE$` here.
+from: Поддержать $SOCIETALVALUE_VALUE_ACC$
+to: Поддержать позицию «$VALUE$»
+
+key: ALREADY_GIVING_RELATION
+why: English names the relation with `$RELATION$` and never reads `RELATION_TYPE` in this trigger; the peace window proved `$RELATION$` 09-27.
+from: [RELATION_TYPE.GetName]
+to: $RELATION$
+
+key: ALREADY_RECEIVING_RELATION
+why: the same.
+from: [RELATION_TYPE.GetName]
+to: $RELATION$
+
+key: ALREADY_HAVE_RELATION
+why: the same.
+from: [RELATION_TYPE.GetName]
+to: $RELATION$
+
+key: PAST_DESTROY_BUILDING_EFFECT
+why: the Russian drops the building's name; English prints `TARGET_BUILDING_TYPE`, which the future-tense twins already read.
+from: [Concept('building', 'Сооружение')|e] уничтожено
+to: [Concept('building', 'Сооружение')|e] «[TARGET_BUILDING_TYPE.GetName]» уничтожено
+
+key: PAST_THIRD_DESTROY_BUILDING_EFFECT
+why: the same.
+from: уничтожено [Concept('building', 'сооружение')|e]
+to: уничтожено [Concept('building', 'сооружение')|e] «[TARGET_BUILDING_TYPE.GetName]»
+
+key: ESTATE_EXPENSE_INFO_ENTRY
+why: English passes the goods as `$GOODS_MARKET_ENTRY_LABEL$` and reads no `GOODS` here.
+from: [GOODS.GetIcon][GOODS.GetNameNoUnderline]
+to: $GOODS_MARKET_ENTRY_LABEL$
+
+key: ESTATE_EXPENSE_INFO_ENTRY
+why: English prints the price, `($PRICE$)`; the Russian dropped it.
+from: [MARKET.GetShortName]: $VAL
+to: [MARKET.GetShortName] ($PRICE$): $VAL
+
+key: GOODS_COST_FOR_DEMAND_ENTRY
+why: a stray space inside the bracket.
+from: ($PRICE$ )
+to: ($PRICE$)
+
+key: MODS_GUI_CONFIRM_CONTINUE_PLAYSET_ISSUES_DESC
+why: `#TOOLTIP:` got no tooltip text, and the issue list landed in the sentence; English hangs the list on the words.
+from: #TOOLTIP:#L есть несколько проблем#!#! ([ToRowListBreakdownParams(GetSelectedPlaysetIssues)])
+to: есть #TOOLTIP:[ToRowListBreakdownParams(GetSelectedPlaysetIssues)] #L несколько проблем#!#!
+
+why: a dynasty or work-of-art tooltip aimed at a `_tt` key the game never defines (`capet_dynasty_tt` and five more; `wattasid_dynasty_tt` and its kind exist). These keys only came into the mod with the `unknown_custom` repairs, and check_script refuses a reference to no key. The word stays, the dead tooltip goes, as in flavor_kni.3.desc.
+regex: #TOOLTIP:(?:DYNASTY|WORK_OF_ART),\$(?:capet_dynasty|avesnes_dynasty|valois_dynasty|shokoku_ji|reading_in_a_bamboo_grove|treatise_of_human_nature)_tt\$,X (#L [^#]*#!)#!
+to: \1
