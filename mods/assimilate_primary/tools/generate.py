@@ -26,8 +26,8 @@ without this mod. A probe (in CM, now removed at his word) read «Совет»
 (`cabinetactions`) off, every month; the 1.4 panel has no switch for the last.
 What turned it off is not known. 0.3.0 switched `cabinetactions` back on every
 month. 0.4.0, his word 12.10: the monthly switch is gone, he believes that bug
-was something else. In its place two decisions (other_decisions) switch
-«Действия совета» on or off by hand, so the hidden switch is reachable without
+was something else. In its place two decisions switch «Действия совета» on or
+off by hand, under «Правительственные» (the game folds «Прочие» shut), so the hidden switch is reachable without
 a window of our own.
 
     python3 mods/assimilate_primary/tools/generate.py
@@ -81,7 +81,7 @@ DECISIONS_TEXT = """# assimilate_primary: the council's hidden «Действи�
 # (cabinetactions) has no switch in the 1.4 automation panel. These two
 # decisions are that switch, for the player only. Rebuilt by tools/generate.py.
 assimilate_primary_cabinetactions_on = {
-\tdecision_category = other_decisions
+\tdecision_category = government_decisions
 
 \tpotential = {
 \t\tis_ai = no
@@ -101,7 +101,7 @@ assimilate_primary_cabinetactions_on = {
 }
 
 assimilate_primary_cabinetactions_off = {
-\tdecision_category = other_decisions
+\tdecision_category = government_decisions
 
 \tpotential = {
 \t\tis_ai = no
