@@ -65,6 +65,18 @@ bag_asp_plan = {
 		debug_log = "bag_asp: no action is ticked in use"
 	}
 	bag_asp_mark_busy = yes
+	# A seat the emergency put on recovery keeps it until the action ends.
+	if = {
+		limit = { is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_recovery_effort } }
+		every_cabinet = {
+			limit = {
+				exists = cabinet_member
+				has_cabinet_action = yes
+				cabinet_action = cabinet_action:recovery_effort
+			}
+			cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+		}
+	}
 	if = {
 		limit = { has_variable = bag_asp_fill_only }
 		every_cabinet = {
@@ -675,7 +687,17 @@ bag_asp_try_recovery_effort = {
 						prosperity < 0
 					}
 				}
-				order_by = population
+				order_by = {
+					value = 0
+					every_location_in_province = {
+						limit = { prosperity < 0 }
+						add = 100
+					}
+					add = {
+						value = population
+						max = 99
+					}
+				}
 				save_temporary_scope_as = bag_asp_pick
 				scope:bag_asp_seat = {
 					if = {
@@ -921,6 +943,77 @@ bag_asp_try_counter_espionage_action = {
 		scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 		scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
 		debug_log = "bag_asp: seat set to counter_espionage_action"
+	}
+}
+
+# Scope: country. While the game's «devastated locations» alert shows, every
+# couple of seconds (bag_asp_devastation_watch.gui): one province below zero
+# prosperity without recovery gets it now, from the seat whose action ranks
+# lowest in «Приоритет» (an empty one first, then one outside the pool).
+bag_asp_emergency = {
+	if = {
+		limit = { has_variable = bag_asp_auto_on }
+		save_scope_as = actor
+		bag_asp_rebuild = yes
+		if = {
+			limit = { is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_recovery_effort } }
+			bag_asp_mark_busy = yes
+			ordered_cabinet = {
+				limit = {
+					exists = cabinet_member
+					NOT = {
+						has_cabinet_action = yes
+						cabinet_action = cabinet_action:recovery_effort
+					}
+				}
+				order_by = {
+					value = 0
+					if = { limit = { has_cabinet_action = no } add = 1000 }
+					else_if = { limit = { cabinet_action = cabinet_action:integrate_province } add = scope:actor.var:bag_asp_rank_integrate_province }
+					else_if = { limit = { cabinet_action = cabinet_action:integrate_area } add = scope:actor.var:bag_asp_rank_integrate_area }
+					else_if = { limit = { cabinet_action = cabinet_action:reduce_war_exhaustion } add = scope:actor.var:bag_asp_rank_reduce_war_exhaustion }
+					else_if = { limit = { cabinet_action = cabinet_action:stabilize_country } add = scope:actor.var:bag_asp_rank_stabilize_country }
+					else_if = { limit = { cabinet_action = cabinet_action:increase_control_province } add = scope:actor.var:bag_asp_rank_increase_control_province }
+					else_if = { limit = { cabinet_action = cabinet_action:increase_control_area } add = scope:actor.var:bag_asp_rank_increase_control_area }
+					else_if = { limit = { cabinet_action = cabinet_action:send_secret_royal_inspectors } add = scope:actor.var:bag_asp_rank_send_secret_royal_inspectors }
+					else_if = { limit = { cabinet_action = cabinet_action:promote_culture } add = scope:actor.var:bag_asp_rank_promote_culture }
+					else_if = { limit = { cabinet_action = cabinet_action:promote_religion } add = scope:actor.var:bag_asp_rank_promote_religion }
+					else_if = { limit = { cabinet_action = cabinet_action:pacify_population } add = scope:actor.var:bag_asp_rank_pacify_population }
+					else_if = { limit = { cabinet_action = cabinet_action:recovery_effort } add = scope:actor.var:bag_asp_rank_recovery_effort }
+					else_if = { limit = { cabinet_action = cabinet_action:appease_estate } add = scope:actor.var:bag_asp_rank_appease_estate }
+					else_if = { limit = { cabinet_action = cabinet_action:alleviate_concerns } add = scope:actor.var:bag_asp_rank_alleviate_concerns }
+					else_if = { limit = { cabinet_action = cabinet_action:reduce_inflation } add = scope:actor.var:bag_asp_rank_reduce_inflation }
+					else_if = { limit = { cabinet_action = cabinet_action:develop_province } add = scope:actor.var:bag_asp_rank_develop_province }
+					else_if = { limit = { cabinet_action = cabinet_action:study_institutions } add = scope:actor.var:bag_asp_rank_study_institutions }
+					else_if = { limit = { cabinet_action = cabinet_action:pop_promote_action } add = scope:actor.var:bag_asp_rank_pop_promote_action }
+					else_if = { limit = { cabinet_action = cabinet_action:strengthen_government } add = scope:actor.var:bag_asp_rank_strengthen_government }
+					else_if = { limit = { cabinet_action = cabinet_action:diplomatic_endeavors } add = scope:actor.var:bag_asp_rank_diplomatic_endeavors }
+					else_if = { limit = { cabinet_action = cabinet_action:counter_espionage_action } add = scope:actor.var:bag_asp_rank_counter_espionage_action }
+					else = { add = 500 }
+					add = {
+						value = cabinet_member.dip
+						divide = 100
+					}
+				}
+				save_scope_as = bag_asp_seat
+				bag_asp_try_recovery_effort = yes
+				if = {
+					limit = { exists = cabinet_member }
+					cabinet_member = {
+						if = {
+							limit = { has_variable = bag_asp_claimed }
+							remove_variable = bag_asp_claimed
+						}
+					}
+				}
+			}
+			if = {
+				limit = { has_variable = bag_asp_placed }
+				debug_log = "bag_asp: emergency, a seat moved to recovery"
+				remove_variable = bag_asp_placed
+			}
+			bag_asp_clear_busy = yes
+		}
 	}
 }
 

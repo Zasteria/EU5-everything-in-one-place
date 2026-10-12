@@ -1,0 +1,24 @@
+﻿# assimilate_primary: watches the game's yellow «devastated locations» alert
+# (has_devastated_locations, in_game/gui/alertmanager.gui). Nothing lives here
+# but one number the engine already has; while the alert shows, the council's
+# emergency runs every two seconds. Rebuilt by tools/generate.py.
+widget = {
+	name = "bag_asp_devastation_watch"
+	size = { 0 0 }
+	visible = "[And(GetPlayer.Exists, GreaterThan_uint32(GetAlertOfTypeShowingCount('has_devastated_locations'), IntToUnsigned('(int32)0')))]"
+
+	state = {
+		name = _show
+		duration = 0.1
+		on_finish = "[GetScriptedGui('bag_asp_devastated_seen').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+		on_finish = "[GetScriptedGui('bag_asp_devastated').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+		next = bag_asp_devastation_again
+	}
+
+	state = {
+		name = bag_asp_devastation_again
+		duration = 2
+		on_finish = "[GetScriptedGui('bag_asp_devastated').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+		next = bag_asp_devastation_again
+	}
+}
