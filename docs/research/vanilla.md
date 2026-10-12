@@ -81,7 +81,11 @@ Alerts (3605651135, игра 1.0) заменяет `alertmanager.gui` целик
 `societal_values = 0.1`, `forbid_for_automation = yes`, без `select_trigger`.
 Пару и сторону выбирает окно `select_societal_value.gui`
 (`SocietalValueCandidate.SelectLeftCandidate` / `SelectRightCandidate`).
-Чем задать их из `set_cabinet_action`, в дампах нет; скрипт видит
+**`set_cabinet_action = { type = cabinet_action:change_societal_values target =
+societal_value_type:… }` ставит действие с пустой парой** (его прогон 10-12:
+«Изменение общественных ценностей «» на в пользу «NAME»»); другого параметра в
+дампах нет. Окно выбора открывает `ChangeCabinetActionTarget(Cabinet)` (правый
+щелчок, `map_markers.gui`), `Scope.GetCabinet` даёт `Cabinet` из скриптовой цели; скрипт видит
 `societal_value_cabinet_action` (у действия есть ценность) и
 `societal_value_progress`, интерфейс — `Cabinet.GetSocietalValue`,
 `GetMaxSocietalValueReachable`, `HasReachedMaxSocietalValue`. Сдвиг скриптом в

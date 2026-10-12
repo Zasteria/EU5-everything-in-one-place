@@ -38,6 +38,8 @@ a filter that filters: the screenshot already says it.
 
 ## Runs
 
+**2026-10-12 (сообщение 23:12 UTC), 1.4: зонд сдвига ценностей, второй.** Первый зонд ничего не тронул: пустого места не было, а снять действие руками игра не даёт. Второй (`stop_cabinet_action` у случайного места, затем `set_cabinet_action … change_societal_values target = societal_value_type:traditionalist_vs_innovative`) снял интеграцию провинции Ров и **поставил сдвиг ценностей с пустой парой** — подсказка «Изменение общественных ценностей «» на в пользу «NAME»». `target` пару не задаёт.
+
 **2026-10-12 (сообщение 23:02 UTC), 1.4: зонд сдвига ценностей, его логи.** `effect every_country = { … set_cabinet_action = { type = cabinet_action:change_societal_values target = societal_value_type:traditionalist_vs_innovative } … }` дважды (03:58:39, 03:59:22, `debug_mode` включён): `console_success`, ошибок про `set_cabinet_action` в `error.log` нет. Что показало место совета — он не сказал. **Каждая команда `effect` шла 7–10 с** — между вызовом и успехом ~7 000 строк перепроверки скрипта.
 
 **2026-10-12 (сообщение 22:45 UTC), 1.4: `assimilate_primary` 0.8.5 + `cmf_dev_beta` +beta10.** **Экстренное восстановление сработало прямо на паузе** — по плашке «разорённые районы» (`GetTitleKey`, ребёнок `type alert_banner`). **Номер места переносит строку** (+beta10, путь стрелок): вписал 4 — строка уехала на 4-ю; но вписанная «4» осталась в поле той строки, что встала на её место (`PdxClearEditBoxText` не очистил) — +beta11 рисует номер кнопкой и открывает поле по щелчку, как мод-лист игры. `quiet_alerts` велел удалить: уведомления игра глушит сама.
