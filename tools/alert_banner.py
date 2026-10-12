@@ -51,8 +51,9 @@ SOUND_CHILD = """
 
 # assimilate_primary: lives only on the «devastated locations» banner (its
 # title key, common/alert_descriptions) and only while the council automation
-# is on. Wakes the emergency as the banner appears, then every ten seconds while
-# it stays — a province can fall while the alert already shows.
+# is on. Wakes the emergency as the banner appears, then every second while it
+# stays — a province can fall while the alert already shows, and a month is
+# 4–8 s of real time (his words 10-12: ten seconds is two months).
 DEVASTATION_CHILD = """
 \t\t# assimilate_primary: the «devastated locations» banner wakes the council's
 \t\t# emergency recovery; nothing on any other banner, nothing with the
@@ -71,7 +72,7 @@ DEVASTATION_CHILD = """
 \t\t\t}
 \t\t\tstate = {
 \t\t\t\tname = bag_asp_devastation_again
-\t\t\t\tduration = 10
+\t\t\t\tduration = 1
 \t\t\t\ton_finish = "[GetScriptedGui('bag_asp_devastated').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
 \t\t\t\tnext = bag_asp_devastation_again
 \t\t\t}

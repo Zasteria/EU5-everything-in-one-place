@@ -740,7 +740,7 @@ bag_asp_clear_busy = {{
         for k, *_ in POOL if k != "recovery_effort")
     run += f"""
 # Scope: country. While the «devastated locations» alert shows (its banner,
-# bag_alert_banner.gui): as it appears, then every ten seconds. Costs a look
+# bag_alert_banner.gui): as it appears, then every second. Costs a look
 # over the provinces unless one has a location below zero and no recovery;
 # then each such province, most devastated first, gets recovery: an empty seat
 # first, else the seat whose action ranks lowest in «Приоритет» — only among
@@ -887,7 +887,7 @@ bag_asp_on_month = {{
 """
     guis = "# assimilate_primary: the lists' callbacks. Rebuilt by tools/generate.py.\n\n" + guis
     guis += f"""# Called by the «devastated locations» banner (bag_alert_banner.gui) while
-# the automation is on: once as it appears, then every ten seconds.
+# the automation is on: once as it appears, then every second.
 bag_asp_devastated = {{
 \tscope = country
 \tis_shown = {{ always = yes }}
