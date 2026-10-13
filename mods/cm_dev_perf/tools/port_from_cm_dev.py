@@ -1177,7 +1177,7 @@ def _gate_vanilla_toggles(text: str) -> tuple[str, int]:
 
 
 # Bump with every change to what cm_rio_patch ships; `mods.bat` compares it.
-RIO_PATCH_REVISION = 1
+RIO_PATCH_REVISION = 2
 
 
 def _rio_patch() -> str:
@@ -1231,7 +1231,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 39
+PERF_REVISION = 40
 
 
 def metadata() -> str:
