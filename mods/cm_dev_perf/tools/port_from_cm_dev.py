@@ -1082,6 +1082,58 @@ def _write_subsidy_desc() -> None:
         path.write_text("\ufeff" + text, encoding="utf-8")
 
 
+# +perf41 (10-13, his «Конечно, делаем… Я играю с автостройкой CM»): the
+# recommended industry-support map, built by cm_maps' own tool so the two stay
+# one rule (mods/cm_maps/tools/industry_support.py), renamed bcm_ -> cm_ and run
+# by CM's own load-time setup right after the rights pass it reads.
+_ind_spec = importlib.util.spec_from_file_location(
+    "cm_maps_industry", refs.REPO / "mods/cm_maps/tools/industry_support.py")
+industry = importlib.util.module_from_spec(_ind_spec)
+_ind_spec.loader.exec_module(industry)
+
+def _industry_files() -> dict[str, str]:
+    trmm = (MOD / TRMM).read_text(encoding="utf-8-sig").replace("cm_trmm_", "bcm_trmm_")
+    made = industry.files({industry.TRMM_EFFECTS: trmm}, refs.GAME)
+    # CM ships more languages than cm_maps; each gets the rows (check_cmm wants them all).
+    inds = industry.industries(refs.GAME)
+    for folder in sorted((MOD / "main_menu/localization").iterdir()):
+        made.setdefault(f"main_menu/localization/{folder.name}/bcm_ind_l_{folder.name}.yml",
+                        industry.localization(folder.name, inds))
+    out = {}
+    for path, text in made.items():
+        path = path.replace("/bcm_ind_", "/cm_ind_").replace("/bcm_industry_", "/cm_industry_")
+        text = text.replace("MAPMODE_BCM_", "MAPMODE_CM_").replace("bcm_", "cm_")
+        out[path] = text
+    return out
+
+
+def _industry_pass(text: str) -> str:
+    old = ("    cm_trmm_recompute_all = yes\n"
+           "    # Synchronous, so there is no partial state for the stamp to certify.\n"
+           "    set_global_variable = { name = cm_trmm_stamp value = cm_trmm_version_value }\n"
+           "  }\n")
+    if text.count(old) != 1:
+        raise SystemExit("setup: the rights pass in cm_run_lobby_setup has changed shape")
+    new = ("    cm_trmm_recompute_all = yes\n"
+           "    # Synchronous, so there is no partial state for the stamp to certify.\n"
+           "    set_global_variable = { name = cm_trmm_stamp value = cm_trmm_version_value }\n"
+           "    # cm_dev_perf +perf41: the industry-support pass reads these rights.\n"
+           "    if = { limit = { has_global_variable = cm_ind_stamp } remove_global_variable = cm_ind_stamp }\n"
+           "  }\n"
+           "  # cm_dev_perf +perf41: recommended industry support per area, from the rights above.\n"
+           "  if = {\n"
+           "    limit = { NOT = { cm_ind_data_is_current = yes } }\n"
+           "    cm_ind_recompute_all = yes\n"
+           "    set_global_variable = { name = cm_ind_stamp value = cm_ind_version_value }\n"
+           "  }\n")
+    text = text.replace(old, new, 1)
+    drop = "  remove_global_variable = cm_fpot_stamp\n}\n"
+    if text.count(drop) != 1:
+        raise SystemExit("setup: cm_setup_drop_stamps has changed shape")
+    return text.replace(drop, "  remove_global_variable = cm_fpot_stamp\n"
+                              "  remove_global_variable = cm_ind_stamp # cm_dev_perf +perf41\n}\n", 1)
+
+
 EDITS = (
     (RESERVE_GUIS, "the gold slider no longer writes CM's reserve", _cut_reserve_pull),
     (WINDOW, "gate the building-type tree", _gate_the_tree),
@@ -1102,6 +1154,7 @@ EDITS = (
     ("in_game/common/scripted_effects/cm_ab_production_effects.txt", "the Production tab skips National Destinies'",
      buildings.edit_production_skip),
     (SEED, "the National Destinies set listed at load", buildings.edit_populate),
+    (SEED, "the industry-support pass after the rights", _industry_pass),
     (CMM, "the roster's new rows and the National Destinies list", buildings.edit_registration),
     (SEED, "the seeded roster's new rows", buildings.edit_seed),
     (LOOKUPS, "National Destinies rows in the roster's lookups and visibility", buildings.edit_lookups),
@@ -1231,7 +1284,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 40
+PERF_REVISION = 41
 
 
 def metadata() -> str:
@@ -1291,6 +1344,11 @@ def main() -> int:
     (MOD / "in_game/common/scripted_guis/cm_perf_buildings_scripted_gui.txt").write_text(
         buildings.scripted_guis(), encoding="utf-8")
     (MOD / PF_VIEW).write_text(_pf_view_effects(), encoding="utf-8")
+    for path, text in _industry_files().items():
+        (MOD / path).parent.mkdir(parents=True, exist_ok=True)
+        (MOD / path).write_text("\ufeff" + text, encoding="utf-8")
+    shutil.copy2(MOD / "main_menu/gfx/interface/icons/map_modes/cm_best_town_right.dds",
+                 MOD / "main_menu/gfx/interface/icons/map_modes/cm_industry_support.dds")
     for folder in sorted((MOD / "main_menu/localization").iterdir()):
         lang = folder.name
         rows = folder / f"cm_cmm_l_{lang}.yml"

@@ -285,7 +285,7 @@ TEXT = {
 
 
 def localization(language: str, inds) -> str:
-    t = TEXT[language]
+    t = TEXT.get(language, TEXT["english"])  # a language without its own text reads English
     votes = "".join(
         f"\\n  ${k}$: [ROOT.GetLocation.MakeScope.ScriptValue('bcm_ind_sv_{k}')|1]" for k, _, _ in inds)
     towns = (" [ROOT.GetLocation.MakeScope.ScriptValue('bcm_ind_sv_towns')|0]")
