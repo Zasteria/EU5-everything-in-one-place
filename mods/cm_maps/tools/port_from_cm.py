@@ -31,6 +31,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "tools"))
 
 import refs  # noqa: E402
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import industry_support  # noqa: E402
+
 MOD = refs.REPO / "mods/cm_maps"
 SRC = refs.mod("romaimperator.construction_manager.dev", "construction_manager_dev")
 
@@ -730,7 +733,7 @@ def main() -> int:
 
     apply_edits(written)
 
-    hand = hand_written()
+    hand = {**hand_written(), **industry_support.files(written, refs.GAME)}
     written = {dest: mark_never_set(text) for dest, text in written.items()}
     for dest, text in {**written, **hand}.items():
         emit(MOD / dest, text)
@@ -740,6 +743,9 @@ def main() -> int:
         dst = MOD / f"main_menu/gfx/interface/icons/map_modes/b{name}.dds"
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, dst)
+    # The industry-support map has no CM original; it wears the rights map's icon.
+    shutil.copyfile(SRC / "main_menu/gfx/interface/icons/map_modes/cm_best_town_right.dds",
+                    MOD / "main_menu/gfx/interface/icons/map_modes/bcm_industry_support.dds")
 
     locale_files = port_localization()
 
@@ -932,6 +938,7 @@ bcm_setup_pending = {
 		OR = {
 			NOT = { bcm_trmm_data_is_current = yes }
 			NOT = { bcm_fpot_data_is_current = yes }
+			NOT = { bcm_ind_data_is_current = yes }
 			NOT = { bcm_pf_river_data_is_current = yes }
 			# The migration below, which a save that predates it still owes. It is
 			# a global stamp and not a check on what it retires, because what it
@@ -1049,6 +1056,18 @@ bcm_run_lobby_setup = {
 		limit = { NOT = { bcm_trmm_data_is_current = yes } }
 		bcm_trmm_recompute_all = yes
 		set_global_variable = { name = bcm_trmm_stamp value = bcm_trmm_version_value }
+		if = {
+			limit = { has_global_variable = bcm_ind_stamp }
+			remove_global_variable = bcm_ind_stamp
+		}
+	}
+
+	# Recommended industry support per area (tools/industry_support.py), read off
+	# the rights just written, so it is redone whenever they are.
+	if = {
+		limit = { NOT = { bcm_ind_data_is_current = yes } }
+		bcm_ind_recompute_all = yes
+		set_global_variable = { name = bcm_ind_stamp value = bcm_ind_version_value }
 	}
 
 	# Food potential per location, so the map reads a variable instead of
@@ -1273,6 +1292,10 @@ bcm_setup_drop_stamps = {
 	if = {
 		limit = { has_global_variable = bcm_fpot_stamp }
 		remove_global_variable = bcm_fpot_stamp
+	}
+	if = {
+		limit = { has_global_variable = bcm_ind_stamp }
+		remove_global_variable = bcm_ind_stamp
 	}
 	if = {
 		limit = { has_global_variable = bcm_pf_river_stamp }

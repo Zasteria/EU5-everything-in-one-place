@@ -13,11 +13,26 @@ own. No Construction Manager — three entries in the map-mode flyout under
 - **Рекомендуемое размещение губернатора** — every owned location coloured by how
   much proximity a new Local or Naval Governor built there would add, given what
   the capital and the existing governors already provide.
+- **Рекомендуемая поддержка отрасли** (0.4.0) — every area coloured by the
+  industry support (1.4) to grant it, read off the urban-rights map:
+  [below](#поддержка-отрасли).
 
 **These are copies, not reimplementations.** Every colour, threshold, gradient
 and formula is Construction Manager's, down to its comments. That is the point:
 they are worth having as a reference you can trust to agree with the mod they
 came from.
+
+## Поддержка отрасли
+
+Своя, у CM её нет: `tools/industry_support.py`. Каждый город, посёлок и
+мегаполис области с рекомендованным правом голосует за отрасли этим правом,
+деля голос по доле товаров права в отрасли: ремесленные права — 2/3 утвари и
+1/3 ремёсел (кожа), каменщики — пополам ремёсла и роскошь, ткачи и книжники —
+2/3, краски не входят ни в одну отрасль. Побеждает отрасль с наибольшей суммой,
+при равенстве — раньше в файле игры. Сталь, фарфор и лак не даёт ни одно право.
+Доли выводятся из файлов игры при сборке и записаны комментарием в
+`bcm_ind_effects.txt`. Считается раз за сохранение после карты прав, за клеймом
+`bcm_ind_stamp`; кнопка «Пересобрать данные» снимает и его.
 
 ## The nine per-right maps
 
