@@ -1230,6 +1230,11 @@ def value_effects(game: Path, actions: dict[str, str]) -> str:
         for i, pair in enumerate(value_pairs(game), 1))
     # The switch sits five tabs deep in bag_asp_sv_choose.
     switch = "\n".join("\t" + line for line in "\n".join(tests).split("\n"))
+    others = "\n".join(
+        f"\t{'if' if i == 1 else 'else_if'} = {{\n\t\tlimit = {{\n\t\t\thas_societal_value = societal_value_type:{pair}\n"
+        f"\t\t\tNOT = {{ var:bag_asp_sv_cur = {i} }}\n\t\t}}\n"
+        f"\t\tset_variable = {{ name = bag_asp_sv_want value = {i} }}\n\t}}"
+        for i, pair in enumerate(value_pairs(game), 1))
     on_values = f"has_cabinet_action = yes cabinet_action = cabinet_action:{SV_ACTION}"
     return f"""
 # Scope: country (scope:actor). The «Приоритет» row of {SV_ACTION}.
@@ -1390,6 +1395,21 @@ bag_asp_sv_test = {{
 \t}}
 }}
 
+# Scope: country. The window left out the pair asked (var:bag_asp_sv_cur):
+# press another pair the country has first, toward the left, and the asked
+# one after it (bag_asp_sv_closed). Called from bag_asp_sv_timeout.
+bag_asp_sv_bounce = {{
+\tset_variable = {{ name = bag_asp_sv_then value = var:bag_asp_sv_cur }}
+\tset_variable = {{ name = bag_asp_sv_then_side value = var:bag_asp_sv_cur_side }}
+\tset_variable = {{ name = bag_asp_sv_bounced value = yes }}
+{others}
+\tset_variable = {{ name = bag_asp_sv_want_side value = 1 }}
+\tdebug_log = "bag_asp: values, the window left the pair out: another pair first, then it"
+\tbag_asp_sv_ask = yes
+\tremove_variable = bag_asp_sv_want
+\tremove_variable = bag_asp_sv_want_side
+}}
+
 # Scope: country. The request for the hidden window: the pair, the side, open.
 bag_asp_sv_ask = {{
 \tswitch = {{
@@ -1462,13 +1482,33 @@ bag_asp_sv_closed = {{
 \tis_shown = {{ always = yes }}
 \teffect = {{
 \t\tdebug_log = "bag_asp: values, the panels close after the press"
+\t\t# The pair the bounce was for (bag_asp_sv_bounce): asked now, before the
+\t\t# panels close in this same call, so the window opens after them.
+\t\tif = {{
+\t\t\tlimit = {{ has_variable = bag_asp_sv_then }}
+\t\t\tset_variable = {{ name = bag_asp_sv_want value = var:bag_asp_sv_then }}
+\t\t\tset_variable = {{ name = bag_asp_sv_want_side value = var:bag_asp_sv_then_side }}
+\t\t\tremove_variable = bag_asp_sv_then
+\t\t\tremove_variable = bag_asp_sv_then_side
+\t\t\tdebug_log = "bag_asp: values, now the pair itself"
+\t\t\tbag_asp_sv_ask = yes
+\t\t\tremove_variable = bag_asp_sv_want
+\t\t\tremove_variable = bag_asp_sv_want_side
+\t\t}}
+\t\telse_if = {{
+\t\t\tlimit = {{ has_variable = bag_asp_sv_bounced }}
+\t\t\tremove_variable = bag_asp_sv_bounced
+\t\t}}
 \t}}
 }}
 
 # Called by the hidden window two seconds after it opened the value window.
-# A side still asked means no row pressed: the window leaves out the pair the
-# seat already pushes. The next pass then takes another pair, and comes back
-# to this one when the seat is off it.
+# A side still asked means no row pressed: the window left the pair out. His
+# run 13.10 12:50:46: he had moved the advisor off centralization by hand, the
+# mod put him back on values, and the window listed 11 rows without it. So
+# the seat is pressed onto another pair first and then onto this one, as a
+# second press switches pairs (his run 13.10 07:04). A second miss gives up:
+# the next pass takes another pair.
 bag_asp_sv_timeout = {{
 \tscope = country
 \tis_shown = {{ always = yes }}
@@ -1480,11 +1520,23 @@ bag_asp_sv_timeout = {{
 \t\t\t\t\thas_variable = bag_asp_sv_right
 \t\t\t\t}}
 \t\t\t}}
-\t\t\tdebug_log = "bag_asp: values, no row pressed in two seconds; the panels close, the next pass takes another pair"
+\t\t\t# Probe: the pair the seat holds in the game's eyes when its row is missing.
+\t\t\tset_global_variable = {{ name = bag_asp_sv_seat value = var:bag_asp_sv_cab }}
+\t\t\tdebug_log = "bag_asp: values, no row pressed in two seconds; the seat holds [GetGlobalVariable('bag_asp_sv_seat').GetCabinet.GetSocietalValueName]"
+\t\t\tremove_global_variable = bag_asp_sv_seat
 {clear_sv(3)}
 \t\t\tif = {{
+\t\t\t\tlimit = {{
+\t\t\t\t\thas_variable = bag_asp_sv_cur
+\t\t\t\t\tNOT = {{ has_variable = bag_asp_sv_bounced }}
+\t\t\t\t}}
+\t\t\t\tbag_asp_sv_bounce = yes
+\t\t\t}}
+\t\t\telse_if = {{
 \t\t\t\tlimit = {{ has_variable = bag_asp_sv_cur }}
+\t\t\t\tdebug_log = "bag_asp: values, missed again after another pair; the next pass takes another pair"
 \t\t\t\tset_variable = {{ name = bag_asp_sv_cur_side value = 0 }}
+\t\t\t\tif = {{ limit = {{ has_variable = bag_asp_sv_bounced }} remove_variable = bag_asp_sv_bounced }}
 \t\t\t}}
 \t\t}}
 \t}}

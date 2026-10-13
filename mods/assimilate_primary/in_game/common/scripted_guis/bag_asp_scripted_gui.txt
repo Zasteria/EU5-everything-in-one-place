@@ -110,13 +110,33 @@ bag_asp_sv_closed = {
 	is_shown = { always = yes }
 	effect = {
 		debug_log = "bag_asp: values, the panels close after the press"
+		# The pair the bounce was for (bag_asp_sv_bounce): asked now, before the
+		# panels close in this same call, so the window opens after them.
+		if = {
+			limit = { has_variable = bag_asp_sv_then }
+			set_variable = { name = bag_asp_sv_want value = var:bag_asp_sv_then }
+			set_variable = { name = bag_asp_sv_want_side value = var:bag_asp_sv_then_side }
+			remove_variable = bag_asp_sv_then
+			remove_variable = bag_asp_sv_then_side
+			debug_log = "bag_asp: values, now the pair itself"
+			bag_asp_sv_ask = yes
+			remove_variable = bag_asp_sv_want
+			remove_variable = bag_asp_sv_want_side
+		}
+		else_if = {
+			limit = { has_variable = bag_asp_sv_bounced }
+			remove_variable = bag_asp_sv_bounced
+		}
 	}
 }
 
 # Called by the hidden window two seconds after it opened the value window.
-# A side still asked means no row pressed: the window leaves out the pair the
-# seat already pushes. The next pass then takes another pair, and comes back
-# to this one when the seat is off it.
+# A side still asked means no row pressed: the window left the pair out. His
+# run 13.10 12:50:46: he had moved the advisor off centralization by hand, the
+# mod put him back on values, and the window listed 11 rows without it. So
+# the seat is pressed onto another pair first and then onto this one, as a
+# second press switches pairs (his run 13.10 07:04). A second miss gives up:
+# the next pass takes another pair.
 bag_asp_sv_timeout = {
 	scope = country
 	is_shown = { always = yes }
@@ -128,14 +148,26 @@ bag_asp_sv_timeout = {
 					has_variable = bag_asp_sv_right
 				}
 			}
-			debug_log = "bag_asp: values, no row pressed in two seconds; the panels close, the next pass takes another pair"
+			# Probe: the pair the seat holds in the game's eyes when its row is missing.
+			set_global_variable = { name = bag_asp_sv_seat value = var:bag_asp_sv_cab }
+			debug_log = "bag_asp: values, no row pressed in two seconds; the seat holds [GetGlobalVariable('bag_asp_sv_seat').GetCabinet.GetSocietalValueName]"
+			remove_global_variable = bag_asp_sv_seat
 			if = { limit = { has_variable = bag_asp_sv_open } remove_variable = bag_asp_sv_open }
 			if = { limit = { has_variable = bag_asp_sv_left } remove_variable = bag_asp_sv_left }
 			if = { limit = { has_variable = bag_asp_sv_right } remove_variable = bag_asp_sv_right }
 			if = { limit = { has_variable = bag_asp_sv_pair } remove_variable = bag_asp_sv_pair }
 			if = {
+				limit = {
+					has_variable = bag_asp_sv_cur
+					NOT = { has_variable = bag_asp_sv_bounced }
+				}
+				bag_asp_sv_bounce = yes
+			}
+			else_if = {
 				limit = { has_variable = bag_asp_sv_cur }
+				debug_log = "bag_asp: values, missed again after another pair; the next pass takes another pair"
 				set_variable = { name = bag_asp_sv_cur_side value = 0 }
+				if = { limit = { has_variable = bag_asp_sv_bounced } remove_variable = bag_asp_sv_bounced }
 			}
 		}
 	}
