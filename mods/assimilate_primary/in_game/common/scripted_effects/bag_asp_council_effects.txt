@@ -1363,7 +1363,53 @@ bag_asp_place_integrate_province = {
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:integrate_province
 		}
-		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+	# even from a lower row: while a free seat beats its weakest kept one in the
+	# skill, the action moves there with its targets.
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		set_variable = { name = bag_asp_moving value = yes }
+		while = {
+			limit = {
+				has_variable = bag_asp_moving
+				any_cabinet = { cabinet_member ?= { has_variable = bag_asp_kept } }
+			}
+			remove_variable = bag_asp_moving
+			ordered_cabinet = {
+				limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+				order_by = {
+					value = 0
+					subtract = cabinet_member.mil
+				}
+				save_scope_as = bag_asp_from
+			}
+			set_variable = { name = bag_asp_low value = scope:bag_asp_from.cabinet_member.mil }
+			ordered_cabinet = {
+				limit = {
+					bag_asp_free_seat = yes
+					cabinet_member = { mil > scope:actor.var:bag_asp_low }
+				}
+				order_by = cabinet_member.mil
+				save_scope_as = bag_asp_seat
+				scope:actor = {
+					bag_asp_move_integrate_province = yes
+					set_variable = { name = bag_asp_moving value = yes }
+				}
+			}
+		}
+		if = {
+			limit = { has_variable = bag_asp_moving }
+			remove_variable = bag_asp_moving
+		}
+	}
+	every_cabinet = {
+		limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+		cabinet_member = { remove_variable = bag_asp_kept }
 	}
 	set_variable = { name = bag_asp_placed value = yes }
 	while = {
@@ -1395,7 +1441,53 @@ bag_asp_place_integrate_area = {
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:integrate_area
 		}
-		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+	# even from a lower row: while a free seat beats its weakest kept one in the
+	# skill, the action moves there with its targets.
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		set_variable = { name = bag_asp_moving value = yes }
+		while = {
+			limit = {
+				has_variable = bag_asp_moving
+				any_cabinet = { cabinet_member ?= { has_variable = bag_asp_kept } }
+			}
+			remove_variable = bag_asp_moving
+			ordered_cabinet = {
+				limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+				order_by = {
+					value = 0
+					subtract = cabinet_member.mil
+				}
+				save_scope_as = bag_asp_from
+			}
+			set_variable = { name = bag_asp_low value = scope:bag_asp_from.cabinet_member.mil }
+			ordered_cabinet = {
+				limit = {
+					bag_asp_free_seat = yes
+					cabinet_member = { mil > scope:actor.var:bag_asp_low }
+				}
+				order_by = cabinet_member.mil
+				save_scope_as = bag_asp_seat
+				scope:actor = {
+					bag_asp_move_integrate_area = yes
+					set_variable = { name = bag_asp_moving value = yes }
+				}
+			}
+		}
+		if = {
+			limit = { has_variable = bag_asp_moving }
+			remove_variable = bag_asp_moving
+		}
+	}
+	every_cabinet = {
+		limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+		cabinet_member = { remove_variable = bag_asp_kept }
 	}
 	set_variable = { name = bag_asp_placed value = yes }
 	while = {
@@ -1427,7 +1519,53 @@ bag_asp_place_reduce_war_exhaustion = {
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:reduce_war_exhaustion
 		}
-		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+	# even from a lower row: while a free seat beats its weakest kept one in the
+	# skill, the action moves there with its targets.
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		set_variable = { name = bag_asp_moving value = yes }
+		while = {
+			limit = {
+				has_variable = bag_asp_moving
+				any_cabinet = { cabinet_member ?= { has_variable = bag_asp_kept } }
+			}
+			remove_variable = bag_asp_moving
+			ordered_cabinet = {
+				limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+				order_by = {
+					value = 0
+					subtract = cabinet_member.dip
+				}
+				save_scope_as = bag_asp_from
+			}
+			set_variable = { name = bag_asp_low value = scope:bag_asp_from.cabinet_member.dip }
+			ordered_cabinet = {
+				limit = {
+					bag_asp_free_seat = yes
+					cabinet_member = { dip > scope:actor.var:bag_asp_low }
+				}
+				order_by = cabinet_member.dip
+				save_scope_as = bag_asp_seat
+				scope:actor = {
+					bag_asp_move_reduce_war_exhaustion = yes
+					set_variable = { name = bag_asp_moving value = yes }
+				}
+			}
+		}
+		if = {
+			limit = { has_variable = bag_asp_moving }
+			remove_variable = bag_asp_moving
+		}
+	}
+	every_cabinet = {
+		limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+		cabinet_member = { remove_variable = bag_asp_kept }
 	}
 	set_variable = { name = bag_asp_placed value = yes }
 	while = {
@@ -1460,7 +1598,53 @@ bag_asp_place_stabilize_country = {
 			cabinet_action = cabinet_action:stabilize_country
 			scope:actor = { stability < 50 }
 		}
-		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+	# even from a lower row: while a free seat beats its weakest kept one in the
+	# skill, the action moves there with its targets.
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		set_variable = { name = bag_asp_moving value = yes }
+		while = {
+			limit = {
+				has_variable = bag_asp_moving
+				any_cabinet = { cabinet_member ?= { has_variable = bag_asp_kept } }
+			}
+			remove_variable = bag_asp_moving
+			ordered_cabinet = {
+				limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+				order_by = {
+					value = 0
+					subtract = cabinet_member.mil
+				}
+				save_scope_as = bag_asp_from
+			}
+			set_variable = { name = bag_asp_low value = scope:bag_asp_from.cabinet_member.mil }
+			ordered_cabinet = {
+				limit = {
+					bag_asp_free_seat = yes
+					cabinet_member = { mil > scope:actor.var:bag_asp_low }
+				}
+				order_by = cabinet_member.mil
+				save_scope_as = bag_asp_seat
+				scope:actor = {
+					bag_asp_move_stabilize_country = yes
+					set_variable = { name = bag_asp_moving value = yes }
+				}
+			}
+		}
+		if = {
+			limit = { has_variable = bag_asp_moving }
+			remove_variable = bag_asp_moving
+		}
+	}
+	every_cabinet = {
+		limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+		cabinet_member = { remove_variable = bag_asp_kept }
 	}
 	set_variable = { name = bag_asp_placed value = yes }
 	while = {
@@ -1492,7 +1676,53 @@ bag_asp_place_increase_control_province = {
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:increase_control_province
 		}
-		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+	# even from a lower row: while a free seat beats its weakest kept one in the
+	# skill, the action moves there with its targets.
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		set_variable = { name = bag_asp_moving value = yes }
+		while = {
+			limit = {
+				has_variable = bag_asp_moving
+				any_cabinet = { cabinet_member ?= { has_variable = bag_asp_kept } }
+			}
+			remove_variable = bag_asp_moving
+			ordered_cabinet = {
+				limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+				order_by = {
+					value = 0
+					subtract = cabinet_member.adm
+				}
+				save_scope_as = bag_asp_from
+			}
+			set_variable = { name = bag_asp_low value = scope:bag_asp_from.cabinet_member.adm }
+			ordered_cabinet = {
+				limit = {
+					bag_asp_free_seat = yes
+					cabinet_member = { adm > scope:actor.var:bag_asp_low }
+				}
+				order_by = cabinet_member.adm
+				save_scope_as = bag_asp_seat
+				scope:actor = {
+					bag_asp_move_increase_control_province = yes
+					set_variable = { name = bag_asp_moving value = yes }
+				}
+			}
+		}
+		if = {
+			limit = { has_variable = bag_asp_moving }
+			remove_variable = bag_asp_moving
+		}
+	}
+	every_cabinet = {
+		limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+		cabinet_member = { remove_variable = bag_asp_kept }
 	}
 	set_variable = { name = bag_asp_placed value = yes }
 	while = {
@@ -1524,7 +1754,53 @@ bag_asp_place_increase_control_area = {
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:increase_control_area
 		}
-		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+	# even from a lower row: while a free seat beats its weakest kept one in the
+	# skill, the action moves there with its targets.
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		set_variable = { name = bag_asp_moving value = yes }
+		while = {
+			limit = {
+				has_variable = bag_asp_moving
+				any_cabinet = { cabinet_member ?= { has_variable = bag_asp_kept } }
+			}
+			remove_variable = bag_asp_moving
+			ordered_cabinet = {
+				limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+				order_by = {
+					value = 0
+					subtract = cabinet_member.adm
+				}
+				save_scope_as = bag_asp_from
+			}
+			set_variable = { name = bag_asp_low value = scope:bag_asp_from.cabinet_member.adm }
+			ordered_cabinet = {
+				limit = {
+					bag_asp_free_seat = yes
+					cabinet_member = { adm > scope:actor.var:bag_asp_low }
+				}
+				order_by = cabinet_member.adm
+				save_scope_as = bag_asp_seat
+				scope:actor = {
+					bag_asp_move_increase_control_area = yes
+					set_variable = { name = bag_asp_moving value = yes }
+				}
+			}
+		}
+		if = {
+			limit = { has_variable = bag_asp_moving }
+			remove_variable = bag_asp_moving
+		}
+	}
+	every_cabinet = {
+		limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+		cabinet_member = { remove_variable = bag_asp_kept }
 	}
 	set_variable = { name = bag_asp_placed value = yes }
 	while = {
@@ -1556,7 +1832,53 @@ bag_asp_place_send_secret_royal_inspectors = {
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:send_secret_royal_inspectors
 		}
-		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+	# even from a lower row: while a free seat beats its weakest kept one in the
+	# skill, the action moves there with its targets.
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		set_variable = { name = bag_asp_moving value = yes }
+		while = {
+			limit = {
+				has_variable = bag_asp_moving
+				any_cabinet = { cabinet_member ?= { has_variable = bag_asp_kept } }
+			}
+			remove_variable = bag_asp_moving
+			ordered_cabinet = {
+				limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+				order_by = {
+					value = 0
+					subtract = cabinet_member.adm
+				}
+				save_scope_as = bag_asp_from
+			}
+			set_variable = { name = bag_asp_low value = scope:bag_asp_from.cabinet_member.adm }
+			ordered_cabinet = {
+				limit = {
+					bag_asp_free_seat = yes
+					cabinet_member = { adm > scope:actor.var:bag_asp_low }
+				}
+				order_by = cabinet_member.adm
+				save_scope_as = bag_asp_seat
+				scope:actor = {
+					bag_asp_move_send_secret_royal_inspectors = yes
+					set_variable = { name = bag_asp_moving value = yes }
+				}
+			}
+		}
+		if = {
+			limit = { has_variable = bag_asp_moving }
+			remove_variable = bag_asp_moving
+		}
+	}
+	every_cabinet = {
+		limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+		cabinet_member = { remove_variable = bag_asp_kept }
 	}
 	set_variable = { name = bag_asp_placed value = yes }
 	while = {
@@ -1589,7 +1911,53 @@ bag_asp_place_promote_culture = {
 			cabinet_action = cabinet_action:promote_culture
 			interaction_target:target_1 ?= { bag_asp_needs_half = yes }
 		}
-		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+	# even from a lower row: while a free seat beats its weakest kept one in the
+	# skill, the action moves there with its targets.
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		set_variable = { name = bag_asp_moving value = yes }
+		while = {
+			limit = {
+				has_variable = bag_asp_moving
+				any_cabinet = { cabinet_member ?= { has_variable = bag_asp_kept } }
+			}
+			remove_variable = bag_asp_moving
+			ordered_cabinet = {
+				limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+				order_by = {
+					value = 0
+					subtract = cabinet_member.dip
+				}
+				save_scope_as = bag_asp_from
+			}
+			set_variable = { name = bag_asp_low value = scope:bag_asp_from.cabinet_member.dip }
+			ordered_cabinet = {
+				limit = {
+					bag_asp_free_seat = yes
+					cabinet_member = { dip > scope:actor.var:bag_asp_low }
+				}
+				order_by = cabinet_member.dip
+				save_scope_as = bag_asp_seat
+				scope:actor = {
+					bag_asp_move_promote_culture = yes
+					set_variable = { name = bag_asp_moving value = yes }
+				}
+			}
+		}
+		if = {
+			limit = { has_variable = bag_asp_moving }
+			remove_variable = bag_asp_moving
+		}
+	}
+	every_cabinet = {
+		limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+		cabinet_member = { remove_variable = bag_asp_kept }
 	}
 	if = {
 		limit = { has_variable = bag_asp_speedup_on }
@@ -1632,7 +2000,54 @@ bag_asp_place_promote_religion = {
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:promote_religion
 		}
-		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+	# even from a lower row: while a free seat beats its weakest kept one in the
+	# skill, the action moves there with its targets.
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		set_variable = { name = bag_asp_moving value = yes }
+		while = {
+			limit = {
+				has_variable = bag_asp_moving
+				any_cabinet = { cabinet_member ?= { has_variable = bag_asp_kept } }
+			}
+			remove_variable = bag_asp_moving
+			ordered_cabinet = {
+				limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+				order_by = {
+					value = 0
+					subtract = cabinet_member.mil
+				}
+				save_scope_as = bag_asp_from
+			}
+			set_variable = { name = bag_asp_low value = scope:bag_asp_from.cabinet_member.mil }
+			ordered_cabinet = {
+				limit = {
+					bag_asp_free_seat = yes
+					cabinet_member = { religion = scope:actor.religion }
+					cabinet_member = { mil > scope:actor.var:bag_asp_low }
+				}
+				order_by = cabinet_member.mil
+				save_scope_as = bag_asp_seat
+				scope:actor = {
+					bag_asp_move_promote_religion = yes
+					set_variable = { name = bag_asp_moving value = yes }
+				}
+			}
+		}
+		if = {
+			limit = { has_variable = bag_asp_moving }
+			remove_variable = bag_asp_moving
+		}
+	}
+	every_cabinet = {
+		limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+		cabinet_member = { remove_variable = bag_asp_kept }
 	}
 	set_variable = { name = bag_asp_placed value = yes }
 	while = {
@@ -1665,7 +2080,53 @@ bag_asp_place_pacify_population = {
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:pacify_population
 		}
-		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+	# even from a lower row: while a free seat beats its weakest kept one in the
+	# skill, the action moves there with its targets.
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		set_variable = { name = bag_asp_moving value = yes }
+		while = {
+			limit = {
+				has_variable = bag_asp_moving
+				any_cabinet = { cabinet_member ?= { has_variable = bag_asp_kept } }
+			}
+			remove_variable = bag_asp_moving
+			ordered_cabinet = {
+				limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+				order_by = {
+					value = 0
+					subtract = cabinet_member.mil
+				}
+				save_scope_as = bag_asp_from
+			}
+			set_variable = { name = bag_asp_low value = scope:bag_asp_from.cabinet_member.mil }
+			ordered_cabinet = {
+				limit = {
+					bag_asp_free_seat = yes
+					cabinet_member = { mil > scope:actor.var:bag_asp_low }
+				}
+				order_by = cabinet_member.mil
+				save_scope_as = bag_asp_seat
+				scope:actor = {
+					bag_asp_move_pacify_population = yes
+					set_variable = { name = bag_asp_moving value = yes }
+				}
+			}
+		}
+		if = {
+			limit = { has_variable = bag_asp_moving }
+			remove_variable = bag_asp_moving
+		}
+	}
+	every_cabinet = {
+		limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+		cabinet_member = { remove_variable = bag_asp_kept }
 	}
 	set_variable = { name = bag_asp_placed value = yes }
 	while = {
@@ -1697,7 +2158,53 @@ bag_asp_place_recovery_effort = {
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:recovery_effort
 		}
-		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+	# even from a lower row: while a free seat beats its weakest kept one in the
+	# skill, the action moves there with its targets.
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		set_variable = { name = bag_asp_moving value = yes }
+		while = {
+			limit = {
+				has_variable = bag_asp_moving
+				any_cabinet = { cabinet_member ?= { has_variable = bag_asp_kept } }
+			}
+			remove_variable = bag_asp_moving
+			ordered_cabinet = {
+				limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+				order_by = {
+					value = 0
+					subtract = cabinet_member.dip
+				}
+				save_scope_as = bag_asp_from
+			}
+			set_variable = { name = bag_asp_low value = scope:bag_asp_from.cabinet_member.dip }
+			ordered_cabinet = {
+				limit = {
+					bag_asp_free_seat = yes
+					cabinet_member = { dip > scope:actor.var:bag_asp_low }
+				}
+				order_by = cabinet_member.dip
+				save_scope_as = bag_asp_seat
+				scope:actor = {
+					bag_asp_move_recovery_effort = yes
+					set_variable = { name = bag_asp_moving value = yes }
+				}
+			}
+		}
+		if = {
+			limit = { has_variable = bag_asp_moving }
+			remove_variable = bag_asp_moving
+		}
+	}
+	every_cabinet = {
+		limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+		cabinet_member = { remove_variable = bag_asp_kept }
 	}
 	set_variable = { name = bag_asp_placed value = yes }
 	while = {
@@ -1729,7 +2236,53 @@ bag_asp_place_appease_estate = {
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:appease_estate
 		}
-		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+	# even from a lower row: while a free seat beats its weakest kept one in the
+	# skill, the action moves there with its targets.
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		set_variable = { name = bag_asp_moving value = yes }
+		while = {
+			limit = {
+				has_variable = bag_asp_moving
+				any_cabinet = { cabinet_member ?= { has_variable = bag_asp_kept } }
+			}
+			remove_variable = bag_asp_moving
+			ordered_cabinet = {
+				limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+				order_by = {
+					value = 0
+					subtract = cabinet_member.dip
+				}
+				save_scope_as = bag_asp_from
+			}
+			set_variable = { name = bag_asp_low value = scope:bag_asp_from.cabinet_member.dip }
+			ordered_cabinet = {
+				limit = {
+					bag_asp_free_seat = yes
+					cabinet_member = { dip > scope:actor.var:bag_asp_low }
+				}
+				order_by = cabinet_member.dip
+				save_scope_as = bag_asp_seat
+				scope:actor = {
+					bag_asp_move_appease_estate = yes
+					set_variable = { name = bag_asp_moving value = yes }
+				}
+			}
+		}
+		if = {
+			limit = { has_variable = bag_asp_moving }
+			remove_variable = bag_asp_moving
+		}
+	}
+	every_cabinet = {
+		limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+		cabinet_member = { remove_variable = bag_asp_kept }
 	}
 	set_variable = { name = bag_asp_placed value = yes }
 	while = {
@@ -1761,7 +2314,53 @@ bag_asp_place_alleviate_concerns = {
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:alleviate_concerns
 		}
-		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+	# even from a lower row: while a free seat beats its weakest kept one in the
+	# skill, the action moves there with its targets.
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		set_variable = { name = bag_asp_moving value = yes }
+		while = {
+			limit = {
+				has_variable = bag_asp_moving
+				any_cabinet = { cabinet_member ?= { has_variable = bag_asp_kept } }
+			}
+			remove_variable = bag_asp_moving
+			ordered_cabinet = {
+				limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+				order_by = {
+					value = 0
+					subtract = cabinet_member.dip
+				}
+				save_scope_as = bag_asp_from
+			}
+			set_variable = { name = bag_asp_low value = scope:bag_asp_from.cabinet_member.dip }
+			ordered_cabinet = {
+				limit = {
+					bag_asp_free_seat = yes
+					cabinet_member = { dip > scope:actor.var:bag_asp_low }
+				}
+				order_by = cabinet_member.dip
+				save_scope_as = bag_asp_seat
+				scope:actor = {
+					bag_asp_move_alleviate_concerns = yes
+					set_variable = { name = bag_asp_moving value = yes }
+				}
+			}
+		}
+		if = {
+			limit = { has_variable = bag_asp_moving }
+			remove_variable = bag_asp_moving
+		}
+	}
+	every_cabinet = {
+		limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+		cabinet_member = { remove_variable = bag_asp_kept }
 	}
 	set_variable = { name = bag_asp_placed value = yes }
 	while = {
@@ -1794,7 +2393,53 @@ bag_asp_place_reduce_inflation = {
 			cabinet_action = cabinet_action:reduce_inflation
 			scope:actor = { inflation > 0 }
 		}
-		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+	# even from a lower row: while a free seat beats its weakest kept one in the
+	# skill, the action moves there with its targets.
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		set_variable = { name = bag_asp_moving value = yes }
+		while = {
+			limit = {
+				has_variable = bag_asp_moving
+				any_cabinet = { cabinet_member ?= { has_variable = bag_asp_kept } }
+			}
+			remove_variable = bag_asp_moving
+			ordered_cabinet = {
+				limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+				order_by = {
+					value = 0
+					subtract = cabinet_member.adm
+				}
+				save_scope_as = bag_asp_from
+			}
+			set_variable = { name = bag_asp_low value = scope:bag_asp_from.cabinet_member.adm }
+			ordered_cabinet = {
+				limit = {
+					bag_asp_free_seat = yes
+					cabinet_member = { adm > scope:actor.var:bag_asp_low }
+				}
+				order_by = cabinet_member.adm
+				save_scope_as = bag_asp_seat
+				scope:actor = {
+					bag_asp_move_reduce_inflation = yes
+					set_variable = { name = bag_asp_moving value = yes }
+				}
+			}
+		}
+		if = {
+			limit = { has_variable = bag_asp_moving }
+			remove_variable = bag_asp_moving
+		}
+	}
+	every_cabinet = {
+		limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+		cabinet_member = { remove_variable = bag_asp_kept }
 	}
 	set_variable = { name = bag_asp_placed value = yes }
 	while = {
@@ -1826,7 +2471,53 @@ bag_asp_place_develop_province = {
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:develop_province
 		}
-		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+	# even from a lower row: while a free seat beats its weakest kept one in the
+	# skill, the action moves there with its targets.
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		set_variable = { name = bag_asp_moving value = yes }
+		while = {
+			limit = {
+				has_variable = bag_asp_moving
+				any_cabinet = { cabinet_member ?= { has_variable = bag_asp_kept } }
+			}
+			remove_variable = bag_asp_moving
+			ordered_cabinet = {
+				limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+				order_by = {
+					value = 0
+					subtract = cabinet_member.adm
+				}
+				save_scope_as = bag_asp_from
+			}
+			set_variable = { name = bag_asp_low value = scope:bag_asp_from.cabinet_member.adm }
+			ordered_cabinet = {
+				limit = {
+					bag_asp_free_seat = yes
+					cabinet_member = { adm > scope:actor.var:bag_asp_low }
+				}
+				order_by = cabinet_member.adm
+				save_scope_as = bag_asp_seat
+				scope:actor = {
+					bag_asp_move_develop_province = yes
+					set_variable = { name = bag_asp_moving value = yes }
+				}
+			}
+		}
+		if = {
+			limit = { has_variable = bag_asp_moving }
+			remove_variable = bag_asp_moving
+		}
+	}
+	every_cabinet = {
+		limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+		cabinet_member = { remove_variable = bag_asp_kept }
 	}
 	set_variable = { name = bag_asp_placed value = yes }
 	while = {
@@ -1858,7 +2549,53 @@ bag_asp_place_study_institutions = {
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:study_institutions
 		}
-		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+	# even from a lower row: while a free seat beats its weakest kept one in the
+	# skill, the action moves there with its targets.
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		set_variable = { name = bag_asp_moving value = yes }
+		while = {
+			limit = {
+				has_variable = bag_asp_moving
+				any_cabinet = { cabinet_member ?= { has_variable = bag_asp_kept } }
+			}
+			remove_variable = bag_asp_moving
+			ordered_cabinet = {
+				limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+				order_by = {
+					value = 0
+					subtract = cabinet_member.adm
+				}
+				save_scope_as = bag_asp_from
+			}
+			set_variable = { name = bag_asp_low value = scope:bag_asp_from.cabinet_member.adm }
+			ordered_cabinet = {
+				limit = {
+					bag_asp_free_seat = yes
+					cabinet_member = { adm > scope:actor.var:bag_asp_low }
+				}
+				order_by = cabinet_member.adm
+				save_scope_as = bag_asp_seat
+				scope:actor = {
+					bag_asp_move_study_institutions = yes
+					set_variable = { name = bag_asp_moving value = yes }
+				}
+			}
+		}
+		if = {
+			limit = { has_variable = bag_asp_moving }
+			remove_variable = bag_asp_moving
+		}
+	}
+	every_cabinet = {
+		limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+		cabinet_member = { remove_variable = bag_asp_kept }
 	}
 	set_variable = { name = bag_asp_placed value = yes }
 	while = {
@@ -1890,7 +2627,53 @@ bag_asp_place_pop_promote_action = {
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:pop_promote_action
 		}
-		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+	# even from a lower row: while a free seat beats its weakest kept one in the
+	# skill, the action moves there with its targets.
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		set_variable = { name = bag_asp_moving value = yes }
+		while = {
+			limit = {
+				has_variable = bag_asp_moving
+				any_cabinet = { cabinet_member ?= { has_variable = bag_asp_kept } }
+			}
+			remove_variable = bag_asp_moving
+			ordered_cabinet = {
+				limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+				order_by = {
+					value = 0
+					subtract = cabinet_member.adm
+				}
+				save_scope_as = bag_asp_from
+			}
+			set_variable = { name = bag_asp_low value = scope:bag_asp_from.cabinet_member.adm }
+			ordered_cabinet = {
+				limit = {
+					bag_asp_free_seat = yes
+					cabinet_member = { adm > scope:actor.var:bag_asp_low }
+				}
+				order_by = cabinet_member.adm
+				save_scope_as = bag_asp_seat
+				scope:actor = {
+					bag_asp_move_pop_promote_action = yes
+					set_variable = { name = bag_asp_moving value = yes }
+				}
+			}
+		}
+		if = {
+			limit = { has_variable = bag_asp_moving }
+			remove_variable = bag_asp_moving
+		}
+	}
+	every_cabinet = {
+		limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+		cabinet_member = { remove_variable = bag_asp_kept }
 	}
 	set_variable = { name = bag_asp_placed value = yes }
 	while = {
@@ -1922,7 +2705,53 @@ bag_asp_place_strengthen_government = {
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:strengthen_government
 		}
-		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+	# even from a lower row: while a free seat beats its weakest kept one in the
+	# skill, the action moves there with its targets.
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		set_variable = { name = bag_asp_moving value = yes }
+		while = {
+			limit = {
+				has_variable = bag_asp_moving
+				any_cabinet = { cabinet_member ?= { has_variable = bag_asp_kept } }
+			}
+			remove_variable = bag_asp_moving
+			ordered_cabinet = {
+				limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+				order_by = {
+					value = 0
+					subtract = cabinet_member.mil
+				}
+				save_scope_as = bag_asp_from
+			}
+			set_variable = { name = bag_asp_low value = scope:bag_asp_from.cabinet_member.mil }
+			ordered_cabinet = {
+				limit = {
+					bag_asp_free_seat = yes
+					cabinet_member = { mil > scope:actor.var:bag_asp_low }
+				}
+				order_by = cabinet_member.mil
+				save_scope_as = bag_asp_seat
+				scope:actor = {
+					bag_asp_move_strengthen_government = yes
+					set_variable = { name = bag_asp_moving value = yes }
+				}
+			}
+		}
+		if = {
+			limit = { has_variable = bag_asp_moving }
+			remove_variable = bag_asp_moving
+		}
+	}
+	every_cabinet = {
+		limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+		cabinet_member = { remove_variable = bag_asp_kept }
 	}
 	set_variable = { name = bag_asp_placed value = yes }
 	while = {
@@ -1954,7 +2783,53 @@ bag_asp_place_diplomatic_endeavors = {
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:diplomatic_endeavors
 		}
-		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+	# even from a lower row: while a free seat beats its weakest kept one in the
+	# skill, the action moves there with its targets.
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		set_variable = { name = bag_asp_moving value = yes }
+		while = {
+			limit = {
+				has_variable = bag_asp_moving
+				any_cabinet = { cabinet_member ?= { has_variable = bag_asp_kept } }
+			}
+			remove_variable = bag_asp_moving
+			ordered_cabinet = {
+				limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+				order_by = {
+					value = 0
+					subtract = cabinet_member.dip
+				}
+				save_scope_as = bag_asp_from
+			}
+			set_variable = { name = bag_asp_low value = scope:bag_asp_from.cabinet_member.dip }
+			ordered_cabinet = {
+				limit = {
+					bag_asp_free_seat = yes
+					cabinet_member = { dip > scope:actor.var:bag_asp_low }
+				}
+				order_by = cabinet_member.dip
+				save_scope_as = bag_asp_seat
+				scope:actor = {
+					bag_asp_move_diplomatic_endeavors = yes
+					set_variable = { name = bag_asp_moving value = yes }
+				}
+			}
+		}
+		if = {
+			limit = { has_variable = bag_asp_moving }
+			remove_variable = bag_asp_moving
+		}
+	}
+	every_cabinet = {
+		limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+		cabinet_member = { remove_variable = bag_asp_kept }
 	}
 	set_variable = { name = bag_asp_placed value = yes }
 	while = {
@@ -1986,7 +2861,53 @@ bag_asp_place_counter_espionage_action = {
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:counter_espionage_action
 		}
-		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+	# even from a lower row: while a free seat beats its weakest kept one in the
+	# skill, the action moves there with its targets.
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		set_variable = { name = bag_asp_moving value = yes }
+		while = {
+			limit = {
+				has_variable = bag_asp_moving
+				any_cabinet = { cabinet_member ?= { has_variable = bag_asp_kept } }
+			}
+			remove_variable = bag_asp_moving
+			ordered_cabinet = {
+				limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+				order_by = {
+					value = 0
+					subtract = cabinet_member.dip
+				}
+				save_scope_as = bag_asp_from
+			}
+			set_variable = { name = bag_asp_low value = scope:bag_asp_from.cabinet_member.dip }
+			ordered_cabinet = {
+				limit = {
+					bag_asp_free_seat = yes
+					cabinet_member = { dip > scope:actor.var:bag_asp_low }
+				}
+				order_by = cabinet_member.dip
+				save_scope_as = bag_asp_seat
+				scope:actor = {
+					bag_asp_move_counter_espionage_action = yes
+					set_variable = { name = bag_asp_moving value = yes }
+				}
+			}
+		}
+		if = {
+			limit = { has_variable = bag_asp_moving }
+			remove_variable = bag_asp_moving
+		}
+	}
+	every_cabinet = {
+		limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+		cabinet_member = { remove_variable = bag_asp_kept }
 	}
 	set_variable = { name = bag_asp_placed value = yes }
 	while = {
@@ -2018,7 +2939,53 @@ bag_asp_place_noblesse_oblige_cabinet_action = {
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:noblesse_oblige_cabinet_action
 		}
-		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+	# even from a lower row: while a free seat beats its weakest kept one in the
+	# skill, the action moves there with its targets.
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		set_variable = { name = bag_asp_moving value = yes }
+		while = {
+			limit = {
+				has_variable = bag_asp_moving
+				any_cabinet = { cabinet_member ?= { has_variable = bag_asp_kept } }
+			}
+			remove_variable = bag_asp_moving
+			ordered_cabinet = {
+				limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+				order_by = {
+					value = 0
+					subtract = cabinet_member.adm
+				}
+				save_scope_as = bag_asp_from
+			}
+			set_variable = { name = bag_asp_low value = scope:bag_asp_from.cabinet_member.adm }
+			ordered_cabinet = {
+				limit = {
+					bag_asp_free_seat = yes
+					cabinet_member = { adm > scope:actor.var:bag_asp_low }
+				}
+				order_by = cabinet_member.adm
+				save_scope_as = bag_asp_seat
+				scope:actor = {
+					bag_asp_move_noblesse_oblige_cabinet_action = yes
+					set_variable = { name = bag_asp_moving value = yes }
+				}
+			}
+		}
+		if = {
+			limit = { has_variable = bag_asp_moving }
+			remove_variable = bag_asp_moving
+		}
+	}
+	every_cabinet = {
+		limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+		cabinet_member = { remove_variable = bag_asp_kept }
 	}
 	set_variable = { name = bag_asp_placed value = yes }
 	while = {
@@ -2051,7 +3018,53 @@ bag_asp_place_diplomatic_antagonism = {
 			cabinet_action = cabinet_action:diplomatic_endeavors
 			scope:actor = { OR = { has_countries_with_near_coalition_grade_antagonism = yes has_countries_with_coalition_grade_antagonism = yes } }
 		}
-		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+	# even from a lower row: while a free seat beats its weakest kept one in the
+	# skill, the action moves there with its targets.
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		set_variable = { name = bag_asp_moving value = yes }
+		while = {
+			limit = {
+				has_variable = bag_asp_moving
+				any_cabinet = { cabinet_member ?= { has_variable = bag_asp_kept } }
+			}
+			remove_variable = bag_asp_moving
+			ordered_cabinet = {
+				limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+				order_by = {
+					value = 0
+					subtract = cabinet_member.dip
+				}
+				save_scope_as = bag_asp_from
+			}
+			set_variable = { name = bag_asp_low value = scope:bag_asp_from.cabinet_member.dip }
+			ordered_cabinet = {
+				limit = {
+					bag_asp_free_seat = yes
+					cabinet_member = { dip > scope:actor.var:bag_asp_low }
+				}
+				order_by = cabinet_member.dip
+				save_scope_as = bag_asp_seat
+				scope:actor = {
+					bag_asp_move_diplomatic_antagonism = yes
+					set_variable = { name = bag_asp_moving value = yes }
+				}
+			}
+		}
+		if = {
+			limit = { has_variable = bag_asp_moving }
+			remove_variable = bag_asp_moving
+		}
+	}
+	every_cabinet = {
+		limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+		cabinet_member = { remove_variable = bag_asp_kept }
 	}
 	set_variable = { name = bag_asp_placed value = yes }
 	while = {
@@ -2083,7 +3096,53 @@ bag_asp_place_promote_culture_full = {
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:promote_culture
 		}
-		cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+	# even from a lower row: while a free seat beats its weakest kept one in the
+	# skill, the action moves there with its targets.
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		set_variable = { name = bag_asp_moving value = yes }
+		while = {
+			limit = {
+				has_variable = bag_asp_moving
+				any_cabinet = { cabinet_member ?= { has_variable = bag_asp_kept } }
+			}
+			remove_variable = bag_asp_moving
+			ordered_cabinet = {
+				limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+				order_by = {
+					value = 0
+					subtract = cabinet_member.dip
+				}
+				save_scope_as = bag_asp_from
+			}
+			set_variable = { name = bag_asp_low value = scope:bag_asp_from.cabinet_member.dip }
+			ordered_cabinet = {
+				limit = {
+					bag_asp_free_seat = yes
+					cabinet_member = { dip > scope:actor.var:bag_asp_low }
+				}
+				order_by = cabinet_member.dip
+				save_scope_as = bag_asp_seat
+				scope:actor = {
+					bag_asp_move_promote_culture_full = yes
+					set_variable = { name = bag_asp_moving value = yes }
+				}
+			}
+		}
+		if = {
+			limit = { has_variable = bag_asp_moving }
+			remove_variable = bag_asp_moving
+		}
+	}
+	every_cabinet = {
+		limit = { cabinet_member ?= { has_variable = bag_asp_kept } }
+		cabinet_member = { remove_variable = bag_asp_kept }
 	}
 	if = {
 		limit = { has_variable = bag_asp_speedup_on }
@@ -2116,6 +3175,668 @@ bag_asp_place_promote_culture_full = {
 		limit = { has_variable = bag_asp_placed }
 		remove_variable = bag_asp_placed
 	}
+}
+
+# Scope: country (scope:actor).
+bag_asp_move_integrate_province = {
+	scope:bag_asp_from = {
+		interaction_target:target ?= { save_scope_as = bag_asp_t_target }
+		stop_cabinet_action = {}
+		cabinet_member = {
+			remove_variable = bag_asp_claimed
+			remove_variable = bag_asp_kept
+			if = {
+				limit = { has_variable = bag_asp_paired }
+				remove_variable = bag_asp_paired
+				scope:bag_asp_seat.cabinet_member = { set_variable = { name = bag_asp_paired value = yes } }
+			}
+		}
+	}
+	scope:bag_asp_seat = {
+		if = {
+			limit = { has_cabinet_action = yes }
+			stop_cabinet_action = {}
+		}
+		set_cabinet_action = { type = cabinet_action:integrate_province target = scope:bag_asp_t_target }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	debug_log = "bag_asp: integrate_province moved to an advisor better at it"
+}
+
+# Scope: country (scope:actor).
+bag_asp_move_integrate_area = {
+	scope:bag_asp_from = {
+		interaction_target:target ?= { save_scope_as = bag_asp_t_target }
+		stop_cabinet_action = {}
+		cabinet_member = {
+			remove_variable = bag_asp_claimed
+			remove_variable = bag_asp_kept
+			if = {
+				limit = { has_variable = bag_asp_paired }
+				remove_variable = bag_asp_paired
+				scope:bag_asp_seat.cabinet_member = { set_variable = { name = bag_asp_paired value = yes } }
+			}
+		}
+	}
+	scope:bag_asp_seat = {
+		if = {
+			limit = { has_cabinet_action = yes }
+			stop_cabinet_action = {}
+		}
+		set_cabinet_action = { type = cabinet_action:integrate_area target = scope:bag_asp_t_target }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	debug_log = "bag_asp: integrate_area moved to an advisor better at it"
+}
+
+# Scope: country (scope:actor).
+bag_asp_move_reduce_war_exhaustion = {
+	scope:bag_asp_from = {
+		stop_cabinet_action = {}
+		cabinet_member = {
+			remove_variable = bag_asp_claimed
+			remove_variable = bag_asp_kept
+			if = {
+				limit = { has_variable = bag_asp_paired }
+				remove_variable = bag_asp_paired
+				scope:bag_asp_seat.cabinet_member = { set_variable = { name = bag_asp_paired value = yes } }
+			}
+		}
+	}
+	scope:bag_asp_seat = {
+		if = {
+			limit = { has_cabinet_action = yes }
+			stop_cabinet_action = {}
+		}
+		set_cabinet_action = { type = cabinet_action:reduce_war_exhaustion }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	debug_log = "bag_asp: reduce_war_exhaustion moved to an advisor better at it"
+}
+
+# Scope: country (scope:actor).
+bag_asp_move_stabilize_country = {
+	scope:bag_asp_from = {
+		stop_cabinet_action = {}
+		cabinet_member = {
+			remove_variable = bag_asp_claimed
+			remove_variable = bag_asp_kept
+			if = {
+				limit = { has_variable = bag_asp_paired }
+				remove_variable = bag_asp_paired
+				scope:bag_asp_seat.cabinet_member = { set_variable = { name = bag_asp_paired value = yes } }
+			}
+		}
+	}
+	scope:bag_asp_seat = {
+		if = {
+			limit = { has_cabinet_action = yes }
+			stop_cabinet_action = {}
+		}
+		set_cabinet_action = { type = cabinet_action:stabilize_country }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	debug_log = "bag_asp: stabilize_country moved to an advisor better at it"
+}
+
+# Scope: country (scope:actor).
+bag_asp_move_increase_control_province = {
+	scope:bag_asp_from = {
+		interaction_target:selected_province ?= { save_scope_as = bag_asp_t_selected_province }
+		stop_cabinet_action = {}
+		cabinet_member = {
+			remove_variable = bag_asp_claimed
+			remove_variable = bag_asp_kept
+			if = {
+				limit = { has_variable = bag_asp_paired }
+				remove_variable = bag_asp_paired
+				scope:bag_asp_seat.cabinet_member = { set_variable = { name = bag_asp_paired value = yes } }
+			}
+		}
+	}
+	scope:bag_asp_seat = {
+		if = {
+			limit = { has_cabinet_action = yes }
+			stop_cabinet_action = {}
+		}
+		set_cabinet_action = { type = cabinet_action:increase_control_province selected_province = scope:bag_asp_t_selected_province }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	debug_log = "bag_asp: increase_control_province moved to an advisor better at it"
+}
+
+# Scope: country (scope:actor).
+bag_asp_move_increase_control_area = {
+	scope:bag_asp_from = {
+		interaction_target:selected_area ?= { save_scope_as = bag_asp_t_selected_area }
+		stop_cabinet_action = {}
+		cabinet_member = {
+			remove_variable = bag_asp_claimed
+			remove_variable = bag_asp_kept
+			if = {
+				limit = { has_variable = bag_asp_paired }
+				remove_variable = bag_asp_paired
+				scope:bag_asp_seat.cabinet_member = { set_variable = { name = bag_asp_paired value = yes } }
+			}
+		}
+	}
+	scope:bag_asp_seat = {
+		if = {
+			limit = { has_cabinet_action = yes }
+			stop_cabinet_action = {}
+		}
+		set_cabinet_action = { type = cabinet_action:increase_control_area selected_area = scope:bag_asp_t_selected_area }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	debug_log = "bag_asp: increase_control_area moved to an advisor better at it"
+}
+
+# Scope: country (scope:actor).
+bag_asp_move_send_secret_royal_inspectors = {
+	scope:bag_asp_from = {
+		interaction_target:target ?= { save_scope_as = bag_asp_t_target }
+		stop_cabinet_action = {}
+		cabinet_member = {
+			remove_variable = bag_asp_claimed
+			remove_variable = bag_asp_kept
+			if = {
+				limit = { has_variable = bag_asp_paired }
+				remove_variable = bag_asp_paired
+				scope:bag_asp_seat.cabinet_member = { set_variable = { name = bag_asp_paired value = yes } }
+			}
+		}
+	}
+	scope:bag_asp_seat = {
+		if = {
+			limit = { has_cabinet_action = yes }
+			stop_cabinet_action = {}
+		}
+		set_cabinet_action = { type = cabinet_action:send_secret_royal_inspectors target = scope:bag_asp_t_target }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	debug_log = "bag_asp: send_secret_royal_inspectors moved to an advisor better at it"
+}
+
+# Scope: country (scope:actor).
+bag_asp_move_promote_culture = {
+	scope:bag_asp_from = {
+		interaction_target:target ?= { save_scope_as = bag_asp_t_target }
+		interaction_target:target_1 ?= { save_scope_as = bag_asp_t_target_1 }
+		stop_cabinet_action = {}
+		cabinet_member = {
+			remove_variable = bag_asp_claimed
+			remove_variable = bag_asp_kept
+			if = {
+				limit = { has_variable = bag_asp_paired }
+				remove_variable = bag_asp_paired
+				scope:bag_asp_seat.cabinet_member = { set_variable = { name = bag_asp_paired value = yes } }
+			}
+		}
+	}
+	scope:bag_asp_seat = {
+		if = {
+			limit = { has_cabinet_action = yes }
+			stop_cabinet_action = {}
+		}
+		set_cabinet_action = { type = cabinet_action:promote_culture target = scope:bag_asp_t_target target_1 = scope:bag_asp_t_target_1 }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	debug_log = "bag_asp: promote_culture moved to an advisor better at it"
+}
+
+# Scope: country (scope:actor).
+bag_asp_move_promote_religion = {
+	scope:bag_asp_from = {
+		interaction_target:target_province ?= { save_scope_as = bag_asp_t_target_province }
+		interaction_target:target_religion ?= { save_scope_as = bag_asp_t_target_religion }
+		stop_cabinet_action = {}
+		cabinet_member = {
+			remove_variable = bag_asp_claimed
+			remove_variable = bag_asp_kept
+			if = {
+				limit = { has_variable = bag_asp_paired }
+				remove_variable = bag_asp_paired
+				scope:bag_asp_seat.cabinet_member = { set_variable = { name = bag_asp_paired value = yes } }
+			}
+		}
+	}
+	scope:bag_asp_seat = {
+		if = {
+			limit = { has_cabinet_action = yes }
+			stop_cabinet_action = {}
+		}
+		set_cabinet_action = { type = cabinet_action:promote_religion target_province = scope:bag_asp_t_target_province target_religion = scope:bag_asp_t_target_religion }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	debug_log = "bag_asp: promote_religion moved to an advisor better at it"
+}
+
+# Scope: country (scope:actor).
+bag_asp_move_pacify_population = {
+	scope:bag_asp_from = {
+		interaction_target:target ?= { save_scope_as = bag_asp_t_target }
+		stop_cabinet_action = {}
+		cabinet_member = {
+			remove_variable = bag_asp_claimed
+			remove_variable = bag_asp_kept
+			if = {
+				limit = { has_variable = bag_asp_paired }
+				remove_variable = bag_asp_paired
+				scope:bag_asp_seat.cabinet_member = { set_variable = { name = bag_asp_paired value = yes } }
+			}
+		}
+	}
+	scope:bag_asp_seat = {
+		if = {
+			limit = { has_cabinet_action = yes }
+			stop_cabinet_action = {}
+		}
+		set_cabinet_action = { type = cabinet_action:pacify_population target = scope:bag_asp_t_target }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	debug_log = "bag_asp: pacify_population moved to an advisor better at it"
+}
+
+# Scope: country (scope:actor).
+bag_asp_move_recovery_effort = {
+	scope:bag_asp_from = {
+		interaction_target:target ?= { save_scope_as = bag_asp_t_target }
+		stop_cabinet_action = {}
+		cabinet_member = {
+			remove_variable = bag_asp_claimed
+			remove_variable = bag_asp_kept
+			if = {
+				limit = { has_variable = bag_asp_paired }
+				remove_variable = bag_asp_paired
+				scope:bag_asp_seat.cabinet_member = { set_variable = { name = bag_asp_paired value = yes } }
+			}
+		}
+	}
+	scope:bag_asp_seat = {
+		if = {
+			limit = { has_cabinet_action = yes }
+			stop_cabinet_action = {}
+		}
+		set_cabinet_action = { type = cabinet_action:recovery_effort target = scope:bag_asp_t_target }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	debug_log = "bag_asp: recovery_effort moved to an advisor better at it"
+}
+
+# Scope: country (scope:actor).
+bag_asp_move_appease_estate = {
+	scope:bag_asp_from = {
+		interaction_target:target ?= { save_scope_as = bag_asp_t_target }
+		stop_cabinet_action = {}
+		cabinet_member = {
+			remove_variable = bag_asp_claimed
+			remove_variable = bag_asp_kept
+			if = {
+				limit = { has_variable = bag_asp_paired }
+				remove_variable = bag_asp_paired
+				scope:bag_asp_seat.cabinet_member = { set_variable = { name = bag_asp_paired value = yes } }
+			}
+		}
+	}
+	scope:bag_asp_seat = {
+		if = {
+			limit = { has_cabinet_action = yes }
+			stop_cabinet_action = {}
+		}
+		set_cabinet_action = { type = cabinet_action:appease_estate target = scope:bag_asp_t_target }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	debug_log = "bag_asp: appease_estate moved to an advisor better at it"
+}
+
+# Scope: country (scope:actor).
+bag_asp_move_alleviate_concerns = {
+	scope:bag_asp_from = {
+		stop_cabinet_action = {}
+		cabinet_member = {
+			remove_variable = bag_asp_claimed
+			remove_variable = bag_asp_kept
+			if = {
+				limit = { has_variable = bag_asp_paired }
+				remove_variable = bag_asp_paired
+				scope:bag_asp_seat.cabinet_member = { set_variable = { name = bag_asp_paired value = yes } }
+			}
+		}
+	}
+	scope:bag_asp_seat = {
+		if = {
+			limit = { has_cabinet_action = yes }
+			stop_cabinet_action = {}
+		}
+		set_cabinet_action = { type = cabinet_action:alleviate_concerns }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	debug_log = "bag_asp: alleviate_concerns moved to an advisor better at it"
+}
+
+# Scope: country (scope:actor).
+bag_asp_move_reduce_inflation = {
+	scope:bag_asp_from = {
+		stop_cabinet_action = {}
+		cabinet_member = {
+			remove_variable = bag_asp_claimed
+			remove_variable = bag_asp_kept
+			if = {
+				limit = { has_variable = bag_asp_paired }
+				remove_variable = bag_asp_paired
+				scope:bag_asp_seat.cabinet_member = { set_variable = { name = bag_asp_paired value = yes } }
+			}
+		}
+	}
+	scope:bag_asp_seat = {
+		if = {
+			limit = { has_cabinet_action = yes }
+			stop_cabinet_action = {}
+		}
+		set_cabinet_action = { type = cabinet_action:reduce_inflation }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	debug_log = "bag_asp: reduce_inflation moved to an advisor better at it"
+}
+
+# Scope: country (scope:actor).
+bag_asp_move_develop_province = {
+	scope:bag_asp_from = {
+		interaction_target:target ?= { save_scope_as = bag_asp_t_target }
+		stop_cabinet_action = {}
+		cabinet_member = {
+			remove_variable = bag_asp_claimed
+			remove_variable = bag_asp_kept
+			if = {
+				limit = { has_variable = bag_asp_paired }
+				remove_variable = bag_asp_paired
+				scope:bag_asp_seat.cabinet_member = { set_variable = { name = bag_asp_paired value = yes } }
+			}
+		}
+	}
+	scope:bag_asp_seat = {
+		if = {
+			limit = { has_cabinet_action = yes }
+			stop_cabinet_action = {}
+		}
+		set_cabinet_action = { type = cabinet_action:develop_province target = scope:bag_asp_t_target }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	debug_log = "bag_asp: develop_province moved to an advisor better at it"
+}
+
+# Scope: country (scope:actor).
+bag_asp_move_study_institutions = {
+	scope:bag_asp_from = {
+		interaction_target:target ?= { save_scope_as = bag_asp_t_target }
+		stop_cabinet_action = {}
+		cabinet_member = {
+			remove_variable = bag_asp_claimed
+			remove_variable = bag_asp_kept
+			if = {
+				limit = { has_variable = bag_asp_paired }
+				remove_variable = bag_asp_paired
+				scope:bag_asp_seat.cabinet_member = { set_variable = { name = bag_asp_paired value = yes } }
+			}
+		}
+	}
+	scope:bag_asp_seat = {
+		if = {
+			limit = { has_cabinet_action = yes }
+			stop_cabinet_action = {}
+		}
+		set_cabinet_action = { type = cabinet_action:study_institutions target = scope:bag_asp_t_target }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	debug_log = "bag_asp: study_institutions moved to an advisor better at it"
+}
+
+# Scope: country (scope:actor).
+bag_asp_move_pop_promote_action = {
+	scope:bag_asp_from = {
+		interaction_target:target ?= { save_scope_as = bag_asp_t_target }
+		stop_cabinet_action = {}
+		cabinet_member = {
+			remove_variable = bag_asp_claimed
+			remove_variable = bag_asp_kept
+			if = {
+				limit = { has_variable = bag_asp_paired }
+				remove_variable = bag_asp_paired
+				scope:bag_asp_seat.cabinet_member = { set_variable = { name = bag_asp_paired value = yes } }
+			}
+		}
+	}
+	scope:bag_asp_seat = {
+		if = {
+			limit = { has_cabinet_action = yes }
+			stop_cabinet_action = {}
+		}
+		set_cabinet_action = { type = cabinet_action:pop_promote_action target = scope:bag_asp_t_target }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	debug_log = "bag_asp: pop_promote_action moved to an advisor better at it"
+}
+
+# Scope: country (scope:actor).
+bag_asp_move_strengthen_government = {
+	scope:bag_asp_from = {
+		stop_cabinet_action = {}
+		cabinet_member = {
+			remove_variable = bag_asp_claimed
+			remove_variable = bag_asp_kept
+			if = {
+				limit = { has_variable = bag_asp_paired }
+				remove_variable = bag_asp_paired
+				scope:bag_asp_seat.cabinet_member = { set_variable = { name = bag_asp_paired value = yes } }
+			}
+		}
+	}
+	scope:bag_asp_seat = {
+		if = {
+			limit = { has_cabinet_action = yes }
+			stop_cabinet_action = {}
+		}
+		set_cabinet_action = { type = cabinet_action:strengthen_government }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	debug_log = "bag_asp: strengthen_government moved to an advisor better at it"
+}
+
+# Scope: country (scope:actor).
+bag_asp_move_diplomatic_endeavors = {
+	scope:bag_asp_from = {
+		stop_cabinet_action = {}
+		cabinet_member = {
+			remove_variable = bag_asp_claimed
+			remove_variable = bag_asp_kept
+			if = {
+				limit = { has_variable = bag_asp_paired }
+				remove_variable = bag_asp_paired
+				scope:bag_asp_seat.cabinet_member = { set_variable = { name = bag_asp_paired value = yes } }
+			}
+		}
+	}
+	scope:bag_asp_seat = {
+		if = {
+			limit = { has_cabinet_action = yes }
+			stop_cabinet_action = {}
+		}
+		set_cabinet_action = { type = cabinet_action:diplomatic_endeavors }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	debug_log = "bag_asp: diplomatic_endeavors moved to an advisor better at it"
+}
+
+# Scope: country (scope:actor).
+bag_asp_move_counter_espionage_action = {
+	scope:bag_asp_from = {
+		stop_cabinet_action = {}
+		cabinet_member = {
+			remove_variable = bag_asp_claimed
+			remove_variable = bag_asp_kept
+			if = {
+				limit = { has_variable = bag_asp_paired }
+				remove_variable = bag_asp_paired
+				scope:bag_asp_seat.cabinet_member = { set_variable = { name = bag_asp_paired value = yes } }
+			}
+		}
+	}
+	scope:bag_asp_seat = {
+		if = {
+			limit = { has_cabinet_action = yes }
+			stop_cabinet_action = {}
+		}
+		set_cabinet_action = { type = cabinet_action:counter_espionage_action }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	debug_log = "bag_asp: counter_espionage_action moved to an advisor better at it"
+}
+
+# Scope: country (scope:actor).
+bag_asp_move_noblesse_oblige_cabinet_action = {
+	scope:bag_asp_from = {
+		interaction_target:selected_province ?= { save_scope_as = bag_asp_t_selected_province }
+		stop_cabinet_action = {}
+		cabinet_member = {
+			remove_variable = bag_asp_claimed
+			remove_variable = bag_asp_kept
+			if = {
+				limit = { has_variable = bag_asp_paired }
+				remove_variable = bag_asp_paired
+				scope:bag_asp_seat.cabinet_member = { set_variable = { name = bag_asp_paired value = yes } }
+			}
+		}
+	}
+	scope:bag_asp_seat = {
+		if = {
+			limit = { has_cabinet_action = yes }
+			stop_cabinet_action = {}
+		}
+		set_cabinet_action = { type = cabinet_action:noblesse_oblige_cabinet_action selected_province = scope:bag_asp_t_selected_province }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	debug_log = "bag_asp: noblesse_oblige_cabinet_action moved to an advisor better at it"
+}
+
+# Scope: country (scope:actor).
+bag_asp_move_diplomatic_antagonism = {
+	scope:bag_asp_from = {
+		stop_cabinet_action = {}
+		cabinet_member = {
+			remove_variable = bag_asp_claimed
+			remove_variable = bag_asp_kept
+			if = {
+				limit = { has_variable = bag_asp_paired }
+				remove_variable = bag_asp_paired
+				scope:bag_asp_seat.cabinet_member = { set_variable = { name = bag_asp_paired value = yes } }
+			}
+		}
+	}
+	scope:bag_asp_seat = {
+		if = {
+			limit = { has_cabinet_action = yes }
+			stop_cabinet_action = {}
+		}
+		set_cabinet_action = { type = cabinet_action:diplomatic_endeavors }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	debug_log = "bag_asp: diplomatic_antagonism moved to an advisor better at it"
+}
+
+# Scope: country (scope:actor).
+bag_asp_move_promote_culture_full = {
+	scope:bag_asp_from = {
+		interaction_target:target ?= { save_scope_as = bag_asp_t_target }
+		interaction_target:target_1 ?= { save_scope_as = bag_asp_t_target_1 }
+		stop_cabinet_action = {}
+		cabinet_member = {
+			remove_variable = bag_asp_claimed
+			remove_variable = bag_asp_kept
+			if = {
+				limit = { has_variable = bag_asp_paired }
+				remove_variable = bag_asp_paired
+				scope:bag_asp_seat.cabinet_member = { set_variable = { name = bag_asp_paired value = yes } }
+			}
+		}
+	}
+	scope:bag_asp_seat = {
+		if = {
+			limit = { has_cabinet_action = yes }
+			stop_cabinet_action = {}
+		}
+		set_cabinet_action = { type = cabinet_action:promote_culture target = scope:bag_asp_t_target target_1 = scope:bag_asp_t_target_1 }
+		cabinet_member = {
+			set_variable = { name = bag_asp_claimed value = yes }
+			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	debug_log = "bag_asp: promote_culture_full moved to an advisor better at it"
 }
 
 # «Ускорять контролем», his rule 13.10: a control action (noblesse_oblige_cabinet_action, increase_control_province,

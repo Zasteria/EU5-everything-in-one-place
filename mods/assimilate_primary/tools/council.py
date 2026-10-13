@@ -537,7 +537,53 @@ bag_asp_place_{row} = {{
 \t\t\thas_cabinet_action = yes
 \t\t\tcabinet_action = cabinet_action:{key}{keep_gate}
 \t\t}}
-\t\tcabinet_member = {{ set_variable = {{ name = bag_asp_claimed value = yes }} }}
+\t\tcabinet_member = {{
+\t\t\tset_variable = {{ name = bag_asp_claimed value = yes }}
+\t\t\tset_variable = {{ name = bag_asp_kept value = yes }}
+\t\t}}
+\t}}
+\t# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+\t# even from a lower row: while a free seat beats its weakest kept one in the
+\t# skill, the action moves there with its targets.
+\tif = {{
+\t\tlimit = {{ NOT = {{ has_variable = bag_asp_fill_only }} }}
+\t\tset_variable = {{ name = bag_asp_moving value = yes }}
+\t\twhile = {{
+\t\t\tlimit = {{
+\t\t\t\thas_variable = bag_asp_moving
+\t\t\t\tany_cabinet = {{ cabinet_member ?= {{ has_variable = bag_asp_kept }} }}
+\t\t\t}}
+\t\t\tremove_variable = bag_asp_moving
+\t\t\tordered_cabinet = {{
+\t\t\t\tlimit = {{ cabinet_member ?= {{ has_variable = bag_asp_kept }} }}
+\t\t\t\torder_by = {{
+\t\t\t\t\tvalue = 0
+\t\t\t\t\tsubtract = cabinet_member.{ability}
+\t\t\t\t}}
+\t\t\t\tsave_scope_as = bag_asp_from
+\t\t\t}}
+\t\t\tset_variable = {{ name = bag_asp_low value = scope:bag_asp_from.cabinet_member.{ability} }}
+\t\t\tordered_cabinet = {{
+\t\t\t\tlimit = {{
+{seat_test(action, 5)}
+\t\t\t\t\tcabinet_member = {{ {ability} > scope:actor.var:bag_asp_low }}
+\t\t\t\t}}
+\t\t\t\torder_by = cabinet_member.{ability}
+\t\t\t\tsave_scope_as = bag_asp_seat
+\t\t\t\tscope:actor = {{
+\t\t\t\t\tbag_asp_move_{row} = yes
+\t\t\t\t\tset_variable = {{ name = bag_asp_moving value = yes }}
+\t\t\t\t}}
+\t\t\t}}
+\t\t}}
+\t\tif = {{
+\t\t\tlimit = {{ has_variable = bag_asp_moving }}
+\t\t\tremove_variable = bag_asp_moving
+\t\t}}
+\t}}
+\tevery_cabinet = {{
+\t\tlimit = {{ cabinet_member ?= {{ has_variable = bag_asp_kept }} }}
+\t\tcabinet_member = {{ remove_variable = bag_asp_kept }}
 \t}}
 {keep_pairs}\tset_variable = {{ name = bag_asp_placed value = yes }}
 \twhile = {{
@@ -559,6 +605,45 @@ bag_asp_place_{row} = {{
 \t\tlimit = {{ has_variable = bag_asp_placed }}
 \t\tremove_variable = bag_asp_placed
 \t}}
+}}
+"""
+
+
+def move_effect(row: str, actions: dict[str, str]) -> str:
+    """bag_asp_move_<row>: the action of scope:bag_asp_from, with every target
+    it was given, onto scope:bag_asp_seat; the seat is claimed and kept, the
+    one left behind is free again. Whether the game keeps the action's
+    progress across the move is not known."""
+    key = act(row)
+    flags = sorted({flag_of(s) for s in children(actions[key], "select_trigger")})
+    save = "".join(f"\t\tinteraction_target:{f} ?= {{ save_scope_as = bag_asp_t_{f} }}\n" for f in flags)
+    params = "".join(f" {f} = scope:bag_asp_t_{f}" for f in flags)
+    return f"""# Scope: country (scope:actor).
+bag_asp_move_{row} = {{
+\tscope:bag_asp_from = {{
+{save}\t\tstop_cabinet_action = {{}}
+\t\tcabinet_member = {{
+\t\t\tremove_variable = bag_asp_claimed
+\t\t\tremove_variable = bag_asp_kept
+\t\t\tif = {{
+\t\t\t\tlimit = {{ has_variable = bag_asp_paired }}
+\t\t\t\tremove_variable = bag_asp_paired
+\t\t\t\tscope:bag_asp_seat.cabinet_member = {{ set_variable = {{ name = bag_asp_paired value = yes }} }}
+\t\t\t}}
+\t\t}}
+\t}}
+\tscope:bag_asp_seat = {{
+\t\tif = {{
+\t\t\tlimit = {{ has_cabinet_action = yes }}
+\t\t\tstop_cabinet_action = {{}}
+\t\t}}
+\t\tset_cabinet_action = {{ type = cabinet_action:{key}{params} }}
+\t\tcabinet_member = {{
+\t\t\tset_variable = {{ name = bag_asp_claimed value = yes }}
+\t\t\tset_variable = {{ name = bag_asp_kept value = yes }}
+\t\t}}
+\t}}
+\tdebug_log = "bag_asp: {row} moved to an advisor better at it"
 }}
 """
 
@@ -711,7 +796,7 @@ bag_asp_register = {{
 \t\tsetting_id = review
 \t\ttab_id = main
 \t\tgroup_id = council
-\t\tdefault_value = 12
+\t\tdefault_value = 1
 \t\tmin_value = 0
 \t\tmax_value = 60
 \t\tstep_value = 1
@@ -1135,6 +1220,7 @@ bag_asp_emergency = {{
 }}
 """
     run += "\n" + "\n".join(place_effect(k, gate, actions) for k, _, _, gate in POOL)
+    run += "\n" + "\n".join(move_effect(k, actions) for k, *_ in POOL)
     run += pair_effects(actions)
 
     on_actions = f"""# assimilate_primary: the CMF page and the monthly pass. The engine merges
@@ -1159,6 +1245,26 @@ cmf_on_callback = {{
 cmf_monthly_human_country_pulse = {{
 \ton_actions = {{
 \t\tbag_asp_on_month
+\t}}
+}}
+
+# His rule 13.10: a new advisor hands every seat out at once. The game's own
+# effect on it stays: these lists merge. root = country, scope:target = the
+# advisor. A death is not on it; the monthly hand-out covers that.
+on_cabinet_assigned = {{
+\ton_actions = {{
+\t\tbag_asp_on_cabinet_change
+\t}}
+}}
+
+# Scope: country
+bag_asp_on_cabinet_change = {{
+\ttrigger = {{
+\t\thas_variable = bag_asp_auto_on
+\t}}
+\teffect = {{
+\t\tdebug_log = "bag_asp: an advisor was assigned"
+\t\tbag_asp_plan_all = yes
 \t}}
 }}
 
@@ -1196,6 +1302,11 @@ bag_asp_on_month = {{
 \teffect = {{
 \t\tcmm_apply_list_change = {{ setting = {MOD_ID}__{s} }}
 \t\tbag_asp_rebuild = yes
+\t\t# His rule 13.10: a change of the lists hands every seat out at once.
+\t\tif = {{
+\t\t\tlimit = {{ has_variable = bag_asp_auto_on }}
+\t\t\tbag_asp_plan_all = yes
+\t\t}}
 \t}}
 }}
 
