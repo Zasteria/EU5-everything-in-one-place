@@ -41,6 +41,32 @@ bag_asp_paired_seat = {
 	cabinet_member ?= { has_variable = bag_asp_paired }
 }
 
+# Scope: province; scope:actor is the country. A control action of the
+# speedup can be put on it now: available, not on a seat yet (one seat each),
+# and its target test holds here.
+bag_asp_control_fits = {
+	OR = {
+		AND = {
+			cabinet_action:noblesse_oblige_cabinet_action = { is_available_for = scope:actor }
+			scope:actor = { NOT = { any_cabinet = { has_cabinet_action = yes cabinet_action = cabinet_action:noblesse_oblige_cabinet_action } } }
+			NOT = { has_variable = bag_asp_busy_noblesse_oblige_cabinet_action }
+			province_average_control < 0.95
+			NOT = { has_variable = bag_asp_busy_noblesse_oblige_cabinet_action }
+			NOT = { has_variable = bag_asp_busy_increase_control_province }
+			NOT = { area ?= { has_variable = bag_asp_busy_increase_control_area } }
+		}
+		AND = {
+			cabinet_action:increase_control_province = { is_available_for = scope:actor }
+			scope:actor = { NOT = { any_cabinet = { has_cabinet_action = yes cabinet_action = cabinet_action:increase_control_province } } }
+			NOT = { has_variable = bag_asp_busy_increase_control_province }
+			province_average_control < 0.95
+			NOT = { has_variable = bag_asp_busy_increase_control_province }
+			NOT = { has_variable = bag_asp_busy_noblesse_oblige_cabinet_action }
+			NOT = { area ?= { has_variable = bag_asp_busy_increase_control_area } }
+		}
+	}
+}
+
 # Scope: province; scope:actor is the country, scope:bag_asp_seat the seat
 # about to assimilate. His rule 13.10: control above zero, or «Ускорять
 # контролем» on, another free seat, and a control action that fits here.
@@ -55,26 +81,7 @@ bag_asp_control_reachable = {
 					NOT = { this = scope:bag_asp_seat }
 				}
 			}
-			OR = {
-				AND = {
-					cabinet_action:noblesse_oblige_cabinet_action = { is_available_for = scope:actor }
-					scope:actor = { NOT = { any_cabinet = { has_cabinet_action = yes cabinet_action = cabinet_action:noblesse_oblige_cabinet_action } } }
-					NOT = { has_variable = bag_asp_busy_noblesse_oblige_cabinet_action }
-					province_average_control < 0.95
-					NOT = { has_variable = bag_asp_busy_noblesse_oblige_cabinet_action }
-					NOT = { has_variable = bag_asp_busy_increase_control_province }
-					NOT = { area ?= { has_variable = bag_asp_busy_increase_control_area } }
-				}
-				AND = {
-					cabinet_action:increase_control_province = { is_available_for = scope:actor }
-					scope:actor = { NOT = { any_cabinet = { has_cabinet_action = yes cabinet_action = cabinet_action:increase_control_province } } }
-					NOT = { has_variable = bag_asp_busy_increase_control_province }
-					province_average_control < 0.95
-					NOT = { has_variable = bag_asp_busy_increase_control_province }
-					NOT = { has_variable = bag_asp_busy_noblesse_oblige_cabinet_action }
-					NOT = { area ?= { has_variable = bag_asp_busy_increase_control_area } }
-				}
-			}
+			bag_asp_control_fits = yes
 		}
 	}
 }

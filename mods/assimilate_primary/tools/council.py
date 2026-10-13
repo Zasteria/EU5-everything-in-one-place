@@ -202,6 +202,19 @@ bag_asp_half_rank = {
 \tadd = bag_asp_half_need
 }
 
+# Scope: cabinet (a seat). The rank of the province its assimilation works on,
+# 0 without one: which of two assimilations keeps its seat for the other's
+# control (bag_asp_keep_pairs).
+bag_asp_seat_rank = {
+\tvalue = 0
+\tinteraction_target:target_1 ?= { add = bag_asp_half_rank }
+}
+
+# Probe, his run 13.10 07:12: a number parked in a global for the log line.
+bag_asp_probe_value = {
+\tvalue = global_var:bag_asp_probe
+}
+
 # The rank, then population to part equal ones. Kept near a million at most:
 # the range of a fixed-point script value is not measured here.
 bag_asp_half_score = {
@@ -486,24 +499,8 @@ def try_effect(row: str, kind: str, order: str | None, gate: str, actions: dict[
         cflag = flag_of(select(action, "culture"))
         pflag = flag_of(sel)
         own = f"\t\t\t\t\t{ROW_TARGET[row]}\n" if row in ROW_TARGET else ""
-        rule = (f"\t\t\t\t\t# His rule 05.10: where an accepted culture leads the primary by\n"
-                f"\t\t\t\t\t# {round(LEAD * 100)} points, do not push the primary.\n"
-                f"\t\t\t\t\ttrigger_if = {{\n\t\t\t\t\t\tlimit = {{ scope:{cflag} = scope:actor.culture }}\n"
-                f"\t\t\t\t\t\tNAND = {{\n\t\t\t\t\t\t\texists = dominant_culture\n"
-                f"\t\t\t\t\t\t\tNOT = {{ dominant_culture = scope:actor.culture }}\n"
-                f"\t\t\t\t\t\t\tdominant_culture = {{ is_primary_or_accepted_in = scope:actor }}\n"
-                f"\t\t\t\t\t\t\t\"culture_percentage(dominant_culture)\" >= {{\n"
-                f"\t\t\t\t\t\t\t\tvalue = \"culture_percentage(scope:actor.culture)\"\n"
-                f"\t\t\t\t\t\t\t\tadd = {LEAD}\n\t\t\t\t\t\t\t}}\n\t\t\t\t\t\t}}\n\t\t\t\t\t}}")
-        # His ask 12.10: into the primary culture (option 1, the default) or an
-        # accepted one, the most widespread in the country (option 2).
-        inner = (f"\t\tif = {{\n\t\t\tlimit = {{\n\t\t\t\tscope:actor = {{\n"
-                 f"\t\t\t\t\tvar:bag_asp_culture_target = 2\n\t\t\t\t\tany_accepted_culture = {{ always = yes }}\n"
-                 f"\t\t\t\t}}\n\t\t\t}}\n"
-                 f"\t\t\tscope:actor = {{\n\t\t\t\tordered_accepted_culture = {{\n"
-                 f"\t\t\t\t\torder_by = \"scope:actor.culture_percentage_in_country(this)\"\n"
-                 f"\t\t\t\t\tsave_scope_as = {cflag}\n\t\t\t\t}}\n\t\t\t}}\n\t\t}}\n"
-                 f"\t\telse = {{\n\t\t\tscope:actor.culture = {{ save_scope_as = {cflag} }}\n\t\t}}\n"
+        rule = lead_rule(cflag)
+        inner = (culture_choice(cflag) +
                  f"\t\tscope:actor = {{\n\t\t\tordered_province = {{\n\t\t\t\tlimit = {{\n"
                  f"{target_test(sel, 5, actions, key)}\n{rule}\n{own}\t\t\t\t}}\n\t\t\t\torder_by = {order}\n"
                  f"\t\t\t\tsave_temporary_scope_as = bag_asp_pick\n"
@@ -544,6 +541,31 @@ def try_effect(row: str, kind: str, order: str | None, gate: str, actions: dict[
     where = f"; the province is {at}" if at else ""
     return (f"# Scope: country (scope:actor); the seat is scope:bag_asp_seat{where}.\n"
             f"{name} = {{\n\tif = {{\n\t\tlimit = {{\n{limit}\n\t\t}}\n{inner}\n\t}}\n}}\n")
+
+
+def culture_choice(cflag: str) -> str:
+    """His ask 12.10: scope:<cflag> is the primary culture (option 1, the default)
+    or the accepted one most widespread in the country (option 2)."""
+    return (f"\t\tif = {{\n\t\t\tlimit = {{\n\t\t\t\tscope:actor = {{\n"
+            f"\t\t\t\t\tvar:bag_asp_culture_target = 2\n\t\t\t\t\tany_accepted_culture = {{ always = yes }}\n"
+            f"\t\t\t\t}}\n\t\t\t}}\n"
+            f"\t\t\tscope:actor = {{\n\t\t\t\tordered_accepted_culture = {{\n"
+            f"\t\t\t\t\torder_by = \"scope:actor.culture_percentage_in_country(this)\"\n"
+            f"\t\t\t\t\tsave_scope_as = {cflag}\n\t\t\t\t}}\n\t\t\t}}\n\t\t}}\n"
+            f"\t\telse = {{\n\t\t\tscope:actor.culture = {{ save_scope_as = {cflag} }}\n\t\t}}\n")
+
+
+def lead_rule(cflag: str) -> str:
+    """His rule 05.10 as conditions on a province, five tabs deep."""
+    return (f"\t\t\t\t\t# His rule 05.10: where an accepted culture leads the primary by\n"
+            f"\t\t\t\t\t# {round(LEAD * 100)} points, do not push the primary.\n"
+            f"\t\t\t\t\ttrigger_if = {{\n\t\t\t\t\t\tlimit = {{ scope:{cflag} = scope:actor.culture }}\n"
+            f"\t\t\t\t\t\tNAND = {{\n\t\t\t\t\t\t\texists = dominant_culture\n"
+            f"\t\t\t\t\t\t\tNOT = {{ dominant_culture = scope:actor.culture }}\n"
+            f"\t\t\t\t\t\t\tdominant_culture = {{ is_primary_or_accepted_in = scope:actor }}\n"
+            f"\t\t\t\t\t\t\t\"culture_percentage(dominant_culture)\" >= {{\n"
+            f"\t\t\t\t\t\t\t\tvalue = \"culture_percentage(scope:actor.culture)\"\n"
+            f"\t\t\t\t\t\t\t\tadd = {LEAD}\n\t\t\t\t\t\t\t}}\n\t\t\t\t\t\t}}\n\t\t\t\t\t}}")
 
 
 def seat_test(action: str, tabs: int) -> str:
@@ -737,6 +759,8 @@ def pair_effects(actions: dict[str, str]) -> str:
     if any((value(actions[k], "ability") or "adm") != ability for k in SPEEDUP):
         raise SystemExit("council: the speedup's control actions no longer share a skill")
     pflag = flag_of(select(actions[PAIRED_WITH], "province"))
+    if pflag != "target_1":
+        raise SystemExit("council: assimilation's province is no longer target_1, which bag_asp_seat_rank reads")
     flags = {flag_of(select(actions[k], "province")) for k in SPEEDUP}
     if len(flags) != 1:
         raise SystemExit("council: the speedup's control actions no longer share a target flag")
@@ -774,37 +798,71 @@ bag_asp_pair = {{
 \tset_variable = {{ name = bag_asp_placed value = yes }}
 }}
 
-# Scope: country (scope:actor). For the assimilations a full hand-out keeps:
-# their control seats are kept with them; one without gets one now.
+# Scope: country (scope:actor). For the assimilations this pass keeps, the
+# best province first: a control seat already with one is kept with it; one
+# without gets one now. His rule 13.10 is assimilation, control, assimilation,
+# control: where no seat is free (his run 13.10 07:12: two integrations above,
+# two assimilations, no control for a month), the weakest assimilation still
+# waiting gives its seat to the control of a better one, in a full hand-out
+# and only where a control action fits that province.
 bag_asp_keep_pairs = {{
 \tevery_cabinet = {{
 \t\tlimit = {{
 \t\t\thas_cabinet_action = yes
 \t\t\tcabinet_action = cabinet_action:{PAIRED_WITH}
+\t\t\texists = interaction_target:{pflag}
+\t\t\tcabinet_member ?= {{ has_variable = bag_asp_claimed }}
 \t\t}}
-\t\tinteraction_target:{pflag} ?= {{
-\t\t\tsave_scope_as = bag_asp_last
-\t\t\tscope:actor = {{
-\t\t\t\tif = {{
-\t\t\t\t\tlimit = {{
-\t\t\t\t\t\tany_cabinet = {{
-\t\t\t\t\t\t\tbag_asp_paired_seat = yes
-\t\t\t\t\t\t\tinteraction_target:{cflag} ?= {{ this = scope:bag_asp_last }}
-\t\t\t\t\t\t}}
-\t\t\t\t\t}}
-\t\t\t\t\tevery_cabinet = {{
-\t\t\t\t\t\tlimit = {{
-\t\t\t\t\t\t\tbag_asp_paired_seat = yes
-\t\t\t\t\t\t\tinteraction_target:{cflag} ?= {{ this = scope:bag_asp_last }}
-\t\t\t\t\t\t}}
-\t\t\t\t\t\tcabinet_member = {{ set_variable = {{ name = bag_asp_claimed value = yes }} }}
-\t\t\t\t\t}}
-\t\t\t\t}}
-\t\t\t\telse = {{
-\t\t\t\t\tbag_asp_pair = yes
-\t\t\t\t\tremove_variable = bag_asp_placed
+\t\tcabinet_member = {{ set_variable = {{ name = bag_asp_pending value = yes }} }}
+\t}}
+\twhile = {{
+\t\tlimit = {{ any_cabinet = {{ cabinet_member ?= {{ has_variable = bag_asp_pending }} }} }}
+\t\tordered_cabinet = {{
+\t\t\tlimit = {{ cabinet_member ?= {{ has_variable = bag_asp_pending }} }}
+\t\t\torder_by = bag_asp_seat_rank
+\t\t\tcabinet_member = {{ remove_variable = bag_asp_pending }}
+\t\t\tinteraction_target:{pflag} = {{ save_scope_as = bag_asp_last }}
+\t\t}}
+\t\tif = {{
+\t\t\tlimit = {{
+\t\t\t\tany_cabinet = {{
+\t\t\t\t\tbag_asp_paired_seat = yes
+\t\t\t\t\tinteraction_target:{cflag} ?= {{ this = scope:bag_asp_last }}
 \t\t\t\t}}
 \t\t\t}}
+\t\t\tevery_cabinet = {{
+\t\t\t\tlimit = {{
+\t\t\t\t\tbag_asp_paired_seat = yes
+\t\t\t\t\tinteraction_target:{cflag} ?= {{ this = scope:bag_asp_last }}
+\t\t\t\t}}
+\t\t\t\tcabinet_member = {{ set_variable = {{ name = bag_asp_claimed value = yes }} }}
+\t\t\t}}
+\t\t}}
+\t\telse = {{
+\t\t\tif = {{
+\t\t\t\tlimit = {{
+\t\t\t\t\tNOT = {{ has_variable = bag_asp_fill_only }}
+\t\t\t\t\tNOT = {{ any_cabinet = {{ bag_asp_free_seat = yes }} }}
+\t\t\t\t\tany_cabinet = {{ cabinet_member ?= {{ has_variable = bag_asp_pending }} }}
+\t\t\t\t\tscope:bag_asp_last = {{ bag_asp_control_fits = yes }}
+\t\t\t\t}}
+\t\t\t\tordered_cabinet = {{
+\t\t\t\t\tlimit = {{ cabinet_member ?= {{ has_variable = bag_asp_pending }} }}
+\t\t\t\t\torder_by = {{
+\t\t\t\t\t\tvalue = 0
+\t\t\t\t\t\tsubtract = bag_asp_seat_rank
+\t\t\t\t\t}}
+\t\t\t\t\tinteraction_target:{pflag} ?= {{ remove_variable = bag_asp_busy_{PAIRED_WITH} }}
+\t\t\t\t\tstop_cabinet_action = {{}}
+\t\t\t\t\tcabinet_member = {{
+\t\t\t\t\t\tremove_variable = bag_asp_pending
+\t\t\t\t\t\tremove_variable = bag_asp_claimed
+\t\t\t\t\t}}
+\t\t\t\t\tdebug_log = "bag_asp: an assimilation gave its seat to the control of a better one"
+\t\t\t\t}}
+\t\t\t}}
+\t\t\tbag_asp_pair = yes
+\t\t\tremove_variable = bag_asp_placed
 \t\t}}
 \t}}
 }}
@@ -835,6 +893,126 @@ bag_asp_unpair = {{
 \t\t\tcabinet_member = {{ remove_variable = bag_asp_paired }}
 \t\t}}
 \t}}
+}}
+"""
+
+
+PRINT = "[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+
+
+def probe_effects(actions: dict[str, str]) -> str:
+    """Probes, his run 13.10 07:12: integration that would not come back on top,
+    a province at 52 % control passed over for ones at 30–43 %, and seats the
+    log never named. What each pass reads, and what it leaves."""
+    key = PAIRED_WITH
+    sel = select(actions[key], "province")
+    cflag = flag_of(select(actions[key], "culture"))
+    order = "\n".join(
+        f"\t\t\t\t\tflag:bag_asp_{k} = {{ debug_log = \"bag_asp: probe: in use, next down the order: {k}\" }}"
+        for k, *_ in POOL)
+    seats = []
+    for k in sorted({act(r) for r, *_ in POOL}):
+        ability = value(actions[k], "ability") or "adm"
+        where = ""
+        if k == key:
+            where = (f"\t\t\tinteraction_target:target_1 ?= {{\n"
+                     f"\t\t\t\tset_global_variable = {{ name = bag_asp_probe value = bag_asp_half_rank }}\n"
+                     f"\t\t\t\tdebug_log = \"bag_asp: probe: its province, rank {PRINT}:\"\n"
+                     f"\t\t\t\tdebug_log_scopes = no\n\t\t\t}}\n")
+        seats.append(f"\t\telse_if = {{\n\t\t\tlimit = {{ cabinet_action = cabinet_action:{k} }}\n"
+                     f"\t\t\tset_global_variable = {{ name = bag_asp_probe value = cabinet_member.{ability} }}\n"
+                     f"\t\t\tdebug_log = \"bag_asp: probe: a seat on {k}, its advisor's {ability} {PRINT}\"\n"
+                     f"{where}\t\t}}")
+    seats_text = "\n".join(seats)
+    return f"""
+# Probe, his run 13.10 07:12: the order a full hand-out reads.
+bag_asp_probe_order = {{
+\tevery_in_list = {{
+\t\tvariable = bag_asp_order
+\t\tsave_temporary_scope_as = bag_asp_item
+\t\tif = {{
+\t\t\tlimit = {{ scope:actor = {{ is_target_in_variable_list = {{ name = bag_asp_used target = scope:bag_asp_item }} }} }}
+\t\t\tscope:actor = {{
+\t\t\t\tswitch = {{
+\t\t\t\t\ttrigger = scope:bag_asp_item
+{order}
+\t\t\t\t}}
+\t\t\t}}
+\t\t}}
+\t}}
+}}
+
+# Probe, his run 13.10 07:12: every seat as a pass leaves it.
+bag_asp_probe_seats = {{
+\tevery_cabinet = {{
+\t\tif = {{
+\t\t\tlimit = {{ NOT = {{ exists = cabinet_member }} }}
+\t\t\tdebug_log = "bag_asp: probe: a seat has no advisor"
+\t\t}}
+\t\telse_if = {{
+\t\t\tlimit = {{ has_cabinet_action = no }}
+\t\t\tdebug_log = "bag_asp: probe: a seat is empty"
+\t\t}}
+{seats_text}
+\t\telse = {{
+\t\t\tdebug_log = "bag_asp: probe: a seat on an action outside the pool"
+\t\t}}
+\t\tif = {{
+\t\t\tlimit = {{ cabinet_member ?= {{ has_variable = bag_asp_paired }} }}
+\t\t\tdebug_log = "bag_asp: probe: (that seat is the control of an assimilation)"
+\t\t}}
+\t}}
+\tremove_global_variable = bag_asp_probe
+}}
+
+# Probe, his run 13.10 07:12: every province at 40 % average control or more
+# with a location integrated or conquered and no assimilation on it, and
+# which test keeps «(до 50%)» from it. Scope: country (scope:actor).
+bag_asp_probe_half = {{
+\tif = {{
+\t\tlimit = {{ has_variable = bag_asp_auto_on }}
+{culture_choice(cflag)}\t\tscope:actor = {{
+\t\t\tevery_province = {{
+\t\t\t\tlimit = {{
+\t\t\t\t\tprovince_average_control >= 0.4
+\t\t\t\t\tNOT = {{ has_variable = bag_asp_busy_{key} }}
+\t\t\t\t\tany_location_in_province = {{
+\t\t\t\t\t\towner ?= scope:actor
+\t\t\t\t\t\tOR = {{
+\t\t\t\t\t\t\tintegration_level = integrated
+\t\t\t\t\t\t\tintegration_level = conquered
+\t\t\t\t\t\t}}
+\t\t\t\t\t}}
+\t\t\t\t}}
+\t\t\t\tset_global_variable = {{ name = bag_asp_probe value = bag_asp_half_rank }}
+\t\t\t\tif = {{
+\t\t\t\t\tlimit = {{ NOT = {{ bag_asp_needs_half = yes }} }}
+\t\t\t\t\tdebug_log = "bag_asp: probe: not taken, no location integrated or conquered short of half; rank {PRINT}:"
+\t\t\t\t}}
+\t\t\t\telse_if = {{
+\t\t\t\t\tlimit = {{
+\t\t\t\t\t\tNOT = {{
+{target_test(sel, 7, actions, key)}
+\t\t\t\t\t\t}}
+\t\t\t\t\t}}
+\t\t\t\t\tdebug_log = "bag_asp: probe: not taken, the game's own province test fails; rank {PRINT}:"
+\t\t\t\t}}
+\t\t\t\telse_if = {{
+\t\t\t\t\tlimit = {{
+\t\t\t\t\t\tNOT = {{
+{indent(lead_rule(cflag), 7)}
+\t\t\t\t\t\t}}
+\t\t\t\t\t}}
+\t\t\t\t\tdebug_log = "bag_asp: probe: not taken, an accepted culture leads the primary by {round(LEAD * 100)} points; rank {PRINT}:"
+\t\t\t\t}}
+\t\t\t\telse = {{
+\t\t\t\t\tdebug_log = "bag_asp: probe: passes every test; rank {PRINT}:"
+\t\t\t\t}}
+\t\t\t\tdebug_log_scopes = no
+\t\t\t}}
+\t\t}}
+\t}}
+\tremove_global_variable = bag_asp_probe
 }}
 """
 
@@ -1114,18 +1292,10 @@ bag_asp_plan = {{
 \t}}
 \tbag_asp_mark_busy = yes
 \tbag_asp_unpair = yes
-\t# Probe, his run 13.10: the logs flooded with assimilation's progress text
-\t# read without a province. Says whether one of the seats is that.
-\tevery_cabinet = {{
-\t\tlimit = {{
-\t\t\thas_cabinet_action = yes
-\t\t\tcabinet_action = cabinet_action:promote_culture
-\t\t\tOR = {{
-\t\t\t\tNOT = {{ exists = interaction_target:target_1 }}
-\t\t\t\tNOT = {{ exists = interaction_target:target }}
-\t\t\t}}
-\t\t}}
-\t\tdebug_log = "bag_asp: an assimilation seat has no province or no culture"
+\tif = {{
+\t\tlimit = {{ NOT = {{ has_variable = bag_asp_fill_only }} }}
+\t\tbag_asp_probe_order = yes
+\t\tbag_asp_probe_half = yes
 \t}}
 \tif = {{
 \t\tlimit = {{ has_variable = bag_asp_fill_only }}
@@ -1159,6 +1329,7 @@ bag_asp_plan = {{
 \t\tlimit = {{ any_cabinet = {{ bag_asp_free_seat = yes }} }}
 \t\tdebug_log = "bag_asp: a seat is left as it was, nothing in use fits it"
 \t}}
+\tbag_asp_probe_seats = yes
 \tevery_cabinet = {{
 \t\tlimit = {{ exists = cabinet_member }}
 \t\tcabinet_member = {{
@@ -1306,6 +1477,7 @@ bag_asp_emergency = {{
     run += "\n" + "\n".join(place_effect(k, gate, actions) for k, _, _, gate in POOL)
     run += "\n" + "\n".join(move_effect(k, actions) for k, *_ in POOL)
     run += pair_effects(actions)
+    run += probe_effects(actions)
 
     on_actions = f"""# assimilate_primary: the CMF page and the monthly pass. The engine merges
 # on_actions lists, so these add to CMF's own.
@@ -1419,10 +1591,19 @@ bag_asp_devastated_seen = {{
     # taken only while a control action can come with it.
     fits = []
     for k in SPEEDUP:
-        fits.append(f"\t\t\t\tAND = {{\n\t\t\t\t\tcabinet_action:{k} = {{ is_available_for = scope:actor }}\n"
-                    f"\t\t\t\t\tscope:actor = {{ NOT = {{ any_cabinet = {{ has_cabinet_action = yes cabinet_action = cabinet_action:{k} }} }} }}\n"
-                    f"{target_test(select(actions[k], 'province'), 5, actions, k)}\n\t\t\t\t}}")
+        fits.append(f"\t\tAND = {{\n\t\t\tcabinet_action:{k} = {{ is_available_for = scope:actor }}\n"
+                    f"\t\t\tscope:actor = {{ NOT = {{ any_cabinet = {{ has_cabinet_action = yes cabinet_action = cabinet_action:{k} }} }} }}\n"
+                    f"{target_test(select(actions[k], 'province'), 3, actions, k)}\n\t\t}}")
     reachable = f"""
+# Scope: province; scope:actor is the country. A control action of the
+# speedup can be put on it now: available, not on a seat yet (one seat each),
+# and its target test holds here.
+bag_asp_control_fits = {{
+\tOR = {{
+{chr(10).join(fits)}
+\t}}
+}}
+
 # Scope: province; scope:actor is the country, scope:bag_asp_seat the seat
 # about to assimilate. His rule 13.10: control above zero, or «Ускорять
 # контролем» on, another free seat, and a control action that fits here.
@@ -1437,9 +1618,7 @@ bag_asp_control_reachable = {{
 \t\t\t\t\tNOT = {{ this = scope:bag_asp_seat }}
 \t\t\t\t}}
 \t\t\t}}
-\t\t\tOR = {{
-{chr(10).join(fits)}
-\t\t\t}}
+\t\t\tbag_asp_control_fits = yes
 \t\t}}
 \t}}
 }}

@@ -81,18 +81,10 @@ bag_asp_plan = {
 	}
 	bag_asp_mark_busy = yes
 	bag_asp_unpair = yes
-	# Probe, his run 13.10: the logs flooded with assimilation's progress text
-	# read without a province. Says whether one of the seats is that.
-	every_cabinet = {
-		limit = {
-			has_cabinet_action = yes
-			cabinet_action = cabinet_action:promote_culture
-			OR = {
-				NOT = { exists = interaction_target:target_1 }
-				NOT = { exists = interaction_target:target }
-			}
-		}
-		debug_log = "bag_asp: an assimilation seat has no province or no culture"
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		bag_asp_probe_order = yes
+		bag_asp_probe_half = yes
 	}
 	if = {
 		limit = { has_variable = bag_asp_fill_only }
@@ -148,6 +140,7 @@ bag_asp_plan = {
 		limit = { any_cabinet = { bag_asp_free_seat = yes } }
 		debug_log = "bag_asp: a seat is left as it was, nothing in use fits it"
 	}
+	bag_asp_probe_seats = yes
 	every_cabinet = {
 		limit = { exists = cabinet_member }
 		cabinet_member = {
@@ -3933,37 +3926,71 @@ bag_asp_pair = {
 	set_variable = { name = bag_asp_placed value = yes }
 }
 
-# Scope: country (scope:actor). For the assimilations a full hand-out keeps:
-# their control seats are kept with them; one without gets one now.
+# Scope: country (scope:actor). For the assimilations this pass keeps, the
+# best province first: a control seat already with one is kept with it; one
+# without gets one now. His rule 13.10 is assimilation, control, assimilation,
+# control: where no seat is free (his run 13.10 07:12: two integrations above,
+# two assimilations, no control for a month), the weakest assimilation still
+# waiting gives its seat to the control of a better one, in a full hand-out
+# and only where a control action fits that province.
 bag_asp_keep_pairs = {
 	every_cabinet = {
 		limit = {
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:promote_culture
+			exists = interaction_target:target_1
+			cabinet_member ?= { has_variable = bag_asp_claimed }
 		}
-		interaction_target:target_1 ?= {
-			save_scope_as = bag_asp_last
-			scope:actor = {
-				if = {
-					limit = {
-						any_cabinet = {
-							bag_asp_paired_seat = yes
-							interaction_target:selected_province ?= { this = scope:bag_asp_last }
-						}
-					}
-					every_cabinet = {
-						limit = {
-							bag_asp_paired_seat = yes
-							interaction_target:selected_province ?= { this = scope:bag_asp_last }
-						}
-						cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
-					}
-				}
-				else = {
-					bag_asp_pair = yes
-					remove_variable = bag_asp_placed
+		cabinet_member = { set_variable = { name = bag_asp_pending value = yes } }
+	}
+	while = {
+		limit = { any_cabinet = { cabinet_member ?= { has_variable = bag_asp_pending } } }
+		ordered_cabinet = {
+			limit = { cabinet_member ?= { has_variable = bag_asp_pending } }
+			order_by = bag_asp_seat_rank
+			cabinet_member = { remove_variable = bag_asp_pending }
+			interaction_target:target_1 = { save_scope_as = bag_asp_last }
+		}
+		if = {
+			limit = {
+				any_cabinet = {
+					bag_asp_paired_seat = yes
+					interaction_target:selected_province ?= { this = scope:bag_asp_last }
 				}
 			}
+			every_cabinet = {
+				limit = {
+					bag_asp_paired_seat = yes
+					interaction_target:selected_province ?= { this = scope:bag_asp_last }
+				}
+				cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+			}
+		}
+		else = {
+			if = {
+				limit = {
+					NOT = { has_variable = bag_asp_fill_only }
+					NOT = { any_cabinet = { bag_asp_free_seat = yes } }
+					any_cabinet = { cabinet_member ?= { has_variable = bag_asp_pending } }
+					scope:bag_asp_last = { bag_asp_control_fits = yes }
+				}
+				ordered_cabinet = {
+					limit = { cabinet_member ?= { has_variable = bag_asp_pending } }
+					order_by = {
+						value = 0
+						subtract = bag_asp_seat_rank
+					}
+					interaction_target:target_1 ?= { remove_variable = bag_asp_busy_promote_culture }
+					stop_cabinet_action = {}
+					cabinet_member = {
+						remove_variable = bag_asp_pending
+						remove_variable = bag_asp_claimed
+					}
+					debug_log = "bag_asp: an assimilation gave its seat to the control of a better one"
+				}
+			}
+			bag_asp_pair = yes
+			remove_variable = bag_asp_placed
 		}
 	}
 }
@@ -3994,4 +4021,289 @@ bag_asp_unpair = {
 			cabinet_member = { remove_variable = bag_asp_paired }
 		}
 	}
+}
+
+# Probe, his run 13.10 07:12: the order a full hand-out reads.
+bag_asp_probe_order = {
+	every_in_list = {
+		variable = bag_asp_order
+		save_temporary_scope_as = bag_asp_item
+		if = {
+			limit = { scope:actor = { is_target_in_variable_list = { name = bag_asp_used target = scope:bag_asp_item } } }
+			scope:actor = {
+				switch = {
+					trigger = scope:bag_asp_item
+					flag:bag_asp_integrate_province = { debug_log = "bag_asp: probe: in use, next down the order: integrate_province" }
+					flag:bag_asp_integrate_area = { debug_log = "bag_asp: probe: in use, next down the order: integrate_area" }
+					flag:bag_asp_reduce_war_exhaustion = { debug_log = "bag_asp: probe: in use, next down the order: reduce_war_exhaustion" }
+					flag:bag_asp_stabilize_country = { debug_log = "bag_asp: probe: in use, next down the order: stabilize_country" }
+					flag:bag_asp_increase_control_province = { debug_log = "bag_asp: probe: in use, next down the order: increase_control_province" }
+					flag:bag_asp_increase_control_area = { debug_log = "bag_asp: probe: in use, next down the order: increase_control_area" }
+					flag:bag_asp_send_secret_royal_inspectors = { debug_log = "bag_asp: probe: in use, next down the order: send_secret_royal_inspectors" }
+					flag:bag_asp_promote_culture = { debug_log = "bag_asp: probe: in use, next down the order: promote_culture" }
+					flag:bag_asp_promote_religion = { debug_log = "bag_asp: probe: in use, next down the order: promote_religion" }
+					flag:bag_asp_pacify_population = { debug_log = "bag_asp: probe: in use, next down the order: pacify_population" }
+					flag:bag_asp_recovery_effort = { debug_log = "bag_asp: probe: in use, next down the order: recovery_effort" }
+					flag:bag_asp_appease_estate = { debug_log = "bag_asp: probe: in use, next down the order: appease_estate" }
+					flag:bag_asp_alleviate_concerns = { debug_log = "bag_asp: probe: in use, next down the order: alleviate_concerns" }
+					flag:bag_asp_reduce_inflation = { debug_log = "bag_asp: probe: in use, next down the order: reduce_inflation" }
+					flag:bag_asp_develop_province = { debug_log = "bag_asp: probe: in use, next down the order: develop_province" }
+					flag:bag_asp_study_institutions = { debug_log = "bag_asp: probe: in use, next down the order: study_institutions" }
+					flag:bag_asp_pop_promote_action = { debug_log = "bag_asp: probe: in use, next down the order: pop_promote_action" }
+					flag:bag_asp_strengthen_government = { debug_log = "bag_asp: probe: in use, next down the order: strengthen_government" }
+					flag:bag_asp_diplomatic_endeavors = { debug_log = "bag_asp: probe: in use, next down the order: diplomatic_endeavors" }
+					flag:bag_asp_counter_espionage_action = { debug_log = "bag_asp: probe: in use, next down the order: counter_espionage_action" }
+					flag:bag_asp_noblesse_oblige_cabinet_action = { debug_log = "bag_asp: probe: in use, next down the order: noblesse_oblige_cabinet_action" }
+					flag:bag_asp_diplomatic_antagonism = { debug_log = "bag_asp: probe: in use, next down the order: diplomatic_antagonism" }
+					flag:bag_asp_promote_culture_full = { debug_log = "bag_asp: probe: in use, next down the order: promote_culture_full" }
+				}
+			}
+		}
+	}
+}
+
+# Probe, his run 13.10 07:12: every seat as a pass leaves it.
+bag_asp_probe_seats = {
+	every_cabinet = {
+		if = {
+			limit = { NOT = { exists = cabinet_member } }
+			debug_log = "bag_asp: probe: a seat has no advisor"
+		}
+		else_if = {
+			limit = { has_cabinet_action = no }
+			debug_log = "bag_asp: probe: a seat is empty"
+		}
+		else_if = {
+			limit = { cabinet_action = cabinet_action:alleviate_concerns }
+			set_global_variable = { name = bag_asp_probe value = cabinet_member.dip }
+			debug_log = "bag_asp: probe: a seat on alleviate_concerns, its advisor's dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+		}
+		else_if = {
+			limit = { cabinet_action = cabinet_action:appease_estate }
+			set_global_variable = { name = bag_asp_probe value = cabinet_member.dip }
+			debug_log = "bag_asp: probe: a seat on appease_estate, its advisor's dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+		}
+		else_if = {
+			limit = { cabinet_action = cabinet_action:counter_espionage_action }
+			set_global_variable = { name = bag_asp_probe value = cabinet_member.dip }
+			debug_log = "bag_asp: probe: a seat on counter_espionage_action, its advisor's dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+		}
+		else_if = {
+			limit = { cabinet_action = cabinet_action:develop_province }
+			set_global_variable = { name = bag_asp_probe value = cabinet_member.adm }
+			debug_log = "bag_asp: probe: a seat on develop_province, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+		}
+		else_if = {
+			limit = { cabinet_action = cabinet_action:diplomatic_endeavors }
+			set_global_variable = { name = bag_asp_probe value = cabinet_member.dip }
+			debug_log = "bag_asp: probe: a seat on diplomatic_endeavors, its advisor's dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+		}
+		else_if = {
+			limit = { cabinet_action = cabinet_action:increase_control_area }
+			set_global_variable = { name = bag_asp_probe value = cabinet_member.adm }
+			debug_log = "bag_asp: probe: a seat on increase_control_area, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+		}
+		else_if = {
+			limit = { cabinet_action = cabinet_action:increase_control_province }
+			set_global_variable = { name = bag_asp_probe value = cabinet_member.adm }
+			debug_log = "bag_asp: probe: a seat on increase_control_province, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+		}
+		else_if = {
+			limit = { cabinet_action = cabinet_action:integrate_area }
+			set_global_variable = { name = bag_asp_probe value = cabinet_member.mil }
+			debug_log = "bag_asp: probe: a seat on integrate_area, its advisor's mil [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+		}
+		else_if = {
+			limit = { cabinet_action = cabinet_action:integrate_province }
+			set_global_variable = { name = bag_asp_probe value = cabinet_member.mil }
+			debug_log = "bag_asp: probe: a seat on integrate_province, its advisor's mil [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+		}
+		else_if = {
+			limit = { cabinet_action = cabinet_action:noblesse_oblige_cabinet_action }
+			set_global_variable = { name = bag_asp_probe value = cabinet_member.adm }
+			debug_log = "bag_asp: probe: a seat on noblesse_oblige_cabinet_action, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+		}
+		else_if = {
+			limit = { cabinet_action = cabinet_action:pacify_population }
+			set_global_variable = { name = bag_asp_probe value = cabinet_member.mil }
+			debug_log = "bag_asp: probe: a seat on pacify_population, its advisor's mil [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+		}
+		else_if = {
+			limit = { cabinet_action = cabinet_action:pop_promote_action }
+			set_global_variable = { name = bag_asp_probe value = cabinet_member.adm }
+			debug_log = "bag_asp: probe: a seat on pop_promote_action, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+		}
+		else_if = {
+			limit = { cabinet_action = cabinet_action:promote_culture }
+			set_global_variable = { name = bag_asp_probe value = cabinet_member.dip }
+			debug_log = "bag_asp: probe: a seat on promote_culture, its advisor's dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			interaction_target:target_1 ?= {
+				set_global_variable = { name = bag_asp_probe value = bag_asp_half_rank }
+				debug_log = "bag_asp: probe: its province, rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:"
+				debug_log_scopes = no
+			}
+		}
+		else_if = {
+			limit = { cabinet_action = cabinet_action:promote_religion }
+			set_global_variable = { name = bag_asp_probe value = cabinet_member.mil }
+			debug_log = "bag_asp: probe: a seat on promote_religion, its advisor's mil [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+		}
+		else_if = {
+			limit = { cabinet_action = cabinet_action:recovery_effort }
+			set_global_variable = { name = bag_asp_probe value = cabinet_member.dip }
+			debug_log = "bag_asp: probe: a seat on recovery_effort, its advisor's dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+		}
+		else_if = {
+			limit = { cabinet_action = cabinet_action:reduce_inflation }
+			set_global_variable = { name = bag_asp_probe value = cabinet_member.adm }
+			debug_log = "bag_asp: probe: a seat on reduce_inflation, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+		}
+		else_if = {
+			limit = { cabinet_action = cabinet_action:reduce_war_exhaustion }
+			set_global_variable = { name = bag_asp_probe value = cabinet_member.dip }
+			debug_log = "bag_asp: probe: a seat on reduce_war_exhaustion, its advisor's dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+		}
+		else_if = {
+			limit = { cabinet_action = cabinet_action:send_secret_royal_inspectors }
+			set_global_variable = { name = bag_asp_probe value = cabinet_member.adm }
+			debug_log = "bag_asp: probe: a seat on send_secret_royal_inspectors, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+		}
+		else_if = {
+			limit = { cabinet_action = cabinet_action:stabilize_country }
+			set_global_variable = { name = bag_asp_probe value = cabinet_member.mil }
+			debug_log = "bag_asp: probe: a seat on stabilize_country, its advisor's mil [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+		}
+		else_if = {
+			limit = { cabinet_action = cabinet_action:strengthen_government }
+			set_global_variable = { name = bag_asp_probe value = cabinet_member.mil }
+			debug_log = "bag_asp: probe: a seat on strengthen_government, its advisor's mil [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+		}
+		else_if = {
+			limit = { cabinet_action = cabinet_action:study_institutions }
+			set_global_variable = { name = bag_asp_probe value = cabinet_member.adm }
+			debug_log = "bag_asp: probe: a seat on study_institutions, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+		}
+		else = {
+			debug_log = "bag_asp: probe: a seat on an action outside the pool"
+		}
+		if = {
+			limit = { cabinet_member ?= { has_variable = bag_asp_paired } }
+			debug_log = "bag_asp: probe: (that seat is the control of an assimilation)"
+		}
+	}
+	remove_global_variable = bag_asp_probe
+}
+
+# Probe, his run 13.10 07:12: every province at 40 % average control or more
+# with a location integrated or conquered and no assimilation on it, and
+# which test keeps «(до 50%)» from it. Scope: country (scope:actor).
+bag_asp_probe_half = {
+	if = {
+		limit = { has_variable = bag_asp_auto_on }
+		if = {
+			limit = {
+				scope:actor = {
+					var:bag_asp_culture_target = 2
+					any_accepted_culture = { always = yes }
+				}
+			}
+			scope:actor = {
+				ordered_accepted_culture = {
+					order_by = "scope:actor.culture_percentage_in_country(this)"
+					save_scope_as = target
+				}
+			}
+		}
+		else = {
+			scope:actor.culture = { save_scope_as = target }
+		}
+		scope:actor = {
+			every_province = {
+				limit = {
+					province_average_control >= 0.4
+					NOT = { has_variable = bag_asp_busy_promote_culture }
+					any_location_in_province = {
+						owner ?= scope:actor
+						OR = {
+							integration_level = integrated
+							integration_level = conquered
+						}
+					}
+				}
+				set_global_variable = { name = bag_asp_probe value = bag_asp_half_rank }
+				if = {
+					limit = { NOT = { bag_asp_needs_half = yes } }
+					debug_log = "bag_asp: probe: not taken, no location integrated or conquered short of half; rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:"
+				}
+				else_if = {
+					limit = {
+						NOT = {
+							NOT = { has_variable = bag_asp_busy_promote_culture }
+							any_location_in_province = {
+								OR = {
+									NOT = { dominant_culture = scope:target }
+									local_cultural_unity < 0.95
+								}
+							}
+							NOT = { has_variable = bag_asp_busy_promote_culture }
+							OR = {
+								scope:actor = { is_ai = no }
+								AND = {
+									trigger_if = {
+										limit = { this = scope:actor.capital.province }
+										scope:target = scope:actor.culture
+									}
+									any_location_in_province = { naturally_assimilating_culture = scope:target }
+									trigger_if = {
+										limit = { exists = dominant_culture }
+										OR = {
+											AND = {
+												NOT = { dominant_culture = scope:target }
+												dominant_culture = { NOT = { is_primary_or_accepted_in = scope:actor } }
+											}
+											AND = {
+												dominant_culture = scope:target
+												any_location_in_province = {
+													exists = secondary_culture
+													secondary_culture = { NOT = { is_primary_or_accepted_in = scope:actor } }
+												}
+											}
+										}
+									}
+									trigger_else = { always = no }
+								}
+							}
+						}
+					}
+					debug_log = "bag_asp: probe: not taken, the game's own province test fails; rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:"
+				}
+				else_if = {
+					limit = {
+						NOT = {
+							# His rule 05.10: where an accepted culture leads the primary by
+							# 30 points, do not push the primary.
+							trigger_if = {
+								limit = { scope:target = scope:actor.culture }
+								NAND = {
+									exists = dominant_culture
+									NOT = { dominant_culture = scope:actor.culture }
+									dominant_culture = { is_primary_or_accepted_in = scope:actor }
+									"culture_percentage(dominant_culture)" >= {
+										value = "culture_percentage(scope:actor.culture)"
+										add = 0.3
+									}
+								}
+							}
+						}
+					}
+					debug_log = "bag_asp: probe: not taken, an accepted culture leads the primary by 30 points; rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:"
+				}
+				else = {
+					debug_log = "bag_asp: probe: passes every test; rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:"
+				}
+				debug_log_scopes = no
+			}
+		}
+	}
+	remove_global_variable = bag_asp_probe
 }
