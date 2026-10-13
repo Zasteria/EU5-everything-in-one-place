@@ -10,11 +10,12 @@ artisan right is furniture, pottery *and* leather, so two thirds of it is
 furnishings and one third crafts; masonry is masonry and glass, half crafts and
 half luxury; dyes, in the textile and book rights, belong to no industry.
 
-So each town in the area votes for industries with its recommended right,
-split by the share of the right's goods each industry covers, and the area's
-recommendation is the industry with the most votes. Only towns and cities vote
-(rights are granted to them, not to rural settlements), and only where the
-rights map found something to recommend. Everything is derived from the game's
+So each province of the area votes for industries with the right the rights
+map colours it with, split by the share of the right's goods each industry
+covers, and the area's recommendation is the industry with the most votes.
+His rule 13.10 18:43: by provinces, as the rights map colours them, not by
+towns («4 провинции под винокурни и 2 под ремесло и камень — спиртные
+напитки»). A province with nothing recommended does not vote. Everything is derived from the game's
 files and from the rights map's own index order, so a patch that moves a good
 between rights or industries is picked up by a rebuild.
 
@@ -34,8 +35,7 @@ INDUSTRIES_FILE = "in_game/common/industry_types/01_industries.txt"
 TRMM_EFFECTS = "in_game/common/scripted_effects/bcm_trmm_effects.txt"
 
 STAMP = "bcm_ind_stamp"
-VERSION = 1
-RANKS = ("town", "city", "megalopolis")
+VERSION = 2
 WATER = "hsv { 0.58 0.50 0.52 }"   # the rights map's own water colour
 EMPTY = "rgb { 40 40 40 }"
 
@@ -119,10 +119,9 @@ def _num(f: Fraction) -> str:
 
 def effects(inds, table) -> str:
     keys = [k for k, _, _ in inds]
-    ranks = " ".join(f"location_rank = location_rank:{r}" for r in RANKS)
     out = [
         "# Written by mods/cm_maps/tools/industry_support.py - do not edit by hand.",
-        "# Recommended industry support per area: each town votes with its",
+        "# Recommended industry support per area: each province votes with its",
         "# recommended royal right, split by the share of the right's goods each",
         "# industry covers. Shares, from the game's files:",
     ]
@@ -132,13 +131,15 @@ def effects(inds, table) -> str:
     out += ["", "# Area scope.", "bcm_ind_recompute_area = {"]
     for k in keys + ["towns"]:
         out.append(f"\tset_local_variable = {{ name = bcm_ind_l_{k} value = 0 }}")
+    # The rights map scores a province and colours all its locations alike,
+    # so one location speaks for it. bcm_ind_l_towns counts the voting provinces.
     out += [
-        "\tevery_location_in_area = {",
+        "\tevery_province_definition_in_area = {",
+        "\t\trandom_location_in_province_definition = {",
         "\t\tlimit = {",
         "\t\t\thas_variable = bcm_trmm_best_idx",
         "\t\t\thas_variable = bcm_trmm_best_mil",
         "\t\t\tvar:bcm_trmm_best_mil > 0",
-        f"\t\t\tOR = {{ {ranks} }}",
         "\t\t}",
         "\t\tchange_local_variable = { name = bcm_ind_l_towns add = 1 }",
     ]
@@ -153,7 +154,10 @@ def effects(inds, table) -> str:
         for k, v in row.items():
             out.append(f"\t\t\tchange_local_variable = {{ name = bcm_ind_l_{k} add = {_num(v)} }}")
         out.append("\t\t}")
+    first_line = out.index("\t\trandom_location_in_province_definition = {") + 1
+    out[first_line:] = ["\t" + line for line in out[first_line:]]
     out += [
+        "\t\t}",
         "\t}",
         "\t# The winner: strictly greater, so a tie keeps the earlier industry.",
         "\tset_local_variable = { name = bcm_ind_l_best value = 0 }",
@@ -254,28 +258,28 @@ TEXT = {
     "russian": {
         "name": "Рекомендуемая поддержка отрасли",
         "desc": ("#T $mapmode_bcm_industry_support_name$#!\\nОкрашивает каждую [area|e] по [industry_promotion|e], "
-                 "которую стоит выбрать для неё по карте рекомендуемых городских прав: каждый город или "
-                 "посёлок голосует своим рекомендуемым правом, а право делится между отраслями по доле своих "
+                 "которую стоит выбрать для неё по карте рекомендуемых городских прав: каждая провинция "
+                 "области голосует правом, в цвет которого её красит та карта, а право делится между отраслями по доле своих "
                  "товаров. Права ткачей и книжников частью приходятся на краски, которых нет ни в одной отрасли."),
         "best": "Область [ROOT.GetLocation.GetArea.GetName]: поддержка «#Y ${key}$#!»",
-        "votes": "Голоса городов по рекомендуемым правам",
-        "none": ("В области [ROOT.GetLocation.GetArea.GetName] нет городов с рекомендуемым правом — "
+        "votes": "Голоса провинций по рекомендуемым правам",
+        "none": ("В области [ROOT.GetLocation.GetArea.GetName] нет провинций с рекомендуемым правом — "
                  "рекомендовать нечего."),
         "water": "[ROOT.GetLocation.GetName] — не суша.",
-        "legend_none": "Нет городов с рекомендацией",
+        "legend_none": "Нет провинций с рекомендацией",
     },
     "english": {
         "name": "Recommended industry support",
         "desc": ("#T $mapmode_bcm_industry_support_name$#!\\nColours every [area|e] by the [industry_promotion|e] "
-                 "to choose for it from the recommended urban rights map: every town or city votes with "
-                 "its recommended right, split between industries by the share of the right's goods. The "
+                 "to choose for it from the recommended urban rights map: every province of the area votes "
+                 "with the right that map colours it with, split between industries by the share of the right's goods. The "
                  "textile and book rights partly go to dyes, which no industry covers."),
         "best": "Area [ROOT.GetLocation.GetArea.GetName]: support «#Y ${key}$#!»",
-        "votes": "Town votes by recommended right",
-        "none": ("Area [ROOT.GetLocation.GetArea.GetName] has no town with a recommended right — nothing "
+        "votes": "Province votes by recommended right",
+        "none": ("Area [ROOT.GetLocation.GetArea.GetName] has no province with a recommended right — nothing "
                  "to recommend."),
         "water": "[ROOT.GetLocation.GetName] is not land.",
-        "legend_none": "No town with a recommendation",
+        "legend_none": "No province with a recommendation",
     },
 }
 

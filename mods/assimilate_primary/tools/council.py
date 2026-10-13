@@ -457,9 +457,11 @@ def target_test(sel: str, tabs: int, actions: dict[str, str], key: str) -> str:
     after a guard that no seat, this pass included, already has this target."""
     parts = [f"NOT = {{ has_variable = bag_asp_busy_{key} }}"]
     if key == PAIRED_WITH:
-        # His run 13.10: Münster, 100% control, Ashkenazi pops nothing can
-        # assimilate; the seat held the province forever (stall_effect).
-        parts.append("NOT = { has_variable = bag_asp_stuck }")
+        # His run 13.10: a province whose last pops cannot turn is no target
+        # (assim_triggers); scope:target is the culture by then.
+        if flag_of(select(actions[key], "culture")) != "target":
+            raise SystemExit("council: assimilation's culture is no longer scope:target")
+        parts.append("any_location_in_province = { bag_asp_assimilable_to_target = yes }")
     parts += [b for b in (child(sel, "visible"), child(sel, "enabled")) if b and b.strip()]
     return indent(rewrite("\n".join(parts), actions), tabs)
 
@@ -1169,22 +1171,82 @@ bag_asp_sv_push = {{
 SV_LOG = "[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n{n}_value')|{d}]"
 
 
-# His run 13.10: a province whose remaining pops nothing can assimilate (the
-# game says so in the location's tooltip, script cannot ask) kept its seat for
-# good. Measured instead: an assimilation whose target culture's share of the
-# province has not risen in STALL_MONTHS monthly ticks is stopped, and the
-# province is not taken again for STUCK_YEARS.
-STALL_MONTHS = 6
-STUCK_YEARS = 2
+# His run 13.10: Münster, 100% control, its last pops Ashkenazi, and the seat
+# held the province forever while the game's tooltip said «no pop here can be
+# assimilated». Why, from the game's own files and its concept text: a pop
+# type with assimilation_conversion_factor 0 (tribesmen) never assimilates; a
+# pop type is blocked by local_/global_<type>_assimilation_blocked; and «some
+# specific cultures are directly tied to their faith, so they will not be able
+# to be assimilated unless they are converted first» — a religion with
+# culture_locked = yes (Judaism). A province where no pop is left but those
+# is never a target, and a seat on one is freed at once; the test is read
+# afresh every pass, so a conversion makes it a target again by itself.
 
 
-def stall_effect() -> str:
+def assim_rules(game: Path) -> tuple[list[str], list[str], list[str]]:
+    """(pop types that never assimilate, pop types a modifier can block,
+    culture-locked religions)."""
+    text = strip_comments((game / "in_game/common/pop_types/00_default.txt").read_text(encoding="utf-8-sig"))
+    never, blockable = [], []
+    defs = (game / "main_menu/common/modifier_type_definitions/00_modifier_types.txt").read_text(encoding="utf-8-sig")
+    for m in re.finditer(r"^(\w+)\s*=\s*\{", text, re.M):
+        factor = re.search(r"assimilation_conversion_factor\s*=\s*([\d.]+)", body(text, m.start()))
+        if factor is None:
+            raise SystemExit(f"assimilation: pop type {m.group(1)} has no assimilation_conversion_factor")
+        if float(factor.group(1)) == 0:
+            never.append(m.group(1))
+        elif re.search(rf"^local_{m.group(1)}_assimilation_blocked\s*=", defs, re.M):
+            blockable.append(m.group(1))
+    locked = []
+    for f in sorted((game / "in_game/common/religions").glob("*.txt")):
+        rtext = strip_comments(f.read_text(encoding="utf-8-sig"))
+        for m in re.finditer(r"^(\w+)\s*=\s*\{", rtext, re.M):
+            if re.search(r"^\s*culture_locked\s*=\s*yes", body(rtext, m.start()), re.M):
+                locked.append(m.group(1))
+    if not never or not locked:
+        raise SystemExit("assimilation: no pop type that never assimilates, or no culture-locked religion; read the game again")
+    return never, blockable, locked
+
+
+def assim_triggers(game: Path) -> str:
+    never, blockable, locked = assim_rules(game)
+    pop = ["\t\t" + f"NOT = {{ pop_type = pop_type:{t} }}" for t in never]
+    pop += ["\t\t" + f"NOT = {{ religion = religion:{r} }}" for r in locked]
+    for t in blockable:
+        pop.append(f"\t\tNOT = {{\n\t\t\tpop_type = pop_type:{t}\n\t\t\tOR = {{\n"
+                   f"\t\t\t\tlocation ?= {{ modifier:local_{t}_assimilation_blocked = yes }}\n"
+                   f"\t\t\t\tscope:actor = {{ modifier:global_{t}_assimilation_blocked = yes }}\n\t\t\t}}\n\t\t}}")
+    rules = "\n".join(pop)
+    return f"""
+# Scope: location; scope:actor is the country, scope:target the culture an
+# assimilation promotes. A pop here that could still turn to it (council.py,
+# assim_rules: never {", ".join(never)}; blockable {", ".join(blockable)};
+# tied to their faith {", ".join(locked)}).
+bag_asp_assimilable_to_target = {{
+\tany_pop = {{
+\t\tNOT = {{ culture = scope:target }}
+{rules}
+\t}}
+}}
+
+# Scope: location; scope:actor is the country. The same, for a pop of a culture
+# neither primary nor accepted: what the half row brings in.
+bag_asp_assimilable_any = {{
+\tany_pop = {{
+\t\tculture = {{ NOT = {{ is_primary_or_accepted_in = scope:actor }} }}
+{rules}
+\t}}
+}}
+"""
+
+
+def assim_check_effect() -> str:
     key = PAIRED_WITH
     return f"""
-# Scope: country. Monthly, from bag_asp_tick: each seat on {key} measures its
-# province's share of the target culture and gives up after {STALL_MONTHS} months
-# without a rise (council.py, stall_effect).
-bag_asp_stall = {{
+# Scope: country. From bag_asp_tick, monthly: a seat on {key} whose province
+# has no pop left that could turn to its culture is freed now (council.py,
+# assim_triggers). Nothing is remembered: the next pass asks again.
+bag_asp_assim_check = {{
 \tsave_scope_as = actor
 \tevery_cabinet = {{
 \t\tlimit = {{
@@ -1193,35 +1255,19 @@ bag_asp_stall = {{
 \t\t\texists = interaction_target:target
 \t\t\texists = interaction_target:target_1
 \t\t}}
-\t\tsave_temporary_scope_as = bag_asp_stall_seat
-\t\tinteraction_target:target = {{ save_temporary_scope_as = bag_asp_stall_culture }}
-\t\tinteraction_target:target_1 = {{
-\t\t\tset_local_variable = {{ name = bag_asp_pc_now value = {{ value = "culture_percentage(scope:bag_asp_stall_culture)" }} }}
-\t\t\tif = {{
-\t\t\t\tlimit = {{
-\t\t\t\t\tOR = {{
-\t\t\t\t\t\tNOT = {{ has_variable = bag_asp_pc_at }}
-\t\t\t\t\t\tlocal_var:bag_asp_pc_now > var:bag_asp_pc_at
-\t\t\t\t\t}}
+\t\tinteraction_target:target = {{ save_temporary_scope_as = target }}
+\t\tif = {{
+\t\t\tlimit = {{
+\t\t\t\tinteraction_target:target_1 = {{
+\t\t\t\t\tNOT = {{ any_location_in_province = {{ bag_asp_assimilable_to_target = yes }} }}
 \t\t\t\t}}
-\t\t\t\tset_variable = {{ name = bag_asp_pc_at value = local_var:bag_asp_pc_now }}
-\t\t\t\tset_variable = {{ name = bag_asp_pc_months value = 0 }}
 \t\t\t}}
-\t\t\telse = {{
-\t\t\t\tchange_variable = {{ name = bag_asp_pc_months add = 1 }}
-\t\t\t}}
+\t\t\tdebug_log = "bag_asp: assimilation freed: no pop left in its province that can turn (tribesmen, a blocked class, or a faith-tied culture)"
 \t\t\tif = {{
-\t\t\t\tlimit = {{ var:bag_asp_pc_months >= {STALL_MONTHS} }}
-\t\t\t\tset_variable = {{ name = bag_asp_stuck value = yes years = {STUCK_YEARS} }}
-\t\t\t\tremove_variable = bag_asp_pc_at
-\t\t\t\tremove_variable = bag_asp_pc_months
-\t\t\t\tdebug_log = "bag_asp: assimilation stopped, no rise in {STALL_MONTHS} months; the province waits {STUCK_YEARS} years"
-\t\t\t\tif = {{
-\t\t\t\t\tlimit = {{ scope:actor = {{ has_variable = bag_asp_log_on }} }}
-\t\t\t\t\tdebug_log_scopes = no
-\t\t\t\t}}
-\t\t\t\tscope:bag_asp_stall_seat = {{ bag_asp_vacate = yes }}
+\t\t\t\tlimit = {{ scope:actor = {{ has_variable = bag_asp_log_on }} }}
+\t\t\t\tinteraction_target:target_1 = {{ debug_log_scopes = no }}
 \t\t\t}}
+\t\t\tbag_asp_vacate = yes
 \t\t}}
 \t}}
 }}
@@ -1997,7 +2043,7 @@ bag_asp_tick = {{
 \tchange_variable = {{ name = bag_asp_months add = 1 }}
 \tchange_variable = {{ name = bag_asp_review_months add = 1 }}
 \tdebug_log = "bag_asp: month"
-\tbag_asp_stall = yes
+\tbag_asp_assim_check = yes
 \tif = {{
 \t\tlimit = {{
 \t\t\tvar:bag_asp_review > 0
@@ -2193,7 +2239,7 @@ bag_asp_vacate = {{
 """
     run += tries
     run += value_effects(game, actions)
-    run += stall_effect()
+    run += assim_check_effect()
     # A seat's rank is its action's row; where two rows share an action, the
     # row whose gate holds now, gated rows tried first.
     shared = {act(k) for k, *_ in POOL if act(k) != k}
@@ -2505,6 +2551,8 @@ bag_asp_short_of_half = {{
 bag_asp_needs_half = {{
 \tany_location_in_province = {{
 \t\towner ?= scope:actor
+\t\t# His run 13.10: only while a pop here can still turn.
+\t\tbag_asp_assimilable_any = yes
 \t\tOR = {{
 \t\t\tintegration_level = integrated
 \t\t\tAND = {{
@@ -2531,7 +2579,7 @@ bag_asp_paired_seat = {{
 """ + reachable
 
     return {
-        "in_game/common/scripted_triggers/bag_asp_council_triggers.txt": triggers + ramp_triggers(game),
+        "in_game/common/scripted_triggers/bag_asp_council_triggers.txt": triggers + ramp_triggers(game) + assim_triggers(game),
         "in_game/common/script_values/bag_asp_values.txt": VALUES + shown_values() + SV_VALUES + sv_push_value(game, actions),
         "in_game/common/scripted_effects/bag_asp_cmm_effects.txt": effects,
         "in_game/common/scripted_effects/bag_asp_council_effects.txt": run,

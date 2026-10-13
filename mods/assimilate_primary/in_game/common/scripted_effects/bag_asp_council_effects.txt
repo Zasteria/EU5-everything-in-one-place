@@ -21,7 +21,7 @@ bag_asp_tick = {
 	change_variable = { name = bag_asp_months add = 1 }
 	change_variable = { name = bag_asp_review_months add = 1 }
 	debug_log = "bag_asp: month"
-	bag_asp_stall = yes
+	bag_asp_assim_check = yes
 	if = {
 		limit = {
 			var:bag_asp_review > 0
@@ -711,7 +711,7 @@ bag_asp_try_promote_culture = {
 			ordered_province = {
 				limit = {
 					NOT = { has_variable = bag_asp_busy_promote_culture }
-					NOT = { has_variable = bag_asp_stuck }
+					any_location_in_province = { bag_asp_assimilable_to_target = yes }
 					any_location_in_province = {
 						OR = {
 							NOT = { dominant_culture = scope:target }
@@ -1187,7 +1187,7 @@ bag_asp_try_promote_culture_full = {
 			ordered_province = {
 				limit = {
 					NOT = { has_variable = bag_asp_busy_promote_culture }
-					NOT = { has_variable = bag_asp_stuck }
+					any_location_in_province = { bag_asp_assimilable_to_target = yes }
 					any_location_in_province = {
 						OR = {
 							NOT = { dominant_culture = scope:target }
@@ -2671,10 +2671,10 @@ bag_asp_sv_ask = {
 	debug_log = "bag_asp: values, the window is asked to open and press"
 }
 
-# Scope: country. Monthly, from bag_asp_tick: each seat on promote_culture measures its
-# province's share of the target culture and gives up after 6 months
-# without a rise (council.py, stall_effect).
-bag_asp_stall = {
+# Scope: country. From bag_asp_tick, monthly: a seat on promote_culture whose province
+# has no pop left that could turn to its culture is freed now (council.py,
+# assim_triggers). Nothing is remembered: the next pass asks again.
+bag_asp_assim_check = {
 	save_scope_as = actor
 	every_cabinet = {
 		limit = {
@@ -2683,35 +2683,19 @@ bag_asp_stall = {
 			exists = interaction_target:target
 			exists = interaction_target:target_1
 		}
-		save_temporary_scope_as = bag_asp_stall_seat
-		interaction_target:target = { save_temporary_scope_as = bag_asp_stall_culture }
-		interaction_target:target_1 = {
-			set_local_variable = { name = bag_asp_pc_now value = { value = "culture_percentage(scope:bag_asp_stall_culture)" } }
-			if = {
-				limit = {
-					OR = {
-						NOT = { has_variable = bag_asp_pc_at }
-						local_var:bag_asp_pc_now > var:bag_asp_pc_at
-					}
+		interaction_target:target = { save_temporary_scope_as = target }
+		if = {
+			limit = {
+				interaction_target:target_1 = {
+					NOT = { any_location_in_province = { bag_asp_assimilable_to_target = yes } }
 				}
-				set_variable = { name = bag_asp_pc_at value = local_var:bag_asp_pc_now }
-				set_variable = { name = bag_asp_pc_months value = 0 }
 			}
-			else = {
-				change_variable = { name = bag_asp_pc_months add = 1 }
-			}
+			debug_log = "bag_asp: assimilation freed: no pop left in its province that can turn (tribesmen, a blocked class, or a faith-tied culture)"
 			if = {
-				limit = { var:bag_asp_pc_months >= 6 }
-				set_variable = { name = bag_asp_stuck value = yes years = 2 }
-				remove_variable = bag_asp_pc_at
-				remove_variable = bag_asp_pc_months
-				debug_log = "bag_asp: assimilation stopped, no rise in 6 months; the province waits 2 years"
-				if = {
-					limit = { scope:actor = { has_variable = bag_asp_log_on } }
-					debug_log_scopes = no
-				}
-				scope:bag_asp_stall_seat = { bag_asp_vacate = yes }
+				limit = { scope:actor = { has_variable = bag_asp_log_on } }
+				interaction_target:target_1 = { debug_log_scopes = no }
 			}
+			bag_asp_vacate = yes
 		}
 	}
 }
@@ -3424,7 +3408,7 @@ bag_asp_place_promote_culture = {
 				ordered_province = {
 					limit = {
 						NOT = { has_variable = bag_asp_busy_promote_culture }
-						NOT = { has_variable = bag_asp_stuck }
+						any_location_in_province = { bag_asp_assimilable_to_target = yes }
 						any_location_in_province = {
 							OR = {
 								NOT = { dominant_culture = scope:target }
@@ -5686,7 +5670,7 @@ bag_asp_probe_half = {
 					limit = {
 						NOT = {
 							NOT = { has_variable = bag_asp_busy_promote_culture }
-							NOT = { has_variable = bag_asp_stuck }
+							any_location_in_province = { bag_asp_assimilable_to_target = yes }
 							any_location_in_province = {
 								OR = {
 									NOT = { dominant_culture = scope:target }

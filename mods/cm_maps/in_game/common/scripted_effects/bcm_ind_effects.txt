@@ -1,5 +1,5 @@
 ﻿# Written by mods/cm_maps/tools/industry_support.py - do not edit by hand.
-# Recommended industry support per area: each town votes with its
+# Recommended industry support per area: each province votes with its
 # recommended royal right, split by the share of the right's goods each
 # industry covers. Shares, from the game's files:
 #   1 royal_masonry_rights (masonry glass): crafts 0.5, luxury 0.5
@@ -23,51 +23,52 @@ bcm_ind_recompute_area = {
 	set_local_variable = { name = bcm_ind_l_naval value = 0 }
 	set_local_variable = { name = bcm_ind_l_beverages value = 0 }
 	set_local_variable = { name = bcm_ind_l_towns value = 0 }
-	every_location_in_area = {
-		limit = {
-			has_variable = bcm_trmm_best_idx
-			has_variable = bcm_trmm_best_mil
-			var:bcm_trmm_best_mil > 0
-			OR = { location_rank = location_rank:town location_rank = location_rank:city location_rank = location_rank:megalopolis }
-		}
-		change_local_variable = { name = bcm_ind_l_towns add = 1 }
-		if = {
-			limit = { var:bcm_trmm_best_idx = 1 }  # royal_masonry_rights
-			change_local_variable = { name = bcm_ind_l_crafts add = 0.5 }
-			change_local_variable = { name = bcm_ind_l_luxury add = 0.5 }
-		}
-		else_if = {
-			limit = { var:bcm_trmm_best_idx = 2 }  # royal_brewing_rights
-			change_local_variable = { name = bcm_ind_l_beverages add = 1 }
-		}
-		else_if = {
-			limit = { var:bcm_trmm_best_idx = 3 }  # royal_artisan_rights
-			change_local_variable = { name = bcm_ind_l_crafts add = 0.333 }
-			change_local_variable = { name = bcm_ind_l_furnishings add = 0.667 }
-		}
-		else_if = {
-			limit = { var:bcm_trmm_best_idx = 4 }  # royal_book_rights
-			change_local_variable = { name = bcm_ind_l_paper_goods add = 0.667 }
-		}
-		else_if = {
-			limit = { var:bcm_trmm_best_idx = 5 }  # royal_weaponry_rights
-			change_local_variable = { name = bcm_ind_l_arms add = 1 }
-		}
-		else_if = {
-			limit = { var:bcm_trmm_best_idx = 6 }  # royal_textile_rights
-			change_local_variable = { name = bcm_ind_l_textiles add = 0.667 }
-		}
-		else_if = {
-			limit = { var:bcm_trmm_best_idx = 7 }  # royal_naval_rights
-			change_local_variable = { name = bcm_ind_l_naval add = 1 }
-		}
-		else_if = {
-			limit = { var:bcm_trmm_best_idx = 8 }  # royal_jewelry_rights
-			change_local_variable = { name = bcm_ind_l_luxury add = 1 }
-		}
-		else_if = {
-			limit = { var:bcm_trmm_best_idx = 9 }  # royal_tooling_rights
-			change_local_variable = { name = bcm_ind_l_crafts add = 1 }
+	every_province_definition_in_area = {
+		random_location_in_province_definition = {
+			limit = {
+				has_variable = bcm_trmm_best_idx
+				has_variable = bcm_trmm_best_mil
+				var:bcm_trmm_best_mil > 0
+			}
+			change_local_variable = { name = bcm_ind_l_towns add = 1 }
+			if = {
+				limit = { var:bcm_trmm_best_idx = 1 }  # royal_masonry_rights
+				change_local_variable = { name = bcm_ind_l_crafts add = 0.5 }
+				change_local_variable = { name = bcm_ind_l_luxury add = 0.5 }
+			}
+			else_if = {
+				limit = { var:bcm_trmm_best_idx = 2 }  # royal_brewing_rights
+				change_local_variable = { name = bcm_ind_l_beverages add = 1 }
+			}
+			else_if = {
+				limit = { var:bcm_trmm_best_idx = 3 }  # royal_artisan_rights
+				change_local_variable = { name = bcm_ind_l_crafts add = 0.333 }
+				change_local_variable = { name = bcm_ind_l_furnishings add = 0.667 }
+			}
+			else_if = {
+				limit = { var:bcm_trmm_best_idx = 4 }  # royal_book_rights
+				change_local_variable = { name = bcm_ind_l_paper_goods add = 0.667 }
+			}
+			else_if = {
+				limit = { var:bcm_trmm_best_idx = 5 }  # royal_weaponry_rights
+				change_local_variable = { name = bcm_ind_l_arms add = 1 }
+			}
+			else_if = {
+				limit = { var:bcm_trmm_best_idx = 6 }  # royal_textile_rights
+				change_local_variable = { name = bcm_ind_l_textiles add = 0.667 }
+			}
+			else_if = {
+				limit = { var:bcm_trmm_best_idx = 7 }  # royal_naval_rights
+				change_local_variable = { name = bcm_ind_l_naval add = 1 }
+			}
+			else_if = {
+				limit = { var:bcm_trmm_best_idx = 8 }  # royal_jewelry_rights
+				change_local_variable = { name = bcm_ind_l_luxury add = 1 }
+			}
+			else_if = {
+				limit = { var:bcm_trmm_best_idx = 9 }  # royal_tooling_rights
+				change_local_variable = { name = bcm_ind_l_crafts add = 1 }
+			}
 		}
 	}
 	# The winner: strictly greater, so a tie keeps the earlier industry.

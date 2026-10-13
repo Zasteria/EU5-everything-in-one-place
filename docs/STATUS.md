@@ -10,13 +10,13 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`nmt_ru`](../mods/nmt_ru/CLAUDE.md) | Русский для National Mission Trees: 17 стран, 3 555 ключей; дерево пишется целиком | всё |
 | [`nmt_fix`](../mods/nmt_fix/CLAUDE.md) | 0.2.0 (10-03): земли подданных (121 условие) + NMT под 1.4 | всё |
 | [`integration_fix`](../mods/integration_fix/CLAUDE.md) | 0.2.0: Integration Hotfix на 1.4.1, вместо него | всё |
-| [`cm_maps`](../mods/cm_maps/CLAUDE.md) | **загружен 09-19, рисует**; 0.4.0: карта поддержки отрасли; еда, губернатор под 1.4 не сверены | 0.3.0, 0.4.0, починка прав, еда |
+| [`cm_maps`](../mods/cm_maps/CLAUDE.md) | **загружен 09-19, рисует**; 0.4.1: карта поддержки отрасли по провинциям; еда, губернатор под 1.4 не сверены | 0.3.0, 0.4.0, починка прав, еда |
 | [`cm_dev_perf`](../mods/cm_dev_perf/CLAUDE.md) | +perf40: окна 1.4.1; права по провинции, грамоты 1.4; перед Río, после Río — [`cm_rio_patch`](../mods/cm_rio_patch/CLAUDE.md); ND — своя категория | +perf19–39, патч |
 | [`cmf_dev_beta`](../mods/cmf_dev_beta/CLAUDE.md) | +beta13: номер места с начала; +beta12: типы 1.4.1; `cmf_is_host`, панель, стрелки, номер места; вместо CMF и CMF Dev | +beta7, +beta12, +beta13 |
 | [`glorpui_hints`](../mods/glorpui_hints/CLAUDE.md) | 1.2.13 (10-13: 1.4.1), игра 1.4, основной предмет; ворота по техам | 1.2.10–1.2.13 в игре не были |
 | [`glorpui_hints_1_3`](../mods/glorpui_hints_1_3/CLAUDE.md) | 1.1.1 для 1.3, свой предмет | — |
 | [`centered_towns`](../mods/centered_towns/CLAUDE.md) | 0.2.0 (10-04): позиции Better label placement под новыми именами файлов 1.4 | 0.2.0 |
-| [`assimilate_primary`](../mods/assimilate_primary/CLAUDE.md) | 0.9.17: своя автоматика совета; ценности через окно игры работают; правки 18:30 не проверены | 0.6.0 |
+| [`assimilate_primary`](../mods/assimilate_primary/CLAUDE.md) | 0.9.18: своя автоматика совета; ценности через окно игры работают; правки 18:30 не проверены | 0.6.0 |
 | [`perf_probe`](../mods/perf_probe/CLAUDE.md), [`speed_5`](../mods/speed_5/CLAUDE.md), [`speed_10`](../mods/speed_10/CLAUDE.md) | 0.1.0: профилировщик; паузы; 10 скоростей | всё |
 | [`auto_marry`](../mods/auto_marry/CLAUDE.md) | автоженитьба под 1.4 | всё |
 | [`war_sliders`](../mods/war_sliders/CLAUDE.md) | **0.7.3**: сам после мира и восстания, кнопка CMF; к мастерской | автозапуск |
