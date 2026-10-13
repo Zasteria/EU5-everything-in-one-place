@@ -1080,13 +1080,20 @@ def value_effects(game: Path) -> str:
     # The probe takes the first pair the country has whose value is short of
     # its right end — his run 13.10: innovation already stood at 100, and the
     # game dropped the action at once.
+    # Not the pair it pressed last: the window leaves out the pair the seat
+    # already pushes (his run 13.10 11:40 — 12 rows, «Централизация» gone).
     pick = []
     for i, pair in enumerate(value_pairs(game)):
         pick.append(f"""\t{"if" if i == 0 else "else_if"} = {{
 \t\tlimit = {{
 \t\t\thas_societal_value = societal_value_type:{pair}
 \t\t\tsocietal_value:{pair} < 100
+\t\t\tOR = {{
+\t\t\t\tNOT = {{ has_variable = bag_asp_sv_last }}
+\t\t\t\tNOT = {{ var:bag_asp_sv_last = {i} }}
+\t\t\t}}
 \t\t}}
+\t\tset_variable = {{ name = bag_asp_sv_last value = {i} }}
 \t\tset_variable = {{ name = bag_asp_sv_pair value = societal_value_type:{pair} }}
 \t\tset_global_variable = {{ name = bag_asp_sv_now value = societal_value:{pair} }}
 \t\tdebug_log = "bag_asp: sv probe, the pair {pair}, now [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_now_value')|2]"

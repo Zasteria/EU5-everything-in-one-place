@@ -112,6 +112,23 @@ def closers() -> str:
     return out
 
 
+def live(children: str, tabs: int) -> str:
+    """The children under a parent whose visible is an always-true expression.
+    His run 13.10 11:40: inside the game's window a child's gate was read when
+    the row was built and never again — the closers never fired, and a second
+    request into the open window drew no row. cm_hidden_window.gui keeps its
+    gates live this way, and ours there fire (the opener, every run)."""
+    pad = "\t" * tabs
+    # The children carry their own indent; one level more puts them inside.
+    body = "".join("\t" + line if line.strip() else line
+                   for line in children.lstrip("\n").splitlines(keepends=True))
+    return (f"\n{pad}# assimilate_primary: keeps the gates below re-read every frame\n"
+            f"{pad}# (value_window.py, as cm_hidden_window.gui).\n"
+            f"{pad}widget = {{\n{pad}\tname = \"bag_asp_sv_live\"\n{pad}\tsize = {{ 0 0 }}\n"
+            f"{pad}\tvisible = \"[EqualTo_CFixedPoint('(CFixedPoint)0', '(CFixedPoint)0')]\"\n"
+            f"{body}{pad}}}\n")
+
+
 HIDDEN_TEXT = f"""# assimilate_primary: always present, never seen. Opens the game's window of
 # societal values for the seat the council automation chose. Built by
 # tools/value_window.py, do not edit by hand.
@@ -154,8 +171,8 @@ def build(game: Path) -> dict[str, str]:
     at = text.index("\n", row) + 1
     head = ("# assimilate_primary: the game's select_societal_value.gui, copied whole,\n"
             "# with the council automation's children. Built by tools/value_window.py.\n")
-    window = (head + text[:top] + closers() + text[top:at] + row_log()
-              + "".join(presser(s) for s in SIDES) + text[at:])
+    window = (head + text[:top] + live(closers(), 2) + text[top:at]
+              + live(row_log() + "".join(presser(s) for s in SIDES), 8) + text[at:])
     return {
         WINDOW: window,
         HIDDEN: HIDDEN_TEXT,
