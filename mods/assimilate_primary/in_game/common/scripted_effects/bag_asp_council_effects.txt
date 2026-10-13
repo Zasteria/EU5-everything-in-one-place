@@ -621,17 +621,7 @@ bag_asp_try_promote_culture = {
 					}
 					bag_asp_needs_half = yes
 				}
-				order_by = {
-					value = 0
-					every_location_in_province = {
-						limit = { bag_asp_short_of_half = yes }
-						add = 100
-					}
-					add = {
-						value = population
-						max = 99
-					}
-				}
+				order_by = bag_asp_half_score
 				save_temporary_scope_as = bag_asp_pick
 				scope:bag_asp_pick = { save_scope_as = bag_asp_last }
 				scope:bag_asp_seat = {
@@ -1915,6 +1905,78 @@ bag_asp_place_promote_culture = {
 			set_variable = { name = bag_asp_claimed value = yes }
 			set_variable = { name = bag_asp_kept value = yes }
 		}
+	}
+	# His rule 13.10: locations assimilate each on their own, so a kept
+	# assimilation moves to a province with more locations to bring to half.
+	if = {
+		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		every_cabinet = {
+			limit = {
+				cabinet_member ?= { has_variable = bag_asp_kept }
+				exists = interaction_target:target
+				exists = interaction_target:target_1
+			}
+			save_scope_as = bag_asp_seat
+			interaction_target:target = { save_scope_as = target }
+			interaction_target:target_1 = {
+				save_scope_as = bag_asp_cur
+				save_scope_value_as = { name = bag_asp_cur_need value = bag_asp_half_need }
+			}
+			scope:actor = {
+				ordered_province = {
+					limit = {
+						NOT = { has_variable = bag_asp_busy_promote_culture }
+						any_location_in_province = {
+							OR = {
+								NOT = { dominant_culture = scope:target }
+								local_cultural_unity < 0.95
+							}
+						}
+						NOT = { has_variable = bag_asp_busy_promote_culture }
+						OR = {
+							scope:actor = { is_ai = no }
+							AND = {
+								trigger_if = {
+									limit = { this = scope:actor.capital.province }
+									scope:target = scope:actor.culture
+								}
+								any_location_in_province = { naturally_assimilating_culture = scope:target }
+								trigger_if = {
+									limit = { exists = dominant_culture }
+									OR = {
+										AND = {
+											NOT = { dominant_culture = scope:target }
+											dominant_culture = { NOT = { is_primary_or_accepted_in = scope:actor } }
+										}
+										AND = {
+											dominant_culture = scope:target
+											any_location_in_province = {
+												exists = secondary_culture
+												secondary_culture = { NOT = { is_primary_or_accepted_in = scope:actor } }
+											}
+										}
+									}
+								}
+								trigger_else = { always = no }
+							}
+						}
+						bag_asp_needs_half = yes
+						bag_asp_half_need > scope:bag_asp_cur_need
+					}
+					order_by = bag_asp_half_score
+					save_scope_as = bag_asp_new
+					scope:bag_asp_cur = { remove_variable = bag_asp_busy_promote_culture }
+					scope:bag_asp_new = { set_variable = { name = bag_asp_busy_promote_culture value = yes } }
+					scope:bag_asp_seat = {
+						stop_cabinet_action = {}
+						set_cabinet_action = { type = cabinet_action:promote_culture target = scope:target target_1 = scope:bag_asp_new }
+					}
+					debug_log = "bag_asp: assimilation moved to a province with more locations to bring to half"
+				}
+			}
+		}
+		# The control seat of a province left behind goes now.
+		bag_asp_unpair = yes
 	}
 	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
 	# even from a lower row: while a free seat beats its weakest kept one in the

@@ -6,10 +6,8 @@ bag_asp_free_seat = {
 	cabinet_member = { NOT = { has_variable = bag_asp_claimed } }
 }
 
-# Scope: location; scope:actor is the country. His rule 13.10, by location: no
-# primary or accepted culture holds half of it.
+# Scope: location. No primary or accepted culture holds half of it.
 bag_asp_short_of_half = {
-	owner ?= scope:actor
 	NAND = {
 		exists = dominant_culture
 		dominant_culture = { is_primary_or_accepted_in = scope:actor }
@@ -17,9 +15,20 @@ bag_asp_short_of_half = {
 	}
 }
 
-# Scope: province; scope:actor is the country. A location of it is short of half.
+# Scope: province; scope:actor is the country. His rule 13.10, by status: a
+# location of it is integrated but not core yet, or conquered and short of half
+# (conquered at half needs integration, not assimilation).
 bag_asp_needs_half = {
-	any_location_in_province = { bag_asp_short_of_half = yes }
+	any_location_in_province = {
+		owner ?= scope:actor
+		OR = {
+			integration_level = integrated
+			AND = {
+				integration_level = conquered
+				bag_asp_short_of_half = yes
+			}
+		}
+	}
 }
 
 # Scope: cabinet. A control action bound to an assimilation («Ускорять контролем»).

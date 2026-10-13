@@ -88,8 +88,8 @@ ROW_SEAT = {"promote_culture": "interaction_target:target_1 ?= { bag_asp_needs_h
 # Rows of one action told apart in their label, and their tooltips.
 ROW_NOTE = {
     "promote_culture": {
-        "english": (" (to half)", "Until in every location of the province a primary or accepted culture holds at least half: what integration and cores need. Counted by location, not for the province as a whole. A seat whose province is there is freed, unless the full row is in use."),
-        "russian": (" (до 50%)", "Пока в каждом районе провинции основная или признанная культура не наберёт половину: это нужно для интеграции и коров. Считается по районам, а не по провинции в целом. Место, чья провинция дошла, освобождается, если не используется строка полной ассимиляции."),
+        "english": (" (to half)", "Until no location of the province is «integrated» or «conquered» short of half a primary or accepted culture: at half an integrated location becomes core. Integrated locations first, conquered ones after them (they assimilate slower); the more of them in a province, the sooner. In a full hand-out a running one moves to a province with more such locations. A seat whose province is done is freed, unless the full row is in use."),
+        "russian": (" (до 50%)", "Пока в провинции есть районы «интегрирован» или «завоёван» без половины основной или признанной культуры: на половине интегрированный район становится национальным. Сначала интегрированные, потом завоёванные (ассимилируются медленнее); чем больше таких районов в провинции, тем раньше. При полной раздаче идущая ассимиляция переезжает туда, где таких районов больше. Место, чья провинция готова, освобождается, если не используется строка полной ассимиляции."),
     },
     "promote_culture_full": {
         "english": (" (full)", "On to the whole province in the target culture, for the rare goal of changing culture outright."),
@@ -156,20 +156,45 @@ INTEGRATION = """{
 \t\t\t\t\t}
 \t\t\t\t}"""
 
-# Which province to assimilate to half first, his rule 13.10: the more of its
-# locations short of half a primary or accepted culture, the sooner; then
-# population.
-HALF = """{
-\t\t\t\t\tvalue = 0
-\t\t\t\t\tevery_location_in_province = {
-\t\t\t\t\t\tlimit = { bag_asp_short_of_half = yes }
-\t\t\t\t\t\tadd = 100
-\t\t\t\t\t}
-\t\t\t\t\tadd = {
-\t\t\t\t\t\tvalue = population
-\t\t\t\t\t\tmax = 99
-\t\t\t\t\t}
-\t\t\t\t}"""
+# Which province to assimilate to half first, his rule 13.10: by the status of
+# its locations, not by percentages. «Integrated» is a location integrated and
+# short of half a primary or accepted culture (at half it becomes core);
+# «conquered» assimilates slower. Locations assimilate each on their own, so
+# the more of them at once, the better. Script values in VALUES.
+HALF = "bag_asp_half_score"
+
+VALUES = """# assimilate_primary: script values of the council pass. Rebuilt by tools/generate.py.
+
+# Scope: province; scope:actor is the country. His rule 13.10: integrated
+# locations first, conquered ones short of half after them.
+bag_asp_half_need = {
+\tvalue = 0
+\tevery_location_in_province = {
+\t\tlimit = {
+\t\t\towner ?= scope:actor
+\t\t\tintegration_level = integrated
+\t\t}
+\t\tadd = 1000
+\t}
+\tevery_location_in_province = {
+\t\tlimit = {
+\t\t\towner ?= scope:actor
+\t\t\tintegration_level = conquered
+\t\t\tbag_asp_short_of_half = yes
+\t\t}
+\t\tadd = 10
+\t}
+}
+
+# The same, then population to part equal ones.
+bag_asp_half_score = {
+\tvalue = bag_asp_half_need
+\tadd = {
+\t\tvalue = population
+\t\tmax = 9
+\t}
+}
+"""
 
 # The two lists over the pool. «Тонкие настройки» holds only the CMF groups of
 # the actions that have settings (FINE): the list of every action that stood
@@ -522,7 +547,48 @@ def place_effect(row: str, gate: str, actions: dict[str, str]) -> str:
     keep_gate = f"\n\t\t\tscope:actor = {{ {gate} }}" if gate else ""
     if row in ROW_SEAT:
         keep_gate += f"\n\t\t\t{ROW_SEAT[row]}"
-    keep_pairs = pair_after = ""
+    keep_pairs = pair_after = retarget = ""
+    if row in ROW_TARGET:
+        sel = select(action, "province")
+        retarget = f"""\t# His rule 13.10: locations assimilate each on their own, so a kept
+\t# assimilation moves to a province with more locations to bring to half.
+\tif = {{
+\t\tlimit = {{ NOT = {{ has_variable = bag_asp_fill_only }} }}
+\t\tevery_cabinet = {{
+\t\t\tlimit = {{
+\t\t\t\tcabinet_member ?= {{ has_variable = bag_asp_kept }}
+\t\t\t\texists = interaction_target:target
+\t\t\t\texists = interaction_target:target_1
+\t\t\t}}
+\t\t\tsave_scope_as = bag_asp_seat
+\t\t\tinteraction_target:target = {{ save_scope_as = target }}
+\t\t\tinteraction_target:target_1 = {{
+\t\t\t\tsave_scope_as = bag_asp_cur
+\t\t\t\tsave_scope_value_as = {{ name = bag_asp_cur_need value = bag_asp_half_need }}
+\t\t\t}}
+\t\t\tscope:actor = {{
+\t\t\t\tordered_province = {{
+\t\t\t\t\tlimit = {{
+{target_test(sel, 6, actions, key)}
+\t\t\t\t\t\t{ROW_TARGET[row]}
+\t\t\t\t\t\tbag_asp_half_need > scope:bag_asp_cur_need
+\t\t\t\t\t}}
+\t\t\t\t\torder_by = {HALF}
+\t\t\t\t\tsave_scope_as = bag_asp_new
+\t\t\t\t\tscope:bag_asp_cur = {{ remove_variable = bag_asp_busy_{key} }}
+\t\t\t\t\tscope:bag_asp_new = {{ set_variable = {{ name = bag_asp_busy_{key} value = yes }} }}
+\t\t\t\t\tscope:bag_asp_seat = {{
+\t\t\t\t\t\tstop_cabinet_action = {{}}
+\t\t\t\t\t\tset_cabinet_action = {{ type = cabinet_action:{key} target = scope:target target_1 = scope:bag_asp_new }}
+\t\t\t\t\t}}
+\t\t\t\t\tdebug_log = "bag_asp: assimilation moved to a province with more locations to bring to half"
+\t\t\t\t}}
+\t\t\t}}
+\t\t}}
+\t\t# The control seat of a province left behind goes now.
+\t\tbag_asp_unpair = yes
+\t}}
+"""
     if key == PAIRED_WITH:
         # His rule 13.10: with «Ускорять контролем» each assimilation brings its
         # control seat at once, before the next assimilation takes a seat.
@@ -542,7 +608,7 @@ bag_asp_place_{row} = {{
 \t\t\tset_variable = {{ name = bag_asp_kept value = yes }}
 \t\t}}
 \t}}
-\t# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+{retarget}\t# His rule 13.10: in a full hand-out the row takes the best advisors for it,
 \t# even from a lower row: while a free seat beats its weakest kept one in the
 \t# skill, the action moves there with its targets.
 \tif = {{
@@ -1339,10 +1405,8 @@ bag_asp_free_seat = {
 \tcabinet_member = { NOT = { has_variable = bag_asp_claimed } }
 }
 """ + f"""
-# Scope: location; scope:actor is the country. His rule 13.10, by location: no
-# primary or accepted culture holds half of it.
+# Scope: location. No primary or accepted culture holds half of it.
 bag_asp_short_of_half = {{
-\towner ?= scope:actor
 \tNAND = {{
 \t\texists = dominant_culture
 \t\tdominant_culture = {{ is_primary_or_accepted_in = scope:actor }}
@@ -1350,9 +1414,20 @@ bag_asp_short_of_half = {{
 \t}}
 }}
 
-# Scope: province; scope:actor is the country. A location of it is short of half.
+# Scope: province; scope:actor is the country. His rule 13.10, by status: a
+# location of it is integrated but not core yet, or conquered and short of half
+# (conquered at half needs integration, not assimilation).
 bag_asp_needs_half = {{
-\tany_location_in_province = {{ bag_asp_short_of_half = yes }}
+\tany_location_in_province = {{
+\t\towner ?= scope:actor
+\t\tOR = {{
+\t\t\tintegration_level = integrated
+\t\t\tAND = {{
+\t\t\t\tintegration_level = conquered
+\t\t\t\tbag_asp_short_of_half = yes
+\t\t\t}}
+\t\t}}
+\t}}
 }}
 
 # Scope: cabinet. A control action bound to an assimilation («Ускорять контролем»).
@@ -1367,6 +1442,7 @@ bag_asp_paired_seat = {{
 
     return {
         "in_game/common/scripted_triggers/bag_asp_council_triggers.txt": triggers,
+        "in_game/common/script_values/bag_asp_values.txt": VALUES,
         "in_game/common/scripted_effects/bag_asp_cmm_effects.txt": effects,
         "in_game/common/scripted_effects/bag_asp_council_effects.txt": run,
         "in_game/common/on_action/bag_asp_cmf_on_actions.txt": on_actions,
