@@ -50,7 +50,7 @@ POOL = [
     ("increase_control_province", "province", "province_tax_base", ""),
     ("increase_control_area", "area", "province_tax_base", ""),
     ("send_secret_royal_inspectors", "province", "province_tax_base", ""),
-    ("promote_culture", "culture", "population", ""),
+    ("promote_culture", "culture", "HALF", ""),
     ("promote_religion", "religion", "population", ""),
     ("pacify_population", "province", "population", ""),
     ("recovery_effort", "province", "RECOVERY", ""),
@@ -71,13 +71,30 @@ POOL = [
     # someone is near a coalition against him.
     ("diplomatic_antagonism", "country", None,
      "OR = { has_countries_with_near_coalition_grade_antagonism = yes has_countries_with_coalition_grade_antagonism = yes }"),
+    # His rule 13.10: assimilation serves two ends. The row above (kept at its
+    # place) brings every location of a province to half a primary or accepted
+    # culture, what integration and cores need; this one goes on to the whole.
+    ("promote_culture_full", "culture", "population", ""),
 ]
 
 # A row that is not an action of its own: the action it places.
-ROW_ACTION = {"diplomatic_antagonism": "diplomatic_endeavors"}
+ROW_ACTION = {"diplomatic_antagonism": "diplomatic_endeavors", "promote_culture_full": "promote_culture"}
+
+# A row's own condition on a target (in the province search) and on a seat
+# already on its action (keeping it; the emergency's rank).
+ROW_TARGET = {"promote_culture": "bag_asp_needs_half = yes"}
+ROW_SEAT = {"promote_culture": "interaction_target:target_1 ?= { bag_asp_needs_half = yes }"}
 
 # Rows of one action told apart in their label, and their tooltips.
 ROW_NOTE = {
+    "promote_culture": {
+        "english": (" (to half)", "Until in every location of the province a primary or accepted culture holds at least half: what integration and cores need. Counted by location, not for the province as a whole. A seat whose province is there is freed, unless the full row is in use."),
+        "russian": (" (до 50%)", "Пока в каждом районе провинции основная или признанная культура не наберёт половину: это нужно для интеграции и коров. Считается по районам, а не по провинции в целом. Место, чья провинция дошла, освобождается, если не используется строка полной ассимиляции."),
+    },
+    "promote_culture_full": {
+        "english": (" (full)", "On to the whole province in the target culture, for the rare goal of changing culture outright."),
+        "russian": (" (полная)", "Дальше, до всей провинции в нужной культуре: для редкой цели полностью сменить культуру."),
+    },
     "diplomatic_endeavors": {
         "english": (" (opinion)", "For improving opinion with your targets. Taken whenever a seat is free for it."),
         "russian": (" (мнение)", "Для улучшения мнения у ваших целей. Берёт место всегда, когда оно свободно."),
@@ -131,6 +148,21 @@ INTEGRATION = """{
 \t\t\t\t\t\t\tdominant_culture ?= { is_primary_or_accepted_in = scope:actor }
 \t\t\t\t\t\t\tculture_percentage = { culture = dominant_culture value >= 0.5 }
 \t\t\t\t\t\t}
+\t\t\t\t\t\tadd = 100
+\t\t\t\t\t}
+\t\t\t\t\tadd = {
+\t\t\t\t\t\tvalue = population
+\t\t\t\t\t\tmax = 99
+\t\t\t\t\t}
+\t\t\t\t}"""
+
+# Which province to assimilate to half first, his rule 13.10: the more of its
+# locations short of half a primary or accepted culture, the sooner; then
+# population.
+HALF = """{
+\t\t\t\t\tvalue = 0
+\t\t\t\t\tevery_location_in_province = {
+\t\t\t\t\t\tlimit = { bag_asp_short_of_half = yes }
 \t\t\t\t\t\tadd = 100
 \t\t\t\t\t}
 \t\t\t\t\tadd = {
@@ -349,6 +381,8 @@ def try_effect(row: str, kind: str, order: str | None, gate: str, actions: dict[
         order = INTEGRATION
     elif order == "RECOVERY":
         order = RECOVERY
+    elif order == "HALF":
+        order = HALF
     # Unset in the file counts as one seat at a time: otherwise an action with no
     # condition on its target (pop_promote_action) takes every seat left.
     multiple = value(action, "allow_multiple") == "yes"
@@ -408,6 +442,7 @@ def try_effect(row: str, kind: str, order: str | None, gate: str, actions: dict[
         sel = select(action, "province")
         cflag = flag_of(select(action, "culture"))
         pflag = flag_of(sel)
+        own = f"\t\t\t\t\t{ROW_TARGET[row]}\n" if row in ROW_TARGET else ""
         rule = (f"\t\t\t\t\t# His rule 05.10: where an accepted culture leads the primary by\n"
                 f"\t\t\t\t\t# {round(LEAD * 100)} points, do not push the primary.\n"
                 f"\t\t\t\t\ttrigger_if = {{\n\t\t\t\t\t\tlimit = {{ scope:{cflag} = scope:actor.culture }}\n"
@@ -427,7 +462,7 @@ def try_effect(row: str, kind: str, order: str | None, gate: str, actions: dict[
                  f"\t\t\t\t\tsave_scope_as = {cflag}\n\t\t\t\t}}\n\t\t\t}}\n\t\t}}\n"
                  f"\t\telse = {{\n\t\t\tscope:actor.culture = {{ save_scope_as = {cflag} }}\n\t\t}}\n"
                  f"\t\tscope:actor = {{\n\t\t\tordered_province = {{\n\t\t\t\tlimit = {{\n"
-                 f"{target_test(sel, 5, actions, key)}\n{rule}\n\t\t\t\t}}\n\t\t\t\torder_by = {order}\n"
+                 f"{target_test(sel, 5, actions, key)}\n{rule}\n{own}\t\t\t\t}}\n\t\t\t\torder_by = {order}\n"
                  f"\t\t\t\tsave_temporary_scope_as = bag_asp_pick\n"
                  f"{assign(f' {cflag} = scope:{cflag} {pflag} = scope:bag_asp_pick', pflag)}\n\t\t\t}}\n\t\t}}")
     elif kind == "religion":
@@ -485,6 +520,8 @@ def place_effect(row: str, gate: str, actions: dict[str, str]) -> str:
     ability = value(action, "ability") or "adm"
     seat = seat_test(action, 4)
     keep_gate = f"\n\t\t\tscope:actor = {{ {gate} }}" if gate else ""
+    if row in ROW_SEAT:
+        keep_gate += f"\n\t\t\t{ROW_SEAT[row]}"
     keep_pairs = pair_after = ""
     if key == PAIRED_WITH:
         # His rule 13.10: with «Ускорять контролем» each assimilation brings its
@@ -891,6 +928,21 @@ bag_asp_plan = {{
 \t\tlimit = {{ NOT = {{ any_in_list = {{ variable = bag_asp_used }} }} }}
 \t\tdebug_log = "bag_asp: no action is ticked in use"
 \t}}
+\t# His rule 13.10: an assimilation whose province has every location at
+\t# half is freed, unless the full row is in use; before the marking, so its
+\t# control seat goes with it.
+\tif = {{
+\t\tlimit = {{ NOT = {{ is_target_in_variable_list = {{ name = bag_asp_used target = flag:bag_asp_promote_culture_full }} }} }}
+\t\tevery_cabinet = {{
+\t\t\tlimit = {{
+\t\t\t\thas_cabinet_action = yes
+\t\t\t\tcabinet_action = cabinet_action:promote_culture
+\t\t\t\tinteraction_target:target_1 ?= {{ NOT = {{ bag_asp_needs_half = yes }} }}
+\t\t\t}}
+\t\t\tstop_cabinet_action = {{}}
+\t\t\tdebug_log = "bag_asp: an assimilation freed, every location of its province is at half"
+\t\t}}
+\t}}
 \tbag_asp_mark_busy = yes
 \tbag_asp_unpair = yes
 \t# Probe, his run 13.10: the logs flooded with assimilation's progress text
@@ -981,7 +1033,7 @@ bag_asp_clear_busy = {{
     # row whose gate holds now, gated rows tried first.
     shared = {act(k) for k, *_ in POOL if act(k) != k}
     rows = sorted((r for r in POOL if r[0] != "recovery_effort"),
-                  key=lambda r: not (act(r[0]) in shared and r[3]))
+                  key=lambda r: not (act(r[0]) in shared and (r[3] or r[0] in ROW_SEAT)))
 
     def seat_is(k: str, gate: str) -> str:
         if k == "paired":
@@ -989,6 +1041,8 @@ bag_asp_clear_busy = {{
         own = f"cabinet_action = cabinet_action:{act(k)}"
         if act(k) in SPEEDUP:
             own += " NOT = { bag_asp_paired_seat = yes }"
+        if act(k) in shared and k in ROW_SEAT:
+            own += f" {ROW_SEAT[k]}"
         return own + (f" scope:actor = {{ {gate} }}" if act(k) in shared and gate else "")
     # A control seat bound to an assimilation ranks as the assimilation.
     ranked = [("paired", PAIRED_WITH, "")] + [(k, k, g) for k, _, _, g in rows]
@@ -1174,6 +1228,22 @@ bag_asp_free_seat = {
 \tcabinet_member = { NOT = { has_variable = bag_asp_claimed } }
 }
 """ + f"""
+# Scope: location; scope:actor is the country. His rule 13.10, by location: no
+# primary or accepted culture holds half of it.
+bag_asp_short_of_half = {{
+\towner ?= scope:actor
+\tNAND = {{
+\t\texists = dominant_culture
+\t\tdominant_culture = {{ is_primary_or_accepted_in = scope:actor }}
+\t\t"culture_percentage(dominant_culture)" >= 0.5
+\t}}
+}}
+
+# Scope: province; scope:actor is the country. A location of it is short of half.
+bag_asp_needs_half = {{
+\tany_location_in_province = {{ bag_asp_short_of_half = yes }}
+}}
+
 # Scope: cabinet. A control action bound to an assimilation («Ускорять контролем»).
 bag_asp_paired_seat = {{
 \thas_cabinet_action = yes
