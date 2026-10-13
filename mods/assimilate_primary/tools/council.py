@@ -139,28 +139,15 @@ INTEGRATION = """{
 \t\t\t\t\t}
 \t\t\t\t}"""
 
-# The three lists over the pool. «Тонкие настройки» lists every action; the
-# settings an action has are CMF groups under the list (FINE).
-LISTS = ("available", "priority", "tuning")
-TUNING_NONE = {"english": "none yet", "russian": "пока нет"}
-TUNING_BELOW = {"english": "below the list", "russian": "под списком"}
-# Rows whose settings sit under the «Тонкие настройки» list, as CMF groups.
-TUNED = ("promote_culture", "promote_religion")
+# The two lists over the pool. «Тонкие настройки» holds only the CMF groups of
+# the actions that have settings (FINE): the list of every action that stood
+# there in 0.9.0 told nothing, his word 13.10.
+LISTS = ("available", "priority")
 
 # The control actions «Ускорять контролем» puts on a province being assimilated,
 # in the order tried: the game hides each where the other is (their visible).
 SPEEDUP = ("noblesse_oblige_cabinet_action", "increase_control_province")
-
-# One row past the pool in «Тонкие настройки» only: the value shift, not handed
-# out yet. Its cell is the probe of 12.10 — what the game says the advisor on
-# it can reach — read for the rule «push only if at least one whole point is
-# left» (his ask 12.10).
-SV_ROW = len(POOL) + 1
-SV_PROBE = "[GetPlayer.MakeScope.GetVariable('bag_asp_sv_cab').GetCabinet.{f}]"
-SV_FIELDS = {
-    "english": ("now", "max reachable", "total", "inertia", "a month"),
-    "russian": ("сейчас", "предел", "всего", "инерция", "за месяц"),
-}
+PAIRED_WITH = "promote_culture"
 
 # The CMF settings of «Тонкие настройки», his ask 12.10. Each: (setting, group,
 # kind, options). Groups are named after the action, by its game name.
@@ -178,7 +165,7 @@ FINE_LOC = {
         "bag_asp__culture_target_option_2_name": "Accepted culture",
         "bag_asp__culture_target_option_2_desc": "The accepted culture most widespread in the country. With none accepted, the primary.",
         "bag_asp__culture_speedup_name": "Speed it up with control",
-        "bag_asp__culture_speedup_desc": "Assimilation runs faster where control is high. On: each province being assimilated also gets [ShowCabinetActionName('noblesse_oblige_cabinet_action')], or [ShowCabinetActionName('increase_control_province')] where that does not fit, on a free seat; when all seats are handed out, also on one whose action ranks lower in «Priority». The game forbids both on one province.",
+        "bag_asp__culture_speedup_desc": "Assimilation runs faster where control is high. On: each assimilation brings its own seat with [ShowCabinetActionName('noblesse_oblige_cabinet_action')], or [ShowCabinetActionName('increase_control_province')] where that does not fit, in the same province, before the next assimilation is placed. That seat is bound to the assimilation, whatever the control action's own place in «Priority», and is freed with it. It never takes a seat from an action ranked above assimilation. The game forbids both control actions on one province.",
         "bag_asp__religion_target_name": "Convert into",
         "bag_asp__religion_target_desc": "Which religion the council converts provinces into.",
         "bag_asp__religion_target_option_1_name": "State religion",
@@ -194,7 +181,7 @@ FINE_LOC = {
         "bag_asp__culture_target_option_2_name": "Признанную культуру",
         "bag_asp__culture_target_option_2_desc": "Самая распространённая в стране признанная культура. Если признанных нет, основная.",
         "bag_asp__culture_speedup_name": "Ускорять контролем",
-        "bag_asp__culture_speedup_desc": "Ассимиляция идёт быстрее при высоком контроле. Включено: в каждую ассимилируемую провинцию ставится ещё [ShowCabinetActionName('noblesse_oblige_cabinet_action')], а где он не подходит, [ShowCabinetActionName('increase_control_province')], на свободное место; при перераспределении всех мест также на место, чьё действие ниже в «Приоритете». Оба в одну провинцию игра не даёт.",
+        "bag_asp__culture_speedup_desc": "Ассимиляция идёт быстрее при высоком контроле. Включено: каждая ассимиляция сразу получает своё место с [ShowCabinetActionName('noblesse_oblige_cabinet_action')], а где он не подходит, с [ShowCabinetActionName('increase_control_province')], в той же провинции, и только потом ставится следующая ассимиляция. Это место привязано к ассимиляции, где бы ни стояло действие контроля в «Приоритете», и освобождается вместе с ней. Место у действия выше ассимиляции оно не забирает. Оба действия контроля в одну провинцию игра не даёт.",
         "bag_asp__religion_target_name": "Обращать в",
         "bag_asp__religion_target_desc": "В какую религию совет обращает провинции.",
         "bag_asp__religion_target_option_1_name": "Государственную",
@@ -382,7 +369,8 @@ def try_effect(row: str, kind: str, order: str | None, gate: str, actions: dict[
             mark = f"\t\t\t\tscope:bag_asp_pick = {{ set_variable = {{ name = bag_asp_busy_{key} value = yes }} }}\n"
         # A seat taken from a lower action is stopped first; set_cabinet_action
         # is not known to replace a running action by itself.
-        return (f"\t\t\t\tscope:bag_asp_seat = {{\n"
+        last = "\t\t\t\tscope:bag_asp_pick = { save_scope_as = bag_asp_last }\n" if key == PAIRED_WITH else ""
+        return (last + f"\t\t\t\tscope:bag_asp_seat = {{\n"
                 f"\t\t\t\t\tif = {{\n\t\t\t\t\t\tlimit = {{ has_cabinet_action = yes }}\n"
                 f"\t\t\t\t\t\tstop_cabinet_action = {{}}\n\t\t\t\t\t}}\n"
                 f"\t\t\t\t\tset_cabinet_action = {{ type = cabinet_action:{key}{params} }}\n"
@@ -497,6 +485,13 @@ def place_effect(row: str, gate: str, actions: dict[str, str]) -> str:
     ability = value(action, "ability") or "adm"
     seat = seat_test(action, 4)
     keep_gate = f"\n\t\t\tscope:actor = {{ {gate} }}" if gate else ""
+    keep_pairs = pair_after = ""
+    if key == PAIRED_WITH:
+        # His rule 13.10: with «Ускорять контролем» each assimilation brings its
+        # control seat at once, before the next assimilation takes a seat.
+        keep_pairs = "\tif = {\n\t\tlimit = { has_variable = bag_asp_speedup_on }\n\t\tbag_asp_keep_pairs = yes\n\t}\n"
+        pair_after = ("\t\tif = {\n\t\t\tlimit = {\n\t\t\t\thas_variable = bag_asp_placed\n"
+                      "\t\t\t\thas_variable = bag_asp_speedup_on\n\t\t\t}\n\t\t\tbag_asp_pair = yes\n\t\t}\n")
     return f"""# Scope: country (scope:actor).
 bag_asp_place_{row} = {{
 \tevery_cabinet = {{
@@ -507,7 +502,7 @@ bag_asp_place_{row} = {{
 \t\t}}
 \t\tcabinet_member = {{ set_variable = {{ name = bag_asp_claimed value = yes }} }}
 \t}}
-\tset_variable = {{ name = bag_asp_placed value = yes }}
+{keep_pairs}\tset_variable = {{ name = bag_asp_placed value = yes }}
 \twhile = {{
 \t\tlimit = {{
 \t\t\thas_variable = bag_asp_placed
@@ -522,7 +517,7 @@ bag_asp_place_{row} = {{
 \t\t\tsave_scope_as = bag_asp_seat
 \t\t\tbag_asp_try_{row} = yes
 \t\t}}
-\t}}
+{pair_after}\t}}
 \tif = {{
 \t\tlimit = {{ has_variable = bag_asp_placed }}
 \t\tremove_variable = bag_asp_placed
@@ -531,46 +526,107 @@ bag_asp_place_{row} = {{
 """
 
 
-def speedup_effect(actions: dict[str, str]) -> str:
-    first = actions[SPEEDUP[0]]
-    ability = value(first, "ability") or "adm"
+def pair_effects(actions: dict[str, str]) -> str:
+    ability = value(actions[SPEEDUP[0]], "ability") or "adm"
     if any((value(actions[k], "ability") or "adm") != ability for k in SPEEDUP):
         raise SystemExit("council: the speedup's control actions no longer share a skill")
-    tries = f"\t\t\t\t\t\tbag_asp_try_at_{SPEEDUP[0]} = yes\n"
+    pflag = flag_of(select(actions[PAIRED_WITH], "province"))
+    flags = {flag_of(select(actions[k], "province")) for k in SPEEDUP}
+    if len(flags) != 1:
+        raise SystemExit("council: the speedup's control actions no longer share a target flag")
+    cflag = flags.pop()
+    is_control = "OR = { " + " ".join(f"cabinet_action = cabinet_action:{k}" for k in SPEEDUP) + " }"
+    tries = f"\t\tbag_asp_try_at_{SPEEDUP[0]} = yes\n"
     for k in SPEEDUP[1:]:
-        tries += (f"\t\t\t\t\t\tif = {{\n\t\t\t\t\t\t\tlimit = {{ scope:actor = {{ NOT = {{ has_variable = bag_asp_placed }} }} }}\n"
-                  f"\t\t\t\t\t\t\tbag_asp_try_at_{k} = yes\n\t\t\t\t\t\t}}\n")
+        tries += (f"\t\tif = {{\n\t\t\tlimit = {{ scope:actor = {{ NOT = {{ has_variable = bag_asp_placed }} }} }}\n"
+                  f"\t\t\tbag_asp_try_at_{k} = yes\n\t\t}}\n")
     return f"""
-# Scope: country (scope:actor). His ask 12.10, with «Ускорять контролем» on:
-# each province being assimilated also gets a control action, the first of
-# {", ".join(SPEEDUP)} that fits, on a free seat, the best in its
-# skill first. Free means not chosen yet in this pass: in a full hand-out, a seat
-# a lower row would have taken; in a fill, an empty one.
-bag_asp_speedup = {{
-\tif = {{
-\t\tlimit = {{ has_variable = bag_asp_speedup_on }}
-\t\tevery_cabinet = {{
-\t\t\tlimit = {{
-\t\t\t\thas_cabinet_action = yes
-\t\t\t\tcabinet_action = cabinet_action:promote_culture
-\t\t\t}}
-\t\t\tinteraction_target:{flag_of(select(actions["promote_culture"], "province"))} ?= {{
-\t\t\t\tsave_scope_as = bag_asp_at
-\t\t\t\tscope:actor = {{
-\t\t\t\t\tordered_cabinet = {{
-\t\t\t\t\t\tlimit = {{
-{seat_test(first, 7)}
+# «Ускорять контролем», his rule 13.10: a control action ({", ".join(SPEEDUP)},
+# the first that fits; the game forbids both on one province) is bound to an
+# assimilation. It comes with it, whatever its own row's place, from a free
+# seat (in a full hand-out a seat a lower row would have taken; in a fill, an
+# empty one), and is released with it. The seat's advisor carries
+# bag_asp_paired while it lasts.
+
+# Scope: country (scope:actor); scope:bag_asp_last is the province just given
+# to an assimilation. Leaves bag_asp_placed set, as the assimilation left it.
+bag_asp_pair = {{
+\tscope:bag_asp_last = {{ save_scope_as = bag_asp_at }}
+\tremove_variable = bag_asp_placed
+\tordered_cabinet = {{
+\t\tlimit = {{
+{seat_test(actions[SPEEDUP[0]], 3)}
+\t\t}}
+\t\torder_by = cabinet_member.{ability}
+\t\tsave_scope_as = bag_asp_seat
+{tries}\t\tif = {{
+\t\t\tlimit = {{ scope:actor = {{ has_variable = bag_asp_placed }} }}
+\t\t\tcabinet_member = {{ set_variable = {{ name = bag_asp_paired value = yes }} }}
+\t\t\tdebug_log = "bag_asp: assimilation sped up with a control action"
+\t\t}}
+\t}}
+\tset_variable = {{ name = bag_asp_placed value = yes }}
+}}
+
+# Scope: country (scope:actor). For the assimilations a full hand-out keeps:
+# their control seats are kept with them; one without gets one now.
+bag_asp_keep_pairs = {{
+\tevery_cabinet = {{
+\t\tlimit = {{
+\t\t\thas_cabinet_action = yes
+\t\t\tcabinet_action = cabinet_action:{PAIRED_WITH}
+\t\t}}
+\t\tinteraction_target:{pflag} ?= {{
+\t\t\tsave_scope_as = bag_asp_last
+\t\t\tscope:actor = {{
+\t\t\t\tif = {{
+\t\t\t\t\tlimit = {{
+\t\t\t\t\t\tany_cabinet = {{
+\t\t\t\t\t\t\tbag_asp_paired_seat = yes
+\t\t\t\t\t\t\tinteraction_target:{cflag} ?= {{ this = scope:bag_asp_last }}
 \t\t\t\t\t\t}}
-\t\t\t\t\t\torder_by = cabinet_member.{ability}
-\t\t\t\t\t\tsave_scope_as = bag_asp_seat
-{tries}\t\t\t\t\t}}
-\t\t\t\t\tif = {{
-\t\t\t\t\t\tlimit = {{ has_variable = bag_asp_placed }}
-\t\t\t\t\t\tremove_variable = bag_asp_placed
-\t\t\t\t\t\tdebug_log = "bag_asp: assimilation sped up with a control action"
+\t\t\t\t\t}}
+\t\t\t\t\tevery_cabinet = {{
+\t\t\t\t\t\tlimit = {{
+\t\t\t\t\t\t\tbag_asp_paired_seat = yes
+\t\t\t\t\t\t\tinteraction_target:{cflag} ?= {{ this = scope:bag_asp_last }}
+\t\t\t\t\t\t}}
+\t\t\t\t\t\tcabinet_member = {{ set_variable = {{ name = bag_asp_claimed value = yes }} }}
 \t\t\t\t\t}}
 \t\t\t\t}}
+\t\t\t\telse = {{
+\t\t\t\t\tbag_asp_pair = yes
+\t\t\t\t\tremove_variable = bag_asp_placed
+\t\t\t\t}}
 \t\t\t}}
+\t\t}}
+\t}}
+}}
+
+# Scope: country (scope:actor), after bag_asp_mark_busy. A control seat whose
+# assimilation is gone is stopped, so this pass can fill it; with the setting
+# off, or the seat given something else, it is only no longer bound.
+bag_asp_unpair = {{
+\tevery_cabinet = {{
+\t\tlimit = {{ cabinet_member ?= {{ has_variable = bag_asp_paired }} }}
+\t\tif = {{
+\t\t\tlimit = {{
+\t\t\t\tscope:actor = {{ has_variable = bag_asp_speedup_on }}
+\t\t\t\tbag_asp_paired_seat = yes
+\t\t\t\tinteraction_target:{cflag} ?= {{ NOT = {{ has_variable = bag_asp_busy_{PAIRED_WITH} }} }}
+\t\t\t}}
+\t\t\tstop_cabinet_action = {{}}
+\t\t\tdebug_log = "bag_asp: a control seat released with its assimilation"
+\t\t\tcabinet_member = {{ remove_variable = bag_asp_paired }}
+\t\t}}
+\t\telse_if = {{
+\t\t\tlimit = {{
+\t\t\t\tOR = {{
+\t\t\t\t\tscope:actor = {{ NOT = {{ has_variable = bag_asp_speedup_on }} }}
+\t\t\t\t\tNOT = {{ bag_asp_paired_seat = yes }}
+\t\t\t\t}}
+\t\t\t}}
+\t\t\tcabinet_member = {{ remove_variable = bag_asp_paired }}
 \t\t}}
 \t}}
 }}
@@ -649,18 +705,6 @@ bag_asp_register = {{
 \t\tsetting_id = priority
 \t\tfield_id = ability
 \t}}
-\tcmm_register_settings_list = {{
-\t\tmod_id = {MOD_ID}
-\t\tsetting_id = tuning
-\t\ttab_id = fine
-\t\titem_count = {SV_ROW}
-\t\tis_ordered = 0
-\t}}
-\tcmm_register_list_text_field = {{
-\t\tmod_id = {MOD_ID}
-\t\tsetting_id = tuning
-\t\tfield_id = settings
-\t}}
 """]
     for setting, group, kind, opt in FINE:
         if kind == "dropdown":
@@ -671,14 +715,9 @@ bag_asp_register = {{
                        f"\t\ttab_id = fine\n\t\tgroup_id = {group}\n\t\tdefault_value = {opt}\n\t}}\n")
     for i, (k, *_) in enumerate(POOL, 1):
         ability = value(actions[act(k)], "ability") or "adm"
-        tuning = "below" if k in TUNED else "none"
         reg.append(f"\tcmm_set_list_item_value = {{ mod_id = {MOD_ID} setting_id = available item = {i} value = flag:bag_asp_{k} }}\n"
                    f"\tcmm_set_list_item_value = {{ mod_id = {MOD_ID} setting_id = priority item = {i} value = flag:bag_asp_{k} }}\n"
-                   f"\tcmm_set_list_text_value = {{ mod_id = {MOD_ID} setting_id = priority field_id = ability item = {i} value = flag:bag_asp_ability_{ability} }}\n"
-                   f"\tcmm_set_list_item_value = {{ mod_id = {MOD_ID} setting_id = tuning item = {i} value = flag:bag_asp_{k} }}\n"
-                   f"\tcmm_set_list_text_value = {{ mod_id = {MOD_ID} setting_id = tuning field_id = settings item = {i} value = flag:bag_asp_tuning_{tuning} }}\n")
-    reg.append(f"\tcmm_set_list_item_value = {{ mod_id = {MOD_ID} setting_id = tuning item = {SV_ROW} value = flag:bag_asp_change_societal_values }}\n"
-               f"\tbag_asp_sv_probe = yes\n")
+                   f"\tcmm_set_list_text_value = {{ mod_id = {MOD_ID} setting_id = priority field_id = ability item = {i} value = flag:bag_asp_ability_{ability} }}\n")
     reg.append(f"""
 \tbag_asp_sync = yes
 \tbag_asp_rebuild = yes
@@ -692,27 +731,6 @@ bag_asp_sync = {{
 \tcmm_sync_setting_alias = {{ setting = {MOD_ID}__culture_target alias = bag_asp_culture_target }}
 \tcmm_sync_bool_alias = {{ setting = {MOD_ID}__culture_speedup alias = bag_asp_speedup_on }}
 \tcmm_sync_setting_alias = {{ setting = {MOD_ID}__religion_target alias = bag_asp_religion_target }}
-}}
-
-# Scope: country. The probe in the value-shift row of «Тонкие настройки»: the
-# seat on the value shift, if any, for the row's text to read.
-bag_asp_sv_probe = {{
-\tif = {{
-\t\tlimit = {{ any_cabinet = {{ has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }} }}
-\t\trandom_cabinet = {{
-\t\t\tlimit = {{ has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }}
-\t\t\tsave_temporary_scope_as = bag_asp_sv_seat
-\t\t}}
-\t\tset_variable = {{ name = bag_asp_sv_cab value = scope:bag_asp_sv_seat }}
-\t\tcmm_set_list_text_value = {{ mod_id = {MOD_ID} setting_id = tuning field_id = settings item = {SV_ROW} value = flag:bag_asp_sv_probe }}
-\t}}
-\telse = {{
-\t\tif = {{
-\t\t\tlimit = {{ has_variable = bag_asp_sv_cab }}
-\t\t\tremove_variable = bag_asp_sv_cab
-\t\t}}
-\t\tcmm_set_list_text_value = {{ mod_id = {MOD_ID} setting_id = tuning field_id = settings item = {SV_ROW} value = flag:bag_asp_sv_probe_none }}
-\t}}
 }}
 
 # Scope: country. The two lists into the order the pulse walks, and which rows
@@ -731,11 +749,9 @@ bag_asp_rebuild = {{
         reg.append(f"""\t\tif = {{
 \t\t\tlimit = {{ cabinet_action:{act(k)} = {{ is_visible_for = root }} }}
 \t\t\tcmm_show_list_item = {{ mod_id = {MOD_ID} setting_id = available item = {i} }}
-\t\t\tcmm_show_list_item = {{ mod_id = {MOD_ID} setting_id = tuning item = {i} }}
 \t\t}}
 \t\telse = {{
 \t\t\tcmm_hide_list_item = {{ mod_id = {MOD_ID} setting_id = available item = {i} }}
-\t\t\tcmm_hide_list_item = {{ mod_id = {MOD_ID} setting_id = tuning item = {i} }}
 \t\t}}
 \t\tif = {{
 \t\t\tlimit = {{
@@ -807,7 +823,7 @@ bag_asp_handle_callback = {{
     effects = "".join(reg)
 
     switch = "\n".join(
-        f"\t\t\t\t\tflag:bag_asp_{k} = {{ bag_asp_place_{k} = yes" + (" bag_asp_speedup = yes" if k == "promote_culture" else "") + " }"
+        f"\t\t\t\t\tflag:bag_asp_{k} = {{ bag_asp_place_{k} = yes"  + " }"
         for k, *_ in POOL)
     run = f"""# assimilate_primary: the mod's own council automation, the monthly pass.
 # Rebuilt by tools/generate.py (tools/council.py).
@@ -832,7 +848,6 @@ bag_asp_tick = {{
 \tchange_variable = {{ name = bag_asp_months add = 1 }}
 \tchange_variable = {{ name = bag_asp_review_months add = 1 }}
 \tdebug_log = "bag_asp: month"
-\tbag_asp_sv_probe = yes
 \tif = {{
 \t\tlimit = {{
 \t\t\tvar:bag_asp_review > 0
@@ -877,6 +892,20 @@ bag_asp_plan = {{
 \t\tdebug_log = "bag_asp: no action is ticked in use"
 \t}}
 \tbag_asp_mark_busy = yes
+\tbag_asp_unpair = yes
+\t# Probe, his run 13.10: the logs flooded with assimilation's progress text
+\t# read without a province. Says whether one of the seats is that.
+\tevery_cabinet = {{
+\t\tlimit = {{
+\t\t\thas_cabinet_action = yes
+\t\t\tcabinet_action = cabinet_action:promote_culture
+\t\t\tOR = {{
+\t\t\t\tNOT = {{ exists = interaction_target:target_1 }}
+\t\t\t\tNOT = {{ exists = interaction_target:target }}
+\t\t\t}}
+\t\t}}
+\t\tdebug_log = "bag_asp: an assimilation seat has no province or no culture"
+\t}}
 \tif = {{
 \t\tlimit = {{ has_variable = bag_asp_fill_only }}
 \t\tevery_cabinet = {{
@@ -955,14 +984,20 @@ bag_asp_clear_busy = {{
                   key=lambda r: not (act(r[0]) in shared and r[3]))
 
     def seat_is(k: str, gate: str) -> str:
+        if k == "paired":
+            return "bag_asp_paired_seat = yes"
         own = f"cabinet_action = cabinet_action:{act(k)}"
+        if act(k) in SPEEDUP:
+            own += " NOT = { bag_asp_paired_seat = yes }"
         return own + (f" scope:actor = {{ {gate} }}" if act(k) in shared and gate else "")
+    # A control seat bound to an assimilation ranks as the assimilation.
+    ranked = [("paired", PAIRED_WITH, "")] + [(k, k, g) for k, _, _, g in rows]
     seat_rank = "\n".join(
-        f"\t\t\telse_if = {{ limit = {{ {seat_is(k, g)} }} add = scope:actor.var:bag_asp_rank_{k} }}"
-        for k, _, _, g in rows)
+        f"\t\t\telse_if = {{ limit = {{ {seat_is(k, g)} }} add = scope:actor.var:bag_asp_rank_{r} }}"
+        for k, r, g in ranked)
     seat_below = "\n".join(
-        f"\t\t\t\t\t\t\tAND = {{ {seat_is(k, g)} scope:actor.var:bag_asp_rank_{k} > scope:actor.var:bag_asp_rank_recovery_effort }}"
-        for k, _, _, g in rows)
+        f"\t\t\t\t\t\t\tAND = {{ {seat_is(k, g)} scope:actor.var:bag_asp_rank_{r} > scope:actor.var:bag_asp_rank_recovery_effort }}"
+        for k, r, g in ranked)
     run += f"""
 # Scope: country. While the «devastated locations» alert shows (its banner,
 # bag_alert_banner.gui): as it appears, then every second. Costs a look
@@ -1046,7 +1081,7 @@ bag_asp_emergency = {{
 }}
 """
     run += "\n" + "\n".join(place_effect(k, gate, actions) for k, _, _, gate in POOL)
-    run += speedup_effect(actions)
+    run += pair_effects(actions)
 
     on_actions = f"""# assimilate_primary: the CMF page and the monthly pass. The engine merges
 # on_actions lists, so these add to CMF's own.
@@ -1138,6 +1173,15 @@ bag_asp_free_seat = {
 \texists = cabinet_member
 \tcabinet_member = { NOT = { has_variable = bag_asp_claimed } }
 }
+""" + f"""
+# Scope: cabinet. A control action bound to an assimilation («Ускорять контролем»).
+bag_asp_paired_seat = {{
+\thas_cabinet_action = yes
+\tOR = {{
+{chr(10).join(f"{chr(9)*2}cabinet_action = cabinet_action:{k}" for k in SPEEDUP)}
+\t}}
+\tcabinet_member ?= {{ has_variable = bag_asp_paired }}
+}}
 """
 
     return {
@@ -1167,18 +1211,12 @@ def loc_rows(game: Path, language: str) -> dict[str, str]:
             rows[f"{MOD_ID}__{s}_i{i}_name"] = name
             if desc:
                 rows[f"{MOD_ID}__{s}_i{i}_desc"] = desc
-    rows[f"{MOD_ID}__tuning_i{SV_ROW}_name"] = "[ShowCabinetActionName('change_societal_values')]"
-    now, top, total, inertia, month = SV_FIELDS[language]
-    probe = lambda f: SV_PROBE.format(f=f)
-    rows["bag_asp_sv_probe"] = (f"{probe('GetSocietalValueName')}: {now} {probe('GetSocietalValueCurrentNumber|2')}, "
-                                f"{top} {probe('GetMaxSocietalValueReachable|2')}, {total} {probe('GetSocietalValueTotal|2')}, "
-                                f"{inertia} {probe('GetSocietalValueTotalInertia|2')}, {month} {probe('GetSocietalValueMonthlyProgress|2')}")
-    rows["bag_asp_sv_probe_none"] = {"english": "probe: no advisor is on it", "russian": "замер: никто им не занят"}[language]
-    rows["bag_asp_tuning_below"] = TUNING_BELOW[language]
     rows.update(FINE_LOC[language])
     for group in {g for _, g, *_ in FINE}:
-        rows[f"{MOD_ID}__fine__{group}_name"] = f"[ShowCabinetActionName('{group}')]"
+        # The plain name: the run of 13.10 flooded the logs with assimilation's
+        # progress text read without a province, cause not placed; a linked name
+        # here was new in 0.9.0, so it goes.
+        rows[f"{MOD_ID}__fine__{group}_name"] = f"${group}$"
     for ab, text in ABILITY[language].items():
         rows[f"bag_asp_ability_{ab}"] = text
-    rows["bag_asp_tuning_none"] = TUNING_NONE[language]
     return rows

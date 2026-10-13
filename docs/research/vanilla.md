@@ -88,5 +88,5 @@ societal_value_type:… }` ставит действие с пустой пар�
 щелчок, `map_markers.gui`), `Scope.GetCabinet` даёт `Cabinet` из скриптовой цели; скрипт видит
 `societal_value_cabinet_action` (у действия есть ценность) и
 `societal_value_progress`, интерфейс — `Cabinet.GetSocietalValue`,
-`GetMaxSocietalValueReachable`, `HasReachedMaxSocietalValue`. Сдвиг скриптом в
+`GetMaxSocietalValueReachable`, `HasReachedMaxSocietalValue`. **Измерено 13.10:** переменная страны держит скоуп места (`set_variable = { … value = <cabinet> }`), и `GetVariable('x').GetCabinet.GetMaxSocietalValueReachable` читает его в локализации («сейчас -35.99, предел 49»). Подсказка игры: предел = 100 × месячный толчок в эту сторону. Сдвиг скриптом в
 обход совета — `change_societal_value = { type = <пара> value = <±> }`.
