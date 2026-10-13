@@ -60,6 +60,13 @@ bag_asp_plan = {
 	# The lists may have moved without their callback (a typed place goes
 	# through the console), so the order is read afresh every pass.
 	bag_asp_rebuild = yes
+	# His ask 13.10: the seats as the pass finds them, so what he changed by
+	# hand between two passes shows against the last pass's «after».
+	if = {
+		limit = { has_variable = bag_asp_log_on }
+		debug_log = "bag_asp: the seats before the pass:"
+		bag_asp_probe_seats = yes
+	}
 	if = {
 		limit = { NOT = { any_in_list = { variable = bag_asp_used } } }
 		debug_log = "bag_asp: no action is ticked in use"
@@ -82,7 +89,10 @@ bag_asp_plan = {
 	bag_asp_mark_busy = yes
 	bag_asp_unpair = yes
 	if = {
-		limit = { NOT = { has_variable = bag_asp_fill_only } }
+		limit = {
+			has_variable = bag_asp_log_on
+			NOT = { has_variable = bag_asp_fill_only }
+		}
 		bag_asp_probe_order = yes
 		bag_asp_probe_half = yes
 	}
@@ -140,7 +150,11 @@ bag_asp_plan = {
 		limit = { any_cabinet = { bag_asp_free_seat = yes } }
 		debug_log = "bag_asp: a seat is left as it was, nothing in use fits it"
 	}
-	bag_asp_probe_seats = yes
+	if = {
+		limit = { has_variable = bag_asp_log_on }
+		debug_log = "bag_asp: the seats after the pass:"
+		bag_asp_probe_seats = yes
+	}
 	every_cabinet = {
 		limit = { exists = cabinet_member }
 		cabinet_member = {
@@ -217,6 +231,9 @@ bag_asp_mark_busy = {
 	}
 }
 
+# Marks a stopped seat left behind stayed for good until 0.9.8 (his run 13.10
+# 10:02: a control action was refused on a province whose own had been
+# stopped a month before), so every mark is swept, not only the seats' own.
 bag_asp_clear_busy = {
 	every_cabinet = {
 		limit = { has_cabinet_action = yes }
@@ -277,6 +294,154 @@ bag_asp_clear_busy = {
 			interaction_target:target ?= { remove_variable = bag_asp_busy_study_institutions }
 		}
 	}
+	every_province = {
+		limit = { bag_asp_busy_any = yes }
+		remove_variable = bag_asp_busy_appease_estate
+		remove_variable = bag_asp_busy_develop_province
+		remove_variable = bag_asp_busy_increase_control_area
+		remove_variable = bag_asp_busy_increase_control_province
+		remove_variable = bag_asp_busy_integrate_area
+		remove_variable = bag_asp_busy_integrate_province
+		remove_variable = bag_asp_busy_noblesse_oblige_cabinet_action
+		remove_variable = bag_asp_busy_pacify_population
+		remove_variable = bag_asp_busy_pop_promote_action
+		remove_variable = bag_asp_busy_promote_culture
+		remove_variable = bag_asp_busy_promote_religion
+		remove_variable = bag_asp_busy_recovery_effort
+		remove_variable = bag_asp_busy_send_secret_royal_inspectors
+		remove_variable = bag_asp_busy_study_institutions
+	}
+	every_province = {
+		area ?= {
+			if = {
+				limit = { bag_asp_busy_any = yes }
+				remove_variable = bag_asp_busy_appease_estate
+				remove_variable = bag_asp_busy_develop_province
+				remove_variable = bag_asp_busy_increase_control_area
+				remove_variable = bag_asp_busy_increase_control_province
+				remove_variable = bag_asp_busy_integrate_area
+				remove_variable = bag_asp_busy_integrate_province
+				remove_variable = bag_asp_busy_noblesse_oblige_cabinet_action
+				remove_variable = bag_asp_busy_pacify_population
+				remove_variable = bag_asp_busy_pop_promote_action
+				remove_variable = bag_asp_busy_promote_culture
+				remove_variable = bag_asp_busy_promote_religion
+				remove_variable = bag_asp_busy_recovery_effort
+				remove_variable = bag_asp_busy_send_secret_royal_inspectors
+				remove_variable = bag_asp_busy_study_institutions
+			}
+		}
+	}
+	every_estate = {
+		limit = { bag_asp_busy_any = yes }
+		remove_variable = bag_asp_busy_appease_estate
+		remove_variable = bag_asp_busy_develop_province
+		remove_variable = bag_asp_busy_increase_control_area
+		remove_variable = bag_asp_busy_increase_control_province
+		remove_variable = bag_asp_busy_integrate_area
+		remove_variable = bag_asp_busy_integrate_province
+		remove_variable = bag_asp_busy_noblesse_oblige_cabinet_action
+		remove_variable = bag_asp_busy_pacify_population
+		remove_variable = bag_asp_busy_pop_promote_action
+		remove_variable = bag_asp_busy_promote_culture
+		remove_variable = bag_asp_busy_promote_religion
+		remove_variable = bag_asp_busy_recovery_effort
+		remove_variable = bag_asp_busy_send_secret_royal_inspectors
+		remove_variable = bag_asp_busy_study_institutions
+	}
+}
+
+# Scope: cabinet (a seat). Stops its action and takes back what the pass gave
+# it: the busy mark on its target and the bond of a control seat. Every seat
+# the pass takes from another action goes through here.
+bag_asp_vacate = {
+	if = {
+		limit = { has_cabinet_action = yes }
+		if = {
+			limit = { cabinet_action = cabinet_action:appease_estate }
+			interaction_target:target ?= { remove_variable = bag_asp_busy_appease_estate }
+		}
+		if = {
+			limit = { cabinet_action = cabinet_action:develop_province }
+			interaction_target:target ?= { remove_variable = bag_asp_busy_develop_province }
+		}
+		if = {
+			limit = { cabinet_action = cabinet_action:increase_control_area }
+			interaction_target:selected_area ?= { remove_variable = bag_asp_busy_increase_control_area }
+		}
+		if = {
+			limit = { cabinet_action = cabinet_action:increase_control_province }
+			interaction_target:selected_province ?= { remove_variable = bag_asp_busy_increase_control_province }
+		}
+		if = {
+			limit = { cabinet_action = cabinet_action:integrate_area }
+			interaction_target:target ?= { remove_variable = bag_asp_busy_integrate_area }
+		}
+		if = {
+			limit = { cabinet_action = cabinet_action:integrate_province }
+			interaction_target:target ?= { remove_variable = bag_asp_busy_integrate_province }
+		}
+		if = {
+			limit = { cabinet_action = cabinet_action:noblesse_oblige_cabinet_action }
+			interaction_target:selected_province ?= { remove_variable = bag_asp_busy_noblesse_oblige_cabinet_action }
+		}
+		if = {
+			limit = { cabinet_action = cabinet_action:pacify_population }
+			interaction_target:target ?= { remove_variable = bag_asp_busy_pacify_population }
+		}
+		if = {
+			limit = { cabinet_action = cabinet_action:pop_promote_action }
+			interaction_target:target ?= { remove_variable = bag_asp_busy_pop_promote_action }
+		}
+		if = {
+			limit = { cabinet_action = cabinet_action:promote_culture }
+			interaction_target:target_1 ?= { remove_variable = bag_asp_busy_promote_culture }
+		}
+		if = {
+			limit = { cabinet_action = cabinet_action:promote_religion }
+			interaction_target:target_province ?= { remove_variable = bag_asp_busy_promote_religion }
+		}
+		if = {
+			limit = { cabinet_action = cabinet_action:recovery_effort }
+			interaction_target:target ?= { remove_variable = bag_asp_busy_recovery_effort }
+		}
+		if = {
+			limit = { cabinet_action = cabinet_action:send_secret_royal_inspectors }
+			interaction_target:target ?= { remove_variable = bag_asp_busy_send_secret_royal_inspectors }
+		}
+		if = {
+			limit = { cabinet_action = cabinet_action:study_institutions }
+			interaction_target:target ?= { remove_variable = bag_asp_busy_study_institutions }
+		}
+		if = { limit = { cabinet_action = cabinet_action:alleviate_concerns } debug_log = "bag_asp: alleviate_concerns stopped on a seat" }
+		if = { limit = { cabinet_action = cabinet_action:appease_estate } debug_log = "bag_asp: appease_estate stopped on a seat" }
+		if = { limit = { cabinet_action = cabinet_action:counter_espionage_action } debug_log = "bag_asp: counter_espionage_action stopped on a seat" }
+		if = { limit = { cabinet_action = cabinet_action:develop_province } debug_log = "bag_asp: develop_province stopped on a seat" }
+		if = { limit = { cabinet_action = cabinet_action:diplomatic_endeavors } debug_log = "bag_asp: diplomatic_endeavors stopped on a seat" }
+		if = { limit = { cabinet_action = cabinet_action:increase_control_area } debug_log = "bag_asp: increase_control_area stopped on a seat" }
+		if = { limit = { cabinet_action = cabinet_action:increase_control_province } debug_log = "bag_asp: increase_control_province stopped on a seat" }
+		if = { limit = { cabinet_action = cabinet_action:integrate_area } debug_log = "bag_asp: integrate_area stopped on a seat" }
+		if = { limit = { cabinet_action = cabinet_action:integrate_province } debug_log = "bag_asp: integrate_province stopped on a seat" }
+		if = { limit = { cabinet_action = cabinet_action:noblesse_oblige_cabinet_action } debug_log = "bag_asp: noblesse_oblige_cabinet_action stopped on a seat" }
+		if = { limit = { cabinet_action = cabinet_action:pacify_population } debug_log = "bag_asp: pacify_population stopped on a seat" }
+		if = { limit = { cabinet_action = cabinet_action:pop_promote_action } debug_log = "bag_asp: pop_promote_action stopped on a seat" }
+		if = { limit = { cabinet_action = cabinet_action:promote_culture } debug_log = "bag_asp: promote_culture stopped on a seat" }
+		if = { limit = { cabinet_action = cabinet_action:promote_religion } debug_log = "bag_asp: promote_religion stopped on a seat" }
+		if = { limit = { cabinet_action = cabinet_action:recovery_effort } debug_log = "bag_asp: recovery_effort stopped on a seat" }
+		if = { limit = { cabinet_action = cabinet_action:reduce_inflation } debug_log = "bag_asp: reduce_inflation stopped on a seat" }
+		if = { limit = { cabinet_action = cabinet_action:reduce_war_exhaustion } debug_log = "bag_asp: reduce_war_exhaustion stopped on a seat" }
+		if = { limit = { cabinet_action = cabinet_action:send_secret_royal_inspectors } debug_log = "bag_asp: send_secret_royal_inspectors stopped on a seat" }
+		if = { limit = { cabinet_action = cabinet_action:stabilize_country } debug_log = "bag_asp: stabilize_country stopped on a seat" }
+		if = { limit = { cabinet_action = cabinet_action:strengthen_government } debug_log = "bag_asp: strengthen_government stopped on a seat" }
+		if = { limit = { cabinet_action = cabinet_action:study_institutions } debug_log = "bag_asp: study_institutions stopped on a seat" }
+		stop_cabinet_action = {}
+	}
+	cabinet_member ?= {
+		if = {
+			limit = { has_variable = bag_asp_paired }
+			remove_variable = bag_asp_paired
+		}
+	}
 }
 
 # Scope: country (scope:actor); the seat is scope:bag_asp_seat.
@@ -319,10 +484,7 @@ bag_asp_try_integrate_province = {
 				}
 				save_temporary_scope_as = bag_asp_pick
 				scope:bag_asp_seat = {
-					if = {
-						limit = { has_cabinet_action = yes }
-						stop_cabinet_action = {}
-					}
+					bag_asp_vacate = yes
 					set_cabinet_action = { type = cabinet_action:integrate_province target = scope:bag_asp_pick }
 				}
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_integrate_province value = yes } }
@@ -377,10 +539,7 @@ bag_asp_try_integrate_area = {
 				}
 				area = { save_temporary_scope_as = bag_asp_pick }
 				scope:bag_asp_seat = {
-					if = {
-						limit = { has_cabinet_action = yes }
-						stop_cabinet_action = {}
-					}
+					bag_asp_vacate = yes
 					set_cabinet_action = { type = cabinet_action:integrate_area target = scope:bag_asp_pick }
 				}
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_integrate_area value = yes } }
@@ -400,10 +559,7 @@ bag_asp_try_reduce_war_exhaustion = {
 			scope:actor = { NOT = { any_cabinet = { has_cabinet_action = yes cabinet_action = cabinet_action:reduce_war_exhaustion } } }
 		}
 		scope:bag_asp_seat = {
-			if = {
-				limit = { has_cabinet_action = yes }
-				stop_cabinet_action = {}
-			}
+			bag_asp_vacate = yes
 			set_cabinet_action = { type = cabinet_action:reduce_war_exhaustion }
 		}
 		scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
@@ -421,10 +577,7 @@ bag_asp_try_stabilize_country = {
 			scope:actor = { NOT = { any_cabinet = { has_cabinet_action = yes cabinet_action = cabinet_action:stabilize_country } } }
 		}
 		scope:bag_asp_seat = {
-			if = {
-				limit = { has_cabinet_action = yes }
-				stop_cabinet_action = {}
-			}
+			bag_asp_vacate = yes
 			set_cabinet_action = { type = cabinet_action:stabilize_country }
 		}
 		scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
@@ -452,10 +605,7 @@ bag_asp_try_increase_control_province = {
 				order_by = province_tax_base
 				save_temporary_scope_as = bag_asp_pick
 				scope:bag_asp_seat = {
-					if = {
-						limit = { has_cabinet_action = yes }
-						stop_cabinet_action = {}
-					}
+					bag_asp_vacate = yes
 					set_cabinet_action = { type = cabinet_action:increase_control_province selected_province = scope:bag_asp_pick }
 				}
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_increase_control_province value = yes } }
@@ -488,10 +638,7 @@ bag_asp_try_increase_control_area = {
 				order_by = province_tax_base
 				area = { save_temporary_scope_as = bag_asp_pick }
 				scope:bag_asp_seat = {
-					if = {
-						limit = { has_cabinet_action = yes }
-						stop_cabinet_action = {}
-					}
+					bag_asp_vacate = yes
 					set_cabinet_action = { type = cabinet_action:increase_control_area selected_area = scope:bag_asp_pick }
 				}
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_increase_control_area value = yes } }
@@ -522,10 +669,7 @@ bag_asp_try_send_secret_royal_inspectors = {
 				order_by = province_tax_base
 				save_temporary_scope_as = bag_asp_pick
 				scope:bag_asp_seat = {
-					if = {
-						limit = { has_cabinet_action = yes }
-						stop_cabinet_action = {}
-					}
+					bag_asp_vacate = yes
 					set_cabinet_action = { type = cabinet_action:send_secret_royal_inspectors target = scope:bag_asp_pick }
 				}
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_send_secret_royal_inspectors value = yes } }
@@ -618,10 +762,7 @@ bag_asp_try_promote_culture = {
 				save_temporary_scope_as = bag_asp_pick
 				scope:bag_asp_pick = { save_scope_as = bag_asp_last }
 				scope:bag_asp_seat = {
-					if = {
-						limit = { has_cabinet_action = yes }
-						stop_cabinet_action = {}
-					}
+					bag_asp_vacate = yes
 					set_cabinet_action = { type = cabinet_action:promote_culture target = scope:target target_1 = scope:bag_asp_pick }
 				}
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_promote_culture value = yes } }
@@ -672,10 +813,7 @@ bag_asp_try_promote_religion = {
 				order_by = population
 				save_temporary_scope_as = bag_asp_pick
 				scope:bag_asp_seat = {
-					if = {
-						limit = { has_cabinet_action = yes }
-						stop_cabinet_action = {}
-					}
+					bag_asp_vacate = yes
 					set_cabinet_action = { type = cabinet_action:promote_religion target_religion = scope:target_religion target_province = scope:bag_asp_pick }
 				}
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_promote_religion value = yes } }
@@ -705,10 +843,7 @@ bag_asp_try_pacify_population = {
 				order_by = population
 				save_temporary_scope_as = bag_asp_pick
 				scope:bag_asp_seat = {
-					if = {
-						limit = { has_cabinet_action = yes }
-						stop_cabinet_action = {}
-					}
+					bag_asp_vacate = yes
 					set_cabinet_action = { type = cabinet_action:pacify_population target = scope:bag_asp_pick }
 				}
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_pacify_population value = yes } }
@@ -751,10 +886,7 @@ bag_asp_try_recovery_effort = {
 				}
 				save_temporary_scope_as = bag_asp_pick
 				scope:bag_asp_seat = {
-					if = {
-						limit = { has_cabinet_action = yes }
-						stop_cabinet_action = {}
-					}
+					bag_asp_vacate = yes
 					set_cabinet_action = { type = cabinet_action:recovery_effort target = scope:bag_asp_pick }
 				}
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_recovery_effort value = yes } }
@@ -786,10 +918,7 @@ bag_asp_try_appease_estate = {
 				order_by = { value = 1 subtract = satisfaction }
 				save_temporary_scope_as = bag_asp_pick
 				scope:bag_asp_seat = {
-					if = {
-						limit = { has_cabinet_action = yes }
-						stop_cabinet_action = {}
-					}
+					bag_asp_vacate = yes
 					set_cabinet_action = { type = cabinet_action:appease_estate target = scope:bag_asp_pick }
 				}
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_appease_estate value = yes } }
@@ -809,10 +938,7 @@ bag_asp_try_alleviate_concerns = {
 			scope:actor = { NOT = { any_cabinet = { has_cabinet_action = yes cabinet_action = cabinet_action:alleviate_concerns } } }
 		}
 		scope:bag_asp_seat = {
-			if = {
-				limit = { has_cabinet_action = yes }
-				stop_cabinet_action = {}
-			}
+			bag_asp_vacate = yes
 			set_cabinet_action = { type = cabinet_action:alleviate_concerns }
 		}
 		scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
@@ -830,10 +956,7 @@ bag_asp_try_reduce_inflation = {
 			scope:actor = { NOT = { any_cabinet = { has_cabinet_action = yes cabinet_action = cabinet_action:reduce_inflation } } }
 		}
 		scope:bag_asp_seat = {
-			if = {
-				limit = { has_cabinet_action = yes }
-				stop_cabinet_action = {}
-			}
+			bag_asp_vacate = yes
 			set_cabinet_action = { type = cabinet_action:reduce_inflation }
 		}
 		scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
@@ -856,10 +979,7 @@ bag_asp_try_develop_province = {
 				}
 				save_temporary_scope_as = bag_asp_pick
 				scope:bag_asp_seat = {
-					if = {
-						limit = { has_cabinet_action = yes }
-						stop_cabinet_action = {}
-					}
+					bag_asp_vacate = yes
 					set_cabinet_action = { type = cabinet_action:develop_province target = scope:bag_asp_pick }
 				}
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_develop_province value = yes } }
@@ -892,10 +1012,7 @@ bag_asp_try_study_institutions = {
 				order_by = population
 				save_temporary_scope_as = bag_asp_pick
 				scope:bag_asp_seat = {
-					if = {
-						limit = { has_cabinet_action = yes }
-						stop_cabinet_action = {}
-					}
+					bag_asp_vacate = yes
 					set_cabinet_action = { type = cabinet_action:study_institutions target = scope:bag_asp_pick }
 				}
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_study_institutions value = yes } }
@@ -922,10 +1039,7 @@ bag_asp_try_pop_promote_action = {
 				order_by = population
 				save_temporary_scope_as = bag_asp_pick
 				scope:bag_asp_seat = {
-					if = {
-						limit = { has_cabinet_action = yes }
-						stop_cabinet_action = {}
-					}
+					bag_asp_vacate = yes
 					set_cabinet_action = { type = cabinet_action:pop_promote_action target = scope:bag_asp_pick }
 				}
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_pop_promote_action value = yes } }
@@ -945,10 +1059,7 @@ bag_asp_try_strengthen_government = {
 			scope:actor = { NOT = { any_cabinet = { has_cabinet_action = yes cabinet_action = cabinet_action:strengthen_government } } }
 		}
 		scope:bag_asp_seat = {
-			if = {
-				limit = { has_cabinet_action = yes }
-				stop_cabinet_action = {}
-			}
+			bag_asp_vacate = yes
 			set_cabinet_action = { type = cabinet_action:strengthen_government }
 		}
 		scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
@@ -965,10 +1076,7 @@ bag_asp_try_diplomatic_endeavors = {
 			scope:actor = { NOT = { any_cabinet = { has_cabinet_action = yes cabinet_action = cabinet_action:diplomatic_endeavors } } }
 		}
 		scope:bag_asp_seat = {
-			if = {
-				limit = { has_cabinet_action = yes }
-				stop_cabinet_action = {}
-			}
+			bag_asp_vacate = yes
 			set_cabinet_action = { type = cabinet_action:diplomatic_endeavors }
 		}
 		scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
@@ -985,10 +1093,7 @@ bag_asp_try_counter_espionage_action = {
 			scope:actor = { NOT = { any_cabinet = { has_cabinet_action = yes cabinet_action = cabinet_action:counter_espionage_action } } }
 		}
 		scope:bag_asp_seat = {
-			if = {
-				limit = { has_cabinet_action = yes }
-				stop_cabinet_action = {}
-			}
+			bag_asp_vacate = yes
 			set_cabinet_action = { type = cabinet_action:counter_espionage_action }
 		}
 		scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
@@ -1016,10 +1121,7 @@ bag_asp_try_noblesse_oblige_cabinet_action = {
 				order_by = province_tax_base
 				save_temporary_scope_as = bag_asp_pick
 				scope:bag_asp_seat = {
-					if = {
-						limit = { has_cabinet_action = yes }
-						stop_cabinet_action = {}
-					}
+					bag_asp_vacate = yes
 					set_cabinet_action = { type = cabinet_action:noblesse_oblige_cabinet_action selected_province = scope:bag_asp_pick }
 				}
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_noblesse_oblige_cabinet_action value = yes } }
@@ -1040,10 +1142,7 @@ bag_asp_try_diplomatic_antagonism = {
 			scope:actor = { NOT = { any_cabinet = { has_cabinet_action = yes cabinet_action = cabinet_action:diplomatic_endeavors } } }
 		}
 		scope:bag_asp_seat = {
-			if = {
-				limit = { has_cabinet_action = yes }
-				stop_cabinet_action = {}
-			}
+			bag_asp_vacate = yes
 			set_cabinet_action = { type = cabinet_action:diplomatic_endeavors }
 		}
 		scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
@@ -1132,10 +1231,7 @@ bag_asp_try_promote_culture_full = {
 				save_temporary_scope_as = bag_asp_pick
 				scope:bag_asp_pick = { save_scope_as = bag_asp_last }
 				scope:bag_asp_seat = {
-					if = {
-						limit = { has_cabinet_action = yes }
-						stop_cabinet_action = {}
-					}
+					bag_asp_vacate = yes
 					set_cabinet_action = { type = cabinet_action:promote_culture target = scope:target target_1 = scope:bag_asp_pick }
 				}
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_promote_culture value = yes } }
@@ -1165,10 +1261,7 @@ bag_asp_try_at_noblesse_oblige_cabinet_action = {
 				}
 				save_temporary_scope_as = bag_asp_pick
 				scope:bag_asp_seat = {
-					if = {
-						limit = { has_cabinet_action = yes }
-						stop_cabinet_action = {}
-					}
+					bag_asp_vacate = yes
 					set_cabinet_action = { type = cabinet_action:noblesse_oblige_cabinet_action selected_province = scope:bag_asp_pick }
 				}
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_noblesse_oblige_cabinet_action value = yes } }
@@ -1198,10 +1291,7 @@ bag_asp_try_at_increase_control_province = {
 				}
 				save_temporary_scope_as = bag_asp_pick
 				scope:bag_asp_seat = {
-					if = {
-						limit = { has_cabinet_action = yes }
-						stop_cabinet_action = {}
-					}
+					bag_asp_vacate = yes
 					set_cabinet_action = { type = cabinet_action:increase_control_province selected_province = scope:bag_asp_pick }
 				}
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_increase_control_province value = yes } }
@@ -1995,6 +2085,7 @@ bag_asp_place_promote_culture = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
+					NOT = { bag_asp_paired_seat = yes }
 					cabinet_member = { dip > scope:actor.var:bag_asp_low }
 				}
 				order_by = cabinet_member.dip
@@ -3180,6 +3271,7 @@ bag_asp_place_promote_culture_full = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
+					NOT = { bag_asp_paired_seat = yes }
 					cabinet_member = { dip > scope:actor.var:bag_asp_low }
 				}
 				order_by = cabinet_member.dip
@@ -3248,10 +3340,7 @@ bag_asp_move_integrate_province = {
 		}
 	}
 	scope:bag_asp_seat = {
-		if = {
-			limit = { has_cabinet_action = yes }
-			stop_cabinet_action = {}
-		}
+		bag_asp_vacate = yes
 		set_cabinet_action = { type = cabinet_action:integrate_province target = scope:bag_asp_t_target }
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3277,10 +3366,7 @@ bag_asp_move_integrate_area = {
 		}
 	}
 	scope:bag_asp_seat = {
-		if = {
-			limit = { has_cabinet_action = yes }
-			stop_cabinet_action = {}
-		}
+		bag_asp_vacate = yes
 		set_cabinet_action = { type = cabinet_action:integrate_area target = scope:bag_asp_t_target }
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3305,10 +3391,7 @@ bag_asp_move_reduce_war_exhaustion = {
 		}
 	}
 	scope:bag_asp_seat = {
-		if = {
-			limit = { has_cabinet_action = yes }
-			stop_cabinet_action = {}
-		}
+		bag_asp_vacate = yes
 		set_cabinet_action = { type = cabinet_action:reduce_war_exhaustion }
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3333,10 +3416,7 @@ bag_asp_move_stabilize_country = {
 		}
 	}
 	scope:bag_asp_seat = {
-		if = {
-			limit = { has_cabinet_action = yes }
-			stop_cabinet_action = {}
-		}
+		bag_asp_vacate = yes
 		set_cabinet_action = { type = cabinet_action:stabilize_country }
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3362,10 +3442,7 @@ bag_asp_move_increase_control_province = {
 		}
 	}
 	scope:bag_asp_seat = {
-		if = {
-			limit = { has_cabinet_action = yes }
-			stop_cabinet_action = {}
-		}
+		bag_asp_vacate = yes
 		set_cabinet_action = { type = cabinet_action:increase_control_province selected_province = scope:bag_asp_t_selected_province }
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3391,10 +3468,7 @@ bag_asp_move_increase_control_area = {
 		}
 	}
 	scope:bag_asp_seat = {
-		if = {
-			limit = { has_cabinet_action = yes }
-			stop_cabinet_action = {}
-		}
+		bag_asp_vacate = yes
 		set_cabinet_action = { type = cabinet_action:increase_control_area selected_area = scope:bag_asp_t_selected_area }
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3420,10 +3494,7 @@ bag_asp_move_send_secret_royal_inspectors = {
 		}
 	}
 	scope:bag_asp_seat = {
-		if = {
-			limit = { has_cabinet_action = yes }
-			stop_cabinet_action = {}
-		}
+		bag_asp_vacate = yes
 		set_cabinet_action = { type = cabinet_action:send_secret_royal_inspectors target = scope:bag_asp_t_target }
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3450,10 +3521,7 @@ bag_asp_move_promote_culture = {
 		}
 	}
 	scope:bag_asp_seat = {
-		if = {
-			limit = { has_cabinet_action = yes }
-			stop_cabinet_action = {}
-		}
+		bag_asp_vacate = yes
 		set_cabinet_action = { type = cabinet_action:promote_culture target = scope:bag_asp_t_target target_1 = scope:bag_asp_t_target_1 }
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3480,10 +3548,7 @@ bag_asp_move_promote_religion = {
 		}
 	}
 	scope:bag_asp_seat = {
-		if = {
-			limit = { has_cabinet_action = yes }
-			stop_cabinet_action = {}
-		}
+		bag_asp_vacate = yes
 		set_cabinet_action = { type = cabinet_action:promote_religion target_province = scope:bag_asp_t_target_province target_religion = scope:bag_asp_t_target_religion }
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3509,10 +3574,7 @@ bag_asp_move_pacify_population = {
 		}
 	}
 	scope:bag_asp_seat = {
-		if = {
-			limit = { has_cabinet_action = yes }
-			stop_cabinet_action = {}
-		}
+		bag_asp_vacate = yes
 		set_cabinet_action = { type = cabinet_action:pacify_population target = scope:bag_asp_t_target }
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3538,10 +3600,7 @@ bag_asp_move_recovery_effort = {
 		}
 	}
 	scope:bag_asp_seat = {
-		if = {
-			limit = { has_cabinet_action = yes }
-			stop_cabinet_action = {}
-		}
+		bag_asp_vacate = yes
 		set_cabinet_action = { type = cabinet_action:recovery_effort target = scope:bag_asp_t_target }
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3567,10 +3626,7 @@ bag_asp_move_appease_estate = {
 		}
 	}
 	scope:bag_asp_seat = {
-		if = {
-			limit = { has_cabinet_action = yes }
-			stop_cabinet_action = {}
-		}
+		bag_asp_vacate = yes
 		set_cabinet_action = { type = cabinet_action:appease_estate target = scope:bag_asp_t_target }
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3595,10 +3651,7 @@ bag_asp_move_alleviate_concerns = {
 		}
 	}
 	scope:bag_asp_seat = {
-		if = {
-			limit = { has_cabinet_action = yes }
-			stop_cabinet_action = {}
-		}
+		bag_asp_vacate = yes
 		set_cabinet_action = { type = cabinet_action:alleviate_concerns }
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3623,10 +3676,7 @@ bag_asp_move_reduce_inflation = {
 		}
 	}
 	scope:bag_asp_seat = {
-		if = {
-			limit = { has_cabinet_action = yes }
-			stop_cabinet_action = {}
-		}
+		bag_asp_vacate = yes
 		set_cabinet_action = { type = cabinet_action:reduce_inflation }
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3652,10 +3702,7 @@ bag_asp_move_develop_province = {
 		}
 	}
 	scope:bag_asp_seat = {
-		if = {
-			limit = { has_cabinet_action = yes }
-			stop_cabinet_action = {}
-		}
+		bag_asp_vacate = yes
 		set_cabinet_action = { type = cabinet_action:develop_province target = scope:bag_asp_t_target }
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3681,10 +3728,7 @@ bag_asp_move_study_institutions = {
 		}
 	}
 	scope:bag_asp_seat = {
-		if = {
-			limit = { has_cabinet_action = yes }
-			stop_cabinet_action = {}
-		}
+		bag_asp_vacate = yes
 		set_cabinet_action = { type = cabinet_action:study_institutions target = scope:bag_asp_t_target }
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3710,10 +3754,7 @@ bag_asp_move_pop_promote_action = {
 		}
 	}
 	scope:bag_asp_seat = {
-		if = {
-			limit = { has_cabinet_action = yes }
-			stop_cabinet_action = {}
-		}
+		bag_asp_vacate = yes
 		set_cabinet_action = { type = cabinet_action:pop_promote_action target = scope:bag_asp_t_target }
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3738,10 +3779,7 @@ bag_asp_move_strengthen_government = {
 		}
 	}
 	scope:bag_asp_seat = {
-		if = {
-			limit = { has_cabinet_action = yes }
-			stop_cabinet_action = {}
-		}
+		bag_asp_vacate = yes
 		set_cabinet_action = { type = cabinet_action:strengthen_government }
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3766,10 +3804,7 @@ bag_asp_move_diplomatic_endeavors = {
 		}
 	}
 	scope:bag_asp_seat = {
-		if = {
-			limit = { has_cabinet_action = yes }
-			stop_cabinet_action = {}
-		}
+		bag_asp_vacate = yes
 		set_cabinet_action = { type = cabinet_action:diplomatic_endeavors }
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3794,10 +3829,7 @@ bag_asp_move_counter_espionage_action = {
 		}
 	}
 	scope:bag_asp_seat = {
-		if = {
-			limit = { has_cabinet_action = yes }
-			stop_cabinet_action = {}
-		}
+		bag_asp_vacate = yes
 		set_cabinet_action = { type = cabinet_action:counter_espionage_action }
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3823,10 +3855,7 @@ bag_asp_move_noblesse_oblige_cabinet_action = {
 		}
 	}
 	scope:bag_asp_seat = {
-		if = {
-			limit = { has_cabinet_action = yes }
-			stop_cabinet_action = {}
-		}
+		bag_asp_vacate = yes
 		set_cabinet_action = { type = cabinet_action:noblesse_oblige_cabinet_action selected_province = scope:bag_asp_t_selected_province }
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3851,10 +3880,7 @@ bag_asp_move_diplomatic_antagonism = {
 		}
 	}
 	scope:bag_asp_seat = {
-		if = {
-			limit = { has_cabinet_action = yes }
-			stop_cabinet_action = {}
-		}
+		bag_asp_vacate = yes
 		set_cabinet_action = { type = cabinet_action:diplomatic_endeavors }
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3881,10 +3907,7 @@ bag_asp_move_promote_culture_full = {
 		}
 	}
 	scope:bag_asp_seat = {
-		if = {
-			limit = { has_cabinet_action = yes }
-			stop_cabinet_action = {}
-		}
+		bag_asp_vacate = yes
 		set_cabinet_action = { type = cabinet_action:promote_culture target = scope:bag_asp_t_target target_1 = scope:bag_asp_t_target_1 }
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3980,8 +4003,7 @@ bag_asp_keep_pairs = {
 						value = 0
 						subtract = bag_asp_seat_rank
 					}
-					interaction_target:target_1 ?= { remove_variable = bag_asp_busy_promote_culture }
-					stop_cabinet_action = {}
+					bag_asp_vacate = yes
 					cabinet_member = {
 						remove_variable = bag_asp_pending
 						remove_variable = bag_asp_claimed
@@ -4007,9 +4029,8 @@ bag_asp_unpair = {
 				bag_asp_paired_seat = yes
 				interaction_target:selected_province ?= { NOT = { has_variable = bag_asp_busy_promote_culture } }
 			}
-			stop_cabinet_action = {}
+			bag_asp_vacate = yes
 			debug_log = "bag_asp: a control seat released with its assimilation"
-			cabinet_member = { remove_variable = bag_asp_paired }
 		}
 		else_if = {
 			limit = {
@@ -4306,4 +4327,30 @@ bag_asp_probe_half = {
 		}
 	}
 	remove_global_variable = bag_asp_probe
+}
+
+# Scope: country. His ask 13.10: the settings as they stand, after he changed one.
+bag_asp_log_settings = {
+	debug_log = "bag_asp: settings: period [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_period')|0], review [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_review')|0], culture_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_culture_target')|0], religion_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_religion_target')|0]"
+	if = {
+		limit = { has_variable = bag_asp_auto_on }
+		debug_log = "bag_asp: setting auto on"
+	}
+	else = {
+		debug_log = "bag_asp: setting auto off"
+	}
+	if = {
+		limit = { has_variable = bag_asp_speedup_on }
+		debug_log = "bag_asp: setting culture_speedup on"
+	}
+	else = {
+		debug_log = "bag_asp: setting culture_speedup off"
+	}
+	if = {
+		limit = { has_variable = bag_asp_log_on }
+		debug_log = "bag_asp: setting log on"
+	}
+	else = {
+		debug_log = "bag_asp: setting log off"
+	}
 }

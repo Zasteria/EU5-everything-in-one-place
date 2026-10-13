@@ -32,6 +32,15 @@ on_cabinet_assigned = {
 	}
 }
 
+# His ask 13.10: an advisor leaving is logged too (named, with the log on).
+# root = country, scope:target = the advisor; fired before on_cabinet_assigned
+# when one replaces another, not on a death.
+on_cabinet_removed = {
+	on_actions = {
+		bag_asp_on_cabinet_removed
+	}
+}
+
 # Scope: country
 bag_asp_on_cabinet_change = {
 	trigger = {
@@ -39,7 +48,25 @@ bag_asp_on_cabinet_change = {
 	}
 	effect = {
 		debug_log = "bag_asp: an advisor was assigned"
+		if = {
+			limit = { has_variable = bag_asp_log_on }
+			scope:target ?= { debug_log_scopes = no }
+		}
 		bag_asp_plan_all = yes
+	}
+}
+
+# Scope: country
+bag_asp_on_cabinet_removed = {
+	trigger = {
+		has_variable = bag_asp_auto_on
+	}
+	effect = {
+		debug_log = "bag_asp: an advisor left the cabinet"
+		if = {
+			limit = { has_variable = bag_asp_log_on }
+			scope:target ?= { debug_log_scopes = no }
+		}
 	}
 }
 

@@ -461,8 +461,7 @@ def try_effect(row: str, kind: str, order: str | None, gate: str, actions: dict[
         # is not known to replace a running action by itself.
         last = "\t\t\t\tscope:bag_asp_pick = { save_scope_as = bag_asp_last }\n" if key == PAIRED_WITH else ""
         return (last + f"\t\t\t\tscope:bag_asp_seat = {{\n"
-                f"\t\t\t\t\tif = {{\n\t\t\t\t\t\tlimit = {{ has_cabinet_action = yes }}\n"
-                f"\t\t\t\t\t\tstop_cabinet_action = {{}}\n\t\t\t\t\t}}\n"
+                f"\t\t\t\t\tbag_asp_vacate = yes\n"
                 f"\t\t\t\t\tset_cabinet_action = {{ type = cabinet_action:{key}{params} }}\n"
                 f"\t\t\t\t}}\n" + mark + done)
 
@@ -583,6 +582,9 @@ def place_effect(row: str, gate: str, actions: dict[str, str]) -> str:
     key = act(row)
     action = actions[key]
     ability = value(action, "ability") or "adm"
+    # His run 13.10 10:02: an assimilation moved onto the seat of its own
+    # control, which was not yet kept at that step, and the control was lost.
+    own_pair = "\t\t\t\t\tNOT = { bag_asp_paired_seat = yes }\n" if key == PAIRED_WITH else ""
     seat = seat_test(action, 4)
     keep_gate = f"\n\t\t\tscope:actor = {{ {gate} }}" if gate else ""
     if row in ROW_SEAT:
@@ -672,7 +674,7 @@ bag_asp_place_{row} = {{
 \t\t\tordered_cabinet = {{
 \t\t\t\tlimit = {{
 {seat_test(action, 5)}
-\t\t\t\t\tcabinet_member = {{ {ability} > scope:actor.var:bag_asp_low }}
+{own_pair}\t\t\t\t\tcabinet_member = {{ {ability} > scope:actor.var:bag_asp_low }}
 \t\t\t\t}}
 \t\t\t\torder_by = cabinet_member.{ability}
 \t\t\t\tsave_scope_as = bag_asp_seat
@@ -739,10 +741,7 @@ bag_asp_move_{row} = {{
 \t\t}}
 \t}}
 \tscope:bag_asp_seat = {{
-\t\tif = {{
-\t\t\tlimit = {{ has_cabinet_action = yes }}
-\t\t\tstop_cabinet_action = {{}}
-\t\t}}
+\t\tbag_asp_vacate = yes
 \t\tset_cabinet_action = {{ type = cabinet_action:{key}{params} }}
 \t\tcabinet_member = {{
 \t\t\tset_variable = {{ name = bag_asp_claimed value = yes }}
@@ -852,8 +851,7 @@ bag_asp_keep_pairs = {{
 \t\t\t\t\t\tvalue = 0
 \t\t\t\t\t\tsubtract = bag_asp_seat_rank
 \t\t\t\t\t}}
-\t\t\t\t\tinteraction_target:{pflag} ?= {{ remove_variable = bag_asp_busy_{PAIRED_WITH} }}
-\t\t\t\t\tstop_cabinet_action = {{}}
+\t\t\t\t\tbag_asp_vacate = yes
 \t\t\t\t\tcabinet_member = {{
 \t\t\t\t\t\tremove_variable = bag_asp_pending
 \t\t\t\t\t\tremove_variable = bag_asp_claimed
@@ -879,9 +877,8 @@ bag_asp_unpair = {{
 \t\t\t\tbag_asp_paired_seat = yes
 \t\t\t\tinteraction_target:{cflag} ?= {{ NOT = {{ has_variable = bag_asp_busy_{PAIRED_WITH} }} }}
 \t\t\t}}
-\t\t\tstop_cabinet_action = {{}}
+\t\t\tbag_asp_vacate = yes
 \t\t\tdebug_log = "bag_asp: a control seat released with its assimilation"
-\t\t\tcabinet_member = {{ remove_variable = bag_asp_paired }}
 \t\t}}
 \t\telse_if = {{
 \t\t\tlimit = {{
@@ -898,6 +895,33 @@ bag_asp_unpair = {{
 
 
 PRINT = "[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+
+# His ask 13.10: every setting's value, logged after he changes one. A number
+# prints through a script value reading the variable outright: the form with
+# `value = 0` and an `if` read zero in silence (docs/pitfalls/diagnosis.md).
+NUMBERS = (("period", "bag_asp_period"), ("review", "bag_asp_review"),
+           ("culture_target", "bag_asp_culture_target"), ("religion_target", "bag_asp_religion_target"))
+SWITCHES = (("auto", "bag_asp_auto_on"), ("culture_speedup", "bag_asp_speedup_on"), ("log", "bag_asp_log_on"))
+
+
+def shown_values() -> str:
+    return "\n# Scope: country. A setting as a number, for the log.\n" + "\n".join(
+        f"bag_asp_show_{name} = {{\n\tvalue = var:{var}\n}}\n" for name, var in NUMBERS)
+
+
+def log_settings() -> str:
+    numbers = ", ".join(
+        f"{name} [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_{name}')|0]" for name, _ in NUMBERS)
+    switches = "\n".join(
+        f"\tif = {{\n\t\tlimit = {{ has_variable = {var} }}\n\t\tdebug_log = \"bag_asp: setting {name} on\"\n\t}}\n"
+        f"\telse = {{\n\t\tdebug_log = \"bag_asp: setting {name} off\"\n\t}}" for name, var in SWITCHES)
+    return f"""
+# Scope: country. His ask 13.10: the settings as they stand, after he changed one.
+bag_asp_log_settings = {{
+\tdebug_log = "bag_asp: settings: {numbers}"
+{switches}
+}}
+"""
 
 
 def probe_effects(actions: dict[str, str]) -> str:
@@ -1063,6 +1087,14 @@ bag_asp_register = {{
 \t\tmax_value = 60
 \t\tstep_value = 1
 \t}}
+\t# His ask 13.10: everything he does and everything the mod does, in the log.
+\tcmm_register_bool_setting = {{
+\t\tmod_id = {MOD_ID}
+\t\tsetting_id = log
+\t\ttab_id = main
+\t\tgroup_id = council
+\t\tdefault_value = 0
+\t}}
 
 \tcmm_register_settings_list = {{
 \t\tmod_id = {MOD_ID}
@@ -1115,6 +1147,7 @@ bag_asp_sync = {{
 \tcmm_sync_setting_alias = {{ setting = {MOD_ID}__culture_target alias = bag_asp_culture_target }}
 \tcmm_sync_bool_alias = {{ setting = {MOD_ID}__culture_speedup alias = bag_asp_speedup_on }}
 \tcmm_sync_setting_alias = {{ setting = {MOD_ID}__religion_target alias = bag_asp_religion_target }}
+\tcmm_sync_bool_alias = {{ setting = {MOD_ID}__log alias = bag_asp_log_on }}
 }}
 
 # Scope: country. The two lists into the order the pulse walks, and which rows
@@ -1201,6 +1234,13 @@ bag_asp_handle_callback = {{
 \t\tflag:{MOD_ID}__culture_target = {{ bag_asp_sync = yes }}
 \t\tflag:{MOD_ID}__culture_speedup = {{ bag_asp_sync = yes }}
 \t\tflag:{MOD_ID}__religion_target = {{ bag_asp_sync = yes }}
+\t\tflag:{MOD_ID}__log = {{ bag_asp_sync = yes }}
+\t}}
+\t# His ask 13.10: what he changes goes into the log, with every setting after it.
+\tif = {{
+\t\tlimit = {{ has_variable = bag_asp_log_on }}
+\t\tdebug_log = "bag_asp: you changed a setting"
+\t\tbag_asp_log_settings = yes
 \t}}
 }}
 """)
@@ -1271,6 +1311,13 @@ bag_asp_plan = {{
 \t# The lists may have moved without their callback (a typed place goes
 \t# through the console), so the order is read afresh every pass.
 \tbag_asp_rebuild = yes
+\t# His ask 13.10: the seats as the pass finds them, so what he changed by
+\t# hand between two passes shows against the last pass's «after».
+\tif = {{
+\t\tlimit = {{ has_variable = bag_asp_log_on }}
+\t\tdebug_log = "bag_asp: the seats before the pass:"
+\t\tbag_asp_probe_seats = yes
+\t}}
 \tif = {{
 \t\tlimit = {{ NOT = {{ any_in_list = {{ variable = bag_asp_used }} }} }}
 \t\tdebug_log = "bag_asp: no action is ticked in use"
@@ -1293,7 +1340,10 @@ bag_asp_plan = {{
 \tbag_asp_mark_busy = yes
 \tbag_asp_unpair = yes
 \tif = {{
-\t\tlimit = {{ NOT = {{ has_variable = bag_asp_fill_only }} }}
+\t\tlimit = {{
+\t\t\thas_variable = bag_asp_log_on
+\t\t\tNOT = {{ has_variable = bag_asp_fill_only }}
+\t\t}}
 \t\tbag_asp_probe_order = yes
 \t\tbag_asp_probe_half = yes
 \t}}
@@ -1329,7 +1379,11 @@ bag_asp_plan = {{
 \t\tlimit = {{ any_cabinet = {{ bag_asp_free_seat = yes }} }}
 \t\tdebug_log = "bag_asp: a seat is left as it was, nothing in use fits it"
 \t}}
-\tbag_asp_probe_seats = yes
+\tif = {{
+\t\tlimit = {{ has_variable = bag_asp_log_on }}
+\t\tdebug_log = "bag_asp: the seats after the pass:"
+\t\tbag_asp_probe_seats = yes
+\t}}
 \tevery_cabinet = {{
 \t\tlimit = {{ exists = cabinet_member }}
 \t\tcabinet_member = {{
@@ -1351,6 +1405,12 @@ bag_asp_plan = {{
             f"\t\tif = {{\n\t\t\tlimit = {{ cabinet_action = cabinet_action:{k} }}\n"
             f"\t\t\tinteraction_target:{f} ?= {{ {effect.format(k=k)} }}\n\t\t}}"
             for k, f in sorted(BUSY))
+    keys = sorted({k for k, _ in BUSY})
+    sweep = "\n".join(f"\t\tremove_variable = bag_asp_busy_{k}" for k in keys)
+    busy_any = " ".join(f"has_variable = bag_asp_busy_{k}" for k in keys)
+    stopped = "\n".join(
+        f"\t\tif = {{ limit = {{ cabinet_action = cabinet_action:{k} }} debug_log = \"bag_asp: {k} stopped on a seat\" }}"
+        for k in sorted({act(r) for r, *_ in POOL}))
     run += f"""# Scope: country. Mark every target a seat already works on, for the copied
 # «already performing the same task» triggers; unmark after the pass.
 bag_asp_mark_busy = {{
@@ -1360,10 +1420,47 @@ bag_asp_mark_busy = {{
 \t}}
 }}
 
+# Marks a stopped seat left behind stayed for good until 0.9.8 (his run 13.10
+# 10:02: a control action was refused on a province whose own had been
+# stopped a month before), so every mark is swept, not only the seats' own.
 bag_asp_clear_busy = {{
 \tevery_cabinet = {{
 \t\tlimit = {{ has_cabinet_action = yes }}
 {pass_("remove_variable = bag_asp_busy_{k}")}
+\t}}
+\tevery_province = {{
+\t\tlimit = {{ bag_asp_busy_any = yes }}
+{sweep}
+\t}}
+\tevery_province = {{
+\t\tarea ?= {{
+\t\t\tif = {{
+\t\t\t\tlimit = {{ bag_asp_busy_any = yes }}
+{sweep.replace(chr(9) * 2, chr(9) * 4)}
+\t\t\t}}
+\t\t}}
+\t}}
+\tevery_estate = {{
+\t\tlimit = {{ bag_asp_busy_any = yes }}
+{sweep}
+\t}}
+}}
+
+# Scope: cabinet (a seat). Stops its action and takes back what the pass gave
+# it: the busy mark on its target and the bond of a control seat. Every seat
+# the pass takes from another action goes through here.
+bag_asp_vacate = {{
+\tif = {{
+\t\tlimit = {{ has_cabinet_action = yes }}
+{pass_("remove_variable = bag_asp_busy_{k}")}
+{stopped}
+\t\tstop_cabinet_action = {{}}
+\t}}
+\tcabinet_member ?= {{
+\t\tif = {{
+\t\t\tlimit = {{ has_variable = bag_asp_paired }}
+\t\t\tremove_variable = bag_asp_paired
+\t\t}}
 \t}}
 }}
 
@@ -1478,6 +1575,7 @@ bag_asp_emergency = {{
     run += "\n" + "\n".join(move_effect(k, actions) for k, *_ in POOL)
     run += pair_effects(actions)
     run += probe_effects(actions)
+    run += log_settings()
 
     on_actions = f"""# assimilate_primary: the CMF page and the monthly pass. The engine merges
 # on_actions lists, so these add to CMF's own.
@@ -1513,6 +1611,15 @@ on_cabinet_assigned = {{
 \t}}
 }}
 
+# His ask 13.10: an advisor leaving is logged too (named, with the log on).
+# root = country, scope:target = the advisor; fired before on_cabinet_assigned
+# when one replaces another, not on a death.
+on_cabinet_removed = {{
+\ton_actions = {{
+\t\tbag_asp_on_cabinet_removed
+\t}}
+}}
+
 # Scope: country
 bag_asp_on_cabinet_change = {{
 \ttrigger = {{
@@ -1520,7 +1627,25 @@ bag_asp_on_cabinet_change = {{
 \t}}
 \teffect = {{
 \t\tdebug_log = "bag_asp: an advisor was assigned"
+\t\tif = {{
+\t\t\tlimit = {{ has_variable = bag_asp_log_on }}
+\t\t\tscope:target ?= {{ debug_log_scopes = no }}
+\t\t}}
 \t\tbag_asp_plan_all = yes
+\t}}
+}}
+
+# Scope: country
+bag_asp_on_cabinet_removed = {{
+\ttrigger = {{
+\t\thas_variable = bag_asp_auto_on
+\t}}
+\teffect = {{
+\t\tdebug_log = "bag_asp: an advisor left the cabinet"
+\t\tif = {{
+\t\t\tlimit = {{ has_variable = bag_asp_log_on }}
+\t\t\tscope:target ?= {{ debug_log_scopes = no }}
+\t\t}}
 \t}}
 }}
 
@@ -1558,6 +1683,12 @@ bag_asp_on_month = {{
 \teffect = {{
 \t\tcmm_apply_list_change = {{ setting = {MOD_ID}__{s} }}
 \t\tbag_asp_rebuild = yes
+\t\tif = {{
+\t\t\tlimit = {{ has_variable = bag_asp_log_on }}
+\t\t\tdebug_log = "bag_asp: you changed the list {s}"
+\t\t\tsave_scope_as = actor
+\t\t\tbag_asp_probe_order = yes
+\t\t}}
 \t\t# His rule 13.10: a change of the lists hands every seat out at once.
 \t\tif = {{
 \t\t\tlimit = {{ has_variable = bag_asp_auto_on }}
@@ -1656,6 +1787,11 @@ bag_asp_needs_half = {{
 \t}}
 }}
 
+# Scope: any target. A busy mark of the pass is on it.
+bag_asp_busy_any = {{
+\tOR = {{ {busy_any} }}
+}}
+
 # Scope: cabinet. A control action bound to an assimilation («Ускорять контролем»).
 bag_asp_paired_seat = {{
 \thas_cabinet_action = yes
@@ -1668,7 +1804,7 @@ bag_asp_paired_seat = {{
 
     return {
         "in_game/common/scripted_triggers/bag_asp_council_triggers.txt": triggers,
-        "in_game/common/script_values/bag_asp_values.txt": VALUES,
+        "in_game/common/script_values/bag_asp_values.txt": VALUES + shown_values(),
         "in_game/common/scripted_effects/bag_asp_cmm_effects.txt": effects,
         "in_game/common/scripted_effects/bag_asp_council_effects.txt": run,
         "in_game/common/on_action/bag_asp_cmf_on_actions.txt": on_actions,

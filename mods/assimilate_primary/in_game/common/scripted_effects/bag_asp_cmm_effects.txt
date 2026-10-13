@@ -31,6 +31,14 @@ bag_asp_register = {
 		max_value = 60
 		step_value = 1
 	}
+	# His ask 13.10: everything he does and everything the mod does, in the log.
+	cmm_register_bool_setting = {
+		mod_id = bag_asp
+		setting_id = log
+		tab_id = main
+		group_id = council
+		default_value = 0
+	}
 
 	cmm_register_settings_list = {
 		mod_id = bag_asp
@@ -162,6 +170,7 @@ bag_asp_sync = {
 	cmm_sync_setting_alias = { setting = bag_asp__culture_target alias = bag_asp_culture_target }
 	cmm_sync_bool_alias = { setting = bag_asp__culture_speedup alias = bag_asp_speedup_on }
 	cmm_sync_setting_alias = { setting = bag_asp__religion_target alias = bag_asp_religion_target }
+	cmm_sync_bool_alias = { setting = bag_asp__log alias = bag_asp_log_on }
 }
 
 # Scope: country. The two lists into the order the pulse walks, and which rows
@@ -724,5 +733,12 @@ bag_asp_handle_callback = {
 		flag:bag_asp__culture_target = { bag_asp_sync = yes }
 		flag:bag_asp__culture_speedup = { bag_asp_sync = yes }
 		flag:bag_asp__religion_target = { bag_asp_sync = yes }
+		flag:bag_asp__log = { bag_asp_sync = yes }
+	}
+	# His ask 13.10: what he changes goes into the log, with every setting after it.
+	if = {
+		limit = { has_variable = bag_asp_log_on }
+		debug_log = "bag_asp: you changed a setting"
+		bag_asp_log_settings = yes
 	}
 }
