@@ -41,6 +41,8 @@
 **Мастерская (10-04, залито):** основной предмет — эта 1.4-линия, имя «Societal Value
 Hints», id `bag.glorpui_hints`. Для 1.3 — отдельный предмет из
 `mods/glorpui_hints_1_3`. Описания — `workshop/description_<lang>.bbcode`.
+**1.2.13 (10-13):** пересобран на 1.4.1 — условия реформы «Воюющее государство»
+(Китай) и строка «Наказа» (`$rus_nakaz_decision.title$`). В мастерскую не залит.
 
 Старые версии (1.2.0–1.2.10) — `docs/archive/glorpui_hints_history.md`.
 
