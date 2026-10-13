@@ -73,7 +73,7 @@ _spec = importlib.util.spec_from_file_location(
 beta = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(beta)
 
-REVISION = 12
+REVISION = 13
 
 
 def metadata() -> str:
@@ -256,7 +256,17 @@ ROW_BOX = """\t\t\t# cmf_dev_beta: the row's place among the shown rows, as the 
 \t\t\t\t\ttext_single = {
 \t\t\t\t\t\tparentanchor = center
 \t\t\t\t\t\talign = center|nobaseline
+\t\t\t\t\t\tvisible = "[GreaterThan_int32(CMMMapInt('cmf_beta_list_place', Scope.GetFlagName), '(int32)0')]"
 \t\t\t\t\t\ttext = "[ToString_int32(CMMMapInt('cmf_beta_list_place', Scope.GetFlagName))]"
+\t\t\t\t\t}
+\t\t\t\t\t# A list nobody has reordered has no place map yet (the renumber runs
+\t\t\t\t\t# after a move): Construction Manager's categories showed 0 on every
+\t\t\t\t\t# row (10-13). Until then, the row's own index + 1, as the arrows read it.
+\t\t\t\t\ttext_single = {
+\t\t\t\t\t\tparentanchor = center
+\t\t\t\t\t\talign = center|nobaseline
+\t\t\t\t\t\tvisible = "[Not(GreaterThan_int32(CMMMapInt('cmf_beta_list_place', Scope.GetFlagName), '(int32)0'))]"
+\t\t\t\t\t\ttext = "[ToString_int32(Add_int32(PdxGuiWidget.GetIndexInDataModel, '(int32)1'))]"
 \t\t\t\t\t}
 \t\t\t\t}
 
