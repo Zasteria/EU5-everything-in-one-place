@@ -3,6 +3,7 @@
 	category = CATEGORY_INFLUENCE_ACTIONS
 	ai_tick = monthly
 	ai_tick_frequency = 6
+	ai_limit_per_check = 1
 
 	potential = {
 		scope:actor = {
@@ -110,6 +111,13 @@
 	block_when_at_war = yes
 	
 	ai_will_do = {
+		add = {
+			desc = "TARGET_ACCEPTANCE"
+			value = "scope:actor.country_interaction_acceptance(country_interaction:propose_ruler|scope:recipient)"
+		}
+	}
+
+	accept = {
 		subtract = {
 			desc = "VOTE_BASE_VALUE"
 			value = 400
@@ -177,68 +185,6 @@
 				desc = "Is Junior Partner"
 				value = 1000
 			}
-		}
-	}
-	accept = {
-		subtract = {
-			desc = "VOTE_BASE_VALUE"
-			value = 400
-		}
-		if = {
-			limit = { exists = scope:recipient }
-			add = {
-				desc = "THEIR_OPINION_TOOLTIP"
-				value = "scope:recipient.opinion(scope:actor)"
-				if = {
-					limit = {
-						scope:recipient = {
-							"opinion(scope:actor)" > 0
-						}
-					}
-					divide = 10
-				}
-				else = {
-					divide = 5
-				}
-			}
-			add = {
-				desc = "DIPLOREASON_TRUST"
-				value = "scope:recipient.trust(scope:actor)"
-				divide = 5
-			}
-			if = {
-				limit = { exists = scope:target }
-				add = {
-					desc = "DIPLOREASON_TARGET_CHARACTER_TOTAL_ABILITIES"
-					value = scope:target.total_abilities
-				}
-				if = {
-					limit = { scope:target.culture = scope:recipient.culture }
-					add = {
-						desc = "DIPLOREASON_TARGET_CHARACTER_CULTURE"
-						value = 50
-					}
-				}
-				if = {
-					limit = { scope:target.religion = scope:recipient.religion }
-					add = {
-						desc = "DIPLOREASON_TARGET_CHARACTER_RELIGION"
-						value = 50
-					}
-				}
-				if = {
-					limit = { scope:target = { is_heir_of = scope:actor } }
-					subtract = {
-						desc = "DIPLOREASON_WOULD_CREATE_UNION_WITH_US"
-						value = 200
-					}
-				}
-			}
-		}
-		add = {
-			desc = "[diplomatic_reputation|e]"
-			value = scope:actor.modifier:diplomatic_reputation
-			multiply = 3
 		}
 	}
 }	

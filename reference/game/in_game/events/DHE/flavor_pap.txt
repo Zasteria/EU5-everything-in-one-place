@@ -3080,6 +3080,18 @@ flavor_pap.1400 = {
 		}
 		international_organization:catholic_church = {
 			add_policy_to_international_organization = policy:society_of_jesus_allowed
+			hidden_effect = {
+				add_to_variable_list = {
+					name = law_debate_cooldowns
+					target = law:cc_society_of_jesus
+					years = 20
+				}
+				add_to_variable_list = {
+					name = ai_law_vote_cooldowns
+					target = law:cc_society_of_jesus
+					years = 20
+				}
+			}
 		}
 		every_country = {
 			limit = {
@@ -3093,10 +3105,14 @@ flavor_pap.1400 = {
 #Institute the Societas Jesu
 flavor_pap.1401 = {
 	type = country_event
-	fire_only_once = yes
 	title = flavor_pap.1401.title
 	desc = flavor_pap.1401.desc
 	outcome = neutral
+
+	trigger = {
+		NOT = { has_policy = jesuits_allowed }
+		NOT = { has_policy = jesuits_not_allowed }
+	}
 
 	illustration_tags = {
         10 = regular
@@ -3106,16 +3122,58 @@ flavor_pap.1401 = {
 	immediate = {
 		event_illustration_estate_effect = { foreground = estate_type:clergy_estate background = estate_type:clergy_estate }
 	}
-		
+
 	option = {
 		name = flavor_pap.1401.a
 		historical_option = yes
+		ai_will_select = {
+			value = 70
+			if = {
+				limit = {
+					is_leader_of_international_organization = international_organization:catholic_church
+				}
+				value = 1000
+			}
+			if = {
+				limit = {
+					OR = {
+						AND = {
+							is_member_of_international_organization = international_organization:hre
+							is_emperor = no
+						}
+						capital.region = region:scandinavian_region
+					}
+				}
+				value = 30
+			}
+		}
 		add_policy = policy:jesuits_allowed
 
 	}
-	
+
 	option = {
 		name = flavor_pap.1401.b
+		ai_will_select = {
+			value = 30
+			if = {
+				limit = {
+					is_leader_of_international_organization = international_organization:catholic_church
+				}
+				value = 0
+			}
+			if = {
+				limit = {
+					OR = {
+						AND = {
+							is_member_of_international_organization = international_organization:hre
+							is_emperor = no
+						}
+						capital.region = region:scandinavian_region
+					}
+				}
+				value = 70
+			}
+		}
 		add_policy = policy:jesuits_not_allowed
 	}
 }

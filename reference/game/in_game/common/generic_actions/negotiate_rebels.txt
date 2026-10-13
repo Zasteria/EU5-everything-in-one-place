@@ -5,16 +5,26 @@
 
 	allow = {
 		scope:actor = {
-			any_rebel = {
-				rebel_progress > 0.8
-			}
 			NOT = {
 				has_cooldown = negotiate_rebels_buy_off_cooldown
 			}
 		}
+		trigger_if = {
+			limit = { exists = scope:target }
+			scope:target = {
+				rebel_progress > 0.8
+			}
+		}
+		trigger_else = {
+			scope:actor = {
+				any_rebel = {
+					rebel_progress > 0.8
+				}
+			}
+		}
 	}
 
-	price = price:negotiate_rebels_buy_off_price
+	price =price:negotiate_rebels_buy_off_price
 	price_modifier = {
 		if = {
 			limit = { exists = scope:target }
@@ -150,9 +160,17 @@ negotiate_rebels_accept_demands = {
 	ai_tick_frequency = 6
 
 	allow = {
-		scope:actor = {
-			any_rebel = {
+		trigger_if = {
+			limit = { exists = scope:target }
+			scope:target = {
 				rebel_progress > 0.8
+			}
+		}
+		trigger_else = {
+			scope:actor = {
+				any_rebel = {
+					rebel_progress > 0.8
+				}
 			}
 		}
 	}
@@ -185,7 +203,6 @@ negotiate_rebels_accept_demands = {
 			}
 			scope:actor = {
 				apply_rebel_demands = scope:target
-				add_legitimacy = -25
 				destroy_rebel = scope:target
 			}
 		}
@@ -196,7 +213,7 @@ negotiate_rebels_accept_demands = {
 
 	ai_will_do = {
 		add = {
-			value = -100
+			value = -150
 			desc = "base"
 		}
 
@@ -253,18 +270,35 @@ negotiate_rebels_accept_demands = {
 			}
 		}
 
+		add = {
+				# we have to base the score of buying off the rebels on the size of the actual revolt
+				# in comparison to the size of our country
+				scope:target = {
+					value = rebel_size
+					multiply = 165
+					multiply = rebel_progress
+
+					if = {
+						limit = { scope:actor.total_population > 0 }
+						divide = scope:actor.total_population
+					}
+				}
+				desc = "Rebellion strength"
+			}
+
 		if = {
 			limit = {
 				scope:target = {
-					rebel_progress >= 0.9
+					rebel_category = religious
 				}
 				scope:actor = {
-					stability < -30
+					has_or_had_tag = TUR
 				}
+				has_game_rule = historical_ai_choices
 			}
-			add = {
-				value = 150
-				desc = "Desperate situation"
+			subtract = {
+				value = 10000
+				desc = "DIPLOREASON_HISTORICAL_DECISION"
 			}
 		}
 	}

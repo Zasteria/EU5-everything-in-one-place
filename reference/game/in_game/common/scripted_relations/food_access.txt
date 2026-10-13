@@ -5,6 +5,7 @@
     break_on_war = yes
     annulled_by_peace_treaty = yes
     annullment_favours_required = 5
+    show_break_alert = yes
     food_access = yes
     receiving_color = define:NMapColors|DIPLOMACY_FOOD_ACCESS_COLOR
     category = {
@@ -94,13 +95,68 @@
         if = {
             limit = {
                 scope:actor = {
-                    at_war = no                  
+                    receiving_scripted_relation = {
+                        target = scope:recipient
+                        type = relation_type:food_access
+                    }
+                    NOT = {
+                        giving_scripted_relation = {
+                            target = scope:recipient
+                            type = relation_type:food_access
+                        }
+                    }
                 }
             }
-            add = -10
+            if = {
+                limit = {
+                    scope:actor = {
+                        at_war = no
+                    }
+                }
+                add = {
+                    desc = "FOOD_ACCESS_KEEP_AT_PEACE"
+                    value = -10
+                }
+            }
+            else = {
+                add = {
+                    desc = "FOOD_ACCESS_KEEP_AT_WAR"
+                    value = 10
+                }
+            }
         }
         else = {
-            add = 10
+            add = {
+                desc = "BASE"
+                value = 20
+            }
+            add = {
+                desc = "DIPLOREASON_NEGATIVE_OPINION"
+                value = "scope:actor.opinion(scope:recipient)"
+                max = 0
+            }
+            if = {
+                limit = {
+                    scope:recipient = {
+                        is_rival_of = scope:actor
+                    }
+                }
+                add = {
+                    desc = "game_concept_rival"
+                    value = -100
+                }
+            }
+            if = {
+                limit = {
+                    scope:actor = {
+                        wants_to_attack = scope:recipient
+                    }
+                }
+                add = {
+                    desc = "WANTS_TO_ATTACK"
+                    value = -100
+                }
+            }
         }
     }
 }	

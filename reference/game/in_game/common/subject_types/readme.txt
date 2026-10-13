@@ -46,6 +46,8 @@
 # will_join_independence_wars = <yes/no> whether or not the subject can join independence wars
 # fleet_basing_rights = <yes/no> whether or not the subject gives fleet basing rights to the overlord
 # food_access = <yes/no> whether or not the subject gives food access to the overlord
+# subject_exempt_from_overlord_import_tariffs = <yes/no> whether or not the subject is exempt from the overlord's import and export tariffs when trading in the overlord's markets, default: no
+# overlord_exempt_from_subject_import_tariffs = <yes/no> whether or not the overlord is exempt from the subject's import and export tariffs when trading in the subject's markets, default: no
 # use_overlord_laws = <yes/no> whether or not the subject gives uses the same set of laws and policies as the overlord
 # on_overlord_becomes_a_subject = <cancel_subjects/transfer_subjects/nothing> what happens to this subject when its overlord itself becomes a subject of another country. cancel_subjects = release subject as independent; transfer_subjects = move subject to the new top overlord (downgrading to vassal if the subject type conditions fail); nothing = default, subject stays under the old overlord as a sub-subject. default: nothing
 # annulled_by_peace_treaty = <yes/no> whether this subject type gets broken / becomes unavailable when treaties get annulled, default: yes

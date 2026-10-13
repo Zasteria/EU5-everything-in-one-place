@@ -8,6 +8,7 @@
 # default:
 # construction_demand:
 # maintenance_demand:
+# repair_demand:                                        # Goods consumed while reinforcing or repairing. Falls back to the category's repair_demand, then to construction_demand
 # use_ship_names = yes / no
 # assault = yes/no                                      # Allows the unit to assualt a fort
 # bombard = yes/no                                      # Allows the unit to bombard a fort

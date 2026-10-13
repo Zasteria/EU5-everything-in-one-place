@@ -44,9 +44,15 @@
     }
 
 	total_votes_needed = {
-		add = {
-			value = "religion:catholic.total_cardinals"
-			multiply = 250
+		if = {
+			limit = { situation:western_schism = { has_variable = western_schism_total_votes_needed } }
+			add = { value = "situation:western_schism.var:western_schism_total_votes_needed" }
+		}
+		else = {
+			add = {
+				value = "religion:catholic.total_cardinals"
+				multiply = 250
+			}
 		}
 	}
 
@@ -97,6 +103,19 @@
 			data = population
 		}
 		visible = {
+			trigger_if = {
+				limit = {
+					exists = scope:actor
+					OR = {
+						scope:actor = c:PAP
+						situation:western_schism = {
+							has_variable = schism_opponent_country
+							var:schism_opponent_country = scope:actor
+						}
+					}
+				}
+				this = scope:actor
+			}
 		}
 	}
 
@@ -133,6 +152,15 @@
 				limit = { situation:western_schism.var:western_schism_vote_counter = 2 }
 				scope:vote = {
 					trigger_event_non_silently = western_schism.1400
+				}
+				situation:western_schism = {
+					set_variable = {
+						name = western_schism_total_votes_needed
+						value = {
+							value = "religion:catholic.total_cardinals"
+							multiply = 250
+						}
+					}
 				}
 				religion:catholic = {
 					every_country_in_religion = {

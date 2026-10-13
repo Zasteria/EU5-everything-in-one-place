@@ -943,7 +943,7 @@ sengoku_reevaluate_strongest_daimyos = {
 				}
 			} 
 			limit = {
-				this != international_organization:japanese_shogunate.leader_country
+				NOT = { is_leader_of_international_organization = international_organization:japanese_shogunate }
 			}
 			max = 1
 			check_range_bounds = no 
@@ -982,7 +982,7 @@ sengoku_reevaluate_strongest_daimyos = {
 				}
 			} 
 			limit = {
-				this != international_organization:japanese_shogunate.leader_country
+				NOT = { is_leader_of_international_organization = international_organization:japanese_shogunate }
 			}
 			position = 1
 			check_range_bounds = no 
@@ -1021,7 +1021,7 @@ sengoku_reevaluate_strongest_daimyos = {
 				}
 			} 
 			limit = {
-				this != international_organization:japanese_shogunate.leader_country
+				NOT = { is_leader_of_international_organization = international_organization:japanese_shogunate }
 			}
 			position = 2
 			check_range_bounds = no 
@@ -1060,7 +1060,7 @@ sengoku_reevaluate_strongest_daimyos = {
 				}
 			} 
 			limit = {
-				this != international_organization:japanese_shogunate.leader_country
+				NOT = { is_leader_of_international_organization = international_organization:japanese_shogunate }
 			}
 			position = 3
 			check_range_bounds = no 
@@ -1099,7 +1099,7 @@ sengoku_reevaluate_strongest_daimyos = {
 				}
 			} 
 			limit = {
-				this != international_organization:japanese_shogunate.leader_country
+				NOT = { is_leader_of_international_organization = international_organization:japanese_shogunate }
 			}
 			position = 4
 			check_range_bounds = no 
@@ -1113,6 +1113,59 @@ sengoku_reevaluate_strongest_daimyos = {
 				name = sengoku_strong_daimyo_list
 				target = this
 			}
+		}
+	}
+}
+
+sengoku_appoint_new_shogun = {
+	if = {
+		limit = {
+			exists = scope:shogun_annexer
+			scope:shogun_annexer = {
+				is_member_of_international_organization = international_organization:japanese_shogunate
+				can_lead_international_organization = international_organization:japanese_shogunate
+			}
+		}
+		scope:shogun_annexer = { save_scope_as = new_shogun }
+	}
+	else_if = {
+		limit = {
+			situation:sengoku.var:sengoku_threatening_daimyo ?= {
+				is_member_of_international_organization = international_organization:japanese_shogunate
+				can_lead_international_organization = international_organization:japanese_shogunate
+				NOT = { is_leader_of_international_organization = international_organization:japanese_shogunate }
+			}
+		}
+		situation:sengoku.var:sengoku_threatening_daimyo = { save_scope_as = new_shogun }
+	}
+	else = {
+		international_organization:japanese_shogunate = {
+			ordered_international_organization_member = {
+				limit = {
+					can_lead_international_organization = international_organization:japanese_shogunate
+					NOT = { is_leader_of_international_organization = international_organization:japanese_shogunate }
+				}
+				order_by = country_economical_base
+				max = 1
+				check_range_bounds = no
+				save_scope_as = new_shogun
+			}
+		}
+	}
+	if = {
+		limit = { exists = scope:new_shogun }
+		international_organization:japanese_shogunate = { set_leader_country = scope:new_shogun }
+		scope:new_shogun = {
+			if = {
+				limit = { has_reform = government_reform:japanese_clan }
+				remove_reform = government_reform:japanese_clan
+			}
+			if = {
+				limit = { has_reform = government_reform:daimyo }
+				remove_reform = government_reform:daimyo
+			}
+			add_reform = government_reform:shogunate
+			set_country_rank = country_rank:rank_empire
 		}
 	}
 }
@@ -1625,9 +1678,19 @@ hussite_wars_update_sides_effect = {
 				}
 			}
 			international_organization:hre.leader_country ?= {
-				hussite_wars_add_country_to_side_effect = {
-					LIST = hussite_wars_catholic_side_list
-					STRENGTH = hussite_wars_catholic_strength_variable
+				if = {
+					limit = {
+						NOT = {
+							is_target_in_global_variable_list = {
+								name = hussite_wars_hussite_side_list
+								target = this
+							}
+						}
+					}
+					hussite_wars_add_country_to_side_effect = {
+						LIST = hussite_wars_catholic_side_list
+						STRENGTH = hussite_wars_catholic_strength_variable
+					}
 				}
 				every_other_country = {
 					limit = {

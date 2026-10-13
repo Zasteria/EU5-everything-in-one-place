@@ -91,35 +91,19 @@
 	}
 
 	ai_will_do = {
+		add = -1 #base reluctance
+
 		if = {
 			limit = {
-				exists = scope:target
-				scope:target = { satisfaction > 0.55 }
 				scope:actor = {
 					at_war = yes
-					lowest_war_score < -10
+					lowest_war_strength_balance < 0.6
 				}
 			}
 
-			subtract = {
-				desc = "War score pressure"
-				value = scope:actor.lowest_war_score
-			}
-
-			if = {
-				limit = { scope:actor = { max_manpower < 5 } }
-				add = { desc = "Critically low manpower" value = 20 }
-			}
-
 			add = {
-				desc = "Estate satisfaction buffer"
-				value = scope:target.satisfaction
-				multiply = 30
-			}
-
-			if = {
-				limit = { scope:target = { satisfaction < 0.55 } }
-				multiply = 0
+				value = 2
+				desc = "we need more units for war"
 			}
 		}
 	}
@@ -972,7 +956,7 @@ call_emergency_parliament = {
 				}
 			}
 			add_legitimacy = legitimacy_mild_penalty
-			add_political_influence = -15
+			add_political_influence = political_influence_severe_penalty
 		}
 	}
 }
@@ -1052,7 +1036,7 @@ press_estate_private_regiments_action = {
 				limit = { scope:target = { estate_type = estate_type:dhimmi_estate } }
 				press_estate_private_regiments = { estate = estate_type:dhimmi_estate }
 			}
-			add_political_influence = -25
+			add_political_influence = political_influence_extreme_penalty
 		}
 	}
 

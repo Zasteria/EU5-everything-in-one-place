@@ -72,12 +72,16 @@ hundred_years_war_unified_requirements = {
 		current_age_or_later = { age = age_4_reformation }
 
 		AND = {
+			current_date > 1437.5.1
+			c:ENG ?= {
+				NOT = { is_at_war_with = c:FRA }
+			}
 			region:france_region = {
 				any_ownable_location_in_region = {
 					owner = {
 						top_overlord_or_this ?= c:ENG
 					}
-					count < 4
+					count > 60
 				}
 			}
 			region:france_region = {
@@ -86,17 +90,33 @@ hundred_years_war_unified_requirements = {
 						text = owned_by_fra_tt
 						owner = { this = c:FRA }
 					}
-					count > 230
+					count > 150
 				}
 			}
 		}
+	}
+}
 
-		region:france_region = {
-			any_ownable_location_in_region = {
-				owner = {
-					top_overlord_or_this ?= c:ENG
-				}
-				count > 175
+hussite_wars_on_opposing_sides = {
+	OR = {
+		AND = {
+			is_target_in_global_variable_list = {
+				name = hussite_wars_hussite_side_list
+				target = $first$
+			}
+			is_target_in_global_variable_list = {
+				name = hussite_wars_catholic_side_list
+				target = $second$
+			}
+		}
+		AND = {
+			is_target_in_global_variable_list = {
+				name = hussite_wars_catholic_side_list
+				target = $first$
+			}
+			is_target_in_global_variable_list = {
+				name = hussite_wars_hussite_side_list
+				target = $second$
 			}
 		}
 	}
@@ -326,6 +346,13 @@ has_italian_league_won_the_italian_wars = {
 	}
 	trigger_else = {
 		custom_tooltip = any_foreign_league_has_at_least_200_locations_in_italy
+	}
+}
+
+can_outmatch_defending_coalition = {
+	relative_defensive_alliance_strength = {
+		target = $target$
+		value >= 0.5
 	}
 }
 
@@ -665,23 +692,26 @@ battle_for_the_strait_contender_eliminated = {
 }
 
 battle_for_the_strait_castile_holds_the_strait = {
-	country_exists = c:CAS
-	c:MOR ?= {
-		NOT = { owns_or_has_subject_in = region:iberia_region }
-	}
 	trigger_if = {
-		limit = {
-			country_exists = c:GRA
-			c:GRA.religion != c:CAS.religion
-			c:GRA = {
-				NOT = { is_subject_of = c:CAS }
-			}
-		}
-		c:GRA = {
+		limit = { country_exists = c:CAS }
+		c:MOR ?= {
 			NOT = { owns_or_has_subject_in = region:iberia_region }
 		}
+		trigger_if = {
+			limit = {
+				country_exists = c:GRA
+				c:GRA.religion != c:CAS.religion
+				c:GRA = {
+					NOT = { is_subject_of = c:CAS }
+				}
+			}
+			c:GRA = {
+				NOT = { owns_or_has_subject_in = region:iberia_region }
+			}
+		}
+		area:granada_area = { owned_by_or_its_subjects = c:CAS }
 	}
-	area:granada_area = { owned_by_or_its_subjects = c:CAS }
+	trigger_else = { country_exists = c:CAS }
 }
 
 battle_for_the_strait_castile_requirements_met = {
@@ -702,10 +732,14 @@ battle_for_the_strait_castile_requirements_met = {
 }
 
 battle_for_the_strait_morocco_holds_the_strait = {
-	country_exists = c:MOR
-	area:granada_area = { owned_by_or_its_subjects = c:MOR }
-	area:andalusia_area = { owned_by_or_its_subjects = c:MOR }
-	area:murcia_area = { owned_by_or_its_subjects = c:MOR }
+	trigger_if = {
+		limit = { country_exists = c:MOR }
+		area:granada_area = { owned_by_or_its_subjects = c:MOR }
+		area:andalusia_area = { owned_by_or_its_subjects = c:MOR }
+		area:murcia_area = { owned_by_or_its_subjects = c:MOR }
+	}
+	trigger_else = { country_exists = c:MOR }
+	
 }
 
 battle_for_the_strait_morocco_requirements_met = {
@@ -729,11 +763,14 @@ battle_for_the_strait_morocco_requirements_met = {
 }
 
 battle_for_the_strait_granada_holds_the_strait = {
-	country_exists = c:GRA
-	c:GRA ?= { is_subject = no }
-	area:granada_area = { owned_by_or_its_subjects = c:GRA }
-	area:andalusia_area = { owned_by_or_its_subjects = c:GRA }
-	area:murcia_area = { owned_by_or_its_subjects = c:GRA }
+	trigger_if = {
+		limit = { country_exists = c:GRA }
+		c:GRA ?= { is_subject = no }
+		area:granada_area = { owned_by_or_its_subjects = c:GRA }
+		area:andalusia_area = { owned_by_or_its_subjects = c:GRA }
+		area:murcia_area = { owned_by_or_its_subjects = c:GRA }
+	}
+	trigger_else = { country_exists = c:GRA }
 }
 
 battle_for_the_strait_granada_requirements_met = {

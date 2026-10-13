@@ -2779,6 +2779,41 @@ container = {
 
 container = {
 	alwaystransparent = no
+	name = "SectionListTooltip"
+
+	ContextualTooltipType = {
+		lowpriotextcontext = "[TooltipString.GetString]"
+		ontextcontextchanged = "[SetSectionListFromTextContext(PdxGuiWidget.AccessSelf)]"
+
+		blockoverride "title_text" {
+			text = "[Select_CString(SectionList.GetTitle.IsStringViewNotEmptyOrNull, SectionList.GetTitle.GetString, Select_CString(PdxGuiWidget.HasTooltipMetaTitle, PdxGuiWidget.GetTooltipMetaTitle, Localize('BREAKDOWN')))]"
+		}
+
+		blockoverride "tooltip_content" {
+			TooltipContentSection = {
+				datamodel = "[SectionList.GetSections]"
+				visible = "[LessThan_int32(GetDataModelSize(SectionList.GetSections), '(int32)3')]"
+
+				item = {
+					TooltipBlockList = {
+						blockoverride "block_title" {
+							text = "[SectionListSection.GetTitle.GetStringView]"
+						}
+						textcontext = "[SectionListSection.GetBody.GetStringView]"
+					}
+				}
+			}
+
+			TooltipStringPairList = {
+				visible = "[GreaterThanOrEqualTo_int32(GetDataModelSize(SectionList.GetSections), '(int32)3')]"
+				textcontext = "[SectionList.GetCollapsedText]"
+			}
+		}
+	}
+}
+
+container = {
+	alwaystransparent = no
 	name = "ArrowListTooltip"
 
 	ContextualTooltipType = {

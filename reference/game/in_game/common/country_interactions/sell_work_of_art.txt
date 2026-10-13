@@ -42,6 +42,7 @@
 		target_flag = recipient
 		name = "choose_country"
 		default_sort = will
+		check_cheapest_price = yes
 		column = {
 			data = country_diplomacy_info_trade
 		}
@@ -71,6 +72,7 @@
 		visible = {
 			art_is_priceless = no
 			is_art_destroyed = no
+			work_of_art_is_imperial_regalia = no
 		}
 	}
 
@@ -120,20 +122,23 @@
 	}
 
 	accept = {
-		add = {
-			desc = "THEIR_OPINION_TOOLTIP"
-			value = "scope:recipient.opinion(scope:actor)"
-			divide = 3
+		if = {
+			limit = { exists = scope:recipient }
+			add = {
+				desc = "THEIR_OPINION_TOOLTIP"
+				value = "scope:recipient.opinion(scope:actor)"
+				divide = 3
+			}
 		}
 		if = {
-			limit = { scope:recipient = { gold < { value = monthly_income_total multiply = 6 } } }
+			limit = { scope:recipient ?= { gold < { value = monthly_income_total multiply = 6 } } }
 			add = {
 				desc = "LOW_TREASURY"
 				value = -60
 			}
 		}
 		if = {
-			limit = { scope:recipient = { gold > { value = monthly_income_total multiply = 24 } } }
+			limit = { scope:recipient ?= { gold > { value = monthly_income_total multiply = 24 } } }
 			add = {
 				desc = "WEALTHY_BUYER"
 				value = 30
@@ -158,7 +163,7 @@
 			}
 		}
 		if = {
-			limit = { scope:recipient = { is_rival_of = scope:actor } }
+			limit = { scope:recipient ?= { is_rival_of = scope:actor } }
 			add = {
 				desc = "game_concept_rival"
 				value = -100

@@ -146,6 +146,8 @@ NCountry = {
 
 	POLITICAL_INFLUENCE_SCALE = 0.005
 	POLITICAL_INFLUENCE_CABINET_MULTIPLIER = 3
+	MAXIMUM_POLITICAL_INFLUENCE = 100				# ceiling on stored political influence
+	MAXIMUM_EFFECTIVE_POLITICAL_INFLUENCE = 100		# stored political influence above this grants no further modifiers
 
 
 	BASE_ESTATE_POWER_FROM_CABINET = 0.25
@@ -255,7 +257,7 @@ NCountry = {
 	CAPITAL_MOVE_BASE_DAYS = 180
 	CAPITAL_MOVE_DISTANCE_FACTOR = 0.05
 	
-	MERCHANT_DISTANCE_COST_DIVISOR = 1200
+	MERCHANT_DISTANCE_COST_DIVISOR = 400
 
 	MERCHANT_MAINTENANCE_COST = 0.25
 
@@ -448,18 +450,18 @@ NCombat = {
 	RETREAT_STRENGTH_DAMAGE = 0.1
 	GARRISON_AFTER_OCCUPATION = 0.010
 	MORALE_COLLAPSE_THRESHOLD = 0.05
-	MINIMUM_COMBAT_DAYS = 4					# minimum land combat duration in daily ticks
-	MINIMUM_NAVAL_COMBAT_DAYS = 12			# minimum naval combat duration in daily ticks
+	MINIMUM_COMBAT_DAYS = 5					# minimum land combat duration in daily ticks
+	MINIMUM_NAVAL_COMBAT_DAYS = 5			# minimum naval combat duration in daily ticks
 	NAVAL_LOW_MORALE_THRESHOLD = 1.5      # below 50% of base naval morale (3.0) → shattered retreat to port
 	
 	BOMBARD_BASE_CHANCE = 0.2
-	BOMBARD_DAYS = 2						# bombard phase duration in daily ticks
-	DAYS_PER_PHASE = 2						# combat phase rotation interval in daily ticks
+	BOMBARD_DAYS = 3						# bombard phase duration in daily ticks
+	DAYS_PER_PHASE = 4						# combat phase rotation interval in daily ticks
 	COMBAT_DICE_SIDE = 10
 	COMBAT_BASE = 5
 	COMBAT_MAX = 15
 	COMBAT_DAMAGE_MULT = 0.12				# damage per daily tick
-	COMBAT_DAILY_MORALE_TICK = 0.06			# morale drain per daily tick
+	COMBAT_DAILY_MORALE_TICK = 0.03			# morale drain per daily tick
 	COMBAT_IMPRISONED_UNIT_DEATH_RATE = 0.4
 	STRAIT_CROSSING_DICE = -2
 	RIVER_CROSSING_DICE = -1
@@ -472,20 +474,20 @@ NCombat = {
 	LAND_LEVY_COMBAT_IMPACT = 0.75
 	MORALE_SIZE_RATIO_MAX = 4.0	# cap on how far regiment size may scale morale damage, either way
 	
-	INITIATIVE_BASE_CHANCE = 0.72	# base chance per daily tick, 1-(1-0.1)^12 preserves the cumulative daily probability of the old 12-tick model
-	INITIATIVE_CHANCE_EACH = 0.01 # Chance to engage per point of initiative
-	INITIATIVE_CHANCE_PER_DAY = 0.06 # Per-day growth of engage chance with combat duration
-	INITIATIVE_CHANCE_MAX = 0.15 # Cap on the initiative-derived part of engage chance, before base/hours add. Prevents stacked initiative + army_initiative bonuses from snowballing engagement.
+	INITIATIVE_BASE_CHANCE = 0.60	# base chance per daily tick, below 12-tick parity (0.72) to leave probability headroom for the initiative term
+	INITIATIVE_CHANCE_EACH = 0.025 # Chance to engage per point of initiative
+	INITIATIVE_CHANCE_PER_DAY = 0.03 # Per-day growth of engage chance with combat duration
+	INITIATIVE_CHANCE_MAX = 0.30 # Cap on the initiative-derived part of engage chance, before base/day add. Saturates at effective initiative 12, above the highest raw stat in content, so army_initiative modifiers still matter.
 	
-	COMBAT_SPEED_SCALE = 0.025
+	COMBAT_SPEED_SCALE = 0.1
 
 	NAVAL_EXPERIENCE_DAMAGE_REDUCTION = 0.5
 	LAND_EXPERIENCE_DAMAGE_REDUCTION = 0.5
 
-	LAND_STRENGTH_DAMAGE_MODIFIER = 0.08
-	NAVAL_STRENGTH_DAMAGE_MODIFIER = 0.125
-	LAND_MORALE_DAMAGE_MODIFIER = 0.5
-	NAVAL_MORALE_DAMAGE_MODIFIER = 0.1
+	LAND_STRENGTH_DAMAGE_MODIFIER = 0.04
+	NAVAL_STRENGTH_DAMAGE_MODIFIER = 0.0625
+	LAND_MORALE_DAMAGE_MODIFIER = 0.25
+	NAVAL_MORALE_DAMAGE_MODIFIER = 0.05
 	NOT_ENGAGED_STRENGTH_DAMAGE_MODIFIER = 1.1
 	NOT_ENGAGED_MORALE_DAMAGE_MODIFIER = 1.2
 	
@@ -499,7 +501,7 @@ NCombat = {
 	
 	
 	NAVAL_RETREAT_DAMAGE_THRESHOLD = 0.5		# if below this % strength, check chance to retreat.
-	NAVAL_RETREAT_CHANCE = 5 #out of 100 if below	the damage threshold, it will retreat ..  combat speed increases it.
+	NAVAL_RETREAT_CHANCE = 3 #out of 100 if below	the damage threshold, it will retreat ..  combat speed increases it.
 	
 	BASE_MORALE_DAMAGE = 1.0
 	
@@ -590,6 +592,8 @@ NAI = {
 	AI_GLOBAL_CONVERSION_SPEED_UTILITY = 5
 
 	AI_CROWN_ESTATE_CABINET_MEMBER_FACTOR = 1.5 # How much extra score AI gives to characters from crown estate when assigning cabinet members
+	AI_CABINET_AGE_FACTOR = 0.25 # how much AI factors in the remaining life expectancy when assigning characters to the cabinet
+
 	AI_ESTATE_BLOCKED_FROM_CABINET_UTILITY = -0.25 # Compounding negative utility for each estate blocked from cabinet
 	AI_CULTURE_CAPACITY_UTILITY = 0.1 # Utility based on used culture capacity, gives 100% of the utility when 100% of the capacity is used
 
@@ -604,10 +608,13 @@ NAI = {
 	AI_GLOBAL_ASSIMILATION_SPEED_UTIL = 0.25 # modifier score multiplied by inverse accepted culture ratio
 	AI_GLOBAL_ASSIMILATION_SPEED_MODIFIER_UTIL = 0.25 # modifier score multiplied by inverse accepted culture ratio
 
-	AI_INTEGRATION_IMPORTANCE_MULT = 0.075 # overall importance of integrating provinces
+	AI_INTEGRATION_IMPORTANCE_MULT = 0.025 # overall importance of integrating provinces
 	AI_INTEGRATION_ACCEPTED_CULTURE_MULT = 2 # bonus multiplier of importance for locations of accepted culture
 	AI_INTEGRATION_POPULATION_SHARE_MULT = 0.01 # importance factor of the population for integration
 	AI_INTEGRATION_TAXBASE_SHARE_MULT  =   0.01 # importance factor of the taxbase for integration
+
+	AI_ANNEX_SUBJECT_DIPLO_PRIORITY = 2 # AI diplomatic priority to annex subjects
+	AI_SUBJUGATE_DIPLO_PRIORITY = 1 # AI diplomatic priority to subjugate diplomatically other countries
 
 	UNBALANCED_FAVORS_ACCEPTANCE_MULT = 200.0
 	
@@ -752,7 +759,7 @@ NAI = {
 	AI_GRANT_TOWN_RIGHT_PI_THRESHOLD = 95 # AI needs this much saved PI to grant a town right
 	AI_PI_GRANT_ESTATE_THRESHOLD = 50 # AI needs this much saved PI to grant an estate privilege
 	AI_PI_START_EXPEDITION_THRESHOLD = 99 # PI required to start expeditions
-	AI_PI_CULTURE_THRESHOLD = 60 # AI needs this much saved PI to change culture acceptance
+	AI_PI_CULTURE_THRESHOLD = 70 # AI needs this much saved PI to change culture acceptance
 	
 	AI_GOVERNMENT_REFORM_SLOT_UTILITY = 0.1 # Inherent score for government reform slots
 	AI_NAVAL_GOVERNOR_UTILITY = 0.05 # naval governor slot utility, if ai owns another area with 10 locations
@@ -773,6 +780,8 @@ NAI = {
 	PEASANT_BUILDING_IN_CITY_UTILITY_MULT = 0.5 # penalty for building peasant building in city that could be built in rural
 	AI_UPGRADE_BUILDING_UTILITY = 0.001 # score from upgrading buildings, becomes relevant when new building choices run out due to lack of pops
 	INPUT_GOODS_SHORTAGE_UTILITY_FACTOR = 0.02
+	LOCAL_OVERSUPPLY_UTILITY_FACTOR = 0.02 # Utility penalty per unit of output a building adds to a good its own market already cannot absorb
+	LOCAL_OVERSUPPLY_STOCKPILE_THRESHOLD = 0.9 # Stockpile fraction above which a market counts as unable to absorb more of a good
 	SELL_PROVINCE_DEBT_CAP = 2 # Max bonus from being in debt, in percentage
 	SELL_PROVINCE_DEBT_CASH_CAP = 2 # Multiplied with the Total Debt and cap the bonus from cash, in percentage
 	SELL_PROVINCE_ACCEPTABLE_PAYBACK_MONTHS = 240 # A bought location is considered fairly priced when its tax base repays the price within this many months
@@ -803,7 +812,7 @@ NAI = {
 	AI_PERFORMANCE_CABINET_ACTION_AREA_SAMPLE_SIZE = 1 # Maximum number of sample areas for AI cabinet actions
 	AI_PERFORMANCE_CABINET_ACTION_MONTHS_BETWEEN_UPDATES = 36 # Number of months between each AI update to change cabinet actions
 	AI_PERFORMANCE_REFORMS_MONTHS_BETWEEN_UPDATES = 24 # Number of months between each AI update to change government reforms
-	AI_PERFORMANCE_BUREAUCRACY_MONTHS_BETWEEN_UPDATES = 24 # Number of months between each AI update to add or remove bureaucracies
+	AI_PERFORMANCE_BUREAUCRACY_MONTHS_BETWEEN_UPDATES = 16 # Number of months between each AI update to add or remove bureaucracies
 	AI_PERFORMANCE_POLICIES_MONTHS_BETWEEN_UPDATES = 6 # Number of months between each AI update to change policies of laws
 	AI_PERFORMANCE_ESTATE_PRIVILEGES_MONTHS_BETWEEN_UPDATES = 12 # Number of months between each AI update to change estate privileges
 	AI_PERFORMANCE_ESTATE_PRIVILEGES_UNUSED_TAX_MONTHS_BETWEEN_UPDATES = 2 # Number of months between each AI update to change estate privileges
@@ -912,6 +921,7 @@ NAI = {
 	AI_UNLOCK_BUILDING_ADVANCE_UTIL_PER_UPGRADE = 200 # score from unlocking a building from number of buildings upgrades per tax base
 	AI_UNLOCK_PM_ADVANCE_UTIL = 50 # score for unlocking a pm from number of buildings using it per tax base
 
+	AI_GLOBAL_RGO_SIZE_UTIL = 0.1
 	AI_GLOBAL_BUILDING_COST_UTIL = -0.75
 	AI_GLOBAL_URBAN_BUILDING_COST_UTIL = -0.5
 
@@ -939,7 +949,7 @@ NAI = {
 
 	GOVERNMENT_POWER_INHERENT_UTILITY = 0.9 # inherent util when below 70 to avoid bad situations
 	AI_STABILITY_INHERENT_UTILITY = 0.25 # AI diminishing inherent willingness to invest in stability slider up to 100
-	AI_STABILITY_LINEAR_INHERENT_UTILITY = 1 # AI linear willingness to invest up to 0 stability
+	AI_STABILITY_LINEAR_INHERENT_UTILITY = 1.5 # AI linear willingness to invest up to 0 stability
 	AI_EMBRACE_INSTITUTION_STABILITY_UTILITY = 0.05 # AI extra willingness to invest in stability slider when it is close to embracing institutions
 
 	# AI is allowed to go a bit negative into stability to embrace their first institution of each age
@@ -1010,7 +1020,7 @@ NAI = {
 
 	AI_SUPPLY_LIMIT_TARGET = 0.95 # AI will try to make army stacks of this ratio of average supply limit in their country
 	RATIO_OVER_SUPPLY_TARGET_TO_SPLIT = 1.3 # A stack has to be this much over the supply limit target to be split in half
-	AI_GLOBAL_SUPPLY_LIMIT_UTILITY = 0.2 # AI score for global supply limit modifier
+	AI_GLOBAL_SUPPLY_LIMIT_UTILITY = 0.6 # AI score for global supply limit modifier
 	AI_MINIMUM_AUXILIARY_RATIO = 0.15 # minimum ratio of auxiliaries that AI will keep in their armies regardless of country bonuses
 	AI_UNIT_CATEGORY_WEIGHT_FROM_POWER = 10 # how much power modifiers to unit categories influence AI army composition
 
@@ -1126,7 +1136,7 @@ NAI = {
 	AI_FRONTAGE_FILL_TARGET         = 0.90 # Stop assigning allies to an objective once 90% of battle frontage is covered
 
 	AI_REMOVE_BUREAUCRACY_THRESHOLD = 5 # AI utility threshold needed for removing a bureaucracy
-	AI_GRANT_BUREAUCRACY_THRESHOLD = 5  # AI utility threshold needed for granting a bureaucracy
+	AI_GRANT_BUREAUCRACY_THRESHOLD = 15  # AI utility threshold needed for granting a bureaucracy
 	AI_BUREAUCRACY_SLOT_UTILITY = 0.05 # AI utility for unlocking more bureaucracy slots unless they already have one available
 
 	# Used for AI assignment of units to objectives
@@ -1302,7 +1312,7 @@ NAI = {
 	# navy (or more) is still allowed to consider cross-water targets; the previous gate
 	# required strict superiority and was hiding Bosphorus-style strait crossings entirely.
 	NAVY_COMPARABILITY_RATIO = 0.5
-	AI_BORDERING_CONQUEST_FACTOR = 2
+	AI_BORDERING_CONQUEST_FACTOR = 5
 
 	DISTANT_WAR_BORDER_DISTANCE = 100
 	DISTANT_WAR_CONQUEST_FACTOR = 0.1
@@ -1381,7 +1391,7 @@ NAI = {
 	SAFE_THREAT_LEVEL_DEFEND_OBJECTIVE = 0.60 #Threat level below that will cause defend objectives to be abandoned
 	SAFE_WIN_CHANCE_DEFEND_OBJECTIVE = 0.40 #Win chance above that will cause defend objectives to be abandoned
 	AI_VERY_SMALL_TARGET_THRESHOLD = 0.05 #If Targets tax base is lower than Actors tax base * this, apply the multiplier
-	AI_VERY_SMALL_TARGET_MULTIPLIER = 0.1 #See above, it won't make the conquest score go below the value needed to pick if the original value 
+	AI_VERY_SMALL_TARGET_MULTIPLIER = 0.33 #See above, it won't make the conquest score go below the value needed to pick if the original value 
 	AI_GLOBAL_INTEGRATION_SPEED_UTILITY = 1 # utility for global integration speed multiplied by ratio of unintegrated land
 
 	AI_ENEMY_LAND_SUPREMACY_THRESHOLD = 3 # If enemies have this much more land armies than us and we are in a defensive war then we will hang back and defend
@@ -1454,7 +1464,7 @@ NAI = {
 	AI_MILITARY_TACTICS_UTILITY = 0.01
 	AI_LAND_MORALE_RECOVERY_UTILITY = 1.25
 	AI_ARMY_INITIATIVE_UTILITY = 0.01
-	AI_ARMY_DISCIPLINE_UTILITY = 0.2
+	AI_ARMY_DISCIPLINE_UTILITY = 0.5
 	AI_UNIT_CATEGORY_POWER_UTILITY = 0.08
 
 	AI_SCRIPTED_OBJECTIVE_INTERACTION_SCORE_BONUS = 25
@@ -1877,6 +1887,9 @@ NEstate = {
 	# At wealth-impact = 0 (no income), demand is multiplied by (1 - POP_DEMAND_DEFICIT_SCALE).
 	POP_DEMAND_DEFICIT_SCALE = 0.5
 
+	ESTATE_PRIVATE_ARMY_DISBAND_THRESHOLD = 0.5 # an estate disbands a private regiment when its unraised upkeep exceeds this share of its gold
+	ESTATE_PRIVATE_ARMY_RECRUIT_THRESHOLD = 2.0 # an estate only buys another private regiment while its gold covers this multiple of the resulting upkeep
+
 	ESTATE_CULTURE_RELIGION_CHANGE_COOLDOWN_MONTHS = 60 # reduce flipflopping
 
 	ESTATE_DOMINANCE_CULTURE_PRIMARY_WEIGHT       = 1.20
@@ -2115,6 +2128,7 @@ NEconomy = {
 	CREDITWORTHINESS_WAR_CREDITOR_PENALTY = 0.15        # Penalty for declaring war on a country you owe money to
 	CREDITWORTHINESS_TARGET_BASE = 0.5                  # Base target creditworthiness before modifiers (0-1 scale)
 	CREDITWORTHINESS_MONTHLY_PULL_RATE = 0.1            # Fraction of the gap to target closed each month
+	AI_MIN_LEND_CREDITWORTHINESS = 0.3                  # Lowest effective creditworthiness the AI will lend to (0-1 scale, 0.5 is neutral)
 
 	BANKRUPTCY_CONTROL_CHANGE_PERCENT = -0.33
 
@@ -2171,7 +2185,8 @@ NEconomy = {
 	ESTATE_MAX_PRICE_MULTIPLIER = 4
 	SETUP_PRINT_OBSOLETE_BUILDINGS = no
 	
-	BALANCE_CACHE_IN_MONTHS = 12
+	BALANCE_CACHE_IN_MONTHS = 120 #months of income/balance history kept, and the span of the economy graph
+	BALANCE_STATISTICS_IN_MONTHS = 12 #most recent months used for the median/highest/lowest income statistics
 	MOTHBALL_MAINTENANCE_FACTOR = 0.5
 	PRISONERS_MAINTENANCE_FACTOR = 0.3
 	
@@ -2457,10 +2472,11 @@ NDiplomacy = {
 	CULTURE_WAR_IMPACT_ON_SPY_NETWORK = 0.5
 	SPY_NETWORK_MIN_MODIFIER = 0.1
 
-	FAVORS_DECAY = -0.0
+	FAVORS_DECAY = -0.01 # monthly fraction of current favors, not a flat amount
+	FAVORS_MIN_THRESHOLD = 0.1 # below this, decay snaps favors to zero so the relation can be cleaned up
 	CURRY_FAVORS = 0.5
 	CURRY_FAVORS_RELATION_REQUIRED = 10
-	CURRY_FAVORS_MAX_FAVORS = 25.0
+	CURRY_FAVORS_MAX_FAVORS = 50.0
 	FAVORS_REJECTED_TRUST_LOSS = 0.25 # Proportion of favors used
 	FAVORS_REJECTED_DIP_REP_LOSS = 0.005 # Propotion of favors used times actor's trust in recipient
 	FAVORS_REJECTED_DIP_REP_MONTHS = 24 # Duration per point of diplo rep

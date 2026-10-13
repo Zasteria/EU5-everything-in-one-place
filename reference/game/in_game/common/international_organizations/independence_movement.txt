@@ -142,7 +142,7 @@
 	}
 	
 	auto_disband_trigger = {
-		leader_country = {
+		leader_country ?= {
 			or = {
 				subject_loyalty > 80
 				not = { overlord ?= scope:target }
@@ -161,24 +161,29 @@
 			}
 			add_casus_belli = {
 				type = casus_belli:cb_independence_war
-				province = scope:recipient.leader_country.capital.province
+				province = root.capital.province
 				target = scope:target
-			}
-		}
-		scope:target = {
-			random_current_war = {
-				limit = {
-					attacker_leader = scope:recipient.leader_country
-					defender_leader = scope:target
-				}
-				save_scope_as = independence_war
 			}
 		}
 		if = {
 			limit = {
-				exists = scope:independence_war
+				exists = scope:recipient.leader_country
 			}
-			join_war_as_attacker = { war = scope:independence_war }
+			scope:target = {
+				random_current_war = {
+					limit = {
+						attacker_leader = scope:recipient.leader_country
+						defender_leader = scope:target
+					}
+					save_scope_as = independence_war
+				}
+			}
+			if = {
+				limit = {
+					exists = scope:independence_war
+				}
+				join_war_as_attacker = { war = scope:independence_war }
+			}
 		}
 	}
 

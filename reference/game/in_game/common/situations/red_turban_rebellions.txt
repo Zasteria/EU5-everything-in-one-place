@@ -29,13 +29,29 @@
 		name = "red_turban_rebellions_rebel_mandate"
 		desc = "red_turban_rebellions_rebel_mandate_desc"
 		trigger = {
-			situation:red_turban_rebellions = { years_since_situation_start > 20 }
 			exists = international_organization:red_turban_rebels.leader_country
 			exists = international_organization:middle_kingdom
-			international_organization:middle_kingdom = {
-				any_international_organization_owned_location = {
-					is_owned_or_owned_by_subjects_or_below_of = international_organization:red_turban_rebels.leader_country
-					percent >= 0.65
+			OR = {
+				AND = {
+					situation:red_turban_rebellions = { years_since_situation_start > 20 }
+					international_organization:middle_kingdom = {
+						any_international_organization_owned_location = {
+							is_owned_or_owned_by_subjects_or_below_of = international_organization:red_turban_rebels.leader_country
+							percent >= 0.65
+						}
+					}
+				}
+				AND = {
+					international_organization:middle_kingdom = {
+						any_international_organization_owned_location = {
+							is_owned_or_owned_by_subjects_or_below_of = international_organization:red_turban_rebels.leader_country
+							percent >= 0.85
+						}
+					}
+					international_organization:red_turban_rebels.leader_country = {
+						legitimacy >= 90
+						stability >= 30
+					}
 				}
 			}
 		}
@@ -76,7 +92,7 @@
 		trigger = {
 			situation:red_turban_rebellions = { years_since_situation_start > 20 }
 			OR = {
-				NOT = { exists = international_organization:middle_kingdom }
+				NOT = { unique_international_organization_type_exists = international_organization_type:middle_kingdom }
 				current_age_or_later = { age = age_3_discovery }
 				AND = {
 					NOT = {

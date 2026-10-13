@@ -8,6 +8,7 @@
 #   is_garrison = yes/no # Default no. 1 and only 1 army category should have it.
 #	construction_demand = <goods demands>
 #	maintenance_demand = <goods demands>
+#	repair_demand = <goods demands>	#Optional, used while reinforcing or repairing. Unit types without their own repair_demand use this, otherwise construction_demand
 #	<combat modifiers>
 #   	General Modifiers:
 #   	    morale_damage_taken

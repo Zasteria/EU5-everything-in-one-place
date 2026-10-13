@@ -101,24 +101,46 @@
 	}
 
 	wants_to_keep = {
-		add = {
-			desc = "THEIR_OPINION_TOOLTIP"
-			value = "scope:actor.opinion(scope:recipient)"
-			if = {
-				limit = { "scope:actor.opinion(scope:recipient)" > 0 }
-				divide = 5
+		if = {
+			limit = {
+				scope:actor = {
+					receiving_scripted_relation = {
+						target = scope:recipient
+						type = relation_type:tariff_exemption
+					}
+					NOT = {
+						giving_scripted_relation = {
+							target = scope:recipient
+							type = relation_type:tariff_exemption
+						}
+					}
+				}
+			}
+			add = {
+				desc = "DIPLOREASON_GOOD_FOR_US"
+				value = 100
 			}
 		}
+		else = {
+			add = {
+				desc = "THEIR_OPINION_TOOLTIP"
+				value = "scope:actor.opinion(scope:recipient)"
+				if = {
+					limit = { "scope:actor.opinion(scope:recipient)" > 0 }
+					divide = 5
+				}
+			}
 
-		add = {
-			desc = "THEIR_TRUST_TOOLTIP"
-			value = "scope:actor.trust(scope:recipient)"
-			divide = 2
-		}
+			add = {
+				desc = "THEIR_TRUST_TOOLTIP"
+				value = "scope:actor.trust(scope:recipient)"
+				divide = 2
+			}
 
-		subtract = {
-			desc = "BASE"
-			value = 25
+			subtract = {
+				desc = "BASE"
+				value = 25
+			}
 		}
 	}
 }

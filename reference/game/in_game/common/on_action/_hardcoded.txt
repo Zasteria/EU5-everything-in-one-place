@@ -410,6 +410,28 @@ on_siege_won = {
 			}
 			trigger_event_silently = flavor_pis.2
 		}
+		if = {
+			limit = {
+				religion:catholic = { any_holy_site_in_religion = { location = scope:target } }
+			}
+			every_international_organizations_member_of = {
+				limit = {
+					international_organization_type = international_organization_type:crusade
+					var:phase = 2
+				}
+				change_variable = { name = religious_zeal add = 5 }
+				clamp_variable = { name = religious_zeal max = 100 min = 0 }
+			}
+		}
+		every_international_organizations_member_of = {
+			limit = {
+				international_organization_type = international_organization_type:jihad
+				var:phase = 2
+				prev.var:religion = { any_holy_site_in_religion = { location = scope:target } }
+			}
+			change_variable = { name = religious_zeal add = 5 }
+			clamp_variable = { name = religious_zeal max = 100 min = 0 }
+		}
 	}
 }
 
@@ -561,6 +583,28 @@ on_location_occupied = {
 			}
 			trigger_event_silently = flavor_pis.2
 		}
+		if = {
+			limit = {
+				religion:catholic = { any_holy_site_in_religion = { location = scope:target } }
+			}
+			every_international_organizations_member_of = {
+				limit = {
+					international_organization_type = international_organization_type:crusade
+					var:phase = 2
+				}
+				change_variable = { name = religious_zeal add = 5 }
+				clamp_variable = { name = religious_zeal max = 100 min = 0 }
+			}
+		}
+		every_international_organizations_member_of = {
+			limit = {
+				international_organization_type = international_organization_type:jihad
+				var:phase = 2
+				prev.var:religion = { any_holy_site_in_religion = { location = scope:target } }
+			}
+			change_variable = { name = religious_zeal add = 5 }
+			clamp_variable = { name = religious_zeal max = 100 min = 0 }
+		}
 	}
 }
 
@@ -649,6 +693,13 @@ on_military_annex = {
 			
 			set_global_variable = byzantine_empire_fallen
 		}
+		if = {
+			limit = {
+				scope:target ?= { is_leader_of_international_organization = international_organization:japanese_shogunate }
+			}
+			save_scope_as = shogun_annexer
+			sengoku_appoint_new_shogun = yes
+		}
 	}
 }
 # fired before the annexation happens; root =  country doing the annexing ,  scope:target = country being annexed
@@ -683,6 +734,13 @@ on_diplomatic_annex = {
 				scope:target = { owns = location:venice }
 			}
 			set_variable = venice_acquired_peacefully_variable
+		}
+		if = {
+			limit = {
+				scope:target ?= { is_leader_of_international_organization = international_organization:japanese_shogunate }
+			}
+			save_scope_as = shogun_annexer
+			sengoku_appoint_new_shogun = yes
 		}
 	}
 }
@@ -1447,6 +1505,19 @@ on_civil_war_won = {
 				set_variable = english_civil_war_won_variable
 			}
 		}
+		if = {
+			limit = { 	##You are the Parliamentarists and you lost
+				exists = scope:loser
+				scope:loser = { has_variable = chosen_parliamentarist_country_variable }
+			}
+			scope:loser = {
+				remove_variable = chosen_parliamentarist_country_variable
+				trigger_event_non_silently = civil_war.1
+			}
+			scope:winner = {
+				set_variable = english_civil_war_won_variable
+			}
+		}
 	}
 }
 
@@ -1454,7 +1525,7 @@ on_civil_war_won = {
 on_winning_war = {
 	effect = {
 		if = {
-			limit = { scope:war = { casus_belli ?= casus_belli:cb_crusade } }
+			limit = { scope:war = { casus_belli ?= casus_belli:cb_crusade is_an_attacker = scope:winner } }
 			scope:winner = {
 				add_country_modifier = {
 					modifier = crusade_victor
@@ -1474,7 +1545,7 @@ on_winning_war = {
 			}
 		}
 		else_if = {
-			limit = { scope:war = { casus_belli ?= casus_belli:cb_jihad } }
+			limit = { scope:war = { casus_belli ?= casus_belli:cb_jihad is_an_attacker = scope:winner } }
 			scope:winner = {
 				add_country_modifier = {
 					modifier = jihad_victor
@@ -1482,7 +1553,10 @@ on_winning_war = {
 					mode = add_and_extend
 				}
 				if = {
-					limit = { exists = ruler }
+					limit = {
+						exists = ruler
+						ruler = { NOT = { has_character_modifier = ghazi_warrior } }
+					}
 					ruler = {
 						add_character_modifier = {
 							modifier = ghazi_warrior
@@ -1892,10 +1966,10 @@ on_pre_winning_war = {
 		}
 		if = {
 			limit = {
-				scope:war = { 
-					casus_belli ?= casus_belli:cb_religious_superiority 
+				scope:war = {
+					casus_belli ?= casus_belli:cb_religious_superiority
 					any_attacker = {
-						has_or_had_tag = SWE 
+						has_or_had_tag = SWE
 						is_human = yes
 						religion = religion:lutheran
 					}
@@ -1914,6 +1988,34 @@ on_pre_winning_war = {
 							years = 1
 						}
 					}
+				}
+			}
+		}
+		if = {
+			limit = {
+				#The Last Crusade Achievement
+				scope:winner = {
+					is_human = yes
+					religion = religion:catholic
+					has_special_status_in_international_organization = {
+						type = special_status:crusade_temporal_leader
+						international_organization = international_organization:crusade
+					}
+				}
+				scope:war = {
+					casus_belli ?= casus_belli:cb_crusade
+					war_goal_province ?= {
+						OR = {
+							sub_continent = sub_continent:north_africa
+							sub_continent = sub_continent:middle_east
+						}
+					}
+				}
+			}
+			scope:winner = {
+				set_variable = {
+					name = unlock_achievement_the_last_crusade
+					months = 1
 				}
 			}
 		}
@@ -1952,9 +2054,15 @@ on_ending_war = {
 					international_organization_type = international_organization_type:crusade
 					var:phase = 2
 					leader_country != root
-					international_organization_target ?= { is_at_war_with = prev.leader_country }
 				}
-				holy_war_desertion_penalty_effect = yes
+				if = {
+					limit = { scope:winner ?= root }
+					holy_war_victory_credit_effect = yes
+				}
+				else_if = {
+					limit = { international_organization_target ?= { is_at_war_with = prev.leader_country } }
+					holy_war_desertion_penalty_effect = yes
+				}
 			}
 		}
 		if = {
@@ -2974,9 +3082,9 @@ on_great_battle_won = {
 			}
 		}
 		if = {
-			limit = { 
-				scope:actor = { 
-					owner = { tag = BUL } 
+			limit = {
+				scope:actor = {
+					owner = { tag = BUL }
 				}
 				scope:target = { owner = { tag = TUR } } #Enemy tag
 			}
@@ -2986,6 +3094,28 @@ on_great_battle_won = {
 					set_local_variable = bul_won_against_ottomans
 					trigger_event_non_silently = flavor_bul.5
 				}
+			}
+		}
+		scope:actor.owner = {
+			every_international_organizations_member_of = {
+				limit = {
+					international_organization_type = international_organization_type:crusade
+					var:phase = 2
+					exists = var:active_war
+					var:active_war = { is_in_war = scope:target.owner }
+				}
+				change_variable = { name = religious_zeal add = 2 }
+				clamp_variable = { name = religious_zeal max = 100 min = 0 }
+			}
+			every_international_organizations_member_of = {
+				limit = {
+					international_organization_type = international_organization_type:jihad
+					var:phase = 2
+					exists = var:active_war
+					var:active_war = { is_in_war = scope:target.owner }
+				}
+				change_variable = { name = religious_zeal add = 2 }
+				clamp_variable = { name = religious_zeal max = 100 min = 0 }
 			}
 		}
 	}
@@ -3247,6 +3377,13 @@ on_overrun_imprisoned = {
 on_max_doom_reached = {
 	events = {
 		doom.1
+	}
+}
+
+#root = country, scope:target = province, scope:actor = the country
+on_colonial_charter_finished = {
+	events = {
+		treaty_of_tordesillas.1
 	}
 }
 
@@ -3612,6 +3749,25 @@ on_new_ruler = {
 		
 		if = {
 			limit = {
+				has_variable = boh_polish_throne_claim_variable
+				government_type = government_type:monarchy
+				c:POL ?= { government_type = government_type:monarchy }
+				NOT = { in_union_with = c:POL }
+			}
+			add_casus_belli = {
+				target = c:POL
+				type = casus_belli:cb_claim_throne
+				character = scope:new_ruler
+				years = {
+					value = var:boh_polish_throne_claim_variable
+					subtract = current_year
+					min = 1
+				}
+			}
+		}
+
+		if = {
+			limit = {
 				has_game_rule = ai_personalities_random_per_ruler
 				is_ai = yes
 			}
@@ -3775,6 +3931,29 @@ on_new_ruler = {
 				var:favored_heir = scope:new_ruler
 			}
 			remove_variable = favored_heir
+		}
+		if = {
+			limit = { has_variable = por_pedro_rebellion }
+			remove_variable = por_pedro_rebellion
+			if = {
+				limit = {
+					NOT = { character:por_pedro_i_portugal ?= scope:new_ruler }
+					character:por_pedro_i_portugal = { is_alive = yes }
+					any_rebel = {
+						rebel_category = pretender
+						has_pretender = yes
+					}
+				}
+				random_rebel = {
+					limit = {
+						rebel_category = pretender
+						has_pretender = yes
+					}
+					save_scope_as = pedro_rebels
+				}
+				apply_rebel_demands = scope:pedro_rebels
+				destroy_rebel = scope:pedro_rebels
+			}
 		}
 	}
 }
@@ -4458,6 +4637,10 @@ on_international_organization_disbanded = {
 	effect = {
 		if = {
 			limit = {
+				exists = scope:international_organization
+				scope:international_organization = {
+					international_organization_type = international_organization_type:autocephalous_patriarchate
+				}
 				religion = {
 					has_autocephalous_patriarchates = yes
 				}

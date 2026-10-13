@@ -45,9 +45,11 @@
 			limit = { is_port = yes }
 			order_by = development
 			max = 1
-			scope:expedition = { add_new_waypoint = prev }
+			scope:expedition = {
+				add_new_waypoint = prev
+				add_to_variable_list = { name = cartographic_survey_visited target = prev }
+			}
 			save_scope_as = cartographic_survey_origin
-			set_variable = { name = cartographic_survey_visited value = 1 }
 		}
 
 		ordered_owned_location = {
@@ -57,19 +59,27 @@
 			every_neighbor_location = {
 				limit = {
 					is_land = no
-					NOT = { has_variable = cartographic_survey_visited }
+					NOT = {
+						scope:expedition = { is_target_in_variable_list = { name = cartographic_survey_visited target = prev } }
+					}
 				}
-				set_variable = { name = cartographic_survey_visited value = 1 }
-				scope:expedition = { add_new_waypoint = prev }
+				scope:expedition = {
+					add_new_waypoint = prev
+					add_to_variable_list = { name = cartographic_survey_visited target = prev }
+				}
 				every_neighbor_location = {
 					limit = {
 						is_land = yes
 						is_coastal = yes
 						owner ?= scope:cartographic_survey_country
-						NOT = { has_variable = cartographic_survey_visited }
+						NOT = {
+							scope:expedition = { is_target_in_variable_list = { name = cartographic_survey_visited target = prev } }
+						}
 					}
-					set_variable = { name = cartographic_survey_visited value = 1 }
-					scope:expedition = { add_new_waypoint = prev }
+					scope:expedition = {
+						add_new_waypoint = prev
+						add_to_variable_list = { name = cartographic_survey_visited target = prev }
+					}
 				}
 			}
 		}
@@ -99,53 +109,58 @@
 			discover_area = scope:location.area
 			change_variable = { name = coasts_surveyed add = 1 }
 			random_list = {
-				# Material-specific good (falls through to generic encounter if no material match)
-				30 = {
-					if = {
-						limit = { scope:location = { raw_material = goods:fish } }
-						trigger_event_non_silently = cartographic_survey_events.10
-					}
-					else_if = {
-						limit = { scope:location = { raw_material = goods:lumber } }
-						trigger_event_non_silently = cartographic_survey_events.11
-					}
-					else_if = {
-						limit = { scope:location = { raw_material = goods:salt } }
-						trigger_event_non_silently = cartographic_survey_events.12
-					}
-					else_if = {
-						limit = { scope:location = { raw_material = goods:pearls } }
-						trigger_event_non_silently = cartographic_survey_events.13
-					}
-					else_if = {
-						limit = { scope:location = { raw_material = goods:wine } }
-						trigger_event_non_silently = cartographic_survey_events.14
-					}
-					else_if = {
-						limit = { scope:location = { raw_material = goods:dyes } }
-						trigger_event_non_silently = cartographic_survey_events.15
-					}
-					else_if = {
-						limit = { scope:location = { raw_material = goods:amber } }
-						trigger_event_non_silently = cartographic_survey_events.16
-					}
-					else = {
-						random_list = {
-							33 = { trigger_event_non_silently = cartographic_survey_events.20 }
-							33 = { trigger_event_non_silently = cartographic_survey_events.21 }
-							34 = { trigger_event_non_silently = cartographic_survey_events.22 }
+				50 = {
+					random_list = {
+						# Material-specific good (falls through to generic encounter if no material match)
+						30 = {
+							if = {
+								limit = { scope:location = { raw_material = goods:fish } }
+								trigger_event_non_silently = cartographic_survey_events.10
+							}
+							else_if = {
+								limit = { scope:location = { raw_material = goods:lumber } }
+								trigger_event_non_silently = cartographic_survey_events.11
+							}
+							else_if = {
+								limit = { scope:location = { raw_material = goods:salt } }
+								trigger_event_non_silently = cartographic_survey_events.12
+							}
+							else_if = {
+								limit = { scope:location = { raw_material = goods:pearls } }
+								trigger_event_non_silently = cartographic_survey_events.13
+							}
+							else_if = {
+								limit = { scope:location = { raw_material = goods:wine } }
+								trigger_event_non_silently = cartographic_survey_events.14
+							}
+							else_if = {
+								limit = { scope:location = { raw_material = goods:dyes } }
+								trigger_event_non_silently = cartographic_survey_events.15
+							}
+							else_if = {
+								limit = { scope:location = { raw_material = goods:amber } }
+								trigger_event_non_silently = cartographic_survey_events.16
+							}
+							else = {
+								random_list = {
+									33 = { trigger_event_non_silently = cartographic_survey_events.20 }
+									33 = { trigger_event_non_silently = cartographic_survey_events.21 }
+									34 = { trigger_event_non_silently = cartographic_survey_events.22 }
+								}
+							}
 						}
+						# Generic harbour encounters (3 × 10 = 30%)
+						10 = { trigger_event_non_silently = cartographic_survey_events.20 }
+						10 = { trigger_event_non_silently = cartographic_survey_events.21 }
+						10 = { trigger_event_non_silently = cartographic_survey_events.22 }
+						# Bad outcomes (4 × 10 = 40%)
+						10 = { trigger_event_non_silently = cartographic_survey_events.30 }
+						10 = { trigger_event_non_silently = cartographic_survey_events.31 }
+						10 = { trigger_event_non_silently = cartographic_survey_events.32 }
+						10 = { trigger_event_non_silently = cartographic_survey_events.33 }
 					}
 				}
-				# Generic harbour encounters (3 × 10 = 30%)
-				10 = { trigger_event_non_silently = cartographic_survey_events.20 }
-				10 = { trigger_event_non_silently = cartographic_survey_events.21 }
-				10 = { trigger_event_non_silently = cartographic_survey_events.22 }
-				# Bad outcomes (4 × 10 = 40%)
-				10 = { trigger_event_non_silently = cartographic_survey_events.30 }
-				10 = { trigger_event_non_silently = cartographic_survey_events.31 }
-				10 = { trigger_event_non_silently = cartographic_survey_events.32 }
-				10 = { trigger_event_non_silently = cartographic_survey_events.33 }
+				50 = {}
 			}
 		}
 	}
@@ -164,18 +179,10 @@
 			add_prestige = prestige_weak_bonus
 		}
 		remove_variable = coasts_surveyed
-		every_owned_location = {
-			limit = { has_variable = cartographic_survey_visited }
-			remove_variable = cartographic_survey_visited
-		}
 	}
 
 	on_fail = {
 		remove_variable = coasts_surveyed
-		every_owned_location = {
-			limit = { has_variable = cartographic_survey_visited }
-			remove_variable = cartographic_survey_visited
-		}
 	}
 
 	ai_chance_to_check = {

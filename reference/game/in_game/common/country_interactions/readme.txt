@@ -44,6 +44,7 @@
 #						column = { data = <column_id> width = <int> icon = <path> show_icon_in_cells = yes/no } adds a column to the UI to search with
 #                                these can also be defaulted, see \common\attribute_columns
 #                       default_sort = key of the sort you want the selection to default to. With nothing it will default to the first sort column. The columns you have are specified in columns = above, the sort keys for the sorts are in \common\attribute_columns\
+#                       check_cheapest_price = yes/no if yes, a target is only enabled if the payer can afford the price with the cheapest option of the next select_trigger (calculated once when the selection opens)
 #                       none_available_msg_key = key of the localisation used when there are no available targets to choose from (optional)
 #                       show_why_not_visible = yes/no true to show why a target might not be visible if there are no targets
 #                       show_why_not_enabled = yes/no true to show why a target might not be enabled if there are no targets

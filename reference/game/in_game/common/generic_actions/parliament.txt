@@ -553,6 +553,21 @@ prepare_for_war = {
 			}
 		}
 
+		if = {
+			limit = {
+				is_situation_active = situation:rise_of_the_ottomans
+				scope:actor = {
+					has_reform = government_reform:anatolian_beylik
+					is_neighbor_of = scope:target_country
+				}
+			}
+
+			subtract = {
+				value = 2000
+				desc = "we can get CBs from rise of the ottoman"
+			}
+		}
+
 		# we want to attack specifically this target and we dont have any CBs, or we want a CB
 		if = {
 			limit = {
@@ -622,19 +637,13 @@ ask_for_larger_levies = {
 			if = {
 				limit = {
 					scope:actor = {
-						OR = {
-							is_in_losing_war = yes
-							AND = {
-								at_war = yes
-								stability >= 10
-							}
-						}
+						at_war = yes
+						lowest_war_strength_balance < 0.6
 					}
 				}
 				value = 2
 			}
 		}
-		
 	}
 }
 
@@ -879,9 +888,31 @@ force_parliament_issue = {
 	}
 }
 
+reroll_parliament_agendas = {
+	type = parliament
+
+	price = price:reroll_parliament_agendas
+
+	allow = {
+		scope:actor = {
+			is_active_parliament = yes
+			has_parliament_agendas = yes
+		}
+	}
+
+	effect = {
+		scope:actor = {
+			reroll_parliament_agendas = yes
+		}
+	}
+
+	ai_tick = never
+	automation_tick = never
+}
+
 challenge_bureaucratic_entrenchment = {
 	type = parliament
-	
+
 	ai_tick = never
 
 	potential = {
@@ -935,7 +966,10 @@ challenge_bureaucratic_entrenchment = {
 					years = modifier_duration_years_short
 					mode = replace
 					size = {
-						value = 1
+						add = {
+							value = 1
+							desc = BASE_VALUE
+						}
 						if = {
 							limit = { exists = scope:target_bureaucracy }
 							add = {
@@ -1050,13 +1084,16 @@ force_parliament_support = {
 	allow = {
 		scope:actor = {
 			is_active_parliament = yes
-			political_influence >= 75
+			political_influence >= {
+				value = political_influence_radical_penalty
+				multiply = -1
+			}
 		}
 	}
 
 	effect = {
 		scope:actor = {
-			add_political_influence = -75
+			add_political_influence = political_influence_radical_penalty
 			change_parliament_issue_support = {
 				value = 0.25
 			}
@@ -1301,8 +1338,9 @@ seat_the_itinerant_court = {
 			controller ?= scope:actor
 			local_control > 0
 			is_core_of = scope:actor
-			# Cannot Seat the Itinerant Court where a Local Governor or a Lieutenancy already sits
+			# Cannot Seat the Itinerant Court where it, a Local Governor or a Lieutenancy already sits
 			NOR = {
+				has_building = building_type:itinerant_court_seat
 				has_building = building_type:local_governor
 				has_building = building_type:lieutenancy
 			}

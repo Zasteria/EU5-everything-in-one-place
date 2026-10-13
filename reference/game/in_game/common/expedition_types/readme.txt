@@ -379,7 +379,11 @@
 # scope:location.
 #
 # on_start: at launch - the place to set_variable trackers, inject dynamic waypoints,
-#   pause_expedition, schedule kickoff events.
+#   pause_expedition, schedule kickoff events. May also call end_expedition or
+#   fail_expedition to resolve the run immediately, which is the correct handling for a
+#   destination the expedition is already standing on: add_new_waypoint silently discards a
+#   waypoint equal to the current final path entry, so a route with no travel in it leaves
+#   the expedition with no next waypoint and the engine fails it on the next daily tick.
 # on_monthly: every month while active - runtime flavor (storms, pirates). Guard with
 #   scope:expedition = { expedition_is_traveling = yes } if the flavor should only fire
 #   while actually traveling (a paused expedition keeps Traveling status - also add

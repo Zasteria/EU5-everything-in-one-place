@@ -112,6 +112,56 @@ update_leader_country = {
 	}
 }
 
+transfer_leadership_to_union_senior_partner = {
+	save_scope_as = league_io
+	if = {
+		limit = {
+			international_organization_has_leader = yes
+			leader_country ?= {
+				exists = union
+				NOT = {
+					union = {
+						country_has_special_status = {
+							type = special_status:senior_partner
+							country = prev
+						}
+					}
+				}
+				any_union_partner = {
+					union = {
+						country_has_special_status = {
+							type = special_status:senior_partner
+							country = prev
+						}
+					}
+					at_war = no
+				}
+			}
+		}
+		leader_country = {
+			random_union_partner = {
+				limit = {
+					union = {
+						country_has_special_status = {
+							type = special_status:senior_partner
+							country = prev
+						}
+					}
+					at_war = no
+				}
+				save_scope_as = league_senior_partner
+			}
+		}
+		if = {
+			limit = {
+				NOT = { scope:league_senior_partner = { is_member_of_international_organization = scope:league_io } }
+			}
+			add_country_to_international_organization = scope:league_senior_partner
+		}
+		set_leader_country = scope:league_senior_partner
+	}
+}
+
 gain_special_status_parliament_issue_support = {
 	if = {
 		limit = { has_ongoing_parliament_debate = yes }
