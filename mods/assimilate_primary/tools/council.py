@@ -1082,6 +1082,18 @@ def value_effects(game: Path) -> str:
     # game dropped the action at once.
     # Not the pair it pressed last: the window leaves out the pair the seat
     # already pushes (his run 13.10 11:40 — 12 rows, «Централизация» gone).
+    # His ask 13.10 12:03: the advisor's reach worked out, not tried. Read-only:
+    # each pair's value and its two monthly pushes as script sees them.
+    pushes = []
+    for pair in value_pairs(game):
+        left, right = pair.split("_vs_")
+        pushes.append(f"""\tif = {{
+\t\tlimit = {{ has_societal_value = societal_value_type:{pair} }}
+\t\tset_global_variable = {{ name = bag_asp_sv_n1 value = societal_value:{pair} }}
+\t\tset_global_variable = {{ name = bag_asp_sv_n2 value = modifier:monthly_towards_{left} }}
+\t\tset_global_variable = {{ name = bag_asp_sv_n3 value = modifier:monthly_towards_{right} }}
+\t\tdebug_log = "bag_asp: sv push {pair}: now [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], toward {left} [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|4], toward {right} [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4]"
+\t}}""")
     pick = []
     for i, pair in enumerate(value_pairs(game)):
         pick.append(f"""\t{"if" if i == 0 else "else_if"} = {{
@@ -1110,10 +1122,15 @@ bag_asp_sv_probe = {{
 \tevery_cabinet = {{
 \t\tlimit = {{ exists = cabinet_member }}
 \t\tset_global_variable = {{ name = bag_asp_sv_seat value = this }}
-\t\tset_global_variable = {{ name = bag_asp_sv_dip value = cabinet_member.dip }}
+\t\tset_global_variable = {{ name = bag_asp_sv_n1 value = cabinet_member.dip }}
+\t\tset_global_variable = {{ name = bag_asp_sv_n2 value = cabinet_member.modifier:character_cabinet_efficiency }}
 \t\tcabinet_member = {{ debug_log_scopes = no }}
-\t\tdebug_log = "bag_asp: sv a seat, dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_dip_value')|0], limit [GetGlobalVariable('bag_asp_sv_seat').GetCabinet.GetMaxSocietalValueReachable|2]"
+\t\tdebug_log = "bag_asp: sv a seat, dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|0], effective skill [GetGlobalVariable('bag_asp_sv_seat').GetCabinet.GetEffectiveSkill|2], own efficiency [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|3]"
+\t\tdebug_log = "bag_asp: sv the seat's value: (pair [GetGlobalVariable('bag_asp_sv_seat').GetCabinet.GetSocietalValueName]) monthly [GetGlobalVariable('bag_asp_sv_seat').GetCabinet.GetSocietalValueMonthlyProgress|4], total [GetGlobalVariable('bag_asp_sv_seat').GetCabinet.GetSocietalValueTotal|2], inertia [GetGlobalVariable('bag_asp_sv_seat').GetCabinet.GetSocietalValueTotalInertia|2], now [GetGlobalVariable('bag_asp_sv_seat').GetCabinet.GetSocietalValueCurrentNumber|2], limit [GetGlobalVariable('bag_asp_sv_seat').GetCabinet.GetMaxSocietalValueReachable|2]"
 \t}}
+\tset_global_variable = {{ name = bag_asp_sv_n1 value = modifier:country_cabinet_efficiency }}
+\tdebug_log = "bag_asp: sv the country's cabinet efficiency [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|3]"
+{chr(10).join(pushes)}
 {chr(10).join(pick)}
 \tif = {{
 \t\tlimit = {{ NOT = {{ has_variable = bag_asp_sv_pair }} }}
@@ -1151,7 +1168,7 @@ bag_asp_sv_probe = {{
 
 # Scope: any. The value probe's numbers, parked in globals for the log.
 SV_VALUES = "".join(f"\n{sv}_value = {{\n\tvalue = global_var:{sv}\n}}\n"
-                    for sv in ("bag_asp_sv_now", "bag_asp_sv_dip", "bag_asp_sv_limit"))
+                    for sv in ("bag_asp_sv_now", "bag_asp_sv_limit", "bag_asp_sv_n1", "bag_asp_sv_n2", "bag_asp_sv_n3"))
 
 
 def value_guis() -> str:
@@ -1199,17 +1216,7 @@ bag_asp_sv_pressed = {{
 \t}}
 }}
 
-# Called by the value window as it leaves: back to the view it opened over,
-# or closed when it opened over nothing. His ask 13.10 11:19.
-bag_asp_sv_back = {{
-\tscope = country
-\tis_shown = {{ always = yes }}
-\teffect = {{
-\t\tdebug_log = "bag_asp: sv the value window goes back to the view under it"
-\t\tif = {{ limit = {{ has_variable = bag_asp_sv_close }} remove_variable = bag_asp_sv_close }}
-\t}}
-}}
-
+# Called by the hidden window as it shuts the value window. His ask 13.10.
 bag_asp_sv_closed = {{
 \tscope = country
 \tis_shown = {{ always = yes }}

@@ -85,33 +85,6 @@ def row_log() -> str:
 """
 
 
-def closers() -> str:
-    """Children of the window itself, not of a row: after the press, back to
-    the view the window opened over, or closed when there was none. His ask
-    13.10 11:19 — the window stayed on screen after the mod's press."""
-    out = ""
-    for name, when, gui, act in (
-            ("back", "LateralView.CanGoBack", "bag_asp_sv_back", "LateralView.GoBack"),
-            ("close", "Not(LateralView.CanGoBack)", "bag_asp_sv_closed", "LateralView.Close")):
-        out += f"""
-\t\t# assimilate_primary: after the council automation's press, {name}
-\t\t# (value_window.py).
-\t\twidget = {{
-\t\t\tname = "bag_asp_sv_{name}"
-\t\t\tsize = {{ 0 0 }}
-\t\t\tvisible_at_creation = no
-\t\t\tvisible = "[And({var('bag_asp_sv_close')}.IsSet, {when})]"
-\t\t\tstate = {{
-\t\t\t\tname = _show
-\t\t\t\tduration = 0.1
-\t\t\t\ton_start = "[GetScriptedGui('{gui}').Execute({ROOT})]"
-\t\t\t\ton_start = "[{act}]"
-\t\t\t}}
-\t\t}}
-"""
-    return out
-
-
 def live(children: str, tabs: int) -> str:
     """The children under a parent whose visible is an always-true expression.
     His run 13.10 11:40: inside the game's window a child's gate was read when
@@ -152,6 +125,21 @@ widget = {{
 \t\t\ton_start = "[GetScriptedGui('bag_asp_sv_opening').Execute({ROOT})]"
 \t\t}}
 \t}}
+\t# His ask 13.10 12:03, «хотя бы просто закрыть»: after the press, the value
+\t# window is toggled shut from here. 0.9.10–0.9.11 closed it from inside
+\t# (LateralView.Close / GoBack): never, or 28 s late. These gates fire.
+\twidget = {{
+\t\tname = "bag_asp_sv_closer"
+\t\tsize = {{ 0 0 }}
+\t\tvisible_at_creation = no
+\t\tvisible = "[And(GetPlayer.Exists, And({var('bag_asp_sv_close')}.IsSet, IsLateralViewOpened('select_societal_value')))]"
+\t\tstate = {{
+\t\t\tname = _show
+\t\t\tduration = 0.1
+\t\t\ton_start = "[ToggleLateralView('select_societal_value')]"
+\t\t\ton_start = "[GetScriptedGui('bag_asp_sv_closed').Execute({ROOT})]"
+\t\t}}
+\t}}
 }}
 """
 
@@ -164,14 +152,10 @@ def build(game: Path) -> dict[str, str]:
     row = text.find("size = { 100% 50 }", model)
     if row < 0 or "SelectLeftCandidate" not in text or "SelectRightCandidate" not in text:
         raise SystemExit("select_societal_value: the pair's row changed; read the game's window first")
-    panel = text.find('blockoverride "panel_content" {')
-    if panel < 0 or panel > model:
-        raise SystemExit("select_societal_value: the window's content block changed; read the game's window first")
-    top = text.index("\n", panel) + 1
     at = text.index("\n", row) + 1
     head = ("# assimilate_primary: the game's select_societal_value.gui, copied whole,\n"
             "# with the council automation's children. Built by tools/value_window.py.\n")
-    window = (head + text[:top] + live(closers(), 2) + text[top:at]
+    window = (head + text[:at]
               + live(row_log() + "".join(presser(s) for s in SIDES), 8) + text[at:])
     return {
         WINDOW: window,
