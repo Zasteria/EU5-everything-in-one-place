@@ -156,12 +156,15 @@ bag_asp_sv_timeout = {
 			if = { limit = { has_variable = bag_asp_sv_left } remove_variable = bag_asp_sv_left }
 			if = { limit = { has_variable = bag_asp_sv_right } remove_variable = bag_asp_sv_right }
 			if = { limit = { has_variable = bag_asp_sv_pair } remove_variable = bag_asp_sv_pair }
+			# The window is closed by bag_asp_sv_closer, and the bounce waits
+			# for it (bag_asp_sv_after_close): his run 13.10 18:30.
+			set_variable = { name = bag_asp_sv_close value = yes }
 			if = {
 				limit = {
 					has_variable = bag_asp_sv_cur
 					NOT = { has_variable = bag_asp_sv_bounced }
 				}
-				bag_asp_sv_bounce = yes
+				set_variable = { name = bag_asp_sv_bounce_due value = yes }
 			}
 			else_if = {
 				limit = { has_variable = bag_asp_sv_cur }
@@ -169,6 +172,20 @@ bag_asp_sv_timeout = {
 				set_variable = { name = bag_asp_sv_cur_side value = 0 }
 				if = { limit = { has_variable = bag_asp_sv_bounced } remove_variable = bag_asp_sv_bounced }
 			}
+		}
+	}
+}
+
+# Called by bag_asp_sv_closer once it has closed the window after a miss.
+bag_asp_sv_after_close = {
+	scope = country
+	is_shown = { always = yes }
+	effect = {
+		if = { limit = { has_variable = bag_asp_sv_close } remove_variable = bag_asp_sv_close }
+		if = {
+			limit = { has_variable = bag_asp_sv_bounce_due }
+			remove_variable = bag_asp_sv_bounce_due
+			bag_asp_sv_bounce = yes
 		}
 	}
 }

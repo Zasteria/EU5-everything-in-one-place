@@ -34,12 +34,29 @@ widget = {
 			on_finish = "[LeftView.Close]"
 			on_finish = "[RightView.Close]"
 		}
+		# His run 13.10 18:30: closing here unconditionally shut, two seconds
+		# after every press, whatever he had opened meanwhile. Now the timeout
+		# only asks for a close when no row pressed (bag_asp_sv_close below).
 		state = {
 			name = bag_asp_sv_wait
 			duration = 2
 			on_finish = "[GetScriptedGui('bag_asp_sv_timeout').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-			on_finish = "[LeftView.Close]"
-			on_finish = "[RightView.Close]"
+		}
+	}
+	# The close after a miss: the timeout sets bag_asp_sv_close only while the
+	# mod's window still waits for its press. Closes first, then lets the
+	# bounce reopen it (bag_asp_sv_after_close).
+	widget = {
+		name = "bag_asp_sv_closer"
+		size = { 0 0 }
+		visible_at_creation = no
+		visible = "[And(GetPlayer.Exists, GetPlayer.MakeScope.GetVariable('bag_asp_sv_close').IsSet)]"
+		state = {
+			name = _show
+			duration = 0.1
+			on_start = "[LeftView.Close]"
+			on_start = "[RightView.Close]"
+			on_start = "[GetScriptedGui('bag_asp_sv_after_close').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
 		}
 	}
 }
