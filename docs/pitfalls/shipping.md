@@ -31,6 +31,14 @@ vanilla's `rural_buildings.txt`, because `00_` sorts first. The `00_` prefix is
 for files that must load *early*; to override, sort late. Symptom: mod loads,
 changes nothing, logs nothing.
 
+**That rule is not measured, and the repository holds the opposite one.** A
+`customizable_localization` and a script value keep the *first* definition and
+drop the later with `gamedatabase.h: Duplicated key ... will not be created`
+([`localization.md`](localization.md)). Which holds for other databases is open
+(10-13, Integration Hotfix redeclares four objects without a prefix in `000_`
+files). Do not rely on either: write `REPLACE:`, and read
+`database_conflicts.log` from the logs zip when a duplicate is suspected.
+
 **`metadata.json` needs `"game_id": "eu5"`.** Every working mod has it. Without
 it the launcher does not treat the folder as an EU5 mod.
 
