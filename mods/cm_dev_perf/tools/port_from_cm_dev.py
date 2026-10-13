@@ -824,8 +824,8 @@ def _food_pops_by_type(text: str) -> str:
                         "# value counting free places of its pop type.\n", 1)
     text = text.replace(old_macro,
                         "\t$target$ = { save_temporary_scope_as = cm_food_pops_type }\n"
-                        "\t# cm_dev_perf +perf42: the building's own pop type, jobs already built counted\n"
-                        "\t$pool$ >= scope:cm_food_pops_type.employment_size\n", 1)
+                        "\t# cm_dev_perf +perf42: a free place of the building's own pop type, jobs already built counted\n"
+                        "\t$pool$ > 0\n", 1)
     text = text.replace(old_fill,
                         "\t# cm_dev_perf +perf42: no food pool has room, unemployed of other types aside\n"
                         "\tNOT = {\n\t\tOR = {\n"
@@ -834,7 +834,7 @@ def _food_pops_by_type(text: str) -> str:
                         "\t\t}\n\t}\n", 1)
     text = text.replace(old_rgo,
                         "\t# cm_dev_perf +perf42: the RGO's own pool, its levels and the laborer jobs counted\n"
-                        "\tcm_location_laborers_or_slaves_available >= 1\n", 1)
+                        "\tcm_location_laborers_or_slaves_available > 0\n", 1)
     game = _food_building_pools()
     calls = list(re.finditer(r"cm_food_location_has_pops_for = \{ target = building_type:(\w+) \}", text))
     if len(calls) != 4:
@@ -866,7 +866,7 @@ def _food_rgo_drain_pops(text: str) -> str:
     if text.count(old) != 1:
         raise SystemExit("food rgo drain: the level loop has changed shape")
     return text.replace(old, old + "\t\t\t\t\t\t# cm_dev_perf +perf42: a level only for laborers or slaves who are there\n"
-                                   "\t\t\t\t\t\tcm_location_laborers_or_slaves_available >= 1\n", 1)
+                                   "\t\t\t\t\t\tcm_location_laborers_or_slaves_available > 0\n", 1)
 
 
 # His words 13.10 20:52, on Auto-Build's food tab (the system paying from its own
@@ -907,10 +907,10 @@ def _ab_food_horizon(text: str) -> str:
     for old in (room, loop):
         if text.count(old) != 1:
             raise SystemExit("ab food: the RGO room or its level loop has changed shape")
-    text = text.replace(room, "\t\t\t\t\t\t# cm_dev_perf +perf43: the tab's own horizon, and the level fully covered\n"
-                              "\t\t\t\t\t\tcm_perf_ab_food_rgo_slack >= 1\n", 1)
+    text = text.replace(room, "\t\t\t\t\t\t# cm_dev_perf +perf43: the tab's own horizon\n"
+                              "\t\t\t\t\t\tcm_perf_ab_food_rgo_slack > 0\n", 1)
     return text.replace(loop, loop + "\t\t\t\t\t\t\t# cm_dev_perf +perf43: each level covered within the horizon\n"
-                                     "\t\t\t\t\t\t\tcm_perf_ab_food_rgo_slack >= 1\n", 1)
+                                     "\t\t\t\t\t\t\tcm_perf_ab_food_rgo_slack > 0\n", 1)
 
 
 def _ab_food_take_manual(text: str) -> str:
@@ -969,12 +969,15 @@ def _register_ab_food(text: str) -> str:
 
 # His words 13.10 21:02: the same slider for Auto-Build's production tab — «пока ты
 # спамишь зданиями там, где они ничего не приносят, ты можешь заспамить в других
-# локациях». +perf44. CM lets a production level in while any pop of its type is
-# unemployed, or while the type's present deficit fills within six years. Here a
-# level is let in when its own jobs are covered: free places of the type plus the
-# horizon's fill reach the level's employment. Types without a fill rate (slaves,
-# tribesmen) keep to their unemployed. The production RGO loop reads the slack
-# with the slider's years. The rest of CM keeps its six years.
+# локациях». +perf44, by his rule of 21:07: one idle pop of the type is reason to
+# build («пусть он заполняется»); the next level waits until the levels already
+# there would be staffed within the horizon. CM let a level in on any unemployed pop
+# of the type, which a level still hiring also has, or on a deficit filling within
+# six years. Here: free places of the type (pops less every job built or building)
+# plus the horizon's fill, strictly positive. Types without a fill rate (slaves,
+# tribesmen) keep to their unemployed. The production RGO loop reads the slack with
+# the slider's years, and builds while room is left after the levels it built. The
+# rest of CM keeps its six years.
 AB_PROD = "in_game/common/scripted_effects/cm_ab_production_effects.txt"
 AB_PROD_FILE = "in_game/common/script_values/cm_perf_ab_production_values.txt"
 AB_PROD_TRIGGERS = "in_game/common/scripted_triggers/cm_perf_ab_production_triggers.txt"
@@ -992,11 +995,12 @@ def _ab_prod_values() -> str:
             "cm_perf_ab_prod_horizon_months = {\n\tvalue = 72\n\tif = {\n"
             "\t\tlimit = { owner = { exists = var:cm_ab_production_horizon } }\n"
             "\t\tvalue = owner.var:cm_ab_production_horizon\n\t\tmultiply = 12\n\t}\n}\n\n"
-            "# Free places of scope:cm_building_type's pop type, plus the horizon's fill, less one level's jobs.\n"
-            "# Non-negative: a new level is staffed within the horizon.\n"
+            "# Free places of scope:cm_building_type's pop type (pops less every job built or building),\n"
+            "# plus the horizon's fill. Positive: someone of the type is idle, or the levels already\n"
+            "# there will be staffed within the horizon with room to start the next.\n"
             "cm_perf_ab_prod_slack = {\n\tvalue = cm_location_unemployed_for_building_type\n"
             + branches +
-            "\tsubtract = scope:cm_building_type.employment_size\n}\n\n"
+            "}\n\n"
             "# cm_location_rgo_promotion_buffer_slack with the slider's years.\n"
             "cm_perf_ab_prod_rgo_slack = {\n\tvalue = cm_location_laborers_or_slaves_available\n"
             "\tadd = { value = cm_location_fill_rate_for_laborers_or_slaves multiply = cm_perf_ab_prod_horizon_months }\n}\n")
@@ -1009,7 +1013,7 @@ AB_PROD_TRIGGERS_TEXT = """\ufeff# Generated by mods/cm_dev_perf/tools/port_from
 cm_perf_ab_prod_has_pops = {
 	has_global_variable_map = cm_building_type_to_pop_type
 	is_key_in_global_variable_map = { name = cm_building_type_to_pop_type target = scope:cm_building_type }
-	cm_perf_ab_prod_slack >= 0
+	cm_perf_ab_prod_slack > 0
 }
 """
 
@@ -1021,7 +1025,11 @@ def _ab_prod_horizon(text: str) -> str:
     old = "set_local_variable = { name = cm_ab_rgo_slack value = cm_location_rgo_promotion_buffer_slack }\n"
     if gate.count(old) != 1:
         raise SystemExit("ab production: the RGO slack read has changed shape")
-    return gate.replace(old, "set_local_variable = { name = cm_ab_rgo_slack value = cm_perf_ab_prod_rgo_slack } # cm_dev_perf +perf44\n", 1)
+    gate = gate.replace(old, "set_local_variable = { name = cm_ab_rgo_slack value = cm_perf_ab_prod_rgo_slack } # cm_dev_perf +perf44\n", 1)
+    each = "local_var:cm_ab_rgo_slack >= local_var:cm_ab_rgo_done\n"
+    if gate.count(each) != 2:
+        raise SystemExit("ab production: the RGO loop's slack test has changed shape")
+    return gate.replace(each, "local_var:cm_ab_rgo_slack > local_var:cm_ab_rgo_done # cm_dev_perf +perf44: room left after the levels built\n")
 
 
 def _register_ab_prod(text: str) -> str:
