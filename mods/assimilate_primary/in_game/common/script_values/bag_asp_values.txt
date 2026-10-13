@@ -9,7 +9,7 @@ bag_asp_half_need = {
 			owner ?= scope:actor
 			integration_level = integrated
 		}
-		add = 1000
+		add = 100
 	}
 	every_location_in_province = {
 		limit = {
@@ -17,13 +17,30 @@ bag_asp_half_need = {
 			integration_level = conquered
 			bag_asp_short_of_half = yes
 		}
-		add = 10
+		add = 1
 	}
 }
 
-# The same, then population to part equal ones.
+# His rule 13.10, later: control first, since without it nothing assimilates.
+# Average control of the province in bands of ten points, 0–10; a higher band
+# wins outright, within a band the locations decide.
+bag_asp_control_band = {
+	value = province_average_control
+	multiply = 10
+	floor = yes
+}
+
+bag_asp_half_rank = {
+	value = bag_asp_control_band
+	multiply = 10000
+	add = bag_asp_half_need
+}
+
+# The rank, then population to part equal ones. Kept near a million at most:
+# the range of a fixed-point script value is not measured here.
 bag_asp_half_score = {
-	value = bag_asp_half_need
+	value = bag_asp_half_rank
+	multiply = 10
 	add = {
 		value = population
 		max = 9

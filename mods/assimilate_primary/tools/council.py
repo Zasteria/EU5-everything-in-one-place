@@ -82,14 +82,14 @@ ROW_ACTION = {"diplomatic_antagonism": "diplomatic_endeavors", "promote_culture_
 
 # A row's own condition on a target (in the province search) and on a seat
 # already on its action (keeping it; the emergency's rank).
-ROW_TARGET = {"promote_culture": "bag_asp_needs_half = yes"}
+ROW_TARGET = {"promote_culture": "bag_asp_needs_half = yes province_average_control > 0"}
 ROW_SEAT = {"promote_culture": "interaction_target:target_1 ?= { bag_asp_needs_half = yes }"}
 
 # Rows of one action told apart in their label, and their tooltips.
 ROW_NOTE = {
     "promote_culture": {
-        "english": (" (to half)", "Until no location of the province is «integrated» or «conquered» short of half a primary or accepted culture: at half an integrated location becomes core. Integrated locations first, conquered ones after them (they assimilate slower); the more of them in a province, the sooner. In a full hand-out a running one moves to a province with more such locations. A seat whose province is done is freed, unless the full row is in use."),
-        "russian": (" (до 50%)", "Пока в провинции есть районы «интегрирован» или «завоёван» без половины основной или признанной культуры: на половине интегрированный район становится национальным. Сначала интегрированные, потом завоёванные (ассимилируются медленнее); чем больше таких районов в провинции, тем раньше. При полной раздаче идущая ассимиляция переезжает туда, где таких районов больше. Место, чья провинция готова, освобождается, если не используется строка полной ассимиляции."),
+        "english": (" (to half)", "Until no location of the province is «integrated» or «conquered» short of half a primary or accepted culture: at half an integrated location becomes core. The province with the higher average control goes first, counted in bands of ten points (without control nothing assimilates; none at all, never); within a band, the one with more integrated locations, then more conquered ones. In a full hand-out a running one moves to a province that ranks higher. A seat whose province is done is freed, unless the full row is in use."),
+        "russian": (" (до 50%)", "Пока в провинции есть районы «интегрирован» или «завоёван» без половины основной или признанной культуры: на половине интегрированный район становится национальным. Первой идёт провинция с более высоким средним контролем, по ступеням в 10 пунктов (без контроля ассимиляция не идёт; при нулевом провинция не берётся); внутри ступени — где больше интегрированных районов, потом завоёванных. При полной раздаче идущая ассимиляция переезжает в провинцию выше по этому порядку. Место, чья провинция готова, освобождается, если не используется строка полной ассимиляции."),
     },
     "promote_culture_full": {
         "english": (" (full)", "On to the whole province in the target culture, for the rare goal of changing culture outright."),
@@ -160,7 +160,8 @@ INTEGRATION = """{
 # its locations, not by percentages. «Integrated» is a location integrated and
 # short of half a primary or accepted culture (at half it becomes core);
 # «conquered» assimilates slower. Locations assimilate each on their own, so
-# the more of them at once, the better. Script values in VALUES.
+# the more of them at once, the better. Then, his correction: average control
+# first, by bands of ten points. Script values in VALUES.
 HALF = "bag_asp_half_score"
 
 VALUES = """# assimilate_primary: script values of the council pass. Rebuilt by tools/generate.py.
@@ -174,7 +175,7 @@ bag_asp_half_need = {
 \t\t\towner ?= scope:actor
 \t\t\tintegration_level = integrated
 \t\t}
-\t\tadd = 1000
+\t\tadd = 100
 \t}
 \tevery_location_in_province = {
 \t\tlimit = {
@@ -182,13 +183,30 @@ bag_asp_half_need = {
 \t\t\tintegration_level = conquered
 \t\t\tbag_asp_short_of_half = yes
 \t\t}
-\t\tadd = 10
+\t\tadd = 1
 \t}
 }
 
-# The same, then population to part equal ones.
+# His rule 13.10, later: control first, since without it nothing assimilates.
+# Average control of the province in bands of ten points, 0–10; a higher band
+# wins outright, within a band the locations decide.
+bag_asp_control_band = {
+\tvalue = province_average_control
+\tmultiply = 10
+\tfloor = yes
+}
+
+bag_asp_half_rank = {
+\tvalue = bag_asp_control_band
+\tmultiply = 10000
+\tadd = bag_asp_half_need
+}
+
+# The rank, then population to part equal ones. Kept near a million at most:
+# the range of a fixed-point script value is not measured here.
 bag_asp_half_score = {
-\tvalue = bag_asp_half_need
+\tvalue = bag_asp_half_rank
+\tmultiply = 10
 \tadd = {
 \t\tvalue = population
 \t\tmax = 9
@@ -564,14 +582,14 @@ def place_effect(row: str, gate: str, actions: dict[str, str]) -> str:
 \t\t\tinteraction_target:target = {{ save_scope_as = target }}
 \t\t\tinteraction_target:target_1 = {{
 \t\t\t\tsave_scope_as = bag_asp_cur
-\t\t\t\tsave_scope_value_as = {{ name = bag_asp_cur_need value = bag_asp_half_need }}
+\t\t\t\tsave_scope_value_as = {{ name = bag_asp_cur_rank value = bag_asp_half_rank }}
 \t\t\t}}
 \t\t\tscope:actor = {{
 \t\t\t\tordered_province = {{
 \t\t\t\t\tlimit = {{
 {target_test(sel, 6, actions, key)}
 \t\t\t\t\t\t{ROW_TARGET[row]}
-\t\t\t\t\t\tbag_asp_half_need > scope:bag_asp_cur_need
+\t\t\t\t\t\tbag_asp_half_rank > scope:bag_asp_cur_rank
 \t\t\t\t\t}}
 \t\t\t\t\torder_by = {HALF}
 \t\t\t\t\tsave_scope_as = bag_asp_new
