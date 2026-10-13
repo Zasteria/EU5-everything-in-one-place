@@ -12,7 +12,6 @@ python3 tools/refresh.py
 | --- | --- | --- | --- |
 | `3668193813_trin_national_destinies` | `trin.national_destinies` | 1.4.0 | 1.4.* |
 | `3692202776_community_mod_framework` | `community_mod_framework` | 2.5.0 | 1.4.* |
-| `3705462070_hre_manager` | `hre_manager` | 1.1.0 | 1.1.* |
 | `3721516330_integration_hotfix` | `Integration Hotfix` | 0.7 | 1.3.x |
 | `3736668860_construction_manager` | `romaimperator.construction_manager` | 2.2.12 | 1.3.* |
 | `3742578604_national_mission_trees` | `national_mission_trees` | 0.2 | 1.3.10 |
