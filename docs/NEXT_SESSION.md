@@ -18,6 +18,19 @@ Four items ([`CONVENTIONS.md`](CONVENTIONS.md)), **no rebuild in it** — after 
 reference update he pushes, `tools/refresh.py` is ours. Tried only on a mock
 Steam folder. **Ask for** `mods.bat → 1`, `→ 2` and `mods.bat check`.
 
+## `assimilate_primary` (10-13): главное сделано, ветка слита в main
+
+Его слова 10-13: «первостепенный функционал мода сделан». Состояние —
+[`../mods/assimilate_primary/CLAUDE.md`](../mods/assimilate_primary/CLAUDE.md).
+**Ждёт прогона:** 0.9.14 (перескок через другую пару, когда окно ценностей
+прячет нужную; проверка — снять советника с пары вручную, дождаться месяца)
+и логи 0.9.8 с «Подробным журналом». **Его спеки 12.10, не начаты:**
+- «Стимулирование урбанизации»: ванильная автоматика держит его на провинции,
+  где «уже некого повышать до высоких классов»; как следить — решать нам.
+- «Развитие провинции»: у развития есть ступени («кажется 20 и 40», проверить
+  самим); повышать по ступеням всё с контролем выше 50, например до 20,
+  столичная провинция первой.
+
 ## Also waiting on the owner, all of it cheap
 
 - **`mods.bat → 3 → 1` on his machine** — the 2026-08-28 files of Advanced Auto
