@@ -1282,7 +1282,7 @@ def loc_rows(game: Path, language: str) -> dict[str, str]:
             if desc:
                 rows[f"{MOD_ID}__{s}_i{i}_desc"] = desc
     rows.update(FINE_LOC[language])
-    for group in {g for _, g, *_ in FINE}:
+    for group in sorted({g for _, g, *_ in FINE}):
         # The plain name: the run of 13.10 flooded the logs with assimilation's
         # progress text read without a province, cause not placed; a linked name
         # here was new in 0.9.0, so it goes.
