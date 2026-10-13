@@ -105,8 +105,8 @@ ROW_NOTE = {
         "russian": (" (мнение)", "Для улучшения мнения у ваших целей. Берёт место всегда, когда оно свободно."),
     },
     "change_societal_values": {
-        "english": ("", "Pushes the pairs ticked in «Societal values» (Fine tuning), in that list's order, toward the side chosen there: the advisor best in diplomacy among the free ones takes the first pair he would move at least one whole point. One seat. The pair is picked in the game's own window, which opens and closes by itself."),
-        "russian": ("", "Двигает пары, отмеченные в «Общественных ценностях» («Тонкие настройки»), в порядке того списка, в выбранную там сторону: лучший по дипломатии свободный советник берёт первую пару, которую сдвинет хотя бы на одну целую единицу. Одно место. Пару выбирает окно игры, оно само открывается и закрывается."),
+        "english": ("", "Pushes the pairs ticked in «Societal values» (Fine tuning), in that list's order, toward the side chosen there: the advisor best in diplomacy among the free ones takes the first pair he would move at least one whole point, at 0.1 a month or more. One seat. The pair is picked in the game's own window, which opens and closes by itself."),
+        "russian": ("", "Двигает пары, отмеченные в «Общественных ценностях» («Тонкие настройки»), в порядке того списка, в выбранную там сторону: лучший по дипломатии свободный советник берёт первую пару, которую сдвинет хотя бы на одну целую единицу, не меньше 0.1 в месяц. Одно место. Пару выбирает окно игры, оно само открывается и закрывается."),
     },
     "diplomatic_antagonism": {
         "english": (" (antagonism)", "For lowering antagonism: diplomatic reputation reduces it. Taken only while a country is near a coalition against you."),
@@ -293,7 +293,7 @@ VALUES_LOC = {
     "english": {
         "bag_asp__fine__values_name": "Societal values",
         "bag_asp__values_name": "Societal values",
-        "bag_asp__values_desc": "For the «Priority» row [ShowCabinetActionName('change_societal_values')]: ticked pairs are pushed, tried from the top, toward the side chosen for each. Each month the advisor best in diplomacy among the free ones takes the first pair he would move at least one whole point: a pair stops where 100 × its monthly push toward the side says (the game's «no more than»), his push included. Hover a row for its two sides.",
+        "bag_asp__values_desc": "For the «Priority» row [ShowCabinetActionName('change_societal_values')]: ticked pairs are pushed, tried from the top, toward the side chosen for each. Each month the advisor best in diplomacy among the free ones takes the first pair he would move at least one whole point and at least 0.1 a month: a pair moves by its net push each month and stops where 100 × its monthly push toward the side says (the game's «no more than»), his push included. Hover a row for its two sides.",
         "bag_asp__values_item_column_name": "Pair",
         "bag_asp__values__use_name": "Push",
         "bag_asp__values__side_name": "Toward",
@@ -305,7 +305,7 @@ VALUES_LOC = {
     "russian": {
         "bag_asp__fine__values_name": "Общественные ценности",
         "bag_asp__values_name": "Общественные ценности",
-        "bag_asp__values_desc": "Для строки «Приоритета» [ShowCabinetActionName('change_societal_values')]: отмеченные пары двигаются, пробуются сверху вниз, в сторону, выбранную у каждой. Каждый месяц лучший по дипломатии свободный советник берёт первую пару, которую сдвинет хотя бы на одну целую единицу: пара останавливается там, где 100 × её месячный сдвиг в эту сторону (игровое «не больше»), с его толчком. Наведите на строку — увидите обе стороны.",
+        "bag_asp__values_desc": "Для строки «Приоритета» [ShowCabinetActionName('change_societal_values')]: отмеченные пары двигаются, пробуются сверху вниз, в сторону, выбранную у каждой. Каждый месяц лучший по дипломатии свободный советник берёт первую пару, которую сдвинет хотя бы на одну целую единицу и не меньше чем на 0.1 в месяц: пара идёт на свой чистый сдвиг в месяц и останавливается там, где 100 × её месячный сдвиг в эту сторону (игровое «не больше»), с его толчком. Наведите на строку — увидите обе стороны.",
         "bag_asp__values_item_column_name": "Пара",
         "bag_asp__values__use_name": "Двигать",
         "bag_asp__values__side_name": "Куда",
@@ -1095,6 +1095,9 @@ SV_FLAGS = ("bag_asp_sv_open", "bag_asp_sv_left", "bag_asp_sv_right", "bag_asp_s
 SV_FILE = "in_game/common/societal_values/00_default.txt"
 SV_ACTION = "change_societal_values"
 SV_DEFINES = "loading_screen/common/defines/00_defines.txt"
+# His rule 13.10: a pair is pushed only while it moves at least this much a
+# month («хотя бы 0.05, в идеале не менее 0.10»).
+SV_MIN_STEP = "0.1"
 
 
 def clear_sv(tabs: int) -> str:
@@ -1197,7 +1200,7 @@ def value_effects(game: Path, actions: dict[str, str]) -> str:
 \t\t\t\t\t\t\tbag_asp_sv_test = yes
 \t\t\t\t\t\t\tif = {{
 \t\t\t\t\t\t\t\tlimit = {{ has_variable = bag_asp_log_on }}
-\t\t\t\t\t\t\t\tdebug_log = "bag_asp: values, {pair} toward {right}: stands at {SV_LOG.format(n=1, d=2)}, would stop at {SV_LOG.format(n=2, d=2)}"
+\t\t\t\t\t\t\t\tdebug_log = "bag_asp: values, {pair} toward {right}: stands at {SV_LOG.format(n=1, d=2)}, would stop at {SV_LOG.format(n=2, d=2)}, moves {SV_LOG.format(n=3, d=4)} a month"
 \t\t\t\t\t\t\t}}
 \t\t\t\t\t\t}}
 \t\t\t\t\t\telse = {{
@@ -1219,7 +1222,7 @@ def value_effects(game: Path, actions: dict[str, str]) -> str:
 \t\t\t\t\t\t\tbag_asp_sv_test = yes
 \t\t\t\t\t\t\tif = {{
 \t\t\t\t\t\t\t\tlimit = {{ has_variable = bag_asp_log_on }}
-\t\t\t\t\t\t\t\tdebug_log = "bag_asp: values, {pair} toward {left}: stands at {SV_LOG.format(n=1, d=2)}, would stop at {SV_LOG.format(n=2, d=2)}"
+\t\t\t\t\t\t\t\tdebug_log = "bag_asp: values, {pair} toward {left}: stands at {SV_LOG.format(n=1, d=2)}, would stop at {SV_LOG.format(n=2, d=2)}, moves {SV_LOG.format(n=3, d=4)} a month"
 \t\t\t\t\t\t\t}}
 \t\t\t\t\t\t}}
 \t\t\t\t\t}}
@@ -1373,6 +1376,7 @@ bag_asp_sv_test = {{
 \t\tlimit = {{ has_variable = bag_asp_log_on }}
 \t\tset_global_variable = {{ name = bag_asp_sv_n1 value = local_var:bag_asp_sv_pos }}
 \t\tset_global_variable = {{ name = bag_asp_sv_n2 value = local_var:bag_asp_sv_stop }}
+\t\tset_global_variable = {{ name = bag_asp_sv_n3 value = local_var:bag_asp_sv_net }}
 \t}}
 \tset_local_variable = {{
 \t\tname = bag_asp_sv_stop
@@ -1389,7 +1393,14 @@ bag_asp_sv_test = {{
 \t\t}}
 \t}}
 \tif = {{
-\t\tlimit = {{ local_var:bag_asp_sv_stop > local_var:bag_asp_sv_at }}
+\t\t# His screenshot 13.10 15:19: «Качество» held at −20.70 with +0.00 a
+\t\t# month. A pair moves by its net push each month up to where it stops;
+\t\t# a net push near zero or below moves nothing. His floor: {SV_MIN_STEP} a
+\t\t# month at least (12:50:54 took quality at a net push of −0.009).
+\t\tlimit = {{
+\t\t\tlocal_var:bag_asp_sv_stop > local_var:bag_asp_sv_at
+\t\t\tlocal_var:bag_asp_sv_net >= {SV_MIN_STEP}
+\t\t}}
 \t\tset_variable = {{ name = bag_asp_sv_want value = local_var:bag_asp_sv_i }}
 \t\tset_variable = {{ name = bag_asp_sv_want_side value = local_var:bag_asp_sv_s }}
 \t}}
