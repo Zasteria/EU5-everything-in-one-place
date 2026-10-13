@@ -907,7 +907,7 @@ SWITCHES = (("auto", "bag_asp_auto_on"), ("culture_speedup", "bag_asp_speedup_on
 
 def shown_values() -> str:
     return "\n# Scope: country. A setting as a number, for the log.\n" + "\n".join(
-        f"bag_asp_show_{name} = {{\n\tvalue = var:{var}\n}}\n" for name, var in NUMBERS)
+        f"bag_asp_show_{name} = {{\n\tvalue = global_var:bag_asp_show_{name}\n}}\n" for name, var in NUMBERS)
 
 
 def log_settings() -> str:
@@ -916,9 +916,17 @@ def log_settings() -> str:
     switches = "\n".join(
         f"\tif = {{\n\t\tlimit = {{ has_variable = {var} }}\n\t\tdebug_log = \"bag_asp: setting {name} on\"\n\t}}\n"
         f"\telse = {{\n\t\tdebug_log = \"bag_asp: setting {name} off\"\n\t}}" for name, var in SWITCHES)
+    # A country variable printed through GetPlayer reads «none/any» in a
+    # debug_log (his run 13.10 11:14); a global prints (docs/pitfalls/diagnosis.md).
+    park = "\n".join(
+        f"\tif = {{\n\t\tlimit = {{ has_variable = {var} }}\n"
+        f"\t\tset_global_variable = {{ name = bag_asp_show_{name} value = var:{var} }}\n\t}}\n"
+        f"\telse = {{\n\t\tset_global_variable = {{ name = bag_asp_show_{name} value = 0 }}\n\t}}"
+        for name, var in NUMBERS)
     return f"""
 # Scope: country. His ask 13.10: the settings as they stand, after he changed one.
 bag_asp_log_settings = {{
+{park}
 \tdebug_log = "bag_asp: settings: {numbers}"
 {switches}
 }}
@@ -1042,12 +1050,15 @@ bag_asp_probe_half = {{
 """
 
 
-# The value-shift probe, 0.9.9. Script sets the action, but the pair stays
-# empty (his runs 12.10); the game's window picks it (value_window.py). The
-# flags live only between the press of the button and the window's press.
+# The value shift, probe 0.9.10. Script sets the action, but the pair stays
+# empty (his runs 12.10); the game's window picks it (value_window.py) — his
+# run 13.10 11:14: the window opened, listed 13 pairs and pressed the asked
+# side, and stayed open. The flags live only between the press of the button
+# and the window closing.
 # `bag_asp_sv_left` joins them with the first rule that pushes a left side;
 # the probe pushes right only.
-SV_FLAGS = ("bag_asp_sv_open", "bag_asp_sv_right", "bag_asp_sv_pair")
+SV_FLAGS = ("bag_asp_sv_open", "bag_asp_sv_right", "bag_asp_sv_pair", "bag_asp_sv_close")
+SV_FILE = "in_game/common/societal_values/00_default.txt"
 
 
 def clear_sv(tabs: int) -> str:
@@ -1056,42 +1067,88 @@ def clear_sv(tabs: int) -> str:
                      for v in SV_FLAGS)
 
 
-VALUE_EFFECTS = f"""
-# Scope: country. The probe's button: the seat whose advisor has the best
-# diplomacy is put on «Изменение общественных ценностей», and the game's window
-# is asked to open for it and press «Традиционализм — Инновации», toward
-# innovation. The hidden window and the window's rows do the rest.
+def value_pairs(game: Path) -> list[str]:
+    """Every pair the game defines, in its file's order (the window's order)."""
+    text = (game / SV_FILE).read_text(encoding="utf-8-sig")
+    pairs = re.findall(r"^(\w+_vs_\w+) = \{", text, re.M)
+    if "traditionalist_vs_innovative" not in pairs:
+        raise SystemExit("societal values: the game's file no longer has traditionalist_vs_innovative")
+    return pairs
+
+
+def value_effects(game: Path) -> str:
+    # The probe takes the first pair the country has whose value is short of
+    # its right end — his run 13.10: innovation already stood at 100, and the
+    # game dropped the action at once.
+    pick = []
+    for i, pair in enumerate(value_pairs(game)):
+        pick.append(f"""\t{"if" if i == 0 else "else_if"} = {{
+\t\tlimit = {{
+\t\t\thas_societal_value = societal_value_type:{pair}
+\t\t\tsocietal_value:{pair} < 100
+\t\t}}
+\t\tset_variable = {{ name = bag_asp_sv_pair value = societal_value_type:{pair} }}
+\t\tset_global_variable = {{ name = bag_asp_sv_now value = societal_value:{pair} }}
+\t\tdebug_log = "bag_asp: sv probe, the pair {pair}, now [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_now_value')|2]"
+\t}}""")
+    return f"""
+# Scope: country. The probe's button: the first pair short of its right end,
+# the seat whose advisor has the best diplomacy put on «Изменение общественных
+# ценностей», and the game's window asked to open for it and press the right
+# side. The hidden window and the window's rows do the rest. Every seat's
+# limit is logged first: what the monthly rule will compare against.
 bag_asp_sv_probe = {{
 \tdebug_log = "bag_asp: sv probe, the button was pressed"
 {clear_sv(1)}
-\tordered_cabinet = {{
+\tevery_cabinet = {{
 \t\tlimit = {{ exists = cabinet_member }}
-\t\torder_by = cabinet_member.dip
-\t\tsave_scope_as = bag_asp_sv_seat
+\t\tset_global_variable = {{ name = bag_asp_sv_seat value = this }}
+\t\tset_global_variable = {{ name = bag_asp_sv_dip value = cabinet_member.dip }}
+\t\tcabinet_member = {{ debug_log_scopes = no }}
+\t\tdebug_log = "bag_asp: sv a seat, dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_dip_value')|0], limit [GetGlobalVariable('bag_asp_sv_seat').GetCabinet.GetMaxSocietalValueReachable|2]"
+\t}}
+{chr(10).join(pick)}
+\tif = {{
+\t\tlimit = {{ NOT = {{ has_variable = bag_asp_sv_pair }} }}
+\t\tdebug_log = "bag_asp: sv probe, every pair the country has is at its right end"
+\t}}
+\telse = {{
+\t\tordered_cabinet = {{
+\t\t\tlimit = {{ exists = cabinet_member }}
+\t\t\torder_by = cabinet_member.dip
+\t\t\tsave_scope_as = bag_asp_sv_seat
+\t\t}}
 \t}}
 \tif = {{
-\t\tlimit = {{ exists = scope:bag_asp_sv_seat }}
+\t\tlimit = {{
+\t\t\thas_variable = bag_asp_sv_pair
+\t\t\texists = scope:bag_asp_sv_seat
+\t\t}}
 \t\tscope:bag_asp_sv_seat = {{
 \t\t\tcabinet_member = {{ debug_log_scopes = no }}
 \t\t\tbag_asp_vacate = yes
 \t\t\tset_cabinet_action = {{
 \t\t\t\ttype = cabinet_action:change_societal_values
+\t\t\t\t# Any pair: the target sets none (his run 12.10); the window picks it.
 \t\t\t\ttarget = societal_value_type:traditionalist_vs_innovative
 \t\t\t}}
 \t\t}}
 \t\tset_variable = {{ name = bag_asp_sv_cab value = scope:bag_asp_sv_seat }}
-\t\tset_variable = {{ name = bag_asp_sv_pair value = societal_value_type:traditionalist_vs_innovative }}
 \t\tset_variable = {{ name = bag_asp_sv_right value = yes }}
 \t\tset_variable = {{ name = bag_asp_sv_open value = yes }}
 \t\tdebug_log = "bag_asp: sv probe, the seat is on values, the window is asked to open"
 \t}}
-\telse = {{
-\t\tdebug_log = "bag_asp: sv probe, no seat has an advisor"
-\t}}
 }}
 """
 
-VALUE_GUIS = f"""
+
+# Scope: any. The value probe's numbers, parked in globals for the log.
+SV_VALUES = "".join(f"\n{sv}_value = {{\n\tvalue = global_var:{sv}\n}}\n"
+                    for sv in ("bag_asp_sv_now", "bag_asp_sv_dip", "bag_asp_sv_limit"))
+
+
+def value_guis() -> str:
+    return f"""
 # The probe's button row draws only while this exists; the press comes as a
 # callback (bag_asp_handle_callback).
 {MOD_ID}__sv_probe_on_changed = {{
@@ -1100,8 +1157,20 @@ VALUE_GUIS = f"""
 \teffect = {{ }}
 }}
 
-# Called by the hidden window (bag_asp_hidden.gui) right after it asked the
-# game's value window to open for the seat in var:bag_asp_sv_cab.
+# Called by the hidden window (bag_asp_hidden.gui) with the chosen seat's
+# limit as the window reads it (Cabinet.GetMaxSocietalValueReachable): the
+# number the monthly rule compares against, read where only the interface can.
+bag_asp_sv_limit = {{
+\tscope = country
+\tis_shown = {{ always = yes }}
+\teffect = {{
+\t\tset_global_variable = {{ name = bag_asp_sv_limit value = scope:limit }}
+\t\tdebug_log = "bag_asp: sv the window read the seat's limit [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_limit_value')|2]"
+\t}}
+}}
+
+# Called by the hidden window right after it asked the game's value window to
+# open for the seat in var:bag_asp_sv_cab.
 bag_asp_sv_opening = {{
 \tscope = country
 \tis_shown = {{ always = yes }}
@@ -1111,13 +1180,35 @@ bag_asp_sv_opening = {{
 \t}}
 }}
 
-# Called by a row of the value window right after it pressed a side.
+# Called by a row of the value window right after it pressed a side; the
+# window then closes itself (bag_asp_sv_close).
 bag_asp_sv_pressed = {{
 \tscope = country
 \tis_shown = {{ always = yes }}
 \teffect = {{
 \t\tdebug_log = "bag_asp: sv the value window pressed the asked side"
 {clear_sv(2)}
+\t\tset_variable = {{ name = bag_asp_sv_close value = yes }}
+\t}}
+}}
+
+# Called by the value window as it leaves: back to the view it opened over,
+# or closed when it opened over nothing. His ask 13.10 11:19.
+bag_asp_sv_back = {{
+\tscope = country
+\tis_shown = {{ always = yes }}
+\teffect = {{
+\t\tdebug_log = "bag_asp: sv the value window goes back to the view under it"
+\t\tif = {{ limit = {{ has_variable = bag_asp_sv_close }} remove_variable = bag_asp_sv_close }}
+\t}}
+}}
+
+bag_asp_sv_closed = {{
+\tscope = country
+\tis_shown = {{ always = yes }}
+\teffect = {{
+\t\tdebug_log = "bag_asp: sv the value window closes"
+\t\tif = {{ limit = {{ has_variable = bag_asp_sv_close }} remove_variable = bag_asp_sv_close }}
 \t}}
 }}
 
@@ -1573,7 +1664,7 @@ bag_asp_vacate = {{
 
 """
     run += tries
-    run += VALUE_EFFECTS
+    run += value_effects(game)
     # A seat's rank is its action's row; where two rows share an action, the
     # row whose gate holds now, gated rows tried first.
     shared = {act(k) for k, *_ in POOL if act(k) != k}
@@ -1825,7 +1916,7 @@ bag_asp_devastated_seen = {{
 \t\tdebug_log = "bag_asp: the devastated locations alert is showing"
 \t}}
 }}
-""" + VALUE_GUIS
+""" + value_guis()
     # His rule 13.10: a province without control assimilates nothing, so it is
     # taken only while a control action can come with it.
     fits = []
@@ -1912,7 +2003,7 @@ bag_asp_paired_seat = {{
 
     return {
         "in_game/common/scripted_triggers/bag_asp_council_triggers.txt": triggers,
-        "in_game/common/script_values/bag_asp_values.txt": VALUES + shown_values(),
+        "in_game/common/script_values/bag_asp_values.txt": VALUES + shown_values() + SV_VALUES,
         "in_game/common/scripted_effects/bag_asp_cmm_effects.txt": effects,
         "in_game/common/scripted_effects/bag_asp_council_effects.txt": run,
         "in_game/common/on_action/bag_asp_cmf_on_actions.txt": on_actions,

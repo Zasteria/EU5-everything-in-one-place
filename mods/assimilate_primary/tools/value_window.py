@@ -85,6 +85,33 @@ def row_log() -> str:
 """
 
 
+def closers() -> str:
+    """Children of the window itself, not of a row: after the press, back to
+    the view the window opened over, or closed when there was none. His ask
+    13.10 11:19 — the window stayed on screen after the mod's press."""
+    out = ""
+    for name, when, gui, act in (
+            ("back", "LateralView.CanGoBack", "bag_asp_sv_back", "LateralView.GoBack"),
+            ("close", "Not(LateralView.CanGoBack)", "bag_asp_sv_closed", "LateralView.Close")):
+        out += f"""
+\t\t# assimilate_primary: after the council automation's press, {name}
+\t\t# (value_window.py).
+\t\twidget = {{
+\t\t\tname = "bag_asp_sv_{name}"
+\t\t\tsize = {{ 0 0 }}
+\t\t\tvisible_at_creation = no
+\t\t\tvisible = "[And({var('bag_asp_sv_close')}.IsSet, {when})]"
+\t\t\tstate = {{
+\t\t\t\tname = _show
+\t\t\t\tduration = 0.1
+\t\t\t\ton_start = "[GetScriptedGui('{gui}').Execute({ROOT})]"
+\t\t\t\ton_start = "[{act}]"
+\t\t\t}}
+\t\t}}
+"""
+    return out
+
+
 HIDDEN_TEXT = f"""# assimilate_primary: always present, never seen. Opens the game's window of
 # societal values for the seat the council automation chose. Built by
 # tools/value_window.py, do not edit by hand.
@@ -103,6 +130,7 @@ widget = {{
 \t\tstate = {{
 \t\t\tname = _show
 \t\t\tduration = 0.1
+\t\t\ton_start = "[GetScriptedGui('bag_asp_sv_limit').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('limit', MakeScopeValue({var('bag_asp_sv_cab')}.GetCabinet.GetMaxSocietalValueReachable)).End)]"
 \t\t\ton_start = "[ChangeCabinetActionTarget({var('bag_asp_sv_cab')}.GetCabinet.Self)]"
 \t\t\ton_start = "[GetScriptedGui('bag_asp_sv_opening').Execute({ROOT})]"
 \t\t}}
@@ -119,10 +147,15 @@ def build(game: Path) -> dict[str, str]:
     row = text.find("size = { 100% 50 }", model)
     if row < 0 or "SelectLeftCandidate" not in text or "SelectRightCandidate" not in text:
         raise SystemExit("select_societal_value: the pair's row changed; read the game's window first")
+    panel = text.find('blockoverride "panel_content" {')
+    if panel < 0 or panel > model:
+        raise SystemExit("select_societal_value: the window's content block changed; read the game's window first")
+    top = text.index("\n", panel) + 1
     at = text.index("\n", row) + 1
     head = ("# assimilate_primary: the game's select_societal_value.gui, copied whole,\n"
-            "# with two children in each pair's row. Built by tools/value_window.py.\n")
-    window = head + text[:at] + row_log() + "".join(presser(s) for s in SIDES) + text[at:]
+            "# with the council automation's children. Built by tools/value_window.py.\n")
+    window = (head + text[:top] + closers() + text[top:at] + row_log()
+              + "".join(presser(s) for s in SIDES) + text[at:])
     return {
         WINDOW: window,
         HIDDEN: HIDDEN_TEXT,

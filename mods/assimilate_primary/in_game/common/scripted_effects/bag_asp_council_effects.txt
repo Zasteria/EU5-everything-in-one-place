@@ -1303,38 +1303,206 @@ bag_asp_try_at_increase_control_province = {
 	}
 }
 
-# Scope: country. The probe's button: the seat whose advisor has the best
-# diplomacy is put on «Изменение общественных ценностей», and the game's window
-# is asked to open for it and press «Традиционализм — Инновации», toward
-# innovation. The hidden window and the window's rows do the rest.
+# Scope: country. The probe's button: the first pair short of its right end,
+# the seat whose advisor has the best diplomacy put on «Изменение общественных
+# ценностей», and the game's window asked to open for it and press the right
+# side. The hidden window and the window's rows do the rest. Every seat's
+# limit is logged first: what the monthly rule will compare against.
 bag_asp_sv_probe = {
 	debug_log = "bag_asp: sv probe, the button was pressed"
 	if = { limit = { has_variable = bag_asp_sv_open } remove_variable = bag_asp_sv_open }
 	if = { limit = { has_variable = bag_asp_sv_right } remove_variable = bag_asp_sv_right }
 	if = { limit = { has_variable = bag_asp_sv_pair } remove_variable = bag_asp_sv_pair }
-	ordered_cabinet = {
+	if = { limit = { has_variable = bag_asp_sv_close } remove_variable = bag_asp_sv_close }
+	every_cabinet = {
 		limit = { exists = cabinet_member }
-		order_by = cabinet_member.dip
-		save_scope_as = bag_asp_sv_seat
+		set_global_variable = { name = bag_asp_sv_seat value = this }
+		set_global_variable = { name = bag_asp_sv_dip value = cabinet_member.dip }
+		cabinet_member = { debug_log_scopes = no }
+		debug_log = "bag_asp: sv a seat, dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_dip_value')|0], limit [GetGlobalVariable('bag_asp_sv_seat').GetCabinet.GetMaxSocietalValueReachable|2]"
 	}
 	if = {
-		limit = { exists = scope:bag_asp_sv_seat }
+		limit = {
+			has_societal_value = societal_value_type:centralization_vs_decentralization
+			societal_value:centralization_vs_decentralization < 100
+		}
+		set_variable = { name = bag_asp_sv_pair value = societal_value_type:centralization_vs_decentralization }
+		set_global_variable = { name = bag_asp_sv_now value = societal_value:centralization_vs_decentralization }
+		debug_log = "bag_asp: sv probe, the pair centralization_vs_decentralization, now [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_now_value')|2]"
+	}
+	else_if = {
+		limit = {
+			has_societal_value = societal_value_type:traditionalist_vs_innovative
+			societal_value:traditionalist_vs_innovative < 100
+		}
+		set_variable = { name = bag_asp_sv_pair value = societal_value_type:traditionalist_vs_innovative }
+		set_global_variable = { name = bag_asp_sv_now value = societal_value:traditionalist_vs_innovative }
+		debug_log = "bag_asp: sv probe, the pair traditionalist_vs_innovative, now [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_now_value')|2]"
+	}
+	else_if = {
+		limit = {
+			has_societal_value = societal_value_type:spiritualist_vs_humanist
+			societal_value:spiritualist_vs_humanist < 100
+		}
+		set_variable = { name = bag_asp_sv_pair value = societal_value_type:spiritualist_vs_humanist }
+		set_global_variable = { name = bag_asp_sv_now value = societal_value:spiritualist_vs_humanist }
+		debug_log = "bag_asp: sv probe, the pair spiritualist_vs_humanist, now [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_now_value')|2]"
+	}
+	else_if = {
+		limit = {
+			has_societal_value = societal_value_type:aristocracy_vs_plutocracy
+			societal_value:aristocracy_vs_plutocracy < 100
+		}
+		set_variable = { name = bag_asp_sv_pair value = societal_value_type:aristocracy_vs_plutocracy }
+		set_global_variable = { name = bag_asp_sv_now value = societal_value:aristocracy_vs_plutocracy }
+		debug_log = "bag_asp: sv probe, the pair aristocracy_vs_plutocracy, now [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_now_value')|2]"
+	}
+	else_if = {
+		limit = {
+			has_societal_value = societal_value_type:serfdom_vs_free_subjects
+			societal_value:serfdom_vs_free_subjects < 100
+		}
+		set_variable = { name = bag_asp_sv_pair value = societal_value_type:serfdom_vs_free_subjects }
+		set_global_variable = { name = bag_asp_sv_now value = societal_value:serfdom_vs_free_subjects }
+		debug_log = "bag_asp: sv probe, the pair serfdom_vs_free_subjects, now [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_now_value')|2]"
+	}
+	else_if = {
+		limit = {
+			has_societal_value = societal_value_type:mercantilism_vs_free_trade
+			societal_value:mercantilism_vs_free_trade < 100
+		}
+		set_variable = { name = bag_asp_sv_pair value = societal_value_type:mercantilism_vs_free_trade }
+		set_global_variable = { name = bag_asp_sv_now value = societal_value:mercantilism_vs_free_trade }
+		debug_log = "bag_asp: sv probe, the pair mercantilism_vs_free_trade, now [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_now_value')|2]"
+	}
+	else_if = {
+		limit = {
+			has_societal_value = societal_value_type:belligerent_vs_conciliatory
+			societal_value:belligerent_vs_conciliatory < 100
+		}
+		set_variable = { name = bag_asp_sv_pair value = societal_value_type:belligerent_vs_conciliatory }
+		set_global_variable = { name = bag_asp_sv_now value = societal_value:belligerent_vs_conciliatory }
+		debug_log = "bag_asp: sv probe, the pair belligerent_vs_conciliatory, now [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_now_value')|2]"
+	}
+	else_if = {
+		limit = {
+			has_societal_value = societal_value_type:quality_vs_quantity
+			societal_value:quality_vs_quantity < 100
+		}
+		set_variable = { name = bag_asp_sv_pair value = societal_value_type:quality_vs_quantity }
+		set_global_variable = { name = bag_asp_sv_now value = societal_value:quality_vs_quantity }
+		debug_log = "bag_asp: sv probe, the pair quality_vs_quantity, now [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_now_value')|2]"
+	}
+	else_if = {
+		limit = {
+			has_societal_value = societal_value_type:offensive_vs_defensive
+			societal_value:offensive_vs_defensive < 100
+		}
+		set_variable = { name = bag_asp_sv_pair value = societal_value_type:offensive_vs_defensive }
+		set_global_variable = { name = bag_asp_sv_now value = societal_value:offensive_vs_defensive }
+		debug_log = "bag_asp: sv probe, the pair offensive_vs_defensive, now [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_now_value')|2]"
+	}
+	else_if = {
+		limit = {
+			has_societal_value = societal_value_type:land_vs_naval
+			societal_value:land_vs_naval < 100
+		}
+		set_variable = { name = bag_asp_sv_pair value = societal_value_type:land_vs_naval }
+		set_global_variable = { name = bag_asp_sv_now value = societal_value:land_vs_naval }
+		debug_log = "bag_asp: sv probe, the pair land_vs_naval, now [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_now_value')|2]"
+	}
+	else_if = {
+		limit = {
+			has_societal_value = societal_value_type:capital_economy_vs_traditional_economy
+			societal_value:capital_economy_vs_traditional_economy < 100
+		}
+		set_variable = { name = bag_asp_sv_pair value = societal_value_type:capital_economy_vs_traditional_economy }
+		set_global_variable = { name = bag_asp_sv_now value = societal_value:capital_economy_vs_traditional_economy }
+		debug_log = "bag_asp: sv probe, the pair capital_economy_vs_traditional_economy, now [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_now_value')|2]"
+	}
+	else_if = {
+		limit = {
+			has_societal_value = societal_value_type:individualism_vs_communalism
+			societal_value:individualism_vs_communalism < 100
+		}
+		set_variable = { name = bag_asp_sv_pair value = societal_value_type:individualism_vs_communalism }
+		set_global_variable = { name = bag_asp_sv_now value = societal_value:individualism_vs_communalism }
+		debug_log = "bag_asp: sv probe, the pair individualism_vs_communalism, now [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_now_value')|2]"
+	}
+	else_if = {
+		limit = {
+			has_societal_value = societal_value_type:outward_vs_inward
+			societal_value:outward_vs_inward < 100
+		}
+		set_variable = { name = bag_asp_sv_pair value = societal_value_type:outward_vs_inward }
+		set_global_variable = { name = bag_asp_sv_now value = societal_value:outward_vs_inward }
+		debug_log = "bag_asp: sv probe, the pair outward_vs_inward, now [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_now_value')|2]"
+	}
+	else_if = {
+		limit = {
+			has_societal_value = societal_value_type:sinicized_vs_unsinicized
+			societal_value:sinicized_vs_unsinicized < 100
+		}
+		set_variable = { name = bag_asp_sv_pair value = societal_value_type:sinicized_vs_unsinicized }
+		set_global_variable = { name = bag_asp_sv_now value = societal_value:sinicized_vs_unsinicized }
+		debug_log = "bag_asp: sv probe, the pair sinicized_vs_unsinicized, now [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_now_value')|2]"
+	}
+	else_if = {
+		limit = {
+			has_societal_value = societal_value_type:absolutism_vs_liberalism
+			societal_value:absolutism_vs_liberalism < 100
+		}
+		set_variable = { name = bag_asp_sv_pair value = societal_value_type:absolutism_vs_liberalism }
+		set_global_variable = { name = bag_asp_sv_now value = societal_value:absolutism_vs_liberalism }
+		debug_log = "bag_asp: sv probe, the pair absolutism_vs_liberalism, now [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_now_value')|2]"
+	}
+	else_if = {
+		limit = {
+			has_societal_value = societal_value_type:mysticism_vs_jurisprudence
+			societal_value:mysticism_vs_jurisprudence < 100
+		}
+		set_variable = { name = bag_asp_sv_pair value = societal_value_type:mysticism_vs_jurisprudence }
+		set_global_variable = { name = bag_asp_sv_now value = societal_value:mysticism_vs_jurisprudence }
+		debug_log = "bag_asp: sv probe, the pair mysticism_vs_jurisprudence, now [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_now_value')|2]"
+	}
+	else_if = {
+		limit = {
+			has_societal_value = societal_value_type:latinization_vs_hellenization
+			societal_value:latinization_vs_hellenization < 100
+		}
+		set_variable = { name = bag_asp_sv_pair value = societal_value_type:latinization_vs_hellenization }
+		set_global_variable = { name = bag_asp_sv_now value = societal_value:latinization_vs_hellenization }
+		debug_log = "bag_asp: sv probe, the pair latinization_vs_hellenization, now [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_now_value')|2]"
+	}
+	if = {
+		limit = { NOT = { has_variable = bag_asp_sv_pair } }
+		debug_log = "bag_asp: sv probe, every pair the country has is at its right end"
+	}
+	else = {
+		ordered_cabinet = {
+			limit = { exists = cabinet_member }
+			order_by = cabinet_member.dip
+			save_scope_as = bag_asp_sv_seat
+		}
+	}
+	if = {
+		limit = {
+			has_variable = bag_asp_sv_pair
+			exists = scope:bag_asp_sv_seat
+		}
 		scope:bag_asp_sv_seat = {
 			cabinet_member = { debug_log_scopes = no }
 			bag_asp_vacate = yes
 			set_cabinet_action = {
 				type = cabinet_action:change_societal_values
+				# Any pair: the target sets none (his run 12.10); the window picks it.
 				target = societal_value_type:traditionalist_vs_innovative
 			}
 		}
 		set_variable = { name = bag_asp_sv_cab value = scope:bag_asp_sv_seat }
-		set_variable = { name = bag_asp_sv_pair value = societal_value_type:traditionalist_vs_innovative }
 		set_variable = { name = bag_asp_sv_right value = yes }
 		set_variable = { name = bag_asp_sv_open value = yes }
 		debug_log = "bag_asp: sv probe, the seat is on values, the window is asked to open"
-	}
-	else = {
-		debug_log = "bag_asp: sv probe, no seat has an advisor"
 	}
 }
 
@@ -4366,6 +4534,34 @@ bag_asp_probe_half = {
 
 # Scope: country. His ask 13.10: the settings as they stand, after he changed one.
 bag_asp_log_settings = {
+	if = {
+		limit = { has_variable = bag_asp_period }
+		set_global_variable = { name = bag_asp_show_period value = var:bag_asp_period }
+	}
+	else = {
+		set_global_variable = { name = bag_asp_show_period value = 0 }
+	}
+	if = {
+		limit = { has_variable = bag_asp_review }
+		set_global_variable = { name = bag_asp_show_review value = var:bag_asp_review }
+	}
+	else = {
+		set_global_variable = { name = bag_asp_show_review value = 0 }
+	}
+	if = {
+		limit = { has_variable = bag_asp_culture_target }
+		set_global_variable = { name = bag_asp_show_culture_target value = var:bag_asp_culture_target }
+	}
+	else = {
+		set_global_variable = { name = bag_asp_show_culture_target value = 0 }
+	}
+	if = {
+		limit = { has_variable = bag_asp_religion_target }
+		set_global_variable = { name = bag_asp_show_religion_target value = var:bag_asp_religion_target }
+	}
+	else = {
+		set_global_variable = { name = bag_asp_show_religion_target value = 0 }
+	}
 	debug_log = "bag_asp: settings: period [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_period')|0], review [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_review')|0], culture_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_culture_target')|0], religion_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_religion_target')|0]"
 	if = {
 		limit = { has_variable = bag_asp_auto_on }

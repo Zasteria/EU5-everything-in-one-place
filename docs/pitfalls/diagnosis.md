@@ -87,6 +87,9 @@ of these shape the file that is built now.
 - **`debug_log` writes on a normal build.** Construction Manager guards its own
   behind `debug_only`; that is their choice, not a requirement. `error_log`
   lands too, which is why the headline goes to both sinks and the detail to one.
+- **A country variable is not** (13.10 11:14): an SV reading `var:x`, printed
+  through `GuiScope.SetRoot(GetPlayer.MakeScope)`, gave «Value of wrong type…
+  none/any» and a zero. Park it in a global first.
 - **A global is reachable**:
   `[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('<sv>')|0]` resolves inside
   a `debug_log` string exactly as it does in a localization.

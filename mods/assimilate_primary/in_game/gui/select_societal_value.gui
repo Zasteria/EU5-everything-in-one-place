@@ -1,5 +1,5 @@
 ﻿# assimilate_primary: the game's select_societal_value.gui, copied whole,
-# with two children in each pair's row. Built by tools/value_window.py.
+# with the council automation's children. Built by tools/value_window.py.
 lateralview = {
 	name = "select_societal_value"
 	
@@ -12,6 +12,36 @@ lateralview = {
 	}
 
 	blockoverride "panel_content" {
+
+		# assimilate_primary: after the council automation's press, back
+		# (value_window.py).
+		widget = {
+			name = "bag_asp_sv_back"
+			size = { 0 0 }
+			visible_at_creation = no
+			visible = "[And(GetPlayer.MakeScope.GetVariable('bag_asp_sv_close').IsSet, LateralView.CanGoBack)]"
+			state = {
+				name = _show
+				duration = 0.1
+				on_start = "[GetScriptedGui('bag_asp_sv_back').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+				on_start = "[LateralView.GoBack]"
+			}
+		}
+
+		# assimilate_primary: after the council automation's press, close
+		# (value_window.py).
+		widget = {
+			name = "bag_asp_sv_close"
+			size = { 0 0 }
+			visible_at_creation = no
+			visible = "[And(GetPlayer.MakeScope.GetVariable('bag_asp_sv_close').IsSet, Not(LateralView.CanGoBack))]"
+			state = {
+				name = _show
+				duration = 0.1
+				on_start = "[GetScriptedGui('bag_asp_sv_closed').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+				on_start = "[LateralView.Close]"
+			}
+		}
 		vbox = {
 			using = layoutpolicy_expanding
 			using = bg_main_inner_alt

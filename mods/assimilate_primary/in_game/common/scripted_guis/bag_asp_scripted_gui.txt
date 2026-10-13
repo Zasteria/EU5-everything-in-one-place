@@ -69,8 +69,20 @@ bag_asp__sv_probe_on_changed = {
 	effect = { }
 }
 
-# Called by the hidden window (bag_asp_hidden.gui) right after it asked the
-# game's value window to open for the seat in var:bag_asp_sv_cab.
+# Called by the hidden window (bag_asp_hidden.gui) with the chosen seat's
+# limit as the window reads it (Cabinet.GetMaxSocietalValueReachable): the
+# number the monthly rule compares against, read where only the interface can.
+bag_asp_sv_limit = {
+	scope = country
+	is_shown = { always = yes }
+	effect = {
+		set_global_variable = { name = bag_asp_sv_limit value = scope:limit }
+		debug_log = "bag_asp: sv the window read the seat's limit [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_limit_value')|2]"
+	}
+}
+
+# Called by the hidden window right after it asked the game's value window to
+# open for the seat in var:bag_asp_sv_cab.
 bag_asp_sv_opening = {
 	scope = country
 	is_shown = { always = yes }
@@ -80,7 +92,8 @@ bag_asp_sv_opening = {
 	}
 }
 
-# Called by a row of the value window right after it pressed a side.
+# Called by a row of the value window right after it pressed a side; the
+# window then closes itself (bag_asp_sv_close).
 bag_asp_sv_pressed = {
 	scope = country
 	is_shown = { always = yes }
@@ -89,6 +102,28 @@ bag_asp_sv_pressed = {
 		if = { limit = { has_variable = bag_asp_sv_open } remove_variable = bag_asp_sv_open }
 		if = { limit = { has_variable = bag_asp_sv_right } remove_variable = bag_asp_sv_right }
 		if = { limit = { has_variable = bag_asp_sv_pair } remove_variable = bag_asp_sv_pair }
+		if = { limit = { has_variable = bag_asp_sv_close } remove_variable = bag_asp_sv_close }
+		set_variable = { name = bag_asp_sv_close value = yes }
+	}
+}
+
+# Called by the value window as it leaves: back to the view it opened over,
+# or closed when it opened over nothing. His ask 13.10 11:19.
+bag_asp_sv_back = {
+	scope = country
+	is_shown = { always = yes }
+	effect = {
+		debug_log = "bag_asp: sv the value window goes back to the view under it"
+		if = { limit = { has_variable = bag_asp_sv_close } remove_variable = bag_asp_sv_close }
+	}
+}
+
+bag_asp_sv_closed = {
+	scope = country
+	is_shown = { always = yes }
+	effect = {
+		debug_log = "bag_asp: sv the value window closes"
+		if = { limit = { has_variable = bag_asp_sv_close } remove_variable = bag_asp_sv_close }
 	}
 }
 
