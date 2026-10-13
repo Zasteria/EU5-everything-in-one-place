@@ -28,6 +28,7 @@ from __future__ import annotations
 import re
 
 import alert_banner  # tools/, put on sys.path by generate.py
+import value_window
 from pathlib import Path
 
 MOD_ID = "bag_asp"
@@ -1041,6 +1042,98 @@ bag_asp_probe_half = {{
 """
 
 
+# The value-shift probe, 0.9.9. Script sets the action, but the pair stays
+# empty (his runs 12.10); the game's window picks it (value_window.py). The
+# flags live only between the press of the button and the window's press.
+# `bag_asp_sv_left` joins them with the first rule that pushes a left side;
+# the probe pushes right only.
+SV_FLAGS = ("bag_asp_sv_open", "bag_asp_sv_right", "bag_asp_sv_pair")
+
+
+def clear_sv(tabs: int) -> str:
+    pad = "\t" * tabs
+    return "\n".join(f"{pad}if = {{ limit = {{ has_variable = {v} }} remove_variable = {v} }}"
+                     for v in SV_FLAGS)
+
+
+VALUE_EFFECTS = f"""
+# Scope: country. The probe's button: the seat whose advisor has the best
+# diplomacy is put on «Изменение общественных ценностей», and the game's window
+# is asked to open for it and press «Традиционализм — Инновации», toward
+# innovation. The hidden window and the window's rows do the rest.
+bag_asp_sv_probe = {{
+\tdebug_log = "bag_asp: sv probe, the button was pressed"
+{clear_sv(1)}
+\tordered_cabinet = {{
+\t\tlimit = {{ exists = cabinet_member }}
+\t\torder_by = cabinet_member.dip
+\t\tsave_scope_as = bag_asp_sv_seat
+\t}}
+\tif = {{
+\t\tlimit = {{ exists = scope:bag_asp_sv_seat }}
+\t\tscope:bag_asp_sv_seat = {{
+\t\t\tcabinet_member = {{ debug_log_scopes = no }}
+\t\t\tbag_asp_vacate = yes
+\t\t\tset_cabinet_action = {{
+\t\t\t\ttype = cabinet_action:change_societal_values
+\t\t\t\ttarget = societal_value_type:traditionalist_vs_innovative
+\t\t\t}}
+\t\t}}
+\t\tset_variable = {{ name = bag_asp_sv_cab value = scope:bag_asp_sv_seat }}
+\t\tset_variable = {{ name = bag_asp_sv_pair value = societal_value_type:traditionalist_vs_innovative }}
+\t\tset_variable = {{ name = bag_asp_sv_right value = yes }}
+\t\tset_variable = {{ name = bag_asp_sv_open value = yes }}
+\t\tdebug_log = "bag_asp: sv probe, the seat is on values, the window is asked to open"
+\t}}
+\telse = {{
+\t\tdebug_log = "bag_asp: sv probe, no seat has an advisor"
+\t}}
+}}
+"""
+
+VALUE_GUIS = f"""
+# The probe's button row draws only while this exists; the press comes as a
+# callback (bag_asp_handle_callback).
+{MOD_ID}__sv_probe_on_changed = {{
+\tscope = country
+\tis_shown = {{ always = yes }}
+\teffect = {{ }}
+}}
+
+# Called by the hidden window (bag_asp_hidden.gui) right after it asked the
+# game's value window to open for the seat in var:bag_asp_sv_cab.
+bag_asp_sv_opening = {{
+\tscope = country
+\tis_shown = {{ always = yes }}
+\teffect = {{
+\t\tdebug_log = "bag_asp: sv the hidden window asked the game's value window to open"
+\t\tif = {{ limit = {{ has_variable = bag_asp_sv_open }} remove_variable = bag_asp_sv_open }}
+\t}}
+}}
+
+# Called by a row of the value window right after it pressed a side.
+bag_asp_sv_pressed = {{
+\tscope = country
+\tis_shown = {{ always = yes }}
+\teffect = {{
+\t\tdebug_log = "bag_asp: sv the value window pressed the asked side"
+{clear_sv(2)}
+\t}}
+}}
+
+# Called once by each row of the value window while a press is awaited: names
+# the row's pair, so a run without a press still says what the window showed.
+bag_asp_sv_row = {{
+\tscope = country
+\tis_shown = {{ always = yes }}
+\teffect = {{
+\t\tdebug_log = "bag_asp: sv the value window shows a row"
+\t\tscope:sv ?= {{ debug_log_scopes = no }}
+\t}}
+}}
+"""
+
+
 def build(game: Path) -> dict[str, str]:
     """Generated files, by path under the mod, and localization rows."""
     actions = load_actions(game)
@@ -1094,6 +1187,19 @@ bag_asp_register = {{
 \t\ttab_id = main
 \t\tgroup_id = council
 \t\tdefault_value = 0
+\t}}
+\t# The value-shift probe, 0.9.9: one press puts the best diplomat on
+\t# «Традиционализм — Инновации» toward innovation through the game's window
+\t# (tools/value_window.py). Drawn only with its `_on_changed` gui.
+\tcmm_register_button_setting = {{
+\t\tmod_id = {MOD_ID}
+\t\tsetting_id = sv_probe
+\t\ttab_id = main
+\t\tgroup_id = council
+\t}}
+\tcmm_add_scripted_gui = {{
+\t\tmod_id = {MOD_ID}
+\t\tsetting_id = sv_probe
 \t}}
 
 \tcmm_register_settings_list = {{
@@ -1235,6 +1341,7 @@ bag_asp_handle_callback = {{
 \t\tflag:{MOD_ID}__culture_speedup = {{ bag_asp_sync = yes }}
 \t\tflag:{MOD_ID}__religion_target = {{ bag_asp_sync = yes }}
 \t\tflag:{MOD_ID}__log = {{ bag_asp_sync = yes }}
+\t\tflag:{MOD_ID}__sv_probe = {{ bag_asp_sv_probe = yes }}
 \t}}
 \t# His ask 13.10: what he changes goes into the log, with every setting after it.
 \tif = {{
@@ -1466,6 +1573,7 @@ bag_asp_vacate = {{
 
 """
     run += tries
+    run += VALUE_EFFECTS
     # A seat's rank is its action's row; where two rows share an action, the
     # row whose gate holds now, gated rows tried first.
     shared = {act(k) for k, *_ in POOL if act(k) != k}
@@ -1717,7 +1825,7 @@ bag_asp_devastated_seen = {{
 \t\tdebug_log = "bag_asp: the devastated locations alert is showing"
 \t}}
 }}
-"""
+""" + VALUE_GUIS
     # His rule 13.10: a province without control assimilates nothing, so it is
     # taken only while a control action can come with it.
     fits = []
@@ -1811,6 +1919,8 @@ bag_asp_paired_seat = {{
         "in_game/common/scripted_guis/bag_asp_scripted_gui.txt": guis,
         # The watch is a child of the game's alert banner: tools/alert_banner.py.
         alert_banner.PATH: alert_banner.build(game),
+        # The value shift presses the game's own window: tools/value_window.py.
+        **value_window.build(game),
     }
 
 

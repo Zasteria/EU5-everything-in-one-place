@@ -1,0 +1,23 @@
+﻿# assimilate_primary: always present, never seen. Opens the game's window of
+# societal values for the seat the council automation chose. Built by
+# tools/value_window.py, do not edit by hand.
+widget = {
+	name = "bag_asp_hidden"
+	# Keeps the children's visibility re-evaluated (cm_hidden_window.gui).
+	visible = "[EqualTo_CFixedPoint('(CFixedPoint)0', '(CFixedPoint)0')]"
+	position = { -10000 1 }
+	widget = {
+		name = "bag_asp_sv_opener"
+		size = { 0 0 }
+		# Hidden at creation, so a save loaded with the flag already set still
+		# turns it visible and fires _show.
+		visible_at_creation = no
+		visible = "[And(GetPlayer.Exists, GetPlayer.MakeScope.GetVariable('bag_asp_sv_open').IsSet)]"
+		state = {
+			name = _show
+			duration = 0.1
+			on_start = "[ChangeCabinetActionTarget(GetPlayer.MakeScope.GetVariable('bag_asp_sv_cab').GetCabinet.Self)]"
+			on_start = "[GetScriptedGui('bag_asp_sv_opening').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+		}
+	}
+}

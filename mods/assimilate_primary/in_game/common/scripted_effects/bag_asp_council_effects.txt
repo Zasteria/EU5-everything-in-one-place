@@ -1303,6 +1303,41 @@ bag_asp_try_at_increase_control_province = {
 	}
 }
 
+# Scope: country. The probe's button: the seat whose advisor has the best
+# diplomacy is put on «Изменение общественных ценностей», and the game's window
+# is asked to open for it and press «Традиционализм — Инновации», toward
+# innovation. The hidden window and the window's rows do the rest.
+bag_asp_sv_probe = {
+	debug_log = "bag_asp: sv probe, the button was pressed"
+	if = { limit = { has_variable = bag_asp_sv_open } remove_variable = bag_asp_sv_open }
+	if = { limit = { has_variable = bag_asp_sv_right } remove_variable = bag_asp_sv_right }
+	if = { limit = { has_variable = bag_asp_sv_pair } remove_variable = bag_asp_sv_pair }
+	ordered_cabinet = {
+		limit = { exists = cabinet_member }
+		order_by = cabinet_member.dip
+		save_scope_as = bag_asp_sv_seat
+	}
+	if = {
+		limit = { exists = scope:bag_asp_sv_seat }
+		scope:bag_asp_sv_seat = {
+			cabinet_member = { debug_log_scopes = no }
+			bag_asp_vacate = yes
+			set_cabinet_action = {
+				type = cabinet_action:change_societal_values
+				target = societal_value_type:traditionalist_vs_innovative
+			}
+		}
+		set_variable = { name = bag_asp_sv_cab value = scope:bag_asp_sv_seat }
+		set_variable = { name = bag_asp_sv_pair value = societal_value_type:traditionalist_vs_innovative }
+		set_variable = { name = bag_asp_sv_right value = yes }
+		set_variable = { name = bag_asp_sv_open value = yes }
+		debug_log = "bag_asp: sv probe, the seat is on values, the window is asked to open"
+	}
+	else = {
+		debug_log = "bag_asp: sv probe, no seat has an advisor"
+	}
+}
+
 # Scope: country. While the «devastated locations» alert shows (its banner,
 # bag_alert_banner.gui): as it appears, then every second. Costs a look
 # over the provinces unless one has a location below zero and no recovery;

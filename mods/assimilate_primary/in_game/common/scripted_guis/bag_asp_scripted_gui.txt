@@ -60,3 +60,45 @@ bag_asp_devastated_seen = {
 		debug_log = "bag_asp: the devastated locations alert is showing"
 	}
 }
+
+# The probe's button row draws only while this exists; the press comes as a
+# callback (bag_asp_handle_callback).
+bag_asp__sv_probe_on_changed = {
+	scope = country
+	is_shown = { always = yes }
+	effect = { }
+}
+
+# Called by the hidden window (bag_asp_hidden.gui) right after it asked the
+# game's value window to open for the seat in var:bag_asp_sv_cab.
+bag_asp_sv_opening = {
+	scope = country
+	is_shown = { always = yes }
+	effect = {
+		debug_log = "bag_asp: sv the hidden window asked the game's value window to open"
+		if = { limit = { has_variable = bag_asp_sv_open } remove_variable = bag_asp_sv_open }
+	}
+}
+
+# Called by a row of the value window right after it pressed a side.
+bag_asp_sv_pressed = {
+	scope = country
+	is_shown = { always = yes }
+	effect = {
+		debug_log = "bag_asp: sv the value window pressed the asked side"
+		if = { limit = { has_variable = bag_asp_sv_open } remove_variable = bag_asp_sv_open }
+		if = { limit = { has_variable = bag_asp_sv_right } remove_variable = bag_asp_sv_right }
+		if = { limit = { has_variable = bag_asp_sv_pair } remove_variable = bag_asp_sv_pair }
+	}
+}
+
+# Called once by each row of the value window while a press is awaited: names
+# the row's pair, so a run without a press still says what the window showed.
+bag_asp_sv_row = {
+	scope = country
+	is_shown = { always = yes }
+	effect = {
+		debug_log = "bag_asp: sv the value window shows a row"
+		scope:sv ?= { debug_log_scopes = no }
+	}
+}
