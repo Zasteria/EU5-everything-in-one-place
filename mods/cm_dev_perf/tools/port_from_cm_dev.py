@@ -810,6 +810,26 @@ def _food_pops_by_type(text: str) -> str:
     return text
 
 
+# The same run, his correction 13.10 20:43: what grew was the livestock RGO,
+# and the shortage was of laborers. Staging lets a food RGO in on one free
+# worker; the drain then builds level after level up to the RGO's size cap,
+# as many as the queue slots and the gold allow, with no pop read at all.
+# +perf42: the drain stops when the laborer-or-slave pool has no free level
+# left. The pool counts the RGO's levels under construction, so each level
+# this loop builds takes one off it. Auto-Build's own food RGO loop is not
+# touched: it gates on the six-year promotion projection by design.
+APPROVAL = "in_game/common/scripted_effects/cm_queue_approval_effects.txt"
+
+
+def _food_rgo_drain_pops(text: str) -> str:
+    old = ("\t\t\t\t\t\tcm_get_max_rgo_workers_floor > { value = cm_modifier_rgo_level add = cm_get_rgos_under_construction }\n"
+           "\t\t\t\t\t\tcm_check_country_gold_above = { threshold = cm_food_gold_threshold_plus_planned_spend }\n")
+    if text.count(old) != 1:
+        raise SystemExit("food rgo drain: the level loop has changed shape")
+    return text.replace(old, old + "\t\t\t\t\t\t# cm_dev_perf +perf42: a level only for laborers or slaves who are there\n"
+                                   "\t\t\t\t\t\tcm_location_laborers_or_slaves_available >= 1\n", 1)
+
+
 # The box's own words, to say it now covers every farm.
 SUBSIDY_DESC = {
     "english": "Subsidize the food-producing buildings auto-food constructs, and every month any farming village "
@@ -1237,6 +1257,7 @@ EDITS = (
     (CMM, "say the refresh button's click in debug.log", _pf_log_click),
     (FOOD, "subsidize every idle or loss-making farm", _subsidize_idle_farms),
     (FOOD_TRIGGERS, "auto-food asks the building's own pop pool", _food_pops_by_type),
+    (APPROVAL, "the food RGO drain stops at the laborer pool", _food_rgo_drain_pops),
     (QUEUE, "poll the queue every second, not every 0.3 s", _slow_the_poll),
     (QUEUE, "shout only into queues with entries", _gate_scan_shouts),
     (FEATURE, "count the ready-polls and log each cycle", _count_rounds_init),
