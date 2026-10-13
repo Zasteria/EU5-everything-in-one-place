@@ -348,3 +348,10 @@ docstring.
 нет ни текстиконов игры, ни половины её типов виджетов (`button_regular` работает
 и используется 114 раз, а объявления нет). «Не нашёл здесь» и «не существует» —
 разные утверждения.
+
+**The engine layers keep every language in one folder.** Under
+`loading_screen/localization/jomini/<part>/` sit `x_l_english.yml`,
+`x_l_russian.yml`… side by side, so reading the folder "as a language" mixes
+them, and the last file alphabetically wins every key. Read those file by file.
+1.4.1 added a Russian `cw_ugc_dlc` holding the English text: read by folder,
+`ru_loc_fix` took its English keys as gone and its translations as obsolete.

@@ -119,3 +119,18 @@ document's mistake. Versions come from `python3 tools/refs.py`, and a mod
 arriving newer than a document remembers is the normal state of this repository
 rather than something to report as a problem.
 
+
+**Never put the old game back with `git checkout <old> -- reference/game`.** It
+writes the old files over the new and re-adds what the patch deleted — into the
+index too — and `git checkout HEAD -- reference/game` afterwards restores the
+changed files but leaves the deleted ones behind, staged (10-13: two canal files
+1.4.1 had removed rode into a commit's index). To read the previous game, use
+`git show <old>:<path>` or `git archive <old> reference/game/... | tar -x -C <scratch>`.
+
+**After a patch, a copy of the game's own text that a mod carries goes stale
+silently — find the plain ones by comparing with the previous game.** A mod's
+copy of a type, a template or a whole window shadows the game's, so the patch
+never shows. Three-way: equal to the new game — fine; equal to the old game —
+a plain copy, take the game's; equal to neither — the mod's own edit, port by
+hand. On 1.4.1 that sorted CMF's 201 copies into 190 / 11 / 0 in a minute
+(`cmf_dev_beta` +beta12 now takes the game's for any copy without `cmf`/`cmm`).
