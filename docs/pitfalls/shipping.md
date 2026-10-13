@@ -31,13 +31,18 @@ vanilla's `rural_buildings.txt`, because `00_` sorts first. The `00_` prefix is
 for files that must load *early*; to override, sort late. Symptom: mod loads,
 changes nothing, logs nothing.
 
-**That rule is not measured, and the repository holds the opposite one.** A
-`customizable_localization` and a script value keep the *first* definition and
-drop the later with `gamedatabase.h: Duplicated key ... will not be created`
-([`localization.md`](localization.md)). Which holds for other databases is open
-(10-13, Integration Hotfix redeclares four objects without a prefix in `000_`
-files). Do not rely on either: write `REPLACE:`, and read
-`database_conflicts.log` from the logs zip when a duplicate is suspected.
+**Measured for `static_modifiers`, it is the other way round (10-13): the first
+definition wins.** Integration Hotfix's unprefixed `province_base` in
+`000_znew_province.txt` beat the game's `province.txt` in his run — the
+location's base read 0.5, not 0.1 (TESTLOG 10-13). A `customizable_localization`
+and a script value do the same, logging `gamedatabase.h: Duplicated key ... will
+not be created` ([`localization.md`](localization.md)). Whether `building_types`
+really differ is unmeasured. Do not rely on either: write `REPLACE:`.
+
+**`INJECT` of a block the object already has adds a second one, both apply.**
+The same run: the hotfix's injected `province_modifier = { province_integration_speed
+= 0.5 }` stood beside the game's 1.0 as two tooltip lines. To change a value,
+`REPLACE` the object.
 
 **`metadata.json` needs `"game_id": "eu5"`.** Every working mod has it. Without
 it the launcher does not treat the folder as an EU5 mod.
