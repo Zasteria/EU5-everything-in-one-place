@@ -82,7 +82,7 @@ ROW_ACTION = {"diplomatic_antagonism": "diplomatic_endeavors", "promote_culture_
 
 # A row's own condition on a target (in the province search) and on a seat
 # already on its action (keeping it; the emergency's rank).
-ROW_TARGET = {"promote_culture": "bag_asp_needs_half = yes province_average_control > 0"}
+ROW_TARGET = {"promote_culture": "bag_asp_needs_half = yes bag_asp_control_reachable = yes"}
 ROW_SEAT = {"promote_culture": "interaction_target:target_1 ?= { bag_asp_needs_half = yes }"}
 
 # Rows of one action told apart in their label, and their tooltips.
@@ -1415,6 +1415,35 @@ bag_asp_devastated_seen = {{
 \t}}
 }}
 """
+    # His rule 13.10: a province without control assimilates nothing, so it is
+    # taken only while a control action can come with it.
+    fits = []
+    for k in SPEEDUP:
+        fits.append(f"\t\t\t\tAND = {{\n\t\t\t\t\tcabinet_action:{k} = {{ is_available_for = scope:actor }}\n"
+                    f"\t\t\t\t\tscope:actor = {{ NOT = {{ any_cabinet = {{ has_cabinet_action = yes cabinet_action = cabinet_action:{k} }} }} }}\n"
+                    f"{target_test(select(actions[k], 'province'), 5, actions, k)}\n\t\t\t\t}}")
+    reachable = f"""
+# Scope: province; scope:actor is the country, scope:bag_asp_seat the seat
+# about to assimilate. His rule 13.10: control above zero, or «Ускорять
+# контролем» on, another free seat, and a control action that fits here.
+bag_asp_control_reachable = {{
+\tOR = {{
+\t\tprovince_average_control > 0
+\t\tAND = {{
+\t\t\tscope:actor = {{
+\t\t\t\thas_variable = bag_asp_speedup_on
+\t\t\t\tany_cabinet = {{
+\t\t\t\t\tbag_asp_free_seat = yes
+\t\t\t\t\tNOT = {{ this = scope:bag_asp_seat }}
+\t\t\t\t}}
+\t\t\t}}
+\t\t\tOR = {{
+{chr(10).join(fits)}
+\t\t\t}}
+\t\t}}
+\t}}
+}}
+"""
     triggers = """# assimilate_primary: triggers of the council pass. Rebuilt by tools/generate.py.
 
 # Scope: cabinet (a seat). It has an advisor whom this pass has not chosen yet.
@@ -1456,7 +1485,7 @@ bag_asp_paired_seat = {{
 \t}}
 \tcabinet_member ?= {{ has_variable = bag_asp_paired }}
 }}
-"""
+""" + reachable
 
     return {
         "in_game/common/scripted_triggers/bag_asp_council_triggers.txt": triggers,
