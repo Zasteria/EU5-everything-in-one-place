@@ -17,9 +17,8 @@ cm`), чтобы сохранения и настройки CMF работали
 +perf4–33 — `docs/archive/cm_dev_perf_beta_0927_1002.md`: окна беты, `cmf_is_host`,
 журнал; окна на Río (порядок CM Perf → Río → [`cm_rio_patch`](../cm_rio_patch/CLAUDE.md)
 → glorpui_hints → ru_loc_fix); карта губернаторов; запас золота; субсидии фермам.
-**+perf34–37 (10-12)** — [`docs/archive/cm_dev_perf_perf34_37.md`](../../docs/archive/cm_dev_perf_perf34_37.md): крик скана в непустые очереди, опрос раз в 1 с, **строка в `debug.log` на каждый цикл** — `CM perf cycle: staged N scored M rounds R rescans K skipped S approved A`; норма — `staged` = `scored`, `skipped 0`, `approved 1` — так во всех 69 циклах 10-12.
-**+perf38–39 (10-12)** — права по провинции как в `cm_maps`, грамоты 1.4: в том же архиве. Не проверено.
-**+perf41 (10-13): карта «Рекомендуемая поддержка отрасли»** — генератор `cm_maps/tools/industry_support.py`, `bcm_`→`cm_`; проход после прав в `cm_run_lobby_setup`, клеймо `cm_ind_stamp`. Каждая провинция области голосует правом карты прав. Не проверено.
+**+perf34–41** — [`docs/archive/cm_dev_perf_perf34_37.md`](../../docs/archive/cm_dev_perf_perf34_37.md): опрос раз в 1 с; **строка `CM perf cycle: staged N scored M …` в `debug.log` на каждый цикл** (норма: `staged` = `scored`, `skipped 0`, `approved 1`); права по провинции, грамоты 1.4; карта поддержки отрасли (+perf41, клеймо `cm_ind_stamp`). Не проверены 38–41.
+**+perf42 (10-13): житница (авто-еда) спрашивает людей того типа, что нанимает здание**, — свободные места `cm_location_<тип>_available` (люди минус все места уже построенных и строящихся уровней), а не всех безработных любого типа. Прежде лишние дворяне или бюргеры давали строить крестьянские деревни: его прогон 13.10, нехватка 3 500 → ещё деревня → 4 300. Не проверено.
 
 ## Автостройка: здания беты и National Destinies (`tools/buildings.py`)
 

@@ -746,6 +746,70 @@ def _subsidize_idle_farms(text: str) -> str:
     return text.replace(old, old + add, 1)
 
 
+# Auto-food counted every unemployed pop at the location, whatever its type,
+# against a building that hires one type. His run 13.10 (1.4.1): a farming
+# village location 3 500 workers short got one more farming village and stood
+# 4 300 short — unemployed nobles, burghers or laborers let CM build peasant
+# jobs. The unemployed count also misses a level that stands unstaffed. +perf42:
+# each option asks its own pool, the pop count minus every job of that type
+# already built or building (CM's own `cm_location_<type>_available`, which
+# the rest of CM uses for the same question). The pool comes from the game's
+# `pop_type` of the building; the RGO's is laborers or slaves, as CM's
+# `cm_location_laborers_or_slaves_available` already counts it.
+FOOD_TRIGGERS = "in_game/common/scripted_triggers/cm_food_auto_build_triggers.txt"
+_FOOD_POOLS = {
+    "peasants": "cm_location_peasants_available",
+    "laborers": "cm_location_laborers_or_slaves_available",
+    "slaves": "cm_location_laborers_or_slaves_available",
+}
+
+
+def _food_building_pools() -> dict[str, str]:
+    pools = {}
+    for path in sorted((refs.GAME_COMMON / "building_types").glob("*.txt")):
+        text = path.read_text(encoding="utf-8-sig")
+        for m in re.finditer(r"(?m)^(\w+) = \{\n(.*?)^\}", text, re.S):
+            pt = re.search(r"(?m)^\tpop_type = (\w+)", m.group(2))
+            if pt:
+                pools[m.group(1)] = pt.group(1)
+    return pools
+
+
+def _food_pops_by_type(text: str) -> str:
+    old_macro = ("\t$target$ = { save_temporary_scope_as = cm_food_pops_type }\n"
+                 "\tcm_location_total_unemployed_pops >= scope:cm_food_pops_type.employment_size\n")
+    old_fill = "\tNOT = { cm_location_total_unemployed_pops > 0 }\n"
+    old_rgo = "\tcm_location_total_unemployed_pops >= 1\n"
+    for old in (old_macro, old_fill, old_rgo):
+        if text.count(old) != 1:
+            raise SystemExit("food pops: cm_food_auto_build_triggers has changed shape")
+    text = text.replace(old_macro,
+                        "\t$target$ = { save_temporary_scope_as = cm_food_pops_type }\n"
+                        "\t# cm_dev_perf +perf42: the building's own pop type, jobs already built counted\n"
+                        "\t$pool$ >= scope:cm_food_pops_type.employment_size\n", 1)
+    text = text.replace(old_fill,
+                        "\t# cm_dev_perf +perf42: no food pool has room, unemployed of other types aside\n"
+                        "\tNOT = {\n\t\tOR = {\n"
+                        "\t\t\tcm_location_peasants_available > 0\n"
+                        "\t\t\tcm_location_laborers_or_slaves_available > 0\n"
+                        "\t\t}\n\t}\n", 1)
+    text = text.replace(old_rgo,
+                        "\t# cm_dev_perf +perf42: the RGO's own pool, its levels and the laborer jobs counted\n"
+                        "\tcm_location_laborers_or_slaves_available >= 1\n", 1)
+    game = _food_building_pools()
+    calls = list(re.finditer(r"cm_food_location_has_pops_for = \{ target = building_type:(\w+) \}", text))
+    if len(calls) != 4:
+        raise SystemExit(f"food pops: expected four options, found {len(calls)}")
+    for m in reversed(calls):
+        pop = game.get(m.group(1))
+        if pop not in _FOOD_POOLS:
+            raise SystemExit(f"food pops: {m.group(1)} hires {pop}, which no pool here counts")
+        text = (text[:m.start()]
+                + f"cm_food_location_has_pops_for = {{ target = building_type:{m.group(1)} pool = {_FOOD_POOLS[pop]} }}"
+                + text[m.end():])
+    return text
+
+
 # The box's own words, to say it now covers every farm.
 SUBSIDY_DESC = {
     "english": "Subsidize the food-producing buildings auto-food constructs, and every month any farming village "
@@ -1172,6 +1236,7 @@ EDITS = (
      _pf_log_close),
     (CMM, "say the refresh button's click in debug.log", _pf_log_click),
     (FOOD, "subsidize every idle or loss-making farm", _subsidize_idle_farms),
+    (FOOD_TRIGGERS, "auto-food asks the building's own pop pool", _food_pops_by_type),
     (QUEUE, "poll the queue every second, not every 0.3 s", _slow_the_poll),
     (QUEUE, "shout only into queues with entries", _gate_scan_shouts),
     (FEATURE, "count the ready-polls and log each cycle", _count_rounds_init),
@@ -1284,7 +1349,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 41
+PERF_REVISION = 42
 
 
 def metadata() -> str:

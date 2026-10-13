@@ -47,12 +47,19 @@ cm_food_location_rgo_is_on_roster = {
 # Root is the location. Expects $target$ = a building_type.
 cm_food_location_has_pops_for = {
 	$target$ = { save_temporary_scope_as = cm_food_pops_type }
-	cm_location_total_unemployed_pops >= scope:cm_food_pops_type.employment_size
+	# cm_dev_perf +perf42: the building's own pop type, jobs already built counted
+	$pool$ >= scope:cm_food_pops_type.employment_size
 }
 
 # Root is the location. True when the location has nobody left to put in a new job.
 cm_food_location_pops_still_filling = {
-	NOT = { cm_location_total_unemployed_pops > 0 }
+	# cm_dev_perf +perf42: no food pool has room, unemployed of other types aside
+	NOT = {
+		OR = {
+			cm_location_peasants_available > 0
+			cm_location_laborers_or_slaves_available > 0
+		}
+	}
 }
 
 # --- Can-build checks per option ---
@@ -73,7 +80,8 @@ cm_food_option_rgo_but_for_pops = {
 cm_food_can_build_rgo = {
 	cm_food_option_rgo_but_for_pops = yes
 	# An RGO level takes one worker unit off the pool, per cm_location_rgo_laborer_reserve.
-	cm_location_total_unemployed_pops >= 1
+	# cm_dev_perf +perf42: the RGO's own pool, its levels and the laborer jobs counted
+	cm_location_laborers_or_slaves_available >= 1
 }
 
 # Option 2: +1 Farming Village level
@@ -98,7 +106,7 @@ cm_food_option_farming_village_but_for_pops = {
 
 cm_food_can_build_farming_village = {
 	cm_food_option_farming_village_but_for_pops = yes
-	cm_food_location_has_pops_for = { target = building_type:farming_village }
+	cm_food_location_has_pops_for = { target = building_type:farming_village pool = cm_location_peasants_available }
 }
 
 # Option 3: Windmill, 1 level max
@@ -118,7 +126,7 @@ cm_food_option_windmill_but_for_pops = {
 
 cm_food_can_build_windmill = {
 	cm_food_option_windmill_but_for_pops = yes
-	cm_food_location_has_pops_for = { target = building_type:windmill }
+	cm_food_location_has_pops_for = { target = building_type:windmill pool = cm_location_laborers_or_slaves_available }
 }
 
 # Option 4: +1 Irrigation level
@@ -132,7 +140,7 @@ cm_food_option_irrigation_but_for_pops = {
 
 cm_food_can_build_irrigation = {
 	cm_food_option_irrigation_but_for_pops = yes
-	cm_food_location_has_pops_for = { target = building_type:irrigation_systems }
+	cm_food_location_has_pops_for = { target = building_type:irrigation_systems pool = cm_location_peasants_available }
 }
 
 # Option 5: +1 Fishing Village level
@@ -147,7 +155,7 @@ cm_food_option_fishing_village_but_for_pops = {
 
 cm_food_can_build_fishing_village = {
 	cm_food_option_fishing_village_but_for_pops = yes
-	cm_food_location_has_pops_for = { target = building_type:fishing_village }
+	cm_food_location_has_pops_for = { target = building_type:fishing_village pool = cm_location_peasants_available }
 }
 
 # True if any of the five options is valid here on every count but pops, which is auto-food
