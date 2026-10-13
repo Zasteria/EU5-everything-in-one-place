@@ -15,6 +15,18 @@ or the side: the pair stays empty (his runs 12.10). Only the game's window
 Opened by hand, the window is the game's: nothing presses unless a side flag
 is set, and the flags live only between the mod's request and the press.
 
+Closing (his ask 13.10, «хотя бы просто закрыть»). A press shuts the pick view
+by itself and leaves the panel under it open (his run 13.10 12:17: the closer
+gated on `IsLateralViewOpened('select_societal_value')` never saw it open after
+the mod's press, and fired only when he opened it by hand). So the press calls
+`PdxGuiTriggerAllAnimations('bag_asp_sv_shut')`, and a widget of the hidden
+window plays that state and closes both side panels (`LeftView.Close`,
+`RightView.Close`, the game's own close button is `LateralView.Close`). Nothing
+waits on a gate: the call comes from the press itself, the CM pattern
+(`docs/pitfalls/windows.md`). When no row presses (the window leaves out the
+pair the seat already pushes), the opener's `bag_asp_sv_wait` clears the flags
+and closes the same way two seconds later.
+
     import value_window
     value_window.build(refs.GAME)     # {path under the mod: text}
 """
@@ -28,9 +40,8 @@ HIDDEN = "in_game/gui/bag_asp_hidden.gui"
 WIDGETS = "in_game/gui/scripted_widgets/bag_asp_scripted_widgets.txt"
 
 ROOT = "GuiScope.SetRoot(GetPlayer.MakeScope).End"
-# The sides the mod presses. The probe (0.9.9) pushes right only; a flag the
-# script never sets is a variable read and never written, which the game logs.
-SIDES = ("right",)
+# The sides the mod presses.
+SIDES = ("left", "right")
 
 
 def var(name: str) -> str:
@@ -55,6 +66,7 @@ def presser(side: str) -> str:
 \t\t\t\t\t\t\t\t\t\tduration = 0.1
 \t\t\t\t\t\t\t\t\t\ton_start = "[SocietalValueCandidate.{select}]"
 \t\t\t\t\t\t\t\t\t\ton_start = "[GetScriptedGui('bag_asp_sv_pressed').Execute({ROOT})]"
+\t\t\t\t\t\t\t\t\t\ton_start = "[PdxGuiTriggerAllAnimations('bag_asp_sv_shut')]"
 \t\t\t\t\t\t\t\t\t}}
 \t\t\t\t\t\t\t\t}}
 """
@@ -120,24 +132,30 @@ widget = {{
 \t\tstate = {{
 \t\t\tname = _show
 \t\t\tduration = 0.1
-\t\t\ton_start = "[GetScriptedGui('bag_asp_sv_limit').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('limit', MakeScopeValue({var('bag_asp_sv_cab')}.GetCabinet.GetMaxSocietalValueReachable)).End)]"
 \t\t\ton_start = "[ChangeCabinetActionTarget({var('bag_asp_sv_cab')}.GetCabinet.Self)]"
 \t\t\ton_start = "[GetScriptedGui('bag_asp_sv_opening').Execute({ROOT})]"
+\t\t\ton_start = "[PdxGuiTriggerAllAnimations('bag_asp_sv_wait')]"
 \t\t}}
 \t}}
-\t# His ask 13.10 12:03, «хотя бы просто закрыть»: after the press, the value
-\t# window is toggled shut from here. 0.9.10–0.9.11 closed it from inside
-\t# (LateralView.Close / GoBack): never, or 28 s late. These gates fire.
+\t# His ask 13.10, «хотя бы просто закрыть». Plays a state only when called
+\t# by name: `bag_asp_sv_shut` by the press, `bag_asp_sv_wait` by the opener.
+\t# No gate: 0.9.12's gated closer misfired on his own clicks.
 \twidget = {{
-\t\tname = "bag_asp_sv_closer"
+\t\tname = "bag_asp_sv_shutter"
 \t\tsize = {{ 0 0 }}
-\t\tvisible_at_creation = no
-\t\tvisible = "[And(GetPlayer.Exists, And({var('bag_asp_sv_close')}.IsSet, IsLateralViewOpened('select_societal_value')))]"
 \t\tstate = {{
-\t\t\tname = _show
-\t\t\tduration = 0.1
-\t\t\ton_start = "[ToggleLateralView('select_societal_value')]"
-\t\t\ton_start = "[GetScriptedGui('bag_asp_sv_closed').Execute({ROOT})]"
+\t\t\tname = bag_asp_sv_shut
+\t\t\tduration = 0.2
+\t\t\ton_finish = "[GetScriptedGui('bag_asp_sv_closed').Execute({ROOT})]"
+\t\t\ton_finish = "[LeftView.Close]"
+\t\t\ton_finish = "[RightView.Close]"
+\t\t}}
+\t\tstate = {{
+\t\t\tname = bag_asp_sv_wait
+\t\t\tduration = 2
+\t\t\ton_finish = "[GetScriptedGui('bag_asp_sv_timeout').Execute({ROOT})]"
+\t\t\ton_finish = "[LeftView.Close]"
+\t\t\ton_finish = "[RightView.Close]"
 \t\t}}
 \t}}
 }}

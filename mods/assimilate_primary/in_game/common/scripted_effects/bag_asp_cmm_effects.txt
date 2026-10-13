@@ -39,25 +39,11 @@ bag_asp_register = {
 		group_id = council
 		default_value = 0
 	}
-	# The value-shift probe, 0.9.9: one press puts the best diplomat on
-	# «Традиционализм — Инновации» toward innovation through the game's window
-	# (tools/value_window.py). Drawn only with its `_on_changed` gui.
-	cmm_register_button_setting = {
-		mod_id = bag_asp
-		setting_id = sv_probe
-		tab_id = main
-		group_id = council
-	}
-	cmm_add_scripted_gui = {
-		mod_id = bag_asp
-		setting_id = sv_probe
-	}
-
 	cmm_register_settings_list = {
 		mod_id = bag_asp
 		setting_id = available
 		tab_id = actions
-		item_count = 23
+		item_count = 24
 		is_ordered = 0
 	}
 	cmm_register_list_bool_field = {
@@ -70,7 +56,7 @@ bag_asp_register = {
 		mod_id = bag_asp
 		setting_id = priority
 		tab_id = actions
-		item_count = 23
+		item_count = 24
 		is_ordered = 1
 	}
 	cmm_register_list_text_field = {
@@ -101,6 +87,43 @@ bag_asp_register = {
 		default_index = 1
 		option_count = 2
 	}
+	cmm_register_settings_list = {
+		mod_id = bag_asp
+		setting_id = values
+		tab_id = fine
+		item_count = 17
+		is_ordered = 1
+	}
+	cmm_register_list_bool_field = {
+		mod_id = bag_asp
+		setting_id = values
+		field_id = use
+		default_value = 0
+	}
+	cmm_register_list_dropdown_field = {
+		mod_id = bag_asp
+		setting_id = values
+		field_id = side
+		default_index = 1
+		option_count = 2
+	}
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = values item = 1 value = flag:bag_asp_sv_centralization_vs_decentralization }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = values item = 2 value = flag:bag_asp_sv_traditionalist_vs_innovative }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = values item = 3 value = flag:bag_asp_sv_spiritualist_vs_humanist }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = values item = 4 value = flag:bag_asp_sv_aristocracy_vs_plutocracy }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = values item = 5 value = flag:bag_asp_sv_serfdom_vs_free_subjects }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = values item = 6 value = flag:bag_asp_sv_mercantilism_vs_free_trade }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = values item = 7 value = flag:bag_asp_sv_belligerent_vs_conciliatory }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = values item = 8 value = flag:bag_asp_sv_quality_vs_quantity }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = values item = 9 value = flag:bag_asp_sv_offensive_vs_defensive }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = values item = 10 value = flag:bag_asp_sv_land_vs_naval }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = values item = 11 value = flag:bag_asp_sv_capital_economy_vs_traditional_economy }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = values item = 12 value = flag:bag_asp_sv_individualism_vs_communalism }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = values item = 13 value = flag:bag_asp_sv_outward_vs_inward }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = values item = 14 value = flag:bag_asp_sv_sinicized_vs_unsinicized }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = values item = 15 value = flag:bag_asp_sv_absolutism_vs_liberalism }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = values item = 16 value = flag:bag_asp_sv_mysticism_vs_jurisprudence }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = values item = 17 value = flag:bag_asp_sv_latinization_vs_hellenization }
 	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 1 value = flag:bag_asp_integrate_province }
 	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 1 value = flag:bag_asp_integrate_province }
 	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 1 value = flag:bag_asp_ability_mil }
@@ -170,6 +193,9 @@ bag_asp_register = {
 	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 23 value = flag:bag_asp_promote_culture_full }
 	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 23 value = flag:bag_asp_promote_culture_full }
 	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 23 value = flag:bag_asp_ability_dip }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 24 value = flag:bag_asp_change_societal_values }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 24 value = flag:bag_asp_change_societal_values }
+	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 24 value = flag:bag_asp_ability_dip }
 
 	bag_asp_sync = yes
 	bag_asp_rebuild = yes
@@ -588,6 +614,23 @@ bag_asp_rebuild = {
 		else = {
 			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 23 }
 		}
+		if = {
+			limit = { cabinet_action:change_societal_values = { is_visible_for = root } }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = available item = 24 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = available item = 24 }
+		}
+		if = {
+			limit = {
+				cabinet_action:change_societal_values = { is_visible_for = root }
+				is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_change_societal_values }
+			}
+			cmm_show_list_item = { mod_id = bag_asp setting_id = priority item = 24 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 24 }
+		}
 		# Each action's place in «Приоритет» (1 = top), +100 when not ticked:
 		# the emergency gives up the seat whose action ranks lowest.
 		set_variable = { name = bag_asp_rank_counter value = 0 }
@@ -621,6 +664,7 @@ bag_asp_rebuild = {
 					flag:bag_asp_noblesse_oblige_cabinet_action = { set_variable = { name = bag_asp_rank_noblesse_oblige_cabinet_action value = var:bag_asp_rank_counter } }
 					flag:bag_asp_diplomatic_antagonism = { set_variable = { name = bag_asp_rank_diplomatic_antagonism value = var:bag_asp_rank_counter } }
 					flag:bag_asp_promote_culture_full = { set_variable = { name = bag_asp_rank_promote_culture_full value = var:bag_asp_rank_counter } }
+					flag:bag_asp_change_societal_values = { set_variable = { name = bag_asp_rank_change_societal_values value = var:bag_asp_rank_counter } }
 				}
 			}
 		}
@@ -716,8 +760,137 @@ bag_asp_rebuild = {
 			limit = { NOT = { is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_promote_culture_full } } }
 			change_variable = { name = bag_asp_rank_promote_culture_full add = 100 }
 		}
+		if = {
+			limit = { NOT = { is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_change_societal_values } } }
+			change_variable = { name = bag_asp_rank_change_societal_values add = 100 }
+		}
 		# The «№» box of each row shows its place among the shown rows (cmf_dev_beta).
 		cmf_beta_list_renumber = { setting = bag_asp__priority }
+	}
+	if = {
+		limit = { has_variable_list = cmm_list_items_bag_asp__values }
+		cmm_build_list_bool_list = { setting = bag_asp__values field_slot = 1 list_name = bag_asp_sv_used }
+		cmm_build_list_field_map = { setting = bag_asp__values field_slot = 2 map_name = bag_asp_sv_side multiply = 1 }
+		if = {
+			limit = { has_societal_value = societal_value_type:centralization_vs_decentralization }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = values item = 1 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = values item = 1 }
+		}
+		if = {
+			limit = { has_societal_value = societal_value_type:traditionalist_vs_innovative }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = values item = 2 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = values item = 2 }
+		}
+		if = {
+			limit = { has_societal_value = societal_value_type:spiritualist_vs_humanist }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = values item = 3 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = values item = 3 }
+		}
+		if = {
+			limit = { has_societal_value = societal_value_type:aristocracy_vs_plutocracy }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = values item = 4 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = values item = 4 }
+		}
+		if = {
+			limit = { has_societal_value = societal_value_type:serfdom_vs_free_subjects }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = values item = 5 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = values item = 5 }
+		}
+		if = {
+			limit = { has_societal_value = societal_value_type:mercantilism_vs_free_trade }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = values item = 6 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = values item = 6 }
+		}
+		if = {
+			limit = { has_societal_value = societal_value_type:belligerent_vs_conciliatory }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = values item = 7 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = values item = 7 }
+		}
+		if = {
+			limit = { has_societal_value = societal_value_type:quality_vs_quantity }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = values item = 8 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = values item = 8 }
+		}
+		if = {
+			limit = { has_societal_value = societal_value_type:offensive_vs_defensive }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = values item = 9 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = values item = 9 }
+		}
+		if = {
+			limit = { has_societal_value = societal_value_type:land_vs_naval }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = values item = 10 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = values item = 10 }
+		}
+		if = {
+			limit = { has_societal_value = societal_value_type:capital_economy_vs_traditional_economy }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = values item = 11 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = values item = 11 }
+		}
+		if = {
+			limit = { has_societal_value = societal_value_type:individualism_vs_communalism }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = values item = 12 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = values item = 12 }
+		}
+		if = {
+			limit = { has_societal_value = societal_value_type:outward_vs_inward }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = values item = 13 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = values item = 13 }
+		}
+		if = {
+			limit = { has_societal_value = societal_value_type:sinicized_vs_unsinicized }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = values item = 14 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = values item = 14 }
+		}
+		if = {
+			limit = { has_societal_value = societal_value_type:absolutism_vs_liberalism }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = values item = 15 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = values item = 15 }
+		}
+		if = {
+			limit = { has_societal_value = societal_value_type:mysticism_vs_jurisprudence }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = values item = 16 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = values item = 16 }
+		}
+		if = {
+			limit = { has_societal_value = societal_value_type:latinization_vs_hellenization }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = values item = 17 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = values item = 17 }
+		}
+		cmf_beta_list_renumber = { setting = bag_asp__values }
 	}
 }
 
@@ -747,7 +920,6 @@ bag_asp_handle_callback = {
 		flag:bag_asp__culture_speedup = { bag_asp_sync = yes }
 		flag:bag_asp__religion_target = { bag_asp_sync = yes }
 		flag:bag_asp__log = { bag_asp_sync = yes }
-		flag:bag_asp__sv_probe = { bag_asp_sv_probe = yes }
 	}
 	# His ask 13.10: what he changes goes into the log, with every setting after it.
 	if = {

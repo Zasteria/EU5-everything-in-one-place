@@ -46,11 +46,27 @@ lateralview = {
 										name = "bag_asp_sv_row_log"
 										size = { 0 0 }
 										visible_at_creation = no
-										visible = "[GetPlayer.MakeScope.GetVariable('bag_asp_sv_right').IsSet]"
+										visible = "[Or(GetPlayer.MakeScope.GetVariable('bag_asp_sv_left').IsSet, GetPlayer.MakeScope.GetVariable('bag_asp_sv_right').IsSet)]"
 										state = {
 											name = _show
 											duration = 0.1
 											on_start = "[GetScriptedGui('bag_asp_sv_row').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('sv', SocietalValueCandidate.GetSocietalValue.MakeScope).End)]"
+										}
+									}
+
+									# assimilate_primary: presses the left side of this pair when the
+									# council automation asked for it (value_window.py).
+									widget = {
+										name = "bag_asp_sv_press_left"
+										size = { 0 0 }
+										visible_at_creation = no
+										visible = "[And(GetPlayer.MakeScope.GetVariable('bag_asp_sv_left').IsSet, ObjectsEqual(SocietalValueCandidate.GetSocietalValue.Self, GetPlayer.MakeScope.GetVariable('bag_asp_sv_pair').GetSocietalValue.Self))]"
+										state = {
+											name = _show
+											duration = 0.1
+											on_start = "[SocietalValueCandidate.SelectLeftCandidate]"
+											on_start = "[GetScriptedGui('bag_asp_sv_pressed').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+											on_start = "[PdxGuiTriggerAllAnimations('bag_asp_sv_shut')]"
 										}
 									}
 
@@ -66,6 +82,7 @@ lateralview = {
 											duration = 0.1
 											on_start = "[SocietalValueCandidate.SelectRightCandidate]"
 											on_start = "[GetScriptedGui('bag_asp_sv_pressed').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+											on_start = "[PdxGuiTriggerAllAnimations('bag_asp_sv_shut')]"
 										}
 									}
 								}

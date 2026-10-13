@@ -16,24 +16,30 @@ widget = {
 		state = {
 			name = _show
 			duration = 0.1
-			on_start = "[GetScriptedGui('bag_asp_sv_limit').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('limit', MakeScopeValue(GetPlayer.MakeScope.GetVariable('bag_asp_sv_cab').GetCabinet.GetMaxSocietalValueReachable)).End)]"
 			on_start = "[ChangeCabinetActionTarget(GetPlayer.MakeScope.GetVariable('bag_asp_sv_cab').GetCabinet.Self)]"
 			on_start = "[GetScriptedGui('bag_asp_sv_opening').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			on_start = "[PdxGuiTriggerAllAnimations('bag_asp_sv_wait')]"
 		}
 	}
-	# His ask 13.10 12:03, «хотя бы просто закрыть»: after the press, the value
-	# window is toggled shut from here. 0.9.10–0.9.11 closed it from inside
-	# (LateralView.Close / GoBack): never, or 28 s late. These gates fire.
+	# His ask 13.10, «хотя бы просто закрыть». Plays a state only when called
+	# by name: `bag_asp_sv_shut` by the press, `bag_asp_sv_wait` by the opener.
+	# No gate: 0.9.12's gated closer misfired on his own clicks.
 	widget = {
-		name = "bag_asp_sv_closer"
+		name = "bag_asp_sv_shutter"
 		size = { 0 0 }
-		visible_at_creation = no
-		visible = "[And(GetPlayer.Exists, And(GetPlayer.MakeScope.GetVariable('bag_asp_sv_close').IsSet, IsLateralViewOpened('select_societal_value')))]"
 		state = {
-			name = _show
-			duration = 0.1
-			on_start = "[ToggleLateralView('select_societal_value')]"
-			on_start = "[GetScriptedGui('bag_asp_sv_closed').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			name = bag_asp_sv_shut
+			duration = 0.2
+			on_finish = "[GetScriptedGui('bag_asp_sv_closed').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			on_finish = "[LeftView.Close]"
+			on_finish = "[RightView.Close]"
+		}
+		state = {
+			name = bag_asp_sv_wait
+			duration = 2
+			on_finish = "[GetScriptedGui('bag_asp_sv_timeout').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			on_finish = "[LeftView.Close]"
+			on_finish = "[RightView.Close]"
 		}
 	}
 }

@@ -41,6 +41,7 @@ MOD_ID = "bag_asp"
 #   culture   promote_culture: primary culture, province by population
 #   religion  promote_religion: state religion, province by population
 #   estate    an estate, least satisfied first
+#   values    a societal value pair, by the list of «Тонкие настройки»
 # gate: extra country-scope condition for picking it; the game's own allow is
 # checked anyway through is_available_for.
 POOL = [
@@ -76,6 +77,9 @@ POOL = [
     # place) brings every location of a province to half a primary or accepted
     # culture, what integration and cores need; this one goes on to the whole.
     ("promote_culture_full", "culture", "population", ""),
+    # His spec 12.10–13.10: the pairs ticked in «Общественные ценности», one
+    # seat, through the game's window (value_effects, value_window.py).
+    ("change_societal_values", "values", None, ""),
 ]
 
 # A row that is not an action of its own: the action it places.
@@ -99,6 +103,10 @@ ROW_NOTE = {
     "diplomatic_endeavors": {
         "english": (" (opinion)", "For improving opinion with your targets. Taken whenever a seat is free for it."),
         "russian": (" (мнение)", "Для улучшения мнения у ваших целей. Берёт место всегда, когда оно свободно."),
+    },
+    "change_societal_values": {
+        "english": ("", "Pushes the pairs ticked in «Societal values» (Fine tuning), in that list's order, toward the side chosen there: the advisor best in diplomacy among the free ones takes the first pair he would move at least one whole point. One seat. The pair is picked in the game's own window, which opens and closes by itself."),
+        "russian": ("", "Двигает пары, отмеченные в «Общественных ценностях» («Тонкие настройки»), в порядке того списка, в выбранную там сторону: лучший по дипломатии свободный советник берёт первую пару, которую сдвинет хотя бы на одну целую единицу. Одно место. Пару выбирает окно игры, оно само открывается и закрывается."),
     },
     "diplomatic_antagonism": {
         "english": (" (antagonism)", "For lowering antagonism: diplomatic reputation reduces it. Taken only while a country is near a coalition against you."),
@@ -279,6 +287,35 @@ FINE_LOC = {
         "bag_asp__religion_target_option_2_desc": "Самая распространённая в стране другая религия той же группы: другую игра не даёт. Если такой нет, государственная.",
     },
 }
+
+# The list «Общественные ценности» of «Тонкие настройки», his spec 12.10.
+VALUES_LOC = {
+    "english": {
+        "bag_asp__fine__values_name": "Societal values",
+        "bag_asp__values_name": "Societal values",
+        "bag_asp__values_desc": "For the «Priority» row [ShowCabinetActionName('change_societal_values')]: ticked pairs are pushed, tried from the top, toward the side chosen for each. Each month the advisor best in diplomacy among the free ones takes the first pair he would move at least one whole point: a pair stops where 100 × its monthly push toward the side says (the game's «no more than»), his push included. Hover a row for its two sides.",
+        "bag_asp__values_item_column_name": "Pair",
+        "bag_asp__values__use_name": "Push",
+        "bag_asp__values__side_name": "Toward",
+        "bag_asp__values__side_option_1_name": "Left, the first",
+        "bag_asp__values__side_option_1_desc": "Toward the first side named in the pair.",
+        "bag_asp__values__side_option_2_name": "Right, the second",
+        "bag_asp__values__side_option_2_desc": "Toward the second side named in the pair.",
+    },
+    "russian": {
+        "bag_asp__fine__values_name": "Общественные ценности",
+        "bag_asp__values_name": "Общественные ценности",
+        "bag_asp__values_desc": "Для строки «Приоритета» [ShowCabinetActionName('change_societal_values')]: отмеченные пары двигаются, пробуются сверху вниз, в сторону, выбранную у каждой. Каждый месяц лучший по дипломатии свободный советник берёт первую пару, которую сдвинет хотя бы на одну целую единицу: пара останавливается там, где 100 × её месячный сдвиг в эту сторону (игровое «не больше»), с его толчком. Наведите на строку — увидите обе стороны.",
+        "bag_asp__values_item_column_name": "Пара",
+        "bag_asp__values__use_name": "Двигать",
+        "bag_asp__values__side_name": "Куда",
+        "bag_asp__values__side_option_1_name": "Влево, к первой",
+        "bag_asp__values__side_option_1_desc": "К первой стороне в названии пары.",
+        "bag_asp__values__side_option_2_name": "Вправо, ко второй",
+        "bag_asp__values__side_option_2_desc": "Ко второй стороне в названии пары.",
+    },
+}
+SIDE_WORDS = {"english": ("Left", "right"), "russian": ("Влево", "вправо")}
 
 ABILITY = {
     "english": {"adm": "ADM", "dip": "DIP", "mil": "MIL"},
@@ -1050,15 +1087,14 @@ bag_asp_probe_half = {{
 """
 
 
-# The value shift, probe 0.9.10. Script sets the action, but the pair stays
-# empty (his runs 12.10); the game's window picks it (value_window.py) — his
-# run 13.10 11:14: the window opened, listed 13 pairs and pressed the asked
-# side, and stayed open. The flags live only between the press of the button
-# and the window closing.
-# `bag_asp_sv_left` joins them with the first rule that pushes a left side;
-# the probe pushes right only.
-SV_FLAGS = ("bag_asp_sv_open", "bag_asp_sv_right", "bag_asp_sv_pair", "bag_asp_sv_close")
+# The value shift (his spec 12.10–13.10). Script sets the action, but the pair
+# stays empty (his runs 12.10); the game's window picks it (value_window.py):
+# opened, rows listed and the asked side pressed since 0.9.11. The flags live
+# only between the mod's request and the press, or the wait running out.
+SV_FLAGS = ("bag_asp_sv_open", "bag_asp_sv_left", "bag_asp_sv_right", "bag_asp_sv_pair")
 SV_FILE = "in_game/common/societal_values/00_default.txt"
+SV_ACTION = "change_societal_values"
+SV_DEFINES = "loading_screen/common/defines/00_defines.txt"
 
 
 def clear_sv(tabs: int) -> str:
@@ -1068,128 +1104,334 @@ def clear_sv(tabs: int) -> str:
 
 
 def value_pairs(game: Path) -> list[str]:
-    """Every pair the game defines, in its file's order (the window's order)."""
+    """Every pair the game defines, in its file's order: the rows of the CMF
+    list «Общественные ценности», item n = the n-th pair. A pair the game adds
+    in the middle shifts the saved ticks below it."""
     text = (game / SV_FILE).read_text(encoding="utf-8-sig")
     pairs = re.findall(r"^(\w+_vs_\w+) = \{", text, re.M)
     if "traditionalist_vs_innovative" not in pairs:
         raise SystemExit("societal values: the game's file no longer has traditionalist_vs_innovative")
+    if len(pairs) > 50:
+        raise SystemExit("societal values: more pairs than a CMM list holds")
     return pairs
 
 
-def value_effects(game: Path) -> str:
-    # The probe takes the first pair the country has whose value is short of
-    # its right end — his run 13.10: innovation already stood at 100, and the
-    # game dropped the action at once.
-    # Not the pair it pressed last: the window leaves out the pair the seat
-    # already pushes (his run 13.10 11:40 — 12 rows, «Централизация» gone).
-    # His ask 13.10 12:03: the advisor's reach worked out, not tried. Read-only:
-    # each pair's value and its two monthly pushes as script sees them.
-    pushes = []
-    for pair in value_pairs(game):
-        left, right = pair.split("_vs_")
-        pushes.append(f"""\tif = {{
-\t\tlimit = {{ has_societal_value = societal_value_type:{pair} }}
-\t\tset_global_variable = {{ name = bag_asp_sv_n1 value = societal_value:{pair} }}
-\t\tset_global_variable = {{ name = bag_asp_sv_n2 value = modifier:monthly_towards_{left} }}
-\t\tset_global_variable = {{ name = bag_asp_sv_n3 value = modifier:monthly_towards_{right} }}
-\t\tdebug_log = "bag_asp: sv push {pair}: now [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], toward {left} [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|4], toward {right} [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4]"
-\t}}""")
-    pick = []
-    for i, pair in enumerate(value_pairs(game)):
-        pick.append(f"""\t{"if" if i == 0 else "else_if"} = {{
-\t\tlimit = {{
-\t\t\thas_societal_value = societal_value_type:{pair}
-\t\t\tsocietal_value:{pair} < 100
-\t\t\tOR = {{
-\t\t\t\tNOT = {{ has_variable = bag_asp_sv_last }}
-\t\t\t\tNOT = {{ var:bag_asp_sv_last = {i} }}
-\t\t\t}}
-\t\t}}
-\t\tset_variable = {{ name = bag_asp_sv_last value = {i} }}
-\t\tset_variable = {{ name = bag_asp_sv_pair value = societal_value_type:{pair} }}
-\t\tset_global_variable = {{ name = bag_asp_sv_now value = societal_value:{pair} }}
-\t\tdebug_log = "bag_asp: sv probe, the pair {pair}, now [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_now_value')|2]"
-\t}}""")
+def sv_formula(game: Path, actions: dict[str, str]) -> tuple[str, str, str]:
+    """The advisor's monthly push, his screenshots 13.10 12:14: base × (1 +
+    effective skill); effective skill = the country's cabinet efficiency +
+    (ruler's + advisor's ability) × CABINET_ACTION_SKILL_MODIFIER + the
+    advisor's own cabinet efficiency. 0.1 × (1 + 0.530 + 0.045 + 0.38) = 0.1956;
+    with the seat on decentralization its push rose 0.25 → 0.4455."""
+    action = actions[SV_ACTION]
+    # value() reads words; the base is a decimal.
+    b = re.search(r"^\s*societal_values\s*=\s*([\d.]+)", action, re.M)
+    base = b.group(1) if b and float(b.group(1)) > 0 else None
+    ability = value(action, "ability") or "adm"
+    m = re.search(r"CABINET_ACTION_SKILL_MODIFIER\s*=\s*([\d.]+)",
+                  (game / SV_DEFINES).read_text(encoding="utf-8-sig"))
+    if not base or not m:
+        raise SystemExit("societal values: the action's base push or the skill define moved")
+    return base, ability, m.group(1)
+
+
+def sv_push_value(game: Path, actions: dict[str, str]) -> str:
+    base, ability, skill = sv_formula(game, actions)
     return f"""
-# Scope: country. The probe's button: the first pair short of its right end,
-# the seat whose advisor has the best diplomacy put on «Изменение общественных
-# ценностей», and the game's window asked to open for it and press the right
-# side. The hidden window and the window's rows do the rest. Every seat's
-# limit is logged first: what the monthly rule will compare against.
-bag_asp_sv_probe = {{
-\tdebug_log = "bag_asp: sv probe, the button was pressed"
-{clear_sv(1)}
-\tevery_cabinet = {{
-\t\tlimit = {{ exists = cabinet_member }}
-\t\tset_global_variable = {{ name = bag_asp_sv_seat value = this }}
-\t\tset_global_variable = {{ name = bag_asp_sv_n1 value = cabinet_member.dip }}
-\t\tset_global_variable = {{ name = bag_asp_sv_n2 value = cabinet_member.modifier:character_cabinet_efficiency }}
-\t\tcabinet_member = {{ debug_log_scopes = no }}
-\t\tdebug_log = "bag_asp: sv a seat, dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|0], effective skill [GetGlobalVariable('bag_asp_sv_seat').GetCabinet.GetEffectiveSkill|2], own efficiency [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|3]"
-\t\tdebug_log = "bag_asp: sv the seat's value: (pair [GetGlobalVariable('bag_asp_sv_seat').GetCabinet.GetSocietalValueName]) monthly [GetGlobalVariable('bag_asp_sv_seat').GetCabinet.GetSocietalValueMonthlyProgress|4], total [GetGlobalVariable('bag_asp_sv_seat').GetCabinet.GetSocietalValueTotal|2], inertia [GetGlobalVariable('bag_asp_sv_seat').GetCabinet.GetSocietalValueTotalInertia|2], now [GetGlobalVariable('bag_asp_sv_seat').GetCabinet.GetSocietalValueCurrentNumber|2], limit [GetGlobalVariable('bag_asp_sv_seat').GetCabinet.GetMaxSocietalValueReachable|2]"
-\t}}
-\tset_global_variable = {{ name = bag_asp_sv_n1 value = modifier:country_cabinet_efficiency }}
-\tdebug_log = "bag_asp: sv the country's cabinet efficiency [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|3]"
-{chr(10).join(pushes)}
-{chr(10).join(pick)}
+# Scope: country; scope:bag_asp_seat is a seat. What its advisor would add to
+# a pair each month on «{SV_ACTION}» (council.py, sv_formula).
+bag_asp_sv_push = {{
+\tvalue = modifier:country_cabinet_efficiency
 \tif = {{
-\t\tlimit = {{ NOT = {{ has_variable = bag_asp_sv_pair }} }}
-\t\tdebug_log = "bag_asp: sv probe, every pair the country has is at its right end"
-\t}}
-\telse = {{
-\t\tordered_cabinet = {{
-\t\t\tlimit = {{ exists = cabinet_member }}
-\t\t\torder_by = cabinet_member.dip
-\t\t\tsave_scope_as = bag_asp_sv_seat
+\t\tlimit = {{ exists = ruler }}
+\t\tadd = {{
+\t\t\tvalue = ruler.{ability}
+\t\t\tmultiply = {skill}
 \t\t}}
 \t}}
-\tif = {{
-\t\tlimit = {{
-\t\t\thas_variable = bag_asp_sv_pair
-\t\t\texists = scope:bag_asp_sv_seat
-\t\t}}
-\t\tscope:bag_asp_sv_seat = {{
-\t\t\tcabinet_member = {{ debug_log_scopes = no }}
-\t\t\tbag_asp_vacate = yes
-\t\t\tset_cabinet_action = {{
-\t\t\t\ttype = cabinet_action:change_societal_values
-\t\t\t\t# Any pair: the target sets none (his run 12.10); the window picks it.
-\t\t\t\ttarget = societal_value_type:traditionalist_vs_innovative
-\t\t\t}}
-\t\t}}
-\t\tset_variable = {{ name = bag_asp_sv_cab value = scope:bag_asp_sv_seat }}
-\t\tset_variable = {{ name = bag_asp_sv_right value = yes }}
-\t\tset_variable = {{ name = bag_asp_sv_open value = yes }}
-\t\tdebug_log = "bag_asp: sv probe, the seat is on values, the window is asked to open"
+\tadd = {{
+\t\tvalue = scope:bag_asp_seat.cabinet_member.{ability}
+\t\tmultiply = {skill}
 \t}}
+\tadd = scope:bag_asp_seat.cabinet_member.modifier:character_cabinet_efficiency
+\tadd = 1
+\tmultiply = {base}
 }}
 """
 
 
-# Scope: any. The value probe's numbers, parked in globals for the log.
+SV_LOG = "[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n{n}_value')|{d}]"
+
+
+def value_effects(game: Path, actions: dict[str, str]) -> str:
+    """His spec 12.10–13.10: one seat, the best diplomat among the free ones,
+    pushes the first ticked pair of «Общественные ценности» (in its order,
+    toward its chosen side) that it can move at least one whole point.
+
+    Where a pair stops, his screenshot 13.10 12:14 («не больше 51.92» at +0.51
+    a month): at 100 × the monthly net push toward the side, 100 at most. So a
+    pair qualifies when floor(that) > floor(where it stands now, toward the
+    side) — his rule, hundredths do not count. The net push is
+    monthly_towards_<side> − monthly_towards_<other side>, and the advisor's
+    push on top unless the seat already pushes this pair: then it is in the
+    modifier already (his run 13.10: 0.25 → 0.4455)."""
+    _, ability, _ = sv_formula(game, actions)
+    tests = []
+    for i, pair in enumerate(value_pairs(game), 1):
+        left, right = pair.split("_vs_")
+        tests.append(f"""\t\t\t\tflag:bag_asp_sv_{pair} = {{
+\t\t\t\t\tif = {{
+\t\t\t\t\t\tlimit = {{ has_societal_value = societal_value_type:{pair} }}
+\t\t\t\t\t\tset_local_variable = {{ name = bag_asp_sv_key value = flag:bag_asp_sv_{pair} }}
+\t\t\t\t\t\tset_local_variable = {{ name = bag_asp_sv_i value = {i} }}
+\t\t\t\t\t\tif = {{
+\t\t\t\t\t\t\tlimit = {{ "variable_map(bag_asp_sv_side|local_var:bag_asp_sv_key)" >= 2 }}
+\t\t\t\t\t\t\tset_local_variable = {{ name = bag_asp_sv_s value = 2 }}
+\t\t\t\t\t\t\tset_local_variable = {{ name = bag_asp_sv_pos value = societal_value:{pair} }}
+\t\t\t\t\t\t\tset_local_variable = {{
+\t\t\t\t\t\t\t\tname = bag_asp_sv_net
+\t\t\t\t\t\t\t\tvalue = {{
+\t\t\t\t\t\t\t\t\tvalue = modifier:monthly_towards_{right}
+\t\t\t\t\t\t\t\t\tsubtract = modifier:monthly_towards_{left}
+\t\t\t\t\t\t\t\t}}
+\t\t\t\t\t\t\t}}
+\t\t\t\t\t\t\tbag_asp_sv_test = yes
+\t\t\t\t\t\t\tif = {{
+\t\t\t\t\t\t\t\tlimit = {{ has_variable = bag_asp_log_on }}
+\t\t\t\t\t\t\t\tdebug_log = "bag_asp: values, {pair} toward {right}: stands at {SV_LOG.format(n=1, d=2)}, would stop at {SV_LOG.format(n=2, d=2)}"
+\t\t\t\t\t\t\t}}
+\t\t\t\t\t\t}}
+\t\t\t\t\t\telse = {{
+\t\t\t\t\t\t\tset_local_variable = {{ name = bag_asp_sv_s value = 1 }}
+\t\t\t\t\t\t\tset_local_variable = {{
+\t\t\t\t\t\t\t\tname = bag_asp_sv_pos
+\t\t\t\t\t\t\t\tvalue = {{
+\t\t\t\t\t\t\t\t\tvalue = societal_value:{pair}
+\t\t\t\t\t\t\t\t\tmultiply = -1
+\t\t\t\t\t\t\t\t}}
+\t\t\t\t\t\t\t}}
+\t\t\t\t\t\t\tset_local_variable = {{
+\t\t\t\t\t\t\t\tname = bag_asp_sv_net
+\t\t\t\t\t\t\t\tvalue = {{
+\t\t\t\t\t\t\t\t\tvalue = modifier:monthly_towards_{left}
+\t\t\t\t\t\t\t\t\tsubtract = modifier:monthly_towards_{right}
+\t\t\t\t\t\t\t\t}}
+\t\t\t\t\t\t\t}}
+\t\t\t\t\t\t\tbag_asp_sv_test = yes
+\t\t\t\t\t\t\tif = {{
+\t\t\t\t\t\t\t\tlimit = {{ has_variable = bag_asp_log_on }}
+\t\t\t\t\t\t\t\tdebug_log = "bag_asp: values, {pair} toward {left}: stands at {SV_LOG.format(n=1, d=2)}, would stop at {SV_LOG.format(n=2, d=2)}"
+\t\t\t\t\t\t\t}}
+\t\t\t\t\t\t}}
+\t\t\t\t\t}}
+\t\t\t\t}}""")
+    asks = "\n".join(
+        f"\t\t{i} = {{\n\t\t\tset_variable = {{ name = bag_asp_sv_pair value = societal_value_type:{pair} }}\n"
+        f"\t\t\tdebug_log = \"bag_asp: values, the seat goes on {pair}\"\n\t\t}}"
+        for i, pair in enumerate(value_pairs(game), 1))
+    # The switch sits five tabs deep in bag_asp_sv_choose.
+    switch = "\n".join("\t" + line for line in "\n".join(tests).split("\n"))
+    on_values = f"has_cabinet_action = yes cabinet_action = cabinet_action:{SV_ACTION}"
+    return f"""
+# Scope: country (scope:actor). The «Приоритет» row of {SV_ACTION}.
+bag_asp_place_{SV_ACTION} = {{
+\t# A pass that only fills empty seats leaves a seat already on values alone.
+\tif = {{
+\t\tlimit = {{
+\t\t\tany_cabinet = {{
+\t\t\t\t{on_values}
+\t\t\t\tNOT = {{ bag_asp_free_seat = yes }}
+\t\t\t}}
+\t\t}}
+\t\tdebug_log = "bag_asp: values, the seat on values stays: this pass fills empty seats only"
+\t}}
+\telse = {{
+\t\t# What the mod asked for last holds only while a seat is still on values.
+\t\tif = {{
+\t\t\tlimit = {{
+\t\t\t\thas_variable = bag_asp_sv_cur
+\t\t\t\tNOT = {{ any_cabinet = {{ {on_values} }} }}
+\t\t\t}}
+\t\t\tremove_variable = bag_asp_sv_cur
+\t\t\tremove_variable = bag_asp_sv_cur_side
+\t\t}}
+\t\tordered_cabinet = {{
+\t\t\tlimit = {{ bag_asp_free_seat = yes }}
+\t\t\torder_by = cabinet_member.{ability}
+\t\t\tsave_scope_as = bag_asp_seat
+\t\t}}
+\t\tif = {{
+\t\t\tlimit = {{
+\t\t\t\texists = scope:bag_asp_seat
+\t\t\t\tcabinet_action:{SV_ACTION} = {{ is_available_for = scope:actor }}
+\t\t\t}}
+\t\t\tset_local_variable = {{ name = bag_asp_sv_p value = bag_asp_sv_push }}
+\t\t\tif = {{
+\t\t\t\tlimit = {{ has_variable = bag_asp_log_on }}
+\t\t\t\tset_global_variable = {{ name = bag_asp_sv_n3 value = local_var:bag_asp_sv_p }}
+\t\t\t\tdebug_log = "bag_asp: values, the best free diplomat would push {SV_LOG.format(n=3, d=4)} a month"
+\t\t\t}}
+\t\t\tbag_asp_sv_choose = yes
+\t\t\tif = {{
+\t\t\t\tlimit = {{
+\t\t\t\t\thas_variable = bag_asp_sv_want
+\t\t\t\t\thas_variable = bag_asp_sv_cur
+\t\t\t\t\tvar:bag_asp_sv_want = var:bag_asp_sv_cur
+\t\t\t\t\tvar:bag_asp_sv_want_side = var:bag_asp_sv_cur_side
+\t\t\t\t}}
+\t\t\t\tevery_cabinet = {{
+\t\t\t\t\tlimit = {{ {on_values} }}
+\t\t\t\t\tcabinet_member ?= {{ set_variable = {{ name = bag_asp_claimed value = yes }} }}
+\t\t\t\t}}
+\t\t\t\tdebug_log = "bag_asp: values, the seat keeps its pair"
+\t\t\t}}
+\t\t\telse_if = {{
+\t\t\t\tlimit = {{ has_variable = bag_asp_sv_want }}
+\t\t\t\t# One seat on values: another one still on it gives it up.
+\t\t\t\tevery_cabinet = {{
+\t\t\t\t\tlimit = {{
+\t\t\t\t\t\t{on_values}
+\t\t\t\t\t\tNOT = {{ this = scope:bag_asp_seat }}
+\t\t\t\t\t}}
+\t\t\t\t\tbag_asp_vacate = yes
+\t\t\t\t}}
+\t\t\t\tscope:bag_asp_seat = {{
+\t\t\t\t\tbag_asp_vacate = yes
+\t\t\t\t\tset_cabinet_action = {{
+\t\t\t\t\t\ttype = cabinet_action:{SV_ACTION}
+\t\t\t\t\t\t# Any pair: the target sets none (his run 12.10); the window picks it.
+\t\t\t\t\t\ttarget = societal_value_type:traditionalist_vs_innovative
+\t\t\t\t\t}}
+\t\t\t\t\tcabinet_member = {{ set_variable = {{ name = bag_asp_claimed value = yes }} }}
+\t\t\t\t}}
+{clear_sv(4)}
+\t\t\t\tset_variable = {{ name = bag_asp_sv_cur value = var:bag_asp_sv_want }}
+\t\t\t\tset_variable = {{ name = bag_asp_sv_cur_side value = var:bag_asp_sv_want_side }}
+\t\t\t\tset_variable = {{ name = bag_asp_sv_cab value = scope:bag_asp_seat }}
+\t\t\t\tbag_asp_sv_ask = yes
+\t\t\t}}
+\t\t\telse = {{
+\t\t\t\tdebug_log = "bag_asp: values, no ticked pair would move a whole point"
+\t\t\t}}
+\t\t\tif = {{ limit = {{ has_variable = bag_asp_sv_want }} remove_variable = bag_asp_sv_want }}
+\t\t\tif = {{ limit = {{ has_variable = bag_asp_sv_want_side }} remove_variable = bag_asp_sv_want_side }}
+\t\t}}
+\t}}
+}}
+
+# Scope: country (scope:actor). var:bag_asp_sv_want (the pair's row) and
+# var:bag_asp_sv_want_side (1 left, 2 right): the first ticked pair, in the
+# list's order, that the seat would move at least one whole point.
+bag_asp_sv_choose = {{
+\tevery_in_list = {{
+\t\tvariable = bag_asp_sv_used
+\t\tsave_temporary_scope_as = bag_asp_sv_item
+\t\tif = {{
+\t\t\tlimit = {{ scope:actor = {{ NOT = {{ has_variable = bag_asp_sv_want }} }} }}
+\t\t\tscope:actor = {{
+\t\t\t\tswitch = {{
+\t\t\t\t\ttrigger = scope:bag_asp_sv_item
+{switch}
+\t\t\t\t}}
+\t\t\t}}
+\t\t}}
+\t}}
+}}
+
+# Scope: country. One pair, set up by bag_asp_sv_choose: local
+# bag_asp_sv_i (its row), _s (side), _pos (where it stands toward the side),
+# _net (the monthly net push toward it without this seat), _p (the seat's push).
+bag_asp_sv_test = {{
+\tif = {{
+\t\tlimit = {{
+\t\t\thas_variable = bag_asp_sv_cur
+\t\t\tvar:bag_asp_sv_cur = local_var:bag_asp_sv_i
+\t\t}}
+\t\t# The seat pushes this pair: its push is in the modifier already. Pushed
+\t\t# the other way, the pair is passed over: the window would not list it.
+\t\tif = {{
+\t\t\tlimit = {{ NOT = {{ var:bag_asp_sv_cur_side = local_var:bag_asp_sv_s }} }}
+\t\t\tset_local_variable = {{ name = bag_asp_sv_net value = -10 }}
+\t\t}}
+\t}}
+\telse = {{
+\t\tchange_local_variable = {{ name = bag_asp_sv_net add = local_var:bag_asp_sv_p }}
+\t}}
+\tset_local_variable = {{
+\t\tname = bag_asp_sv_stop
+\t\tvalue = {{
+\t\t\tvalue = local_var:bag_asp_sv_net
+\t\t\tmultiply = 100
+\t\t\tmax = 100
+\t\t}}
+\t}}
+\tif = {{
+\t\tlimit = {{ has_variable = bag_asp_log_on }}
+\t\tset_global_variable = {{ name = bag_asp_sv_n1 value = local_var:bag_asp_sv_pos }}
+\t\tset_global_variable = {{ name = bag_asp_sv_n2 value = local_var:bag_asp_sv_stop }}
+\t}}
+\tset_local_variable = {{
+\t\tname = bag_asp_sv_stop
+\t\tvalue = {{
+\t\t\tvalue = local_var:bag_asp_sv_stop
+\t\t\tfloor = yes
+\t\t}}
+\t}}
+\tset_local_variable = {{
+\t\tname = bag_asp_sv_at
+\t\tvalue = {{
+\t\t\tvalue = local_var:bag_asp_sv_pos
+\t\t\tfloor = yes
+\t\t}}
+\t}}
+\tif = {{
+\t\tlimit = {{ local_var:bag_asp_sv_stop > local_var:bag_asp_sv_at }}
+\t\tset_variable = {{ name = bag_asp_sv_want value = local_var:bag_asp_sv_i }}
+\t\tset_variable = {{ name = bag_asp_sv_want_side value = local_var:bag_asp_sv_s }}
+\t}}
+}}
+
+# Scope: country. The request for the hidden window: the pair, the side, open.
+bag_asp_sv_ask = {{
+\tswitch = {{
+\t\ttrigger = var:bag_asp_sv_want
+{asks}
+\t}}
+\tif = {{
+\t\tlimit = {{ var:bag_asp_sv_want_side = 2 }}
+\t\tset_variable = {{ name = bag_asp_sv_right value = yes }}
+\t}}
+\telse = {{
+\t\tset_variable = {{ name = bag_asp_sv_left value = yes }}
+\t}}
+\tset_variable = {{ name = bag_asp_sv_open value = yes }}
+\tdebug_log = "bag_asp: values, the window is asked to open and press"
+}}
+"""
+
+
+# Scope: any. The value rule's numbers, parked in globals for the log.
 SV_VALUES = "".join(f"\n{sv}_value = {{\n\tvalue = global_var:{sv}\n}}\n"
-                    for sv in ("bag_asp_sv_now", "bag_asp_sv_limit", "bag_asp_sv_n1", "bag_asp_sv_n2", "bag_asp_sv_n3"))
+                    for sv in ("bag_asp_sv_n1", "bag_asp_sv_n2", "bag_asp_sv_n3"))
 
 
 def value_guis() -> str:
     return f"""
-# The probe's button row draws only while this exists; the press comes as a
-# callback (bag_asp_handle_callback).
-{MOD_ID}__sv_probe_on_changed = {{
-\tscope = country
-\tis_shown = {{ always = yes }}
-\teffect = {{ }}
-}}
-
-# Called by the hidden window (bag_asp_hidden.gui) with the chosen seat's
-# limit as the window reads it (Cabinet.GetMaxSocietalValueReachable): the
-# number the monthly rule compares against, read where only the interface can.
-bag_asp_sv_limit = {{
+# The list «Общественные ценности» draws only while this exists, and a change
+# of it is committed here.
+{MOD_ID}__values_on_changed = {{
 \tscope = country
 \tis_shown = {{ always = yes }}
 \teffect = {{
-\t\tset_global_variable = {{ name = bag_asp_sv_limit value = scope:limit }}
-\t\tdebug_log = "bag_asp: sv the window read the seat's limit [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_limit_value')|2]"
+\t\tcmm_apply_list_change = {{ setting = {MOD_ID}__values }}
+\t\tbag_asp_rebuild = yes
+\t\tif = {{
+\t\t\tlimit = {{ has_variable = bag_asp_log_on }}
+\t\t\tdebug_log = "bag_asp: you changed the list values"
+\t\t}}
+\t\tif = {{
+\t\t\tlimit = {{ has_variable = bag_asp_auto_on }}
+\t\t\tbag_asp_plan_all = yes
+\t\t}}
 \t}}
 }}
 
@@ -1199,30 +1441,52 @@ bag_asp_sv_opening = {{
 \tscope = country
 \tis_shown = {{ always = yes }}
 \teffect = {{
-\t\tdebug_log = "bag_asp: sv the hidden window asked the game's value window to open"
+\t\tdebug_log = "bag_asp: values, the hidden window asked the game's value window to open"
 \t\tif = {{ limit = {{ has_variable = bag_asp_sv_open }} remove_variable = bag_asp_sv_open }}
 \t}}
 }}
 
-# Called by a row of the value window right after it pressed a side; the
-# window then closes itself (bag_asp_sv_close).
+# Called by a row of the value window right after it pressed a side.
 bag_asp_sv_pressed = {{
 \tscope = country
 \tis_shown = {{ always = yes }}
 \teffect = {{
-\t\tdebug_log = "bag_asp: sv the value window pressed the asked side"
+\t\tdebug_log = "bag_asp: values, the value window pressed the asked side"
 {clear_sv(2)}
-\t\tset_variable = {{ name = bag_asp_sv_close value = yes }}
 \t}}
 }}
 
-# Called by the hidden window as it shuts the value window. His ask 13.10.
+# Called by the hidden window as it closes the panels after a press.
 bag_asp_sv_closed = {{
 \tscope = country
 \tis_shown = {{ always = yes }}
 \teffect = {{
-\t\tdebug_log = "bag_asp: sv the value window closes"
-\t\tif = {{ limit = {{ has_variable = bag_asp_sv_close }} remove_variable = bag_asp_sv_close }}
+\t\tdebug_log = "bag_asp: values, the panels close after the press"
+\t}}
+}}
+
+# Called by the hidden window two seconds after it opened the value window.
+# A side still asked means no row pressed: the window leaves out the pair the
+# seat already pushes. The next pass then takes another pair, and comes back
+# to this one when the seat is off it.
+bag_asp_sv_timeout = {{
+\tscope = country
+\tis_shown = {{ always = yes }}
+\teffect = {{
+\t\tif = {{
+\t\t\tlimit = {{
+\t\t\t\tOR = {{
+\t\t\t\t\thas_variable = bag_asp_sv_left
+\t\t\t\t\thas_variable = bag_asp_sv_right
+\t\t\t\t}}
+\t\t\t}}
+\t\t\tdebug_log = "bag_asp: values, no row pressed in two seconds; the panels close, the next pass takes another pair"
+{clear_sv(3)}
+\t\t\tif = {{
+\t\t\t\tlimit = {{ has_variable = bag_asp_sv_cur }}
+\t\t\t\tset_variable = {{ name = bag_asp_sv_cur_side value = 0 }}
+\t\t\t}}
+\t\t}}
 \t}}
 }}
 
@@ -1232,7 +1496,7 @@ bag_asp_sv_row = {{
 \tscope = country
 \tis_shown = {{ always = yes }}
 \teffect = {{
-\t\tdebug_log = "bag_asp: sv the value window shows a row"
+\t\tdebug_log = "bag_asp: values, the value window shows a row"
 \t\tscope:sv ?= {{ debug_log_scopes = no }}
 \t}}
 }}
@@ -1245,8 +1509,9 @@ def build(game: Path) -> dict[str, str]:
     missing = [act(k) for k, *_ in POOL if act(k) not in actions]
     if missing:
         raise SystemExit(f"council: the game has no cabinet action {', '.join(missing)}")
-    for k, *_ in POOL:
-        if value(actions[act(k)], "forbid_for_automation") == "yes":
+    for k, kind, *_ in POOL:
+        # The game keeps its own automation off values; ours presses its window.
+        if kind != "values" and value(actions[act(k)], "forbid_for_automation") == "yes":
             raise SystemExit(f"council: {k} is forbidden for automation in the game now")
     n = len(POOL)
     if n > 50:
@@ -1293,20 +1558,6 @@ bag_asp_register = {{
 \t\tgroup_id = council
 \t\tdefault_value = 0
 \t}}
-\t# The value-shift probe, 0.9.9: one press puts the best diplomat on
-\t# «Традиционализм — Инновации» toward innovation through the game's window
-\t# (tools/value_window.py). Drawn only with its `_on_changed` gui.
-\tcmm_register_button_setting = {{
-\t\tmod_id = {MOD_ID}
-\t\tsetting_id = sv_probe
-\t\ttab_id = main
-\t\tgroup_id = council
-\t}}
-\tcmm_add_scripted_gui = {{
-\t\tmod_id = {MOD_ID}
-\t\tsetting_id = sv_probe
-\t}}
-
 \tcmm_register_settings_list = {{
 \t\tmod_id = {MOD_ID}
 \t\tsetting_id = available
@@ -1340,6 +1591,32 @@ bag_asp_register = {{
         else:
             reg.append(f"\tcmm_register_bool_setting = {{\n\t\tmod_id = {MOD_ID}\n\t\tsetting_id = {setting}\n"
                        f"\t\ttab_id = fine\n\t\tgroup_id = {group}\n\t\tdefault_value = {opt}\n\t}}\n")
+    # His spec 12.10: in «Тонкие настройки», every pair the game has, in an
+    # order he sets, each with a tick and the side to push it toward.
+    pairs = value_pairs(game)
+    reg.append(f"""\tcmm_register_settings_list = {{
+\t\tmod_id = {MOD_ID}
+\t\tsetting_id = values
+\t\ttab_id = fine
+\t\titem_count = {len(pairs)}
+\t\tis_ordered = 1
+\t}}
+\tcmm_register_list_bool_field = {{
+\t\tmod_id = {MOD_ID}
+\t\tsetting_id = values
+\t\tfield_id = use
+\t\tdefault_value = 0
+\t}}
+\tcmm_register_list_dropdown_field = {{
+\t\tmod_id = {MOD_ID}
+\t\tsetting_id = values
+\t\tfield_id = side
+\t\tdefault_index = 1
+\t\toption_count = 2
+\t}}
+""")
+    for i, pair in enumerate(pairs, 1):
+        reg.append(f"\tcmm_set_list_item_value = {{ mod_id = {MOD_ID} setting_id = values item = {i} value = flag:bag_asp_sv_{pair} }}\n")
     for i, (k, *_) in enumerate(POOL, 1):
         ability = value(actions[act(k)], "ability") or "adm"
         reg.append(f"\tcmm_set_list_item_value = {{ mod_id = {MOD_ID} setting_id = available item = {i} value = flag:bag_asp_{k} }}\n"
@@ -1417,7 +1694,22 @@ bag_asp_rebuild = {{
 \t\t# The «№» box of each row shows its place among the shown rows (cmf_dev_beta).
 \t\tcmf_beta_list_renumber = {{{{ setting = bag_asp__priority }}}}
 """.replace("{{", "{").replace("}}", "}"))
-    reg.append("\t}\n}\n")
+    # The pairs: ticked ones in the list's order, each one's side (1 left,
+    # 2 right), and rows only for the pairs this country has.
+    shown = "".join(
+        f"\t\tif = {{\n\t\t\tlimit = {{ has_societal_value = societal_value_type:{pair} }}\n"
+        f"\t\t\tcmm_show_list_item = {{ mod_id = {MOD_ID} setting_id = values item = {i} }}\n\t\t}}\n"
+        f"\t\telse = {{\n\t\t\tcmm_hide_list_item = {{ mod_id = {MOD_ID} setting_id = values item = {i} }}\n\t\t}}\n"
+        for i, pair in enumerate(pairs, 1))
+    reg.append(f"""\t}}
+\tif = {{
+\t\tlimit = {{ has_variable_list = cmm_list_items_{MOD_ID}__values }}
+\t\tcmm_build_list_bool_list = {{ setting = {MOD_ID}__values field_slot = 1 list_name = bag_asp_sv_used }}
+\t\tcmm_build_list_field_map = {{ setting = {MOD_ID}__values field_slot = 2 map_name = bag_asp_sv_side multiply = 1 }}
+{shown}\t\tcmf_beta_list_renumber = {{ setting = {MOD_ID}__values }}
+\t}}
+}}
+""")
 
     reg.append(f"""
 # Scope: country. var:cmf_callback names what was clicked; switch as in
@@ -1446,7 +1738,6 @@ bag_asp_handle_callback = {{
 \t\tflag:{MOD_ID}__culture_speedup = {{ bag_asp_sync = yes }}
 \t\tflag:{MOD_ID}__religion_target = {{ bag_asp_sync = yes }}
 \t\tflag:{MOD_ID}__log = {{ bag_asp_sync = yes }}
-\t\tflag:{MOD_ID}__sv_probe = {{ bag_asp_sv_probe = yes }}
 \t}}
 \t# His ask 13.10: what he changes goes into the log, with every setting after it.
 \tif = {{
@@ -1610,7 +1901,7 @@ bag_asp_plan = {{
 
 """
     BUSY.clear()
-    tries = "\n".join(try_effect(k, kind, order, gate, actions) for k, kind, order, gate in POOL)
+    tries = "\n".join(try_effect(k, kind, order, gate, actions) for k, kind, order, gate in POOL if kind != "values")
     tries += "\n" + "\n".join(try_effect(k, "province", None, "", actions, at="scope:bag_asp_at") for k in SPEEDUP)
     def pass_(effect: str) -> str:
         return "\n".join(
@@ -1678,7 +1969,7 @@ bag_asp_vacate = {{
 
 """
     run += tries
-    run += value_effects(game)
+    run += value_effects(game, actions)
     # A seat's rank is its action's row; where two rows share an action, the
     # row whose gate holds now, gated rows tried first.
     shared = {act(k) for k, *_ in POOL if act(k) != k}
@@ -1784,8 +2075,8 @@ bag_asp_emergency = {{
 \t}}
 }}
 """
-    run += "\n" + "\n".join(place_effect(k, gate, actions) for k, _, _, gate in POOL)
-    run += "\n" + "\n".join(move_effect(k, actions) for k, *_ in POOL)
+    run += "\n" + "\n".join(place_effect(k, gate, actions) for k, kind, _, gate in POOL if kind != "values")
+    run += "\n" + "\n".join(move_effect(k, actions) for k, kind, *_ in POOL if kind != "values")
     run += pair_effects(actions)
     run += probe_effects(actions)
     run += log_settings()
@@ -2017,7 +2308,7 @@ bag_asp_paired_seat = {{
 
     return {
         "in_game/common/scripted_triggers/bag_asp_council_triggers.txt": triggers,
-        "in_game/common/script_values/bag_asp_values.txt": VALUES + shown_values() + SV_VALUES,
+        "in_game/common/script_values/bag_asp_values.txt": VALUES + shown_values() + SV_VALUES + sv_push_value(game, actions),
         "in_game/common/scripted_effects/bag_asp_cmm_effects.txt": effects,
         "in_game/common/scripted_effects/bag_asp_council_effects.txt": run,
         "in_game/common/on_action/bag_asp_cmf_on_actions.txt": on_actions,
@@ -2051,6 +2342,16 @@ def loc_rows(game: Path, language: str) -> dict[str, str]:
         # progress text read without a province, cause not placed; a linked name
         # here was new in 0.9.0, so it goes.
         rows[f"{MOD_ID}__fine__{group}_name"] = f"${group}$"
+    rows.update(VALUES_LOC[language])
+    # A pair's row: the game's own name of the pair; its tooltip, the two sides.
+    lw, rw = SIDE_WORDS[language]
+    for i, pair in enumerate(value_pairs(game), 1):
+        if pair not in names:
+            raise SystemExit(f"council: the game has no {language} name for {pair}")
+        left, right = pair.split("_vs_")
+        rows[f"{MOD_ID}__values_i{i}_name"] = f"${pair}$"
+        rows[f"{MOD_ID}__values_i{i}_desc"] = (f"{lw}: [ShowSocietyDirectionName('{left}')], "
+                                               f"{rw}: [ShowSocietyDirectionName('{right}')].")
     for ab, text in ABILITY[language].items():
         rows[f"bag_asp_ability_{ab}"] = text
     return rows

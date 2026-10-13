@@ -61,23 +61,22 @@ bag_asp_devastated_seen = {
 	}
 }
 
-# The probe's button row draws only while this exists; the press comes as a
-# callback (bag_asp_handle_callback).
-bag_asp__sv_probe_on_changed = {
-	scope = country
-	is_shown = { always = yes }
-	effect = { }
-}
-
-# Called by the hidden window (bag_asp_hidden.gui) with the chosen seat's
-# limit as the window reads it (Cabinet.GetMaxSocietalValueReachable): the
-# number the monthly rule compares against, read where only the interface can.
-bag_asp_sv_limit = {
+# The list «Общественные ценности» draws only while this exists, and a change
+# of it is committed here.
+bag_asp__values_on_changed = {
 	scope = country
 	is_shown = { always = yes }
 	effect = {
-		set_global_variable = { name = bag_asp_sv_limit value = scope:limit }
-		debug_log = "bag_asp: sv the window read the seat's limit [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_limit_value')|2]"
+		cmm_apply_list_change = { setting = bag_asp__values }
+		bag_asp_rebuild = yes
+		if = {
+			limit = { has_variable = bag_asp_log_on }
+			debug_log = "bag_asp: you changed the list values"
+		}
+		if = {
+			limit = { has_variable = bag_asp_auto_on }
+			bag_asp_plan_all = yes
+		}
 	}
 }
 
@@ -87,33 +86,58 @@ bag_asp_sv_opening = {
 	scope = country
 	is_shown = { always = yes }
 	effect = {
-		debug_log = "bag_asp: sv the hidden window asked the game's value window to open"
+		debug_log = "bag_asp: values, the hidden window asked the game's value window to open"
 		if = { limit = { has_variable = bag_asp_sv_open } remove_variable = bag_asp_sv_open }
 	}
 }
 
-# Called by a row of the value window right after it pressed a side; the
-# window then closes itself (bag_asp_sv_close).
+# Called by a row of the value window right after it pressed a side.
 bag_asp_sv_pressed = {
 	scope = country
 	is_shown = { always = yes }
 	effect = {
-		debug_log = "bag_asp: sv the value window pressed the asked side"
+		debug_log = "bag_asp: values, the value window pressed the asked side"
 		if = { limit = { has_variable = bag_asp_sv_open } remove_variable = bag_asp_sv_open }
+		if = { limit = { has_variable = bag_asp_sv_left } remove_variable = bag_asp_sv_left }
 		if = { limit = { has_variable = bag_asp_sv_right } remove_variable = bag_asp_sv_right }
 		if = { limit = { has_variable = bag_asp_sv_pair } remove_variable = bag_asp_sv_pair }
-		if = { limit = { has_variable = bag_asp_sv_close } remove_variable = bag_asp_sv_close }
-		set_variable = { name = bag_asp_sv_close value = yes }
 	}
 }
 
-# Called by the hidden window as it shuts the value window. His ask 13.10.
+# Called by the hidden window as it closes the panels after a press.
 bag_asp_sv_closed = {
 	scope = country
 	is_shown = { always = yes }
 	effect = {
-		debug_log = "bag_asp: sv the value window closes"
-		if = { limit = { has_variable = bag_asp_sv_close } remove_variable = bag_asp_sv_close }
+		debug_log = "bag_asp: values, the panels close after the press"
+	}
+}
+
+# Called by the hidden window two seconds after it opened the value window.
+# A side still asked means no row pressed: the window leaves out the pair the
+# seat already pushes. The next pass then takes another pair, and comes back
+# to this one when the seat is off it.
+bag_asp_sv_timeout = {
+	scope = country
+	is_shown = { always = yes }
+	effect = {
+		if = {
+			limit = {
+				OR = {
+					has_variable = bag_asp_sv_left
+					has_variable = bag_asp_sv_right
+				}
+			}
+			debug_log = "bag_asp: values, no row pressed in two seconds; the panels close, the next pass takes another pair"
+			if = { limit = { has_variable = bag_asp_sv_open } remove_variable = bag_asp_sv_open }
+			if = { limit = { has_variable = bag_asp_sv_left } remove_variable = bag_asp_sv_left }
+			if = { limit = { has_variable = bag_asp_sv_right } remove_variable = bag_asp_sv_right }
+			if = { limit = { has_variable = bag_asp_sv_pair } remove_variable = bag_asp_sv_pair }
+			if = {
+				limit = { has_variable = bag_asp_sv_cur }
+				set_variable = { name = bag_asp_sv_cur_side value = 0 }
+			}
+		}
 	}
 }
 
@@ -123,7 +147,7 @@ bag_asp_sv_row = {
 	scope = country
 	is_shown = { always = yes }
 	effect = {
-		debug_log = "bag_asp: sv the value window shows a row"
+		debug_log = "bag_asp: values, the value window shows a row"
 		scope:sv ?= { debug_log_scopes = no }
 	}
 }
