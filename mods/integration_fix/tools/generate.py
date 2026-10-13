@@ -17,10 +17,16 @@ being reverted.  Every edit names its anchor and how many times it must match
 in the block; a patch that moves the anchor stops the build, it does not write
 a quiet no-op.
 
-Left to the game on purpose: the integration cabinet actions (1.4's 1.0 and 1.5
-are above the hotfix's 0.5 and 1.0), the annexation base cost (1.4's 50 is
-below the hotfix's 75), the Roman casus belli, and every subject-type field
-other than cabinet efficiency.
+The integration cabinet actions keep the hotfix's speed exactly.  Its INJECT
+adds a second province_modifier to the game's (his run 10-13, Emsland: the
+action's tooltip lists +1.00 and +0.50, and 0.16 + 0.60 + 0.30 per location is
+the 2.18 a month the location showed), so the action is 1.0 + 0.5 = 1.5, and
+Zanzibar's 1.5 + 1.0 = 2.5.  The same run shows the hotfix's unprefixed
+province_base winning (0.5 / 3 locations = 0.16).
+
+Left to the game on purpose: the annexation base cost (1.4's 50 is below the
+hotfix's 75), the Roman casus belli, and every subject-type field other than
+cabinet efficiency.
 
 Usage:  python3 mods/integration_fix/tools/generate.py
 """
@@ -61,6 +67,16 @@ EDITS = [
     # Natural integration speed of a province.
     ("main_menu/common/static_modifiers/province.txt", "province_base", [
         (r"province_integration_speed = 0\.1\b", "province_integration_speed = 0.5", 1),
+    ]),
+    # Cabinet integration: the game's speed plus the hotfix's injected one.
+    ("in_game/common/cabinet_actions/integrate_area.txt", "integrate_area", [
+        (r"province_integration_speed = 1\.0\b", "province_integration_speed = 1.5", 1),
+    ]),
+    ("in_game/common/cabinet_actions/integrate_province.txt", "integrate_province", [
+        (r"province_integration_speed = 1\.0\b", "province_integration_speed = 1.5", 1),
+    ]),
+    ("in_game/common/cabinet_actions/oma_zanzibar_integration.txt", "oma_zanzibar_integration", [
+        (r"province_integration_speed = 1\.5\b", "province_integration_speed = 2.5", 1),
     ]),
     # Subjects: no -50% assimilation and conversion.
     ("main_menu/common/static_modifiers/country.txt", "is_subject", [

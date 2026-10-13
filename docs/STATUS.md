@@ -9,7 +9,7 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`nd_ru`](../mods/nd_ru/CLAUDE.md) | 4 385 keys (0.2.1, 10-03: ND 1.4.0) | everything except Westphalia and the override itself |
 | [`nmt_ru`](../mods/nmt_ru/CLAUDE.md) | Русский для National Mission Trees: 17 стран, 3 555 ключей; дерево пишется целиком | всё |
 | [`nmt_fix`](../mods/nmt_fix/CLAUDE.md) | 0.2.0 (10-03): земли подданных (121 условие) + NMT под 1.4 | всё |
-| [`integration_fix`](../mods/integration_fix/CLAUDE.md) | 0.1.0: Integration Hotfix на 1.4.1, вместо него | всё |
+| [`integration_fix`](../mods/integration_fix/CLAUDE.md) | 0.2.0: Integration Hotfix на 1.4.1, вместо него | всё |
 | [`cm_maps`](../mods/cm_maps/CLAUDE.md) | **загружен 09-19, рисует**; 0.3.0: права по провинции; еда, губернатор под 1.4 не сверены | 0.3.0, починка прав, еда |
 | [`cm_dev_perf`](../mods/cm_dev_perf/CLAUDE.md) | +perf40: окна 1.4.1; права по провинции, грамоты 1.4; перед Río, после Río — [`cm_rio_patch`](../mods/cm_rio_patch/CLAUDE.md); ND — своя категория | +perf19–39, патч |
 | [`cmf_dev_beta`](../mods/cmf_dev_beta/CLAUDE.md) | +beta13: номер места с начала; +beta12: типы 1.4.1; `cmf_is_host`, панель, стрелки, номер места; вместо CMF и CMF Dev | +beta7, +beta12, +beta13 |
