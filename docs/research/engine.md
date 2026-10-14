@@ -477,6 +477,13 @@ guild" the same statement.
 | `debug_log_scopes = no` | **the current scope, named**, on its own line: «Держава Валахия (WAL)», «Район Тырговиште (3574)». This is how a row says which location it is |
 | `error_log = "…"` | **the line lands in `error.log` and in `debug.log` both.** A message sent to both sinks therefore arrives in `debug.log` twice |
 
+**And `debug.log` is not complete while the game runs** (10-14,
+`cmf_saved_settings`): read at 08:43 with the game open, a block lacked its last
+three lines; read after closing, the same block was whole. Read it after the
+game exits. On the same run `GetGlobalVariable('x').GetFlagName` printed a flag
+global's name and `GetValue` matched the script value in 611 of 611 lines, while
+`TopScope.GetFlagName('<saved scope>')` printed nothing.
+
 **And square brackets in a `debug_log` string are data function syntax**, exactly
 as in a localization value (`CLAUDE.md` carries the rule and this is where it was
 paid for a second time): `given=[…]` printed a number, and `[glass, masonry]`

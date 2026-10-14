@@ -20,6 +20,13 @@ settings. Symptom: an interface that renders perfectly and does nothing.
 `python3 tools/check_cmm.py mods/<mod>/in_game/common` checks a whole mod against
 whichever CMF is in `reference/`.
 
+**And not only CMM macros: any scripted effect whose `$param$` sits only inside
+quotes.** The game does not substitute a macro inside a quoted string, so such a
+parameter is undeclared, and a call passing it drops the rest of the caller's
+effect. `cmf_saved_settings` 0.1.0 printed `CMFSAVE begin` and nothing else;
+0.1.1, the same code with `$kind$` gone from a `debug_log` string, printed 611
+settings (10-14). `check_script.py` reports it (`quoted_only_parameters`).
+
 **A formatted list field needs its format keys or it prints their names.**
 `cmm_set_list_field_format` and `cmm_set_list_field_conditional_format` make the
 widget read `<mod>__<setting>__<field>_prefix` and `_postfix`, and for the
