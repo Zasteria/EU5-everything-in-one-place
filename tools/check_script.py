@@ -846,6 +846,39 @@ def flowcontainer_datamodels(root: Path) -> list[str]:
     return found
 
 
+def quoted_only_parameters(root: Path) -> list[str]:
+    """A scripted effect or trigger whose `$param$` appears only inside quotes.
+
+    **Measured 2026-10-14, `cmf_saved_settings` 0.1.0 against 0.1.1.** The
+    game does not substitute a macro inside a quoted string (CMF says so in
+    `_cmm_restore_default_for_key`), so a parameter that appears nowhere else
+    is not declared. Calling `bag_cmfs_print = { kind = c }`, with `$kind$`
+    only in a `debug_log` string, then fails the way a CMM macro with a foreign
+    argument does: silently, taking the rest of the caller's effect with it.
+    The press printed `CMFSAVE begin` and nothing after; 0.1.1, the same code
+    with the parameter gone, printed 611 settings.
+    """
+    found = []
+    for folder in ("scripted_effects", "scripted_triggers"):
+        for path in sorted((root / "in_game/common" / folder).rglob("*.txt")):
+            text = "\n".join(l.split("#", 1)[0]
+                             for l in path.read_text(encoding="utf-8-sig").split("\n"))
+            for head in re.finditer(r"^(\w+)\s*=\s*\{", text, re.M):
+                body = text[head.end() - 1:_brace_end(text, head.end() - 1) + 1]
+                quoted = "".join(re.findall(r'"[^"\n]*"', body))
+                bare = re.sub(r'"[^"\n]*"', "", body)
+                inside = set(re.findall(r"\$(\w+)\$", quoted))
+                outside = set(re.findall(r"\$(\w+)\$", bare))
+                for name in sorted(inside - outside):
+                    line = text[:head.start()].count("\n") + 1
+                    found.append(
+                        f"{path.relative_to(REPO)}:{line}: `{head.group(1)}` uses "
+                        f"`${name}$` only inside quotes — a macro is not substituted "
+                        f"there, so `{name}` is undeclared and any call passing it "
+                        f"silently drops the rest of the caller's effect")
+    return found
+
+
 def scope_mixed_variables(root: Path) -> list[str]:
     """A name written as a global and read as a location's own, or the reverse.
 
@@ -1460,6 +1493,7 @@ def main(argv: list[str]) -> int:
                  + unregistered_windows(root) + unresolved_interface(root)
                  + flowcontainer_datamodels(root)
                  + scope_mixed_variables(root)
+                 + quoted_only_parameters(root)
                  + overflowing_windows(root)
                  + localization_markup(root)
                  + stale_overrides(root)

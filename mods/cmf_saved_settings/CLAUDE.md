@@ -40,11 +40,12 @@
 `GetGlobalVariable(...).GetFlagName` (так выводит свой лог CMF) или `TopScope`,
 число через script value (измерено) или `GetValue`.
 
-**10-14, прогон 0.1.0: только `CMFSAVE begin 1`.** Подозреваемый — параметр,
-стоявший только в кавычках (TESTLOG 10-14 08:35). **0.1.1:** без параметров в
-кавычках, этапы `CMFSAVE stage c|g|order`, `mods.bat` → 5 называет последний
-пройденный этап. В игре не был. Если 0.1.1 пройдёт — правило в
-`docs/pitfalls/script.md` и в `check_script.py`.
+**10-14, прогон 0.1.0: только `CMFSAVE begin 1`** — параметр, стоявший только
+в кавычках. **Прогон 0.1.1 (10-14 08:43): 611 настроек, 609 с именем, 60 строк
+порядка из 62, `end` нет** — причина подтверждена, правило в
+`docs/pitfalls/cmm.md` и `check_script.py`; `GetFlagName` в `debug_log`
+работает. Открыто: хвост лога при открытой игре (не дописан?) и два
+безымянных ключа — ждём `last.txt`.
 
 Проверки: `python3 tools/check_cmm.py mods/cmf_saved_settings/in_game/common`,
 `python3 tools/check_script.py mods/cmf_saved_settings`.

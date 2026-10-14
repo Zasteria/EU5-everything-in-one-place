@@ -1291,7 +1291,9 @@ def screen_save_settings() -> None:
     say("  настроек: %d, из них с читаемым именем: %d" % (len(rows), len(named)))
     say("  строк порядка списков: %d" % len(order))
     if not finished:
-        say("  БЛОК ОБОРВАН: нет строки CMFSAVE end — нажатие не дошло до конца.")
+        say("  БЛОК ОБОРВАН: нет строки CMFSAVE end.")
+        say("  Если игра ещё открыта — она могла не дописать хвост лога: закрой её")
+        say("  и выбери этот пункт снова, до следующего запуска.")
         stages = [line for line in block if line.startswith("CMFSAVE stage ")]
         if stages:
             say("  последний пройденный этап: %s" % stages[-1][len("CMFSAVE stage "):])
