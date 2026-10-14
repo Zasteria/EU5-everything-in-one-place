@@ -979,13 +979,16 @@ bag_asp_try_develop_province = {
 	if = {
 		limit = {
 			cabinet_action:develop_province = { is_available_for = scope:actor }
+			scope:actor = { bag_asp_develop_province_room = yes }
 		}
-		scope:actor.capital.province = {
-			if = {
+		scope:actor = {
+			ordered_province = {
 				limit = {
 					NOT = { has_variable = bag_asp_busy_develop_province }
 					NOT = { has_variable = bag_asp_busy_develop_province }
+					bag_asp_develop_wanted = yes
 				}
+				order_by = bag_asp_develop_score
 				save_temporary_scope_as = bag_asp_pick
 				scope:bag_asp_seat = {
 					bag_asp_vacate = yes
@@ -4124,10 +4127,41 @@ bag_asp_place_develop_province = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:develop_province
+			interaction_target:target ?= { bag_asp_develop_wanted = yes }
 		}
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
 			set_variable = { name = bag_asp_kept value = yes }
+		}
+	}
+	while = {
+		limit = {
+			NOT = { has_variable = bag_asp_fill_only }
+			has_variable = bag_asp_develop_seats
+			var:bag_asp_develop_seats > 0
+			bag_asp_develop_used > var:bag_asp_develop_seats
+			any_cabinet = {
+				has_cabinet_action = yes
+				cabinet_action = cabinet_action:develop_province
+				cabinet_member ?= { has_variable = bag_asp_kept }
+			}
+		}
+		ordered_cabinet = {
+			limit = {
+				has_cabinet_action = yes
+				cabinet_action = cabinet_action:develop_province
+				cabinet_member ?= { has_variable = bag_asp_kept }
+			}
+			order_by = {
+				value = 0
+				subtract = cabinet_member.adm
+			}
+			bag_asp_vacate = yes
+			cabinet_member = {
+				remove_variable = bag_asp_claimed
+				remove_variable = bag_asp_kept
+			}
+			debug_log = "bag_asp: develop_province gave up a seat: more than its setting allows"
 		}
 	}
 	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
@@ -5912,7 +5946,28 @@ bag_asp_log_settings = {
 	else = {
 		set_global_variable = { name = bag_asp_show_religion_target value = 0 }
 	}
-	debug_log = "bag_asp: settings: period [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_period')|0], review [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_review')|0], culture_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_culture_target')|0], religion_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_religion_target')|0]"
+	if = {
+		limit = { has_variable = bag_asp_develop_target }
+		set_global_variable = { name = bag_asp_show_develop_target value = var:bag_asp_develop_target }
+	}
+	else = {
+		set_global_variable = { name = bag_asp_show_develop_target value = 0 }
+	}
+	if = {
+		limit = { has_variable = bag_asp_develop_control }
+		set_global_variable = { name = bag_asp_show_develop_control value = var:bag_asp_develop_control }
+	}
+	else = {
+		set_global_variable = { name = bag_asp_show_develop_control value = 0 }
+	}
+	if = {
+		limit = { has_variable = bag_asp_develop_seats }
+		set_global_variable = { name = bag_asp_show_develop_seats value = var:bag_asp_develop_seats }
+	}
+	else = {
+		set_global_variable = { name = bag_asp_show_develop_seats value = 0 }
+	}
+	debug_log = "bag_asp: settings: period [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_period')|0], review [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_review')|0], culture_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_culture_target')|0], religion_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_religion_target')|0], develop_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_develop_target')|0], develop_control [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_develop_control')|0], develop_seats [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_develop_seats')|0]"
 	if = {
 		limit = { has_variable = bag_asp_auto_on }
 		debug_log = "bag_asp: setting auto on"

@@ -77,6 +77,18 @@ bag_asp_show_religion_target = {
 	value = global_var:bag_asp_show_religion_target
 }
 
+bag_asp_show_develop_target = {
+	value = global_var:bag_asp_show_develop_target
+}
+
+bag_asp_show_develop_control = {
+	value = global_var:bag_asp_show_develop_control
+}
+
+bag_asp_show_develop_seats = {
+	value = global_var:bag_asp_show_develop_seats
+}
+
 bag_asp_sv_n1_value = {
 	value = global_var:bag_asp_sv_n1
 }
@@ -87,6 +99,30 @@ bag_asp_sv_n2_value = {
 
 bag_asp_sv_n3_value = {
 	value = global_var:bag_asp_sv_n3
+}
+
+# Scope: country. Seats this pass has given development so far.
+bag_asp_develop_used = {
+	value = 0
+	every_cabinet = {
+		limit = {
+			has_cabinet_action = yes
+			cabinet_action = cabinet_action:develop_province
+			cabinet_member ?= { has_variable = bag_asp_claimed }
+		}
+		add = 1
+	}
+}
+
+# Scope: province; scope:actor is the country. His spec 12.10: the capital's
+# province first; then the one nearest its target, which reaches the step
+# soonest.
+bag_asp_develop_score = {
+	value = province_average_development
+	if = {
+		limit = { this = scope:actor.capital.province }
+		add = 1000
+	}
 }
 
 # Scope: country; scope:bag_asp_seat is a seat. What its advisor would add to

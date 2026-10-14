@@ -1187,3 +1187,23 @@ bag_asp_assimilable_any = {
 		}
 	}
 }
+
+# Scope: province; scope:actor is the country. Development wanted here
+# (council.py, his settings 14.10).
+bag_asp_develop_wanted = {
+	province_average_development < scope:actor.var:bag_asp_develop_target
+	province_average_control > {
+		value = scope:actor.var:bag_asp_develop_control
+		divide = 100
+	}
+}
+
+# Scope: country. Another seat may take development: no cap (0), or fewer
+# seats on it this pass than the cap.
+bag_asp_develop_province_room = {
+	OR = {
+		NOT = { has_variable = bag_asp_develop_seats }
+		var:bag_asp_develop_seats <= 0
+		bag_asp_develop_used < var:bag_asp_develop_seats
+	}
+}

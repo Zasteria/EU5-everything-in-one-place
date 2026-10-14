@@ -59,7 +59,9 @@ POOL = [
     ("appease_estate", "estate", None, ""),
     ("alleviate_concerns", "country", None, ""),
     ("reduce_inflation", "country", None, "inflation > 0"),
-    ("develop_province", "capital", None, ""),
+    # His ask 14.10: every province he names by its settings, not the capital
+    # alone, on as many seats as «Советников на развитии» lets.
+    ("develop_province", "province", "DEVELOP", ""),
     ("study_institutions", "province", "population", ""),
     ("pop_promote_action", "province", "population", ""),
     ("strengthen_government", "country", None, ""),
@@ -88,7 +90,13 @@ ROW_ACTION = {"diplomatic_antagonism": "diplomatic_endeavors", "promote_culture_
 # A row's own condition on a target (in the province search) and on a seat
 # already on its action (keeping it; the emergency's rank).
 ROW_TARGET = {"promote_culture": "bag_asp_needs_half = yes bag_asp_control_reachable = yes"}
-ROW_SEAT = {"promote_culture": "interaction_target:target_1 ?= { bag_asp_needs_half = yes }"}
+ROW_SEAT = {"promote_culture": "interaction_target:target_1 ?= { bag_asp_needs_half = yes }",
+            "develop_province": "interaction_target:target ?= { bag_asp_develop_wanted = yes }"}
+# A province row's own condition on its target (kind province only).
+PROVINCE_COND = {"develop_province": "bag_asp_develop_wanted = yes"}
+# His ask 14.10: a row on at most this many seats, the country variable of its
+# setting (0 = as many as it finds targets for), and the value counting them.
+CAP = {"develop_province": ("bag_asp_develop_seats", "bag_asp_develop_used")}
 
 # Rows of one action told apart in their label, and their tooltips.
 ROW_NOTE = {
@@ -173,6 +181,57 @@ INTEGRATION = """{
 # first, by bands of ten points. Script values in VALUES.
 HALF = "bag_asp_half_score"
 
+# His ask 14.10: «Развитие провинции» by his three numbers (FINE). Scope:
+# province; scope:actor is the country. Average development below the target,
+# average control above the floor (a percent in the setting, 0–1 in the game).
+DEVELOP_TRIGGERS = """
+# Scope: province; scope:actor is the country. Development wanted here
+# (council.py, his settings 14.10).
+bag_asp_develop_wanted = {
+\tprovince_average_development < scope:actor.var:bag_asp_develop_target
+\tprovince_average_control > {
+\t\tvalue = scope:actor.var:bag_asp_develop_control
+\t\tdivide = 100
+\t}
+}
+
+# Scope: country. Another seat may take development: no cap (0), or fewer
+# seats on it this pass than the cap.
+bag_asp_develop_province_room = {
+\tOR = {
+\t\tNOT = { has_variable = bag_asp_develop_seats }
+\t\tvar:bag_asp_develop_seats <= 0
+\t\tbag_asp_develop_used < var:bag_asp_develop_seats
+\t}
+}
+"""
+
+DEVELOP_VALUES = """
+# Scope: country. Seats this pass has given development so far.
+bag_asp_develop_used = {
+\tvalue = 0
+\tevery_cabinet = {
+\t\tlimit = {
+\t\t\thas_cabinet_action = yes
+\t\t\tcabinet_action = cabinet_action:develop_province
+\t\t\tcabinet_member ?= { has_variable = bag_asp_claimed }
+\t\t}
+\t\tadd = 1
+\t}
+}
+
+# Scope: province; scope:actor is the country. His spec 12.10: the capital's
+# province first; then the one nearest its target, which reaches the step
+# soonest.
+bag_asp_develop_score = {
+\tvalue = province_average_development
+\tif = {
+\t\tlimit = { this = scope:actor.capital.province }
+\t\tadd = 1000
+\t}
+}
+"""
+
 VALUES = """# assimilate_primary: script values of the council pass. Rebuilt by tools/generate.py.
 
 # Scope: province; scope:actor is the country. His rule 13.10: integrated
@@ -252,6 +311,12 @@ FINE = [
     ("culture_target", "promote_culture", "dropdown", 2),
     ("culture_speedup", "promote_culture", "bool", 0),
     ("religion_target", "promote_religion", "dropdown", 2),
+    # His ask 14.10: how far, where, and on how many seats provinces develop.
+    # Numbers (default, min, max, step). 20 is the step the game itself uses:
+    # some buildings need development 20 (common_buildings.txt, town_buildings.txt).
+    ("develop_target", "develop_province", "numeric", (20, 1, 100, 1)),
+    ("develop_control", "develop_province", "numeric", (50, 0, 100, 5)),
+    ("develop_seats", "develop_province", "numeric", (0, 0, 50, 1)),
 ]
 FINE_LOC = {
     "english": {
@@ -269,6 +334,12 @@ FINE_LOC = {
         "bag_asp__religion_target_option_1_desc": "The country's own religion.",
         "bag_asp__religion_target_option_2_name": "Another of its group",
         "bag_asp__religion_target_option_2_desc": "The most widespread other religion of the state religion's group in the country; the game allows no other. With none present, the state religion.",
+        "bag_asp__develop_target_name": "Develop up to",
+        "bag_asp__develop_target_desc": "A province is developed while its average development is below this. 20 is the game's own step: some buildings need development 20 in a location.",
+        "bag_asp__develop_control_name": "Control above, %",
+        "bag_asp__develop_control_desc": "Only provinces whose average control is above this percent are developed. The capital's province goes first, then the one nearest the target.",
+        "bag_asp__develop_seats_name": "Advisors on development",
+        "bag_asp__develop_seats_desc": "At most this many seats develop provinces at once; the rest go to the rows below in «Priority». 0: as many as there are provinces to develop.",
     },
     "russian": {
         "bag_asp__culture_target_name": "Ассимилировать в",
@@ -285,6 +356,12 @@ FINE_LOC = {
         "bag_asp__religion_target_option_1_desc": "Религия страны.",
         "bag_asp__religion_target_option_2_name": "Другую из её группы",
         "bag_asp__religion_target_option_2_desc": "Самая распространённая в стране другая религия той же группы: другую игра не даёт. Если такой нет, государственная.",
+        "bag_asp__develop_target_name": "Развивать до",
+        "bag_asp__develop_target_desc": "Провинция развивается, пока её среднее развитие ниже этого числа. 20 — ступень самой игры: части зданий нужно развитие 20 в районе.",
+        "bag_asp__develop_control_name": "Контроль выше, %",
+        "bag_asp__develop_control_desc": "Развиваются только провинции, где средний контроль выше этого процента. Первой идёт провинция столицы, потом та, что ближе всех к цели.",
+        "bag_asp__develop_seats_name": "Советников на развитии",
+        "bag_asp__develop_seats_desc": "Не больше стольких мест развивают провинции одновременно, остальные места идут ниже по «Приоритету». 0 — сколько найдётся провинций.",
     },
 }
 
@@ -483,12 +560,16 @@ def try_effect(row: str, kind: str, order: str | None, gate: str, actions: dict[
         order = RECOVERY
     elif order == "HALF":
         order = HALF
+    elif order == "DEVELOP":
+        order = "bag_asp_develop_score"
     # Unset in the file counts as one seat at a time: otherwise an action with no
     # condition on its target (pop_promote_action) takes every seat left.
     multiple = value(action, "allow_multiple") == "yes"
     cond = [f"cabinet_action:{key} = {{ is_available_for = scope:actor }}"]
     if gate:
         cond.append(f"scope:actor = {{ {gate} }}")
+    if row in CAP:
+        cond.append("scope:actor = { bag_asp_" + row + "_room = yes }")
     if not multiple:
         cond.append(f"scope:actor = {{ NOT = {{ any_cabinet = {{ has_cabinet_action = yes cabinet_action = cabinet_action:{key} }} }} }}")
     limit = "\n".join("\t\t\t" + c for c in cond)
@@ -520,8 +601,9 @@ def try_effect(row: str, kind: str, order: str | None, gate: str, actions: dict[
                      f"\t\t\t\tsave_temporary_scope_as = bag_asp_pick\n"
                      f"{assign(f' {flag} = scope:bag_asp_pick', flag)}\n\t\t\t}}\n\t\t}}")
         elif kind == "province":
+            own = f"\n\t\t\t\t\t{PROVINCE_COND[row]}" if row in PROVINCE_COND else ""
             inner = (f"\t\tscope:actor = {{\n\t\t\tordered_province = {{\n\t\t\t\tlimit = {{\n"
-                     f"{target_test(sel, 5, actions, key)}\n\t\t\t\t}}\n\t\t\t\torder_by = {order}\n"
+                     f"{target_test(sel, 5, actions, key)}{own}\n\t\t\t\t}}\n\t\t\t\torder_by = {order}\n"
                      f"\t\t\t\tsave_temporary_scope_as = bag_asp_pick\n"
                      f"{assign(f' {flag} = scope:bag_asp_pick', flag)}\n\t\t\t}}\n\t\t}}")
         else:
@@ -633,7 +715,42 @@ def place_effect(row: str, gate: str, actions: dict[str, str]) -> str:
     keep_gate = f"\n\t\t\tscope:actor = {{ {gate} }}" if gate else ""
     if row in ROW_SEAT:
         keep_gate += f"\n\t\t\t{ROW_SEAT[row]}"
-    keep_pairs = pair_after = retarget = ""
+    keep_pairs = pair_after = retarget = trim = ""
+    if row in CAP:
+        var, used = CAP[row]
+        # His ask 14.10: more kept seats than the setting allows (he lowered it)
+        # give up the weakest in the skill first; the rows below take them.
+        trim = f"""\twhile = {{
+\t\tlimit = {{
+\t\t\tNOT = {{ has_variable = bag_asp_fill_only }}
+\t\t\thas_variable = {var}
+\t\t\tvar:{var} > 0
+\t\t\t{used} > var:{var}
+\t\t\tany_cabinet = {{
+\t\t\t\thas_cabinet_action = yes
+\t\t\t\tcabinet_action = cabinet_action:{key}
+\t\t\t\tcabinet_member ?= {{ has_variable = bag_asp_kept }}
+\t\t\t}}
+\t\t}}
+\t\tordered_cabinet = {{
+\t\t\tlimit = {{
+\t\t\t\thas_cabinet_action = yes
+\t\t\t\tcabinet_action = cabinet_action:{key}
+\t\t\t\tcabinet_member ?= {{ has_variable = bag_asp_kept }}
+\t\t\t}}
+\t\t\torder_by = {{
+\t\t\t\tvalue = 0
+\t\t\t\tsubtract = cabinet_member.{ability}
+\t\t\t}}
+\t\t\tbag_asp_vacate = yes
+\t\t\tcabinet_member = {{
+\t\t\t\tremove_variable = bag_asp_claimed
+\t\t\t\tremove_variable = bag_asp_kept
+\t\t\t}}
+\t\t\tdebug_log = "bag_asp: {row} gave up a seat: more than its setting allows"
+\t\t}}
+\t}}
+"""
     if row in ROW_TARGET:
         sel = select(action, "province")
         retarget = f"""\t# His rule 13.10: locations assimilate each on their own, so a kept
@@ -694,7 +811,7 @@ bag_asp_place_{row} = {{
 \t\t\tset_variable = {{ name = bag_asp_kept value = yes }}
 \t\t}}
 \t}}
-{retarget}\t# His rule 13.10: in a full hand-out the row takes the best advisors for it,
+{trim}{retarget}\t# His rule 13.10: in a full hand-out the row takes the best advisors for it,
 \t# even from a lower row: while a free seat beats its weakest kept one in the
 \t# skill, the action moves there with its targets.
 \tif = {{
@@ -944,7 +1061,9 @@ PRINT = "[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value
 # prints through a script value reading the variable outright: the form with
 # `value = 0` and an `if` read zero in silence (docs/pitfalls/diagnosis.md).
 NUMBERS = (("period", "bag_asp_period"), ("review", "bag_asp_review"),
-           ("culture_target", "bag_asp_culture_target"), ("religion_target", "bag_asp_religion_target"))
+           ("culture_target", "bag_asp_culture_target"), ("religion_target", "bag_asp_religion_target"),
+           ("develop_target", "bag_asp_develop_target"), ("develop_control", "bag_asp_develop_control"),
+           ("develop_seats", "bag_asp_develop_seats"))
 SWITCHES = (("auto", "bag_asp_auto_on"), ("culture_speedup", "bag_asp_speedup_on"), ("log", "bag_asp_log_on"))
 
 
@@ -1950,6 +2069,11 @@ bag_asp_register = {{
         if kind == "dropdown":
             reg.append(f"\tcmm_register_dropdown_setting = {{\n\t\tmod_id = {MOD_ID}\n\t\tsetting_id = {setting}\n"
                        f"\t\ttab_id = fine\n\t\tgroup_id = {group}\n\t\tdefault_index = 1\n\t\toption_count = {opt}\n\t}}\n")
+        elif kind == "numeric":
+            d, lo, hi, st = opt
+            reg.append(f"\tcmm_register_numeric_setting = {{\n\t\tmod_id = {MOD_ID}\n\t\tsetting_id = {setting}\n"
+                       f"\t\ttab_id = fine\n\t\tgroup_id = {group}\n\t\tdefault_value = {d}\n"
+                       f"\t\tmin_value = {lo}\n\t\tmax_value = {hi}\n\t\tstep_value = {st}\n\t}}\n")
         else:
             reg.append(f"\tcmm_register_bool_setting = {{\n\t\tmod_id = {MOD_ID}\n\t\tsetting_id = {setting}\n"
                        f"\t\ttab_id = fine\n\t\tgroup_id = {group}\n\t\tdefault_value = {opt}\n\t}}\n")
@@ -1997,6 +2121,9 @@ bag_asp_sync = {{
 \tcmm_sync_setting_alias = {{ setting = {MOD_ID}__culture_target alias = bag_asp_culture_target }}
 \tcmm_sync_bool_alias = {{ setting = {MOD_ID}__culture_speedup alias = bag_asp_speedup_on }}
 \tcmm_sync_setting_alias = {{ setting = {MOD_ID}__religion_target alias = bag_asp_religion_target }}
+\tcmm_sync_setting_alias = {{ setting = {MOD_ID}__develop_target alias = bag_asp_develop_target }}
+\tcmm_sync_setting_alias = {{ setting = {MOD_ID}__develop_control alias = bag_asp_develop_control }}
+\tcmm_sync_setting_alias = {{ setting = {MOD_ID}__develop_seats alias = bag_asp_develop_seats }}
 \tcmm_sync_bool_alias = {{ setting = {MOD_ID}__log alias = bag_asp_log_on }}
 }}
 
@@ -2099,6 +2226,9 @@ bag_asp_handle_callback = {{
 \t\tflag:{MOD_ID}__culture_target = {{ bag_asp_sync = yes }}
 \t\tflag:{MOD_ID}__culture_speedup = {{ bag_asp_sync = yes }}
 \t\tflag:{MOD_ID}__religion_target = {{ bag_asp_sync = yes }}
+\t\tflag:{MOD_ID}__develop_target = {{ bag_asp_sync = yes }}
+\t\tflag:{MOD_ID}__develop_control = {{ bag_asp_sync = yes }}
+\t\tflag:{MOD_ID}__develop_seats = {{ bag_asp_sync = yes }}
 \t\tflag:{MOD_ID}__log = {{ bag_asp_sync = yes }}
 \t}}
 \t# His ask 13.10: what he changes goes into the log, with every setting after it.
@@ -2674,8 +2804,8 @@ bag_asp_paired_seat = {{
 """ + reachable
 
     return {
-        "in_game/common/scripted_triggers/bag_asp_council_triggers.txt": triggers + ramp_triggers(game) + assim_triggers(game),
-        "in_game/common/script_values/bag_asp_values.txt": VALUES + shown_values() + SV_VALUES + sv_push_value(game, actions),
+        "in_game/common/scripted_triggers/bag_asp_council_triggers.txt": triggers + ramp_triggers(game) + assim_triggers(game) + DEVELOP_TRIGGERS,
+        "in_game/common/script_values/bag_asp_values.txt": VALUES + shown_values() + SV_VALUES + DEVELOP_VALUES + sv_push_value(game, actions),
         "in_game/common/scripted_effects/bag_asp_cmm_effects.txt": effects,
         "in_game/common/scripted_effects/bag_asp_council_effects.txt": run,
         "in_game/common/on_action/bag_asp_cmf_on_actions.txt": on_actions,
