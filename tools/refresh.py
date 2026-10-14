@@ -44,6 +44,7 @@ GENERATORS = (
     ("assimilate_primary", "mods/assimilate_primary/tools/generate.py"),
     ("centered_towns", "mods/centered_towns/tools/generate.py"),
     ("nd_ru", "mods/nd_ru/tools/generate_ru.py"),
+    ("nd_unnerf", "mods/nd_unnerf/tools/generate.py"),
     ("nmt_ru", "mods/nmt_ru/tools/generate_ru.py"),
     ("nmt_fix", "mods/nmt_fix/tools/generate.py"),
     ("integration_fix", "mods/integration_fix/tools/generate.py"),
