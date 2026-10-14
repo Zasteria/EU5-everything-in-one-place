@@ -1079,6 +1079,8 @@ bag_asp_probe_half = {{
 \t\t\t\t\t\t\t}}
 \t\t\t\t\t\t}}
 \t\t\t\t\t\tdebug_log = "bag_asp: probe: not taken, its foreign pops are all locked (tribesmen, a culture-locked faith, a blocked class); rank {PRINT}:"
+\t\t\t\t\t\tdebug_log_scopes = no
+\t\t\t\t\t\tbag_asp_probe_pops = yes
 \t\t\t\t\t}}
 \t\t\t\t\telse_if = {{
 \t\t\t\t\t\tlimit = {{
@@ -1270,6 +1272,54 @@ bag_asp_assimilable_any = {{
 \t}}
 }}
 """
+
+
+FOREIGN = "culture = { NOT = { is_primary_or_accepted_in = scope:actor } }"
+
+
+def assim_probe_effect(game: Path) -> str:
+    """His run 14.10 10:54: Paderborn plateau, integrated, no Ashkenazim in his
+    locations, and the half probe said its foreign pops were all locked. Which
+    rule of assim_rules caught them, location by location."""
+    never, blockable, locked = assim_rules(game)
+    rules = [(f"pop_type = pop_type:{t}", f"{t}, which never assimilate") for t in never]
+    rules += [(f"religion = religion:{r}", f"of {r}, a culture-locked faith") for r in locked]
+    rules += [(f"pop_type = pop_type:{t} location ?= {{ modifier:local_{t}_assimilation_blocked = yes }}",
+               f"{t}, blocked here") for t in blockable]
+    rules += [(f"pop_type = pop_type:{t} scope:actor = {{ modifier:global_{t}_assimilation_blocked = yes }}",
+               f"{t}, blocked in the country") for t in blockable]
+    checks = "".join(
+        f"\t\t\tif = {{\n\t\t\t\tlimit = {{ any_pop = {{ {FOREIGN} {cond} }} }}\n"
+        f"\t\t\t\tdebug_log = \"bag_asp: probe:   a foreign pop here is {why}\"\n\t\t\t}}\n"
+        for cond, why in rules)
+    return """
+# Scope: province; scope:actor is the country. Probe, his run 14.10: for each
+# location of his that the half row would want, which rule keeps its foreign
+# pops (neither primary nor accepted) from turning, or that one could turn.
+bag_asp_probe_pops = {
+\tevery_location_in_province = {
+\t\tlimit = {
+\t\t\towner ?= scope:actor
+\t\t\tOR = {
+\t\t\t\tintegration_level = integrated
+\t\t\t\tAND = {
+\t\t\t\t\tintegration_level = conquered
+\t\t\t\t\tbag_asp_short_of_half = yes
+\t\t\t\t}
+\t\t\t}
+\t\t\tany_pop = { FOREIGN }
+\t\t}
+\t\tdebug_log = "bag_asp: probe:  a location with foreign pops:"
+\t\tdebug_log_scopes = no
+\t\tif = {
+\t\t\tlimit = { bag_asp_assimilable_any = yes }
+\t\t\tdebug_log = "bag_asp: probe:   and one of them can turn (so the province test should hold)"
+\t\t}
+\t\telse = {
+CHECKS\t\t}
+\t}
+}
+""".replace("FOREIGN", FOREIGN).replace("CHECKS", checks)
 
 
 def assim_check_effect() -> str:
@@ -2281,6 +2331,7 @@ bag_asp_vacate = {{
     run += tries
     run += value_effects(game, actions)
     run += assim_check_effect()
+    run += assim_probe_effect(game)
     # A seat's rank is its action's row; where two rows share an action, the
     # row whose gate holds now, gated rows tried first.
     shared = {act(k) for k, *_ in POOL if act(k) != k}

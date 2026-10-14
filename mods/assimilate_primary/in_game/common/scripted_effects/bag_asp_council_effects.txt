@@ -2709,6 +2709,101 @@ bag_asp_assim_check = {
 	}
 }
 
+# Scope: province; scope:actor is the country. Probe, his run 14.10: for each
+# location of his that the half row would want, which rule keeps its foreign
+# pops (neither primary nor accepted) from turning, or that one could turn.
+bag_asp_probe_pops = {
+	every_location_in_province = {
+		limit = {
+			owner ?= scope:actor
+			OR = {
+				integration_level = integrated
+				AND = {
+					integration_level = conquered
+					bag_asp_short_of_half = yes
+				}
+			}
+			any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } }
+		}
+		debug_log = "bag_asp: probe:  a location with foreign pops:"
+		debug_log_scopes = no
+		if = {
+			limit = { bag_asp_assimilable_any = yes }
+			debug_log = "bag_asp: probe:   and one of them can turn (so the province test should hold)"
+		}
+		else = {
+			if = {
+				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:tribesmen } }
+				debug_log = "bag_asp: probe:   a foreign pop here is tribesmen, which never assimilate"
+			}
+			if = {
+				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } religion = religion:judaism } }
+				debug_log = "bag_asp: probe:   a foreign pop here is of judaism, a culture-locked faith"
+			}
+			if = {
+				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } religion = religion:samaritanism } }
+				debug_log = "bag_asp: probe:   a foreign pop here is of samaritanism, a culture-locked faith"
+			}
+			if = {
+				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:nobles location ?= { modifier:local_nobles_assimilation_blocked = yes } } }
+				debug_log = "bag_asp: probe:   a foreign pop here is nobles, blocked here"
+			}
+			if = {
+				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:clergy location ?= { modifier:local_clergy_assimilation_blocked = yes } } }
+				debug_log = "bag_asp: probe:   a foreign pop here is clergy, blocked here"
+			}
+			if = {
+				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:burghers location ?= { modifier:local_burghers_assimilation_blocked = yes } } }
+				debug_log = "bag_asp: probe:   a foreign pop here is burghers, blocked here"
+			}
+			if = {
+				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:laborers location ?= { modifier:local_laborers_assimilation_blocked = yes } } }
+				debug_log = "bag_asp: probe:   a foreign pop here is laborers, blocked here"
+			}
+			if = {
+				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:soldiers location ?= { modifier:local_soldiers_assimilation_blocked = yes } } }
+				debug_log = "bag_asp: probe:   a foreign pop here is soldiers, blocked here"
+			}
+			if = {
+				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:peasants location ?= { modifier:local_peasants_assimilation_blocked = yes } } }
+				debug_log = "bag_asp: probe:   a foreign pop here is peasants, blocked here"
+			}
+			if = {
+				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:slaves location ?= { modifier:local_slaves_assimilation_blocked = yes } } }
+				debug_log = "bag_asp: probe:   a foreign pop here is slaves, blocked here"
+			}
+			if = {
+				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:nobles scope:actor = { modifier:global_nobles_assimilation_blocked = yes } } }
+				debug_log = "bag_asp: probe:   a foreign pop here is nobles, blocked in the country"
+			}
+			if = {
+				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:clergy scope:actor = { modifier:global_clergy_assimilation_blocked = yes } } }
+				debug_log = "bag_asp: probe:   a foreign pop here is clergy, blocked in the country"
+			}
+			if = {
+				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:burghers scope:actor = { modifier:global_burghers_assimilation_blocked = yes } } }
+				debug_log = "bag_asp: probe:   a foreign pop here is burghers, blocked in the country"
+			}
+			if = {
+				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:laborers scope:actor = { modifier:global_laborers_assimilation_blocked = yes } } }
+				debug_log = "bag_asp: probe:   a foreign pop here is laborers, blocked in the country"
+			}
+			if = {
+				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:soldiers scope:actor = { modifier:global_soldiers_assimilation_blocked = yes } } }
+				debug_log = "bag_asp: probe:   a foreign pop here is soldiers, blocked in the country"
+			}
+			if = {
+				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:peasants scope:actor = { modifier:global_peasants_assimilation_blocked = yes } } }
+				debug_log = "bag_asp: probe:   a foreign pop here is peasants, blocked in the country"
+			}
+			if = {
+				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:slaves scope:actor = { modifier:global_slaves_assimilation_blocked = yes } } }
+				debug_log = "bag_asp: probe:   a foreign pop here is slaves, blocked in the country"
+			}
+		}
+	}
+}
+
 # Scope: country. While the «devastated locations» alert shows (its banner,
 # bag_alert_banner.gui): as it appears, then every second. Costs a look
 # over the provinces unless one has a location below zero and no recovery;
@@ -5689,6 +5784,8 @@ bag_asp_probe_half = {
 							}
 						}
 						debug_log = "bag_asp: probe: not taken, its foreign pops are all locked (tribesmen, a culture-locked faith, a blocked class); rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:"
+						debug_log_scopes = no
+						bag_asp_probe_pops = yes
 					}
 					else_if = {
 						limit = {
