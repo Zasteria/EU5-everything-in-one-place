@@ -1425,13 +1425,17 @@ bag_asp_place_{SV_ACTION} = {{
 \t}}
 \telse = {{
 \t\t# What the mod asked for last holds only while a seat is still on values.
+\t\t# His log 14.10 10:02: the game ends the action itself once its pair
+\t\t# cannot move (serfdom at 63.30, stop 62.85), and that month's modifier
+\t\t# still carries the seat's push (0.6285 read with the seat empty). So the
+\t\t# pair just left is tested this pass as if the seat were still on it,
+\t\t# and the request is forgotten only after the test.
 \t\tif = {{
 \t\t\tlimit = {{
 \t\t\t\thas_variable = bag_asp_sv_cur
 \t\t\t\tNOT = {{ any_cabinet = {{ {on_values} }} }}
 \t\t\t}}
-\t\t\tremove_variable = bag_asp_sv_cur
-\t\t\tremove_variable = bag_asp_sv_cur_side
+\t\t\tset_local_variable = {{ name = bag_asp_sv_gone value = yes }}
 \t\t}}
 \t\tordered_cabinet = {{
 \t\t\tlimit = {{ bag_asp_free_seat = yes }}
@@ -1450,6 +1454,11 @@ bag_asp_place_{SV_ACTION} = {{
 \t\t\t\tdebug_log = "bag_asp: values, the best free diplomat would push {SV_LOG.format(n=3, d=4)} a month"
 \t\t\t}}
 \t\t\tbag_asp_sv_choose = yes
+\t\t\tif = {{
+\t\t\t\tlimit = {{ has_local_variable = bag_asp_sv_gone }}
+\t\t\t\tremove_variable = bag_asp_sv_cur
+\t\t\t\tremove_variable = bag_asp_sv_cur_side
+\t\t\t}}
 \t\t\tif = {{
 \t\t\t\tlimit = {{
 \t\t\t\t\thas_variable = bag_asp_sv_want

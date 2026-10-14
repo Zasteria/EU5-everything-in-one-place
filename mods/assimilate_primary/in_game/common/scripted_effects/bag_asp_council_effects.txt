@@ -1331,13 +1331,17 @@ bag_asp_place_change_societal_values = {
 	}
 	else = {
 		# What the mod asked for last holds only while a seat is still on values.
+		# His log 14.10 10:02: the game ends the action itself once its pair
+		# cannot move (serfdom at 63.30, stop 62.85), and that month's modifier
+		# still carries the seat's push (0.6285 read with the seat empty). So the
+		# pair just left is tested this pass as if the seat were still on it,
+		# and the request is forgotten only after the test.
 		if = {
 			limit = {
 				has_variable = bag_asp_sv_cur
 				NOT = { any_cabinet = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values } }
 			}
-			remove_variable = bag_asp_sv_cur
-			remove_variable = bag_asp_sv_cur_side
+			set_local_variable = { name = bag_asp_sv_gone value = yes }
 		}
 		ordered_cabinet = {
 			limit = { bag_asp_free_seat = yes }
@@ -1356,6 +1360,11 @@ bag_asp_place_change_societal_values = {
 				debug_log = "bag_asp: values, the best free diplomat would push [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
 			}
 			bag_asp_sv_choose = yes
+			if = {
+				limit = { has_local_variable = bag_asp_sv_gone }
+				remove_variable = bag_asp_sv_cur
+				remove_variable = bag_asp_sv_cur_side
+			}
 			if = {
 				limit = {
 					has_variable = bag_asp_sv_want
