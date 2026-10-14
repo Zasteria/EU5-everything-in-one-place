@@ -1041,16 +1041,17 @@ bag_asp_probe_seats = {{
 \tremove_global_variable = bag_asp_probe
 }}
 
-# Probe, his run 13.10 07:12: every province at 40 % average control or more
-# with a location integrated or conquered and no assimilation on it, and
-# which test keeps «(до 50%)» from it. Scope: country (scope:actor).
+# Probe, his run 13.10 07:12: every province with a location integrated or
+# conquered and no assimilation on it, and which test keeps «(до 50%)» from
+# it. Scope: country (scope:actor). His ask 14.10: integrated land he has was
+# not taken, and the 40 % control floor here hid it; the floor is gone and a
+# failed status test now says which half of it failed.
 bag_asp_probe_half = {{
 \tif = {{
 \t\tlimit = {{ has_variable = bag_asp_auto_on }}
 {culture_choice(cflag)}\t\tscope:actor = {{
 \t\t\tevery_province = {{
 \t\t\t\tlimit = {{
-\t\t\t\t\tprovince_average_control >= 0.4
 \t\t\t\t\tNOT = {{ has_variable = bag_asp_busy_{key} }}
 \t\t\t\t\tany_location_in_province = {{
 \t\t\t\t\t\towner ?= scope:actor
@@ -1063,7 +1064,38 @@ bag_asp_probe_half = {{
 \t\t\t\tset_global_variable = {{ name = bag_asp_probe value = bag_asp_half_rank }}
 \t\t\t\tif = {{
 \t\t\t\t\tlimit = {{ NOT = {{ bag_asp_needs_half = yes }} }}
-\t\t\t\t\tdebug_log = "bag_asp: probe: not taken, no location integrated or conquered short of half; rank {PRINT}:"
+\t\t\t\t\tif = {{
+\t\t\t\t\t\tlimit = {{
+\t\t\t\t\t\t\tany_location_in_province = {{
+\t\t\t\t\t\t\t\towner ?= scope:actor
+\t\t\t\t\t\t\t\tOR = {{
+\t\t\t\t\t\t\t\t\tintegration_level = integrated
+\t\t\t\t\t\t\t\t\tAND = {{
+\t\t\t\t\t\t\t\t\t\tintegration_level = conquered
+\t\t\t\t\t\t\t\t\t\tbag_asp_short_of_half = yes
+\t\t\t\t\t\t\t\t\t}}
+\t\t\t\t\t\t\t\t}}
+\t\t\t\t\t\t\t\tany_pop = {{ culture = {{ NOT = {{ is_primary_or_accepted_in = scope:actor }} }} }}
+\t\t\t\t\t\t\t}}
+\t\t\t\t\t\t}}
+\t\t\t\t\t\tdebug_log = "bag_asp: probe: not taken, its foreign pops are all locked (tribesmen, a culture-locked faith, a blocked class); rank {PRINT}:"
+\t\t\t\t\t}}
+\t\t\t\t\telse_if = {{
+\t\t\t\t\t\tlimit = {{
+\t\t\t\t\t\t\tany_location_in_province = {{
+\t\t\t\t\t\t\t\towner ?= scope:actor
+\t\t\t\t\t\t\t\tintegration_level = integrated
+\t\t\t\t\t\t\t}}
+\t\t\t\t\t\t}}
+\t\t\t\t\t\tdebug_log = "bag_asp: probe: not taken, an integrated location here has no pop of a culture neither primary nor accepted; rank {PRINT}:"
+\t\t\t\t\t}}
+\t\t\t\t\telse = {{
+\t\t\t\t\t\tdebug_log = "bag_asp: probe: not taken, no location integrated, and the conquered ones are at half; rank {PRINT}:"
+\t\t\t\t\t}}
+\t\t\t\t}}
+\t\t\t\telse_if = {{
+\t\t\t\t\tlimit = {{ province_average_control <= 0 }}
+\t\t\t\t\tdebug_log = "bag_asp: probe: not taken without «Ускорять контролем», average control 0; rank {PRINT}:"
 \t\t\t\t}}
 \t\t\t\telse_if = {{
 \t\t\t\t\tlimit = {{

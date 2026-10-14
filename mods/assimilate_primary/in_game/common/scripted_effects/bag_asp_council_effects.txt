@@ -5634,9 +5634,11 @@ bag_asp_probe_seats = {
 	remove_global_variable = bag_asp_probe
 }
 
-# Probe, his run 13.10 07:12: every province at 40 % average control or more
-# with a location integrated or conquered and no assimilation on it, and
-# which test keeps «(до 50%)» from it. Scope: country (scope:actor).
+# Probe, his run 13.10 07:12: every province with a location integrated or
+# conquered and no assimilation on it, and which test keeps «(до 50%)» from
+# it. Scope: country (scope:actor). His ask 14.10: integrated land he has was
+# not taken, and the 40 % control floor here hid it; the floor is gone and a
+# failed status test now says which half of it failed.
 bag_asp_probe_half = {
 	if = {
 		limit = { has_variable = bag_asp_auto_on }
@@ -5660,7 +5662,6 @@ bag_asp_probe_half = {
 		scope:actor = {
 			every_province = {
 				limit = {
-					province_average_control >= 0.4
 					NOT = { has_variable = bag_asp_busy_promote_culture }
 					any_location_in_province = {
 						owner ?= scope:actor
@@ -5673,7 +5674,38 @@ bag_asp_probe_half = {
 				set_global_variable = { name = bag_asp_probe value = bag_asp_half_rank }
 				if = {
 					limit = { NOT = { bag_asp_needs_half = yes } }
-					debug_log = "bag_asp: probe: not taken, no location integrated or conquered short of half; rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:"
+					if = {
+						limit = {
+							any_location_in_province = {
+								owner ?= scope:actor
+								OR = {
+									integration_level = integrated
+									AND = {
+										integration_level = conquered
+										bag_asp_short_of_half = yes
+									}
+								}
+								any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } }
+							}
+						}
+						debug_log = "bag_asp: probe: not taken, its foreign pops are all locked (tribesmen, a culture-locked faith, a blocked class); rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:"
+					}
+					else_if = {
+						limit = {
+							any_location_in_province = {
+								owner ?= scope:actor
+								integration_level = integrated
+							}
+						}
+						debug_log = "bag_asp: probe: not taken, an integrated location here has no pop of a culture neither primary nor accepted; rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:"
+					}
+					else = {
+						debug_log = "bag_asp: probe: not taken, no location integrated, and the conquered ones are at half; rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:"
+					}
+				}
+				else_if = {
+					limit = { province_average_control <= 0 }
+					debug_log = "bag_asp: probe: not taken without «Ускорять контролем», average control 0; rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:"
 				}
 				else_if = {
 					limit = {
