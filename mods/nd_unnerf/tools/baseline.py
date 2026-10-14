@@ -36,10 +36,14 @@ MOD = HERE.parent
 REPO = MOD.parent.parent
 sys.path.insert(0, str(HERE))
 
+sys.path.insert(0, str(REPO / "tools"))
+
+import refs  # noqa: E402
 import script  # noqa: E402
 
 OLD, NEW = "0f50c8b9", "613205d7"
-ND = "reference/mods/3668193813_trin_national_destinies"
+# Where ND sits now; both commits must hold it under the same folder name.
+ND = refs.known("national_destinies").relative_to(REPO).as_posix()
 OUT = MOD / "baseline.tsv"
 
 CATEGORIES = {
