@@ -125,3 +125,20 @@ bag_cmfs_print_order = {
 		debug_log = "CMFSAVE order none"
 	}
 }
+
+# --------------------------------------------- применение сохранённого (0.3.0)
+
+# Scope: country. Сказать моду, что настройка сменилась, как «Сбросить» самого
+# CMF (`_cmm_fire_reset_callback`): cmf_callback держит флаг настройки.
+bag_cmfs_tell = {
+	set_variable = { name = cmf_callback value = flag:$setting$ }
+	trigger_event_silently = { on_action = cmf_on_callback }
+	remove_variable = cmf_callback
+}
+
+# Scope: country. Один проход и одна строка в debug.log о том, что он сделал.
+bag_cmfs_pass = {
+	set_global_variable = { name = bag_cmfs_applied value = 0 }
+	bag_cmfs_apply = yes
+	debug_log = "CMFMY pass applied=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_cmfs_applied_sv')|0] of [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_cmfs_total_sv')|0]"
+}

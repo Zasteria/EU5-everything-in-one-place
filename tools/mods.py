@@ -34,8 +34,9 @@ The menu, as he asked for it on 2026-10-03:
 
 5. **Настройки модов CMF** — the `CMFSAVE` block the `cmf_saved_settings`
    button printed into `debug.log`, copied to its own file next to the game's
-   folder before the next launch overwrites the log, and built into the local
-   mod `cmf_my_settings` (`tools/cmf_my_settings.py`).
+   folder before the next launch overwrites the log, and written as script into
+   the game's copy of that same mod (`tools/cmf_saved_apply.py`); item 3, which
+   replaces our mods whole, writes it again from `last.txt`.
 
 **Nothing here rebuilds or checks anything**, and nothing commits: generators,
 `tools/refresh.py` and the checkers are a session's job, and commit and push
@@ -64,6 +65,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import cmf_saved_apply  # noqa: E402
 import refs  # noqa: E402
 import workshop  # noqa: E402
 
@@ -955,7 +957,12 @@ def tree_digest(paths: list[Path], root: Path) -> str:
         for path in sorted(part.rglob("*")):
             if not path.is_file():
                 continue
-            digest.update(str(path.relative_to(root)).replace("\\", "/").encode("utf-8"))
+            relative = str(path.relative_to(root)).replace("\\", "/")
+            # His saved CMF settings: empty here, his values in the game's copy
+            # (item 5). Different by design, so not a difference.
+            if relative == cmf_saved_apply.GENERATED:
+                continue
+            digest.update(relative.encode("utf-8"))
             digest.update(path.read_bytes())
     return digest.hexdigest()
 
@@ -1234,8 +1241,22 @@ def screen_logs() -> None:
 # `debug.log` при каждом запуске, поэтому блок надо унести в свой файл до
 # перезапуска — это и делает пункт 5. Файлы лежат рядом с папкой игры, вне
 # репозитория: настройки его, а ветки он переключает часто.
-SAVED_SETTINGS = "cmf_saved_settings"
-SAVED_SETTINGS_MOD = "cmf_my_settings"   # = cmf_my_settings.FOLDER
+SAVED_SETTINGS = "cmf_saved_settings"   # = cmf_saved_apply.MOD
+# 0.2.0 собирал отдельный мод «CMF: мои настройки»; с 0.3.0 всё в самом
+# cmf_saved_settings, а пункт 5 удаляет старую папку.
+RETIRED_SETTINGS_MOD = "cmf_my_settings"
+
+
+def game_documents() -> Path | None:
+    """Documents/Paradox Interactive/Europa Universalis V — та, где есть logs."""
+    return next((d / GAME_DOCUMENTS for d in documents_dir()
+                 if (d / GAME_DOCUMENTS / "logs").is_dir()), None)
+
+
+def saved_settings_folder() -> Path | None:
+    """Где пункт 5 держит файлы настроек: рядом с папкой игры, вне репозитория."""
+    base = game_documents()
+    return base / SAVED_SETTINGS if base is not None else None
 
 
 def last_settings_block(text: str) -> list[str] | None:
@@ -1253,13 +1274,11 @@ def last_settings_block(text: str) -> list[str] | None:
 
 
 def screen_save_settings(configured: dict) -> None:
-    """Пункт 5: блок настроек из debug.log — в файл и в мод «мои настройки»."""
+    """Пункт 5: блок настроек из debug.log — в файл и в игровую копию мода."""
     from datetime import datetime
-    import cmf_my_settings
 
     say()
-    base = next((d / GAME_DOCUMENTS for d in documents_dir()
-                 if (d / GAME_DOCUMENTS / "logs").is_dir()), None)
+    base = game_documents()
     debug = base / "logs" / "debug.log" if base is not None else None
     if debug is None or not debug.is_file():
         say("Не нашёл debug.log игры. Обычно он здесь:")
@@ -1299,7 +1318,7 @@ def screen_save_settings(configured: dict) -> None:
         # закрытия тот же блок пришёл целым, с `end`.
         say("  БЛОК ОБОРВАН: нет строки CMFSAVE end. Игра, скорее всего, ещё открыта")
         say("  и не дописала хвост лога: закрой её и выбери этот пункт снова,")
-        say("  до следующего запуска. Мод «мои настройки» из оборванного не собираю.")
+        say("  до следующего запуска. В мод оборванный блок не кладу.")
         stages = [line for line in block if line.startswith("CMFSAVE stage ")]
         if stages:
             say("  последний пройденный этап: %s" % stages[-1][len("CMFSAVE stage "):])
@@ -1308,20 +1327,28 @@ def screen_save_settings(configured: dict) -> None:
         return
 
     (folder / "last.txt").write_text(text, encoding="utf-8")
-    target = game_mods_dir(configured, make=True)
-    if target is None:
-        say("Папка модов игры не найдена — мод «мои настройки» не собран.")
+    target = game_mods_dir(configured, make=False)
+    old = target / RETIRED_SETTINGS_MOD if target is not None else None
+    if old is not None and old.is_dir():
+        shutil.rmtree(old, ignore_errors=True)
+        say()
+        say("Старый мод «CMF: мои настройки» удалён: теперь всё внутри %s." % SAVED_SETTINGS)
+        say("  Выключи его в плейсете, если лаунчер ещё его показывает.")
+    mod = target / SAVED_SETTINGS if target is not None else None
+    if mod is None or not (mod / ".metadata").is_dir():
+        say()
+        say("Мода %s нет в папке модов игры — поставь его пунктом 3." % SAVED_SETTINGS)
+        say("  Настройки сохранены в last.txt; пункт 3 сам положит их в мод.")
         say()
         ask("Enter — назад ")
         return
-    report = cmf_my_settings.write_mod(block, target / cmf_my_settings.FOLDER, dated.name)
+    report = cmf_saved_apply.write_into(mod, block)
     say()
-    say("Собран мод «CMF: мои настройки»: %s" % (target / cmf_my_settings.FOLDER))
+    say("Положено в %s: %s" % (SAVED_SETTINGS, mod / cmf_saved_apply.GENERATED))
     say("  значений: %d, упорядоченных списков: %d, моды: %s"
         % (report["values"], report["lists"], ", ".join(report["mods"])))
-    say("  Включи его в плейсете один раз. В каждой НОВОЙ партии он сам поставит")
-    say("  эти настройки; старые сохранения не трогает. Пересохранил настройки —")
-    say("  снова этот пункт, мод пересоберётся.")
+    say("  В каждой НОВОЙ партии мод сам поставит эти настройки; старые")
+    say("  сохранения не трогает. Пересохранил настройки — снова этот пункт.")
     say()
     ask("Enter — назад ")
 
@@ -1357,9 +1384,7 @@ class Entry:
             return "наш %s" % (self.ours.version or "")
         mod = self.workshop
         if mod is None:
-            # Не наш и не из мастерской, но и не чужой: его пишет пункт 5 из
-            # сохранённых настроек, в репозитории его нет и быть не должно.
-            return "из пункта 5" if self.name == SAVED_SETTINGS_MOD else "—"
+            return "—"
         if mod.folder is not None and mod.folder.exists():
             return mod.where
         return "НЕТ КОПИИ" if mod.key else "—"
@@ -1417,6 +1442,15 @@ def install_ours(chosen: list[refs.Mod], target: Path) -> None:
         with Doing("в игру ← %s" % mod.path.name) as step:
             files, size = install(mod, target)
             step.finish("%d файлов, %s" % (files, workshop.human(size)))
+        if mod.path.name == SAVED_SETTINGS:
+            # Копия заменена целиком — с ней ушли и его настройки из пункта 5.
+            last = saved_settings_folder()
+            last = last / "last.txt" if last is not None else None
+            if last is not None and last.is_file():
+                report = cmf_saved_apply.write_into(
+                    target / mod.path.name, last.read_text(encoding="utf-8").splitlines())
+                say("     его настройки снова в моде: %d значений, %d списков (из %s)"
+                    % (report["values"], report["lists"], last))
         if unknown:
             say("     не знаю, что это, и потому не копировал: %s" % ", ".join(unknown))
         # Read back rather than trust the copy: everything that has gone wrong
@@ -1673,7 +1707,7 @@ def menu(configured: dict) -> int:
         say("  2  Все моды: выбрать мод и решить, что с ним делать")
         say("  3  Всё сразу: обновить всё, убрать отсутствующее, наши в игру")
         say("  4  Забрать из игры: логи, файлы игры, дампы API")
-        say("  5  Настройки модов CMF: из игры в файл и в мод «мои настройки»")
+        say("  5  Настройки модов CMF: из игры в файл и в мод cmf_saved_settings")
         say("  0  Выход")
         say()
         say("  Коммит и пуш — в GitHub Desktop; отсюда репозиторий не пишется.")

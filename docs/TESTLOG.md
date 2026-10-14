@@ -81,9 +81,10 @@ Earlier runs of 10-04 (glorpui_hints 1.2.4–1.2.10, cm_dev_perf +perf11): [`arc
 The next session should start here rather than designing anything new. All of
 these are prepared, all are cheap, and the owner has agreed to the hover one.
 
-**`cmf_saved_settings` 0.2.0 + `mods.bat` → 5** (10-14): сохранить, закрыть
-игру, пункт 5, включить «CMF: мои настройки», **новая** партия. Верно: настройки
-его, в `debug.log` строка `CMFMY pass applied=N of 611` с N около 600.
+**`cmf_saved_settings` 0.3.0 + `mods.bat`** (10-14): пункт 3 (ставит 0.3.0 и
+сразу кладёт в него `last.txt`), пункт 5 (удаляет старый «CMF: мои настройки» —
+выключить в плейсете), **новая** партия. Верно: настройки его, в `debug.log`
+строка `CMFMY pass applied=N of 611` с N около 600.
 
 **`nmt_fix` 0.1.0, та же болгарская партия**, мод после NMT. Верно:
 «Завоевать Валахию» считает районы вассала, error.log молчит о `nmt_fix`.
