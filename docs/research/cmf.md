@@ -343,6 +343,21 @@ question about a CMM call comes up; do not add it to `reference/`, which
 - **`cmf_change_variable_map` and its local and global twins are deprecated** —
   `add_to_variable_map` overwrites an existing key by itself now.
 
+### Where CMM keeps a value, read from 2.5.0 (10-14)
+
+All of it lives in the variable map `cmm` — the country's, or the global map for
+`global` settings — keyed by flag, and every value is a number (text settings
+are not in it). A plain setting is `flag:<mod>__<setting>`; a list field is
+`flag:<mod>__<setting>_i<N>_f<slot>`, where `_i<N>` is the item's index from
+registration, fixed for lists registered unconditionally (CM, QoL,
+`assimilate_primary`). The on-screen order of an ordered list is a separate
+variable list, `cmm_list_items_<mod>__<setting>`, holding the `<setting>_i<N>`
+flags; moving a row reorders it and nothing else. Defaults sit in `cmm_default`
+and `cmm_list_field_default`, which is what «Сбросить» copies back. So the whole
+state of every CMF mod is walkable with `every_key_in_variable_map = { variable
+= cmm }` (CMF's own country transfer does exactly that) — except list order,
+whose list name can only be built from a literal.
+
 ### `cmf_suppress`, and why it is not to be reached for
 
 ```
