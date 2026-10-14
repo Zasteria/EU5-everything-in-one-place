@@ -79,6 +79,10 @@ Earlier runs of 10-04 (glorpui_hints 1.2.4–1.2.10, cm_dev_perf +perf11): [`arc
 The next session should start here rather than designing anything new. All of
 these are prepared, all are cheap, and the owner has agreed to the hover one.
 
+**`cmf_saved_settings` 0.1.0** (10-14): CMF → «Мои настройки» →
+«Сохранить», затем до перезапуска `mods.bat` → 5, приложить `last.txt`. Верно:
+у каждой строки `CMFSAVE c/g` имя `мод__настройка` и число.
+
 **`nmt_fix` 0.1.0, та же болгарская партия**, мод после NMT. Верно:
 «Завоевать Валахию» считает районы вассала, error.log молчит о `nmt_fix`.
 

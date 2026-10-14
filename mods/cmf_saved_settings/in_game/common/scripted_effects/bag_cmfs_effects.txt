@@ -1,0 +1,103 @@
+﻿# Пробник 0.1.0: кнопка печатает в `debug.log` все настройки CMF.
+#
+# CMF держит значения в карте `cmm`: на стране игрока — обычные, глобальной
+# картой — `global`-настройки. Ключ — флаг `<mod_id>__<setting_id>`, у поля
+# списка — `<mod_id>__<setting_id>_i<N>_f<slot>`. Значение всегда число
+# (текстовые настройки в карту не пишутся).
+#
+# **Что проверяет прогон.** Строка `CMFSAVE c|g <число> <ключ>`: число —
+# script value на глобальной (измерено 09-02), ключ —
+# `GetGlobalVariable(...).GetFlagName` (так CMF выводит свой лог; в
+# `debug_log` не мерено). Число стоит первым: функция, которая не
+# сработала, обрезает остаток строки и уносит его отдельной записью без
+# префикса (engine.md) — так число уцелеет при любом исходе. Две другие формы
+# идут своими строками `CMFSAVE probe`: `GetValue` и
+# `TopScope.GetFlagName('<saved scope>')` — какая напечатает, тоже вопрос.
+# Порядок упорядоченных списков — отдельные строки `CMFSAVE order`, по одному
+# пункту `<setting>_i<N>` на строку, в порядке на экране.
+#
+# **Макрос CMM, позванный с аргументом, которого CMF не объявляет, молча
+# уносит остаток эффекта** — `python3 tools/check_cmm.py
+# mods/cmf_saved_settings/in_game/common` после правки.
+
+# Scope: country
+bag_cmfs_register = {
+	cmm_register_button_setting = {
+		mod_id = bag_cmfs
+		setting_id = save_now
+		tab_id = main
+		group_id = save
+	}
+	cmm_add_scripted_gui = {
+		mod_id = bag_cmfs
+		setting_id = save_now
+	}
+}
+
+# Scope: country
+bag_cmfs_handle_callback = {
+	if = {
+		limit = { var:cmf_callback = flag:bag_cmfs__save_now }
+		bag_cmfs_dump = yes
+	}
+}
+
+# Scope: country (игрок)
+bag_cmfs_dump = {
+	save_scope_as = bag_cmfs_owner
+	set_global_variable = { name = bag_cmfs_count value = 0 }
+	debug_log = "CMFSAVE begin 1"
+
+	every_key_in_variable_map = {
+		variable = cmm
+		save_scope_as = bag_cmfs_key
+		scope:bag_cmfs_owner = {
+			set_local_variable = { name = bag_cmfs_v value = "variable_map(cmm|scope:bag_cmfs_key)" }
+			bag_cmfs_print = { kind = c }
+		}
+	}
+
+	every_key_in_global_variable_map = {
+		variable = cmm
+		save_scope_as = bag_cmfs_key
+		scope:bag_cmfs_owner = {
+			set_local_variable = { name = bag_cmfs_v value = "global_variable_map(cmm|scope:bag_cmfs_key)" }
+			bag_cmfs_print = { kind = g }
+		}
+	}
+
+	# Порядок двух списков, которые точно переставляют: городские права CM и
+	# «Приоритет» автоматики совета. Имя списка собирается только из литерала,
+	# поэтому здесь по списку на вызов; в рабочей версии их выпишет генератор.
+	bag_cmfs_print_order = { setting = cm__auto_town_rights_list }
+	bag_cmfs_print_order = { setting = bag_asp__priority }
+
+	debug_log = "CMFSAVE end count=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_cmfs_count_sv')|0]"
+}
+
+# Scope: country. Args: kind (c — страна, g — глобальная карта).
+# Ждёт scope:bag_cmfs_key и local_var:bag_cmfs_v.
+bag_cmfs_print = {
+	set_global_variable = { name = bag_cmfs_key value = scope:bag_cmfs_key }
+	set_global_variable = { name = bag_cmfs_val value = local_var:bag_cmfs_v }
+	change_global_variable = { name = bag_cmfs_count add = 1 }
+	debug_log = "CMFSAVE $kind$ [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_cmfs_val_sv')|2] [GetGlobalVariable('bag_cmfs_key').GetFlagName]"
+	debug_log = "CMFSAVE probe raw [GetGlobalVariable('bag_cmfs_val').GetValue]"
+	debug_log = "CMFSAVE probe top [TopScope.GetFlagName('bag_cmfs_key')]"
+}
+
+# Scope: country. Args: setting — `<mod_id>__<setting_id>`.
+bag_cmfs_print_order = {
+	if = {
+		limit = { has_variable_list = cmm_list_items_$setting$ }
+		every_in_list = {
+			variable = cmm_list_items_$setting$
+			save_scope_as = bag_cmfs_item
+			set_global_variable = { name = bag_cmfs_key value = scope:bag_cmfs_item }
+			debug_log = "CMFSAVE order $setting$ [GetGlobalVariable('bag_cmfs_key').GetFlagName]"
+		}
+	}
+	else = {
+		debug_log = "CMFSAVE order $setting$ (no list)"
+	}
+}

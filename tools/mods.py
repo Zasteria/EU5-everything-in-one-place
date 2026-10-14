@@ -32,6 +32,10 @@ The menu, as he asked for it on 2026-10-03:
 4. **Забрать из игры** — a zip of the logs, the game's own files into
    `reference/game/`, the engine's API dumps.
 
+5. **Настройки модов CMF** — the `CMFSAVE` block the `cmf_saved_settings`
+   button printed into `debug.log`, copied to its own file next to the game's
+   folder before the next launch overwrites the log.
+
 **Nothing here rebuilds or checks anything**, and nothing commits: generators,
 `tools/refresh.py` and the checkers are a session's job, and commit and push
 are his, in GitHub Desktop.
@@ -1222,6 +1226,76 @@ def screen_logs() -> None:
     ask("Enter — назад ")
 
 
+# ------------------------------------------- settings of CMF mods, to a file
+
+# Кнопка «Сохранить мои настройки» мода `cmf_saved_settings` печатает в
+# `debug.log` блок строк `CMFSAVE`, от `begin` до `end`. Игра перезаписывает
+# `debug.log` при каждом запуске, поэтому блок надо унести в свой файл до
+# перезапуска — это и делает пункт 5. Файлы лежат рядом с папкой игры, вне
+# репозитория: настройки его, а ветки он переключает часто.
+SAVED_SETTINGS = "cmf_saved_settings"
+
+
+def last_settings_block(text: str) -> list[str] | None:
+    """Последний блок `CMFSAVE begin … end` из debug.log, без префиксов строк."""
+    lines = [line[line.index("CMFSAVE"):].rstrip()
+             for line in text.splitlines() if "CMFSAVE" in line]
+    starts = [i for i, line in enumerate(lines) if line.startswith("CMFSAVE begin")]
+    if not starts:
+        return None
+    block = lines[starts[-1]:]
+    for i, line in enumerate(block):
+        if line.startswith("CMFSAVE end"):
+            return block[:i + 1]
+    return block
+
+
+def screen_save_settings() -> None:
+    """Пункт 5: блок настроек из debug.log — в отдельный файл."""
+    from datetime import datetime
+
+    say()
+    base = next((d / GAME_DOCUMENTS for d in documents_dir()
+                 if (d / GAME_DOCUMENTS / "logs").is_dir()), None)
+    debug = base / "logs" / "debug.log" if base is not None else None
+    if debug is None or not debug.is_file():
+        say("Не нашёл debug.log игры. Обычно он здесь:")
+        say(r"  C:\Users\<ты>\Documents\Paradox Interactive\Europa Universalis V\logs")
+        say()
+        ask("Enter — назад ")
+        return
+
+    block = last_settings_block(debug.read_text(encoding="utf-8", errors="replace"))
+    if block is None:
+        say("В debug.log нет сохранённых настроек.")
+        say("В игре: меню CMF → «Мои настройки» → «Сохранить», потом сюда,")
+        say("не перезапуская игру — при запуске она стирает debug.log.")
+        say()
+        ask("Enter — назад ")
+        return
+
+    rows = [line for line in block if line.startswith(("CMFSAVE c ", "CMFSAVE g "))]
+    named = [line for line in rows if re.match(r"CMFSAVE [cg] -?[\d.]+ \w+__\w+$", line)]
+    order = [line for line in block if line.startswith("CMFSAVE order ")]
+    finished = block[-1].startswith("CMFSAVE end")
+
+    folder = base / SAVED_SETTINGS
+    folder.mkdir(exist_ok=True)
+    stamp = datetime.now().strftime("%Y-%m-%d_%H%M")
+    text = "\n".join(block) + "\n"
+    (folder / ("settings_%s.txt" % stamp)).write_text(text, encoding="utf-8")
+    (folder / "last.txt").write_text(text, encoding="utf-8")
+
+    say("Сохранено: %s" % (folder / ("settings_%s.txt" % stamp)))
+    say("  и копия в last.txt рядом")
+    say("  настроек: %d, из них с читаемым именем: %d" % (len(rows), len(named)))
+    say("  строк порядка списков: %d" % len(order))
+    if not finished:
+        say("  БЛОК ОБОРВАН: нет строки CMFSAVE end — нажатие не дошло до конца.")
+    say()
+    ask("Enter — назад ")
+
+
 # ------------------------------------------------- every mod, wherever it is
 
 
@@ -1567,6 +1641,7 @@ def menu(configured: dict) -> int:
         say("  2  Все моды: выбрать мод и решить, что с ним делать")
         say("  3  Всё сразу: обновить всё, убрать отсутствующее, наши в игру")
         say("  4  Забрать из игры: логи, файлы игры, дампы API")
+        say("  5  Настройки модов CMF: из игры в файл (после кнопки «Сохранить»)")
         say("  0  Выход")
         say()
         say("  Коммит и пуш — в GitHub Desktop; отсюда репозиторий не пишется.")
@@ -1580,6 +1655,8 @@ def menu(configured: dict) -> int:
             world = screen_bulk(world, configured)
         elif choice == "4":
             screen_collect(world, configured)
+        elif choice == "5":
+            screen_save_settings()
         elif choice in {"0", "q", "в", "выход"}:
             return 0
 
