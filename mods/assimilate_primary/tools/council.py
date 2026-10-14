@@ -1101,7 +1101,7 @@ bag_asp_probe_half = {{
 \t\t\t\t}}
 \t\t\t\telse_if = {{
 \t\t\t\t\tlimit = {{
-\t\t\t\t\t\tNOT = {{
+\t\t\t\t\t\tNAND = {{
 {target_test(sel, 7, actions, key)}
 \t\t\t\t\t\t}}
 \t\t\t\t\t}}
@@ -1109,7 +1109,7 @@ bag_asp_probe_half = {{
 \t\t\t\t}}
 \t\t\t\telse_if = {{
 \t\t\t\t\tlimit = {{
-\t\t\t\t\t\tNOT = {{
+\t\t\t\t\t\tNAND = {{
 {indent(lead_rule(cflag), 7)}
 \t\t\t\t\t\t}}
 \t\t\t\t\t}}
@@ -1243,11 +1243,14 @@ def assim_rules(game: Path) -> tuple[list[str], list[str], list[str]]:
 
 
 def assim_triggers(game: Path) -> str:
+    # NAND, not NOT: NOT = { A B } is true only when neither holds, so NOT over
+    # «this class» and «blocked» shut out every pop of every class (his run
+    # 14.10 11:17: Diepholz, foreign pops, no rule catching any of them).
     never, blockable, locked = assim_rules(game)
     pop = ["\t\t" + f"NOT = {{ pop_type = pop_type:{t} }}" for t in never]
     pop += ["\t\t" + f"NOT = {{ religion = religion:{r} }}" for r in locked]
     for t in blockable:
-        pop.append(f"\t\tNOT = {{\n\t\t\tpop_type = pop_type:{t}\n\t\t\tOR = {{\n"
+        pop.append(f"\t\tNAND = {{\n\t\t\tpop_type = pop_type:{t}\n\t\t\tOR = {{\n"
                    f"\t\t\t\tlocation ?= {{ modifier:local_{t}_assimilation_blocked = yes }}\n"
                    f"\t\t\t\tscope:actor = {{ modifier:global_{t}_assimilation_blocked = yes }}\n\t\t\t}}\n\t\t}}")
     rules = "\n".join(pop)

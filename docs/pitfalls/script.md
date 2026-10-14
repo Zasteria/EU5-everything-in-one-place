@@ -15,6 +15,11 @@ is the expensive kind.
 
 ## Триггеры: чью правду они говорят
 
+**`NOT = { A B }` — это «ни A, ни B», а не «не (A и B)».** Для «не (A и B)» —
+`NAND`. `assimilate_primary` 0.9.17: `NOT = { pop_type = X  OR = { блок… } }` по
+семи сословиям исключил всех жителей. Симптом (14.10): в Дипхольце чужие жители,
+и ни одно правило по отдельности их не ловит. Ошибок в логе нет.
+
 **A trigger that models what the player *means* must never gate what the game will
 *do*.** `where_to_produce`'s `_stands_<building>` deliberately obeys the mod's own
 rank override — that is the whole point of a plan that says «I will make this
