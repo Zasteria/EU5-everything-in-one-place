@@ -1235,6 +1235,7 @@ def screen_logs() -> None:
 # перезапуска — это и делает пункт 5. Файлы лежат рядом с папкой игры, вне
 # репозитория: настройки его, а ветки он переключает часто.
 SAVED_SETTINGS = "cmf_saved_settings"
+SAVED_SETTINGS_MOD = "cmf_my_settings"   # = cmf_my_settings.FOLDER
 
 
 def last_settings_block(text: str) -> list[str] | None:
@@ -1356,7 +1357,9 @@ class Entry:
             return "наш %s" % (self.ours.version or "")
         mod = self.workshop
         if mod is None:
-            return "—"
+            # Не наш и не из мастерской, но и не чужой: его пишет пункт 5 из
+            # сохранённых настроек, в репозитории его нет и быть не должно.
+            return "из пункта 5" if self.name == SAVED_SETTINGS_MOD else "—"
         if mod.folder is not None and mod.folder.exists():
             return mod.where
         return "НЕТ КОПИИ" if mod.key else "—"
