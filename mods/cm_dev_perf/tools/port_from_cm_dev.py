@@ -448,6 +448,34 @@ SETTING_WORDS = {
                     "Build core goods in markets whose centre belongs to another country too, where you "
                     "own locations. Without it Construction Manager only works markets you hold the centre of."),
     },
+    "cm__ab_food_horizon": {
+        "russian": ("Срок найма для RGO, лет",
+                    "Сколько лет автостройка готова ждать, пока прирост населения заполнит новый уровень RGO еды "
+                    "рабочими или рабами. Уровень строится, только если нехватку закроет прирост за этот срок. "
+                    "Меньше — строит реже, но уровни не стоят пустыми."),
+        "english": ("Hiring Horizon for RGOs, Years",
+                    "How many years Auto-Build will wait for population growth to staff a new food RGO level "
+                    "with laborers or slaves. A level is built only if growth covers the shortfall within this "
+                    "time. Lower builds less often, but levels do not stand empty."),
+    },
+    "cm__ab_production_horizon": {
+        "russian": ("Срок найма, лет",
+                    "Сколько лет автостройка готова ждать, пока прирост населения заполнит новый уровень "
+                    "производственного здания или RGO людьми нужного типа. Меньше — строит там, где люди "
+                    "уже есть, и не копит пустые здания."),
+        "english": ("Hiring Horizon, Years",
+                    "How many years Auto-Build will wait for population growth to staff a new level of a "
+                    "production building or RGO with the pops it needs. Lower builds where the pops already "
+                    "are, and stops piling up empty buildings."),
+    },
+    "cm__ab_food_take_manual": {
+        "russian": ("Брать житницы, включённые вручную",
+                    "Когда авторасширение еды выключено, автостройка строит и в районах, где житница включена "
+                    "вручную, — из бюджета продовольствия, по правилам этой вкладки."),
+        "english": ("Take Hand-Enabled Breadbaskets",
+                    "While auto-food is off, Auto-Build also builds in locations whose breadbasket you enabled "
+                    "by hand, from the food budget and by this tab's rules."),
+    },
 }
 
 
@@ -744,6 +772,287 @@ def _subsidize_idle_farms(text: str) -> str:
            "\t\t}\n"
            "\t}\n")
     return text.replace(old, old + add, 1)
+
+
+# Auto-food counted every unemployed pop at the location, whatever its type,
+# against a building that hires one type. His run 13.10 (1.4.1): a farming
+# village location 3 500 workers short got one more farming village and stood
+# 4 300 short — unemployed nobles, burghers or laborers let CM build peasant
+# jobs. The unemployed count also misses a level that stands unstaffed. +perf42:
+# each option asks its own pool, the pop count minus every job of that type
+# already built or building (CM's own `cm_location_<type>_available`, which
+# the rest of CM uses for the same question). The pool comes from the game's
+# `pop_type` of the building; the RGO's is laborers or slaves, as CM's
+# `cm_location_laborers_or_slaves_available` already counts it.
+FOOD_TRIGGERS = "in_game/common/scripted_triggers/cm_food_auto_build_triggers.txt"
+_FOOD_POOLS = {
+    "peasants": "cm_location_peasants_available",
+    "laborers": "cm_location_laborers_or_slaves_available",
+    "slaves": "cm_location_laborers_or_slaves_available",
+}
+
+
+def _food_building_pools() -> dict[str, str]:
+    pools = {}
+    for path in sorted((refs.GAME_COMMON / "building_types").glob("*.txt")):
+        text = path.read_text(encoding="utf-8-sig")
+        for m in re.finditer(r"(?m)^(\w+) = \{\n(.*?)^\}", text, re.S):
+            pt = re.search(r"(?m)^\tpop_type = (\w+)", m.group(2))
+            if pt:
+                pools[m.group(1)] = pt.group(1)
+    return pools
+
+
+def _food_pops_by_type(text: str) -> str:
+    old_macro = ("\t$target$ = { save_temporary_scope_as = cm_food_pops_type }\n"
+                 "\tcm_location_total_unemployed_pops >= scope:cm_food_pops_type.employment_size\n")
+    old_fill = "\tNOT = { cm_location_total_unemployed_pops > 0 }\n"
+    old_rgo = "\tcm_location_total_unemployed_pops >= 1\n"
+    old_why = ("# Auto-food gates on the pops a location has left over of any type, never on the type a building\n"
+               "# draws. Open jobs are what speed promotion, and a location reaches its population cap long before\n"
+               "# it reaches its building caps, so holding a level back until the right type has promoted costs\n"
+               "# more food than it saves.\n"
+               "# Root is the location. Expects $target$ = a building_type.\n")
+    for old in (old_macro, old_fill, old_rgo, old_why):
+        if text.count(old) != 1:
+            raise SystemExit("food pops: cm_food_auto_build_triggers has changed shape")
+    text = text.replace(old_why,
+                        "# CM gated auto-food on the pops left over of any type, on purpose: open jobs speed promotion.\n"
+                        "# cm_dev_perf +perf42 gates on the type the building draws instead, by the owner's call 13.10:\n"
+                        "# levels built on other types' unemployment stood short of workers (3 500 laborers short, then\n"
+                        "# 4 300). Root is the location. Expects $target$ = a building_type and $pool$ = the script\n"
+                        "# value counting free places of its pop type.\n", 1)
+    text = text.replace(old_macro,
+                        "\t$target$ = { save_temporary_scope_as = cm_food_pops_type }\n"
+                        "\t# cm_dev_perf +perf42: a free place of the building's own pop type, jobs already built counted\n"
+                        "\t$pool$ > 0\n", 1)
+    text = text.replace(old_fill,
+                        "\t# cm_dev_perf +perf42: no food pool has room, unemployed of other types aside\n"
+                        "\tNOT = {\n\t\tOR = {\n"
+                        "\t\t\tcm_location_peasants_available > 0\n"
+                        "\t\t\tcm_location_laborers_or_slaves_available > 0\n"
+                        "\t\t}\n\t}\n", 1)
+    text = text.replace(old_rgo,
+                        "\t# cm_dev_perf +perf42: the RGO's own pool, its levels and the laborer jobs counted\n"
+                        "\tcm_location_laborers_or_slaves_available > 0\n", 1)
+    game = _food_building_pools()
+    calls = list(re.finditer(r"cm_food_location_has_pops_for = \{ target = building_type:(\w+) \}", text))
+    if len(calls) != 4:
+        raise SystemExit(f"food pops: expected four options, found {len(calls)}")
+    for m in reversed(calls):
+        pop = game.get(m.group(1))
+        if pop not in _FOOD_POOLS:
+            raise SystemExit(f"food pops: {m.group(1)} hires {pop}, which no pool here counts")
+        text = (text[:m.start()]
+                + f"cm_food_location_has_pops_for = {{ target = building_type:{m.group(1)} pool = {_FOOD_POOLS[pop]} }}"
+                + text[m.end():])
+    return text
+
+
+# The same run, his correction 13.10 20:43: what grew was the livestock RGO,
+# and the shortage was of laborers. Staging lets a food RGO in on one free
+# worker; the drain then builds level after level up to the RGO's size cap,
+# as many as the queue slots and the gold allow, with no pop read at all.
+# +perf42: the drain stops when the laborer-or-slave pool has no free level
+# left. The pool counts the RGO's levels under construction, so each level
+# this loop builds takes one off it. Auto-Build's own food RGO loop is not
+# touched: it gates on the six-year promotion projection by design.
+APPROVAL = "in_game/common/scripted_effects/cm_queue_approval_effects.txt"
+
+
+def _food_rgo_drain_pops(text: str) -> str:
+    old = ("\t\t\t\t\t\tcm_get_max_rgo_workers_floor > { value = cm_modifier_rgo_level add = cm_get_rgos_under_construction }\n"
+           "\t\t\t\t\t\tcm_check_country_gold_above = { threshold = cm_food_gold_threshold_plus_planned_spend }\n")
+    if text.count(old) != 1:
+        raise SystemExit("food rgo drain: the level loop has changed shape")
+    return text.replace(old, old + "\t\t\t\t\t\t# cm_dev_perf +perf42: a level only for laborers or slaves who are there\n"
+                                   "\t\t\t\t\t\tcm_location_laborers_or_slaves_available > 0\n", 1)
+
+
+# His words 13.10 20:52, on Auto-Build's food tab (the system paying from its own
+# budget): the six years it lets population growth take to staff a food RGO level
+# become a slider, 1-10 years, 6 by default; and a checkbox lets it take the
+# locations whose breadbasket he enabled by hand, while auto-food itself is off.
+# +perf43. The six years stay everywhere else in CM: only this tab's RGO room and
+# the level loop under it read the slider, and the loop now stops when the next
+# level would not be covered (it built up to the size cap before).
+AB_FOOD = "in_game/common/scripted_effects/cm_ab_food_effects.txt"
+AB_FOOD_VALUES = "in_game/common/script_values/cm_perf_ab_food_values.txt"
+AB_FOOD_VALUES_TEXT = """\ufeff# Generated by mods/cm_dev_perf/tools/port_from_cm_dev.py; not to be edited by hand.
+# Auto-Build food's hiring horizon (+perf43): cm_location_rgo_promotion_buffer_slack with the
+# slider's years in place of CM's fixed six. Root is the location.
+cm_perf_ab_food_horizon_months = {
+	value = 72
+	if = {
+		limit = { owner = { exists = var:cm_ab_food_horizon } }
+		value = owner.var:cm_ab_food_horizon
+		multiply = 12
+	}
+}
+
+cm_perf_ab_food_rgo_slack = {
+	value = cm_location_laborers_or_slaves_available
+	add = {
+		value = cm_location_fill_rate_for_laborers_or_slaves
+		multiply = cm_perf_ab_food_horizon_months
+	}
+}
+"""
+
+
+def _ab_food_horizon(text: str) -> str:
+    room = "\t\t\t\t\t\tcm_location_rgo_promotion_buffer_slack >= 0\n"
+    loop = ("\t\t\t\t\t\t\tcm_get_max_rgo_workers_floor > { value = cm_modifier_rgo_level add = cm_get_rgos_under_construction }\n"
+            "\t\t\t\t\t\t\tcm_ab_can_afford_rgo = { POOL = cm_ab_pool_food }\n")
+    for old in (room, loop):
+        if text.count(old) != 1:
+            raise SystemExit("ab food: the RGO room or its level loop has changed shape")
+    text = text.replace(room, "\t\t\t\t\t\t# cm_dev_perf +perf43: the tab's own horizon\n"
+                              "\t\t\t\t\t\tcm_perf_ab_food_rgo_slack > 0\n", 1)
+    return text.replace(loop, loop + "\t\t\t\t\t\t\t# cm_dev_perf +perf43: each level covered within the horizon\n"
+                                     "\t\t\t\t\t\t\tcm_perf_ab_food_rgo_slack > 0\n", 1)
+
+
+def _ab_food_take_manual(text: str) -> str:
+    old = ("\t\t\tscope:cm_location = { cm_ab_food_stage_in_location = yes }\n"
+           "\t\t}\n\t}\n}\n")
+    if text.count(old) != 1:
+        raise SystemExit("ab food: cm_ab_run_food has changed shape")
+    return text.replace(old, old[:-2] + (
+        "\t# cm_dev_perf +perf43: the breadbaskets he enabled by hand, while auto-food is off\n"
+        "\tif = {\n\t\tlimit = {\n"
+        "\t\t\texists = var:cm_ab_food_take_manual\n"
+        "\t\t\tNOT = { is_target_in_variable_list = { name = cm_priority_features_enabled target = flag:cm_feature_auto_food } }\n"
+        "\t\t}\n"
+        "\t\tevery_owned_location = {\n\t\t\tlimit = {\n"
+        "\t\t\t\texists = var:cm_auto_food_location_enabled\n"
+        "\t\t\t\tlocation_rank = location_rank:rural_settlement\n"
+        "\t\t\t\tNOT = { integration_level = conquered }\n"
+        "\t\t\t\tcm_ab_location_is_system_food_picked = no\n"
+        "\t\t\t\tcm_food_location_rgo_is_on_roster = yes\n"
+        "\t\t\t}\n"
+        "\t\t\tsave_scope_as = cm_location\n"
+        "\t\t\traw_material = { save_scope_as = cm_food_good }\n"
+        "\t\t\tcm_ab_food_stage_in_location = yes\n"
+        "\t\t}\n\t}\n}\n"), 1)
+
+
+def _register_ab_food(text: str) -> str:
+    """The slider and the checkbox, after «Субсидировать» on the food tab."""
+    sync = ("\tcmm_sync_bool_alias = {\n\t\tsetting = cm__ab_food_subsidize\n"
+            "\t\talias = cm_ab_food_subsidize\n\t}\n")
+    if text.count(sync) != 1:
+        raise SystemExit("cmm: the food subsidy checkbox has changed shape")
+    text = text.replace(sync, sync + (
+        "\n\t# cm_dev_perf +perf43: the hiring horizon and the hand-enabled breadbaskets\n"
+        "\tcmm_register_slider_setting = {\n\t\tmod_id = cm\n\t\tsetting_id = ab_food_horizon\n"
+        "\t\ttab_id = ab_food\n\t\tgroup_id = ab_food\n\t\tdefault_value = 6\n"
+        "\t\tmin_value = 1\n\t\tmax_value = 10\n\t\tstep_value = 1\n\t}\n"
+        "\tcmm_sync_setting_alias = {\n\t\tsetting = cm__ab_food_horizon\n"
+        "\t\talias = cm_ab_food_horizon\n\t}\n"
+        "\tcmm_register_bool_setting = {\n\t\tmod_id = cm\n\t\tsetting_id = ab_food_take_manual\n"
+        "\t\ttab_id = ab_food\n\t\tgroup_id = ab_food\n\t\tdefault_value = 0\n\t}\n"
+        "\tcmm_sync_bool_alias = {\n\t\tsetting = cm__ab_food_take_manual\n"
+        "\t\talias = cm_ab_food_take_manual\n\t}\n"))
+    changed = "\t\tflag:cm__ab_food_run_now = {\n"
+    if text.count(changed) != 1:
+        raise SystemExit("cmm: the food run-now branch has changed shape")
+    return text.replace(changed, (
+        "\t\t# cm_dev_perf +perf43\n"
+        "\t\tflag:cm__ab_food_horizon = {\n\t\t\tcmm_sync_setting_alias = {\n"
+        "\t\t\t\tsetting = cm__ab_food_horizon\n\t\t\t\talias = cm_ab_food_horizon\n"
+        "\t\t\t}\n\t\t}\n"
+        "\t\tflag:cm__ab_food_take_manual = {\n\t\t\tcmm_sync_bool_alias = {\n"
+        "\t\t\t\tsetting = cm__ab_food_take_manual\n\t\t\t\talias = cm_ab_food_take_manual\n"
+        "\t\t\t}\n\t\t}\n") + changed, 1)
+
+
+# His words 13.10 21:02: the same slider for Auto-Build's production tab — «пока ты
+# спамишь зданиями там, где они ничего не приносят, ты можешь заспамить в других
+# локациях». +perf44, by his rule of 21:07: one idle pop of the type is reason to
+# build («пусть он заполняется»); the next level waits until the levels already
+# there would be staffed within the horizon. CM let a level in on any unemployed pop
+# of the type, which a level still hiring also has, or on a deficit filling within
+# six years. Here: free places of the type (pops less every job built or building)
+# plus the horizon's fill, strictly positive. Types without a fill rate (slaves,
+# tribesmen) keep to their unemployed. The production RGO loop reads the slack with
+# the slider's years, and builds while room is left after the levels it built. The
+# rest of CM keeps its six years.
+AB_PROD = "in_game/common/scripted_effects/cm_ab_production_effects.txt"
+AB_PROD_FILE = "in_game/common/script_values/cm_perf_ab_production_values.txt"
+AB_PROD_TRIGGERS = "in_game/common/scripted_triggers/cm_perf_ab_production_triggers.txt"
+_FILL_TYPES = ("nobles", "clergy", "burghers", "laborers", "soldiers", "peasants")
+
+
+def _ab_prod_values() -> str:
+    branches = "".join(
+        f"\tif = {{\n\t\tlimit = {{ \"global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)\" = pop_type:{t} }}\n"
+        f"\t\tvalue = cm_location_{t}_available\n"
+        f"\t\tadd = {{ value = cm_location_fill_rate_for_{t} multiply = cm_perf_ab_prod_horizon_months }}\n\t}}\n"
+        for t in _FILL_TYPES)
+    return ("\ufeff# Generated by mods/cm_dev_perf/tools/port_from_cm_dev.py; not to be edited by hand.\n"
+            "# Auto-Build production's hiring horizon (+perf44). Root is the location.\n"
+            "cm_perf_ab_prod_horizon_months = {\n\tvalue = 72\n\tif = {\n"
+            "\t\tlimit = { owner = { exists = var:cm_ab_production_horizon } }\n"
+            "\t\tvalue = owner.var:cm_ab_production_horizon\n\t\tmultiply = 12\n\t}\n}\n\n"
+            "# Free places of scope:cm_building_type's pop type (pops less every job built or building),\n"
+            "# plus the horizon's fill. Positive: someone of the type is idle, or the levels already\n"
+            "# there will be staffed within the horizon with room to start the next.\n"
+            "cm_perf_ab_prod_slack = {\n\tvalue = cm_location_unemployed_for_building_type\n"
+            + branches +
+            "}\n\n"
+            "# cm_location_rgo_promotion_buffer_slack with the slider's years.\n"
+            "cm_perf_ab_prod_rgo_slack = {\n\tvalue = cm_location_laborers_or_slaves_available\n"
+            "\tadd = { value = cm_location_fill_rate_for_laborers_or_slaves multiply = cm_perf_ab_prod_horizon_months }\n}\n")
+
+
+AB_PROD_TRIGGERS_TEXT = """\ufeff# Generated by mods/cm_dev_perf/tools/port_from_cm_dev.py; not to be edited by hand.
+# cm_location_has_enough_pops_available for Auto-Build production (+perf44): the level's own
+# jobs covered within the production tab's horizon. Root is the location, expects
+# scope:cm_building_type.
+cm_perf_ab_prod_has_pops = {
+	has_global_variable_map = cm_building_type_to_pop_type
+	is_key_in_global_variable_map = { name = cm_building_type_to_pop_type target = scope:cm_building_type }
+	cm_perf_ab_prod_slack > 0
+}
+"""
+
+
+def _ab_prod_horizon(text: str) -> str:
+    gate, n = re.subn(r"cm_location_has_enough_pops_available = yes", "cm_perf_ab_prod_has_pops = yes # cm_dev_perf +perf44", text)
+    if n != 3:
+        raise SystemExit(f"ab production: expected three pop gates, found {n}")
+    old = "set_local_variable = { name = cm_ab_rgo_slack value = cm_location_rgo_promotion_buffer_slack }\n"
+    if gate.count(old) != 1:
+        raise SystemExit("ab production: the RGO slack read has changed shape")
+    gate = gate.replace(old, "set_local_variable = { name = cm_ab_rgo_slack value = cm_perf_ab_prod_rgo_slack } # cm_dev_perf +perf44\n", 1)
+    each = "local_var:cm_ab_rgo_slack >= local_var:cm_ab_rgo_done\n"
+    if gate.count(each) != 2:
+        raise SystemExit("ab production: the RGO loop's slack test has changed shape")
+    return gate.replace(each, "local_var:cm_ab_rgo_slack > local_var:cm_ab_rgo_done # cm_dev_perf +perf44: room left after the levels built\n")
+
+
+def _register_ab_prod(text: str) -> str:
+    """The slider, after the algorithm dropdown on the production tab."""
+    sync = ("\tcmm_sync_setting_alias = {\n\t\tsetting = cm__ab_production_algorithm\n"
+            "\t\talias = cm_ab_production_algorithm\n\t}\n")
+    if text.count(sync) != 1:
+        raise SystemExit("cmm: the production algorithm setting has changed shape")
+    text = text.replace(sync, sync + (
+        "\n\t# cm_dev_perf +perf44: the hiring horizon\n"
+        "\tcmm_register_slider_setting = {\n\t\tmod_id = cm\n\t\tsetting_id = ab_production_horizon\n"
+        "\t\ttab_id = ab_production\n\t\tgroup_id = ab_production\n\t\tdefault_value = 6\n"
+        "\t\tmin_value = 1\n\t\tmax_value = 10\n\t\tstep_value = 1\n\t}\n"
+        "\tcmm_sync_setting_alias = {\n\t\tsetting = cm__ab_production_horizon\n"
+        "\t\talias = cm_ab_production_horizon\n\t}\n"))
+    changed = "\t\tflag:cm__ab_production_algorithm = {\n"
+    if text.count(changed) != 1:
+        raise SystemExit("cmm: the production algorithm branch has changed shape")
+    return text.replace(changed, (
+        "\t\t# cm_dev_perf +perf44\n"
+        "\t\tflag:cm__ab_production_horizon = {\n\t\t\tcmm_sync_setting_alias = {\n"
+        "\t\t\t\tsetting = cm__ab_production_horizon\n\t\t\t\talias = cm_ab_production_horizon\n"
+        "\t\t\t}\n\t\t}\n") + changed, 1)
 
 
 # The box's own words, to say it now covers every farm.
@@ -1082,6 +1391,58 @@ def _write_subsidy_desc() -> None:
         path.write_text("\ufeff" + text, encoding="utf-8")
 
 
+# +perf41 (10-13, his «Конечно, делаем… Я играю с автостройкой CM»): the
+# recommended industry-support map, built by cm_maps' own tool so the two stay
+# one rule (mods/cm_maps/tools/industry_support.py), renamed bcm_ -> cm_ and run
+# by CM's own load-time setup right after the rights pass it reads.
+_ind_spec = importlib.util.spec_from_file_location(
+    "cm_maps_industry", refs.REPO / "mods/cm_maps/tools/industry_support.py")
+industry = importlib.util.module_from_spec(_ind_spec)
+_ind_spec.loader.exec_module(industry)
+
+def _industry_files() -> dict[str, str]:
+    trmm = (MOD / TRMM).read_text(encoding="utf-8-sig").replace("cm_trmm_", "bcm_trmm_")
+    made = industry.files({industry.TRMM_EFFECTS: trmm}, refs.GAME)
+    # CM ships more languages than cm_maps; each gets the rows (check_cmm wants them all).
+    inds = industry.industries(refs.GAME)
+    for folder in sorted((MOD / "main_menu/localization").iterdir()):
+        made.setdefault(f"main_menu/localization/{folder.name}/bcm_ind_l_{folder.name}.yml",
+                        industry.localization(folder.name, inds))
+    out = {}
+    for path, text in made.items():
+        path = path.replace("/bcm_ind_", "/cm_ind_").replace("/bcm_industry_", "/cm_industry_")
+        text = text.replace("MAPMODE_BCM_", "MAPMODE_CM_").replace("bcm_", "cm_")
+        out[path] = text
+    return out
+
+
+def _industry_pass(text: str) -> str:
+    old = ("    cm_trmm_recompute_all = yes\n"
+           "    # Synchronous, so there is no partial state for the stamp to certify.\n"
+           "    set_global_variable = { name = cm_trmm_stamp value = cm_trmm_version_value }\n"
+           "  }\n")
+    if text.count(old) != 1:
+        raise SystemExit("setup: the rights pass in cm_run_lobby_setup has changed shape")
+    new = ("    cm_trmm_recompute_all = yes\n"
+           "    # Synchronous, so there is no partial state for the stamp to certify.\n"
+           "    set_global_variable = { name = cm_trmm_stamp value = cm_trmm_version_value }\n"
+           "    # cm_dev_perf +perf41: the industry-support pass reads these rights.\n"
+           "    if = { limit = { has_global_variable = cm_ind_stamp } remove_global_variable = cm_ind_stamp }\n"
+           "  }\n"
+           "  # cm_dev_perf +perf41: recommended industry support per area, from the rights above.\n"
+           "  if = {\n"
+           "    limit = { NOT = { cm_ind_data_is_current = yes } }\n"
+           "    cm_ind_recompute_all = yes\n"
+           "    set_global_variable = { name = cm_ind_stamp value = cm_ind_version_value }\n"
+           "  }\n")
+    text = text.replace(old, new, 1)
+    drop = "  remove_global_variable = cm_fpot_stamp\n}\n"
+    if text.count(drop) != 1:
+        raise SystemExit("setup: cm_setup_drop_stamps has changed shape")
+    return text.replace(drop, "  remove_global_variable = cm_fpot_stamp\n"
+                              "  remove_global_variable = cm_ind_stamp # cm_dev_perf +perf41\n}\n", 1)
+
+
 EDITS = (
     (RESERVE_GUIS, "the gold slider no longer writes CM's reserve", _cut_reserve_pull),
     (WINDOW, "gate the building-type tree", _gate_the_tree),
@@ -1102,6 +1463,7 @@ EDITS = (
     ("in_game/common/scripted_effects/cm_ab_production_effects.txt", "the Production tab skips National Destinies'",
      buildings.edit_production_skip),
     (SEED, "the National Destinies set listed at load", buildings.edit_populate),
+    (SEED, "the industry-support pass after the rights", _industry_pass),
     (CMM, "the roster's new rows and the National Destinies list", buildings.edit_registration),
     (SEED, "the seeded roster's new rows", buildings.edit_seed),
     (LOOKUPS, "National Destinies rows in the roster's lookups and visibility", buildings.edit_lookups),
@@ -1119,6 +1481,13 @@ EDITS = (
      _pf_log_close),
     (CMM, "say the refresh button's click in debug.log", _pf_log_click),
     (FOOD, "subsidize every idle or loss-making farm", _subsidize_idle_farms),
+    (FOOD_TRIGGERS, "auto-food asks the building's own pop pool", _food_pops_by_type),
+    (APPROVAL, "the food RGO drain stops at the laborer pool", _food_rgo_drain_pops),
+    (AB_FOOD, "the food tab's hiring horizon", _ab_food_horizon),
+    (AB_FOOD, "take the hand-enabled breadbaskets", _ab_food_take_manual),
+    (CMM, "the food tab's slider and checkbox", _register_ab_food),
+    (AB_PROD, "the production tab's hiring horizon", _ab_prod_horizon),
+    (CMM, "the production tab's slider", _register_ab_prod),
     (QUEUE, "poll the queue every second, not every 0.3 s", _slow_the_poll),
     (QUEUE, "shout only into queues with entries", _gate_scan_shouts),
     (FEATURE, "count the ready-polls and log each cycle", _count_rounds_init),
@@ -1177,7 +1546,7 @@ def _gate_vanilla_toggles(text: str) -> tuple[str, int]:
 
 
 # Bump with every change to what cm_rio_patch ships; `mods.bat` compares it.
-RIO_PATCH_REVISION = 1
+RIO_PATCH_REVISION = 2
 
 
 def _rio_patch() -> str:
@@ -1231,7 +1600,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 39
+PERF_REVISION = 44
 
 
 def metadata() -> str:
@@ -1291,6 +1660,14 @@ def main() -> int:
     (MOD / "in_game/common/scripted_guis/cm_perf_buildings_scripted_gui.txt").write_text(
         buildings.scripted_guis(), encoding="utf-8")
     (MOD / PF_VIEW).write_text(_pf_view_effects(), encoding="utf-8")
+    (MOD / AB_FOOD_VALUES).write_text(AB_FOOD_VALUES_TEXT, encoding="utf-8")
+    (MOD / AB_PROD_FILE).write_text(_ab_prod_values(), encoding="utf-8")
+    (MOD / AB_PROD_TRIGGERS).write_text(AB_PROD_TRIGGERS_TEXT, encoding="utf-8")
+    for path, text in _industry_files().items():
+        (MOD / path).parent.mkdir(parents=True, exist_ok=True)
+        (MOD / path).write_text("\ufeff" + text, encoding="utf-8")
+    shutil.copy2(MOD / "main_menu/gfx/interface/icons/map_modes/cm_best_town_right.dds",
+                 MOD / "main_menu/gfx/interface/icons/map_modes/cm_industry_support.dds")
     for folder in sorted((MOD / "main_menu/localization").iterdir()):
         lang = folder.name
         rows = folder / f"cm_cmm_l_{lang}.yml"

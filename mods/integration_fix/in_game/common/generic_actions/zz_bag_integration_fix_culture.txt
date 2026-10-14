@@ -1,0 +1,176 @@
+﻿# Written by mods/integration_fix/tools/generate.py from the game's own file. Do not edit.
+# from in_game/common/generic_actions/culture.txt
+REPLACE:add_accepted_culture = {
+	type = owncountry
+
+	potential = {
+	}
+
+	allow = {
+		scope:actor = {
+			in_civil_war = no
+		}
+		trigger_if = {
+			limit = {
+				exists = scope:target
+				exists = scope:actor
+			}
+			scope:actor = {
+				culture_population_in_country = {
+					culture = scope:target
+					value > 0
+				}
+			}
+		}
+	}
+
+	ai_tick = never
+	ai_tick_frequency = 12
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = cultureacceptance
+
+	price = price:add_accepted_culture
+
+	select_trigger = {
+		looking_for_a = culture
+		target_flag = target
+		source = actor
+		source_flags = only_tolerated
+
+		name = "add_accepted_culture_select_culture"
+		none_available_msg_key = "add_accepted_culture_no_cultures"
+		column = {
+			data = name
+		}
+		visible = {
+			not = { is_accepted_in = scope:actor }
+		}
+		enabled = {
+			is_tolerated_in = scope:actor
+			NOT = {
+				scope:actor.culture = this
+			}
+			scope:actor = {
+				OR = {
+					culture_percentage_in_country = {
+						culture = root
+						value >= 0
+					}
+
+					culture_population_in_country = {
+						culture = root
+						value >= 0
+					}
+					any_estate = {
+						dominant_culture ?= { this = root }
+					}
+				}
+			}
+		}
+	}
+
+	effect = {
+		scope:actor = {
+			if = {
+				limit = {
+					exists = scope:target
+				}
+				add_accepted_culture = scope:target
+				grant_culture_bonus_advances = scope:target
+			}
+		}
+	}
+
+	ai_will_do = {
+		# handled in code
+	}
+}
+
+# from in_game/common/generic_actions/culture.txt
+REPLACE:add_tolerated_culture = {
+	type = owncountry
+
+	potential = {
+	}
+
+	allow = {
+		scope:actor = {
+			in_civil_war = no
+		}
+		trigger_if = {
+			limit = {
+				exists = scope:target
+				exists = scope:actor
+			}
+			scope:actor = {
+				culture_population_in_country = {
+					culture = scope:target
+					value > 0
+				}
+			}
+		}
+	}
+
+	ai_tick = never
+	ai_tick_frequency = 12
+
+	automation_tick = monthly
+	automation_tick_frequency = 1
+	player_automated_category = cultureacceptance
+	
+	price = price:add_tolerated_culture
+
+	select_trigger = {
+		looking_for_a = culture
+		#for the AI we have an optimisation to only look through cultures that are present. Human can look at all...but will have some disabled
+		source_ai_override = actor
+		target_flag = target
+		source_flags_ai_override = include_any_present
+		name = "add_tolerated_culture_select_culture"
+		none_available_msg_key = "add_tolerated_culture_no_cultures"
+		column = {
+			data = name
+		}
+		enabled = {
+			NOR = {
+				scope:actor.culture = this
+				is_tolerated_in = scope:actor
+				is_accepted_in = scope:actor
+			}
+			scope:actor = {
+				OR = {
+					culture_percentage_in_country = {
+						culture = root
+						value >= 0
+					}
+
+
+					culture_population_in_country = {
+						culture = root
+						value >= 0
+					}
+					any_estate = {
+						dominant_culture ?= { this = root }
+					}
+				}
+			}
+		}
+	}
+
+	effect = {
+		scope:actor = {
+			if = {
+				limit = {
+					exists = scope:target
+				}
+				add_tolerated_culture = scope:target
+			}
+		}
+	}
+	
+	ai_will_do = {
+		# handled in code
+	}
+}

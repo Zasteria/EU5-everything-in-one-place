@@ -151,6 +151,14 @@ cm_run_lobby_setup = {
     cm_trmm_recompute_all = yes
     # Synchronous, so there is no partial state for the stamp to certify.
     set_global_variable = { name = cm_trmm_stamp value = cm_trmm_version_value }
+    # cm_dev_perf +perf41: the industry-support pass reads these rights.
+    if = { limit = { has_global_variable = cm_ind_stamp } remove_global_variable = cm_ind_stamp }
+  }
+  # cm_dev_perf +perf41: recommended industry support per area, from the rights above.
+  if = {
+    limit = { NOT = { cm_ind_data_is_current = yes } }
+    cm_ind_recompute_all = yes
+    set_global_variable = { name = cm_ind_stamp value = cm_ind_version_value }
   }
   if = {
     limit = { NOT = { cm_fpot_data_is_current = yes } }
@@ -262,6 +270,7 @@ cm_setup_drop_stamps = {
   remove_global_variable = cm_pf_river_stamp
   remove_global_variable = cm_ln_ids_stamp
   remove_global_variable = cm_fpot_stamp
+  remove_global_variable = cm_ind_stamp # cm_dev_perf +perf41
 }
 
 # Numeric ids for every location, in both directions. Location.GetKey returns the runtime id

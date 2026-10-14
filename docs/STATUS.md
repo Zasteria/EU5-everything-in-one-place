@@ -5,17 +5,18 @@ One line each. **Read only the brief of the mod the task is about** —
 
 | mod | state | never been in game |
 | --- | --- | --- |
-| [`ru_loc_fix`](../mods/ru_loc_fix/CLAUDE.md) | разметка русского и перевод беты 10-01, окна на бете; 0.5.0 — круг 11: правки Russian Localization Fix и `unknown_custom`; **09-26: круг 4 подтверждён** | круги 5–8, 0.4.3, 0.5.0 |
-| [`nd_ru`](../mods/nd_ru/CLAUDE.md) | in progress; 4 385 keys (0.2.1, 10-03: 45 ключей под ND 1.4.0) | everything except Westphalia and the override itself |
+| [`ru_loc_fix`](../mods/ru_loc_fix/CLAUDE.md) | разметка русского; перевод 1.4.1 (0.5.1, круг 12); 0.5.0 — круг 11: правки Russian Localization Fix и `unknown_custom`; **09-26: круг 4 подтверждён** | круги 5–8, 0.4.3, 0.5.0, 0.5.1 |
+| [`nd_ru`](../mods/nd_ru/CLAUDE.md) | 4 385 keys (0.2.1, 10-03: ND 1.4.0) | everything except Westphalia and the override itself |
 | [`nmt_ru`](../mods/nmt_ru/CLAUDE.md) | Русский для National Mission Trees: 17 стран, 3 555 ключей; дерево пишется целиком | всё |
-| [`nmt_fix`](../mods/nmt_fix/CLAUDE.md) | 0.2.0 (10-03): земли подданных (121 условие) + NMT под 1.4: Арагон, модификатор, подданные, 7 старых ошибок NMT | всё |
-| [`cm_maps`](../mods/cm_maps/CLAUDE.md) | **загружен 09-19, рисует**; 0.3.0: права по провинции; еда, губернатор под 1.4 не сверены | 0.3.0, починка прав, еда |
-| [`cm_dev_perf`](../mods/cm_dev_perf/CLAUDE.md) | +perf39: права по провинции, грамоты 1.4; перед Río, после Río — [`cm_rio_patch`](../mods/cm_rio_patch/CLAUDE.md); ND — своя категория | +perf19–39, патч |
-| [`cmf_dev_beta`](../mods/cmf_dev_beta/CLAUDE.md) | +beta11 (10-12): CMF 1.4 + `cmf_is_host`, панель без пустот, стрелки мимо скрытых, номер места; вместо CMF и CMF Dev | +beta7 |
-| [`glorpui_hints`](../mods/glorpui_hints/CLAUDE.md) | 1.2.12, игра 1.4, основной предмет; ворота по техам | 1.2.10–1.2.12 в игре не были |
+| [`nmt_fix`](../mods/nmt_fix/CLAUDE.md) | 0.2.0 (10-03): земли подданных (121 условие) + NMT под 1.4 | всё |
+| [`integration_fix`](../mods/integration_fix/CLAUDE.md) | 0.2.0: Integration Hotfix на 1.4.1, вместо него | всё |
+| [`cm_maps`](../mods/cm_maps/CLAUDE.md) | **загружен 09-19, рисует**; 0.4.1: карта поддержки отрасли по провинциям; еда, губернатор под 1.4 не сверены | 0.3.0, 0.4.0, починка прав, еда |
+| [`cm_dev_perf`](../mods/cm_dev_perf/CLAUDE.md) | +perf42–44: стройка по рабочим; +perf41: карта отраслей; перед Río, после Río — [`cm_rio_patch`](../mods/cm_rio_patch/CLAUDE.md); ND — своя категория | +perf19–39, патч |
+| [`cmf_dev_beta`](../mods/cmf_dev_beta/CLAUDE.md) | +beta13: номер места с начала; +beta12: типы 1.4.1; `cmf_is_host`, панель, стрелки, номер места; вместо CMF и CMF Dev | +beta7, +beta12, +beta13 |
+| [`glorpui_hints`](../mods/glorpui_hints/CLAUDE.md) | 1.2.13 (10-13: 1.4.1), игра 1.4, основной предмет; ворота по техам | 1.2.10–1.2.13 в игре не были |
 | [`glorpui_hints_1_3`](../mods/glorpui_hints_1_3/CLAUDE.md) | 1.1.1 для 1.3, свой предмет | — |
 | [`centered_towns`](../mods/centered_towns/CLAUDE.md) | 0.2.0 (10-04): позиции Better label placement под новыми именами файлов 1.4 | 0.2.0 |
-| [`assimilate_primary`](../mods/assimilate_primary/CLAUDE.md) | 0.9.15 (10-13): своя автоматика совета; сдвиг ценностей по формуле через окно игры работает; перескок и шаг ≥ 0.1 не проверены | 0.6.0 |
+| [`assimilate_primary`](../mods/assimilate_primary/CLAUDE.md) | 0.9.18: своя автоматика совета; ценности через окно игры работают; правки 18:30 не проверены | 0.6.0 |
 | [`perf_probe`](../mods/perf_probe/CLAUDE.md), [`speed_5`](../mods/speed_5/CLAUDE.md), [`speed_10`](../mods/speed_10/CLAUDE.md) | 0.1.0: профилировщик; паузы; 10 скоростей | всё |
 | [`auto_marry`](../mods/auto_marry/CLAUDE.md) | автоженитьба под 1.4 | всё |
 | [`war_sliders`](../mods/war_sliders/CLAUDE.md) | **0.7.3**: сам после мира и восстания, кнопка CMF; к мастерской | автозапуск |

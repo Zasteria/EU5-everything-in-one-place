@@ -40,6 +40,15 @@ command `effect c:<tag> = { cmf_beta_list_move_to = { ... to = <typed> } }`,
 so the typed digits become a literal macro argument. Single player only, like
 CMF's text setting.
 
+**CMF's copies of vanilla interface types follow the game** (+beta12, 1.4.1).
+`in_game/gui/vanilla/` is 201 types and templates CMF copies from the game,
+none of them changed (measured on 2.5.0: 190 equal to 1.4.1, the other 11 equal
+to 1.4.0 — the town-rights revoke conditions, the DLC map-mode hover, the
+widened production numbers). A stale copy shadows the game's, so the patch
+never shows. Each one that differs from the game is replaced by the game's
+own definition and named in the output; a copy that mentions CMF (`cmf`/`cmm`)
+would be CMF's hook and is left alone.
+
     python3 mods/cmf_dev_beta/tools/port_from_cmf_dev.py
 """
 
@@ -64,7 +73,7 @@ _spec = importlib.util.spec_from_file_location(
 beta = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(beta)
 
-REVISION = 11
+REVISION = 13
 
 
 def metadata() -> str:
@@ -110,6 +119,37 @@ def own_host_trigger() -> int:
              + body.replace("is_host = {", "cmf_is_host = {", 1) + "\n")
     path.write_text("\ufeff" + text, encoding="utf-8")
     return calls
+
+
+VANILLA_TYPES = "in_game/gui/vanilla"
+TYPE_NAME = re.compile(r"^[ \t]*(?:type\s+(\w+)\s*=\s*\w+|template\s+(\w+))\s*\{", re.M)
+
+
+def vanilla_types_current() -> list[str]:
+    """CMF's plain copies of game types replaced by the game's current ones."""
+    taken = []
+    for path in sorted((MOD / VANILLA_TYPES).glob("*.gui")):
+        raw = path.read_text(encoding="utf-8-sig")
+        crlf = "\r\n" in raw
+        text = raw.replace("\r\n", "\n")
+        for name in [m.group(1) or m.group(2) for m in TYPE_NAME.finditer(text)]:
+            span = beta.type_block(text, name)
+            if not span:
+                continue
+            mine = text[span[0]:span[1]]
+            if re.search(r"cmf|cmm", mine, re.I):
+                continue
+            try:
+                game = beta.beta_type(refs.GAME_GUI, name)
+            except beta.EditFailed:
+                continue
+            if " ".join(mine.split()) == " ".join(game.split()):
+                continue
+            text = text[:span[0]] + game + text[span[1]:]
+            taken.append(f"{path.stem}:{name}")
+        out = text.replace("\n", "\r\n") if crlf else text
+        path.write_text("\ufeff" + out, encoding="utf-8")
+    return taken
 
 
 ACTION_BAR = "in_game/gui/cmf/cmf_action_bar.gui"
@@ -216,7 +256,17 @@ ROW_BOX = """\t\t\t# cmf_dev_beta: the row's place among the shown rows, as the 
 \t\t\t\t\ttext_single = {
 \t\t\t\t\t\tparentanchor = center
 \t\t\t\t\t\talign = center|nobaseline
+\t\t\t\t\t\tvisible = "[GreaterThan_int32(CMMMapInt('cmf_beta_list_place', Scope.GetFlagName), '(int32)0')]"
 \t\t\t\t\t\ttext = "[ToString_int32(CMMMapInt('cmf_beta_list_place', Scope.GetFlagName))]"
+\t\t\t\t\t}
+\t\t\t\t\t# A list nobody has reordered has no place map yet (the renumber runs
+\t\t\t\t\t# after a move): Construction Manager's categories showed 0 on every
+\t\t\t\t\t# row (10-13). Until then, the row's own index + 1, as the arrows read it.
+\t\t\t\t\ttext_single = {
+\t\t\t\t\t\tparentanchor = center
+\t\t\t\t\t\talign = center|nobaseline
+\t\t\t\t\t\tvisible = "[Not(GreaterThan_int32(CMMMapInt('cmf_beta_list_place', Scope.GetFlagName), '(int32)0'))]"
+\t\t\t\t\t\ttext = "[ToString_int32(Add_int32(PdxGuiWidget.GetIndexInDataModel, '(int32)1'))]"
 \t\t\t\t\t}
 \t\t\t\t}
 
@@ -406,6 +456,7 @@ def main() -> int:
     bar_ignores_hidden()
     arrows_skip_hidden()
     typed_position()
+    taken = vanilla_types_current()
     (MOD / ".metadata").mkdir(parents=True, exist_ok=True)
     (MOD / ".metadata/metadata.json").write_text("﻿" + metadata(), encoding="utf-8")
     thumb = SRC / ".metadata/thumbnail.png"
@@ -413,6 +464,8 @@ def main() -> int:
         shutil.copy2(thumb, MOD / ".metadata/thumbnail.png")
     print("cmf_dev_beta: whole copy of %s, %d is_host calls on cmf_is_host"
           % (SRC.name, host_calls))
+    print("     %d vanilla types taken from the game over CMF's stale copies%s"
+          % (len(taken), (": " + ", ".join(taken)) if taken else ""))
     return 0
 
 

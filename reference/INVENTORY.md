@@ -12,11 +12,11 @@ python3 tools/refresh.py
 | --- | --- | --- | --- |
 | `3668193813_trin_national_destinies` | `trin.national_destinies` | 1.4.0 | 1.4.* |
 | `3692202776_community_mod_framework` | `community_mod_framework` | 2.5.0 | 1.4.* |
-| `3705462070_hre_manager` | `hre_manager` | 1.1.0 | 1.1.* |
+| `3721516330_integration_hotfix` | `Integration Hotfix` | 0.7 | 1.3.x |
 | `3736668860_construction_manager` | `romaimperator.construction_manager` | 2.2.12 | 1.3.* |
 | `3742578604_national_mission_trees` | `national_mission_trees` | 0.2 | 1.3.10 |
 | `3765240629_responsive_universalis_aggressive_ticks` | `responsive_universalis_aggressive_ticks` | 1.1.0 | 1.4.* |
-| `3781437488_eu5ab_regional_development` | `eu5ab_regional_development` | 0.9.7-beta | 1.4.* |
+| `3784699906` | no metadata | — | — |
 | `3784699906_calidad_de_vida_eu5` | `calidad_de_vida_eu5` | 1.2.4 | 1.4.* |
 | `3789103426_community_mod_framework_dev` | `community_mod_framework.dev` | 2.4.1 | 1.3.* |
 | `3789151637_romaimperator_construction_manager_dev` | `romaimperator.construction_manager.dev` | 2.3.0 | 1.3.* |
@@ -34,11 +34,10 @@ compiles from them.
 | Folder | Mod id | Version | Mounts |
 | --- | --- | --- | --- |
 | `3633816300_ogasoptimized` | `ogasoptimized` | 20260627 | in_game, main_menu |
-| `3721516330_integration_hotfix` | `Integration Hotfix` | 0.7 | in_game, loading_screen, main_menu |
 | `3780623638_nation_destinies_rus` | `nation_destinies_rus` | 1.3 | main_menu |
 | `3816131982_theplaymaker_hre_fix` | `theplaymaker.hre_fix` | 1.0.1 | in_game |
 
-`reference/game/` holds 5147 files of EU5 itself — `in_game/gui/`, the parts
+`reference/game/` holds 5165 files of EU5 itself — `in_game/gui/`, the parts
 of `in_game/common/` the mods here reason about, and the game's own
 localization, which is how `mods/nd_ru/tools/term.py` answers what the game
 calls a concept.

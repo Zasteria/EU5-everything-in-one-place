@@ -405,6 +405,25 @@ cm_ab_run_food = {
 			scope:cm_location = { cm_ab_food_stage_in_location = yes }
 		}
 	}
+	# cm_dev_perf +perf43: the breadbaskets he enabled by hand, while auto-food is off
+	if = {
+		limit = {
+			exists = var:cm_ab_food_take_manual
+			NOT = { is_target_in_variable_list = { name = cm_priority_features_enabled target = flag:cm_feature_auto_food } }
+		}
+		every_owned_location = {
+			limit = {
+				exists = var:cm_auto_food_location_enabled
+				location_rank = location_rank:rural_settlement
+				NOT = { integration_level = conquered }
+				cm_ab_location_is_system_food_picked = no
+				cm_food_location_rgo_is_on_roster = yes
+			}
+			save_scope_as = cm_location
+			raw_material = { save_scope_as = cm_food_good }
+			cm_ab_food_stage_in_location = yes
+		}
+	}
 }
 
 # Auto-Build mirror of cm_food_auto_build_in_location: the same marginal comparison
@@ -525,7 +544,8 @@ cm_ab_pass_food = {
 						cm_is_rgo_not_max_level_already = yes
 						cm_is_rgo_under_construction = no
 						cm_location_rgo_free_this_cycle = yes
-						cm_location_rgo_promotion_buffer_slack >= 0
+						# cm_dev_perf +perf43: the tab's own horizon
+						cm_perf_ab_food_rgo_slack > 0
 						cm_market_has_construction_goods_for_rgo = yes
 					}
 					set_local_variable = { name = cm_ab_food_rgo_room value = 1 }
@@ -545,6 +565,8 @@ cm_ab_pass_food = {
 							cm_get_open_build_queue_slots > 0
 							cm_get_max_rgo_workers_floor > { value = cm_modifier_rgo_level add = cm_get_rgos_under_construction }
 							cm_ab_can_afford_rgo = { POOL = cm_ab_pool_food }
+							# cm_dev_perf +perf43: each level covered within the horizon
+							cm_perf_ab_food_rgo_slack > 0
 						}
 						change_local_variable = { name = cm_ab_food_rgo_guard add = 1 }
 						set_local_variable = { name = cm_ab_rgo_cost value = glorpui_rgo_expand_cost }

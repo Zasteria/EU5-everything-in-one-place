@@ -96,6 +96,21 @@ class Finding:
     entry: Entry = field(repr=False, default=None)
 
 
+def read_file(path: Path) -> dict[str, Entry]:
+    """The keys one file defines."""
+    found: dict[str, Entry] = {}
+    try:
+        text = path.read_text(encoding="utf-8-sig")
+    except (UnicodeDecodeError, OSError):
+        return found
+    for number, line in enumerate(text.splitlines(), 1):
+        match = KEY_LINE.match(line)
+        if match:
+            key, value = match.groups()
+            found[key] = Entry(key, value, path, number)
+    return found
+
+
 def read_language(directory: Path) -> dict[str, Entry]:
     """Every key a localization tree defines, last definition winning.
 
@@ -130,16 +145,20 @@ def load(root: Path = None) -> tuple[dict[str, Entry], dict[str, Entry]]:
     for base in (refs.GAME_LOCALIZATION, refs.GAME / "loading_screen/localization"):
         russian.update(read_language(base / "russian"))
         english.update(read_language(base / "english"))
-    # Files the game and its engine layers ship in English only — the playset
-    # screen's `MOD_PLAYSET_IS_AUTOMATICALLY_SORTED_*` (10-01) showed as a raw key.
+    # The engine layers keep every language in one folder, not a folder each.
+    # Some files come in English only — the playset screen's
+    # `MOD_PLAYSET_IS_AUTOMATICALLY_SORTED_*` (10-01) showed as a raw key — and
+    # 1.4.1 added a Russian `cw_ugc_dlc` that holds the English text, so both
+    # sides are read file by file.
     for base in (refs.GAME / "loading_screen/localization/jomini",
                  refs.REFERENCE / "clausewitz", refs.REFERENCE / "jomini"):
         for path in sorted(base.rglob("*_l_english.yml")):
             stem = path.name[: -len("_l_english.yml")]
-            if not any(base.rglob(stem + "_l_russian.yml")):
-                for key, entry in read_language(path.parent).items():
-                    if entry.path == path:
-                        english.setdefault(key, entry)
+            for key, entry in read_file(path).items():
+                english.setdefault(key, entry)
+            for twin in base.rglob(stem + "_l_russian.yml"):
+                for key, entry in read_file(twin).items():
+                    russian.setdefault(key, entry)
     return russian, english
 
 

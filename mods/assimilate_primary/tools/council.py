@@ -456,6 +456,12 @@ def target_test(sel: str, tabs: int, actions: dict[str, str], key: str) -> str:
     """The select_trigger's own visible and enabled, as one block of conditions,
     after a guard that no seat, this pass included, already has this target."""
     parts = [f"NOT = {{ has_variable = bag_asp_busy_{key} }}"]
+    if key == PAIRED_WITH:
+        # His run 13.10: a province whose last pops cannot turn is no target
+        # (assim_triggers); scope:target is the culture by then.
+        if flag_of(select(actions[key], "culture")) != "target":
+            raise SystemExit("council: assimilation's culture is no longer scope:target")
+        parts.append("any_location_in_province = { bag_asp_assimilable_to_target = yes }")
     parts += [b for b in (child(sel, "visible"), child(sel, "enabled")) if b and b.strip()]
     return indent(rewrite("\n".join(parts), actions), tabs)
 
@@ -1165,6 +1171,161 @@ bag_asp_sv_push = {{
 SV_LOG = "[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n{n}_value')|{d}]"
 
 
+# His run 13.10: Münster, 100% control, its last pops Ashkenazi, and the seat
+# held the province forever while the game's tooltip said «no pop here can be
+# assimilated». Why, from the game's own files and its concept text: a pop
+# type with assimilation_conversion_factor 0 (tribesmen) never assimilates; a
+# pop type is blocked by local_/global_<type>_assimilation_blocked; and «some
+# specific cultures are directly tied to their faith, so they will not be able
+# to be assimilated unless they are converted first» — a religion with
+# culture_locked = yes (Judaism). A province where no pop is left but those
+# is never a target, and a seat on one is freed at once; the test is read
+# afresh every pass, so a conversion makes it a target again by itself.
+
+
+def assim_rules(game: Path) -> tuple[list[str], list[str], list[str]]:
+    """(pop types that never assimilate, pop types a modifier can block,
+    culture-locked religions)."""
+    text = strip_comments((game / "in_game/common/pop_types/00_default.txt").read_text(encoding="utf-8-sig"))
+    never, blockable = [], []
+    defs = (game / "main_menu/common/modifier_type_definitions/00_modifier_types.txt").read_text(encoding="utf-8-sig")
+    for m in re.finditer(r"^(\w+)\s*=\s*\{", text, re.M):
+        factor = re.search(r"assimilation_conversion_factor\s*=\s*([\d.]+)", body(text, m.start()))
+        if factor is None:
+            raise SystemExit(f"assimilation: pop type {m.group(1)} has no assimilation_conversion_factor")
+        if float(factor.group(1)) == 0:
+            never.append(m.group(1))
+        elif re.search(rf"^local_{m.group(1)}_assimilation_blocked\s*=", defs, re.M):
+            blockable.append(m.group(1))
+    locked = []
+    for f in sorted((game / "in_game/common/religions").glob("*.txt")):
+        rtext = strip_comments(f.read_text(encoding="utf-8-sig"))
+        for m in re.finditer(r"^(\w+)\s*=\s*\{", rtext, re.M):
+            if re.search(r"^\s*culture_locked\s*=\s*yes", body(rtext, m.start()), re.M):
+                locked.append(m.group(1))
+    if not never or not locked:
+        raise SystemExit("assimilation: no pop type that never assimilates, or no culture-locked religion; read the game again")
+    return never, blockable, locked
+
+
+def assim_triggers(game: Path) -> str:
+    never, blockable, locked = assim_rules(game)
+    pop = ["\t\t" + f"NOT = {{ pop_type = pop_type:{t} }}" for t in never]
+    pop += ["\t\t" + f"NOT = {{ religion = religion:{r} }}" for r in locked]
+    for t in blockable:
+        pop.append(f"\t\tNOT = {{\n\t\t\tpop_type = pop_type:{t}\n\t\t\tOR = {{\n"
+                   f"\t\t\t\tlocation ?= {{ modifier:local_{t}_assimilation_blocked = yes }}\n"
+                   f"\t\t\t\tscope:actor = {{ modifier:global_{t}_assimilation_blocked = yes }}\n\t\t\t}}\n\t\t}}")
+    rules = "\n".join(pop)
+    return f"""
+# Scope: location; scope:actor is the country, scope:target the culture an
+# assimilation promotes. A pop here that could still turn to it (council.py,
+# assim_rules: never {", ".join(never)}; blockable {", ".join(blockable)};
+# tied to their faith {", ".join(locked)}).
+bag_asp_assimilable_to_target = {{
+\tany_pop = {{
+\t\tNOT = {{ culture = scope:target }}
+{rules}
+\t}}
+}}
+
+# Scope: location; scope:actor is the country. The same, for a pop of a culture
+# neither primary nor accepted: what the half row brings in.
+bag_asp_assimilable_any = {{
+\tany_pop = {{
+\t\tculture = {{ NOT = {{ is_primary_or_accepted_in = scope:actor }} }}
+{rules}
+\t}}
+}}
+"""
+
+
+def assim_check_effect() -> str:
+    key = PAIRED_WITH
+    return f"""
+# Scope: country. From bag_asp_tick, monthly: a seat on {key} whose province
+# has no pop left that could turn to its culture is freed now (council.py,
+# assim_triggers). Nothing is remembered: the next pass asks again.
+bag_asp_assim_check = {{
+\tsave_scope_as = actor
+\tevery_cabinet = {{
+\t\tlimit = {{
+\t\t\thas_cabinet_action = yes
+\t\t\tcabinet_action = cabinet_action:{key}
+\t\t\texists = interaction_target:target
+\t\t\texists = interaction_target:target_1
+\t\t}}
+\t\tinteraction_target:target = {{ save_temporary_scope_as = target }}
+\t\tif = {{
+\t\t\tlimit = {{
+\t\t\t\tinteraction_target:target_1 = {{
+\t\t\t\t\tNOT = {{ any_location_in_province = {{ bag_asp_assimilable_to_target = yes }} }}
+\t\t\t\t}}
+\t\t\t}}
+\t\t\tdebug_log = "bag_asp: assimilation freed: no pop left in its province that can turn (tribesmen, a blocked class, or a faith-tied culture)"
+\t\t\tif = {{
+\t\t\t\tlimit = {{ scope:actor = {{ has_variable = bag_asp_log_on }} }}
+\t\t\t\tinteraction_target:target_1 = {{ debug_log_scopes = no }}
+\t\t\t}}
+\t\t\tbag_asp_vacate = yes
+\t\t}}
+\t}}
+}}
+"""
+
+
+def ramp_sources(game: Path) -> dict[str, list[tuple[str, str]]]:
+    """Per side, what pushes it and is implemented over time: (kind, key) for
+    each policy of a law, estate privilege and government reform whose
+    country modifier has monthly_towards_<side>."""
+    common = game / "in_game/common"
+    found: dict[str, list[tuple[str, str]]] = {}
+
+    def note(kind: str, key: str, text: str) -> None:
+        for side in sorted(set(re.findall(r"monthly_towards_(\w+)", text))):
+            found.setdefault(side, []).append((kind, key))
+
+    def tops(folder: str):
+        for f in sorted((common / folder).glob("*.txt")):
+            text = strip_comments(f.read_text(encoding="utf-8-sig").replace("\r\n", "\n"))
+            for m in re.finditer(r"^(\w+)\s*=\s*\{", text, re.M):
+                yield m.group(1), body(text, m.start())
+
+    for _, law in tops("laws"):
+        for m in re.finditer(r"^\t(\w+)\s*=\s*\{", law, re.M):
+            policy = body(law, m.start())
+            if child(policy, "country_modifier") is not None:
+                note("policy", m.group(1), policy)
+    for key, text in tops("estate_privileges"):
+        note("privilege", key, text)
+    for key, text in tops("government_reforms"):
+        note("reform", key, text)
+    if not found:
+        raise SystemExit("societal values: no law, privilege or reform pushes a value any more")
+    return found
+
+
+def ramp_triggers(game: Path) -> str:
+    """bag_asp_sv_ramp_<side>: something of the country that pushes the side is
+    still being implemented, so the pair's stop is still rising. His ask 13.10
+    18:29: a law half enacted gave half its push, the advisor went on the pair
+    for a hair, and every month the window opened again."""
+    sources = ramp_sources(game)
+    test = {
+        "policy": "AND = {{ has_policy = {k} policy:{k} = {{ NOT = {{ is_fully_implemented_in = scope:actor }} }} }}",
+        "privilege": "AND = {{ has_estate_privilege = estate_privilege:{k} estate_privilege:{k} = {{ NOT = {{ is_fully_implemented_in = scope:actor }} }} }}",
+        "reform": "AND = {{ has_reform = government_reform:{k} government_reform:{k} = {{ NOT = {{ is_fully_implemented_in = scope:actor }} }} }}",
+    }
+    out = ["\n# Scope: country; scope:actor is it. A source of the side's monthly push is",
+           "# still being implemented (council.py, ramp_triggers)."]
+    for pair in value_pairs(game):
+        for side in pair.split("_vs_"):
+            rows = "\n".join(f"\t\t{test[kind].format(k=k)}" for kind, k in sources.get(side, []))
+            inner = f"\tOR = {{\n{rows}\n\t}}" if rows else "\talways = no"
+            out.append(f"bag_asp_sv_ramp_{side} = {{\n{inner}\n}}")
+    return "\n".join(out) + "\n"
+
+
 def value_effects(game: Path, actions: dict[str, str]) -> str:
     """His spec 12.10–13.10: one seat, the best diplomat among the free ones,
     pushes the first ticked pair of «Общественные ценности» (in its order,
@@ -1197,6 +1358,11 @@ def value_effects(game: Path, actions: dict[str, str]) -> str:
 \t\t\t\t\t\t\t\t\tsubtract = modifier:monthly_towards_{left}
 \t\t\t\t\t\t\t\t}}
 \t\t\t\t\t\t\t}}
+\t\t\t\t\t\t\tset_local_variable = {{ name = bag_asp_sv_r value = 0 }}
+\t\t\t\t\t\t\tif = {{
+\t\t\t\t\t\t\t\tlimit = {{ bag_asp_sv_ramp_{right} = yes }}
+\t\t\t\t\t\t\t\tset_local_variable = {{ name = bag_asp_sv_r value = 1 }}
+\t\t\t\t\t\t\t}}
 \t\t\t\t\t\t\tbag_asp_sv_test = yes
 \t\t\t\t\t\t\tif = {{
 \t\t\t\t\t\t\t\tlimit = {{ has_variable = bag_asp_log_on }}
@@ -1218,6 +1384,11 @@ def value_effects(game: Path, actions: dict[str, str]) -> str:
 \t\t\t\t\t\t\t\t\tvalue = modifier:monthly_towards_{left}
 \t\t\t\t\t\t\t\t\tsubtract = modifier:monthly_towards_{right}
 \t\t\t\t\t\t\t\t}}
+\t\t\t\t\t\t\t}}
+\t\t\t\t\t\t\tset_local_variable = {{ name = bag_asp_sv_r value = 0 }}
+\t\t\t\t\t\t\tif = {{
+\t\t\t\t\t\t\t\tlimit = {{ bag_asp_sv_ramp_{left} = yes }}
+\t\t\t\t\t\t\t\tset_local_variable = {{ name = bag_asp_sv_r value = 1 }}
 \t\t\t\t\t\t\t}}
 \t\t\t\t\t\t\tbag_asp_sv_test = yes
 \t\t\t\t\t\t\tif = {{
@@ -1393,6 +1564,13 @@ bag_asp_sv_test = {{
 \t\t}}
 \t}}
 \tif = {{
+\t\tlimit = {{
+\t\t\thas_variable = bag_asp_log_on
+\t\t\tlocal_var:bag_asp_sv_r = 1
+\t\t}}
+\t\tdebug_log = "bag_asp: values, something pushing this side is still being implemented: not taken until it is in full"
+\t}}
+\tif = {{
 \t\t# His screenshot 13.10 15:19: «Качество» held at −20.70 with +0.00 a
 \t\t# month. A pair moves by its net push each month up to where it stops;
 \t\t# a net push near zero or below moves nothing. His floor: {SV_MIN_STEP} a
@@ -1400,6 +1578,16 @@ bag_asp_sv_test = {{
 \t\tlimit = {{
 \t\t\tlocal_var:bag_asp_sv_stop > local_var:bag_asp_sv_at
 \t\t\tlocal_var:bag_asp_sv_net >= {SV_MIN_STEP}
+\t\t\t# His ask 13.10 18:29: while a law, privilege or reform pushing this
+\t\t\t# side is still being implemented, its stop keeps creeping up; the
+\t\t\t# pair is not taken until it is in full (a seat already on it stays).
+\t\t\tOR = {{
+\t\t\t\tlocal_var:bag_asp_sv_r = 0
+\t\t\t\tAND = {{
+\t\t\t\t\thas_variable = bag_asp_sv_cur
+\t\t\t\t\tvar:bag_asp_sv_cur = local_var:bag_asp_sv_i
+\t\t\t\t}}
+\t\t\t}}
 \t\t}}
 \t\tset_variable = {{ name = bag_asp_sv_want value = local_var:bag_asp_sv_i }}
 \t\tset_variable = {{ name = bag_asp_sv_want_side value = local_var:bag_asp_sv_s }}
@@ -1536,12 +1724,15 @@ bag_asp_sv_timeout = {{
 \t\t\tdebug_log = "bag_asp: values, no row pressed in two seconds; the seat holds [GetGlobalVariable('bag_asp_sv_seat').GetCabinet.GetSocietalValueName]"
 \t\t\tremove_global_variable = bag_asp_sv_seat
 {clear_sv(3)}
+\t\t\t# The window is closed by bag_asp_sv_closer, and the bounce waits
+\t\t\t# for it (bag_asp_sv_after_close): his run 13.10 18:30.
+\t\t\tset_variable = {{ name = bag_asp_sv_close value = yes }}
 \t\t\tif = {{
 \t\t\t\tlimit = {{
 \t\t\t\t\thas_variable = bag_asp_sv_cur
 \t\t\t\t\tNOT = {{ has_variable = bag_asp_sv_bounced }}
 \t\t\t\t}}
-\t\t\t\tbag_asp_sv_bounce = yes
+\t\t\t\tset_variable = {{ name = bag_asp_sv_bounce_due value = yes }}
 \t\t\t}}
 \t\t\telse_if = {{
 \t\t\t\tlimit = {{ has_variable = bag_asp_sv_cur }}
@@ -1549,6 +1740,20 @@ bag_asp_sv_timeout = {{
 \t\t\t\tset_variable = {{ name = bag_asp_sv_cur_side value = 0 }}
 \t\t\t\tif = {{ limit = {{ has_variable = bag_asp_sv_bounced }} remove_variable = bag_asp_sv_bounced }}
 \t\t\t}}
+\t\t}}
+\t}}
+}}
+
+# Called by bag_asp_sv_closer once it has closed the window after a miss.
+bag_asp_sv_after_close = {{
+\tscope = country
+\tis_shown = {{ always = yes }}
+\teffect = {{
+\t\tif = {{ limit = {{ has_variable = bag_asp_sv_close }} remove_variable = bag_asp_sv_close }}
+\t\tif = {{
+\t\t\tlimit = {{ has_variable = bag_asp_sv_bounce_due }}
+\t\t\tremove_variable = bag_asp_sv_bounce_due
+\t\t\tbag_asp_sv_bounce = yes
 \t\t}}
 \t}}
 }}
@@ -1838,6 +2043,7 @@ bag_asp_tick = {{
 \tchange_variable = {{ name = bag_asp_months add = 1 }}
 \tchange_variable = {{ name = bag_asp_review_months add = 1 }}
 \tdebug_log = "bag_asp: month"
+\tbag_asp_assim_check = yes
 \tif = {{
 \t\tlimit = {{
 \t\t\tvar:bag_asp_review > 0
@@ -2033,6 +2239,7 @@ bag_asp_vacate = {{
 """
     run += tries
     run += value_effects(game, actions)
+    run += assim_check_effect()
     # A seat's rank is its action's row; where two rows share an action, the
     # row whose gate holds now, gated rows tried first.
     shared = {act(k) for k, *_ in POOL if act(k) != k}
@@ -2344,6 +2551,8 @@ bag_asp_short_of_half = {{
 bag_asp_needs_half = {{
 \tany_location_in_province = {{
 \t\towner ?= scope:actor
+\t\t# His run 13.10: only while a pop here can still turn.
+\t\tbag_asp_assimilable_any = yes
 \t\tOR = {{
 \t\t\tintegration_level = integrated
 \t\t\tAND = {{
@@ -2370,7 +2579,7 @@ bag_asp_paired_seat = {{
 """ + reachable
 
     return {
-        "in_game/common/scripted_triggers/bag_asp_council_triggers.txt": triggers,
+        "in_game/common/scripted_triggers/bag_asp_council_triggers.txt": triggers + ramp_triggers(game) + assim_triggers(game),
         "in_game/common/script_values/bag_asp_values.txt": VALUES + shown_values() + SV_VALUES + sv_push_value(game, actions),
         "in_game/common/scripted_effects/bag_asp_cmm_effects.txt": effects,
         "in_game/common/scripted_effects/bag_asp_council_effects.txt": run,

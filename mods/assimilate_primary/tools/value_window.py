@@ -25,7 +25,8 @@ window plays that state and closes both side panels (`LeftView.Close`,
 waits on a gate: the call comes from the press itself, the CM pattern
 (`docs/pitfalls/windows.md`). When no row presses (the window leaves out the
 pair the seat already pushes), the opener's `bag_asp_sv_wait` clears the flags
-and closes the same way two seconds later.
+two seconds later and, only then, asks `bag_asp_sv_closer` to close (his run
+13.10 18:30: an unconditional close there shut what he had opened since).
 
     import value_window
     value_window.build(refs.GAME)     # {path under the mod: text}
@@ -150,12 +151,29 @@ widget = {{
 \t\t\ton_finish = "[LeftView.Close]"
 \t\t\ton_finish = "[RightView.Close]"
 \t\t}}
+\t\t# His run 13.10 18:30: closing here unconditionally shut, two seconds
+\t\t# after every press, whatever he had opened meanwhile. Now the timeout
+\t\t# only asks for a close when no row pressed (bag_asp_sv_close below).
 \t\tstate = {{
 \t\t\tname = bag_asp_sv_wait
 \t\t\tduration = 2
 \t\t\ton_finish = "[GetScriptedGui('bag_asp_sv_timeout').Execute({ROOT})]"
-\t\t\ton_finish = "[LeftView.Close]"
-\t\t\ton_finish = "[RightView.Close]"
+\t\t}}
+\t}}
+\t# The close after a miss: the timeout sets bag_asp_sv_close only while the
+\t# mod's window still waits for its press. Closes first, then lets the
+\t# bounce reopen it (bag_asp_sv_after_close).
+\twidget = {{
+\t\tname = "bag_asp_sv_closer"
+\t\tsize = {{ 0 0 }}
+\t\tvisible_at_creation = no
+\t\tvisible = "[And(GetPlayer.Exists, {var('bag_asp_sv_close')}.IsSet)]"
+\t\tstate = {{
+\t\t\tname = _show
+\t\t\tduration = 0.1
+\t\t\ton_start = "[LeftView.Close]"
+\t\t\ton_start = "[RightView.Close]"
+\t\t\ton_start = "[GetScriptedGui('bag_asp_sv_after_close').Execute({ROOT})]"
 \t\t}}
 \t}}
 }}
