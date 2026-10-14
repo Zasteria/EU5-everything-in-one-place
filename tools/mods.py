@@ -1292,6 +1292,9 @@ def screen_save_settings() -> None:
     say("  строк порядка списков: %d" % len(order))
     if not finished:
         say("  БЛОК ОБОРВАН: нет строки CMFSAVE end — нажатие не дошло до конца.")
+        stages = [line for line in block if line.startswith("CMFSAVE stage ")]
+        if stages:
+            say("  последний пройденный этап: %s" % stages[-1][len("CMFSAVE stage "):])
     say()
     ask("Enter — назад ")
 

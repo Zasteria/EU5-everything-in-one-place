@@ -43,50 +43,74 @@ bag_cmfs_handle_callback = {
 }
 
 # Scope: country (игрок)
+#
+# 0.1.1. **Прогон 0.1.0 (10-14) напечатал `CMFSAVE begin 1` и больше ничего** —
+# ни одной настройки, ни `end`. Подозреваемый: `bag_cmfs_print = { kind = c }`.
+# Параметр `kind` стоял только внутри кавычек, а внутри кавычек макросы не
+# подставляются (комментарий CMF в `_cmm_restore_default_for_key`) — значит,
+# параметр не объявлен, а вызов с необъявленным аргументом молча уносит остаток
+# эффекта (docs/pitfalls/cmm.md). Теперь параметров в кавычках нет вовсе, а
+# строки `CMFSAVE stage` говорят, до какого места дошло, если встанет снова.
 bag_cmfs_dump = {
 	save_scope_as = bag_cmfs_owner
 	set_global_variable = { name = bag_cmfs_count value = 0 }
-	debug_log = "CMFSAVE begin 1"
+	debug_log = "CMFSAVE begin 2"
 
+	debug_log = "CMFSAVE stage c"
 	every_key_in_variable_map = {
 		variable = cmm
 		save_scope_as = bag_cmfs_key
 		scope:bag_cmfs_owner = {
 			set_local_variable = { name = bag_cmfs_v value = "variable_map(cmm|scope:bag_cmfs_key)" }
-			bag_cmfs_print = { kind = c }
+			bag_cmfs_park = yes
+			debug_log = "CMFSAVE c [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_cmfs_val_sv')|2] [GetGlobalVariable('bag_cmfs_key').GetFlagName]"
+			bag_cmfs_print_probes = yes
 		}
 	}
 
-	every_key_in_global_variable_map = {
-		variable = cmm
-		save_scope_as = bag_cmfs_key
-		scope:bag_cmfs_owner = {
-			set_local_variable = { name = bag_cmfs_v value = "global_variable_map(cmm|scope:bag_cmfs_key)" }
-			bag_cmfs_print = { kind = g }
+	debug_log = "CMFSAVE stage g"
+	if = {
+		limit = { has_global_variable_map = cmm }
+		every_key_in_global_variable_map = {
+			variable = cmm
+			save_scope_as = bag_cmfs_key
+			scope:bag_cmfs_owner = {
+				set_local_variable = { name = bag_cmfs_v value = "global_variable_map(cmm|scope:bag_cmfs_key)" }
+				bag_cmfs_park = yes
+				debug_log = "CMFSAVE g [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_cmfs_val_sv')|2] [GetGlobalVariable('bag_cmfs_key').GetFlagName]"
+				bag_cmfs_print_probes = yes
+			}
 		}
 	}
 
 	# Порядок двух списков, которые точно переставляют: городские права CM и
 	# «Приоритет» автоматики совета. Имя списка собирается только из литерала,
 	# поэтому здесь по списку на вызов; в рабочей версии их выпишет генератор.
+	# Имя самого списка в строке не печатается — оно есть в имени пункта
+	# (`<setting>_i<N>`).
+	debug_log = "CMFSAVE stage order"
 	bag_cmfs_print_order = { setting = cm__auto_town_rights_list }
 	bag_cmfs_print_order = { setting = bag_asp__priority }
 
 	debug_log = "CMFSAVE end count=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_cmfs_count_sv')|0]"
 }
 
-# Scope: country. Args: kind (c — страна, g — глобальная карта).
-# Ждёт scope:bag_cmfs_key и local_var:bag_cmfs_v.
-bag_cmfs_print = {
+# Scope: country. Ждёт scope:bag_cmfs_key и local_var:bag_cmfs_v; паркует их в
+# глобальные, откуда их читает строка лога.
+bag_cmfs_park = {
 	set_global_variable = { name = bag_cmfs_key value = scope:bag_cmfs_key }
 	set_global_variable = { name = bag_cmfs_val value = local_var:bag_cmfs_v }
 	change_global_variable = { name = bag_cmfs_count add = 1 }
-	debug_log = "CMFSAVE $kind$ [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_cmfs_val_sv')|2] [GetGlobalVariable('bag_cmfs_key').GetFlagName]"
+}
+
+# Запасные формы, каждая своей строкой: несработавшая функция обрезает строку.
+bag_cmfs_print_probes = {
 	debug_log = "CMFSAVE probe raw [GetGlobalVariable('bag_cmfs_val').GetValue]"
 	debug_log = "CMFSAVE probe top [TopScope.GetFlagName('bag_cmfs_key')]"
 }
 
-# Scope: country. Args: setting — `<mod_id>__<setting_id>`.
+# Scope: country. Args: setting — `<mod_id>__<setting_id>`; используется только
+# вне кавычек.
 bag_cmfs_print_order = {
 	if = {
 		limit = { has_variable_list = cmm_list_items_$setting$ }
@@ -94,10 +118,10 @@ bag_cmfs_print_order = {
 			variable = cmm_list_items_$setting$
 			save_scope_as = bag_cmfs_item
 			set_global_variable = { name = bag_cmfs_key value = scope:bag_cmfs_item }
-			debug_log = "CMFSAVE order $setting$ [GetGlobalVariable('bag_cmfs_key').GetFlagName]"
+			debug_log = "CMFSAVE order [GetGlobalVariable('bag_cmfs_key').GetFlagName]"
 		}
 	}
 	else = {
-		debug_log = "CMFSAVE order $setting$ (no list)"
+		debug_log = "CMFSAVE order none"
 	}
 }

@@ -38,7 +38,13 @@
 `bag_asp__priority`), между `CMFSAVE begin 1` и `CMFSAVE end count=N`. Вопрос
 прогона — какие из форм печатают: имя через
 `GetGlobalVariable(...).GetFlagName` (так выводит свой лог CMF) или `TopScope`,
-число через script value (измерено) или `GetValue`. **В игре не был.**
+число через script value (измерено) или `GetValue`.
+
+**10-14, прогон 0.1.0: только `CMFSAVE begin 1`.** Подозреваемый — параметр,
+стоявший только в кавычках (TESTLOG 10-14 08:35). **0.1.1:** без параметров в
+кавычках, этапы `CMFSAVE stage c|g|order`, `mods.bat` → 5 называет последний
+пройденный этап. В игре не был. Если 0.1.1 пройдёт — правило в
+`docs/pitfalls/script.md` и в `check_script.py`.
 
 Проверки: `python3 tools/check_cmm.py mods/cmf_saved_settings/in_game/common`,
 `python3 tools/check_script.py mods/cmf_saved_settings`.
