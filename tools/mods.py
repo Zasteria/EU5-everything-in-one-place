@@ -34,7 +34,8 @@ The menu, as he asked for it on 2026-10-03:
 
 5. **Настройки модов CMF** — the `CMFSAVE` block the `cmf_saved_settings`
    button printed into `debug.log`, copied to its own file next to the game's
-   folder before the next launch overwrites the log.
+   folder before the next launch overwrites the log, and built into the local
+   mod `cmf_my_settings` (`tools/cmf_my_settings.py`).
 
 **Nothing here rebuilds or checks anything**, and nothing commits: generators,
 `tools/refresh.py` and the checkers are a session's job, and commit and push
@@ -1250,9 +1251,10 @@ def last_settings_block(text: str) -> list[str] | None:
     return block
 
 
-def screen_save_settings() -> None:
-    """Пункт 5: блок настроек из debug.log — в отдельный файл."""
+def screen_save_settings(configured: dict) -> None:
+    """Пункт 5: блок настроек из debug.log — в файл и в мод «мои настройки»."""
     from datetime import datetime
+    import cmf_my_settings
 
     say()
     base = next((d / GAME_DOCUMENTS for d in documents_dir()
@@ -1268,8 +1270,8 @@ def screen_save_settings() -> None:
     block = last_settings_block(debug.read_text(encoding="utf-8", errors="replace"))
     if block is None:
         say("В debug.log нет сохранённых настроек.")
-        say("В игре: меню CMF → «Мои настройки» → «Сохранить», потом сюда,")
-        say("не перезапуская игру — при запуске она стирает debug.log.")
+        say("В игре: меню CMF → «Мои настройки» → «Сохранить», потом закрой игру")
+        say("и приходи сюда до следующего запуска — при запуске она стирает debug.log.")
         say()
         ask("Enter — назад ")
         return
@@ -1283,20 +1285,42 @@ def screen_save_settings() -> None:
     folder.mkdir(exist_ok=True)
     stamp = datetime.now().strftime("%Y-%m-%d_%H%M")
     text = "\n".join(block) + "\n"
-    (folder / ("settings_%s.txt" % stamp)).write_text(text, encoding="utf-8")
-    (folder / "last.txt").write_text(text, encoding="utf-8")
-
-    say("Сохранено: %s" % (folder / ("settings_%s.txt" % stamp)))
-    say("  и копия в last.txt рядом")
-    say("  настроек: %d, из них с читаемым именем: %d" % (len(rows), len(named)))
+    dated = folder / ("settings_%s.txt" % stamp)
+    dated.write_text(text, encoding="utf-8")
+    say("Сохранено: %s" % dated)
+    # `cmm_init` — служебный ключ самого CMF, без `__`; его не переносят.
+    say("  настроек: %d, с читаемым именем: %d (служебных ключей CMF: %d)"
+        % (len(named), len(named), len(rows) - len(named)))
     say("  строк порядка списков: %d" % len(order))
+
     if not finished:
-        say("  БЛОК ОБОРВАН: нет строки CMFSAVE end.")
-        say("  Если игра ещё открыта — она могла не дописать хвост лога: закрой её")
-        say("  и выбери этот пункт снова, до следующего запуска.")
+        # 10-14: при открытой игре хвост debug.log ещё не дописан — после
+        # закрытия тот же блок пришёл целым, с `end`.
+        say("  БЛОК ОБОРВАН: нет строки CMFSAVE end. Игра, скорее всего, ещё открыта")
+        say("  и не дописала хвост лога: закрой её и выбери этот пункт снова,")
+        say("  до следующего запуска. Мод «мои настройки» из оборванного не собираю.")
         stages = [line for line in block if line.startswith("CMFSAVE stage ")]
         if stages:
             say("  последний пройденный этап: %s" % stages[-1][len("CMFSAVE stage "):])
+        say()
+        ask("Enter — назад ")
+        return
+
+    (folder / "last.txt").write_text(text, encoding="utf-8")
+    target = game_mods_dir(configured, make=True)
+    if target is None:
+        say("Папка модов игры не найдена — мод «мои настройки» не собран.")
+        say()
+        ask("Enter — назад ")
+        return
+    report = cmf_my_settings.write_mod(block, target / cmf_my_settings.FOLDER, dated.name)
+    say()
+    say("Собран мод «CMF: мои настройки»: %s" % (target / cmf_my_settings.FOLDER))
+    say("  значений: %d, упорядоченных списков: %d, моды: %s"
+        % (report["values"], report["lists"], ", ".join(report["mods"])))
+    say("  Включи его в плейсете один раз. В каждой НОВОЙ партии он сам поставит")
+    say("  эти настройки; старые сохранения не трогает. Пересохранил настройки —")
+    say("  снова этот пункт, мод пересоберётся.")
     say()
     ask("Enter — назад ")
 
@@ -1646,7 +1670,7 @@ def menu(configured: dict) -> int:
         say("  2  Все моды: выбрать мод и решить, что с ним делать")
         say("  3  Всё сразу: обновить всё, убрать отсутствующее, наши в игру")
         say("  4  Забрать из игры: логи, файлы игры, дампы API")
-        say("  5  Настройки модов CMF: из игры в файл (после кнопки «Сохранить»)")
+        say("  5  Настройки модов CMF: из игры в файл и в мод «мои настройки»")
         say("  0  Выход")
         say()
         say("  Коммит и пуш — в GitHub Desktop; отсюда репозиторий не пишется.")
@@ -1661,7 +1685,7 @@ def menu(configured: dict) -> int:
         elif choice == "4":
             screen_collect(world, configured)
         elif choice == "5":
-            screen_save_settings()
+            screen_save_settings(configured)
         elif choice in {"0", "q", "в", "выход"}:
             return 0
 

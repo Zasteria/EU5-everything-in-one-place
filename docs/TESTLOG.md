@@ -38,6 +38,8 @@ a filter that filters: the screenshot already says it.
 
 ## Runs
 
+**2026-10-14 (сообщение 08:50 UTC), 1.4.1: `cmf_saved_settings` 0.1.1, `last.txt` после закрытия игры.** Блок целый: 611 строк, 62 строки порядка, `end count=611`. **Хвост `debug.log` при открытой игре не дописан** — тот же блок без трёх последних строк в 08:43. Два «безымянных» — `cmm_init`, служебный ключ CMF. `GetValue` совпал с script value во всех 611; `TopScope.GetFlagName('<scope>')` печатает пусто. Настройки у семи модов: cm 435, qol 68, bag_asp 68, glorpui 20, bag_wsl 11, cmf_core 6, svx 1. → 0.2.0: применение.
+
 **2026-10-14 (сообщение 08:43 UTC), 1.4.1: `cmf_saved_settings` 0.1.1, вывод `mods.bat` → 5.** Настроек 611, с читаемым именем 609, строк порядка 60 из ожидаемых 62 (38 прав CM + 24 «Приоритета»), `end` нет. **Причина 0.1.0 подтверждена:** параметр только в кавычках — правило в `pitfalls/cmm.md` и `check_script.py`. `GetFlagName` на глобальной в `debug_log` имя печатает. Хвост из трёх строк, по-видимому, не дописан в лог, пока игра открыта — не проверено; два безымянных ключа не разобраны, `last.txt` попрошен.
 
 **2026-10-14 (сообщение 08:35 UTC), 1.4.1: `cmf_saved_settings` 0.1.0, вывод `mods.bat` → 5.** Загрузил сейв, нажал «Сохранить»: в блоке только `CMFSAVE begin 1`, ни одной настройки, ни `end`. Логи не смотрены. Подозреваемый: `bag_cmfs_print = { kind = c }`, где `$kind$` стоял только в кавычках — там макрос не подставляется (комментарий CMF), параметр не объявлен, и вызов уносит остаток эффекта. → 0.1.1: параметров в кавычках нет, строки `CMFSAVE stage`.
@@ -79,9 +81,9 @@ Earlier runs of 10-04 (glorpui_hints 1.2.4–1.2.10, cm_dev_perf +perf11): [`arc
 The next session should start here rather than designing anything new. All of
 these are prepared, all are cheap, and the owner has agreed to the hover one.
 
-**`cmf_saved_settings` 0.1.1** (10-14): CMF → «Мои настройки» →
-«Сохранить», затем до перезапуска `mods.bat` → 5, приложить `last.txt`. Верно:
-у каждой строки `CMFSAVE c/g` имя `мод__настройка` и число.
+**`cmf_saved_settings` 0.2.0 + `mods.bat` → 5** (10-14): сохранить, закрыть
+игру, пункт 5, включить «CMF: мои настройки», **новая** партия. Верно: настройки
+его, в `debug.log` строка `CMFMY pass applied=N of 611` с N около 600.
 
 **`nmt_fix` 0.1.0, та же болгарская партия**, мод после NMT. Верно:
 «Завоевать Валахию» считает районы вассала, error.log молчит о `nmt_fix`.

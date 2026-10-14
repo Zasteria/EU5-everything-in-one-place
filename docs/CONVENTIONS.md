@@ -160,7 +160,9 @@ generators and the checkers are the session's to run.
    - **дампы API** — copied only if taken after the last Steam update.
 5. **Настройки модов CMF** (10-14) — the `CMFSAVE` block of
    `mods/cmf_saved_settings` out of `debug.log` into
-   `Documents/.../Europa Universalis V/cmf_saved_settings/`, dated and `last.txt`.
+   `Documents/.../Europa Universalis V/cmf_saved_settings/`, dated and `last.txt`,
+   and `tools/cmf_my_settings.py` builds from it the local mod
+   `Documents/.../mod/cmf_my_settings` that writes them into every new game.
 
 **Only the game's half of a mod folder goes.** `.metadata/` and the mount
 directories (`in_game`, `main_menu`, `loading_screen`, …); never `tools/`,
