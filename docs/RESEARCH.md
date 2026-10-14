@@ -12,7 +12,7 @@ does not care what a `$vanilla_key$` passthrough is.
 | --- | --- |
 | **[`research/engine.md`](research/engine.md)** | What the engine gives a mod: how to ask it what exists, mod layout, why localization is code and the ways it fails to compile, what gates a production method, geography from script, and where the RGO bonus and the goods data live |
 | **[`research/interface.md`](research/interface.md)** | The interface half of the same: which panel is which, list filters and what a filter trigger receives, view object scoping, what a scripted widget costs, and the game's own map selection — what it is made of and which parts of it a mod may have |
-| **[`research/cmf.md`](research/cmf.md)** | Community Mod Framework: its hooks, Mod Menu settings, and the list machinery that fails silently |
+| **[`research/cmf.md`](research/cmf.md)** | Community Mod Framework: its hooks, Mod Menu settings, where every setting's value is stored, and the list machinery that fails silently |
 | **[`research/construction_manager.md`](research/construction_manager.md)** | Construction Manager: where it gets its buildings, why it builds what it builds, how it meets the game's own automation, and how an addon reaches it |
 | **[`research/translation.md`](research/translation.md)** | Translating somebody else's mod: what the job is, what it costs, and how a localization breaks without a word |
 | **[`research/vanilla.md`](research/vanilla.md)** | Vanilla behaviour the player sees but does not choose: what decides it, from the game's files (cabinet automation picking an accepted culture) |

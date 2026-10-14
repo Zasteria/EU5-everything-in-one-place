@@ -17,7 +17,8 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`glorpui_hints_1_3`](../mods/glorpui_hints_1_3/CLAUDE.md) | 1.1.1 для 1.3, свой предмет | — |
 | [`centered_towns`](../mods/centered_towns/CLAUDE.md) | 0.2.0 (10-04): позиции Better label placement под новыми именами файлов 1.4 | 0.2.0 |
 | [`assimilate_primary`](../mods/assimilate_primary/CLAUDE.md) | 0.10.2: своя автоматика совета; ценности и «до 50 %» работают; развитие и порог контроля не проверены | 0.6.0 |
-| [`perf_probe`](../mods/perf_probe/CLAUDE.md), [`speed_5`](../mods/speed_5/CLAUDE.md), [`speed_10`](../mods/speed_10/CLAUDE.md) | 0.1.0: профилировщик; паузы; 10 скоростей | всё |
+| [`speed_5`](../mods/speed_5/CLAUDE.md), [`speed_10`](../mods/speed_10/CLAUDE.md) | паузы, 10 скоростей | всё |
+| [`cmf_saved_settings`](../mods/cmf_saved_settings/CLAUDE.md) | 0.3.0: применение | 0.3.0 |
 | [`auto_marry`](../mods/auto_marry/CLAUDE.md) | автоженитьба под 1.4 | всё |
 | [`war_sliders`](../mods/war_sliders/CLAUDE.md) | **0.7.3**: сам после мира и восстания, кнопка CMF; к мастерской | автозапуск |
 

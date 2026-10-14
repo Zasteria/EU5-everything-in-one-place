@@ -1,0 +1,75 @@
+﻿# Крючки CMF — регистрация страницы и обратный звонок с её кнопки — и
+# применение сохранённого (bag_cmfs_apply, файл bag_cmfs_my_values.txt пишет
+# mods.bat → 5; в репозитории он пустой).
+#
+# Новая партия поднимает bag_cmfs_new_game; только тогда проходы что-то пишут,
+# так что загруженное старое сохранение не трогается. Проходов три, потому что
+# какой из них идёт после регистрации всех модов — не мерено: сама новая
+# партия, after-lobby и каждая регистрация (ключ пишется один раз, поздние
+# проходы ловят только то, что ещё не было зарегистрировано).
+
+cmf_on_mod_registration = {
+	on_actions = {
+		bag_cmfs_on_register
+	}
+}
+
+# Scope: country
+bag_cmfs_on_register = {
+	effect = {
+		bag_cmfs_register = yes
+		if = {
+			limit = { has_global_variable = bag_cmfs_new_game }
+			bag_cmfs_pass = yes
+		}
+	}
+}
+
+cmf_on_callback = {
+	on_actions = {
+		bag_cmfs_on_callback
+	}
+}
+
+# Scope: country
+bag_cmfs_on_callback = {
+	effect = {
+		bag_cmfs_handle_callback = yes
+	}
+}
+
+on_game_started_after_lobby = {
+	on_actions = {
+		bag_cmfs_on_new_game
+	}
+}
+
+# Scope: none
+bag_cmfs_on_new_game = {
+	effect = {
+		set_global_variable = { name = bag_cmfs_new_game value = yes }
+		every_country = {
+			limit = { is_ai = no }
+			bag_cmfs_pass = yes
+		}
+	}
+}
+
+on_game_start_after_lobby = {
+	on_actions = {
+		bag_cmfs_on_after_lobby
+	}
+}
+
+# Scope: none
+bag_cmfs_on_after_lobby = {
+	effect = {
+		if = {
+			limit = { has_global_variable = bag_cmfs_new_game }
+			every_country = {
+				limit = { is_ai = no }
+				bag_cmfs_pass = yes
+			}
+		}
+	}
+}

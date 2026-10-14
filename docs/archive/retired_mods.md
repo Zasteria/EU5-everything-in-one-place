@@ -22,3 +22,6 @@
 С ними ушли инструменты, нужные только им: `tools/diag.py` (отчёт «Диагностика»
 `where_to_produce` и пункт меню при нём), `tools/eu5data.py`, и PowerShell-двойники
 `tools/sync_workshop.ps1`, `tools/extract_game_files.ps1` — `mods.bat` делает то же.
+
+**`perf_probe`** (профилировщик, 0.1.0) — убран из дерева им самим 10-13
+(коммит `e1dafbdf`); строка в `STATUS.md` снята 10-14.

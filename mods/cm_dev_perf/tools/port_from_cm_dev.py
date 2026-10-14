@@ -22,10 +22,11 @@ and the stall rescan (cm_perf edit 3 was taken off dev). What dev still lacks:
    also lives in this tree, so the gate is either pass, not only the
    classification.
 
-2. **A probe window** (`tools/probe/`, 2026-09-27): says whether the
-   classification has closed. Open past the first seconds means the tree
-   stands all session and the classification is incomplete, the suspected
-   cause of perf's slow loads and wrong builds. Closed with its cross.
+2. **The probe window is gone** (+perf45, 10-14, his ask). It said whether
+   the classification had closed and which `is_host` the player passes; both
+   were answered in game (TESTLOG 10-02 and 10-04: it closes, `cmf_is_host`
+   holds). `tools/probe/` now carries only the script values the debug.log
+   mirror reads (`cm_perf_log_values.txt`).
 
 cm_perf's edit 5 (auto-expand verdict cached monthly) is left out on purpose:
 the slot circles live only in the district and production windows, which she
@@ -1600,7 +1601,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 44
+PERF_REVISION = 45
 
 
 def metadata() -> str:
@@ -1736,8 +1737,9 @@ def main() -> int:
         mirrored, m = _mirror_direct(guarded)
         if n or m:
             path.write_text("\ufeff" + mirrored, encoding="utf-8")
-    # The probe window (09-27) ships beside CM's files; its sources live in
-    # tools/probe/ so this rebuild does not wipe them.
+    # Files of ours that ship beside CM's (since +perf45 only the log mirror's
+    # script values); their sources live in tools/probe/ so this rebuild does
+    # not wipe them.
     for src in PROBE.rglob("*"):
         if src.is_file():
             dst = MOD / src.relative_to(PROBE)
