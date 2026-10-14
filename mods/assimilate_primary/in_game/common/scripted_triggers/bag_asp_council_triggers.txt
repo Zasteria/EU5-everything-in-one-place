@@ -74,12 +74,39 @@ bag_asp_control_fits = {
 	}
 }
 
+# Scope: province; scope:actor is the country. His rule 14.10: a location the
+# half row would assimilate has control at its floor or above (Sauerland: the
+# province at 20 %, Siegen, its only integrated location, at 0.12 %, and the
+# assimilation there stood still). Without the setting, above zero.
+bag_asp_half_control_ok = {
+	any_location_in_province = {
+		owner ?= scope:actor
+		OR = {
+			integration_level = integrated
+			AND = {
+				integration_level = conquered
+				bag_asp_short_of_half = yes
+			}
+		}
+		bag_asp_assimilable_any = yes
+		local_control > 0
+		OR = {
+			scope:actor = { NOT = { has_variable = bag_asp_assim_control } }
+			local_control >= {
+				value = scope:actor.var:bag_asp_assim_control
+				divide = 100
+			}
+		}
+	}
+}
+
 # Scope: province; scope:actor is the country, scope:bag_asp_seat the seat
-# about to assimilate. His rule 13.10: control above zero, or «Ускорять
-# контролем» on, another free seat, and a control action that fits here.
+# about to assimilate. His rules 13.10 and 14.10: control at the floor
+# (bag_asp_half_control_ok), or «Ускорять контролем» on, another free seat,
+# and a control action that fits here. Neither: skipped until one holds.
 bag_asp_control_reachable = {
 	OR = {
-		province_average_control > 0
+		bag_asp_half_control_ok = yes
 		AND = {
 			scope:actor = {
 				has_variable = bag_asp_speedup_on

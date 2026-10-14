@@ -2849,7 +2849,7 @@ bag_asp_emergency = {
 						OR = {
 							has_cabinet_action = no
 							AND = { bag_asp_paired_seat = yes scope:actor.var:bag_asp_rank_promote_culture > scope:actor.var:bag_asp_rank_recovery_effort }
-							AND = { cabinet_action = cabinet_action:promote_culture interaction_target:target_1 ?= { bag_asp_needs_half = yes } scope:actor.var:bag_asp_rank_promote_culture > scope:actor.var:bag_asp_rank_recovery_effort }
+							AND = { cabinet_action = cabinet_action:promote_culture interaction_target:target_1 ?= { bag_asp_needs_half = yes OR = { bag_asp_half_control_ok = yes has_variable = bag_asp_busy_noblesse_oblige_cabinet_action has_variable = bag_asp_busy_increase_control_province } } scope:actor.var:bag_asp_rank_promote_culture > scope:actor.var:bag_asp_rank_recovery_effort }
 							AND = { cabinet_action = cabinet_action:diplomatic_endeavors scope:actor = { OR = { has_countries_with_near_coalition_grade_antagonism = yes has_countries_with_coalition_grade_antagonism = yes } } scope:actor.var:bag_asp_rank_diplomatic_antagonism > scope:actor.var:bag_asp_rank_recovery_effort }
 							AND = { cabinet_action = cabinet_action:integrate_province scope:actor.var:bag_asp_rank_integrate_province > scope:actor.var:bag_asp_rank_recovery_effort }
 							AND = { cabinet_action = cabinet_action:integrate_area scope:actor.var:bag_asp_rank_integrate_area > scope:actor.var:bag_asp_rank_recovery_effort }
@@ -2878,7 +2878,7 @@ bag_asp_emergency = {
 						value = 0
 						if = { limit = { has_cabinet_action = no } add = 1000 }
 						else_if = { limit = { bag_asp_paired_seat = yes } add = scope:actor.var:bag_asp_rank_promote_culture }
-						else_if = { limit = { cabinet_action = cabinet_action:promote_culture interaction_target:target_1 ?= { bag_asp_needs_half = yes } } add = scope:actor.var:bag_asp_rank_promote_culture }
+						else_if = { limit = { cabinet_action = cabinet_action:promote_culture interaction_target:target_1 ?= { bag_asp_needs_half = yes OR = { bag_asp_half_control_ok = yes has_variable = bag_asp_busy_noblesse_oblige_cabinet_action has_variable = bag_asp_busy_increase_control_province } } } add = scope:actor.var:bag_asp_rank_promote_culture }
 						else_if = { limit = { cabinet_action = cabinet_action:diplomatic_endeavors scope:actor = { OR = { has_countries_with_near_coalition_grade_antagonism = yes has_countries_with_coalition_grade_antagonism = yes } } } add = scope:actor.var:bag_asp_rank_diplomatic_antagonism }
 						else_if = { limit = { cabinet_action = cabinet_action:integrate_province } add = scope:actor.var:bag_asp_rank_integrate_province }
 						else_if = { limit = { cabinet_action = cabinet_action:integrate_area } add = scope:actor.var:bag_asp_rank_integrate_area }
@@ -3488,7 +3488,7 @@ bag_asp_place_promote_culture = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:promote_culture
-			interaction_target:target_1 ?= { bag_asp_needs_half = yes }
+			interaction_target:target_1 ?= { bag_asp_needs_half = yes OR = { bag_asp_half_control_ok = yes has_variable = bag_asp_busy_noblesse_oblige_cabinet_action has_variable = bag_asp_busy_increase_control_province } }
 		}
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -5835,8 +5835,8 @@ bag_asp_probe_half = {
 					}
 				}
 				else_if = {
-					limit = { province_average_control <= 0 }
-					debug_log = "bag_asp: probe: not taken without «Ускорять контролем», average control 0; rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:"
+					limit = { NOT = { bag_asp_half_control_ok = yes } }
+					debug_log = "bag_asp: probe: needs a control seat: no location to assimilate has control at the floor; rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:"
 				}
 				else_if = {
 					limit = {
@@ -5947,6 +5947,13 @@ bag_asp_log_settings = {
 		set_global_variable = { name = bag_asp_show_religion_target value = 0 }
 	}
 	if = {
+		limit = { has_variable = bag_asp_assim_control }
+		set_global_variable = { name = bag_asp_show_assim_control value = var:bag_asp_assim_control }
+	}
+	else = {
+		set_global_variable = { name = bag_asp_show_assim_control value = 0 }
+	}
+	if = {
 		limit = { has_variable = bag_asp_develop_target }
 		set_global_variable = { name = bag_asp_show_develop_target value = var:bag_asp_develop_target }
 	}
@@ -5967,7 +5974,7 @@ bag_asp_log_settings = {
 	else = {
 		set_global_variable = { name = bag_asp_show_develop_seats value = 0 }
 	}
-	debug_log = "bag_asp: settings: period [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_period')|0], review [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_review')|0], culture_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_culture_target')|0], religion_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_religion_target')|0], develop_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_develop_target')|0], develop_control [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_develop_control')|0], develop_seats [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_develop_seats')|0]"
+	debug_log = "bag_asp: settings: period [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_period')|0], review [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_review')|0], culture_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_culture_target')|0], religion_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_religion_target')|0], assim_control [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_assim_control')|0], develop_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_develop_target')|0], develop_control [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_develop_control')|0], develop_seats [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_develop_seats')|0]"
 	if = {
 		limit = { has_variable = bag_asp_auto_on }
 		debug_log = "bag_asp: setting auto on"

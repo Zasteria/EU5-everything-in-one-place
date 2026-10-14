@@ -90,7 +90,7 @@ ROW_ACTION = {"diplomatic_antagonism": "diplomatic_endeavors", "promote_culture_
 # A row's own condition on a target (in the province search) and on a seat
 # already on its action (keeping it; the emergency's rank).
 ROW_TARGET = {"promote_culture": "bag_asp_needs_half = yes bag_asp_control_reachable = yes"}
-ROW_SEAT = {"promote_culture": "interaction_target:target_1 ?= { bag_asp_needs_half = yes }",
+ROW_SEAT = {"promote_culture": "interaction_target:target_1 ?= { bag_asp_needs_half = yes OR = { bag_asp_half_control_ok = yes has_variable = bag_asp_busy_noblesse_oblige_cabinet_action has_variable = bag_asp_busy_increase_control_province } }",
             "develop_province": "interaction_target:target ?= { bag_asp_develop_wanted = yes }"}
 # A province row's own condition on its target (kind province only).
 PROVINCE_COND = {"develop_province": "bag_asp_develop_wanted = yes"}
@@ -313,6 +313,8 @@ PAIRED_WITH = "promote_culture"
 FINE = [
     ("culture_target", "promote_culture", "dropdown", 2),
     ("culture_speedup", "promote_culture", "bool", 0),
+    # His ask 14.10: below this control, assimilation only with a control seat.
+    ("assim_control", "promote_culture", "numeric", (10, 0, 100, 5)),
     ("religion_target", "promote_religion", "dropdown", 2),
     # His ask 14.10: how far, where, and on how many seats provinces develop.
     # Numbers (default, min, max, step). 20 is the step the game itself uses:
@@ -337,6 +339,8 @@ FINE_LOC = {
         "bag_asp__religion_target_option_1_desc": "The country's own religion.",
         "bag_asp__religion_target_option_2_name": "Another of its group",
         "bag_asp__religion_target_option_2_desc": "The most widespread other religion of the state religion's group in the country; the game allows no other. With none present, the state religion.",
+        "bag_asp__assim_control_name": "Control without a pair, %",
+        "bag_asp__assim_control_desc": "Assimilation «(to 50%)» works alone only where a location it would assimilate has at least this much control: with almost none it stands still. Below it, only with «Speed it up with control» on and a free seat for the control action; otherwise the province is skipped until control rises.",
         "bag_asp__develop_target_name": "Develop up to",
         "bag_asp__develop_target_desc": "A province is developed while its average development is below this. Some buildings also need development 20 in a location.",
         "bag_asp__develop_control_name": "Control above, %",
@@ -359,6 +363,8 @@ FINE_LOC = {
         "bag_asp__religion_target_option_1_desc": "Религия страны.",
         "bag_asp__religion_target_option_2_name": "Другую из её группы",
         "bag_asp__religion_target_option_2_desc": "Самая распространённая в стране другая религия той же группы: другую игра не даёт. Если такой нет, государственная.",
+        "bag_asp__assim_control_name": "Контроль без пары, %",
+        "bag_asp__assim_control_desc": "Ассимиляция «(до 50%)» идёт одна только там, где у района, который она ассимилирует, контроль не ниже этого: почти без контроля она стоит на месте. Ниже — только при включённом «Ускорять контролем» и свободном месте для действия контроля; иначе провинция пропускается, пока контроль не поднимется.",
         "bag_asp__develop_target_name": "Развивать до",
         "bag_asp__develop_target_desc": "Провинция развивается, пока её среднее развитие ниже этого числа. Части зданий тоже нужно развитие 20 в районе.",
         "bag_asp__develop_control_name": "Контроль выше, %",
@@ -1065,7 +1071,7 @@ PRINT = "[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value
 # `value = 0` and an `if` read zero in silence (docs/pitfalls/diagnosis.md).
 NUMBERS = (("period", "bag_asp_period"), ("review", "bag_asp_review"),
            ("culture_target", "bag_asp_culture_target"), ("religion_target", "bag_asp_religion_target"),
-           ("develop_target", "bag_asp_develop_target"), ("develop_control", "bag_asp_develop_control"),
+           ("assim_control", "bag_asp_assim_control"), ("develop_target", "bag_asp_develop_target"), ("develop_control", "bag_asp_develop_control"),
            ("develop_seats", "bag_asp_develop_seats"))
 SWITCHES = (("auto", "bag_asp_auto_on"), ("culture_speedup", "bag_asp_speedup_on"), ("log", "bag_asp_log_on"))
 
@@ -1218,8 +1224,8 @@ bag_asp_probe_half = {{
 \t\t\t\t\t}}
 \t\t\t\t}}
 \t\t\t\telse_if = {{
-\t\t\t\t\tlimit = {{ province_average_control <= 0 }}
-\t\t\t\t\tdebug_log = "bag_asp: probe: not taken without «Ускорять контролем», average control 0; rank {PRINT}:"
+\t\t\t\t\tlimit = {{ NOT = {{ bag_asp_half_control_ok = yes }} }}
+\t\t\t\t\tdebug_log = "bag_asp: probe: needs a control seat: no location to assimilate has control at the floor; rank {PRINT}:"
 \t\t\t\t}}
 \t\t\t\telse_if = {{
 \t\t\t\t\tlimit = {{
@@ -2124,6 +2130,7 @@ bag_asp_sync = {{
 \tcmm_sync_setting_alias = {{ setting = {MOD_ID}__culture_target alias = bag_asp_culture_target }}
 \tcmm_sync_bool_alias = {{ setting = {MOD_ID}__culture_speedup alias = bag_asp_speedup_on }}
 \tcmm_sync_setting_alias = {{ setting = {MOD_ID}__religion_target alias = bag_asp_religion_target }}
+\tcmm_sync_setting_alias = {{ setting = {MOD_ID}__assim_control alias = bag_asp_assim_control }}
 \tcmm_sync_setting_alias = {{ setting = {MOD_ID}__develop_target alias = bag_asp_develop_target }}
 \tcmm_sync_setting_alias = {{ setting = {MOD_ID}__develop_control alias = bag_asp_develop_control }}
 \tcmm_sync_setting_alias = {{ setting = {MOD_ID}__develop_seats alias = bag_asp_develop_seats }}
@@ -2229,6 +2236,7 @@ bag_asp_handle_callback = {{
 \t\tflag:{MOD_ID}__culture_target = {{ bag_asp_sync = yes }}
 \t\tflag:{MOD_ID}__culture_speedup = {{ bag_asp_sync = yes }}
 \t\tflag:{MOD_ID}__religion_target = {{ bag_asp_sync = yes }}
+\t\tflag:{MOD_ID}__assim_control = {{ bag_asp_sync = yes }}
 \t\tflag:{MOD_ID}__develop_target = {{ bag_asp_sync = yes }}
 \t\tflag:{MOD_ID}__develop_control = {{ bag_asp_sync = yes }}
 \t\tflag:{MOD_ID}__develop_seats = {{ bag_asp_sync = yes }}
@@ -2737,12 +2745,39 @@ bag_asp_control_fits = {{
 \t}}
 }}
 
+# Scope: province; scope:actor is the country. His rule 14.10: a location the
+# half row would assimilate has control at its floor or above (Sauerland: the
+# province at 20 %, Siegen, its only integrated location, at 0.12 %, and the
+# assimilation there stood still). Without the setting, above zero.
+bag_asp_half_control_ok = {{
+\tany_location_in_province = {{
+\t\towner ?= scope:actor
+\t\tOR = {{
+\t\t\tintegration_level = integrated
+\t\t\tAND = {{
+\t\t\t\tintegration_level = conquered
+\t\t\t\tbag_asp_short_of_half = yes
+\t\t\t}}
+\t\t}}
+\t\tbag_asp_assimilable_any = yes
+\t\tlocal_control > 0
+\t\tOR = {{
+\t\t\tscope:actor = {{ NOT = {{ has_variable = bag_asp_assim_control }} }}
+\t\t\tlocal_control >= {{
+\t\t\t\tvalue = scope:actor.var:bag_asp_assim_control
+\t\t\t\tdivide = 100
+\t\t\t}}
+\t\t}}
+\t}}
+}}
+
 # Scope: province; scope:actor is the country, scope:bag_asp_seat the seat
-# about to assimilate. His rule 13.10: control above zero, or «Ускорять
-# контролем» on, another free seat, and a control action that fits here.
+# about to assimilate. His rules 13.10 and 14.10: control at the floor
+# (bag_asp_half_control_ok), or «Ускорять контролем» on, another free seat,
+# and a control action that fits here. Neither: skipped until one holds.
 bag_asp_control_reachable = {{
 \tOR = {{
-\t\tprovince_average_control > 0
+\t\tbag_asp_half_control_ok = yes
 \t\tAND = {{
 \t\t\tscope:actor = {{
 \t\t\t\thas_variable = bag_asp_speedup_on
