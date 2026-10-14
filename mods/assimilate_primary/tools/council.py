@@ -220,14 +220,17 @@ bag_asp_develop_used = {
 \t}
 }
 
-# Scope: province; scope:actor is the country. His spec 12.10: the capital's
-# province first; then the one nearest its target, which reaches the step
-# soonest.
+# Scope: province; scope:actor is the country. His spec 14.10: from the
+# capital's province outward, the nearest to the capital first (the distance
+# between the province's capital and the country's).
 bag_asp_develop_score = {
-\tvalue = province_average_development
+\tvalue = 0
+\tprovince_capital ?= {
+\t\tsubtract = "distance_to(scope:actor.capital)"
+\t}
 \tif = {
 \t\tlimit = { this = scope:actor.capital.province }
-\t\tadd = 1000
+\t\tadd = 100000
 \t}
 }
 """
@@ -335,9 +338,9 @@ FINE_LOC = {
         "bag_asp__religion_target_option_2_name": "Another of its group",
         "bag_asp__religion_target_option_2_desc": "The most widespread other religion of the state religion's group in the country; the game allows no other. With none present, the state religion.",
         "bag_asp__develop_target_name": "Develop up to",
-        "bag_asp__develop_target_desc": "A province is developed while its average development is below this. 20 is the game's own step: some buildings need development 20 in a location.",
+        "bag_asp__develop_target_desc": "A province is developed while its average development is below this. Some buildings also need development 20 in a location.",
         "bag_asp__develop_control_name": "Control above, %",
-        "bag_asp__develop_control_desc": "Only provinces whose average control is above this percent are developed. The capital's province goes first, then the one nearest the target.",
+        "bag_asp__develop_control_desc": "Only provinces whose average control is above this percent are developed. The capital's province goes first, then outward, the nearest to the capital first.",
         "bag_asp__develop_seats_name": "Advisors on development",
         "bag_asp__develop_seats_desc": "At most this many seats develop provinces at once; the rest go to the rows below in «Priority». 0: as many as there are provinces to develop.",
     },
@@ -357,9 +360,9 @@ FINE_LOC = {
         "bag_asp__religion_target_option_2_name": "Другую из её группы",
         "bag_asp__religion_target_option_2_desc": "Самая распространённая в стране другая религия той же группы: другую игра не даёт. Если такой нет, государственная.",
         "bag_asp__develop_target_name": "Развивать до",
-        "bag_asp__develop_target_desc": "Провинция развивается, пока её среднее развитие ниже этого числа. 20 — ступень самой игры: части зданий нужно развитие 20 в районе.",
+        "bag_asp__develop_target_desc": "Провинция развивается, пока её среднее развитие ниже этого числа. Части зданий тоже нужно развитие 20 в районе.",
         "bag_asp__develop_control_name": "Контроль выше, %",
-        "bag_asp__develop_control_desc": "Развиваются только провинции, где средний контроль выше этого процента. Первой идёт провинция столицы, потом та, что ближе всех к цели.",
+        "bag_asp__develop_control_desc": "Развиваются только провинции, где средний контроль выше этого процента. Первой идёт провинция столицы, дальше наружу, ближайшие к столице первыми.",
         "bag_asp__develop_seats_name": "Советников на развитии",
         "bag_asp__develop_seats_desc": "Не больше стольких мест развивают провинции одновременно, остальные места идут ниже по «Приоритету». 0 — сколько найдётся провинций.",
     },
@@ -2817,6 +2820,21 @@ bag_asp_paired_seat = {{
     }
 
 
+def develop_steps(game: Path) -> dict[int, list[str]]:
+    """His screenshot 14.10: marble is wanted by nobles past development 40. The
+    game's own steps: every good's development_threshold, by threshold."""
+    steps: dict[int, list[str]] = {}
+    for f in sorted((game / "in_game/common/goods").glob("*.txt")):
+        text = strip_comments(f.read_text(encoding="utf-8-sig"))
+        for m in re.finditer(r"^(\w+)\s*=\s*\{", text, re.M):
+            t = re.search(r"development_threshold\s*=\s*([\d.]+)", body(text, m.start()))
+            if t:
+                steps.setdefault(round(float(t.group(1))), []).append(m.group(1))
+    if not steps:
+        raise SystemExit("council: no good has a development_threshold; read the game again")
+    return steps
+
+
 def loc_rows(game: Path, language: str) -> dict[str, str]:
     """List row labels: the game's own linked action names."""
     src = (game / f"main_menu/localization/{language}/government_l_{language}.yml").read_text(encoding="utf-8-sig")
@@ -2834,6 +2852,15 @@ def loc_rows(game: Path, language: str) -> dict[str, str]:
             if desc:
                 rows[f"{MOD_ID}__{s}_i{i}_desc"] = desc
     rows.update(FINE_LOC[language])
+    # The game's steps of development, named from its own goods.
+    goods = {}
+    for f in (game / f"main_menu/localization/{language}").glob("*.yml"):
+        goods.update(re.findall(r'^ (\w+):\d* "(.*)"\s*$', f.read_text(encoding="utf-8-sig"), re.M))
+    head = {"english": " The game's steps, where pops start to want goods:",
+            "russian": " Ступени игры, где население начинает потреблять товары:"}[language]
+    rows[f"{MOD_ID}__develop_target_desc"] += head + "".join(
+        f"\\n{t}: " + ", ".join(goods.get(g, g) for g in sorted(gs)) + "."
+        for t, gs in sorted(develop_steps(game).items()))
     for group in sorted({g for _, g, *_ in FINE}):
         # The plain name: the run of 13.10 flooded the logs with assimilation's
         # progress text read without a province, cause not placed; a linked name
