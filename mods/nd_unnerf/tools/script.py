@@ -100,6 +100,11 @@ def path_parse(text: str) -> tuple:
 
 
 def number(value: float) -> str:
-    """As short as it is exact to six places: 0.0325, 2, -0.085."""
-    text = f"{value:.6f}".rstrip("0").rstrip(".")
+    """At most five decimals: 0.0325, 2, -0.085, 0.00218.
+
+    Neither the game nor ND writes a sixth anywhere in `common/`, and the one
+    value written with six (0.002175, Westphalia's Markgenossenschaft growth)
+    vanished from its tooltip in his run 10-14 while its neighbours stayed.
+    """
+    text = f"{value:.5f}".rstrip("0").rstrip(".")
     return "0" if text in ("-0", "") else text

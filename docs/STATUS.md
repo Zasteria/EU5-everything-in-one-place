@@ -7,7 +7,7 @@ One line each. **Read only the brief of the mod the task is about** —
 | --- | --- | --- |
 | [`ru_loc_fix`](../mods/ru_loc_fix/CLAUDE.md) | разметка русского; перевод 1.4.1 (0.5.1, круг 12); 0.5.0 — круг 11: правки Russian Localization Fix и `unknown_custom`; **09-26: круг 4 подтверждён** | круги 5–8, 0.4.3, 0.5.0, 0.5.1 |
 | [`nd_ru`](../mods/nd_ru/CLAUDE.md) | 4 385 keys (0.2.1, 10-03: ND 1.4.0) | everything except Westphalia and the override itself |
-| [`nd_unnerf`](../mods/nd_unnerf/CLAUDE.md) | 0.1.0: срезы ND смягчены до 30 % | всё |
+| [`nd_unnerf`](../mods/nd_unnerf/CLAUDE.md) | 0.1.1: срезы ND смягчены до 30 % | всё |
 | [`nmt_ru`](../mods/nmt_ru/CLAUDE.md) | Русский для National Mission Trees: 17 стран, 3 555 ключей; дерево пишется целиком | всё |
 | [`nmt_fix`](../mods/nmt_fix/CLAUDE.md) | 0.2.0 (10-03): земли подданных (121 условие) + NMT под 1.4 | всё |
 | [`integration_fix`](../mods/integration_fix/CLAUDE.md) | 0.2.0: Integration Hotfix на 1.4.1, вместо него | всё |
