@@ -24,8 +24,7 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`war_sliders`](../mods/war_sliders/CLAUDE.md) | **0.7.3**: сам после мира и восстания, кнопка CMF; к мастерской | автозапуск |
 
 Закрытые, но лежащие здесь: [`archive/status_closed.md`](archive/status_closed.md).
-Убранные из дерева 10-03 (`where_to_produce`, `goods_target`, `marker_throttle`,
-`widget_probe`, `qol_beta`, `auto_build_ru`): [`archive/retired_mods.md`](archive/retired_mods.md).
+Убранные из дерева 10-03: [`archive/retired_mods.md`](archive/retired_mods.md).
 
 ## Two things being hunted that are not any mod's fault
 
