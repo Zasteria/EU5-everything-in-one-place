@@ -1049,7 +1049,7 @@ bag_asp_try_pop_promote_action = {
 			ordered_province = {
 				limit = {
 					NOT = { has_variable = bag_asp_busy_pop_promote_action }
-					unfilled_jobs_in_province > 0
+					unfilled_jobs_in_province < 0
 				}
 				order_by = bag_asp_promote_score
 				save_temporary_scope_as = bag_asp_pick
@@ -4319,7 +4319,7 @@ bag_asp_place_pop_promote_action = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:pop_promote_action
-			interaction_target:target ?= { unfilled_jobs_in_province > 0 }
+			interaction_target:target ?= { unfilled_jobs_in_province < 0 }
 		}
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -5646,14 +5646,14 @@ bag_asp_probe_promote = {
 	}
 	set_global_variable = { name = bag_asp_probe value = 0 }
 	every_province = {
-		limit = { unfilled_jobs_in_province > 0 }
+		limit = { unfilled_jobs_in_province < 0 }
 		change_global_variable = { name = bag_asp_probe add = 1 }
 	}
-	debug_log = "bag_asp: probe: urbanization, provinces with unfilled jobs above 0: [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+	debug_log = "bag_asp: probe: urbanization, provinces short of workers: [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
 	ordered_province = {
 		order_by = bag_asp_promote_score
 		set_global_variable = { name = bag_asp_probe value = unfilled_jobs_in_province }
-		debug_log = "bag_asp: probe: urbanization, most unfilled jobs [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|2]"
+		debug_log = "bag_asp: probe: urbanization, most short of workers [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|2]"
 		set_global_variable = { name = bag_asp_probe value = { value = unfilled_jobs_in_province_percentage multiply = 100 } }
 		debug_log = "bag_asp: probe: urbanization, there in percent [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|2], the province:"
 		debug_log_scopes = no
