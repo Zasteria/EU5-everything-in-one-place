@@ -63,7 +63,9 @@ POOL = [
     # alone, on as many seats as «Советников на развитии» lets.
     ("develop_province", "province", "DEVELOP", ""),
     ("study_institutions", "province", "population", ""),
-    ("pop_promote_action", "province", "population", ""),
+    # His run 15.10: it stayed on a province with no job left to fill. Only
+    # provinces with unfilled jobs, the most first (the action's own measure).
+    ("pop_promote_action", "province", "bag_asp_promote_score", ""),
     ("strengthen_government", "country", None, ""),
     ("diplomatic_endeavors", "country", None, ""),
     ("counter_espionage_action", "country", None, ""),
@@ -91,9 +93,11 @@ ROW_ACTION = {"diplomatic_antagonism": "diplomatic_endeavors", "promote_culture_
 # already on its action (keeping it; the emergency's rank).
 ROW_TARGET = {"promote_culture": "bag_asp_needs_half = yes bag_asp_control_reachable = yes"}
 ROW_SEAT = {"promote_culture": "interaction_target:target_1 ?= { bag_asp_needs_half = yes OR = { bag_asp_half_control_ok = yes has_variable = bag_asp_busy_noblesse_oblige_cabinet_action has_variable = bag_asp_busy_increase_control_province } }",
-            "develop_province": "interaction_target:target ?= { bag_asp_develop_wanted = yes }"}
+            "develop_province": "interaction_target:target ?= { bag_asp_develop_wanted = yes }",
+            "pop_promote_action": "interaction_target:target ?= { unfilled_jobs_in_province > 0 }"}
 # A province row's own condition on its target (kind province only).
-PROVINCE_COND = {"develop_province": "bag_asp_develop_wanted = yes"}
+PROVINCE_COND = {"develop_province": "bag_asp_develop_wanted = yes",
+                 "pop_promote_action": "unfilled_jobs_in_province > 0"}
 # His ask 14.10: a row on at most this many seats, the country variable of its
 # setting (0 = as many as it finds targets for), and the value counting them.
 CAP = {"develop_province": ("bag_asp_develop_seats", "bag_asp_develop_used")}
@@ -232,6 +236,13 @@ bag_asp_develop_score = {
 \t\tlimit = { this = scope:actor.capital.province }
 \t\tadd = 100000
 \t}
+}
+
+# Scope: province. His run 15.10: urbanization where most jobs wait for
+# promoted pops; the game's own progress of pop_promote_action is the same
+# measure in percent.
+bag_asp_promote_score = {
+\tvalue = "unfilled_jobs_in_province"
 }
 """
 
