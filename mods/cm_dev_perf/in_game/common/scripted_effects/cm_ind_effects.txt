@@ -1,24 +1,28 @@
 ﻿# Written by mods/cm_maps/tools/industry_support.py - do not edit by hand.
-# Recommended industry support per area: every province adds to each industry
-# the share of the industry's goods it will produce. A good a royal right
-# raises is produced where the province's recommended right raises it; a good
-# no right raises, where the province has its key raw material.
+# Recommended industry support per area, by the mode picked on the CMF page:
+#   1  the recommended right's goods counted whole, divided by the industry's
+#      goods some right raises;
+#   2  the right split by the share of its goods in each industry (0.4.1);
+#   3  as 1, plus steel, porcelain and lacquerware where the province has their
+#      raw material, divided by all of the industry's goods.
 # Goods each right gives each industry, from the game's files:
-#   1 royal_masonry_rights (masonry glass): crafts 1 of 4, luxury 1 of 4
+#   1 royal_masonry_rights (masonry glass): crafts 1 of 2, luxury 1 of 2
 #   2 royal_brewing_rights (liquor beer wine): beverages 3 of 3
-#   3 royal_artisan_rights (furniture pottery leather): crafts 1 of 4, furnishings 2 of 2
-#   4 royal_book_rights (paper books dyes): paper_goods 2 of 2
+#   3 royal_artisan_rights (furniture pottery leather): crafts 1 of 3, furnishings 2 of 3
+#   4 royal_book_rights (paper books dyes): paper_goods 2 of 3
 #   5 royal_weaponry_rights (weaponry firearms cannons): arms 3 of 3
-#   6 royal_textile_rights (cloth fine_cloth dyes): textiles 2 of 2
+#   6 royal_textile_rights (cloth fine_cloth dyes): textiles 2 of 3
 #   7 royal_naval_rights (naval_supplies tar): naval 2 of 2
-#   8 royal_jewelry_rights (jewelry): luxury 1 of 4
-#   9 royal_tooling_rights (tools): crafts 1 of 4
-#   crafts, from the land: steel where there is iron (of 4; in_game/common/building_types/pure_one_level_productions.txt:183)
-#   luxury, from the land: porcelain where there is clay (of 4; in_game/common/building_types/production_porcelain.txt:22, in_game/common/building_types/production_porcelain.txt:62)
-#   luxury, from the land: lacquerware where there is dyes (of 4; in_game/common/building_types/production_lacquerware.txt:23, in_game/common/building_types/production_lacquerware.txt:64)
+#   8 royal_jewelry_rights (jewelry): luxury 1 of 1
+#   9 royal_tooling_rights (tools): crafts 1 of 1
+#   crafts, from the land: steel where there is iron (in_game/common/building_types/pure_one_level_productions.txt:183)
+#   luxury, from the land: porcelain where there is clay (in_game/common/building_types/production_porcelain.txt:22, in_game/common/building_types/production_porcelain.txt:62)
+#   luxury, from the land: lacquerware where there is dyes (in_game/common/building_types/production_lacquerware.txt:23, in_game/common/building_types/production_lacquerware.txt:64)
+# Divisors, modes 1 and 3: textiles 2/2, crafts 3/4, arms 3/3, luxury 2/4, paper_goods 2/2, furnishings 2/2, naval 2/2, beverages 3/3
 
 # Area scope.
 cm_ind_recompute_area = {
+	set_local_variable = { name = cm_ind_l_mode value = cm_ind_mode_value }
 	set_local_variable = { name = cm_ind_l_textiles value = 0 }
 	set_local_variable = { name = cm_ind_l_crafts value = 0 }
 	set_local_variable = { name = cm_ind_l_arms value = 0 }
@@ -38,64 +42,137 @@ cm_ind_recompute_area = {
 			change_local_variable = { name = cm_ind_l_towns add = 1 }
 			if = {
 				limit = { var:cm_trmm_best_idx = 1 }  # royal_masonry_rights
-				change_local_variable = { name = cm_ind_l_crafts add = 1 }
-				change_local_variable = { name = cm_ind_l_luxury add = 1 }
+				if = {
+					limit = { local_var:cm_ind_l_mode = 2 }
+					change_local_variable = { name = cm_ind_l_crafts add = 0.5 }
+					change_local_variable = { name = cm_ind_l_luxury add = 0.5 }
+				}
+				else = {
+					change_local_variable = { name = cm_ind_l_crafts add = 1 }
+					change_local_variable = { name = cm_ind_l_luxury add = 1 }
+				}
 			}
 			else_if = {
 				limit = { var:cm_trmm_best_idx = 2 }  # royal_brewing_rights
-				change_local_variable = { name = cm_ind_l_beverages add = 3 }
+				if = {
+					limit = { local_var:cm_ind_l_mode = 2 }
+					change_local_variable = { name = cm_ind_l_beverages add = 1 }
+				}
+				else = {
+					change_local_variable = { name = cm_ind_l_beverages add = 3 }
+				}
 			}
 			else_if = {
 				limit = { var:cm_trmm_best_idx = 3 }  # royal_artisan_rights
-				change_local_variable = { name = cm_ind_l_crafts add = 1 }
-				change_local_variable = { name = cm_ind_l_furnishings add = 2 }
+				if = {
+					limit = { local_var:cm_ind_l_mode = 2 }
+					change_local_variable = { name = cm_ind_l_crafts add = 0.333 }
+					change_local_variable = { name = cm_ind_l_furnishings add = 0.667 }
+				}
+				else = {
+					change_local_variable = { name = cm_ind_l_crafts add = 1 }
+					change_local_variable = { name = cm_ind_l_furnishings add = 2 }
+				}
 			}
 			else_if = {
 				limit = { var:cm_trmm_best_idx = 4 }  # royal_book_rights
-				change_local_variable = { name = cm_ind_l_paper_goods add = 2 }
+				if = {
+					limit = { local_var:cm_ind_l_mode = 2 }
+					change_local_variable = { name = cm_ind_l_paper_goods add = 0.667 }
+				}
+				else = {
+					change_local_variable = { name = cm_ind_l_paper_goods add = 2 }
+				}
 			}
 			else_if = {
 				limit = { var:cm_trmm_best_idx = 5 }  # royal_weaponry_rights
-				change_local_variable = { name = cm_ind_l_arms add = 3 }
+				if = {
+					limit = { local_var:cm_ind_l_mode = 2 }
+					change_local_variable = { name = cm_ind_l_arms add = 1 }
+				}
+				else = {
+					change_local_variable = { name = cm_ind_l_arms add = 3 }
+				}
 			}
 			else_if = {
 				limit = { var:cm_trmm_best_idx = 6 }  # royal_textile_rights
-				change_local_variable = { name = cm_ind_l_textiles add = 2 }
+				if = {
+					limit = { local_var:cm_ind_l_mode = 2 }
+					change_local_variable = { name = cm_ind_l_textiles add = 0.667 }
+				}
+				else = {
+					change_local_variable = { name = cm_ind_l_textiles add = 2 }
+				}
 			}
 			else_if = {
 				limit = { var:cm_trmm_best_idx = 7 }  # royal_naval_rights
-				change_local_variable = { name = cm_ind_l_naval add = 2 }
+				if = {
+					limit = { local_var:cm_ind_l_mode = 2 }
+					change_local_variable = { name = cm_ind_l_naval add = 1 }
+				}
+				else = {
+					change_local_variable = { name = cm_ind_l_naval add = 2 }
+				}
 			}
 			else_if = {
 				limit = { var:cm_trmm_best_idx = 8 }  # royal_jewelry_rights
-				change_local_variable = { name = cm_ind_l_luxury add = 1 }
+				if = {
+					limit = { local_var:cm_ind_l_mode = 2 }
+					change_local_variable = { name = cm_ind_l_luxury add = 1 }
+				}
+				else = {
+					change_local_variable = { name = cm_ind_l_luxury add = 1 }
+				}
 			}
 			else_if = {
 				limit = { var:cm_trmm_best_idx = 9 }  # royal_tooling_rights
-				change_local_variable = { name = cm_ind_l_crafts add = 1 }
+				if = {
+					limit = { local_var:cm_ind_l_mode = 2 }
+					change_local_variable = { name = cm_ind_l_crafts add = 1 }
+				}
+				else = {
+					change_local_variable = { name = cm_ind_l_crafts add = 1 }
+				}
 			}
 		}
-		if = {  # steel
-			limit = { any_location_in_province_definition = { raw_material ?= goods:iron } }
-			change_local_variable = { name = cm_ind_l_crafts add = 1 }
-		}
-		if = {  # porcelain
-			limit = { any_location_in_province_definition = { raw_material ?= goods:clay } }
-			change_local_variable = { name = cm_ind_l_luxury add = 1 }
-		}
-		if = {  # lacquerware
-			limit = { any_location_in_province_definition = { raw_material ?= goods:dyes } }
-			change_local_variable = { name = cm_ind_l_luxury add = 1 }
+		if = {
+			limit = { local_var:cm_ind_l_mode = 3 }
+			if = {  # steel
+				limit = { any_location_in_province_definition = { raw_material ?= goods:iron } }
+				change_local_variable = { name = cm_ind_l_crafts add = 1 }
+			}
+			if = {  # porcelain
+				limit = { any_location_in_province_definition = { raw_material ?= goods:clay } }
+				change_local_variable = { name = cm_ind_l_luxury add = 1 }
+			}
+			if = {  # lacquerware
+				limit = { any_location_in_province_definition = { raw_material ?= goods:dyes } }
+				change_local_variable = { name = cm_ind_l_luxury add = 1 }
+			}
 		}
 	}
-	set_local_variable = { name = cm_ind_l_textiles value = { value = local_var:cm_ind_l_textiles divide = 2 } }
-	set_local_variable = { name = cm_ind_l_crafts value = { value = local_var:cm_ind_l_crafts divide = 4 } }
-	set_local_variable = { name = cm_ind_l_arms value = { value = local_var:cm_ind_l_arms divide = 3 } }
-	set_local_variable = { name = cm_ind_l_luxury value = { value = local_var:cm_ind_l_luxury divide = 4 } }
-	set_local_variable = { name = cm_ind_l_paper_goods value = { value = local_var:cm_ind_l_paper_goods divide = 2 } }
-	set_local_variable = { name = cm_ind_l_furnishings value = { value = local_var:cm_ind_l_furnishings divide = 2 } }
-	set_local_variable = { name = cm_ind_l_naval value = { value = local_var:cm_ind_l_naval divide = 2 } }
-	set_local_variable = { name = cm_ind_l_beverages value = { value = local_var:cm_ind_l_beverages divide = 3 } }
+	if = {
+		limit = { local_var:cm_ind_l_mode = 1 }
+		set_local_variable = { name = cm_ind_l_textiles value = { value = local_var:cm_ind_l_textiles divide = 2 } }
+		set_local_variable = { name = cm_ind_l_crafts value = { value = local_var:cm_ind_l_crafts divide = 3 } }
+		set_local_variable = { name = cm_ind_l_arms value = { value = local_var:cm_ind_l_arms divide = 3 } }
+		set_local_variable = { name = cm_ind_l_luxury value = { value = local_var:cm_ind_l_luxury divide = 2 } }
+		set_local_variable = { name = cm_ind_l_paper_goods value = { value = local_var:cm_ind_l_paper_goods divide = 2 } }
+		set_local_variable = { name = cm_ind_l_furnishings value = { value = local_var:cm_ind_l_furnishings divide = 2 } }
+		set_local_variable = { name = cm_ind_l_naval value = { value = local_var:cm_ind_l_naval divide = 2 } }
+		set_local_variable = { name = cm_ind_l_beverages value = { value = local_var:cm_ind_l_beverages divide = 3 } }
+	}
+	if = {
+		limit = { local_var:cm_ind_l_mode = 3 }
+		set_local_variable = { name = cm_ind_l_textiles value = { value = local_var:cm_ind_l_textiles divide = 2 } }
+		set_local_variable = { name = cm_ind_l_crafts value = { value = local_var:cm_ind_l_crafts divide = 4 } }
+		set_local_variable = { name = cm_ind_l_arms value = { value = local_var:cm_ind_l_arms divide = 3 } }
+		set_local_variable = { name = cm_ind_l_luxury value = { value = local_var:cm_ind_l_luxury divide = 4 } }
+		set_local_variable = { name = cm_ind_l_paper_goods value = { value = local_var:cm_ind_l_paper_goods divide = 2 } }
+		set_local_variable = { name = cm_ind_l_furnishings value = { value = local_var:cm_ind_l_furnishings divide = 2 } }
+		set_local_variable = { name = cm_ind_l_naval value = { value = local_var:cm_ind_l_naval divide = 2 } }
+		set_local_variable = { name = cm_ind_l_beverages value = { value = local_var:cm_ind_l_beverages divide = 3 } }
+	}
 	# The winner: strictly greater, so a tie keeps the earlier industry.
 	set_local_variable = { name = cm_ind_l_best value = 0 }
 	set_local_variable = { name = cm_ind_l_best_s value = 0 }
@@ -156,4 +233,23 @@ cm_ind_recompute_area = {
 # No scope. Runs after the rights map, which it reads; cm_run_lobby_setup stamps it.
 cm_ind_recompute_all = {
 	every_area = { cm_ind_recompute_area = yes }
+}
+
+# Country scope: the CMF dropdown was just synced to var:cm_ind_mode. The mode
+# is kept global because the pass and the stamp read it with no country to hand;
+# the stamp carries the mode, so a changed pick makes the data stale and it is
+# redone here at once, provided the rights it reads are there.
+cm_ind_mode_changed = {
+	if = {
+		limit = { has_variable = cm_ind_mode }
+		set_global_variable = { name = cm_ind_mode_g value = var:cm_ind_mode }
+	}
+	if = {
+		limit = {
+			cm_trmm_data_is_current = yes
+			NOT = { cm_ind_data_is_current = yes }
+		}
+		cm_ind_recompute_all = yes
+		set_global_variable = { name = cm_ind_stamp value = cm_ind_version_value }
+	}
 }

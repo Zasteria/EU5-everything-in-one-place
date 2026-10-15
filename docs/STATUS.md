@@ -11,7 +11,7 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`nmt_ru`](../mods/nmt_ru/CLAUDE.md) | Русский для National Mission Trees: 17 стран, 3 555 ключей; дерево пишется целиком | всё |
 | [`nmt_fix`](../mods/nmt_fix/CLAUDE.md) | 0.2.0 (10-03): земли подданных (121 условие) + NMT под 1.4 | всё |
 | [`integration_fix`](../mods/integration_fix/CLAUDE.md) | 0.2.0: Integration Hotfix на 1.4.1, вместо него | всё |
-| [`cm_maps`](../mods/cm_maps/CLAUDE.md) | **загружен 09-19, рисует**; 0.5.0: отрасли по товарам провинций; еда, губернатор под 1.4 не сверены | 0.3.0–0.5.0, починка прав, еда |
+| [`cm_maps`](../mods/cm_maps/CLAUDE.md) | **загружен 09-19, рисует**; 0.6.0: три режима карты отраслей; еда, губернатор под 1.4 не сверены | 0.3.0–0.6.0, починка прав, еда |
 | [`cm_dev_perf`](../mods/cm_dev_perf/CLAUDE.md) | +perf42–44: стройка по рабочим; +perf41/46: карта отраслей; перед Río, после Río — [`cm_rio_patch`](../mods/cm_rio_patch/CLAUDE.md); ND — своя категория | +perf19–39, патч |
 | [`cmf_dev_beta`](../mods/cmf_dev_beta/CLAUDE.md) | +beta13: номер места с начала; +beta12: типы 1.4.1; `cmf_is_host`, панель, стрелки, номер места; вместо CMF и CMF Dev | +beta7, +beta12, +beta13 |
 | [`glorpui_hints`](../mods/glorpui_hints/CLAUDE.md) | 1.2.13 (10-13: 1.4.1), игра 1.4, основной предмет; ворота по техам | 1.2.10–1.2.13 в игре не были |

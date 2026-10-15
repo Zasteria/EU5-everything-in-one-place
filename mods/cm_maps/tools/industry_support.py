@@ -10,6 +10,18 @@ artisan right is furniture, pottery *and* leather, so two thirds of it is
 furnishings and one third crafts; masonry is masonry and glass, half crafts and
 half luxury; dyes, in the textile and book rights, belong to no industry.
 
+How a province counts is the player's pick, the dropdown «Счёт карты отраслей»
+on the CMF page (his three modes, 10-15; the pass reads it from
+`global_var:bcm_ind_mode_g`, 2 when unset):
+
+1. **Average.** The goods of the province's recommended right, counted whole;
+   an industry's sum is divided by the number of its goods some right raises
+   (crafts 3, luxury 2), so steel, porcelain and lacquerware count for nothing
+   either way. Moldavia: textiles 3, beverages 2, paper 1.
+2. **Shares**, 0.4.1's rule and the default: the right is split by the share of
+   its goods in each industry (masonry: crafts ½, luxury ½), no division.
+3. **With the land**, a map for the late ages — the rest of this docstring.
+
 So an industry is scored by which of its goods each province will produce —
 yes or no, not how well (his rule, 10-15: «отрасль просто хочет бафать домики,
 которые там будут стоять; она не решает, будет ли там что-то стоять»):
@@ -46,7 +58,9 @@ INDUSTRIES_FILE = "in_game/common/industry_types/01_industries.txt"
 TRMM_EFFECTS = "in_game/common/scripted_effects/bcm_trmm_effects.txt"
 
 STAMP = "bcm_ind_stamp"
-VERSION = 3
+VERSION = 4
+MODES = 3
+DEFAULT_MODE = 2  # 0.4.1's rule, what the map drew before the dropdown
 # A good no right raises is produced where the province has this raw material.
 # A patch that adds such a good stops the build until it is given one here.
 KEY_RAW = {"steel": "iron", "porcelain": "clay", "lacquerware": "dyes"}
@@ -163,24 +177,30 @@ def _num(f: float) -> str:
 def effects(inds, table, land) -> str:
     keys = [k for k, _, _ in inds]
     sizes = {k: len(g) for k, _, g in inds}
+    # Mode 1's divisor: the industry's goods some right raises.
+    raised = {k: len({g for _, goods, _ in table.values() for g in goods if g in igoods})
+              for k, _, igoods in inds}
     out = [
         "# Written by mods/cm_maps/tools/industry_support.py - do not edit by hand.",
-        "# Recommended industry support per area: every province adds to each industry",
-        "# the share of the industry's goods it will produce. A good a royal right",
-        "# raises is produced where the province's recommended right raises it; a good",
-        "# no right raises, where the province has its key raw material.",
+        "# Recommended industry support per area, by the mode picked on the CMF page:",
+        "#   1  the recommended right's goods counted whole, divided by the industry's",
+        "#      goods some right raises;",
+        "#   2  the right split by the share of its goods in each industry (0.4.1);",
+        "#   3  as 1, plus steel, porcelain and lacquerware where the province has their",
+        "#      raw material, divided by all of the industry's goods.",
         "# Goods each right gives each industry, from the game's files:",
     ]
     for idx, (short, goods, row) in table.items():
-        split = ", ".join(f"{k} {v} of {sizes[k]}" for k, v in row.items()) or "none"
+        split = ", ".join(f"{k} {v} of {len(goods)}" for k, v in row.items()) or "none"
         out.append(f"#   {idx} royal_{short}_rights ({' '.join(goods)}): {split}")
     for key, goods in land.items():
         for good, raw, where in goods:
-            out.append(f"#   {key}, from the land: {good} where there is {raw} (of {sizes[key]}; {', '.join(where)})")
-    out += ["", "# Area scope.", "bcm_ind_recompute_area = {"]
+            out.append(f"#   {key}, from the land: {good} where there is {raw} ({', '.join(where)})")
+    out.append("# Divisors, modes 1 and 3: " + ", ".join(f"{k} {raised[k]}/{sizes[k]}" for k in keys))
+    out += ["", "# Area scope.", "bcm_ind_recompute_area = {",
+            "\tset_local_variable = { name = bcm_ind_l_mode value = bcm_ind_mode_value }"]
     for k in keys + ["towns"]:
         out.append(f"\tset_local_variable = {{ name = bcm_ind_l_{k} value = 0 }}")
-    # Goods counted whole here and divided by the industry's size at the end.
     # The rights map colours all of a province alike, so one location speaks for
     # it. bcm_ind_l_towns counts the provinces with a recommended right.
     out += [
@@ -194,26 +214,40 @@ def effects(inds, table, land) -> str:
         "\t\t\tchange_local_variable = { name = bcm_ind_l_towns add = 1 }",
     ]
     first = True
-    for idx, (short, _, row) in table.items():
+    for idx, (short, goods, row) in table.items():
         if not row:
             continue  # a right none of whose goods is in an industry gives nothing
         kw = "if" if first else "else_if"
         first = False
         out.append(f"\t\t\t{kw} = {{")
         out.append(f"\t\t\t\tlimit = {{ var:bcm_trmm_best_idx = {idx} }}  # royal_{short}_rights")
+        out.append("\t\t\t\tif = {")
+        out.append("\t\t\t\t\tlimit = { local_var:bcm_ind_l_mode = 2 }")
         for k, v in row.items():
-            out.append(f"\t\t\t\tchange_local_variable = {{ name = bcm_ind_l_{k} add = {v} }}")
+            out.append(f"\t\t\t\t\tchange_local_variable = {{ name = bcm_ind_l_{k} add = {_num(v / len(goods))} }}")
+        out.append("\t\t\t\t}")
+        out.append("\t\t\t\telse = {")
+        for k, v in row.items():
+            out.append(f"\t\t\t\t\tchange_local_variable = {{ name = bcm_ind_l_{k} add = {v} }}")
+        out.append("\t\t\t\t}")
         out.append("\t\t\t}")
     out.append("\t\t}")
-    for key, goods in land.items():
-        for good, raw, _ in goods:
-            out += ["\t\tif = {  # " + good,
-                    f"\t\t\tlimit = {{ any_location_in_province_definition = {{ raw_material ?= goods:{raw} }} }}",
-                    f"\t\t\tchange_local_variable = {{ name = bcm_ind_l_{key} add = 1 }}",
-                    "\t\t}"]
+    if land:
+        out += ["\t\tif = {", "\t\t\tlimit = { local_var:bcm_ind_l_mode = 3 }"]
+        for key, goods in land.items():
+            for good, raw, _ in goods:
+                out += ["\t\t\tif = {  # " + good,
+                        f"\t\t\t\tlimit = {{ any_location_in_province_definition = {{ raw_material ?= goods:{raw} }} }}",
+                        f"\t\t\t\tchange_local_variable = {{ name = bcm_ind_l_{key} add = 1 }}",
+                        "\t\t\t}"]
+        out.append("\t\t}")
     out.append("\t}")
-    for k in keys:
-        out.append(f"\tset_local_variable = {{ name = bcm_ind_l_{k} value = {{ value = local_var:bcm_ind_l_{k} divide = {sizes[k]} }} }}")
+    for mode, div in ((1, raised), (3, sizes)):
+        out += ["\tif = {", f"\t\tlimit = {{ local_var:bcm_ind_l_mode = {mode} }}"]
+        for k in keys:
+            if div[k] > 1:
+                out.append(f"\t\tset_local_variable = {{ name = bcm_ind_l_{k} value = {{ value = local_var:bcm_ind_l_{k} divide = {div[k]} }} }}")
+        out.append("\t}")
     out += [
         "\t# The winner: strictly greater, so a tie keeps the earlier industry.",
         "\tset_local_variable = { name = bcm_ind_l_best value = 0 }",
@@ -236,14 +270,35 @@ def effects(inds, table, land) -> str:
             "# No scope. Runs after the rights map, which it reads; bcm_run_lobby_setup stamps it.",
             "bcm_ind_recompute_all = {",
             "\tevery_area = { bcm_ind_recompute_area = yes }",
+            "}", "",
+            "# Country scope: the CMF dropdown was just synced to var:bcm_ind_mode. The mode",
+            "# is kept global because the pass and the stamp read it with no country to hand;",
+            "# the stamp carries the mode, so a changed pick makes the data stale and it is",
+            "# redone here at once, provided the rights it reads are there.",
+            "bcm_ind_mode_changed = {",
+            "\tif = {",
+            "\t\tlimit = { has_variable = bcm_ind_mode }",
+            "\t\tset_global_variable = { name = bcm_ind_mode_g value = var:bcm_ind_mode }",
+            "\t}",
+            "\tif = {",
+            "\t\tlimit = {",
+            "\t\t\tbcm_trmm_data_is_current = yes",
+            "\t\t\tNOT = { bcm_ind_data_is_current = yes }",
+            "\t\t}",
+            "\t\tbcm_ind_recompute_all = yes",
+            f"\t\tset_global_variable = {{ name = {STAMP} value = bcm_ind_version_value }}",
+            "\t}",
             "}", ""]
     return "\n".join(out)
 
 
 def values(inds) -> str:
     out = ["# Written by mods/cm_maps/tools/industry_support.py - do not edit by hand.",
-           "# Bump to make every save redo the industry-support pass.",
-           f"bcm_ind_version_value = {VERSION}", "",
+           "# The mode picked on the CMF page, 1-3; the default until the page is opened.",
+           "bcm_ind_mode_value = {", f"\tvalue = {DEFAULT_MODE}",
+           "\tif = { limit = { has_global_variable = bcm_ind_mode_g } value = global_var:bcm_ind_mode_g }", "}", "",
+           "# The stamp: version and mode, so a save redoes the pass when either moves.",
+           "bcm_ind_version_value = {", f"\tvalue = {VERSION * 10}", "\tadd = bcm_ind_mode_value", "}", "",
            "# Location scope: the area's votes, read by the map's tooltip.",
            "bcm_ind_sv_towns = {", "\tvalue = 0",
            "\tif = { limit = { has_variable = bcm_ind_towns } add = var:bcm_ind_towns }", "}"]
@@ -315,38 +370,66 @@ TEXT = {
         "name": "Рекомендуемая поддержка отрасли",
         "desc": ("#T $mapmode_bcm_industry_support_name$#!\\nОкрашивает каждую [area|e] по [industry_promotion|e], "
                  "которая поднимет больше всего того, что там будут производить. Каждая провинция области "
-                 "даёт отрасли долю её товаров, которые там будут: товары своего рекомендуемого городского права, "
-                 "сталь — где есть железо, фарфор — где есть глина, лак — где есть краски. Так отрасль из двух "
-                 "товаров и отрасль из четырёх меряются одинаково."),
+                 "голосует своим рекомендуемым городским правом; как именно — выбирается на странице мода в "
+                 "настройках CMF, «Счёт карты отраслей»."),
         "best": "Область [ROOT.GetLocation.GetArea.GetName]: поддержка «#Y ${key}$#!»",
-        "votes": "Доли товаров отраслей, сумма по провинциям",
+        "votes": "Счёт отраслей, сумма по провинциям, режим",
         "none": ("В области [ROOT.GetLocation.GetArea.GetName] не будут производить ни одного товара отраслей — "
                  "рекомендовать нечего."),
         "water": "[ROOT.GetLocation.GetName] — не суша.",
         "legend_none": "Нечего рекомендовать",
+        "group": ("Поддержка отрасли", "Как карта «Рекомендуемая поддержка отрасли» складывает провинции области."),
+        "setting": ("Счёт карты отраслей",
+                    "Как каждая провинция области голосует своим рекомендуемым городским правом. Смена "
+                    "пересчитывает карту сразу; если она открыта, переключите режим карты туда и обратно."),
+        "options": (
+            ("Среднее по правам",
+             "Товары лучшего права провинции считаются целиком, и сумма отрасли делится на число её товаров, "
+             "которые поднимает хоть одно право: ремёсла на 3, роскошь на 2. Сталь, фарфор и лак не считаются."),
+            ("Доли права (как было)",
+             "Лучшее право провинции делится между отраслями по доле своих товаров: каменщики дают ремёслам ½ "
+             "и роскоши ½. Правило до этой настройки."),
+            ("С фарфором, сталью, лаком",
+             "Как «Среднее по правам», но сталь считается там, где есть железо, фарфор — где глина, лак — где "
+             "краски, и сумма делится на все товары отрасли. Карта на поздние эпохи."),
+        ),
     },
     "english": {
         "name": "Recommended industry support",
         "desc": ("#T $mapmode_bcm_industry_support_name$#!\\nColours every [area|e] by the [industry_promotion|e] "
-                 "that would raise the most of what will be produced there. Every province of the area gives an "
-                 "industry the share of its goods that will be made there: the goods of the province's recommended "
-                 "urban right, steel where there is iron, porcelain where there is clay, lacquerware where there are "
-                 "dyes. An industry of two goods and one of four are measured alike."),
+                 "that would raise the most of what will be produced there. Every province of the area votes with "
+                 "its recommended urban right; how is picked on the mod's CMF page, «Industry Map Scoring»."),
         "best": "Area [ROOT.GetLocation.GetArea.GetName]: support «#Y ${key}$#!»",
-        "votes": "Share of each industry's goods, summed over provinces",
+        "votes": "Industry scores, summed over provinces, mode",
         "none": ("Area [ROOT.GetLocation.GetArea.GetName] will produce none of the industries' goods — nothing "
                  "to recommend."),
         "water": "[ROOT.GetLocation.GetName] is not land.",
         "legend_none": "Nothing to recommend",
+        "group": ("Industry Support", "How the Recommended Industry Support map adds up an area's provinces."),
+        "setting": ("Industry Map Scoring",
+                    "How every province of an area votes with its recommended urban right. A change recomputes "
+                    "the map at once; if it is open, switch map modes away and back."),
+        "options": (
+            ("Average by Rights",
+             "The goods of the province's best right count whole, and an industry's sum is divided by how many "
+             "of its goods some right raises: crafts by 3, luxury by 2. Steel, porcelain and lacquerware do not count."),
+            ("Right Shares (as before)",
+             "The province's best right is split among industries by the share of its goods: masonry gives "
+             "crafts ½ and luxury ½. The rule before this setting."),
+            ("With Porcelain, Steel, Lacquer",
+             "As Average by Rights, plus steel where there is iron, porcelain where there is clay and "
+             "lacquerware where there are dyes, each sum divided by all of the industry's goods. A map for the late ages."),
+        ),
     },
 }
 
 
-def localization(language: str, inds) -> str:
+def localization(language: str, inds, tab: str = "main") -> str:
     t = TEXT.get(language, TEXT["english"])  # a language without its own text reads English
     votes = "".join(
         f"\\n  ${k}$: [ROOT.GetLocation.MakeScope.ScriptValue('bcm_ind_sv_{k}')|2]" for k, _, _ in inds)
-    towns = (" [ROOT.GetLocation.MakeScope.ScriptValue('bcm_ind_sv_towns')|0]")
+    towns = "[ROOT.GetLocation.MakeScope.ScriptValue('bcm_ind_sv_towns')|0]"
+    mode = "[ROOT.GetLocation.MakeScope.ScriptValue('bcm_ind_mode_value')|0]"
     lines = [f"l_{language}:",
              f' mapmode_bcm_industry_support_name: "{t["name"]}"',
              f' MAPMODE_BCM_INDUSTRY_SUPPORT: "{t["desc"]}"',
@@ -355,11 +438,20 @@ def localization(language: str, inds) -> str:
              f' bcm_ind_legend_none: "{t["legend_none"]}"']
     for k, _, _ in inds:
         best = t["best"].replace("{key}", k)
-        lines.append(f' MAPMODE_BCM_INDUSTRY_SUPPORT_TT_{k.upper()}: "{best}\\n{t["votes"]} ({towns.strip()}):{votes}"')
+        lines.append(f' MAPMODE_BCM_INDUSTRY_SUPPORT_TT_{k.upper()}: "{best}\\n{t["votes"]} {mode} ({towns}):{votes}"')
+    # The CMF page's group and dropdown (registration in each mod's generator).
+    lines += [f' bcm__{tab}__industry_name: "{t["group"][0]}"',
+              f' bcm__{tab}__industry_desc: "{t["group"][1]}"',
+              f' bcm__industry_mode: "bcm__industry_mode"',
+              f' bcm__industry_mode_name: "{t["setting"][0]}"',
+              f' bcm__industry_mode_desc: "{t["setting"][1]}"']
+    for n, (name, desc) in enumerate(t["options"], 1):
+        lines += [f' bcm__industry_mode_option_{n}_name: "{name}"',
+                  f' bcm__industry_mode_option_{n}_desc: "{desc}"']
     return "\n".join(lines) + "\n"
 
 
-def files(written: dict[str, str], game: Path) -> dict[str, str]:
+def files(written: dict[str, str], game: Path, tab: str = "main") -> dict[str, str]:
     inds, table, land = weights(game, written[TRMM_EFFECTS])
     out = {
         "in_game/common/scripted_effects/bcm_ind_effects.txt": effects(inds, table, land),
@@ -368,5 +460,5 @@ def files(written: dict[str, str], game: Path) -> dict[str, str]:
         "in_game/gfx/map/map_modes/bcm_industry_support_map_mode.txt": map_mode(inds),
     }
     for language in TEXT:
-        out[f"main_menu/localization/{language}/bcm_ind_l_{language}.yml"] = localization(language, inds)
+        out[f"main_menu/localization/{language}/bcm_ind_l_{language}.yml"] = localization(language, inds, tab)
     return out
