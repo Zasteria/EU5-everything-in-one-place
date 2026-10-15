@@ -49,7 +49,8 @@ POOL = [
     ("integrate_area", "area", "INTEGRATION", ""),
     ("reduce_war_exhaustion", "country", None, ""),
     ("stabilize_country", "country", None, "stability < 50"),
-    ("increase_control_province", "province", "province_tax_base", ""),
+    # His rule 15.10: by tax base times the control it can still gain (CONTROL_*).
+    ("increase_control_province", "province", "bag_asp_control_score", ""),
     ("increase_control_area", "area", "province_tax_base", ""),
     ("send_secret_royal_inspectors", "province", "province_tax_base", ""),
     ("promote_culture", "culture", "HALF", ""),
@@ -71,7 +72,7 @@ POOL = [
     ("counter_espionage_action", "country", None, ""),
     # Appended, not inserted: CMF keeps a list's rows by position, and a saved
     # game's order of the first twenty must not shift.
-    ("noblesse_oblige_cabinet_action", "province", "province_tax_base", ""),
+    ("noblesse_oblige_cabinet_action", "province", "bag_asp_control_score", ""),
     # His ask 12.10: diplomatic endeavors serves two ends, so two rows he can
     # rank apart. The action has no target; this row only takes a seat while
     # someone is near a coalition against him.
@@ -94,10 +95,14 @@ ROW_ACTION = {"diplomatic_antagonism": "diplomatic_endeavors", "promote_culture_
 ROW_TARGET = {"promote_culture": "bag_asp_needs_half = yes bag_asp_control_reachable = yes"}
 ROW_SEAT = {"promote_culture": "interaction_target:target_1 ?= { bag_asp_needs_half = yes OR = { bag_asp_half_control_ok = yes has_variable = bag_asp_busy_noblesse_oblige_cabinet_action has_variable = bag_asp_busy_increase_control_province } }",
             "develop_province": "interaction_target:target ?= { bag_asp_develop_wanted = yes }",
-            "pop_promote_action": "interaction_target:target ?= { unfilled_jobs_in_province > 0 }"}
+            "pop_promote_action": "interaction_target:target ?= { unfilled_jobs_in_province > 0 }",
+            "increase_control_province": "OR = { bag_asp_paired_seat = yes interaction_target:selected_province ?= { bag_asp_control_rising = yes } }",
+            "noblesse_oblige_cabinet_action": "OR = { bag_asp_paired_seat = yes interaction_target:selected_province ?= { bag_asp_control_rising = yes } }"}
 # A province row's own condition on its target (kind province only).
 PROVINCE_COND = {"develop_province": "bag_asp_develop_wanted = yes",
-                 "pop_promote_action": "unfilled_jobs_in_province > 0"}
+                 "pop_promote_action": "unfilled_jobs_in_province > 0",
+                 "increase_control_province": "bag_asp_control_wanted = yes",
+                 "noblesse_oblige_cabinet_action": "bag_asp_control_wanted = yes"}
 # His ask 14.10: a row on at most this many seats, the country variable of its
 # setting (0 = as many as it finds targets for), and the value counting them.
 CAP = {"develop_province": ("bag_asp_develop_seats", "bag_asp_develop_used")}
@@ -186,17 +191,37 @@ INTEGRATION = """{
 HALF = "bag_asp_half_score"
 
 # His ask 14.10: «Развитие провинции» by his three numbers (FINE). Scope:
-# province; scope:actor is the country. Average development below the target,
+# province; scope:actor is the country. A location of it below the target (his
+# rule 15.10: the target is a floor for every location, not the average),
 # average control above the floor (a percent in the setting, 0–1 in the game).
 DEVELOP_TRIGGERS = """
 # Scope: province; scope:actor is the country. Development wanted here
 # (council.py, his settings 14.10).
 bag_asp_develop_wanted = {
-\tprovince_average_development < scope:actor.var:bag_asp_develop_target
+\tany_location_in_province = {
+\t\towner ?= scope:actor
+\t\tdevelopment < scope:actor.var:bag_asp_develop_target
+\t}
 \tprovince_average_control > {
 \t\tvalue = scope:actor.var:bag_asp_develop_control
 \t\tdivide = 100
 \t}
+}
+
+# Scope: province; scope:actor is the country. His rule 15.10: a control
+# action is worth taking here, the control it can still gain at least
+# «Брать, если недостаёт».
+bag_asp_control_wanted = {
+\tbag_asp_control_missing >= {
+\t\tvalue = scope:actor.var:bag_asp_control_take
+\t\tdivide = 100
+\t}
+}
+
+# Scope: province. A control seat on it still raises it: control a point or
+# more below the max, which includes the seat's own gain.
+bag_asp_control_rising = {
+\tbag_asp_control_gap >= 0.01
 }
 
 # Scope: country. Another seat may take development: no cap (0), or fewer
@@ -236,6 +261,31 @@ bag_asp_develop_score = {
 \t\tlimit = { this = scope:actor.capital.province }
 \t\tadd = 100000
 \t}
+}
+
+# Scope: province. Control below the max (the max with a control seat's gain
+# while one is on it).
+bag_asp_control_gap = {
+\tvalue = province_average_max_control
+\tsubtract = province_average_control
+}
+
+# Scope: province; scope:actor is the country. His rule 15.10: the control a
+# seat can still gain here, up to the max plus «Прибавка советника к
+# максимуму», never above 1.
+bag_asp_control_missing = {
+\tvalue = scope:actor.var:bag_asp_control_boost
+\tdivide = 100
+\tadd = province_average_max_control
+\tmax = 1
+\tsubtract = province_average_control
+}
+
+# Scope: province; scope:actor is the country. His rule 15.10: tax base times
+# the control a seat can still gain.
+bag_asp_control_score = {
+\tvalue = province_tax_base
+\tmultiply = bag_asp_control_missing
 }
 
 # Scope: province. His run 15.10: urbanization where most jobs wait for
@@ -333,6 +383,11 @@ FINE = [
     ("develop_target", "develop_province", "numeric", (20, 1, 100, 1)),
     ("develop_control", "develop_province", "numeric", (50, 0, 100, 5)),
     ("develop_seats", "develop_province", "numeric", (0, 0, 50, 1)),
+    # His rule 15.10: a control seat raises a province to its max and moves on;
+    # the province left sinks 0.5 a month, the seat raises about 2.5, so one
+    # seat keeps several above their own max in turn. Both control actions.
+    ("control_boost", "increase_control_province", "numeric", (20, 5, 100, 5)),
+    ("control_take", "increase_control_province", "numeric", (5, 1, 50, 1)),
 ]
 FINE_LOC = {
     "english": {
@@ -352,8 +407,12 @@ FINE_LOC = {
         "bag_asp__religion_target_option_2_desc": "The most widespread other religion of the state religion's group in the country; the game allows no other. With none present, the state religion.",
         "bag_asp__assim_control_name": "Control without a pair, %",
         "bag_asp__assim_control_desc": "Assimilation «(to 50%)» works alone only where a location it would assimilate has at least this much control: with almost none it stands still. Below it, only with «Speed it up with control» on and a free seat for the control action; otherwise the province is skipped until control rises.",
+        "bag_asp__control_boost_name": "Advisor's gain to max, %",
+        "bag_asp__control_boost_desc": "How much the control action raises a province's max control; the game shows it on the action. A province is worth the seat by its tax base times the control it can still gain: up to its max plus this, never above 100 %. Also for Noblesse Oblige.",
+        "bag_asp__control_take_name": "Take when short by, %",
+        "bag_asp__control_take_desc": "A seat leaves a province once its control has reached the max, and takes the province worth most where control can still rise by at least this. The province left sinks about 0.5 a month, so the seat comes back once it has lost this much: higher means fewer moves, deeper dips.",
         "bag_asp__develop_target_name": "Develop up to",
-        "bag_asp__develop_target_desc": "A province is developed while its average development is below this. Some buildings also need development 20 in a location.",
+        "bag_asp__develop_target_desc": "A province is developed while any of its locations is below this. Some buildings also need development 20 in a location.",
         "bag_asp__develop_control_name": "Control above, %",
         "bag_asp__develop_control_desc": "Only provinces whose average control is above this percent are developed. The capital's province goes first, then outward, the nearest to the capital first.",
         "bag_asp__develop_seats_name": "Advisors on development",
@@ -376,8 +435,12 @@ FINE_LOC = {
         "bag_asp__religion_target_option_2_desc": "Самая распространённая в стране другая религия той же группы: другую игра не даёт. Если такой нет, государственная.",
         "bag_asp__assim_control_name": "Контроль без пары, %",
         "bag_asp__assim_control_desc": "Ассимиляция «(до 50%)» идёт одна только там, где у района, который она ассимилирует, контроль не ниже этого: почти без контроля она стоит на месте. Ниже — только при включённом «Ускорять контролем» и свободном месте для действия контроля; иначе провинция пропускается, пока контроль не поднимется.",
+        "bag_asp__control_boost_name": "Прибавка советника к максимуму, %",
+        "bag_asp__control_boost_desc": "На сколько задание поднимает максимум контроля провинции; игра пишет это в самом задании. Провинция стоит места по налоговой базе, умноженной на контроль, который ещё можно набрать: до её максимума плюс это число, не выше 100 %. Действует и на Noblesse Oblige.",
+        "bag_asp__control_take_name": "Брать, если недостаёт, %",
+        "bag_asp__control_take_desc": "Советник уходит с провинции, когда контроль дошёл до максимума, и берёт самую ценную, где контроль может вырасти хотя бы на это число. Оставленная падает примерно на 0.5 в месяц, и советник вернётся, когда она потеряет столько же: больше число — реже переезды, глубже провалы.",
         "bag_asp__develop_target_name": "Развивать до",
-        "bag_asp__develop_target_desc": "Провинция развивается, пока её среднее развитие ниже этого числа. Части зданий тоже нужно развитие 20 в районе.",
+        "bag_asp__develop_target_desc": "Провинция развивается, пока хоть один её район ниже этого числа. Части зданий тоже нужно развитие 20 в районе.",
         "bag_asp__develop_control_name": "Контроль выше, %",
         "bag_asp__develop_control_desc": "Развиваются только провинции, где средний контроль выше этого процента. Первой идёт провинция столицы, дальше наружу, ближайшие к столице первыми.",
         "bag_asp__develop_seats_name": "Советников на развитии",
@@ -1083,7 +1146,8 @@ PRINT = "[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value
 NUMBERS = (("period", "bag_asp_period"), ("review", "bag_asp_review"),
            ("culture_target", "bag_asp_culture_target"), ("religion_target", "bag_asp_religion_target"),
            ("assim_control", "bag_asp_assim_control"), ("develop_target", "bag_asp_develop_target"), ("develop_control", "bag_asp_develop_control"),
-           ("develop_seats", "bag_asp_develop_seats"))
+           ("develop_seats", "bag_asp_develop_seats"), ("control_boost", "bag_asp_control_boost"),
+           ("control_take", "bag_asp_control_take"))
 SWITCHES = (("auto", "bag_asp_auto_on"), ("culture_speedup", "bag_asp_speedup_on"), ("log", "bag_asp_log_on"))
 
 
@@ -2143,6 +2207,8 @@ bag_asp_sync = {{
 \tcmm_sync_setting_alias = {{ setting = {MOD_ID}__religion_target alias = bag_asp_religion_target }}
 \tcmm_sync_setting_alias = {{ setting = {MOD_ID}__assim_control alias = bag_asp_assim_control }}
 \tcmm_sync_setting_alias = {{ setting = {MOD_ID}__develop_target alias = bag_asp_develop_target }}
+\tcmm_sync_setting_alias = {{ setting = {MOD_ID}__control_boost alias = bag_asp_control_boost }}
+\tcmm_sync_setting_alias = {{ setting = {MOD_ID}__control_take alias = bag_asp_control_take }}
 \tcmm_sync_setting_alias = {{ setting = {MOD_ID}__develop_control alias = bag_asp_develop_control }}
 \tcmm_sync_setting_alias = {{ setting = {MOD_ID}__develop_seats alias = bag_asp_develop_seats }}
 \tcmm_sync_bool_alias = {{ setting = {MOD_ID}__log alias = bag_asp_log_on }}
@@ -2249,6 +2315,8 @@ bag_asp_handle_callback = {{
 \t\tflag:{MOD_ID}__religion_target = {{ bag_asp_sync = yes }}
 \t\tflag:{MOD_ID}__assim_control = {{ bag_asp_sync = yes }}
 \t\tflag:{MOD_ID}__develop_target = {{ bag_asp_sync = yes }}
+\t\tflag:{MOD_ID}__control_boost = {{ bag_asp_sync = yes }}
+\t\tflag:{MOD_ID}__control_take = {{ bag_asp_sync = yes }}
 \t\tflag:{MOD_ID}__develop_control = {{ bag_asp_sync = yes }}
 \t\tflag:{MOD_ID}__develop_seats = {{ bag_asp_sync = yes }}
 \t\tflag:{MOD_ID}__log = {{ bag_asp_sync = yes }}

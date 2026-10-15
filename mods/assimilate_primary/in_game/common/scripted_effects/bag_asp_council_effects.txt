@@ -604,8 +604,9 @@ bag_asp_try_increase_control_province = {
 					NOT = { has_variable = bag_asp_busy_increase_control_province }
 					NOT = { has_variable = bag_asp_busy_noblesse_oblige_cabinet_action }
 					NOT = { area ?= { has_variable = bag_asp_busy_increase_control_area } }
+					bag_asp_control_wanted = yes
 				}
-				order_by = province_tax_base
+				order_by = bag_asp_control_score
 				save_temporary_scope_as = bag_asp_pick
 				scope:bag_asp_seat = {
 					bag_asp_vacate = yes
@@ -1130,8 +1131,9 @@ bag_asp_try_noblesse_oblige_cabinet_action = {
 					NOT = { has_variable = bag_asp_busy_noblesse_oblige_cabinet_action }
 					NOT = { has_variable = bag_asp_busy_increase_control_province }
 					NOT = { area ?= { has_variable = bag_asp_busy_increase_control_area } }
+					bag_asp_control_wanted = yes
 				}
-				order_by = province_tax_base
+				order_by = bag_asp_control_score
 				save_temporary_scope_as = bag_asp_pick
 				scope:bag_asp_seat = {
 					bag_asp_vacate = yes
@@ -3255,6 +3257,7 @@ bag_asp_place_increase_control_province = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:increase_control_province
+			OR = { bag_asp_paired_seat = yes interaction_target:selected_province ?= { bag_asp_control_rising = yes } }
 		}
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -4628,6 +4631,7 @@ bag_asp_place_noblesse_oblige_cabinet_action = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:noblesse_oblige_cabinet_action
+			OR = { bag_asp_paired_seat = yes interaction_target:selected_province ?= { bag_asp_control_rising = yes } }
 		}
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -5976,7 +5980,21 @@ bag_asp_log_settings = {
 	else = {
 		set_global_variable = { name = bag_asp_show_develop_seats value = 0 }
 	}
-	debug_log = "bag_asp: settings: period [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_period')|0], review [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_review')|0], culture_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_culture_target')|0], religion_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_religion_target')|0], assim_control [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_assim_control')|0], develop_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_develop_target')|0], develop_control [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_develop_control')|0], develop_seats [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_develop_seats')|0]"
+	if = {
+		limit = { has_variable = bag_asp_control_boost }
+		set_global_variable = { name = bag_asp_show_control_boost value = var:bag_asp_control_boost }
+	}
+	else = {
+		set_global_variable = { name = bag_asp_show_control_boost value = 0 }
+	}
+	if = {
+		limit = { has_variable = bag_asp_control_take }
+		set_global_variable = { name = bag_asp_show_control_take value = var:bag_asp_control_take }
+	}
+	else = {
+		set_global_variable = { name = bag_asp_show_control_take value = 0 }
+	}
+	debug_log = "bag_asp: settings: period [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_period')|0], review [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_review')|0], culture_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_culture_target')|0], religion_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_religion_target')|0], assim_control [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_assim_control')|0], develop_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_develop_target')|0], develop_control [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_develop_control')|0], develop_seats [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_develop_seats')|0], control_boost [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_control_boost')|0], control_take [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_control_take')|0]"
 	if = {
 		limit = { has_variable = bag_asp_auto_on }
 		debug_log = "bag_asp: setting auto on"

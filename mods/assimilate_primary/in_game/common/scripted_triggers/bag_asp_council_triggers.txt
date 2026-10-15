@@ -1218,11 +1218,30 @@ bag_asp_assimilable_any = {
 # Scope: province; scope:actor is the country. Development wanted here
 # (council.py, his settings 14.10).
 bag_asp_develop_wanted = {
-	province_average_development < scope:actor.var:bag_asp_develop_target
+	any_location_in_province = {
+		owner ?= scope:actor
+		development < scope:actor.var:bag_asp_develop_target
+	}
 	province_average_control > {
 		value = scope:actor.var:bag_asp_develop_control
 		divide = 100
 	}
+}
+
+# Scope: province; scope:actor is the country. His rule 15.10: a control
+# action is worth taking here, the control it can still gain at least
+# «Брать, если недостаёт».
+bag_asp_control_wanted = {
+	bag_asp_control_missing >= {
+		value = scope:actor.var:bag_asp_control_take
+		divide = 100
+	}
+}
+
+# Scope: province. A control seat on it still raises it: control a point or
+# more below the max, which includes the seat's own gain.
+bag_asp_control_rising = {
+	bag_asp_control_gap >= 0.01
 }
 
 # Scope: country. Another seat may take development: no cap (0), or fewer

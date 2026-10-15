@@ -93,6 +93,14 @@ bag_asp_show_develop_seats = {
 	value = global_var:bag_asp_show_develop_seats
 }
 
+bag_asp_show_control_boost = {
+	value = global_var:bag_asp_show_control_boost
+}
+
+bag_asp_show_control_take = {
+	value = global_var:bag_asp_show_control_take
+}
+
 bag_asp_sv_n1_value = {
 	value = global_var:bag_asp_sv_n1
 }
@@ -130,6 +138,31 @@ bag_asp_develop_score = {
 		limit = { this = scope:actor.capital.province }
 		add = 100000
 	}
+}
+
+# Scope: province. Control below the max (the max with a control seat's gain
+# while one is on it).
+bag_asp_control_gap = {
+	value = province_average_max_control
+	subtract = province_average_control
+}
+
+# Scope: province; scope:actor is the country. His rule 15.10: the control a
+# seat can still gain here, up to the max plus «Прибавка советника к
+# максимуму», never above 1.
+bag_asp_control_missing = {
+	value = scope:actor.var:bag_asp_control_boost
+	divide = 100
+	add = province_average_max_control
+	max = 1
+	subtract = province_average_control
+}
+
+# Scope: province; scope:actor is the country. His rule 15.10: tax base times
+# the control a seat can still gain.
+bag_asp_control_score = {
+	value = province_tax_base
+	multiply = bag_asp_control_missing
 }
 
 # Scope: province. His run 15.10: urbanization where most jobs wait for
