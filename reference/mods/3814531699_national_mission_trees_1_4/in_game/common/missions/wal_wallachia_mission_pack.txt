@@ -1,0 +1,500 @@
+﻿wal_wallachia_mission_pack = {
+	icon = nmt_wallachia
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = WAL
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = { always = yes }
+
+	on_start = { set_variable = wal_mission_started }
+	on_completion = { remove_variable = wal_mission_started }
+	on_abort = { remove_variable = wal_mission_started }
+
+	# ===== ROOT =====
+
+	wal_voivode_beginnings = {
+		icon = voivode_advance
+		requires = { }
+		enabled = { always = yes }
+		on_completion = {
+			add_country_modifier = { modifier = wal_voivode_beginnings_mod years = 20 mode = add }
+		}
+	}
+
+	# ===== 第1階層(ROOT直下・3並列) =====
+
+	wal_voivode_authority = {
+		icon = wallachian_tradition
+		requires = { wal_voivode_beginnings }
+		enabled = {
+			legitimacy >= 95
+		}
+		on_completion = {
+			add_country_modifier = { modifier = wal_voivode_mod years = 20 mode = add }
+		}
+	}
+
+	wal_orthodox_church = {
+		icon = seat_of_metropolitan_bishop
+		requires = { wal_voivode_beginnings }
+		enabled = {
+			any_international_organizations_member_of = {
+				international_organization_type = international_organization_type:autocephalous_patriarchate
+				leader_country ?= root
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = wal_church_mod years = -1 mode = add }
+		}
+	}
+
+	wal_dregatori = {
+		icon = smooth_administration
+		requires = { wal_voivode_beginnings }
+		enabled = {
+			num_characters >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = wal_dregatori_mod years = 50 mode = add }
+		}
+	}
+
+	# ===== 第2階層 =====
+
+	wal_boyar_council = {
+		icon = strength_of_the_boyars
+		requires = { wal_voivode_authority }
+		enabled = {
+			OR = {
+				AND = {
+					"estate_power(estate_type:nobles_estate)" >= 0.30
+					estate_satisfaction:nobles_estate >= 0.75
+				}
+				"estate_power(estate_type:crown_estate)" >= 0.15
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = wal_boyar_mod years = 60 mode = add }
+		}
+	}
+
+	wal_order_of_dragon_founding = {
+		icon = wal_the_order_of_the_dragon_influence
+		requires = { wal_voivode_authority }
+		enabled = {
+			ruler ?= {
+				is_in_chivalric_order = yes
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = wal_order_of_dragon_mod years = 20 mode = add }
+		}
+	}
+
+	# ===== 第3階層 =====
+
+	wal_found_bucharest = {
+		icon = city_building_advance
+		requires = { wal_boyar_council }
+		enabled = {
+			location:bucharest = {
+				owner = root
+				total_building_levels >= 12
+			}
+		}
+		on_completion = {
+			location:bucharest = {
+				add_location_modifier = { modifier = wal_bucharest_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	wal_fortify_carpathians = {
+		icon = alpine_defensiveness
+		requires = { wal_boyar_council }
+		enabled = {
+			any_owned_location = {
+				region = region:carpathia_region
+				OR = {
+					has_building_with_at_least_one_level = castle
+					has_building_with_at_least_one_level = bastion
+				}
+				count >= 4
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = wal_carpathians_mod years = 20 mode = add }
+		}
+	}
+
+	wal_impale_the_sultan = {
+		icon = resistance_to_the_infidels
+		requires = { wal_order_of_dragon_founding }
+		enabled = {
+			any_current_war = {
+				OR = {
+					attacker_leader = root
+					defender_leader = root
+				}
+				any_war_participant = {
+					NOT = { this = root }
+					religion.group = religion_group:muslim
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = wal_impale_mod years = 10 mode = add }
+		}
+	}
+
+	# ===== 第4階層 =====
+
+	wal_targoviste_dev = {
+		icon = wallachian_heritage
+		requires = { wal_found_bucharest }
+		enabled = {
+			location:targoviste = {
+				owner = root
+				total_building_levels >= 12
+			}
+		}
+		on_completion = {
+			location:targoviste = {
+				add_location_modifier = { modifier = wal_targoviste_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	wal_unite_voivodes = {
+		icon = glorious_arms
+		requires = { wal_found_bucharest }
+		enabled = {
+			any_owned_location = {
+				area = area:wallachia_area
+				owner = root
+				count >= 10
+			}
+			OR = {
+				country_exists = c:MOL
+				any_owned_location = {
+					area = area:moldavia_area
+					OR = {
+						owner = root
+						owner = { is_subject_of = root }
+					}
+					count >= 1
+				}
+			}
+		}
+		on_completion = {
+			every_country = {
+				limit = {
+					NOT = { this = root }
+					any_owned_location = {
+						area = area:moldavia_area
+						count >= 1
+					}
+				}
+				root = {
+					add_casus_belli = {
+						type = casus_belli:wal_cb_moldavia_claim
+						target = prev
+						years = 25
+					}
+				}
+			}
+		}
+	}
+
+	wal_danube_trade = {
+		icon = river_trade
+		requires = { wal_found_bucharest }
+		enabled = {
+			monthly_income_trade_and_tax >= 50
+		}
+		on_completion = {
+			add_country_modifier = { modifier = wal_trade_mod years = 60 mode = add }
+		}
+	}
+
+	wal_drive_out_turks = {
+		icon = eternal_crusade
+		requires = { wal_impale_the_sultan }
+		enabled = {
+			any_owned_location = {
+				area = area:macedonia_area
+				owner = root
+				count >= 5
+			}
+			any_owned_location = {
+				area = area:thrace_area
+				owner = root
+				count >= 5
+			}
+			any_owned_location = {
+				area = area:bulgaria_area
+				owner = root
+				count >= 5
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = wal_drive_out_mod years = -1 mode = add }
+		}
+	}
+
+	wal_bulwark_of_christendom = {
+		icon = ecumenical_defenders_of_christendom
+		requires = { wal_impale_the_sultan }
+		enabled = {
+			any_owned_location = {
+				OR = {
+					has_building_with_at_least_one_level = castle
+					has_building_with_at_least_one_level = bastion
+					has_building_with_at_least_one_level = star_fort
+					has_building_with_at_least_one_level = fortress
+				}
+				count >= 8
+			}
+			any_country = {
+				religion.group = religion_group:muslim
+				is_neighbor_of = root
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = wal_bulwark_mod years = -1 mode = add }
+		}
+	}
+
+	# ===== 第5階層 =====
+
+	wal_subdue_moldavia = {
+		icon = expansionism
+		requires = { wal_unite_voivodes }
+		enabled = {
+			any_owned_location = {
+				area = area:moldavia_area
+				OR = {
+					owner = root
+					owner = { is_subject_of = root }
+				}
+				count >= 46
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = wal_moldavia_mod years = 30 mode = add }
+		}
+	}
+
+	wal_conquer_transylvania = {
+		icon = tra_the_transylvanian_autonomy
+		requires = { wal_unite_voivodes }
+		enabled = {
+			any_owned_location = {
+				area = area:transylvania_area
+				owner = root
+				count >= 20
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = wal_transylvania_mod years = 20 mode = add }
+		}
+	}
+
+	wal_treasury = {
+		icon = royal_revenue
+		requires = { wal_danube_trade }
+		enabled = {
+			gold >= 2000
+		}
+		on_completion = {
+			add_country_modifier = { modifier = wal_treasury_mod years = 20 mode = add }
+		}
+	}
+
+	wal_liberate_serbia = {
+		icon = resistance_to_persecution
+		requires = { wal_drive_out_turks }
+		enabled = {
+			OR = {
+				NOT = { country_exists = c:SER }
+				c:SER = { is_subject_of = root }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = wal_serbia_mod years = 20 mode = add }
+		}
+	}
+
+	wal_reclaim_morea = {
+		icon = moe_reclaiming_the_peloponnese_advance
+		requires = { wal_drive_out_turks }
+		enabled = {
+			any_owned_location = {
+				area = area:morea_area
+				owner = root
+				count >= 20
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = wal_morea_mod years = 20 mode = add }
+		}
+	}
+
+	# ===== 第6階層 =====
+
+	wal_secure_danube = {
+		icon = reclamation_of_land
+		requires = { wal_subdue_moldavia }
+		enabled = {
+			any_owned_location = {
+				region = region:carpathia_region
+				owner = root
+				count >= 100
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = wal_danube_mod years = 20 mode = add }
+		}
+	}
+
+	wal_szekely_land = {
+		icon = military_border
+		requires = { wal_conquer_transylvania }
+		enabled = {
+			province_definition:szekelyfold_province = {
+				any_location_in_province_definition = {
+					count >= 8
+					is_core_of = root
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = wal_szekely_mod years = -1 mode = add }
+		}
+	}
+
+	wal_saxon_towns = {
+		icon = free_cities
+		requires = { wal_conquer_transylvania }
+		enabled = {
+			province_definition:kiralyfold_province = {
+				any_location_in_province_definition = {
+					count >= 6
+					is_core_of = root
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = wal_saxon_mod years = 20 mode = add }
+		}
+	}
+
+	wal_manufactories = {
+		icon = manufactories_advance
+		requires = { wal_treasury }
+		enabled = {
+			monthly_income_trade_and_tax >= 300
+			any_owned_location = {
+				is_market_center = yes
+				count >= 2
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = wal_manufactories_mod years = -1 mode = add }
+		}
+	}
+
+	wal_heir_of_rome = {
+		icon = heirs_of_rome
+		requires = { wal_liberate_serbia wal_reclaim_morea }
+		enabled = {
+			NOT = { country_exists = c:BYZ }
+			any_owned_location = {
+				area = area:thrace_area
+				OR = {
+					owner = root
+					owner = { is_subject_of = root }
+				}
+				count >= 20
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = wal_heir_of_rome_mod years = 20 mode = add }
+		}
+	}
+
+	wal_ottoman_downfall = {
+		icon = imperial_ambitions
+		requires = { wal_liberate_serbia wal_reclaim_morea }
+		enabled = {
+			NOT = { country_exists = c:TUR }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = wal_downfall_mod years = 20 mode = add }
+		}
+	}
+
+	# ===== 第7階層 =====
+
+	wal_carpathian_hegemony = {
+		icon = legacy_of_great_empires
+		requires = { wal_secure_danube wal_szekely_land wal_saxon_towns }
+		enabled = {
+			country_rank_level >= 3
+		}
+		on_completion = {
+			add_country_modifier = { modifier = wal_hegemony_mod years = -1 mode = add }
+		}
+	}
+
+	wal_reclaim_constantinople = {
+		icon = glory_of_rome
+		requires = { wal_ottoman_downfall wal_heir_of_rome }
+		enabled = {
+			location:constantinople = {
+				owner = root
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = wal_events.2
+		}
+	}
+
+	# ===== 第8階層 =====
+
+	wal_romanian_unity = {
+		icon = rmn_the_descendants_of_trajan
+		requires = { wal_carpathian_hegemony }
+		enabled = {
+			this = c:RMN
+			any_owned_location = {
+				region = region:carpathia_region
+				owner = root
+				count >= 120
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = wal_unity_mod years = -1 mode = add }
+		}
+	}
+
+	# ===== 第9階層(最終) =====
+
+	wal_danubian_empire = {
+		icon = a_magnanimous_empire
+		requires = { wal_reclaim_constantinople wal_romanian_unity }
+		final = yes
+		enabled = {
+			num_locations >= 600
+		}
+		on_completion = {
+			trigger_event_non_silently = wal_events.99
+		}
+	}
+}

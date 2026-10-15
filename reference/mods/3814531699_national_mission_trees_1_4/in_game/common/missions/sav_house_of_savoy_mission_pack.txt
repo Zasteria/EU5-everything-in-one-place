@@ -1,0 +1,739 @@
+﻿sav_house_of_savoy_mission_pack = {
+	icon = nmt_italy
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = SAV
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = {
+		always = yes
+	}
+
+	on_start = {
+		set_variable = sav_mission_started
+	}
+
+	on_completion = {
+		remove_variable = sav_mission_started
+	}
+
+	on_abort = {
+		remove_variable = sav_mission_started
+	}
+
+	# ==================== ROOT ====================
+
+	sav_the_savoy_ambition = {
+		icon = glorious_arms
+		requires = { }
+
+		enabled = {
+			always = yes
+		}
+		duration = 0
+		on_completion = {
+			trigger_event_non_silently = sav_events.1
+		}
+	}
+
+	# ==================== BRANCH 1: ピエモンテの統治 ====================
+
+	sav_unify_piedmont = {
+		icon = consolidate_the_royal_domain
+		requires = { sav_the_savoy_ambition }
+
+		enabled = {
+			any_owned_location = {
+				area = area:piemonte_area
+				count >= 20
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = sav_unified_piedmont_mod years = -1 mode = add }
+		}
+	}
+
+	sav_glory_of_turin = {
+		icon = city_building_advance
+		requires = { sav_unify_piedmont }
+
+		enabled = {
+			location:turin = {
+				development >= 40
+			}
+			location:turin = { is_capital = yes }
+		}
+		duration = 180
+		on_completion = {
+			trigger_event_non_silently = sav_events.2
+		}
+	}
+
+	sav_shroud_of_turin = {
+		icon = genoese_banking_traditions
+		requires = { sav_glory_of_turin }
+
+		enabled = {
+			has_fired_unique_event = flavor_sav.1
+		}
+		duration = 0
+		on_completion = {
+			add_country_modifier = { modifier = sav_shroud_of_turin_mod years = -1 mode = add }
+		}
+	}
+
+	sav_alpine_roads = {
+		icon = exploit_the_alpine_trade
+		requires = { sav_unify_piedmont }
+
+		enabled = {
+			any_owned_location = {
+				has_building = building_type:bridge_infrastructure
+				count >= 10
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = sav_alpine_roads_mod years = -1 mode = add }
+		}
+	}
+
+	sav_crossroads_of_europe = {
+		icon = crossroads_of_commerce
+		requires = { sav_alpine_roads }
+
+		enabled = {
+			any_owned_location = {
+				is_market_center = yes
+				count >= 1
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = sav_crossroads_mod years = -1 mode = add }
+		}
+	}
+
+	sav_order_of_saints_maurice = {
+		icon = genoese_school
+		requires = { sav_shroud_of_turin sav_crossroads_of_europe }
+
+		enabled = {
+			OR = {
+				c:PAP = { opinion = { target = root value >= 100 } }
+				NOT = { country_exists = c:PAP }
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = sav_order_of_saints_mod years = -1 mode = add }
+		}
+	}
+
+	sav_savoy_academy = {
+		icon = encouragement_of_philosophers
+		requires = { sav_shroud_of_turin }
+
+		enabled = {
+			has_embraced_institution = institution:renaissance
+			any_owned_location = {
+				has_building = building_type:university
+				count >= 3
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = sav_savoy_academy_mod years = -1 mode = add }
+		}
+	}
+
+	sav_alpine_powerhouse = {
+		icon = arduous_terrain
+		requires = { sav_university_of_turin sav_crossroads_of_europe }
+
+		enabled = {
+			total_population >= 2000
+			num_locations >= 200
+		}
+		duration = 365
+		on_completion = {
+			add_country_modifier = { modifier = sav_alpine_powerhouse_mod years = -1 mode = add }
+			set_country_rank_effect = { rank = country_rank:rank_kingdom }
+		}
+	}
+
+	# ==================== BRANCH 2: アルプスの要塞 ====================
+
+	sav_alpine_fortifications = {
+		icon = a_fortified_border
+		requires = { sav_the_savoy_ambition }
+
+		enabled = {
+			any_owned_location = {
+				has_building = building_type:castle
+				count >= 3
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = sav_alpine_fortifications_mod years = 40 mode = add }
+		}
+	}
+
+	sav_diplomatic_balance = {
+		icon = diplomatic_range_age_1
+		requires = { sav_alpine_fortifications }
+
+		enabled = {
+			power_projection >= 10
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = sav_diplomatic_balance_mod years = -1 mode = add }
+		}
+	}
+
+	sav_savoyard_army = {
+		icon = arm_mountain_armies
+		requires = { sav_diplomatic_balance sav_ordinanza_piedmontese }
+
+		enabled = {
+			army_size >= 10
+			monthly_army_tradition >= 0.05
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = sav_savoyard_army_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH 3: イタリア征服 ====================
+
+	sav_conquer_genoa = {
+		icon = genoese_maritime_diplomacy
+		requires = { sav_unify_piedmont }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:genoa
+		}
+		duration = 150
+		on_completion = {
+			add_country_modifier = { modifier = sav_conquer_genoa_mod years = 40 mode = add }
+		}
+	}
+
+	sav_nice_naval_base = {
+		icon = ara_a_maritime_realm
+		requires = { sav_conquer_genoa }
+
+		enabled = {
+			location:nice = {
+				has_building = building_type:dock
+			}
+		}
+		duration = 120
+		on_completion = {
+			location:nice = {
+				add_location_modifier = { modifier = sav_nice_naval_base_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	sav_sardinia_union = {
+		icon = genoese_flexibility
+		requires = { sav_conquer_genoa }
+
+		enabled = {
+			any_owned_location = {
+				area = area:sardinia_area
+				count >= 20
+			}
+		}
+		duration = 150
+		on_completion = {
+			trigger_event_non_silently = sav_events.3
+		}
+	}
+
+	sav_seize_lombardy = {
+		icon = fortified_towns
+		requires = { sav_conquer_genoa sav_savoyard_army }
+
+		enabled = {
+			OR = {
+				owns_or_non_sovereign_subject_owns = location:milano
+				NOT = { country_exists = c:MLO }
+			}
+			any_owned_location = {
+				area = area:lombardy_area
+				count >= 30
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = sav_seize_lombardy_mod years = -1 mode = add }
+		}
+	}
+
+	sav_push_tuscany = {
+		icon = city_of_artists
+		requires = { sav_seize_lombardy }
+
+		enabled = {
+			any_owned_location = {
+				area = area:tuscany_area
+				count >= 15
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = sav_push_tuscany_mod years = -1 mode = add }
+		}
+	}
+
+	sav_capture_venice = {
+		icon = genoese_maritime_diplomacy
+		requires = { sav_seize_lombardy }
+
+		enabled = {
+			any_owned_location = {
+				area = area:veneto_area
+				count >= 20
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = sav_capture_venice_mod years = -1 mode = add }
+		}
+	}
+
+	sav_emilia_and_beyond = {
+		icon = continental_trade
+		requires = { sav_push_tuscany sav_capture_venice }
+
+		enabled = {
+			any_owned_location = {
+				area = area:emilia_area
+				count >= 10
+			}
+		}
+		duration = 150
+		on_completion = {
+			add_country_modifier = { modifier = sav_emilia_and_beyond_mod years = -1 mode = add }
+		}
+	}
+
+	sav_march_on_naples = {
+		icon = a_magnanimous_empire
+		requires = { sav_emilia_and_beyond }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:naples
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = sav_march_on_naples_mod years = -1 mode = add }
+		}
+	}
+
+	sav_eternal_rome = {
+		icon = crown_power_advance_renaissance
+		requires = { sav_march_on_naples sav_tyrrhenian_sea }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:rome
+		}
+		duration = 365
+		on_completion = {
+			add_country_modifier = { modifier = sav_eternal_rome_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH 4: フランスへの野望 ====================
+
+	sav_integrate_geneva = {
+		icon = diplomatic_range_age_1
+		requires = { sav_the_savoy_ambition }
+
+		enabled = {
+			owns = location:geneve
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = sav_integrate_geneva_mod years = 40 mode = add }
+		}
+	}
+
+	sav_control_provence = {
+		icon = french_tradition
+		requires = { sav_integrate_geneva }
+
+		enabled = {
+			any_owned_location = {
+				area = area:provence_area
+				count >= 10
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = sav_control_provence_mod years = -1 mode = add }
+		}
+	}
+
+	sav_against_the_swiss = {
+		icon = arduous_terrain
+		requires = { sav_integrate_geneva }
+
+		enabled = {
+			any_owned_location = {
+				area = area:western_switzerland_area
+				count >= 5
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = sav_against_the_swiss_mod years = -1 mode = add }
+		}
+	}
+
+	sav_conquer_burgundy = {
+		icon = french_heritage
+		requires = { sav_against_the_swiss sav_control_provence }
+
+		enabled = {
+			any_owned_location = {
+				region = region:france_region
+				count >= 30
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = sav_conquer_burgundy_mod years = -1 mode = add }
+		}
+	}
+
+	sav_savoyard_occitania = {
+		icon = french_ambition
+		requires = { sav_control_provence }
+
+		enabled = {
+			any_owned_location = {
+				area = area:provence_area
+				count >= 16
+			}
+		}
+		duration = 150
+		on_completion = {
+			add_country_modifier = { modifier = sav_savoyard_occitania_mod years = -1 mode = add }
+		}
+	}
+
+	sav_claim_france = {
+		icon = french_language_in_all_courts
+		requires = { sav_normandy_coast }
+
+		enabled = {
+			OR = {
+				owns_or_non_sovereign_subject_owns = location:paris
+				NOT = { country_exists = c:FRA }
+			}
+		}
+		duration = 365
+		on_completion = {
+			add_country_modifier = { modifier = sav_claim_france_mod years = -1 mode = add }
+		}
+	}
+
+
+	sav_woolens_of_piedmont = {
+		icon = arte_della_lana
+		requires = { sav_unify_piedmont }
+
+		enabled = {
+			OR = {
+				produced_in_country:wool > 4
+				produced_in_country:cloth > 4
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = sav_woolens_of_piedmont_mod years = -1 mode = add }
+		}
+	}
+
+
+	sav_franchises = {
+		icon = ara_protection_of_the_little_folk
+		requires = { sav_unify_piedmont }
+
+		enabled = {
+			num_locations >= 15
+			any_owned_location = {
+				is_market_center = yes
+				count >= 1
+			}
+		}
+		duration = 120
+		on_completion = {
+			set_variable = {
+				name = sav_franchises_unlocked
+				value = 1
+			}
+			custom_tooltip = sav_franchises_unlock_tt
+		}
+	}
+
+	sav_patria_legis = {
+		icon = consolidate_the_royal_domain
+		requires = { sav_franchises }
+
+		enabled = {
+			has_embraced_institution = institution:renaissance
+			any_owned_location = {
+				has_building = building_type:university
+				count >= 1
+			}
+		}
+		duration = 180
+		on_completion = {
+			set_variable = {
+				name = sav_patria_legis_unlocked
+				value = 1
+			}
+			custom_tooltip = sav_patria_legis_unlock_tt
+		}
+	}
+
+	sav_nebbiolo_vineyards = {
+		icon = piedmontese_the_nebbiolo_vigne
+		requires = { sav_woolens_of_piedmont }
+
+		enabled = {
+			produced_in_country:wine > 10
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = sav_nebbiolo_vineyards_mod years = -1 mode = add }
+		}
+	}
+
+
+	sav_casa_savoia = {
+		icon = crown_power_advance_renaissance
+		requires = { sav_glory_of_turin }
+
+		enabled = {
+			legitimacy >= 90
+			stability >= 30
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = sav_casa_savoia_mod years = -1 mode = add }
+		}
+	}
+
+
+	sav_ordinanza_piedmontese = {
+		icon = pie_ordinanza_piedmontese
+		requires = { sav_alpine_fortifications }
+
+		enabled = {
+			army_size >= 1
+			monthly_army_tradition >= 0.03
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = sav_ordinanza_piedmontese_mod years = 60 mode = add }
+		}
+	}
+
+
+	sav_university_of_turin = {
+		icon = encouragement_of_philosophers
+		requires = { sav_savoy_academy sav_casa_savoia }
+
+		enabled = {
+			any_owned_location = {
+				has_building = building_type:university
+				count >= 5
+			}
+			location:turin = {
+				development >= 45
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = sav_university_of_turin_mod years = -1 mode = add }
+		}
+	}
+
+
+	sav_corsica_seized = {
+		icon = genoese_flexibility
+		requires = { sav_nice_naval_base }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:ajaccio
+		}
+		duration = 150
+		on_completion = {
+			add_country_modifier = { modifier = sav_corsica_seized_mod years = -1 mode = add }
+		}
+	}
+
+
+	sav_towers_of_sardinia = {
+		icon = sardinian_the_turres_costeras
+		requires = { sav_sardinia_union }
+
+		enabled = {
+			any_owned_location = {
+				area = area:sardinia_area
+				has_building = building_type:castle
+				count >= 3
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = sav_towers_of_sardinia_mod years = -1 mode = add }
+		}
+	}
+
+
+	sav_cagliari_development = {
+		icon = sardinian_the_industrial_transition
+		requires = { sav_sardinia_union }
+
+		enabled = {
+			location:cagliari = {
+				population >= 30
+				development >= 35
+			}
+		}
+		duration = 150
+		on_completion = {
+			location:cagliari = {
+				add_location_modifier = { modifier = sav_cagliari_development_mod years = -1 mode = add }
+			}
+		}
+	}
+
+
+	sav_tyrrhenian_sea = {
+		icon = development_of_maritime_law
+		requires = { sav_corsica_seized sav_cagliari_development }
+
+		enabled = {
+			navy_size >= 20
+			any_owned_location = {
+				is_market_center = yes
+				count >= 1
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = sav_tyrrhenian_sea_mod years = -1 mode = add }
+		}
+	}
+
+
+	sav_languedoc = {
+		icon = french_tradition
+		requires = { sav_savoyard_occitania }
+
+		enabled = {
+			any_owned_location = {
+				area = area:languedoc_area
+				count >= 20
+			}
+		}
+		duration = 150
+		on_completion = {
+			add_country_modifier = { modifier = sav_languedoc_mod years = -1 mode = add }
+		}
+	}
+
+
+	sav_gascony = {
+		icon = french_ambition
+		requires = { sav_languedoc }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:bordeaux
+		}
+		duration = 150
+		on_completion = {
+			add_country_modifier = { modifier = sav_gascony_mod years = -1 mode = add }
+		}
+	}
+
+
+	sav_lyon_gateway = {
+		icon = continental_trade
+		requires = { sav_conquer_burgundy }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:lyon
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = sav_lyon_gateway_mod years = -1 mode = add }
+		}
+	}
+
+
+	sav_loire_valley = {
+		icon = french_heritage
+		requires = { sav_gascony sav_lyon_gateway }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:nantes
+			owns_or_non_sovereign_subject_owns = location:tours
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = sav_loire_valley_mod years = -1 mode = add }
+		}
+	}
+
+
+	sav_normandy_coast = {
+		icon = cas_castilian_navy
+		requires = { sav_loire_valley }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:rouen
+		}
+		duration = 150
+		on_completion = {
+			add_country_modifier = { modifier = sav_normandy_coast_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== FINAL ====================
+
+	sav_kingdom_of_italy = {
+		icon = legacy_of_great_empires
+		requires = { sav_alpine_powerhouse sav_eternal_rome sav_claim_france }
+		final = yes
+
+		enabled = {
+			any_owned_location = {
+				region = region:italy_region
+				count >= 200
+			}
+			num_locations >= 400
+		}
+		duration = 365
+		on_completion = {
+			add_country_modifier = { modifier = sav_kingdom_of_italy_mod years = -1 mode = add }
+			set_country_rank_effect = { rank = country_rank:rank_empire }
+		}
+	}
+}

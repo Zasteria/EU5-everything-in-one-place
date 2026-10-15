@@ -1,0 +1,559 @@
+﻿geo_georgia_mission_pack = {
+	icon = nmt_georgia
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = GEO
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = { always = yes }
+
+	on_start = { set_variable = geo_mission_started }
+	on_completion = { remove_variable = geo_mission_started }
+	on_abort = { remove_variable = geo_mission_started }
+
+	# ===== ROOT =====
+
+	geo_bagrationi_legacy = {
+		icon = geo_bagrationi_dynasty
+		requires = { }
+		enabled = { always = yes }
+		on_completion = {
+			add_country_modifier = { modifier = geo_bagrationi_mod years = 20 mode = add }
+		}
+	}
+
+	# ===== A: 国内統合 =====
+
+	geo_royal_succession = {
+		icon = geo_georgian_titles
+		requires = { geo_bagrationi_legacy }
+		enabled = {
+			legitimacy >= 90
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_succession_mod years = 10 mode = add }
+		}
+	}
+
+	geo_reunite_georgia = {
+		icon = geo_georgian_unification
+		requires = { geo_royal_succession }
+		enabled = {
+			location:tbilisi = { owner = root }
+			location:kutaisi = { owner = root }
+			location:akhaltsikhe = { owner = root }
+			location:batumi = { owner = root }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_reunite_mod years = 40 mode = add }
+		}
+	}
+
+	geo_fortify_caucasia = {
+		icon = geo_georgian_highlands
+		requires = { geo_reunite_georgia }
+		enabled = {
+			any_owned_location = {
+				area = area:georgia_area
+				OR = {
+					has_building_with_at_least_one_level = castle
+					has_building_with_at_least_one_level = bastion
+				}
+				count >= 4
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_fortify_mod years = -1 mode = add }
+		}
+	}
+
+	geo_church_of_georgia = {
+		icon = geo_legacy_of_saint_nino
+		requires = { geo_bagrationi_legacy }
+		enabled = {
+			religion = religion:orthodox
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_church_mod years = 30 mode = add }
+		}
+	}
+
+	geo_royal_court = {
+		icon = geo_georgian_principalities
+		requires = { geo_church_of_georgia }
+		enabled = {
+			capital = {
+				has_building_with_at_least_one_level = royal_court
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_court_mod years = 20 mode = add }
+		}
+	}
+
+	geo_georgian_army = {
+		icon = sme_frontier_warriors
+		requires = { geo_fortify_caucasia }
+		enabled = {
+			army_tradition >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_army_mod years = 20 mode = add }
+		}
+	}
+
+	# ===== B: コーカサス・ステップ =====
+
+	geo_recover_strength = {
+		icon = geo_georgian_resilience
+		requires = { geo_reunite_georgia }
+		enabled = {
+			num_locations >= 80
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_recover_mod years = 15 mode = add }
+		}
+	}
+
+	geo_queen_tamar_ambition = {
+		icon = geo_legacy_of_tamar
+		requires = { geo_recover_strength }
+		enabled = {
+			any_owned_location = {
+				area = area:armenia_area
+				count >= 15
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_tamar_mod years = -1 mode = add }
+		}
+	}
+
+	geo_reclaim_shirvan = {
+		icon = glh_secure_the_trade_routes
+		requires = { geo_recover_strength }
+		enabled = {
+			OR = {
+				NOT = { country_exists = c:SRV }
+				c:SRV = { is_subject_of = root }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_shirvan_mod years = 20 mode = add }
+		}
+	}
+
+	geo_heirs_of_seljuks = {
+		icon = heirs_of_rum
+		requires = { geo_queen_tamar_ambition }
+		enabled = {
+			any_owned_location = {
+				region = region:caucasus_region
+				OR = {
+					owner = root
+					owner = { is_subject_of = root }
+				}
+				count >= 100
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_seljuk_mod years = -1 mode = add }
+		}
+	}
+
+	geo_gates_of_alexander = {
+		icon = glh_tatar_traditions
+		requires = { geo_recover_strength }
+		enabled = {
+			any_owned_location = {
+				OR = {
+					area = area:northern_caucasus_area
+					area = area:matrega_area
+				}
+				owner = root
+				count >= 10
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_gates_mod years = -1 mode = add }
+		}
+	}
+
+	geo_bane_of_khagan = {
+		icon = glh_kipchak_khanate
+		requires = { geo_gates_of_alexander }
+		enabled = {
+			location:sarai_al_jadid = {
+				owner = root
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = geo_events.1
+		}
+	}
+
+	geo_seize_crimea = {
+		icon = glh_legacy_of_jochi
+		requires = { geo_gates_of_alexander }
+		enabled = {
+			any_owned_location = {
+				area = area:crimea_area
+				count >= 10
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_crimea_mod years = 15 mode = add }
+		}
+	}
+
+	geo_control_black_sea = {
+		icon = tre_terminus_of_the_silk_road
+		requires = { geo_seize_crimea }
+		enabled = {
+			any_owned_location = {
+				area = area:azov_area
+				owner = root
+				count >= 20
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_black_sea_mod years = -1 mode = add }
+		}
+	}
+
+	geo_envoy_to_tsar = {
+		icon = heritage_of_the_rus
+		requires = { geo_bane_of_khagan }
+		enabled = {
+			OR = {
+				is_allied_with = { target = c:MOS }
+				is_allied_with = { target = c:RUS }
+				country_rank_level >= 4
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_tsar_mod years = -1 mode = add }
+		}
+	}
+
+	geo_caucasus_hegemony = {
+		icon = legacy_of_great_empires
+		requires = { geo_heirs_of_seljuks geo_control_black_sea geo_envoy_to_tsar }
+		enabled = {
+			country_rank_level >= 4
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_hegemony_mod years = -1 mode = add }
+		}
+	}
+
+	# ===== C: 十字軍・南方征服 =====
+
+	geo_deal_with_trebizond = {
+		icon = tre_grand_komnenoi
+		requires = { geo_heirs_of_seljuks }
+		enabled = {
+			OR = {
+				is_allied_with = { target = c:TRE }
+				location:trebizond = {
+					owner = root
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_trebizond_mod years = -1 mode = add }
+		}
+	}
+
+	geo_conquer_jalayirids = {
+		icon = glh_perso_mongol_administration
+		requires = { geo_deal_with_trebizond }
+		enabled = {
+			any_owned_location = {
+				OR = {
+					area = area:armenian_highlands_area
+					area = area:azerbaijan_area
+				}
+				owner = root
+				count >= 30
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_jalayirid_mod years = 40 mode = add }
+		}
+	}
+
+	geo_encroach_mamluks = {
+		icon = mamluk_halqah
+		requires = { geo_conquer_jalayirids }
+		enabled = {
+			any_owned_location = {
+				area = area:jazira_area
+				count >= 30
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_mamluk_mod years = 20 mode = add }
+		}
+	}
+
+	geo_conquer_cyprus = {
+		icon = imperial_school_of_naval_engineering
+		requires = { geo_encroach_mamluks }
+		enabled = {
+			location:nicosia_cyp = {
+				owner = root
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_cyprus_mod years = -1 mode = add }
+		}
+	}
+
+	geo_cradle_of_civilization = {
+		icon = riches_of_the_silk_road
+		requires = { geo_conquer_jalayirids }
+		enabled = {
+			any_owned_location = {
+				area = area:iraq_arabi_area
+				owner = root
+				count >= 40
+			}
+			location:baghdad = {
+				owner = root
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_mesopotamia_mod years = -1 mode = add }
+		}
+	}
+
+	geo_claim_holy_city = {
+		icon = jerusalem_focus
+		requires = { geo_encroach_mamluks }
+		enabled = {
+			location:jerusalem = {
+				owner = root
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_holy_city_mod years = -1 mode = add }
+		}
+	}
+
+	geo_light_of_east = {
+		icon = primacy_of_alexandria
+		requires = { geo_claim_holy_city }
+		enabled = {
+			location:antioch = {
+				owner = root
+			}
+			location:alexandria = {
+				owner = root
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_light_east_mod years = -1 mode = add }
+		}
+	}
+
+	geo_anatolian_incursion = {
+		icon = tre_pontic_mountains
+		requires = { geo_conquer_jalayirids }
+		enabled = {
+			any_owned_location = {
+				region = region:anatolia_region
+				owner = root
+				count >= 20
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_anatolia_mod years = 30 mode = add }
+		}
+	}
+
+	geo_empires_downfall = {
+		icon = imperial_ambitions
+		requires = { geo_anatolian_incursion }
+		enabled = {
+			NOT = { country_exists = c:BYZ }
+			NOT = { country_exists = c:TUR }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_downfall_mod years = 20 mode = add }
+		}
+	}
+
+	geo_throne_of_romans = {
+		icon = glory_of_rome
+		requires = { geo_empires_downfall }
+		enabled = {
+			location:constantinople = {
+				owner = root
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = geo_events.2
+		}
+	}
+
+	geo_beacon_of_christendom = {
+		icon = geo_beacon_of_christianity
+		requires = { geo_throne_of_romans geo_light_of_east }
+		final = yes
+		enabled = {
+			country_rank_level >= 4
+			num_locations >= 800
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_beacon_mod years = -1 mode = add }
+		}
+	}
+
+	geo_georgian_crusader_realm = {
+		icon = golden_fleece
+		requires = { geo_conquer_cyprus geo_beacon_of_christendom }
+		final = yes
+		enabled = {
+			num_locations >= 120
+		}
+		on_completion = {
+			trigger_event_non_silently = geo_events.99
+		}
+	}
+
+	# ===== D: 内政発展 =====
+
+	geo_rebuild_tbilisi = {
+		icon = geo_restoration_of_fortresses_and_churches
+		requires = { geo_royal_court }
+		enabled = {
+			location:tbilisi = {
+				owner = root
+				total_building_levels >= 40
+			}
+		}
+		on_completion = {
+			location:tbilisi = {
+				add_location_modifier = { modifier = geo_tbilisi_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	geo_georgian_vineyards = {
+		icon = generic_trade
+		requires = { geo_rebuild_tbilisi }
+		enabled = {
+			produced_in_country:wine >= 10
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_vineyards_mod years = -1 mode = add }
+		}
+	}
+
+	geo_revive_literature = {
+		icon = geo_georgian_script
+		requires = { geo_rebuild_tbilisi }
+		enabled = {
+			has_embraced_institution = institution:renaissance
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_literature_mod years = -1 mode = add }
+		}
+	}
+
+	geo_legacy_of_builder = {
+		icon = geo_david_the_builder
+		requires = { geo_revive_literature }
+		enabled = {
+			any_owned_location = {
+				is_city = yes
+				count >= 10
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_builder_mod years = -1 mode = add }
+		}
+	}
+
+	geo_svetitskhoveli_cathedral = {
+		icon = geo_legacy_of_saint_george
+		requires = { geo_revive_literature }
+		enabled = {
+			location:mtskheta = {
+				owner = root
+				is_city = yes
+			}
+		}
+		on_completion = {
+			location:mtskheta = {
+				add_location_modifier = { modifier = geo_cathedral_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	geo_patriarchate_of_georgia = {
+		icon = the_pentarchy
+		requires = { geo_svetitskhoveli_cathedral }
+		enabled = {
+			religion = religion:orthodox
+			religion_percentage_in_country = {
+				religion = religion:orthodox
+				value >= 0.90
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_patriarchate_mod years = -1 mode = add }
+		}
+	}
+
+	geo_silk_road_trade = {
+		icon = sme_protect_trade_routes
+		requires = { geo_georgian_vineyards }
+		enabled = {
+			monthly_income_trade_and_tax >= 200
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_silk_road_mod years = 20 mode = add }
+		}
+	}
+
+	geo_mountain_fortresses = {
+		icon = sme_atabegs_of_samtskhe
+		requires = { geo_georgian_army }
+		enabled = {
+			any_owned_location = {
+				OR = {
+					has_building_with_at_least_one_level = castle
+					has_building_with_at_least_one_level = bastion
+					has_building_with_at_least_one_level = star_fort
+					has_building_with_at_least_one_level = fortress
+				}
+				count >= 12
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_mountain_fort_mod years = -1 mode = add }
+		}
+	}
+
+	geo_golden_age = {
+		icon = geo_georgian_golden_age
+		requires = { geo_legacy_of_builder geo_patriarchate_of_georgia geo_silk_road_trade }
+		enabled = {
+			monthly_income_trade_and_tax >= 500
+			any_owned_location = {
+				is_market_center = yes
+				count >= 4
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = geo_golden_age_mod years = -1 mode = add }
+		}
+	}
+}

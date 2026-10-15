@@ -1,0 +1,190 @@
+﻿namespace = pro_events
+
+# =============================================================================
+# Event 1: アンジュー家の野望
+# =============================================================================
+
+# =============================================================================
+# Event 2: ルネ王の継承権
+# =============================================================================
+pro_events.2 = {
+	type = country_event
+	category = mission_event
+	title = pro_events.2.t
+	desc  = pro_events.2.d
+	fire_only_once = yes
+	illustration_tags = { 10 = interior 10 = regular }
+	immediate = {
+		event_illustration_estate_effect = {
+			foreground = estate_type:nobles_estate
+			background = estate_type:nobles_estate
+		}
+	}
+	option = {
+		name = pro_events.2.a
+		add_country_modifier = { modifier = pro_claims_of_king_rene_mod years = -1 mode = add }
+		if = {
+			limit = { country_exists = c:NAP }
+			add_casus_belli = {
+				target = c:NAP
+				type = casus_belli:cb_claim_throne
+			}
+		}
+	}
+}
+
+# =============================================================================
+# Event 3: 賢王ロベールの治世（1337年のプロヴァンス）
+# =============================================================================
+pro_events.3 = {
+	type = country_event
+	category = mission_event
+	title = pro_events.3.t
+	desc  = pro_events.3.d
+	fire_only_once = yes
+	illustration_tags = { 10 = interior 10 = regular }
+	immediate = {
+		event_illustration_estate_effect = {
+			foreground = estate_type:nobles_estate
+			background = estate_type:nobles_estate
+		}
+	}
+	option = {
+		name = pro_events.3.a
+	}
+}
+
+# =============================================================================
+# Event 4: ロレーヌとの婚姻・封土化
+# =============================================================================
+pro_events.4 = {
+	type = country_event
+	category = mission_event
+	title = pro_events.4.t
+	desc  = pro_events.4.d
+	fire_only_once = yes
+	illustration_tags = { 10 = interior 10 = regular }
+	trigger = {
+		country_exists = c:LOR
+	}
+	immediate = {
+		event_illustration_estate_effect = {
+			foreground = estate_type:nobles_estate
+			background = estate_type:nobles_estate
+		}
+	}
+	option = {
+		name = pro_events.4.a
+		if = {
+			limit = { country_exists = c:LOR }
+			c:LOR = {
+				make_subject_of = {
+					target = root
+					type = subject_type:fiefdom
+				}
+			}
+		}
+	}
+	option = {
+		name = pro_events.4.b
+	}
+}
+
+# =============================================================================
+# Event 5: エルサレム王国の形成
+# =============================================================================
+pro_events.5 = {
+	type = country_event
+	category = mission_event
+	title = pro_events.5.t
+	desc  = pro_events.5.d
+	fire_only_once = yes
+	illustration_tags = { 10 = exterior 10 = regular }
+	immediate = {
+		event_illustration_estate_effect = {
+			foreground = estate_type:nobles_estate
+			background = estate_type:nobles_estate
+		}
+	}
+	option = {
+		name = pro_events.5.a
+		add_country_modifier = { modifier = pro_king_of_jerusalem_mod years = -1 mode = add }
+		hidden_effect = {
+		location:jerusalem = { add_core = c:KOJ }
+		location:hebron = { add_core = c:KOJ }
+		location:beersheba = { add_core = c:KOJ }
+		location:gaza = { add_core = c:KOJ }
+		location:majdal = { add_core = c:KOJ }
+		location:nablus = { add_core = c:KOJ }
+		location:jaffa = { add_core = c:KOJ }
+		location:safed = { add_core = c:KOJ }
+		location:acre = { add_core = c:KOJ }
+		location:sidon = { add_core = c:KOJ }
+		location:deir_qamar = { add_core = c:KOJ }
+		location:beirut = { add_core = c:KOJ }
+		location:irbid = { add_core = c:KOJ }
+		location:amman = { add_core = c:KOJ }
+		location:madaba = { add_core = c:KOJ }
+		location:karak = { add_core = c:KOJ }
+		location:sughar = { add_core = c:KOJ }
+		location:shoubak = { add_core = c:KOJ }
+		location:maan = { add_core = c:KOJ }
+		location:al_quwayrah = { add_core = c:KOJ }
+		location:aqaba = { add_core = c:KOJ }
+			create_country_from_cores_in_our_locations = c:KOJ
+			if = {
+				limit = { country_exists = c:KOJ }
+				c:KOJ = {
+					make_subject_of = { target = root type = subject_type:fiefdom }
+					change_religion = religion:catholic
+					change_religion_for_ruler_and_family = { country = c:KOJ religion = religion:catholic }
+					change_government_type = government_type:monarchy
+					every_owned_location = { add_core = c:KOJ }
+				}
+			}
+		}
+	}
+}
+
+# =============================================================================
+# Event 6: アヴィニョン問題の解決
+# =============================================================================
+
+pro_events.6 = {
+	type = country_event
+	category = mission_event
+	title = pro_events.6.t
+	desc  = pro_events.6.d
+	fire_only_once = yes
+	illustration_tags = { 10 = interior 10 = regular }
+	immediate = {
+		event_illustration_estate_effect = {
+			foreground = estate_type:clergy_estate
+			background = estate_type:clergy_estate
+		}
+	}
+	option = {
+		name = pro_events.6.a
+		# PAPがavignonを割譲し、プロヴァンスが中核化
+		if = {
+			limit = {
+				country_exists = c:PAP
+				c:PAP = { owns = location:avignon }
+			}
+			c:PAP = {
+				location:avignon = {
+					remove_core = c:PAP
+					add_core = root
+					change_location_owner = root
+				}
+			}
+		}
+		if = {
+			limit = { owns = location:avignon }
+			location:avignon = {
+				add_core = root
+			}
+		}
+		add_country_modifier = { modifier = pro_avignon_question_mod years = -1 mode = add }
+	}
+}

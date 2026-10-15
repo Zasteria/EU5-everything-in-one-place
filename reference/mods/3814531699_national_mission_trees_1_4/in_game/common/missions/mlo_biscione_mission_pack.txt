@@ -1,0 +1,570 @@
+﻿mlo_biscione_mission_pack = {
+	icon = nmt_italy
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = MLO
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = {
+		always = yes
+	}
+
+	on_start = {
+		set_variable = mlo_biscione_started
+	}
+
+	on_completion = {
+		remove_variable = mlo_biscione_started
+	}
+
+	on_abort = {
+		remove_variable = mlo_biscione_started
+	}
+
+	# ==================== ROOT ====================
+
+	mlo_expanded_domain = {
+		icon = fortified_towns
+		requires = { }
+
+		enabled = {
+			location:novara = {
+				OR = {
+					integration_level = integrated
+					integration_level = core
+				}
+			}
+			location:lodi = {
+				OR = {
+					integration_level = integrated
+					integration_level = core
+				}
+			}
+		}
+		duration = 0
+		on_completion = {
+			add_country_modifier = { modifier = mlo_expanded_domain_mod years = 20 mode = add }
+		}
+	}
+
+	mlo_curb_della_scala = {
+		icon = independence_from_mali
+		requires = { }
+
+		enabled = {
+			OR = {
+				NOT = { is_at_war_with = c:VER }
+				NOT = { country_exists = c:VER }
+				c:VER = { country_tax_base < root.country_tax_base }
+			}
+		}
+		duration = 0
+		on_completion = {
+			add_country_modifier = { modifier = mlo_curb_della_scala_mod years = 20 mode = add }
+			if = {
+				limit = {
+					country_exists = c:VER
+					location:verona = { exists = yes }
+				}
+				add_casus_belli = {
+					target = location:verona.owner
+					type = casus_belli:cb_conquer_province
+					province = location:verona.province
+				}
+			}
+		}
+	}
+
+	mlo_imperial_vicariate = {
+		icon = imperial_creed
+		requires = { }
+
+		enabled = {
+			always = yes
+		}
+		duration = 0
+		on_completion = {
+			trigger_event_non_silently = mlo_events.2
+		}
+	}
+
+	mlo_serpent_that_devours_men = {
+		icon = milanese_heritage
+		requires = { mlo_expanded_domain mlo_curb_della_scala mlo_imperial_vicariate }
+
+		enabled = {
+			has_fired_unique_event = flavor_mlo.13
+		}
+		duration = 0
+		on_completion = {
+			trigger_event_non_silently = mlo_events.1
+			add_country_modifier = { modifier = mlo_serpent_reward_mod years = 40 mode = add }
+		}
+	}
+
+	# ==================== BRANCH A: 国家主導の事業 ====================
+
+	mlo_state_led_enterprises = {
+		icon = smooth_administration
+		requires = { mlo_serpent_that_devours_men }
+
+		enabled = {
+			capital = {
+				OR = {
+					has_building = building_type:city_guard
+					has_building = building_type:sergeantry
+				}
+			}
+		}
+		duration = 0
+		on_completion = {
+			add_country_modifier = { modifier = mlo_state_led_enterprises_mod years = 60 mode = add }
+		}
+	}
+
+	mlo_rigorous_plague_policy = {
+		icon = sanitation_advance
+		requires = { mlo_state_led_enterprises }
+
+		enabled = {
+			any_owned_location = {
+				has_building = building_type:hospital
+				count >= 3
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = mlo_rigorous_plague_policy_mod years = 40 mode = add }
+		}
+	}
+
+	mlo_duomo_di_milano = {
+		icon = national_churches
+		requires = { mlo_state_led_enterprises }
+
+		enabled = {
+			has_fired_unique_event = flavor_mlo.24
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = mlo_duomo_di_milano_mod years = 20 mode = add }
+		}
+	}
+
+	mlo_road_network_of_the_realm = {
+		icon = road_building
+		requires = { mlo_state_led_enterprises }
+
+		enabled = {
+			average_control_in_home_region >= 0.50
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = mlo_road_network_of_the_realm_mod years = 40 mode = add }
+		}
+	}
+
+	mlo_expand_administrative_buildings = {
+		icon = state_administration_advance
+		requires = { mlo_rigorous_plague_policy }
+
+		enabled = {
+			any_owned_location = {
+				has_building = building_type:counting_house
+				count >= 5
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = mlo_expand_administrative_buildings_mod years = 40 mode = add }
+		}
+	}
+
+	mlo_embrace_the_renaissance = {
+		icon = renaissance_advance
+		requires = { mlo_duomo_di_milano }
+
+		enabled = {
+			has_embraced_institution = institution:renaissance
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = mlo_embrace_the_renaissance_mod years = 40 mode = add }
+		}
+	}
+
+	mlo_the_last_supper = {
+		icon = city_of_artists
+		requires = { mlo_embrace_the_renaissance }
+
+		enabled = {
+			has_fired_unique_event = flavor_mlo.6
+		}
+		duration = 180
+		on_completion = {
+			location:milano = {
+				add_location_modifier = { modifier = mlo_the_last_supper_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	mlo_naviglio_grande_renovation = {
+		icon = extensive_canal_works
+		requires = { mlo_embrace_the_renaissance mlo_road_network_of_the_realm }
+
+		enabled = {
+			location:milano = {
+				total_building_levels >= 60
+			}
+		}
+		duration = 120
+		on_completion = {
+			location:milano = {
+				add_location_modifier = { modifier = mlo_naviglio_grande_renovation_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	mlo_castello_sforzesco = {
+		icon = raj_fortress_architecture
+		requires = { mlo_expand_administrative_buildings mlo_embrace_the_renaissance }
+
+		enabled = {
+			current_date > 1450.1.1
+			location:milano = {
+				has_building = building_type:castle
+				has_building = building_type:city_walls
+			}
+		}
+		duration = 180
+		on_completion = {
+			trigger_event_non_silently = mlo_events.3
+		}
+	}
+
+	mlo_biblioteca_ambrosiana = {
+		icon = library_advance
+		requires = { mlo_the_last_supper }
+
+		enabled = {
+			any_owned_location = {
+				any_work_of_art_in_location = {
+					count >= 50
+				}
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = mlo_biblioteca_ambrosiana_mod years = -1 mode = add }
+		}
+	}
+
+	mlo_heart_of_italy = {
+		icon = milanese_tradition
+		requires = { mlo_castello_sforzesco mlo_biblioteca_ambrosiana mlo_naviglio_grande_renovation }
+
+		enabled = {
+			location:milano = {
+				population >= 250
+				development >= 50
+			}
+		}
+		duration = 180
+		on_completion = {
+			location:milano = {
+				change_location_rank = location_rank:megalopolis
+				add_location_modifier = { modifier = mlo_heart_of_italy_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	# ==================== BRANCH B: 北イタリアの野望 ====================
+
+	mlo_north_italian_ambitions = {
+		icon = imperial_ambitions
+		requires = { mlo_serpent_that_devours_men }
+
+		enabled = {
+			army_size >= 1
+		}
+		duration = 0
+		on_completion = {
+			add_country_modifier = { modifier = mlo_north_italian_ambitions_mod years = 20 mode = add }
+		}
+	}
+
+	mlo_subjugate_lombardy = {
+		icon = chg_glory_of_conquest
+		requires = { mlo_north_italian_ambitions }
+
+		enabled = {
+			any_owned_location = {
+				area = area:lombardy_area
+				owner = root
+				count >= 28
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = mlo_subjugate_lombardy_mod years = 40 mode = add }
+		}
+	}
+
+	mlo_advance_into_piedmont = {
+		icon = mountain_roads
+		requires = { mlo_north_italian_ambitions }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:turin
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = mlo_advance_into_piedmont_mod years = 40 mode = add }
+		}
+	}
+
+	mlo_strife_over_veneto = {
+		icon = independence_from_mali
+		requires = { mlo_subjugate_lombardy }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:brescia
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = mlo_strife_over_veneto_mod years = 40 mode = add }
+		}
+	}
+
+	mlo_through_emilia_and_beyond = {
+		icon = emilian_the_via_emilia
+		requires = { mlo_subjugate_lombardy }
+
+		enabled = {
+			any_owned_location = {
+				area = area:emilia_area
+				owner = root
+				count >= 30
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = mlo_through_emilia_and_beyond_mod years = 40 mode = add }
+		}
+	}
+
+	mlo_secure_liguria = {
+		icon = ligurian_coastal_seafarers
+		requires = { mlo_advance_into_piedmont }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:genoa
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = mlo_secure_liguria_mod years = 40 mode = add }
+		}
+	}
+
+	mlo_reach_the_coveted_sea = {
+		icon = river_trade
+		requires = { mlo_secure_liguria }
+
+		enabled = {
+			any_owned_location = {
+				area = area:liguria_area
+				count >= 10
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = mlo_reach_the_coveted_sea_mod years = -1 mode = add }
+		}
+	}
+
+	mlo_topple_the_old_rival_florence = {
+		icon = war_bonfires
+		requires = { mlo_through_emilia_and_beyond mlo_reach_the_coveted_sea }
+
+		enabled = {
+			NOT = { country_exists = c:FLO }
+		}
+		duration = 365
+		on_completion = {
+			add_country_modifier = { modifier = mlo_topple_the_old_rival_florence_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH C: 権威の狭間にて ====================
+
+	mlo_between_two_authorities = {
+		icon = papal_investiture_and_tithes
+		requires = { mlo_serpent_that_devours_men }
+
+		enabled = {
+			has_fired_unique_event = flavor_mlo.13
+		}
+		duration = 0
+		on_completion = {
+			add_country_modifier = { modifier = mlo_between_two_authorities_mod years = 20 mode = add }
+		}
+	}
+
+	mlo_reconcile_with_the_papacy = {
+		icon = pap_head_of_the_church
+		requires = { mlo_between_two_authorities }
+
+		enabled = {
+			OR = {
+				is_allied_with = { target = c:PAP }
+				is_rival_of = c:PAP
+				c:PAP = { opinion = { target = root value >= 150 } }
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = mlo_reconcile_with_the_papacy_mod years = 40 mode = add }
+		}
+	}
+
+	mlo_trust_of_the_emperor = {
+		icon = lat_emperor_latins_advance
+		requires = { mlo_between_two_authorities }
+
+		enabled = {
+			OR = {
+				is_allied_with = { target = international_organization:hre.leader_country }
+				international_organization:hre = {
+					leader_country = { is_rival_of = root }
+				}
+				is_leader_of_international_organization = international_organization:hre
+				country_rank_level >= 3
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = mlo_trust_of_the_emperor_mod years = 40 mode = add }
+		}
+	}
+
+	mlo_overture_to_france = {
+		icon = liberty_egalite_fraternity
+		requires = { mlo_between_two_authorities }
+
+		enabled = {
+			OR = {
+				is_allied_with = { target = c:FRA }
+				has_royal_marriage_with = c:FRA
+				is_rival_of = c:FRA
+				c:FRA = { opinion = { target = root value >= 150 } }
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = mlo_overture_to_france_mod years = 40 mode = add }
+		}
+	}
+
+	mlo_the_italian_wars = {
+		icon = vauban_fortifications
+		requires = { mlo_reconcile_with_the_papacy mlo_trust_of_the_emperor mlo_overture_to_france }
+
+		enabled = {
+			OR = {
+				is_situation_active = situation:italian_wars
+				situation:italian_wars = { situation_has_ended = yes }
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = mlo_the_italian_wars_mod years = 40 mode = add }
+		}
+	}
+
+	mlo_isolate_papal_authority = {
+		icon = church_guidance
+		requires = { mlo_the_italian_wars }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:rome
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = mlo_isolate_papal_authority_mod years = 40 mode = add }
+		}
+	}
+
+	mlo_deny_imperial_authority = {
+		icon = fra_code_civil
+		requires = { mlo_the_italian_wars }
+
+		enabled = {
+			OR = {
+				is_leader_of_international_organization = international_organization:hre
+				country_rank_level >= 3
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = mlo_deny_imperial_authority_mod years = 40 mode = add }
+		}
+	}
+
+	mlo_repel_french_authority = {
+		icon = fra_expansion_of_france
+		requires = { mlo_the_italian_wars }
+
+		enabled = {
+			NOT = {
+				c:FRA = {
+					any_owned_location = {
+						region = region:italy_region
+					}
+				}
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = mlo_repel_french_authority_mod years = 40 mode = add }
+		}
+	}
+
+	mlo_italian_independence = {
+		icon = renaissance_prince
+		requires = { mlo_isolate_papal_authority mlo_deny_imperial_authority mlo_repel_french_authority }
+
+		enabled = {
+			any_owned_location = {
+				region = region:italy_region
+				count >= 200
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = mlo_italian_independence_mod years = -1 mode = add }
+			set_country_rank_effect = { rank = country_rank:rank_kingdom }
+		}
+	}
+
+	# ==================== FINAL ====================
+
+	mlo_who_achieves_all_things = {
+		icon = crown_power_advance_renaissance
+		requires = { mlo_heart_of_italy mlo_topple_the_old_rival_florence mlo_italian_independence }
+		final = yes
+
+		enabled = {
+			num_locations >= 500
+		}
+		duration = 365
+		on_completion = {
+			add_country_modifier = { modifier = mlo_who_achieves_all_things_mod years = -1 mode = add }
+			set_country_rank_effect = { rank = country_rank:rank_empire }
+		}
+	}
+}

@@ -1,0 +1,51 @@
+﻿# 貴族と市民の影響力バランス改革
+# 貴族の影響力が市民を上回るほど封建的な効果、
+# 市民の影響力が貴族を上回るほど商業的な効果が強まる
+
+brb_estates_balance_reform = {
+	unique = yes
+	icon = monarchy_reform_traditions_advance
+
+	potential = {
+		OR = {
+			has_unlocked_government_reform_trigger = { type = brb_estates_balance_reform }
+			has_reform = government_reform:brb_estates_balance_reform
+		}
+	}
+
+	allow = {
+		always = yes
+	}
+
+	# 貴族の影響力が市民より高いほど封建的効果が強まる
+	country_modifier = {
+		scale = {
+			value = "estate_power(estate_type:nobles_estate)"
+			subtract = "estate_power(estate_type:burghers_estate)"
+			min = 0.0
+			max = 1.0
+		}
+		nobles_estate_target_satisfaction = 0.20
+		burghers_estate_target_satisfaction = -0.20
+		global_estate_max_tax = 0.10
+		trade_income = -0.10
+	}
+
+	# 市民の影響力が貴族より高いほど商業的効果が強まる
+	country_modifier = {
+		scale = {
+			value = "estate_power(estate_type:burghers_estate)"
+			subtract = "estate_power(estate_type:nobles_estate)"
+			min = 0.0
+			max = 1.0
+		}
+		nobles_estate_target_satisfaction = -0.20
+		burghers_estate_target_satisfaction = 0.20
+		global_estate_max_tax = -0.10
+		trade_income = 0.10
+	}
+
+	on_deactivate = {}
+
+	years = 2
+}
