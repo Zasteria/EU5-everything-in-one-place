@@ -1,0 +1,43 @@
+﻿# Bohemia (BOH): decision unlocked by the mission boh_silesian_mines
+boh_silesian_mining_decision = {
+	decision_category = country_specific_decisions
+
+	hide_repeatable_tag = yes
+
+	potential = {
+		has_variable = boh_silesian_mining_unlocked
+	}
+
+	allow = {
+		gold >= 1000
+		NOT = { has_variable = boh_silesian_mining_cooldown }
+		any_owned_location = {
+			area = area:silesia_area
+			NOT = { has_location_modifier = boh_silesian_mines_mod }
+		}
+	}
+
+	ai_will_do = {
+		value = -1
+	}
+
+	option = {
+		name = boh_silesian_mining_decision.a
+		ai_chance = { value = 100 }
+		effect = {
+			add_gold = -1000
+			set_variable = {
+				name = boh_silesian_mining_cooldown
+				value = 1
+				years = 10
+			}
+			random_owned_location = {
+				limit = {
+					area = area:silesia_area
+					NOT = { has_location_modifier = boh_silesian_mines_mod }
+				}
+				add_location_modifier = { modifier = boh_silesian_mines_mod years = -1 mode = add }
+			}
+		}
+	}
+}

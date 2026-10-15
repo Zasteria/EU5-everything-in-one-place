@@ -1,0 +1,740 @@
+﻿den_kalmar_union_mission_pack = {
+	icon = nmt_scandinavia
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = DAN
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = { always = yes }
+
+	on_start = { set_variable = den_mission_started }
+	on_completion = { remove_variable = den_mission_started }
+	on_abort = { remove_variable = den_mission_started }
+
+	# ==================== ROOT ====================
+
+	den_restoration_of_denmark = {
+		icon = dan_rulers_of_the_north
+		requires = { }
+		enabled = {
+			legitimacy >= 70
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_valdemar_legacy_mod years = 100 mode = add }
+		}
+	}
+
+	# ==================== BRANCH A: カルマル同盟・スカンジナビア統一 ====================
+
+	den_secure_denmark = {
+		icon = dan_danish_legislation
+		requires = { den_restoration_of_denmark }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:roskilde
+			owns_or_non_sovereign_subject_owns = location:aalborg
+			owns_or_non_sovereign_subject_owns = location:malmo
+		}
+		on_completion = {
+			if = {
+				limit = { country_exists = c:SWE }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:SWE
+					target_character = root.ruler
+					years = 100
+				}
+			}
+			if = {
+				limit = { country_exists = c:NOR }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:NOR
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	den_norway_union = {
+		icon = dan_levy_recruitment
+		requires = { den_secure_denmark }
+		enabled = {
+			OR = {
+				c:NOR = { in_union_with = root }
+				c:NOR = { is_subject_of = root }
+				NOT = { country_exists = c:NOR }
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = den_events.10
+		}
+	}
+
+	den_sweden_union = {
+		icon = dan_levy_recruitment
+		requires = { den_secure_denmark }
+		enabled = {
+			OR = {
+				c:SWE = { in_union_with = root }
+				c:SWE = { is_subject_of = root }
+				NOT = { country_exists = c:SWE }
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = den_events.20
+		}
+	}
+
+	den_integrate_holstein = {
+		icon = dan_danish_legislation
+		requires = { den_norway_union }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:rendsburg
+			owns_or_non_sovereign_subject_owns = location:kiel
+			any_owned_location = {
+				area = area:holstein_area
+				count >= 5
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_holstein_integration_mod years = -1 mode = add }
+		}
+	}
+
+	den_kalmar_union = {
+		icon = dan_levy_recruitment
+		requires = { den_norway_union den_sweden_union }
+		enabled = {
+			OR = {
+				c:NOR = { in_union_with = root }
+				NOT = { country_exists = c:NOR }
+			}
+			OR = {
+				c:SWE = { in_union_with = root }
+				NOT = { country_exists = c:SWE }
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = den_events.30
+		}
+	}
+
+
+	den_unite_scandinavia = {
+		icon = dan_rulers_of_the_north
+		requires = { den_integrate_norway den_integrate_sweden den_integrate_holstein }
+		enabled = {
+			region:scandinavian_region = {
+				any_location_in_region = {
+					count >= 350
+					owner = root
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_scandinavia_united_mod years = -1 mode = add }
+			set_country_rank_effect = { rank = country_rank:rank_kingdom }
+		}
+	}
+
+	# ==================== BRANCH B: バルト海覇権・東方拡大 ====================
+
+	den_retake_gotland = {
+		icon = hsa_hanseatic_ties
+		requires = { den_restoration_of_denmark }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:visby
+		}
+		on_completion = {
+			location:visby = {
+				add_location_modifier = { modifier = den_visby_trade_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	den_sound_toll = {
+		icon = dan_royal_danish_navy
+		requires = { den_retake_gotland }
+		enabled = {
+			navy_size >= 20
+			monthly_income_trade_and_tax >= 80
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_sound_toll_mod years = -1 mode = add }
+		}
+	}
+
+	den_humiliate_hansa = {
+		icon = hsa_seal_of_the_hansa
+		requires = { den_sound_toll }
+		enabled = {
+			OR = {
+				owns_or_non_sovereign_subject_owns = location:lubeck
+				NOT = { country_exists = c:HSA }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_hansa_dominance_mod years = 30 mode = add }
+		}
+	}
+
+	den_reconquer_estonia = {
+		icon = hsa_mastery_of_the_sea
+		requires = { den_sound_toll }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:tallinn
+			owns_or_non_sovereign_subject_owns = location:narva
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_estonia_mod years = -1 mode = add }
+		}
+	}
+
+	den_control_livonia = {
+		icon = hsa_mastery_of_the_sea
+		requires = { den_reconquer_estonia }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:riga
+			owns_or_non_sovereign_subject_owns = location:tartu
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_livonia_mod years = -1 mode = add }
+		}
+	}
+
+	# B+Aブランチ合流: バルト海の覇者
+	den_master_of_the_baltic = {
+		icon = hsa_mastery_of_the_sea
+		requires = { den_humiliate_hansa den_control_livonia }
+		enabled = {
+			navy_size >= 50
+			owns_or_non_sovereign_subject_owns = location:konigsberg
+			owns_or_non_sovereign_subject_owns = location:gdansk
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_baltic_master_mod years = -1 mode = add }
+		}
+	}
+
+	den_eliminate_novgorod = {
+		icon = hsa_global_reach
+		requires = { den_master_of_the_baltic }
+		enabled = {
+			OR = {
+				owns_or_non_sovereign_subject_owns = location:novgorod
+				NOT = { country_exists = c:NOV }
+			}
+			owns_or_non_sovereign_subject_owns = location:pskov
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_eastern_routes_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH C: イングランド征服・北海帝国 ====================
+
+	den_rival_england = {
+		icon = dan_old_naval_traditions
+		requires = { den_restoration_of_denmark }
+		enabled = {
+			OR = {
+				c:ENG = { is_rival_of = root }
+				power_projection >= 15
+			}
+			navy_size >= 15
+		}
+		on_completion = {
+			if = {
+				limit = { location:york = { exists = yes } }
+				add_casus_belli = {
+					target = location:york.owner
+					type = casus_belli:cb_conquer_province
+					province = location:york.province
+				}
+			}
+		}
+	}
+
+	den_north_sea_fleet = {
+		icon = dan_royal_danish_navy
+		requires = { den_rival_england }
+		enabled = {
+			navy_size >= 40
+			ship_build_speed >= 0
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_north_sea_fleet_mod years = -1 mode = add }
+		}
+	}
+
+	den_invade_england = {
+		icon = dan_scanian_regiment
+		requires = { den_north_sea_fleet }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:york
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_england_invasion_mod years = 30 mode = add }
+			add_prestige = 20
+		}
+	}
+
+	den_conquer_england = {
+		icon = dan_scanian_regiment
+		requires = { den_invade_england }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:london
+			owns_or_non_sovereign_subject_owns = location:edinburgh
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_north_sea_empire_mod years = -1 mode = add }
+			set_country_rank_effect = { rank = country_rank:rank_empire }
+		}
+	}
+
+	# ==================== BRANCH D: 宗教分岐（3方向）====================
+
+	den_religious_question = {
+		icon = dan_danish_orthodoxy
+		requires = { den_secure_denmark }
+		enabled = {
+			is_situation_active = situation:reformation
+		}
+		on_completion = {
+			trigger_event_non_silently = den_events.40
+		}
+	}
+
+	# D1: カトリック路線
+	den_catholic_denmark = {
+		icon = dan_danish_orthodoxy
+		requires = { den_religious_question }
+		enabled = {
+			dominant_religion = religion:catholic
+			c:PAP = { opinion = { target = root value >= 180 } }
+			NOT = { has_country_modifier = den_lutheran_reform_mod }
+			NOT = { has_country_modifier = den_norse_revival_mod }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_catholic_devotion_mod years = -1 mode = add }
+		}
+	}
+
+	den_crusade_north = {
+		icon = dan_danish_orthodoxy
+		requires = { den_catholic_denmark }
+		enabled = {
+			any_current_war = {
+				OR = {
+					attacker_leader = root
+					defender_leader = root
+				}
+				any_war_participant = {
+					religion.group = religion_group:muslim
+					NOT = { this = root }
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_northern_crusader_mod years = -1 mode = add }
+			add_prestige = 20
+		}
+	}
+
+	# D2: プロテスタント路線（ルター派改革）
+	den_reformation = {
+		icon = dan_danish_legislation
+		requires = { den_religious_question }
+		enabled = {
+			OR = {
+				dominant_religion = religion:lutheran
+				dominant_religion = religion:calvinist
+			}
+			NOT = { has_country_modifier = den_catholic_devotion_mod }
+			NOT = { has_country_modifier = den_norse_revival_mod }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_lutheran_reform_mod years = -1 mode = add }
+		}
+	}
+
+	den_protestant_church = {
+		icon = dan_danish_legislation
+		requires = { den_reformation }
+		enabled = {
+			any_owned_location = {
+				has_building = building_type:university
+				count >= 3
+			}
+			estate_satisfaction:clergy_estate >= 0.65
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_protestant_church_mod years = -1 mode = add }
+		}
+	}
+
+	den_protestant_league = {
+		icon = dan_danish_legislation
+		requires = { den_protestant_church }
+		enabled = {
+			situation:war_of_religions = { situation_has_ended = yes }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_protestant_league_mod years = -1 mode = add }
+		}
+	}
+
+	# D3: ノルド改宗路線（異教復活）
+	den_norse_revival = {
+		icon = nor_seaborn_country
+		requires = { den_religious_question }
+		enabled = {
+			dominant_religion = religion:norse
+			NOT = { has_country_modifier = den_catholic_devotion_mod }
+			NOT = { has_country_modifier = den_lutheran_reform_mod }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_norse_revival_mod years = -1 mode = add }
+		}
+	}
+
+	den_viking_tradition = {
+		icon = nor_seaborn_country
+		requires = { den_norse_revival }
+		enabled = {
+			navy_tradition >= 50
+			navy_size >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_viking_warriors_mod years = -1 mode = add }
+		}
+	}
+
+	den_asgard_kingdom = {
+		icon = nor_seaborn_country
+		requires = { den_viking_tradition }
+		enabled = {
+			country_rank = country_rank:rank_empire
+			num_locations >= 500
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_asgard_kingdom_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH E: 内政・経済・絶対王政 ====================
+
+	den_strengthen_crown = {
+		icon = dan_danish_legislation
+		requires = { den_restoration_of_denmark }
+		enabled = {
+			legitimacy >= 95
+			estate_satisfaction:nobles_estate >= 0.65
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_royal_authority_mod years = -1 mode = add }
+		}
+	}
+
+	den_copenhagen_university = {
+		icon = dan_rentekammer_advance
+		requires = { den_strengthen_crown }
+		enabled = {
+			location:kobenhavn = {
+				has_building = building_type:university
+			}
+		}
+		on_completion = {
+			location:kobenhavn = {
+				add_location_modifier = { modifier = den_copenhagen_learning_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	den_develop_copenhagen = {
+		icon = dan_admiralty_college
+		requires = { den_strengthen_crown }
+		enabled = {
+			location:kobenhavn = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+			location:kobenhavn = { development >= 30 }
+		}
+		on_completion = {
+			location:kobenhavn = {
+				add_location_modifier = { modifier = den_copenhagen_capital_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	den_absolutism = {
+		icon = dan_admiralty_college
+		requires = { den_copenhagen_university den_develop_copenhagen }
+		enabled = {
+			"estate_power(estate_type:crown_estate)" >= 0.30
+			legitimacy >= 90
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_absolutism_mod years = -1 mode = add }
+		}
+	}
+
+	den_economic_powerhouse = {
+		icon = dan_trading_economy
+		requires = { den_absolutism }
+		enabled = {
+			monthly_income_trade_and_tax >= 300
+			any_owned_location = {
+				is_market_center = yes
+				count >= 3
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_danish_economy_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== 宗教分岐合流: デンマーク王国の栄光 ====================
+
+	den_kingdom_of_god = {
+		icon = dan_danish_orthodoxy
+		requires = { den_catholic_denmark }
+		enabled = {
+			c:PAP = { opinion = { target = root value >= 180 } }
+			owns_or_non_sovereign_subject_owns = location:hamburg
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_papal_champion_mod years = -1 mode = add }
+		}
+	}
+
+
+
+	# ==================== BRANCH A延伸 ====================
+
+
+	den_integrate_norway = {
+		icon = dan_danish_agriculture
+		requires = { den_kalmar_union }
+		enabled = {
+			owns = location:oslo
+			owns = location:bergen
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_norway_integration_mod years = -1 mode = add }
+		}
+	}
+
+	den_integrate_sweden = {
+		icon = nor_bounties_of_the_sea
+		requires = { den_kalmar_union }
+		enabled = {
+			owns = location:stockholm
+			any_owned_location = {
+				area = area:svealand_area
+				count >= 5
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_sweden_integration_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH B延伸 ====================
+
+	den_stralsund_treaty = {
+		icon = hsa_hanseatic_ties
+		requires = { den_sound_toll }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:stralsund
+			owns_or_non_sovereign_subject_owns = location:stettin
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_pomeranian_coast_mod years = -1 mode = add }
+		}
+	}
+
+	den_expand_the_toll = {
+		icon = dan_trading_economy
+		requires = { den_stralsund_treaty den_humiliate_hansa }
+		enabled = {
+			monthly_income_trade_and_tax >= 200
+			any_owned_location = {
+				is_market_center = yes
+				count >= 4
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_sound_toll_extended_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH C延伸 ====================
+
+	den_danish_scotland = {
+		icon = dan_scanian_regiment
+		requires = { den_north_sea_fleet }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:edinburgh
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_scotland_mod years = 30 mode = add }
+		}
+	}
+
+	# ==================== BRANCH E延伸 ====================
+
+	den_revoke_privileges = {
+		icon = dan_danish_legislation
+		requires = { den_strengthen_crown }
+		enabled = {
+			"estate_power(estate_type:crown_estate)" >= 0.25
+			government_reform_slots >= 1
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_crown_privileges_mod years = -1 mode = add }
+		}
+	}
+
+	den_danish_navy = {
+		icon = dan_old_naval_traditions
+		requires = { den_develop_copenhagen }
+		enabled = {
+			navy_size >= 30
+			location:kobenhavn = { has_building = building_type:dock }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_royal_navy_mod years = -1 mode = add }
+		}
+	}
+
+	den_amber_trade = {
+		icon = dan_trading_economy
+		requires = { den_revoke_privileges }
+		enabled = {
+			produced_in_country:amber > 3
+			monthly_income_trade_and_tax >= 100
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_amber_trade_mod years = -1 mode = add }
+		}
+	}
+
+	den_develop_aarhus = {
+		icon = dan_trading_economy
+		requires = { den_secure_denmark }
+		enabled = {
+			location:aarhus = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+			location:aarhus = { development >= 25 }
+		}
+		on_completion = {
+			location:aarhus = {
+				add_location_modifier = { modifier = den_aarhus_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	den_develop_malmo = {
+		icon = dan_trading_economy
+		requires = { den_secure_denmark }
+		enabled = {
+			location:malmo = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+				development >= 25
+			}
+		}
+		on_completion = {
+			location:malmo = {
+				add_location_modifier = { modifier = den_malmo_mod years = -1 mode = add }
+			}
+		}
+	}
+
+
+	den_develop_trondheim = {
+		icon = dan_danish_agriculture
+		requires = { den_integrate_norway }
+		enabled = {
+			owns = location:nidaros
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_norway_north_mod years = -1 mode = add }
+		}
+	}
+
+
+	den_finland_integration = {
+		icon = dan_danish_agriculture
+		requires = { den_integrate_sweden }
+		enabled = {
+			owns = location:abo
+			owns = location:vyborg
+			owns = location:uleaborg
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_finland_mod years = -1 mode = add }
+		}
+	}
+
+	# A+E合流: スカンジナビア黄金時代
+	den_scandinavian_golden_age = {
+		icon = dan_rulers_of_the_north
+		requires = { den_integrate_norway den_integrate_sweden den_absolutism }
+		enabled = {
+			num_locations >= 400
+			monthly_income_trade_and_tax >= 400
+			prestige >= 70
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_golden_age_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== 大合流: 北方帝国 ====================
+
+	den_north_sea_dominion = {
+		icon = hsa_global_reach
+		requires = { den_unite_scandinavia den_master_of_the_baltic den_scandinavian_golden_age }
+		enabled = {
+			num_locations >= 600
+			monthly_income_trade_and_tax >= 600
+			navy_size >= 80
+		}
+		on_completion = {
+			add_country_modifier = { modifier = den_north_sea_dominion_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== FINAL ====================
+
+	den_scandinavian_empire = {
+		icon = dan_rulers_of_the_north
+		requires = { den_north_sea_dominion den_eliminate_novgorod }
+		final = yes
+		enabled = {
+			num_locations >= 1000
+			prestige >= 80
+			monthly_income_trade_and_tax >= 1000
+		}
+		on_completion = {
+			trigger_event_non_silently = den_events.99
+		}
+	}
+}

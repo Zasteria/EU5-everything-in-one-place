@@ -119,6 +119,9 @@ these are prepared, all are cheap, and the owner has agreed to the hover one.
    пустыми, должны показывать списки, и свежезанятые тоже.
 6. **0.3.0:** районы одной провинции (Чернигов) одного цвета на карте прав,
    проценты в подсказке одинаковые.
+7. **0.6.0, отрасли, список на CMF:** Молдавия — текстиль во всех трёх; в
+   подсказке режим 1: 3/2/1, ремёсла 0.67; 2: текстиль = напитки = 2; 3:
+   ремёсла и роскошь 0.75 (по стартовым файлам).
 
 **`where_to_produce`, twenty-eighth load.** Four small things and one question,
 all of it one glance with the results window open. Not worth a run of its own.

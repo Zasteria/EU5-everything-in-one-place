@@ -1,0 +1,335 @@
+﻿nav_crown_mission_pack = {
+	icon = nmt_iberia
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = NAV
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = {
+		always = yes
+	}
+
+	on_start = {
+		set_variable = nav_crown_started
+	}
+
+	on_completion = {
+		remove_variable = nav_crown_started
+	}
+
+	on_abort = {
+		remove_variable = nav_crown_started
+	}
+
+	# ==================== ROOT: バスクの王国 ====================
+
+	nav_kingdom_of_pamplona = {
+		icon = nav_royal_basque_society
+		requires = { }
+
+		enabled = {
+			always = yes
+		}
+		duration = 0
+		on_completion = {
+			trigger_event_non_silently = nav_events.1
+		}
+	}
+
+	# ==================== BRANCH 1: バスクの結束 ====================
+
+	nav_secure_bayonne = {
+		icon = nav_basque_ferocity
+		requires = { nav_kingdom_of_pamplona }
+
+		enabled = {
+			own_entire_province = province_definition:bayonne_province
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = nav_secure_bayonne_mod years = 40 mode = add }
+		}
+	}
+
+	nav_basque_unity = {
+		icon = nav_royal_basque_society
+		requires = { nav_secure_bayonne }
+
+		enabled = {
+			num_locations >= 12
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = nav_basque_unity_mod years = -1 mode = add }
+		}
+	}
+
+	nav_fueros_and_privileges = {
+		icon = nav_chartered_councils
+		requires = { nav_kingdom_of_pamplona }
+
+		enabled = {
+			estate_satisfaction:nobles_estate >= 0.60
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = nav_fueros_and_privileges_mod years = 40 mode = add }
+		}
+	}
+
+	nav_efficient_administration = {
+		icon = nav_efficient_bureaucracy
+		requires = { nav_fueros_and_privileges }
+
+		enabled = {
+			any_owned_location = {
+				has_building = building_type:counting_house
+				count >= 2
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = nav_efficient_administration_mod years = 40 mode = add }
+		}
+	}
+
+	nav_renaissance_of_pamplona = {
+		icon = nav_a_renaissance_realm
+		requires = { nav_basque_unity nav_efficient_administration }
+
+		enabled = {
+			has_embraced_institution = institution:renaissance
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = nav_renaissance_of_pamplona_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH 2: ガスコーニュ進出 ====================
+
+	nav_intervene_hundred_years_war = {
+		icon = nav_basque_ferocity
+		requires = { nav_kingdom_of_pamplona }
+
+		enabled = {
+			is_situation_active = situation:hundred_years_war
+		}
+		duration = 120
+		on_completion = {
+			trigger_event_non_silently = nav_events.4
+		}
+	}
+
+	nav_foothold_in_france = {
+		icon = nav_basque_ferocity
+		requires = { nav_intervene_hundred_years_war }
+
+		enabled = {
+			any_owned_location = {
+				region = region:france_region
+				count >= 3
+			}
+		}
+		duration = 150
+		on_completion = {
+			add_country_modifier = { modifier = nav_foothold_in_france_mod years = 40 mode = add }
+		}
+	}
+
+	nav_secure_gascony = {
+		icon = nav_navarrese_defense_force
+		requires = { nav_foothold_in_france }
+
+		enabled = {
+			own_entire_province = province_definition:tursan_province
+			owns_or_non_sovereign_subject_owns = location:bordeaux
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = nav_secure_gascony_mod years = 40 mode = add }
+		}
+	}
+
+	nav_claims_on_france = {
+		icon = nav_the_national_military_academy
+		requires = { nav_secure_gascony }
+
+		enabled = {
+			any_owned_location = {
+				region = region:france_region
+				count >= 20
+			}
+		}
+		duration = 0
+		on_completion = {
+			trigger_event_non_silently = nav_events.2
+		}
+	}
+
+	nav_house_of_evreux = {
+		icon = nav_riflemen_march
+		requires = { nav_claims_on_france }
+
+		enabled = {
+			OR = {
+				in_union_with = c:FRA
+				owns = location:paris
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = nav_house_of_evreux_mod years = -1 mode = add }
+		}
+	}
+
+	nav_claim_french_throne = {
+		icon = nav_the_national_military_academy
+		requires = { nav_house_of_evreux }
+
+		enabled = {
+			NOT = { country_exists = c:FRA }
+		}
+		duration = 365
+		on_completion = {
+			add_country_modifier = { modifier = nav_claim_french_throne_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH 3: イベリアの統一 ====================
+
+	nav_aragonese_inheritance = {
+		icon = nav_memories_reconquista
+		requires = { nav_kingdom_of_pamplona }
+
+		enabled = {
+			OR = {
+				in_union_with = c:ARA
+				is_allied_with = { target = c:ARA }
+				is_rival_of = c:ARA
+			}
+		}
+		duration = 0
+		on_completion = {
+			trigger_event_non_silently = nav_events.3
+		}
+	}
+
+	nav_castilian_question = {
+		icon = nav_memories_reconquista
+		requires = { nav_aragonese_inheritance }
+
+		enabled = {
+			OR = {
+				is_allied_with = { target = c:CAS }
+				is_rival_of = c:CAS
+				has_royal_marriage_with = c:CAS
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = nav_castilian_question_mod years = 40 mode = add }
+		}
+	}
+
+	nav_reconquista_legacy = {
+		icon = nav_memories_reconquista
+		requires = { nav_castilian_question }
+
+		enabled = {
+			any_owned_location = {
+				region = region:iberia_region
+				count >= 10
+			}
+		}
+		duration = 150
+		on_completion = {
+			add_country_modifier = { modifier = nav_reconquista_legacy_mod years = 40 mode = add }
+		}
+	}
+
+	nav_dominate_iberia = {
+		icon = nav_royal_basque_society
+		requires = { nav_reconquista_legacy }
+
+		enabled = {
+			any_owned_location = {
+				region = region:iberia_region
+				count >= 40
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = nav_dominate_iberia_mod years = -1 mode = add }
+			set_country_rank_effect = { rank = country_rank:rank_kingdom }
+		}
+	}
+
+	# ==================== 海への憧憬（小ブランチ） ====================
+
+	nav_basque_seafarers = {
+		icon = nav_people_of_the_sea
+		requires = { nav_kingdom_of_pamplona }
+
+		enabled = {
+			any_owned_location = {
+				has_building = building_type:fishing_village
+				count >= 1
+			}
+		}
+		duration = 90
+		on_completion = {
+			location:pamplona = {
+				add_location_modifier = { modifier = nav_basque_seafarers_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	nav_fearless_fishermen = {
+		icon = nav_fearless_seamen
+		requires = { nav_basque_seafarers }
+
+		enabled = {
+			navy_size >= 10
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = nav_fearless_fishermen_mod years = 40 mode = add }
+		}
+	}
+
+	nav_transatlantic_whalers = {
+		icon = nav_transatlantic_whaling
+		requires = { nav_fearless_fishermen }
+
+		enabled = {
+			navy_size >= 30
+		}
+		duration = 150
+		on_completion = {
+			add_country_modifier = { modifier = nav_transatlantic_whalers_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== FINAL ====================
+
+	nav_basque_in_glory = {
+		icon = nav_a_renaissance_realm
+		requires = { nav_renaissance_of_pamplona nav_claim_french_throne nav_dominate_iberia }
+		final = yes
+
+		enabled = {
+			has_or_had_tag = SPA
+		}
+		duration = 365
+		on_completion = {
+			add_country_modifier = { modifier = nav_basque_in_glory_mod years = -1 mode = add }
+			set_country_rank_effect = { rank = country_rank:rank_empire }
+		}
+	}
+}

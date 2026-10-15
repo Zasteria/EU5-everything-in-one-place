@@ -1198,6 +1198,27 @@ bcm_register = {
 		setting_id = rebuild_setup
 	}
 
+	## Поддержка отрасли (industry): как карта отраслей считает, его три режима
+	# 10-15. По умолчанию 2 — правило 0.4.1, то, что карта рисовала до списка.
+	# Синхронизация только переписывает выбор в глобальную переменную, которую
+	# читает проход; посчитает его драйвер или обратный звонок.
+	cmm_register_dropdown_setting = {
+		mod_id = bcm
+		setting_id = industry_mode
+		tab_id = main
+		group_id = industry
+		default_index = 2
+		option_count = 3
+	}
+	cmm_sync_setting_alias = {
+		setting = bcm__industry_mode
+		alias = bcm_ind_mode
+	}
+	if = {
+		limit = { has_variable = bcm_ind_mode }
+		set_global_variable = { name = bcm_ind_mode_g value = var:bcm_ind_mode }
+	}
+
 	## Диагностика (debug)
 	cmm_register_bool_setting = {
 		mod_id = bcm
@@ -1257,6 +1278,13 @@ bcm_handle_callback = {
 		}
 		flag:bcm__rebuild_setup = {
 			bcm_dbg_rebuild_setup = yes
+		}
+		flag:bcm__industry_mode = {
+			cmm_sync_setting_alias = {
+				setting = bcm__industry_mode
+				alias = bcm_ind_mode
+			}
+			bcm_ind_mode_changed = yes
 		}
 	}
 }

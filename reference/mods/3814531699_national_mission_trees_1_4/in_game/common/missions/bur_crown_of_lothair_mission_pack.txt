@@ -1,0 +1,408 @@
+﻿bur_crown_of_lothair_mission_pack = {
+	icon = pro_missions
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = BUR
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = {
+		always = yes
+	}
+
+	on_start = { set_variable = bur_mission_started }
+	on_completion = { remove_variable = bur_mission_started }
+	on_abort = { remove_variable = bur_mission_started }
+
+	# ==================== ROOT ====================
+
+	bur_duchy_of_burgundy = {
+		icon = bur_between_two_realms
+		requires = { }
+		enabled = {
+			is_situation_active = situation:hundred_years_war
+		}
+		on_completion = {
+			trigger_event_non_silently = bur_events.1
+		}
+	}
+
+	# ==================== ブランチA: 英仏の立ち回り ====================
+
+	bur_balance_of_power = {
+		icon = bur_between_two_realms
+		requires = { bur_duchy_of_burgundy }
+		enabled = {
+			power_projection >= 7
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bur_balance_of_power_mod years = 100 mode = add }
+		}
+	}
+
+	bur_ally_england = {
+		icon = english_ambition
+		requires = { bur_balance_of_power }
+		enabled = {
+			is_allied_with = { target = c:ENG }
+			c:ENG = { opinion = { target = root value >= 100 } }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bur_ally_england_mod years = -1 mode = add }
+			if = {
+				limit = { country_exists = c:FRA }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:FRA
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	bur_siege_of_calais = {
+		icon = english_tradition
+		requires = { bur_ally_england }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:calais
+		}
+		on_completion = {
+			location:calais = {
+				add_location_modifier = { modifier = bur_calais_port_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	bur_treaty_of_troyes = {
+		icon = english_heritage
+		requires = { bur_siege_of_calais }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:reims
+			owns_or_non_sovereign_subject_owns = location:paris
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bur_treaty_of_troyes_mod years = -1 mode = add }
+			set_country_rank_effect = { rank = country_rank:rank_kingdom }
+		}
+	}
+
+	bur_ally_france = {
+		icon = french_ambition
+		requires = { bur_balance_of_power }
+		enabled = {
+			is_allied_with = { target = c:FRA }
+			c:FRA = { opinion = { target = root value >= 100 } }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bur_ally_france_mod years = -1 mode = add }
+		}
+	}
+
+	bur_treaty_of_arras = {
+		icon = french_heritage
+		requires = { bur_ally_france }
+		enabled = {
+			any_owned_location = {
+				area = area:lorraine_area
+				count >= 8
+			}
+			c:FRA = { opinion = { target = root value >= 150 } }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bur_treaty_of_arras_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== ブランチB: 宮廷・文化 ====================
+
+	bur_join_hre = {
+		icon = lux_destined_rule
+		requires = { bur_duchy_of_burgundy }
+		enabled = {
+			OR = {
+				AND = {
+					international_organization:hre.leader_country = {
+						opinion = { target = root value >= 100 }
+					}
+				}
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = bur_events.4
+		}
+	}
+
+	bur_court_of_dijon = {
+		icon = bur_rich_soil_of_burgundy
+		requires = { bur_join_hre }
+		enabled = {
+			legitimacy >= 100
+			stability >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bur_court_of_dijon_mod years = -1 mode = add }
+		}
+	}
+
+	bur_golden_fleece = {
+		icon = golden_fleece
+		requires = { bur_court_of_dijon }
+		enabled = {
+			current_date > 1400.1.1
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bur_golden_fleece_mod years = -1 mode = add }
+		}
+	}
+
+	bur_estates_general = {
+		icon = court_accounting
+		requires = { bur_golden_fleece }
+		enabled = {
+			total_population >= 1000
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bur_estates_general_mod years = -1 mode = add }
+		}
+	}
+
+	bur_feast_of_pheasants = {
+		icon = golden_fleece
+		requires = { bur_estates_general }
+		enabled = {
+			monthly_prestige >= 0.30
+			c:PAP = { opinion = { target = root value >= 100 } }
+		}
+		on_completion = {
+			trigger_event_non_silently = bur_events.2
+		}
+	}
+
+	bur_council_of_mechelen = {
+		icon = bureaucracy_law_advance
+		requires = { bur_feast_of_pheasants }
+		enabled = {
+			owns = location:mechelen
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bur_council_of_mechelen_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== ブランチC: 領土拡張（フランドル・ネーデルラント）====================
+
+	bur_flanders_in_the_war = {
+		icon = flemish_cloth_making
+		requires = { bur_duchy_of_burgundy }
+		enabled = {
+			OR = {
+				AND = {
+					country_exists = c:FLA
+					c:FLA = { is_subject_of = c:ENG }
+				}
+				AND = {
+					country_exists = c:FLA
+					c:FLA = { opinion = { target = root value >= 150 } }
+				}
+				NOT = { country_exists = c:FLA }
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = bur_events.6
+			if = {
+				limit = { location:nevers = { exists = yes } }
+				add_casus_belli = {
+					target = location:nevers.owner
+					type = casus_belli:cb_conquer_province
+					province = location:nevers.province
+				}
+			}
+		}
+	}
+
+
+	bur_nevers_union = {
+		icon = lux_heirs_john_blind
+		requires = { bur_flanders_in_the_war }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:nevers
+		}
+		on_completion = {
+			if = {
+				limit = { location:brussels = { exists = yes } }
+				add_casus_belli = {
+					target = location:brussels.owner
+					type = casus_belli:cb_conquer_province
+					province = location:brussels.province
+				}
+			}
+		}
+	}
+
+	bur_flemish_cloth = {
+		icon = flemish_cloth_making
+		requires = { bur_flanders_in_the_war }
+		enabled = {
+			OR = {
+				produced_in_country:cloth > 5
+				produced_in_country:fine_cloth > 3
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bur_flemish_cloth_mod years = -1 mode = add }
+		}
+	}
+
+	bur_integrate_brabant = {
+		icon = netherlandish_protoindustry
+		requires = { bur_nevers_union }
+		enabled = {
+			any_owned_location = {
+				area = area:brabant_area
+				count >= 10
+			}
+			owns_or_non_sovereign_subject_owns = location:antwerp
+		}
+		on_completion = {
+			if = {
+				limit = { location:valenciennes = { exists = yes } }
+				add_casus_belli = {
+					target = location:valenciennes.owner
+					type = casus_belli:cb_conquer_province
+					province = location:valenciennes.province
+				}
+			}
+		}
+	}
+
+	bur_hainaut_namur = {
+		icon = lux_heirs_john_blind
+		requires = { bur_integrate_brabant }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:namur
+			owns_or_non_sovereign_subject_owns = location:mons
+		}
+		on_completion = {
+			if = {
+				limit = { location:rotterdam = { exists = yes } }
+				add_casus_belli = {
+					target = location:rotterdam.owner
+					type = casus_belli:cb_conquer_province
+					province = location:rotterdam.province
+				}
+			}
+		}
+	}
+
+	bur_holland_zeeland = {
+		icon = hollander_beater
+		requires = { bur_hainaut_namur }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:rotterdam
+			owns_or_non_sovereign_subject_owns = location:amsterdam
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bur_low_countries_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== ブランチD: 東方拡張（ロタリンギア）====================
+
+	bur_franchecomte_fiefdom = {
+		icon = bur_rich_soil_of_burgundy
+		requires = { bur_duchy_of_burgundy }
+		enabled = {
+			OR = {
+				NOT = { country_exists = c:FCB }
+				in_union_with = c:FCB
+				NOT = { has_ruler = character:bur_eudes_iv_burgundy }
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = bur_events.5
+		}
+	}
+
+	bur_integrate_franche_comte = {
+		icon = bur_rich_soil_of_burgundy
+		requires = { bur_franchecomte_fiefdom }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:dole
+		}
+		on_completion = {
+			if = {
+				limit = { location:nancy = { exists = yes } }
+				add_casus_belli = {
+					target = location:nancy.owner
+					type = casus_belli:cb_conquer_province
+					province = location:nancy.province
+				}
+			}
+		}
+	}
+
+	bur_expand_into_lorraine = {
+		icon = lux_fortress_europe
+		requires = { bur_integrate_franche_comte }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:nancy
+		}
+		on_completion = {
+			if = {
+				limit = { location:luxembourg = { exists = yes } }
+				add_casus_belli = {
+					target = location:luxembourg.owner
+					type = casus_belli:cb_conquer_province
+					province = location:luxembourg.province
+				}
+			}
+		}
+	}
+
+	bur_luxemburg = {
+		icon = lux_destined_rule
+		requires = { bur_expand_into_lorraine }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:luxembourg
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bur_luxemburg_mod years = -1 mode = add }
+		}
+	}
+
+	bur_dominate_rhine = {
+		icon = lux_fortress_europe
+		requires = { bur_luxemburg }
+		enabled = {
+			any_owned_location = {
+				area = area:rhineland_area
+				count >= 8
+			}
+			owns_or_non_sovereign_subject_owns = location:strasbourg
+		}
+		on_completion = {
+			add_country_modifier = { modifier = bur_dominate_rhine_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== FINAL ====================
+
+	bur_crown_of_lothair = {
+		icon = legacy_of_great_empires
+		requires = { bur_treaty_of_troyes bur_treaty_of_arras bur_council_of_mechelen bur_holland_zeeland bur_dominate_rhine }
+		final = yes
+		enabled = {
+			num_locations >= 200
+			total_population >= 2000
+		}
+		on_completion = {
+			trigger_event_non_silently = bur_events.3
+		}
+	}
+}

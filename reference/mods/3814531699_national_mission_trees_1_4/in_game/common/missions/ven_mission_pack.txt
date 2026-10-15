@@ -1,0 +1,700 @@
+﻿ven_grand_strategy_mission_pack = {
+	icon = nmt_mediterranean_port
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = VEN
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = {
+		always = yes
+	}
+
+	on_start = {
+		set_variable = ven_grand_strategy_started
+	}
+
+	on_completion = {
+		remove_variable = ven_grand_strategy_started
+	}
+
+	on_abort = {
+		remove_variable = ven_grand_strategy_started
+	}
+
+	# ========================================================================
+	# 起：本土の基盤
+	# ========================================================================
+
+	# 始点（本土系統）
+	ven_mainland_food_crisis = {
+		icon = ven_provveditori_ai_beni_inculti
+		requires = { }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:venice
+			location:venice = { rgo_level >= 6 }
+		}
+		duration = 60
+		on_completion = {
+			location:venice = {
+				add_location_modifier = {
+					modifier = ven_grain_reserves
+					years = -1
+					mode = add
+				}
+			}
+		}
+	}
+
+	ven_scaliger_war = {
+		icon = ven_mixed_naval_tactics
+		requires = { ven_mainland_food_crisis }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:treviso
+			owns_or_non_sovereign_subject_owns = location:vicenza
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = ven_scaliger_victory years = 30 mode = add }
+			trigger_event_non_silently = ven_events.1
+		}
+	}
+
+	# ==== 起→承：本土の安定化 ====
+
+	ven_mainland_consolidation = {
+		icon = ven_stato_da_mar
+		requires = { ven_scaliger_war }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:padova
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = ven_mainland_order years = 35 mode = add }
+		}
+	}
+
+	# ==== 起→承：テラフェルマの拡大 ====
+
+	ven_terraferma_expansion = {
+		icon = ven_stato_da_mar
+		requires = { ven_scaliger_war }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:verona
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = ven_terraferma_growth years = 40 mode = add }
+			trigger_event_non_silently = ven_events.2
+		}
+	}
+
+	# ========================================================================
+	# 承：水の都の整備（本土の安定化ルート）
+	# ========================================================================
+
+	ven_warehouse_expansion = {
+		icon = ven_printing_industry
+		requires = { ven_mainland_consolidation }
+
+		enabled = {
+			total_effective_building_levels:market_warehouse >= 5
+		}
+		duration = 60
+		on_completion = {
+			location:venice = {
+				add_location_modifier = {
+					modifier = ven_fondaco_supply
+					years = -1
+					mode = add
+				}
+			}
+		}
+	}
+
+	ven_piazza_san_marco = {
+		icon = ven_gothic_architecture
+		requires = { ven_mainland_consolidation }
+
+		enabled = {
+			location:venice = { prosperity >= 0.80 }
+		}
+		duration = 60
+		on_completion = {
+			location:venice = {
+				add_location_modifier = {
+					modifier = ven_san_marco_square
+					years = -1
+					mode = add
+				}
+			}
+		}
+	}
+
+	ven_canal_administration = {
+		icon = ven_provveditori_ai_beni_inculti
+		requires = { ven_mainland_consolidation }
+
+		enabled = {
+			total_effective_building_levels:wharf >= 4
+		}
+		duration = 60
+		on_completion = {
+			add_country_modifier = { modifier = ven_canal_efficiency years = 35 mode = add }
+		}
+	}
+
+	# ---- フォンダコ（倉庫の拡張から） ----
+	ven_fondaco = {
+		icon = ven_printing_industry
+		requires = { ven_warehouse_expansion }
+
+		enabled = {
+			any_owned_location = {
+				is_market_center = yes
+				count >= 10
+			}
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = ven_fondaco_network years = -1 mode = add }
+		}
+	}
+
+	# ---- 富の橋の繁栄（フォンダコから） ----
+	ven_bridge_of_wealth = {
+		icon = ven_printing_industry
+		requires = { ven_fondaco }
+
+		enabled = {
+			monthly_income_trade_and_tax >= 800
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = ven_bridge_of_wealth_bonus years = -1 mode = add }
+		}
+	}
+
+	# ---- 国立マルチャーナ図書館（サン・マルコ広場の整備から） ----
+	ven_marciana_library = {
+		icon = woodblock_printing
+		requires = { ven_piazza_san_marco }
+
+		enabled = {
+			location:venice = {
+				has_building = building_type:library
+				has_building = building_type:university
+			}
+		}
+		duration = 90
+		on_completion = {
+			location:venice = {
+				add_location_modifier = {
+					modifier = ven_marciana_biblioteca
+					years = -1
+					mode = add
+				}
+			}
+		}
+	}
+
+	# ---- ドゥカーレ宮殿の改修（国立マルチャーナ図書館から） ----
+	ven_doges_palace = {
+		icon = ven_gothic_architecture
+		requires = { ven_marciana_library }
+
+		enabled = {
+			custom_description = {
+				text = ven_doges_palace_event_occurred_tt
+				has_variable = unlocked_the_doges_palace
+			}
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = ven_doges_authority years = 40 mode = add }
+			trigger_event_non_silently = ven_events.3
+		}
+	}
+
+	# ---- アルセナーレ・ディ・ヴェネツィア（水路の管理から、水の都へ繋がる） ----
+	ven_arsenal = {
+		icon = expanded_arsenale
+		requires = { ven_canal_administration }
+
+		enabled = {
+			total_effective_building_levels:wharf >= 8
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = ven_arsenal_production years = 50 mode = add }
+			trigger_event_non_silently = ven_events.4
+		}
+	}
+
+	# ---- ロンバルディアの覇権（フェラーラの確保から） ----
+	ven_lombardy_hegemony = {
+		icon = ven_mixed_naval_tactics
+		requires = { ven_secure_ferrara }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:milano
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = ven_lombardy_dominance years = -1 mode = add }
+		}
+	}
+
+	# ---- ジェノヴァとの決着（ロンバルディアの覇権から） ----
+	ven_settling_with_genoa = {
+		icon = ven_mixed_naval_tactics
+		requires = { ven_lombardy_hegemony }
+
+		enabled = {
+			OR = {
+				NOT = { country_exists = c:GEN }
+				owns_or_non_sovereign_subject_owns = location:genoa
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = ven_genoese_settlement years = -1 mode = add }
+		}
+	}
+
+	# ---- 水の都（富の橋の繁栄＋ドゥカーレ宮殿の改修＋アルセナーレ・ディ・ヴェネツィアから） ----
+	ven_city_of_water = {
+		icon = ven_gothic_architecture
+		requires = { ven_bridge_of_wealth ven_doges_palace ven_arsenal }
+
+		enabled = {
+			location:venice = { local_control >= 1.0 }
+			total_effective_building_levels:wharf >= 12
+		}
+		duration = 150
+		on_completion = {
+			set_variable = ven_city_of_water_done
+			add_country_modifier = { modifier = ven_queen_of_canals years = -1 mode = add }
+			trigger_event_non_silently = ven_events.5
+		}
+	}
+
+	# ========================================================================
+	# 承：テラフェルマの拡大ルート
+	# ========================================================================
+
+	# ---- フェッラーラの確保（テラフェルマの拡大から） ----
+	ven_secure_ferrara = {
+		icon = ven_stato_da_mar
+		requires = { ven_terraferma_expansion }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:ferrara
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = ven_ferrara_secured years = 40 mode = add }
+		}
+	}
+
+	# ---- 北方への拡大（テラフェルマの拡大から） ----
+	ven_northern_expansion = {
+		icon = ven_stato_da_mar
+		requires = { ven_terraferma_expansion }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:trento
+			owns_or_non_sovereign_subject_owns = location:udine
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = ven_alpine_frontier years = 40 mode = add }
+		}
+	}
+
+	# ---- 教皇領との対立（フェッラーラの確保から） ----
+	ven_papal_conflict = {
+		icon = ven_state_inquisition
+		requires = { ven_secure_ferrara }
+
+		enabled = {
+			OR = {
+				is_excommunicated = yes
+				is_neighbor_of = c:PAP
+				owns_or_non_sovereign_subject_owns = location:rome
+			}
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = ven_papal_tension years = -1 mode = add }
+			trigger_event_non_silently = ven_events.6
+		}
+	}
+
+	# ---- アルプスを越える商売（北方への拡大から） ----
+	ven_alpine_trade = {
+		icon = ven_printing_industry
+		requires = { ven_northern_expansion }
+
+		enabled = {
+			any_owned_location = {
+				is_market_center = yes
+				count >= 2
+			}
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = ven_alpine_trade_routes years = -1 mode = add }
+		}
+	}
+
+	# ---- 神のものは神に、商人のものは商人に（教皇領との対立から） ----
+	ven_render_unto_caesar = {
+		icon = ven_state_inquisition
+		requires = { ven_papal_conflict }
+
+		enabled = {
+			estate_satisfaction:clergy_estate >= 0.90
+			estate_satisfaction:burghers_estate >= 0.90
+			owns_or_non_sovereign_subject_owns = location:rome
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = ven_secular_authority years = 45 mode = add }
+			trigger_event_non_silently = ven_events.7
+		}
+	}
+
+	# ---- カンブレー同盟の攪乱（教皇領との対立＋アルプスを越える商売から） ----
+	ven_league_of_cambrai = {
+		icon = ven_mixed_naval_tactics
+		requires = { ven_papal_conflict ven_alpine_trade }
+
+		enabled = {
+			NOT = { is_situation_active = situation:italian_wars }
+		}
+		duration = 150
+		on_completion = {
+			add_country_modifier = { modifier = ven_cambrai_survived years = -1 mode = add }
+			trigger_event_non_silently = ven_events.8
+		}
+	}
+
+	# ---- テラフェルマの完成（ロンバルディアの覇権＋神のものは神に...＋カンブレー同盟の攪乱から） ----
+	ven_terraferma_completed = {
+		icon = ven_stato_da_mar
+		requires = { ven_settling_with_genoa ven_render_unto_caesar ven_league_of_cambrai }
+
+		enabled = {
+			num_locations >= 100
+		}
+		duration = 180
+		on_completion = {
+			set_variable = ven_terraferma_completed_done
+			add_country_modifier = { modifier = ven_terraferma_zenith years = -1 mode = add }
+			trigger_event_non_silently = ven_events.9
+		}
+	}
+
+	# ---- イタリア諸国共通／イタリア形成ルート ----
+	ven_italian_unity_route = {
+		icon = religious_unification
+		requires = { ven_terraferma_completed ven_city_of_water }
+		final = yes
+
+		enabled = {
+			num_locations >= 200
+			monthly_income_trade_and_tax >= 1500
+		}
+		duration = 180
+		on_completion = {
+			set_variable = ven_italian_unity_done
+			custom_tooltip = ven_italian_unity_unlock_tt
+			trigger_event_non_silently = ven_events.10
+		}
+	}
+
+	# ========================================================================
+	# 起：海上系統
+	# ========================================================================
+
+	# 始点（海上系統）
+	ven_fleet_unification = {
+		icon = ven_ship_mounted_gunpowder_weapons
+		requires = { }
+
+		enabled = {
+			navy_size >= 10
+		}
+		duration = 60
+		on_completion = {
+			add_country_modifier = { modifier = ven_unified_fleet years = 30 mode = add }
+		}
+	}
+
+	ven_black_sea_insurance = {
+		icon = ven_printing_industry
+		requires = { ven_fleet_unification }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:negroponte
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = ven_black_sea_protection years = 40 mode = add }
+		}
+	}
+
+	ven_secure_adriatic = {
+		icon = zta_maritime_fiefdoms_of_the_adriatic
+		requires = { ven_fleet_unification }
+
+		enabled = {
+			location:zadar = { owner = root }
+			location:rijeka = { owner = root }
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = ven_adriatic_secured years = 40 mode = add }
+			location:zadar = {
+				if = {
+					limit = { NOT = { is_city = yes } }
+					change_location_rank = location_rank:town
+				}
+				add_location_modifier = {
+					modifier = ven_zadar_trade_hub
+					years = -1
+					mode = add
+				}
+			}
+			trigger_event_non_silently = ven_events.11
+		}
+	}
+
+	# ---- 黒海からのジェノヴァの排除（黒海交易の保険から） ----
+	ven_expel_genoa_black_sea = {
+		icon = ven_naval_conscription
+		requires = { ven_black_sea_insurance }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:kaffa
+			owns_or_non_sovereign_subject_owns = location:tana
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = ven_genoese_rivalry_won years = 45 mode = add }
+			trigger_event_non_silently = ven_events.12
+		}
+	}
+
+	# ---- エーゲ海での拡大（黒海交易の保険から） ----
+	ven_aegean_expansion = {
+		icon = ven_venetian_thalassocracy
+		requires = { ven_black_sea_insurance }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:candia
+			owns_or_non_sovereign_subject_owns = location:naxos
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = ven_aegean_dominance years = 45 mode = add }
+		}
+	}
+
+	# ---- ダルマチアの制圧（アドリア海の確保から） ----
+	ven_dalmatian_subjugation = {
+		icon = dalmatian_the_cult_of_the_local_patron_saint
+		requires = { ven_secure_adriatic }
+
+		enabled = {
+			any_owned_location = {
+				area = area:croatia_area
+				owner = root
+				count >= 9
+			}
+		}
+		duration = 150
+		on_completion = {
+			add_country_modifier = { modifier = ven_dalmatia_subdued years = 50 mode = add }
+		}
+	}
+
+	# ---- 東方貿易を支配せよ（黒海からのジェノヴァの排除から） ----
+	ven_dominate_eastern_trade = {
+		icon = ven_venetian_thalassocracy
+		requires = { ven_expel_genoa_black_sea }
+
+		enabled = {
+			monthly_income_trade_and_tax >= 100
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = ven_eastern_trade_dominance years = 50 mode = add }
+		}
+	}
+
+	# ---- ギリシャの橋頭堡（エーゲ海での拡大から） ----
+	ven_greek_bridgehead = {
+		icon = ven_stato_da_mar
+		requires = { ven_aegean_expansion }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:athens
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = ven_greek_bridgehead_secured years = 45 mode = add }
+			trigger_event_non_silently = ven_events.13
+		}
+	}
+
+	# ---- アドリア海の真珠の回収（ダルマチアの制圧から） ----
+	ven_pearl_of_adriatic = {
+		icon = ven_gothic_architecture
+		requires = { ven_dalmatian_subjugation }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:dubrovnik
+			location:dubrovnik = { population >= 20 }
+		}
+		duration = 90
+		on_completion = {
+			location:dubrovnik = {
+				add_location_modifier = {
+					modifier = ven_pearl_prosperity
+					years = -1
+					mode = add
+				}
+			}
+		}
+	}
+
+	# ---- コルフ島の保護（ダルマチアの制圧から） ----
+	ven_protect_corfu = {
+		icon = zta_maritime_fiefdoms_of_the_adriatic
+		requires = { ven_dalmatian_subjugation }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:corfu
+			location:corfu = { local_control >= 0.60 }
+		}
+		duration = 90
+		on_completion = {
+			location:corfu = {
+				add_location_modifier = {
+					modifier = ven_corfu_garrison
+					years = -1
+					mode = add
+				}
+			}
+		}
+	}
+
+	# ---- キプロス占有（東方貿易を支配せよから） ----
+	ven_occupy_cyprus = {
+		icon = ven_venetian_thalassocracy
+		requires = { ven_dominate_eastern_trade }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:larnaca
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = ven_cyprus_secured years = 50 mode = add }
+			trigger_event_non_silently = ven_events.14
+		}
+	}
+
+	# ---- 二度目の帝都の制圧（ギリシャの橋頭堡から） ----
+	ven_second_conquest_of_constantinople = {
+		icon = divine_supremacy
+		requires = { ven_greek_bridgehead }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:constantinople
+		}
+		duration = 150
+		on_completion = {
+			add_country_modifier = { modifier = ven_latin_empire_foundation years = -1 mode = add }
+			trigger_event_non_silently = ven_events.15
+		}
+	}
+
+	# ---- アドリア海の女王（アドリア海の真珠の回収＋コルフ島の保護から） ----
+	ven_queen_of_the_adriatic = {
+		icon = zta_maritime_fiefdoms_of_the_adriatic
+		requires = { ven_pearl_of_adriatic ven_protect_corfu }
+
+		enabled = {
+			navy_size >= 200
+		}
+		duration = 150
+		on_completion = {
+			set_variable = ven_queen_of_adriatic_done
+			add_country_modifier = { modifier = ven_adriatic_queen years = -1 mode = add }
+			trigger_event_non_silently = ven_events.16
+		}
+	}
+
+	# ---- 剣ではなく、ペンを持って（キプロス占有から） ----
+	ven_pen_not_sword = {
+		icon = ven_venetian_school_of_music
+		requires = { ven_occupy_cyprus }
+
+		enabled = {
+			any_owned_foreign_building = {
+				building_type = building_type:trade_office
+				count >= 200
+			}
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = ven_diplomatic_mastery years = -1 mode = add }
+			trigger_event_non_silently = ven_events.17
+		}
+	}
+
+	# ---- ラテン人の帝国（二度目の帝都の制圧から） ----
+	ven_latin_empire = {
+		icon = divine_supremacy
+		requires = { ven_second_conquest_of_constantinople }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:constantinople
+			any_owned_location = {
+				area = area:northern_greece_area
+				count >= all
+			}
+			any_owned_location = {
+				area = area:morea_area
+				count >= all
+			}
+			any_owned_location = {
+				area = area:aegean_archipelago_area
+				count >= all
+			}
+			any_owned_location = {
+				area = area:thrace_area
+				count >= all
+			}
+			any_owned_location = {
+				area = area:macedonia_area
+				count >= all
+			}
+		}
+		duration = 180
+		on_completion = {
+			custom_tooltip = ven_latin_empire_unlock_tt
+			trigger_event_non_silently = ven_events.18
+		}
+	}
+}

@@ -1,0 +1,566 @@
+﻿flo_magnifico_mission_pack = {
+	icon = nmt_italy
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = FLO
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = {
+		always = yes
+	}
+
+	on_start = {
+		set_variable = flo_magnifico_started
+	}
+
+	on_completion = {
+		remove_variable = flo_magnifico_started
+	}
+
+	on_abort = {
+		remove_variable = flo_magnifico_started
+	}
+
+	# ==================== ROOT ====================
+
+	flo_rise_of_the_commune = {
+		icon = guilds
+		requires = { }
+
+		enabled = {
+			always = yes
+		}
+		duration = 0
+		on_completion = {
+			trigger_event_non_silently = flo_events.1
+		}
+	}
+
+	flo_the_prince = {
+		icon = renaissance_prince
+		requires = { flo_rise_of_the_commune }
+
+		enabled = {
+			is_situation_active = situation:italian_wars
+		}
+		duration = 0
+		on_completion = {
+			trigger_event_non_silently = flo_events.6
+		}
+	}
+
+	# ==================== BRANCH 1: 商業・金融 ====================
+
+	flo_arte_della_lana = {
+		icon = arte_della_lana
+		requires = { flo_rise_of_the_commune }
+
+		enabled = {
+			OR = {
+				produced_in_country:wool > 4
+				produced_in_country:cloth > 4
+			}
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = flo_arte_della_lana_mod years = -1 mode = add }
+		}
+	}
+
+	flo_medici_bank = {
+		icon = bank_of_the_medici
+		requires = { flo_arte_della_lana }
+
+		enabled = {
+			any_owned_location = {
+				has_building = building_type:counting_house
+				count >= 3
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = flo_medici_bank_mod years = -1 mode = add }
+		}
+	}
+
+	flo_arno_corridor = {
+		icon = river_trade
+		requires = { flo_medici_bank }
+
+		enabled = {
+			location:florence = {
+				has_building = building_type:bridge_infrastructure
+				has_building = building_type:pound_lock_canal_infrastructure
+			}
+		}
+		duration = 120
+		on_completion = {
+			location:florence = {
+				add_location_modifier = { modifier = flo_arno_corridor_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	flo_arno_trade_network = {
+		icon = river_trade
+		requires = { flo_arno_corridor }
+
+		enabled = {
+			any_owned_location = {
+				area = area:tuscany_area
+				count >= 15
+			}
+		}
+		duration = 150
+		on_completion = {
+			add_country_modifier = { modifier = flo_arno_trade_network_mod years = -1 mode = add }
+		}
+	}
+
+	flo_dominate_italian_trade = {
+		icon = free_merchants
+		requires = { flo_arno_trade_network }
+
+		enabled = {
+			any_owned_location = {
+				is_market_center = yes
+				count >= 2
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = flo_dominate_italian_trade_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH 2: 芸術・文化 ====================
+
+	flo_duomo_di_firenze = {
+		icon = city_of_artists
+		requires = { flo_rise_of_the_commune }
+
+		enabled = {
+			location:florence = {
+				has_building = building_type:monastery
+				has_building = building_type:temple
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = flo_duomo_di_firenze_mod years = -1 mode = add }
+		}
+	}
+
+	flo_birthplace_of_renaissance = {
+		icon = renaissance_advance
+		requires = { flo_duomo_di_firenze }
+
+		enabled = {
+			has_embraced_institution = institution:renaissance
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = flo_birthplace_of_renaissance_mod years = -1 mode = add }
+		}
+	}
+
+	flo_florentine_school_of_painting = {
+		icon = florentine_school
+		requires = { flo_birthplace_of_renaissance }
+
+		enabled = {
+			has_fired_unique_event = flavor_flo.33
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = flo_florentine_school_of_painting_mod years = -1 mode = add }
+		}
+	}
+
+	flo_the_mona_lisa = {
+		icon = patron_of_art
+		requires = { flo_florentine_school_of_painting }
+
+		enabled = {
+			has_fired_unique_event = flavor_flo.45
+		}
+		duration = 0
+		on_completion = {
+			add_country_modifier = { modifier = flo_the_mona_lisa_mod years = -1 mode = add }
+		}
+	}
+
+	flo_uffizi = {
+		icon = artists_advance
+		requires = { flo_vasari_corridor }
+
+		enabled = {
+			has_embraced_institution = institution:renaissance
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = flo_uffizi_mod years = -1 mode = add }
+		}
+	}
+
+	flo_arno_renewal = {
+		icon = river_trade
+		requires = { flo_uffizi }
+
+		enabled = {
+			location:florence = {
+				development >= 50
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = flo_arno_renewal_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH 3: 統治・政治 ====================
+
+	flo_the_rise_of_medici = {
+		icon = bank_of_the_medici
+		requires = { flo_rise_of_the_commune }
+
+		enabled = {
+			has_fired_unique_event = flavor_flo.57
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = flo_the_rise_of_medici_mod years = -1 mode = add }
+		}
+	}
+
+	flo_pazzi_conspiracy = {
+		icon = sie_the_palio
+		requires = { flo_the_rise_of_medici }
+
+		enabled = {
+			OR = {
+				has_fired_unique_event = flavor_flo.20
+				current_date > 1480.1.1
+			}
+		}
+		duration = 0
+		on_completion = {
+			trigger_event_non_silently = flo_events.3
+		}
+	}
+
+	flo_machiavelli = {
+		icon = renaissance_prince
+		requires = { flo_pazzi_conspiracy }
+
+		enabled = {
+			OR = {
+				has_fired_unique_event = flavor_flo.46
+				current_date > 1515.1.1
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = flo_machiavelli_mod years = -1 mode = add }
+		}
+	}
+
+	flo_republic_of_virtue = {
+		icon = accademia_cimento
+		requires = { flo_machiavelli }
+
+		enabled = {
+			legitimacy >= 0.75
+			stability >= 1
+		}
+		duration = 150
+		on_completion = {
+			add_country_modifier = { modifier = flo_republic_of_virtue_mod years = -1 mode = add }
+		}
+	}
+
+	flo_camerata_fiorentina_nmt = {
+		icon = artists_advance
+		requires = { flo_republic_of_virtue }
+
+		enabled = {
+			capital = {
+				has_building = building_type:art_school
+			}
+		}
+		duration = 150
+		on_completion = {
+			add_country_modifier = { modifier = flo_camerata_fiorentina_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH 4: イタリア征服 ====================
+
+	flo_subjugate_pisa = {
+		icon = pis_maritimes_legacy
+		requires = { flo_rise_of_the_commune }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:pisa
+		}
+		duration = 120
+		on_completion = {
+			location:pisa = {
+				add_location_modifier = { modifier = flo_subjugate_pisa_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	flo_siena_submitted = {
+		icon = sie_monte_dei_paschi
+		requires = { flo_subjugate_pisa }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:siena
+		}
+		duration = 120
+		on_completion = {
+			location:siena = {
+				add_location_modifier = { modifier = flo_siena_submitted_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	flo_lucca_absorbed = {
+		icon = luc_the_towers_of_lucca
+		requires = { flo_siena_submitted }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:lucca
+		}
+		duration = 120
+		on_completion = {
+			location:lucca = {
+				add_location_modifier = { modifier = flo_lucca_absorbed_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	flo_unify_tuscany = {
+		icon = tuscan_physiocratic_reforms
+		requires = { flo_lucca_absorbed }
+
+		enabled = {
+			any_owned_location = {
+				area = area:tuscany_area
+				count >= 18
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = flo_unify_tuscany_mod years = -1 mode = add }
+			set_country_rank_effect = { rank = country_rank:rank_kingdom }
+		}
+	}
+
+	flo_push_into_lombardy = {
+		icon = exploit_the_alpine_trade
+		requires = { flo_unify_tuscany }
+
+		enabled = {
+			any_owned_location = {
+				region = region:italy_region
+				count >= 40
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = flo_push_into_lombardy_mod years = 40 mode = add }
+		}
+	}
+
+	flo_march_on_rome = {
+		icon = city_building_advance
+		requires = { flo_push_into_lombardy }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:rome
+		}
+		duration = 180
+		on_completion = {
+			trigger_event_non_silently = flo_events.4
+		}
+	}
+
+	flo_the_new_rome = {
+		icon = renaissance_prince
+		requires = { flo_march_on_rome }
+
+		enabled = {
+			any_owned_location = {
+				region = region:italy_region
+				count >= 80
+			}
+		}
+		duration = 365
+		on_completion = {
+			add_country_modifier = { modifier = flo_the_new_rome_mod years = -1 mode = add }
+			set_country_rank_effect = { rank = country_rank:rank_empire }
+		}
+	}
+
+	flo_il_magnifico_of_italy = {
+		icon = cosmopolitan_court
+		requires = { flo_the_new_rome }
+
+		enabled = {
+			any_owned_location = {
+				region = region:italy_region
+				count >= 150
+			}
+		}
+		duration = 365
+		on_completion = {
+			add_country_modifier = { modifier = flo_il_magnifico_of_italy_mod years = -1 mode = add }
+		}
+	}
+
+
+	flo_medici_oriental_press = {
+		icon = genoese_banking_traditions
+		requires = { flo_medici_bank }
+
+		enabled = {
+			has_fired_unique_event = flavor_flo.8
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = flo_medici_oriental_press_mod years = 40 mode = add }
+		}
+	}
+
+	flo_clock_tower = {
+		icon = city_building_advance
+		requires = { flo_pazzi_conspiracy }
+
+		enabled = {
+			has_fired_unique_event = flavor_flo.27
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = flo_clock_tower_mod years = 40 mode = add }
+		}
+	}
+
+	flo_first_modern_engineer = {
+		icon = renaissance_advance
+		requires = { flo_florentine_school_of_painting }
+
+		enabled = {
+			has_fired_unique_event = flavor_flo.29
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = flo_first_modern_engineer_mod years = 40 mode = add }
+		}
+	}
+
+	flo_humiliate_venice = {
+		icon = pis_maritimes_legacy
+		requires = { flo_push_into_lombardy }
+
+		enabled = {
+			OR = {
+				is_rival_of = c:VEN
+				c:VEN = { is_subject_of = root }
+				NOT = { country_exists = c:VEN }
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = flo_humiliate_venice_mod years = 40 mode = add }
+		}
+	}
+
+	flo_papal_relations = {
+		icon = patron_of_art
+		requires = { flo_march_on_rome }
+
+		enabled = {
+			OR = {
+				is_allied_with = { target = c:PAP }
+				c:PAP = { is_subject_of = root }
+				NOT = { country_exists = c:PAP }
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = flo_papal_relations_mod years = -1 mode = add }
+		}
+	}
+
+	flo_vasari_corridor = {
+		icon = city_of_artists
+		requires = { flo_unify_tuscany }
+
+		enabled = {
+			OR = {
+				has_fired_unique_event = flavor_flo.44
+				current_date > 1500.1.1
+			}
+		}
+		duration = 120
+		on_completion = {
+			trigger_event_non_silently = flo_events.5
+		}
+	}
+
+	flo_academy_of_florence = {
+		icon = accademia_cimento
+		requires = { flo_camerata_fiorentina_nmt }
+
+		enabled = {
+			any_owned_location = {
+				has_building = building_type:university
+				count >= 5
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = flo_academy_of_florence_mod years = -1 mode = add }
+		}
+	}
+
+	flo_italian_cultural_hegemon = {
+		icon = medici_porcelain
+		requires = { flo_first_modern_engineer }
+
+		enabled = {
+			any_owned_location = {
+				region = region:italy_region
+				count >= 60
+			}
+			average_control_in_home_region >= 0.60
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = flo_italian_cultural_hegemon_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== FINAL (両ブランチ収束) ====================
+
+	flo_magnifico = {
+		icon = medici_porcelain
+		requires = { flo_dominate_italian_trade flo_italian_cultural_hegemon flo_academy_of_florence flo_il_magnifico_of_italy flo_papal_relations }
+		final = yes
+
+		enabled = {
+			num_locations >= 200
+		}
+		duration = 365
+		on_completion = {
+			add_country_modifier = { modifier = flo_magnifico_mod years = -1 mode = add }
+		}
+	}
+}

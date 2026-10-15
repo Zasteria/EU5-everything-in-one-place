@@ -1,0 +1,188 @@
+﻿sic_restoration_mission_pack = {
+	icon = nmt_mediterranean_port
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = SIC
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = {
+		always = yes
+	}
+
+	on_start = {
+		set_variable = sic_restoration_started
+	}
+
+	on_completion = {
+		remove_variable = sic_restoration_started
+	}
+
+	on_abort = {
+		remove_variable = sic_restoration_started
+	}
+
+	# ==================== ROOT: 海峡の向こう ====================
+
+	sic_divided_kingdom = {
+		icon = angevin_heraldry
+		requires = { }
+
+		enabled = {
+			OR = {
+				is_rival_of = c:NAP
+				is_allied_with = { target = c:NAP }
+			}
+		}
+		duration = 0
+		on_completion = {
+			trigger_event_non_silently = sic_events.1
+		}
+	}
+
+	# ==================== ROUTE A: 再征服・両シチリア王国 ====================
+
+	sic_ambitions_on_naples = {
+		icon = apetian_house_of_anjou
+		requires = { sic_divided_kingdom }
+
+		enabled = {
+			regular_army_size >= 2
+		}
+		duration = 90
+		on_completion = {
+			add_casus_belli = {
+				type = casus_belli:cb_claim_throne
+				target = c:NAP
+				target_character = root.ruler
+				years = 100
+			}
+		}
+	}
+
+	sic_army_of_the_island = {
+		icon = sic_sicilian_baroque
+		requires = { sic_ambitions_on_naples }
+
+		enabled = {
+			navy_size >= 10
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = sic_army_of_the_island_mod years = 40 mode = add }
+		}
+	}
+
+	sic_conquest_of_naples = {
+		icon = apetian_house_of_anjou
+		requires = { sic_army_of_the_island }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:naples
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = sic_conquest_of_naples_mod years = -1 mode = add }
+		}
+	}
+
+	sic_two_sicilies = {
+		icon = divine_supremacy
+		requires = { sic_conquest_of_naples }
+
+		enabled = {
+			owns = location:naples
+			owns = location:palermo
+		}
+		duration = 180
+		on_completion = {
+			form_country = formable_country:TWS_f
+			add_country_modifier = { modifier = sic_two_sicilies_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== ROUTE B: シチリア島の発展 ====================
+
+	sic_golden_wheat_fields = {
+		icon = ukrainian_farmlands
+		requires = { sic_divided_kingdom }
+
+		enabled = {
+			location:palermo = {
+				rgo_level >= 5
+			}
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = sic_golden_wheat_fields_mod years = 100 mode = add }
+		}
+	}
+
+	sic_palermo_resurgent = {
+		icon = sic_sicilian_baroque
+		requires = { sic_golden_wheat_fields }
+
+		enabled = {
+			location:palermo.total_building_levels >= 30
+		}
+		duration = 120
+		on_completion = {
+			location:palermo = {
+				add_location_modifier = { modifier = sic_palermo_resurgent_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	sic_mediterranean_crossroads = {
+		icon = secure_mediterranean_ports
+		requires = { sic_palermo_resurgent }
+
+		enabled = {
+			any_owned_location = {
+				is_market_center = yes
+				count >= 1
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = sic_mediterranean_crossroads_mod years = 40 mode = add }
+		}
+	}
+
+	sic_sicilian_renaissance = {
+		icon = patron_of_art
+		requires = { sic_mediterranean_crossroads }
+
+		enabled = {
+			location:palermo = {
+				any_work_of_art_in_location = {
+					count >= 20
+				}
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = sic_sicilian_renaissance_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== FINAL: 両ルート合流 ====================
+
+	sic_kingdom_resurgent = {
+		icon = divine_supremacy
+		requires = { sic_two_sicilies sic_sicilian_renaissance }
+		final = yes
+
+		enabled = {
+			num_locations >= 100
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = sic_kingdom_resurgent_mod years = -1 mode = add }
+		}
+	}
+}

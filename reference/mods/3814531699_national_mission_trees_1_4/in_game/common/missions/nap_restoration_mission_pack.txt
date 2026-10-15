@@ -1,0 +1,561 @@
+﻿nap_restoration_mission_pack = {
+	icon = nmt_mediterranean_port
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = NAP
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = {
+		always = yes
+	}
+
+	on_start = {
+		set_variable = nap_restoration_started
+	}
+
+	on_completion = {
+		remove_variable = nap_restoration_started
+	}
+
+	on_abort = {
+		remove_variable = nap_restoration_started
+	}
+
+	# ==================== LEFT TREE: 別たれた王国 ====================
+
+	nap_divided_kingdom = {
+		icon = angevin_heraldry
+		requires = { }
+
+		enabled = {
+			OR = {
+				is_rival_of = c:SIC
+				is_allied_with = { target = c:SIC }
+			}
+		}
+		duration = 0
+		on_completion = {
+			trigger_event_non_silently = nap_events.1
+		}
+	}
+
+	nap_papal_blessing = {
+		icon = apetian_house_of_anjou
+		requires = { nap_divided_kingdom }
+
+		enabled = {
+			is_excommunicated = no
+			"opinion(c:PAP)" >= 100
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = nap_papal_blessing_mod years = 40 mode = add }
+		}
+	}
+
+	nap_army_buildup = {
+		icon = apetian_house_of_anjou
+		requires = { nap_divided_kingdom }
+
+		enabled = {
+			regular_army_size >= 2
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = nap_army_buildup_mod years = 40 mode = add }
+		}
+	}
+
+	nap_match_aragon_navy = {
+		icon = ara_fleet_ordinances
+		requires = { nap_divided_kingdom }
+
+		enabled = {
+			navy_size >= 30
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = nap_match_aragon_navy_mod years = 40 mode = add }
+		}
+	}
+
+	nap_sword_of_the_guelphs = {
+		icon = apetian_house_of_anjou
+		requires = { nap_papal_blessing }
+
+		enabled = {
+			is_situation_active = situation:guelphs_and_ghibellines
+			is_member_of_international_organization = international_organization:guelphs_io
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = nap_sword_of_the_guelphs_mod years = 40 mode = add }
+		}
+	}
+
+	nap_sicilian_reunification_war = {
+		icon = sic_sicilian_baroque
+		requires = { nap_army_buildup nap_papal_blessing nap_match_aragon_navy }
+
+		enabled = {
+			location:palermo = {
+				controller = root
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = nap_sicilian_reunification_war_mod years = 40 mode = add }
+		}
+	}
+
+	nap_invest_in_provence = {
+		icon = ara_chartered_merchant_companies
+		requires = { nap_match_aragon_navy }
+
+		enabled = {
+			any_owned_location = {
+				area = area:provence_area
+				count >= 20
+			}
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = nap_invest_in_provence_mod years = 40 mode = add }
+		}
+	}
+
+	nap_cross_the_strait_of_otranto = {
+		icon = ara_fleet_ordinances
+		requires = { nap_match_aragon_navy nap_apulian_granary }
+
+		enabled = {
+			area:albania_area = {
+				NOT = {
+					any_location_in_area = {
+						NOT = {
+							OR = {
+								owner ?= root
+								owner = { is_subject_of = root }
+							}
+						}
+					}
+				}
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = nap_cross_the_strait_of_otranto_mod years = 40 mode = add }
+		}
+	}
+
+	nap_influence_over_the_papacy = {
+		icon = apetian_house_of_anjou
+		requires = { nap_sword_of_the_guelphs }
+
+		enabled = {
+			OR = {
+				owns_or_non_sovereign_subject_owns = location:rome
+				is_allied_with = { target = c:PAP }
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = nap_influence_over_the_papacy_mod years = 40 mode = add }
+		}
+	}
+
+	nap_the_bells_fall_silent = {
+		icon = sic_sicilian_baroque
+		requires = { nap_sicilian_reunification_war }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:palermo
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = nap_the_bells_fall_silent_mod years = -1 mode = add }
+		}
+	}
+
+	nap_anjou_hungary = {
+		icon = apetian_house_of_anjou
+		requires = { nap_cross_the_strait_of_otranto }
+
+		enabled = {
+			OR = {
+				is_allied_with = { target = c:HUN }
+				"opinion(c:HUN)" >= 150
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_casus_belli = {
+				type = casus_belli:cb_claim_throne
+				target = c:HUN
+				target_character = root.ruler
+				years = 100
+			}
+		}
+	}
+
+	nap_foothold_in_northern_italy = {
+		icon = apetian_house_of_anjou
+		requires = { nap_influence_over_the_papacy }
+
+		enabled = {
+			any_owned_location = { area = area:tuscany_area }
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = nap_foothold_in_northern_italy_mod years = 100 mode = add }
+		}
+	}
+
+	nap_crossroads_of_civilizations = {
+		icon = ara_chartered_merchant_companies
+		requires = { nap_the_bells_fall_silent }
+
+		enabled = {
+			any_owned_location = {
+				any_work_of_art_in_location = {
+					count >= 100
+				}
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = nap_crossroads_of_civilizations_mod years = -1 mode = add }
+		}
+	}
+
+	nap_defeat_of_aragon = {
+		icon = apetian_house_of_anjou
+		requires = { nap_the_bells_fall_silent nap_invest_in_provence }
+
+		enabled = {
+			OR = {
+				NOT = { country_exists = c:ARA }
+				c:ARA = { is_subject_of = root }
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = nap_defeat_of_aragon_mod years = -1 mode = add }
+		}
+	}
+
+	nap_expand_influence_in_southern_france = {
+		icon = ara_chartered_merchant_companies
+		requires = { nap_invest_in_provence }
+
+		enabled = {
+			any_owned_location = { area = area:lyonnais_area }
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = nap_expand_influence_in_southern_france_mod years = 40 mode = add }
+		}
+	}
+
+	nap_western_mediterranean_hegemony = {
+		icon = secure_mediterranean_ports
+		requires = { nap_defeat_of_aragon }
+
+		enabled = {
+			any_owned_location = {
+				area = area:sardinia_area
+				count >= 20
+			}
+			any_owned_location = {
+				area = area:balearics_area
+				count >= 4
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = nap_western_mediterranean_hegemony_mod years = -1 mode = add }
+		}
+	}
+
+	nap_anjou_homeland = {
+		icon = angevin_heraldry
+		requires = { nap_expand_influence_in_southern_france }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:angers
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = nap_anjou_homeland_mod years = -1 mode = add }
+			add_casus_belli = {
+				type = casus_belli:cb_claim_throne
+				target = c:FRA
+				target_character = root.ruler
+				years = 100
+			}
+		}
+	}
+
+	nap_french_throne_claim = {
+		icon = apetian_house_of_anjou
+		requires = { nap_anjou_homeland }
+
+		enabled = {
+			OR = {
+				owns_or_non_sovereign_subject_owns = location:paris
+				in_union_with = c:FRA
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = nap_king_of_france_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== RIGHT TREE: シチリア王国の新たな首都 ====================
+
+	nap_new_capital_of_sicily = {
+		icon = monarchy_royal_court_advance
+		requires = { }
+
+		enabled = {
+			location:naples.total_building_levels >= 50
+		}
+		duration = 90
+		on_completion = {
+			location:naples = {
+				add_location_modifier = { modifier = nap_new_capital_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	nap_apulian_granary = {
+		icon = ukrainian_farmlands
+		requires = { nap_new_capital_of_sicily }
+
+		enabled = {
+			location:lecce = {
+				rgo_level >= 5
+			}
+		}
+		duration = 120
+		on_completion = {
+			every_owned_location = {
+				limit = {
+					area = area:apulia_area
+				}
+				add_location_modifier = { modifier = nap_apulian_granary_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	nap_mediterranean_greatest_city = {
+		icon = divine_supremacy
+		requires = { nap_new_capital_of_sicily }
+
+		enabled = {
+			location:naples = {
+				population >= 200
+			}
+		}
+		duration = 120
+		on_completion = {
+			location:naples = {
+				add_location_modifier = { modifier = nap_mediterranean_greatest_city_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	nap_control_of_transumanza = {
+		icon = ukrainian_farmlands
+		requires = { nap_apulian_granary }
+
+		enabled = {
+			location:aquila = {
+				rgo_level >= 5
+			}
+		}
+		duration = 120
+		on_completion = {
+			every_owned_location = {
+				limit = {
+					area = area:abruzzo_area
+				}
+				add_location_modifier = { modifier = nap_control_of_transumanza_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	nap_university_of_frederick_ii = {
+		icon = university_naples
+		requires = { nap_mediterranean_greatest_city }
+
+		enabled = {
+			location:naples = {
+				has_building = building_type:arts_academy
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = nap_university_of_frederick_ii_mod years = 40 mode = add }
+		}
+	}
+
+	nap_magnificent_royal_palace = {
+		icon = monarchy_royal_court_advance
+		requires = { nap_mediterranean_greatest_city }
+
+		enabled = {
+			location:naples = {
+				has_building = building_type:royal_garden
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = nap_magnificent_royal_palace_mod years = 40 mode = add }
+		}
+	}
+
+	nap_expansion_of_naples_port = {
+		icon = ara_chartered_merchant_companies
+		requires = { nap_control_of_transumanza }
+
+		enabled = {
+			location:naples = {
+				has_building = building_type:dock
+			}
+		}
+		duration = 120
+		on_completion = {
+			location:naples = {
+				add_location_modifier = { modifier = nap_expansion_of_naples_port_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	nap_patronage_of_diverse_arts = {
+		icon = patron_of_art
+		requires = { nap_university_of_frederick_ii }
+
+		enabled = {
+			any_owned_location = {
+				has_building = building_type:theater
+				count >= 5
+			}
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = nap_patronage_of_diverse_arts_mod years = 40 mode = add }
+		}
+	}
+
+	nap_dynastic_stability = {
+		icon = angevin_heraldry
+		requires = { nap_magnificent_royal_palace }
+
+		enabled = {
+			legitimacy >= 100
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = nap_dynastic_stability_mod years = 40 mode = add }
+		}
+	}
+
+	nap_subjugation_of_epirus = {
+		icon = apetian_house_of_anjou
+		requires = { nap_cross_the_strait_of_otranto }
+
+		enabled = {
+			any_owned_location = {
+				area = area:northern_greece_area
+				count >= 30
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = nap_subjugation_of_epirus_mod years = 40 mode = add }
+		}
+	}
+
+	nap_southern_renaissance = {
+		icon = patron_of_art
+		requires = { nap_patronage_of_diverse_arts nap_dynastic_stability }
+
+		enabled = {
+			location:naples = {
+				any_work_of_art_in_location = {
+					count >= 20
+				}
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = nap_southern_renaissance_mod years = -1 mode = add }
+		}
+	}
+
+	nap_caserta_palace = {
+		icon = monarchy_royal_court_advance
+		requires = { nap_dynastic_stability }
+
+		enabled = {
+			location:caserta.total_building_levels >= 30
+		}
+		duration = 120
+		on_completion = {
+			location:caserta = {
+				add_location_modifier = { modifier = nap_caserta_palace_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	nap_charles_dream = {
+		icon = apetian_house_of_anjou
+		requires = { nap_subjugation_of_epirus }
+
+		enabled = {
+			any_owned_location = { area = area:morea_area }
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = nap_charles_dream_mod years = 40 mode = add }
+		}
+	}
+
+	nap_never_die_without_seeing_naples = {
+		icon = divine_supremacy
+		requires = { nap_southern_renaissance nap_expansion_of_naples_port }
+
+		enabled = {
+			location:naples.total_building_levels >= 100
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = nap_never_die_without_seeing_naples_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== FINAL ====================
+
+	nap_latin_empire = {
+		icon = divine_supremacy
+		requires = { nap_western_mediterranean_hegemony nap_charles_dream }
+		final = yes
+
+		enabled = {
+			num_locations >= 300
+		}
+		duration = 180
+		on_completion = {
+			set_country_rank_effect = { rank = country_rank:rank_empire }
+			add_country_modifier = { modifier = nap_latin_empire_mod years = -1 mode = add }
+		}
+	}
+
+}
