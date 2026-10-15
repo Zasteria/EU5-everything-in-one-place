@@ -65,7 +65,10 @@ POOL = [
     ("develop_province", "province", "DEVELOP", ""),
     ("study_institutions", "province", "population", ""),
     # His run 15.10: it stayed on a province with no job left to fill. Only
-    # provinces with unfilled jobs, the most first (the action's own measure).
+    # provinces short of workers, the most first. unfilled_jobs_in_province is
+    # NEGATIVE when workers are missing (probe 15.10 17:23: Северная Мунтения
+    # -1.82 with -684 in one location; 0 where all are filled); the game sorts
+    # its column ascending for the same reason.
     ("pop_promote_action", "province", "bag_asp_promote_score", ""),
     ("strengthen_government", "country", None, ""),
     ("diplomatic_endeavors", "country", None, ""),
@@ -95,12 +98,12 @@ ROW_ACTION = {"diplomatic_antagonism": "diplomatic_endeavors", "promote_culture_
 ROW_TARGET = {"promote_culture": "bag_asp_needs_half = yes bag_asp_control_reachable = yes"}
 ROW_SEAT = {"promote_culture": "interaction_target:target_1 ?= { bag_asp_needs_half = yes OR = { bag_asp_half_control_ok = yes has_variable = bag_asp_busy_noblesse_oblige_cabinet_action has_variable = bag_asp_busy_increase_control_province } }",
             "develop_province": "interaction_target:target ?= { bag_asp_develop_wanted = yes }",
-            "pop_promote_action": "interaction_target:target ?= { unfilled_jobs_in_province > 0 }",
+            "pop_promote_action": "interaction_target:target ?= { unfilled_jobs_in_province < 0 }",
             "increase_control_province": "OR = { bag_asp_paired_seat = yes interaction_target:selected_province ?= { bag_asp_control_rising = yes } }",
             "noblesse_oblige_cabinet_action": "OR = { bag_asp_paired_seat = yes interaction_target:selected_province ?= { bag_asp_control_rising = yes } }"}
 # A province row's own condition on its target (kind province only).
 PROVINCE_COND = {"develop_province": "bag_asp_develop_wanted = yes",
-                 "pop_promote_action": "unfilled_jobs_in_province > 0",
+                 "pop_promote_action": "unfilled_jobs_in_province < 0",
                  "increase_control_province": "bag_asp_control_wanted = yes",
                  "noblesse_oblige_cabinet_action": "bag_asp_control_wanted = yes"}
 # His ask 14.10: a row on at most this many seats, the country variable of its
@@ -288,11 +291,11 @@ bag_asp_control_score = {
 \tmultiply = bag_asp_control_missing
 }
 
-# Scope: province. His run 15.10: urbanization where most jobs wait for
-# promoted pops; the game's own progress of pop_promote_action is the same
-# measure in percent.
+# Scope: province. His run 15.10: urbanization where most workers are
+# missing. unfilled_jobs_in_province is negative then (probe 17:23).
 bag_asp_promote_score = {
-\tvalue = "unfilled_jobs_in_province"
+\tvalue = 0
+\tsubtract = unfilled_jobs_in_province
 }
 """
 
@@ -1245,14 +1248,14 @@ bag_asp_probe_promote = {{
 \t}}
 \tset_global_variable = {{ name = bag_asp_probe value = 0 }}
 \tevery_province = {{
-\t\tlimit = {{ unfilled_jobs_in_province > 0 }}
+\t\tlimit = {{ unfilled_jobs_in_province < 0 }}
 \t\tchange_global_variable = {{ name = bag_asp_probe add = 1 }}
 \t}}
-\tdebug_log = "bag_asp: probe: urbanization, provinces with unfilled jobs above 0: {PRINT}"
+\tdebug_log = "bag_asp: probe: urbanization, provinces short of workers: {PRINT}"
 \tordered_province = {{
 \t\torder_by = bag_asp_promote_score
 \t\tset_global_variable = {{ name = bag_asp_probe value = unfilled_jobs_in_province }}
-\t\tdebug_log = "bag_asp: probe: urbanization, most unfilled jobs {PRINT2}"
+\t\tdebug_log = "bag_asp: probe: urbanization, most short of workers {PRINT2}"
 \t\tset_global_variable = {{ name = bag_asp_probe value = {{ value = unfilled_jobs_in_province_percentage multiply = 100 }} }}
 \t\tdebug_log = "bag_asp: probe: urbanization, there in percent {PRINT2}, the province:"
 \t\tdebug_log_scopes = no
