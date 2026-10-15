@@ -1,0 +1,284 @@
+namespace = hab_events
+
+hab_events.1 = {
+	type = country_event
+	category = mission_event
+	title = hab_events.1.t
+	desc  = hab_events.1.d
+	fire_only_once = yes
+	immediate = {}
+	option = {
+		name = hab_events.1.a
+		add_prestige = 20
+		add_legitimacy = legitimacy_mild_bonus
+	}
+}
+
+hab_events.10 = {
+	type = country_event
+	category = mission_event
+	title = hab_events.10.t
+	desc  = hab_events.10.d
+	fire_only_once = yes
+	immediate = {}
+	option = {
+		name = hab_events.10.a
+		set_country_rank_effect = { rank = country_rank:rank_empire }
+		add_prestige = 40
+		add_country_modifier = { modifier = hab_rome_legacy_mod years = -1 mode = add }
+	}
+}
+
+hab_events.15 = {
+	type = country_event
+	category = mission_event
+	title = hab_events.15.t
+	desc  = hab_events.15.d
+	fire_only_once = yes
+	immediate = {}
+	option = {
+		name = hab_events.15.a
+		trigger = {
+			OR = {
+				has_or_had_tag = HRE
+				tag = HRE
+			}
+		}
+		add_prestige = 30
+		add_country_modifier = { modifier = hab_hre_unity_mod years = -1 mode = add }
+	}
+	option = {
+		name = hab_events.15.b
+		trigger = {
+			OR = {
+				has_or_had_tag = GER
+				tag = GER
+			}
+		}
+		add_prestige = 30
+		add_country_modifier = { modifier = hab_ger_empire_mod years = -1 mode = add }
+	}
+}
+
+hab_events.20 = {
+	type = country_event
+	category = mission_event
+	title = hab_events.20.t
+	desc  = hab_events.20.d
+	fire_only_once = yes
+	immediate = {}
+	option = {
+		name = hab_events.20.a
+		add_prestige = 25
+		if = {
+			limit = { country_exists = c:FRA }
+			add_casus_belli = {
+				target = c:FRA
+				type = casus_belli:cb_claim_throne
+				years = 60
+			}
+		}
+	}
+}
+
+hab_events.25 = {
+	type = country_event
+	category = mission_event
+	title = hab_events.25.t
+	desc  = hab_events.25.d
+	fire_only_once = yes
+	immediate = {}
+	option = {
+		name = hab_events.25.a
+		add_prestige = 35
+		add_country_modifier = { modifier = hab_spain_crown_mod years = -1 mode = add }
+	}
+}
+
+hab_events.30 = {
+	type = country_event
+	category = mission_event
+	title = hab_events.30.t
+	desc  = hab_events.30.d
+	fire_only_once = yes
+
+	immediate = {}
+
+	option = {
+		name = hab_events.30.a
+		add_prestige = 35
+
+		# ① イタリア地方の自国所有ロケーションをリスト化
+		every_owned_location = {
+			limit = { region = region:italy_region }
+			add_to_list = list_of_ita_locations
+		}
+
+		# ② 起点ロケーション選択（ローマ優先・なければ人口最大）
+		if = {
+			limit = {
+				owns = location:rome
+				location:rome = { region = region:italy_region }
+			}
+			location:rome = {
+				save_scope_as = ita_capital_location
+			}
+		}
+		else = {
+			ordered_in_list = {
+				list = list_of_ita_locations
+				order_by = pop_size
+				descending = yes
+				max = 1
+				save_scope_as = ita_capital_location
+			}
+		}
+
+		# ③ 起点から新国家ITA作成
+		scope:ita_capital_location = {
+			create_country_from_location = {
+				define_unique_country_tag = ITA
+				hidden_effect = {
+					change_country_name = ITA
+					change_country_adjective = ITA_ADJ
+					change_country_color = map_ITA
+					change_country_flag = ITA
+				}
+				save_scope_as = ita_new_state
+			}
+		}
+
+		# ④ 王国ランクに設定
+		scope:ita_new_state = {
+			set_country_rank = country_rank:rank_kingdom
+		}
+
+		# ⑤ イタリア地方の全自国領をITAへ移譲・コア化
+		every_in_list = {
+			list = list_of_ita_locations
+			limit = { NOT = { owner = scope:ita_new_state } }
+			change_location_owner = scope:ita_new_state
+			add_core = scope:ita_new_state
+			change_integration_level = core
+		}
+
+		# ⑥ 統合された王冠領として属国化
+		scope:ita_new_state = {
+			make_subject_of = {
+				target = root
+				type = subject_type:hab_integrated_crown
+			}
+		}
+	}
+
+	option = {
+		name = hab_events.30.b
+		add_prestige = 5
+	}
+}
+
+hab_events.40 = {
+	type = country_event
+	category = mission_event
+	title = hab_events.40.t
+	desc  = hab_events.40.d
+	fire_only_once = yes
+	immediate = {}
+	option = {
+		name = hab_events.40.a
+		add_prestige = 20
+		if = {
+			limit = { country_exists = c:HUN }
+			c:HUN = {
+				make_subject_of = {
+					target = root
+					type = subject_type:hab_integrated_crown
+				}
+				add_country_modifier = {
+					modifier = hab_hun_loyalty_mod
+					years = 100
+					mode = add
+				}
+			}
+		}
+	}
+	option = {
+		name = hab_events.40.b
+		add_prestige = 5
+	}
+}
+
+
+hab_events.50 = {
+	type = country_event
+	category = mission_event
+	title = hab_events.50.t
+	desc  = hab_events.50.d
+	fire_only_once = yes
+	immediate = {}
+	option = {
+		name = hab_events.50.a
+		add_prestige = 40
+	}
+}
+
+hab_events.55 = {
+	type = country_event
+	category = mission_event
+	title = hab_events.55.t
+	desc  = hab_events.55.d
+	fire_only_once = yes
+	immediate = {}
+	option = {
+		name = hab_events.55.a
+		location:vienna = {
+			add_location_modifier = { modifier = hab_great_vienna_loc_mod years = -1 mode = add }
+		}
+		add_prestige = 25
+	}
+}
+
+hab_events.65 = {
+	type = country_event
+	category = mission_event
+	title = hab_events.65.t
+	desc  = hab_events.65.d
+	fire_only_once = yes
+	immediate = {}
+	option = {
+		name = hab_events.65.a
+		add_prestige = 20
+		if = {
+			limit = { country_exists = c:BOH }
+			c:BOH = {
+				make_subject_of = {
+					target = root
+					type = subject_type:hab_integrated_crown
+				}
+				add_country_modifier = {
+					modifier = hab_boh_loyalty_mod
+					years = 100
+					mode = add
+				}
+			}
+		}
+	}
+	option = {
+		name = hab_events.65.b
+		add_prestige = 5
+	}
+}
+
+hab_events.99 = {
+	type = country_event
+	category = mission_event
+	title = hab_events.99.t
+	desc  = hab_events.99.d
+	fire_only_once = yes
+	immediate = {}
+	option = {
+		name = hab_events.99.a
+		add_country_modifier = { modifier = hab_universal_empire_mod years = -1 mode = add }
+		set_country_rank_effect = { rank = country_rank:rank_empire }
+	}
+}

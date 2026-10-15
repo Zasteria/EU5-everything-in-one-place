@@ -1,0 +1,523 @@
+﻿aac_carolingian_legacy_mission_pack = {
+	icon = nmt_bohemia
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = AAC
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = { always = yes }
+
+	on_start = { set_variable = aac_mission_started }
+	on_completion = { remove_variable = aac_mission_started }
+	on_abort = { remove_variable = aac_mission_started }
+
+	# ==================== ROOT ====================
+
+	aac_throne_of_charlemagne = {
+		icon = frankokratia_frankokratia_advance
+		requires = { }
+		enabled = {
+			always = yes
+		}
+		on_completion = {
+			trigger_event_non_silently = aac_events.10
+			area:rhineland_area = {
+				every_location_in_area = {
+					limit = { owner ?= { NOT = { this = root } } }
+					save_scope_as = target_location
+					root = {
+						add_casus_belli = {
+							target = scope:target_location.owner
+							type = casus_belli:cb_conquer_province
+							province = scope:target_location.province
+							years = 50
+						}
+					}
+				}
+			}
+		}
+	}
+
+	# ==================== BRANCH A: ライン川・ドイツ ===================
+
+	aac_control_rhineland = {
+		icon = legacy_of_great_empires
+		requires = { aac_throne_of_charlemagne }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:cologne
+			owns_or_non_sovereign_subject_owns = location:trier
+			any_owned_location = {
+				area = area:rhineland_area
+				count >= 10
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = aac_rhineland_mod years = -1 mode = add }
+		}
+	}
+
+	aac_integrate_lorraine = {
+		icon = legacy_of_great_empires
+		requires = { aac_control_rhineland }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:metz
+			any_owned_location = {
+				area = area:lorraine_area
+				count >= 8
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = aac_lorraine_mod years = -1 mode = add }
+		}
+	}
+
+	aac_conquer_hre = {
+		icon = legacy_of_great_empires
+		requires = { aac_integrate_lorraine aac_control_flanders }
+		enabled = {
+			OR = {
+				is_leader_of_international_organization = international_organization:hre
+				AND = {
+					any_owned_location = {
+						region = region:north_german_region
+						count >= 150
+					}
+					any_owned_location = {
+						region = region:south_german_region
+						count >= 150
+					}
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = aac_hre_master_mod years = -1 mode = add }
+			set_country_rank_effect = { rank = country_rank:rank_empire }
+		}
+	}
+
+	# ==================== BRANCH B: フランドル・低地 ===================
+
+	aac_control_flanders = {
+		icon = crown_power_advance_renaissance
+		requires = { aac_throne_of_charlemagne }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:liege
+			any_owned_location = {
+				area = area:flanders_area
+				count >= 8
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = aac_flanders_mod years = -1 mode = add }
+		}
+	}
+
+	aac_brabant_trade = {
+		icon = a_magnanimous_empire
+		requires = { aac_control_flanders }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:brussels
+			any_owned_location = {
+				area = area:brabant_area
+				count >= 6
+			}
+			monthly_income_trade_and_tax >= 100
+		}
+		on_completion = {
+			add_country_modifier = { modifier = aac_brabant_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH C: ガリア・フランス征服 ====================
+
+	aac_push_into_france = {
+		icon = fra_expansion_of_france
+		requires = { aac_control_rhineland aac_control_flanders }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:paris
+			any_owned_location = {
+				area = area:ile_de_france_area
+				count >= 5
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = aac_events.20
+		}
+	}
+
+	aac_conquer_northern_france = {
+		icon = fra_expansion_of_france
+		requires = { aac_push_into_france }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:reims
+			any_owned_location = {
+				area = area:normandy_area
+				count >= 8
+			}
+			any_owned_location = {
+				area = area:picardy_area
+				count >= 5
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = aac_northern_france_mod years = -1 mode = add }
+		}
+	}
+
+	aac_conquer_burgundy = {
+		icon = fra_expansion_of_france
+		requires = { aac_push_into_france }
+		enabled = {
+			any_owned_location = {
+				area = area:burgundy_area
+				count >= 8
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = aac_burgundy_mod years = -1 mode = add }
+		}
+	}
+
+	aac_conquer_southern_france = {
+		icon = fra_expansion_of_france
+		requires = { aac_conquer_northern_france aac_conquer_burgundy }
+		enabled = {
+			any_owned_location = {
+				area = area:languedoc_area
+				count >= 8
+			}
+			any_owned_location = {
+				area = area:gascony_area
+				count >= 6
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = aac_southern_france_mod years = -1 mode = add }
+		}
+	}
+
+	# C合流: ガリア統一
+	aac_reunite_gaul = {
+		icon = legacy_of_great_empires
+		requires = { aac_conquer_southern_france aac_conquer_burgundy }
+		enabled = {
+			any_owned_location = {
+				region = region:france_region
+				count >= 300
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = aac_events.40
+		}
+	}
+
+	# ==================== BRANCH D: 内政・経済 ====================
+
+	aac_develop_aachen = {
+		icon = palatinate_romanticism
+		requires = { aac_throne_of_charlemagne }
+		enabled = {
+			location:aachen = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+				development >= 35
+				rgo_level >= 6
+			}
+		}
+		on_completion = {
+			location:aachen = {
+				add_location_modifier = { modifier = aac_aachen_capital_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	aac_frankish_law = {
+		icon = fra_code_civil
+		requires = { aac_develop_aachen }
+		enabled = {
+			"estate_power(estate_type:crown_estate)" >= 0.25
+		}
+		on_completion = {
+			add_country_modifier = { modifier = aac_frankish_law_mod years = -1 mode = add }
+		}
+	}
+
+	aac_missi_dominici = {
+		icon = crown_power_advance_renaissance
+		requires = { aac_frankish_law }
+		enabled = {
+			"estate_power(estate_type:crown_estate)" >= 0.40
+			legitimacy >= 90
+		}
+		on_completion = {
+			add_country_modifier = { modifier = aac_missi_dominici_mod years = -1 mode = add }
+		}
+	}
+
+	aac_carolingian_renaissance = {
+		icon = palatinate_romanticism
+		requires = { aac_develop_aachen }
+		enabled = {
+			any_owned_location = {
+				has_building = building_type:university
+				count >= 3
+			}
+			location:aachen = { development >= 40 }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = aac_renaissance_mod years = -1 mode = add }
+		}
+	}
+
+	aac_trade_empire = {
+		icon = a_magnanimous_empire
+		requires = { aac_brabant_trade }
+		enabled = {
+			monthly_income_trade_and_tax >= 250
+			any_owned_location = {
+				is_market_center = yes
+				count >= 5
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = aac_trade_empire_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH E: 軍事・封建制 ====================
+
+	aac_frankish_levy = {
+		icon = feudalism_advance
+		requires = { aac_throne_of_charlemagne }
+		enabled = {
+			army_size >= 10
+			army_tradition >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = aac_frankish_levy_mod years = 30 mode = add }
+		}
+	}
+
+	aac_palatine_guard = {
+		icon = feudalism_advance
+		requires = { aac_frankish_levy }
+		enabled = {
+			army_tradition >= 50
+			army_size >= 40
+		}
+		on_completion = {
+			add_country_modifier = { modifier = aac_palatine_mod years = -1 mode = add }
+		}
+	}
+
+	aac_carolingian_cavalry = {
+		icon = fra_gendarmes
+		requires = { aac_palatine_guard }
+		enabled = {
+			army_tradition >= 65
+			discipline >= 1.05
+			army_size >= 60
+		}
+		on_completion = {
+			add_country_modifier = { modifier = aac_cavalry_mod years = -1 mode = add }
+		}
+	}
+
+
+	aac_alsace_swabia = {
+		icon = legacy_of_great_empires
+		requires = { aac_control_rhineland }
+		enabled = {
+			any_owned_location = {
+				area = area:alsace_area
+				count >= 5
+			}
+			any_owned_location = {
+				area = area:swabia_area
+				count >= 8
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = aac_alsace_mod years = -1 mode = add }
+		}
+	}
+
+	aac_champagne_fairs = {
+		icon = a_magnanimous_empire
+		requires = { aac_push_into_france }
+		enabled = {
+			any_owned_location = {
+				area = area:champagne_area
+				count >= 8
+			}
+			monthly_income_trade_and_tax >= 150
+		}
+		on_completion = {
+			add_country_modifier = { modifier = aac_champagne_mod years = -1 mode = add }
+		}
+	}
+
+	aac_conquer_brittany = {
+		icon = fra_expansion_of_france
+		requires = { aac_conquer_northern_france }
+		enabled = {
+			any_owned_location = {
+				area = area:brittany_area
+				count >= 8
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = aac_brittany_mod years = -1 mode = add }
+		}
+	}
+
+	aac_holy_crown = {
+		icon = ties_with_the_holy_see
+		requires = { aac_papal_alliance aac_develop_aachen }
+		enabled = {
+			OR = {
+				is_allied_with = { target = c:PAP }
+				NOT = { country_exists = c:PAP }
+			}
+			c:PAP = { opinion = { target = root value >= 200 } }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = aac_holy_crown_mod years = -1 mode = add }
+		}
+	}
+
+	aac_dev_reims = {
+		icon = palatinate_romanticism
+		requires = { aac_conquer_northern_france }
+		enabled = {
+			location:reims = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+				development >= 25
+			}
+		}
+		on_completion = {
+			location:reims = {
+				add_location_modifier = { modifier = aac_reims_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	aac_dev_paris = {
+		icon = palatinate_romanticism
+		requires = { aac_push_into_france }
+		enabled = {
+			location:paris = {
+				development >= 40
+				total_building_levels >= 100
+			}
+		}
+		on_completion = {
+			location:paris = {
+				add_location_modifier = { modifier = aac_paris_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	aac_bretagne_fleet = {
+		icon = feudalism_advance
+		requires = { aac_conquer_brittany aac_brabant_trade }
+		enabled = {
+			navy_size >= 30
+			navy_tradition >= 40
+		}
+		on_completion = {
+			add_country_modifier = { modifier = aac_fleet_mod years = -1 mode = add }
+		}
+	}
+
+
+	aac_aachen_megalopolis = {
+		icon = palatinate_romanticism
+		requires = { aac_carolingian_renaissance }
+		enabled = {
+			location:aachen = {
+				population >= 200
+				development >= 50
+				total_building_levels >= 180
+			}
+		}
+		on_completion = {
+			location:aachen = {
+				change_location_rank = location_rank:megalopolis
+				add_location_modifier = { modifier = aac_aachen_megalopolis_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	# ==================== 大合流: フランク王国の復興 ====================
+
+	aac_kingdom_of_franks = {
+		icon = frankokratia_frankokratia_advance
+		requires = { aac_reunite_gaul aac_missi_dominici }
+		enabled = {
+			num_locations >= 400
+			prestige >= 70
+			monthly_income_trade_and_tax >= 400
+		}
+		on_completion = {
+			trigger_event_non_silently = aac_events.50
+		}
+	}
+
+	# ==================== BRANCH F: イタリア・教皇 ====================
+
+	aac_papal_alliance = {
+		icon = holy_father
+		requires = { aac_throne_of_charlemagne }
+		enabled = {
+			c:PAP = { opinion = { target = root value >= 150 } }
+			dominant_religion = religion:catholic
+		}
+		on_completion = {
+			add_country_modifier = { modifier = aac_papal_mod years = 100 mode = add }
+		}
+	}
+
+	aac_conquer_italy = {
+		icon = a_neverending_crusade
+		requires = { aac_papal_alliance aac_kingdom_of_franks }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:rome
+			any_owned_location = {
+				region = region:italy_region
+				count >= 150
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = aac_italy_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== FINAL: 西ローマ帝国の再興 ====================
+
+	aac_western_roman_empire = {
+		icon = frankokratia_frankokratia_advance
+		requires = { aac_conquer_hre aac_kingdom_of_franks aac_conquer_italy }
+		final = yes
+		enabled = {
+			num_locations >= 800
+			owns_or_non_sovereign_subject_owns = location:rome
+			owns_or_non_sovereign_subject_owns = location:paris
+			owns_or_non_sovereign_subject_owns = location:aachen
+			prestige >= 80
+		}
+		on_completion = {
+			trigger_event_non_silently = aac_events.99
+		}
+	}
+}

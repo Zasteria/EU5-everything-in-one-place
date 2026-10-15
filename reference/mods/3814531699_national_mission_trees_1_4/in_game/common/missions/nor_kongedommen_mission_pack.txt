@@ -1,0 +1,779 @@
+﻿nor_kongedommen_mission_pack = {
+	icon = nmt_scandinavia
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = NOR
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = { always = yes }
+
+	on_start = { set_variable = nor_mission_started }
+	on_completion = { remove_variable = nor_mission_started }
+	on_abort = { remove_variable = nor_mission_started }
+
+	# ==================== ROOT ====================
+
+	nor_kingdom_of_norway = {
+		icon = dan_rulers_of_the_north
+		requires = { }
+		enabled = {
+			legitimacy >= 100
+			stability >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_kingdom_mod years = 100 mode = add }
+		}
+	}
+
+	# ==================== BRANCH A: 独立・スカンジナビア統一 ====================
+
+	nor_expel_danish_nobility = {
+		icon = dan_danish_legislation
+		requires = { nor_kingdom_of_norway }
+		enabled = {
+			OR = {
+				c:DAN = { is_rival_of = root }
+				is_allied_with = { target = c:DAN }
+				c:DAN = { opinion = { target = root value >= 150 } }
+				NOT = { country_exists = c:DAN }
+			}
+		}
+		on_completion = {
+			if = {
+				limit = { country_exists = c:DAN }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:DAN
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	nor_control_denmark = {
+		icon = dan_scanian_regiment
+		requires = { nor_expel_danish_nobility }
+		enabled = {
+			OR = {
+				c:DAN = { in_union_with = root }
+				c:DAN = { is_subject_of = root }
+				NOT = { country_exists = c:DAN }
+				owns_or_non_sovereign_subject_owns = location:kobenhavn
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_denmark_crushed_mod years = 30 mode = add }
+			add_prestige = 20
+		}
+	}
+
+	nor_sweden_union = {
+		icon = dan_levy_recruitment
+		requires = { nor_kingdom_of_norway }
+		enabled = {
+			OR = {
+				AND = {
+					c:SWE = { in_union_with = root }
+					c:SWE = { opinion = { target = root value >= 200 } }
+				}
+				AND = {
+					c:SWE = { is_subject_of = root }
+					c:SWE = { opinion = { target = root value >= 200 } }
+				}
+				NOT = { country_exists = c:SWE }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_sweden_union_mod years = -1 mode = add }
+		}
+	}
+
+	nor_unite_scandinavia = {
+		icon = dan_rulers_of_the_north
+		requires = { nor_control_denmark nor_sweden_union }
+		enabled = {
+			region:scandinavian_region = {
+				any_location_in_region = {
+					count >= 300
+					owner = root
+				}
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = nor_events.30
+		}
+	}
+
+	# ==================== BRANCH B: 北海・大西洋・植民地 ====================
+
+	nor_secure_bergen = {
+		icon = nor_seaborn_country
+		requires = { nor_kingdom_of_norway }
+		enabled = {
+			location:bergen = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+				development >= 20
+			}
+		}
+		on_completion = {
+			location:bergen = {
+				add_location_modifier = { modifier = nor_bergen_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	nor_fleet_of_norway = {
+		icon = nor_seaborn_country
+		requires = { nor_secure_bergen }
+		enabled = {
+			navy_size >= 20
+			navy_tradition >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_fleet_mod years = -1 mode = add }
+		}
+	}
+
+	nor_north_sea_markets = {
+		icon = dan_trading_economy
+		requires = { nor_fleet_of_norway }
+		enabled = {
+			monthly_income_trade_and_tax >= 100
+			any_owned_location = {
+				is_market_center = yes
+				count >= 3
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_north_sea_mod years = -1 mode = add }
+		}
+	}
+
+	nor_iceland_colony = {
+		icon = hsa_global_reach
+		requires = { nor_fleet_of_norway }
+		enabled = {
+			any_owned_location = {
+				area = area:iceland_area
+				count >= 3
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_iceland_mod years = -1 mode = add }
+		}
+	}
+
+	nor_greenland_expedition = {
+		icon = hsa_global_reach
+		requires = { nor_iceland_colony }
+		enabled = {
+			any_owned_location = {
+				area = area:greenland_area
+				count >= 1
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_greenland_mod years = 50 mode = add }
+			add_prestige = 15
+		}
+	}
+
+	nor_vinland = {
+		icon = hsa_global_reach
+		requires = { nor_greenland_expedition }
+		enabled = {
+			any_colonial_country = {
+				is_subject_of = root
+				count >= 1
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_vinland_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH C: ブリテン島・オークニー ====================
+
+	nor_orkney_shetland = {
+		icon = nor_seaborn_country
+		requires = { nor_fleet_of_norway }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:orkney
+			owns_or_non_sovereign_subject_owns = location:shetland
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_orkney_mod years = -1 mode = add }
+		}
+	}
+
+	nor_conquer_scotland = {
+		icon = dan_scanian_regiment
+		requires = { nor_orkney_shetland }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:edinburgh
+			any_owned_location = {
+				area = area:hebrides_area
+				count >= 3
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_scotland_mod years = -1 mode = add }
+			if = {
+				limit = { location:york = { exists = yes } }
+				add_casus_belli = {
+					target = location:york.owner
+					type = casus_belli:cb_conquer_province
+					province = location:york.province
+				}
+			}
+		}
+	}
+
+	nor_invade_england = {
+		icon = dan_scanian_regiment
+		requires = { nor_conquer_scotland }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:york
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_england_invasion_mod years = 30 mode = add }
+			add_prestige = 20
+		}
+	}
+
+	nor_kingdom_of_britain = {
+		icon = dan_rulers_of_the_north
+		requires = { nor_invade_england }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:london
+			owns_or_non_sovereign_subject_owns = location:york
+			owns_or_non_sovereign_subject_owns = location:edinburgh
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_britain_mod years = -1 mode = add }
+			set_country_rank_effect = { rank = country_rank:rank_empire }
+		}
+	}
+
+	# B+C合流: 北海の覇者
+	nor_master_of_north_sea = {
+		icon = hsa_mastery_of_the_sea
+		requires = { nor_north_sea_markets nor_orkney_shetland }
+		enabled = {
+			navy_size >= 50
+			monthly_income_trade_and_tax >= 200
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_north_sea_master_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH D: 北方内政・漁業・産業 ====================
+
+	nor_secure_nidaros = {
+		icon = dan_rulers_of_the_north
+		requires = { nor_kingdom_of_norway }
+		enabled = {
+			location:nidaros = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+				development >= 25
+			}
+		}
+		on_completion = {
+			location:nidaros = {
+				add_location_modifier = { modifier = nor_nidaros_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	nor_fisheries = {
+		icon = nor_bounties_of_the_sea
+		requires = { nor_secure_nidaros }
+		enabled = {
+			produced_in_country:fish > 60
+			any_owned_location = {
+				has_building = building_type:wharf
+				count >= 5
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_fisheries_mod years = -1 mode = add }
+		}
+	}
+
+	nor_timber_industry = {
+		icon = nor_bounties_of_the_sea
+		requires = { nor_fisheries }
+		enabled = {
+			any_owned_location = {
+				has_building = building_type:lumber_mill
+				count >= 15
+			}
+			monthly_income_trade_and_tax >= 100
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_timber_mod years = -1 mode = add }
+		}
+	}
+
+	nor_arctic_trade = {
+		icon = hsa_global_reach
+		requires = { nor_timber_industry }
+		enabled = {
+			any_owned_location = {
+				area = area:kola_area
+				count >= 15
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_arctic_trade_mod years = -1 mode = add }
+		}
+	}
+
+	nor_develop_oslo = {
+		icon = dan_rulers_of_the_north
+		requires = { nor_kingdom_of_norway }
+		enabled = {
+			location:oslo = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+				development >= 30
+			}
+		}
+		on_completion = {
+			location:oslo = {
+				add_location_modifier = { modifier = nor_oslo_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	nor_absolutism = {
+		icon = dan_admiralty_college
+		requires = { nor_develop_oslo }
+		enabled = {
+			"estate_power(estate_type:crown_estate)" >= 0.25
+			legitimacy >= 90
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_absolutism_mod years = -1 mode = add }
+		}
+	}
+
+	# D合流: 北方の経済
+	nor_northern_economy = {
+		icon = dan_trading_economy
+		requires = { nor_arctic_trade nor_absolutism }
+		enabled = {
+			monthly_income_trade_and_tax >= 300
+			any_owned_location = {
+				is_market_center = yes
+				count >= 4
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_northern_economy_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH E: 宗教分岐（3方向）====================
+
+	nor_religious_question = {
+		icon = dan_danish_orthodoxy
+		requires = { nor_secure_nidaros }
+		enabled = {
+			is_situation_active = situation:reformation
+		}
+		on_completion = {
+			trigger_event_non_silently = nor_events.40
+		}
+	}
+
+	# E1: カトリック
+	nor_catholic_norway = {
+		icon = dan_danish_orthodoxy
+		requires = { nor_religious_question }
+		enabled = {
+			dominant_religion = religion:catholic
+			c:PAP = { opinion = { target = root value >= 150 } }
+			NOT = { has_country_modifier = nor_lutheran_mod }
+			NOT = { has_country_modifier = nor_norse_conversion_mod }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_catholic_mod years = -1 mode = add }
+		}
+	}
+
+	nor_northern_crusade = {
+		icon = dan_danish_orthodoxy
+		requires = { nor_catholic_norway }
+		enabled = {
+			any_current_war = {
+				OR = {
+					attacker_leader = root
+					defender_leader = root
+				}
+				any_war_participant = {
+					religion.group = religion_group:muslim
+					NOT = { this = root }
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_crusader_mod years = 50 mode = add }
+			add_prestige = 20
+		}
+	}
+
+	# E2: ルター派
+	nor_reformation = {
+		icon = dan_danish_legislation
+		requires = { nor_religious_question }
+		enabled = {
+			OR = {
+				dominant_religion = religion:lutheran
+				dominant_religion = religion:calvinist
+			}
+			NOT = { has_country_modifier = nor_catholic_mod }
+			NOT = { has_country_modifier = nor_norse_conversion_mod }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_lutheran_mod years = -1 mode = add }
+		}
+	}
+
+	nor_protestant_church = {
+		icon = dan_danish_legislation
+		requires = { nor_reformation }
+		enabled = {
+			estate_satisfaction:clergy_estate >= 0.65
+			any_owned_location = {
+				has_building = building_type:university
+				count >= 2
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_protestant_church_mod years = -1 mode = add }
+		}
+	}
+
+	# E3: ノルド
+	nor_norse_revival = {
+		icon = nor_seaborn_country
+		requires = { nor_religious_question }
+		enabled = {
+			dominant_religion = religion:norse
+			NOT = { has_country_modifier = nor_catholic_mod }
+			NOT = { has_country_modifier = nor_lutheran_mod }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_norse_conversion_mod years = -1 mode = add }
+		}
+	}
+
+	nor_berserker_fleet = {
+		icon = nor_seaborn_country
+		requires = { nor_norse_revival }
+		enabled = {
+			navy_tradition >= 50
+			navy_size >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_berserker_fleet_mod years = -1 mode = add }
+		}
+	}
+
+	nor_ragnarok_empire = {
+		icon = nor_seaborn_country
+		requires = { nor_berserker_fleet }
+		enabled = {
+			country_rank = country_rank:rank_empire
+			num_locations >= 500
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_ragnarok_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH F: バルト海・東方 ====================
+
+	nor_bane_of_hansa = {
+		icon = hsa_seal_of_the_hansa
+		requires = { nor_kingdom_of_norway }
+		enabled = {
+			OR = {
+				owns_or_non_sovereign_subject_owns = location:lubeck
+				NOT = { country_exists = c:HSA }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_hansa_victory_mod years = 30 mode = add }
+		}
+	}
+
+	nor_baltic_access = {
+		icon = hsa_mastery_of_the_sea
+		requires = { nor_bane_of_hansa }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:stralsund
+			navy_size >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_baltic_mod years = -1 mode = add }
+		}
+	}
+
+	nor_control_north_sea_trade = {
+		icon = dan_trading_economy
+		requires = { nor_north_sea_markets nor_bane_of_hansa }
+		enabled = {
+			monthly_income_trade_and_tax >= 300
+			modifier:trade_income >= 0
+			navy_size >= 40
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_trade_supremacy_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== 追加ミッション ====================
+
+	nor_develop_stavanger = {
+		icon = nor_bounties_of_the_sea
+		requires = { nor_secure_bergen }
+		enabled = {
+			location:stavanger = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:stavanger = {
+				add_location_modifier = { modifier = nor_stavanger_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	nor_amber_trade = {
+		icon = dan_trading_economy
+		requires = { nor_north_sea_markets }
+		enabled = {
+			produced_in_country:amber > 3
+			monthly_income_trade_and_tax >= 150
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_amber_mod years = -1 mode = add }
+		}
+	}
+
+	nor_integrate_finland = {
+		icon = dan_danish_agriculture
+		requires = { nor_sweden_union }
+		enabled = {
+			owns = location:abo
+			owns = location:uleaborg
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_finland_mod years = -1 mode = add }
+		}
+	}
+
+	nor_engelbrekt = {
+		icon = dan_levy_recruitment
+		requires = { nor_expel_danish_nobility }
+		enabled = {
+			legitimacy >= 85
+			estate_satisfaction:peasants_estate >= 0.70
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_engelbrekt_mod years = 30 mode = add }
+			add_prestige = 10
+		}
+	}
+
+	nor_develop_hammerfest = {
+		icon = hsa_global_reach
+		requires = { nor_arctic_trade }
+		enabled = {
+			owns = location:hammerfest
+			location:hammerfest = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:hammerfest = {
+				add_location_modifier = { modifier = nor_hammerfest_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	nor_karoliner = {
+		icon = dan_scanian_regiment
+		requires = { nor_absolutism }
+		enabled = {
+			army_tradition >= 50
+			army_size >= 25
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_military_tradition_mod years = -1 mode = add }
+		}
+	}
+
+	nor_great_power = {
+		icon = dan_rulers_of_the_north
+		requires = { nor_absolutism nor_fisheries }
+		enabled = {
+			num_locations >= 200
+			monthly_income_trade_and_tax >= 250
+			prestige >= 60
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_great_power_mod years = -1 mode = add }
+		}
+	}
+
+	nor_protestant_empire = {
+		icon = dan_danish_legislation
+		requires = { nor_protestant_church }
+		enabled = {
+			num_locations >= 250
+			any_owned_location = {
+				region = region:scandinavian_region
+				"religion_percentage(religion:lutheran)" >= 0.70
+				count >= 1
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_protestant_empire_mod years = -1 mode = add }
+		}
+	}
+
+	nor_papal_champion = {
+		icon = dan_danish_orthodoxy
+		requires = { nor_northern_crusade }
+		enabled = {
+			c:PAP = { opinion = { target = root value >= 180 } }
+			owns_or_non_sovereign_subject_owns = location:lubeck
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_papal_champion_mod years = -1 mode = add }
+		}
+	}
+
+	nor_colonization = {
+		icon = hsa_global_reach
+		requires = { nor_vinland nor_northern_economy }
+		enabled = {
+			any_colonial_country = {
+				is_subject_of = root
+				count >= 4
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_colonial_empire_mod years = -1 mode = add }
+		}
+	}
+
+
+	nor_sound_toll = {
+		icon = dan_royal_danish_navy
+		requires = { nor_control_denmark }
+		enabled = {
+			navy_size >= 30
+			monthly_income_trade_and_tax >= 150
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_sound_toll_mod years = -1 mode = add }
+		}
+	}
+
+	nor_develop_stockholm = {
+		icon = dan_rulers_of_the_north
+		requires = { nor_sweden_union }
+		enabled = {
+			owns = location:stockholm
+			location:stockholm = {
+				development >= 30
+			}
+		}
+		on_completion = {
+			location:stockholm = {
+				add_location_modifier = { modifier = nor_stockholm_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	nor_hanseatic_expulsion = {
+		icon = hsa_seal_of_the_hansa
+		requires = { nor_bane_of_hansa nor_secure_bergen }
+		enabled = {
+			NOT = { country_exists = c:HSA }
+			monthly_income_trade_and_tax >= 200
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_hanseatic_expulsion_mod years = -1 mode = add }
+		}
+	}
+
+	nor_north_sea_empire = {
+		icon = hsa_mastery_of_the_sea
+		requires = { nor_control_north_sea_trade nor_master_of_north_sea }
+		enabled = {
+			navy_size >= 60
+			owns_or_non_sovereign_subject_owns = location:lubeck
+			monthly_income_trade_and_tax >= 350
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_north_sea_empire_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== 大合流: ノルウェー帝国 ====================
+
+	nor_stormakt = {
+		icon = dan_rulers_of_the_north
+		requires = { nor_unite_scandinavia nor_north_sea_empire }
+		enabled = {
+			num_locations >= 600
+			monthly_income_trade_and_tax >= 600
+			prestige >= 80
+		}
+		on_completion = {
+			add_country_modifier = { modifier = nor_stormakt_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== FINAL ====================
+
+	nor_norwegian_empire = {
+		icon = dan_rulers_of_the_north
+		requires = { nor_stormakt nor_colonization }
+		final = yes
+		enabled = {
+			num_locations >= 900
+			prestige >= 80
+			monthly_income_trade_and_tax >= 900
+		}
+		on_completion = {
+			trigger_event_non_silently = nor_events.99
+		}
+	}
+}

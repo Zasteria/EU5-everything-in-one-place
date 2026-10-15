@@ -1403,12 +1403,12 @@ _ind_spec.loader.exec_module(industry)
 
 def _industry_files() -> dict[str, str]:
     trmm = (MOD / TRMM).read_text(encoding="utf-8-sig").replace("cm_trmm_", "bcm_trmm_")
-    made = industry.files({industry.TRMM_EFFECTS: trmm}, refs.GAME)
+    made = industry.files({industry.TRMM_EFFECTS: trmm}, refs.GAME, tab="map_modes")
     # CM ships more languages than cm_maps; each gets the rows (check_cmm wants them all).
     inds = industry.industries(refs.GAME)
     for folder in sorted((MOD / "main_menu/localization").iterdir()):
         made.setdefault(f"main_menu/localization/{folder.name}/bcm_ind_l_{folder.name}.yml",
-                        industry.localization(folder.name, inds))
+                        industry.localization(folder.name, inds, "map_modes"))
     out = {}
     for path, text in made.items():
         path = path.replace("/bcm_ind_", "/cm_ind_").replace("/bcm_industry_", "/cm_industry_")
@@ -1444,7 +1444,33 @@ def _industry_pass(text: str) -> str:
                               "  remove_global_variable = cm_ind_stamp # cm_dev_perf +perf41\n}\n", 1)
 
 
+def _register_industry_mode(text: str) -> str:
+    """+perf47 (10-15): the industry map's three modes, a dropdown on the map
+    modes tab after the governor's, the same one cm_maps has (its words and
+    `cm_ind_mode_changed` come with industry_support.py)."""
+    sync = ("\tcmm_sync_setting_alias = {\n\t\tsetting = cm__placement_finder_accuracy\n"
+            "\t\talias = cm_placement_finder_accuracy\n\t}\n")
+    if text.count(sync) != 1:
+        raise SystemExit("cmm: the governor accuracy dropdown has changed shape")
+    text = text.replace(sync, sync + (
+        "\n\t# cm_dev_perf +perf47: how the industry-support map counts, 2 = 0.4.1's rule\n"
+        "\tcmm_register_dropdown_setting = {\n\t\tmod_id = cm\n\t\tsetting_id = industry_mode\n"
+        "\t\ttab_id = map_modes\n\t\tgroup_id = industry\n\t\tdefault_index = 2\n\t\toption_count = 3\n\t}\n"
+        "\tcmm_sync_setting_alias = {\n\t\tsetting = cm__industry_mode\n\t\talias = cm_ind_mode\n\t}\n"
+        "\tif = {\n\t\tlimit = { has_variable = cm_ind_mode }\n"
+        "\t\tset_global_variable = { name = cm_ind_mode_g value = var:cm_ind_mode }\n\t}\n"), 1)
+    changed = "\t\tflag:cm__placement_finder_accuracy = {\n"
+    if text.count(changed) != 1:
+        raise SystemExit("cmm: the governor accuracy branch has changed shape")
+    return text.replace(changed, (
+        "\t\t# cm_dev_perf +perf47\n"
+        "\t\tflag:cm__industry_mode = {\n\t\t\tcmm_sync_setting_alias = {\n"
+        "\t\t\t\tsetting = cm__industry_mode\n\t\t\t\talias = cm_ind_mode\n"
+        "\t\t\t}\n\t\t\tcm_ind_mode_changed = yes\n\t\t}\n") + changed, 1)
+
+
 EDITS = (
+    (CMM, "the industry map's mode dropdown", _register_industry_mode),
     (RESERVE_GUIS, "the gold slider no longer writes CM's reserve", _cut_reserve_pull),
     (WINDOW, "gate the building-type tree", _gate_the_tree),
     (WINDOW, "widen the first pass's instantiation window", perf._widen_first_pass),

@@ -1,0 +1,903 @@
+﻿pol_jagiellonian_dynasty_mission_pack = {
+	icon = pro_missions
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = POL
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = { always = yes }
+
+	on_start = { set_variable = pol_mission_started }
+	on_completion = { remove_variable = pol_mission_started }
+	on_abort = { remove_variable = pol_mission_started }
+
+	# ==================== ROOT ====================
+
+	pol_kingdom_of_poland = {
+		icon = land_of_promise
+		requires = { }
+		enabled = {
+			legitimacy >= 100
+			stability >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_piast_heritage_mod years = 100 mode = add }
+		}
+	}
+
+	# ==================== BRANCH A: 内政・セイム・経済（2サブブランチに分岐） ====================
+
+	pol_integrate_mazovia = {
+		icon = fra_integration_of_new_territories
+		requires = { pol_kingdom_of_poland }
+		enabled = {
+			owns = location:plock
+			owns = location:warsaw
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_mazovia_integration_mod years = -1 mode = add }
+		}
+	}
+
+	pol_great_sejm = {
+		icon = legalism_advance
+		requires = { pol_integrate_mazovia }
+		enabled = {
+			OR = {
+				"estate_power(estate_type:crown_estate)" >= 0.20
+				"estate_power(estate_type:nobles_estate)" >= 0.50
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_great_sejm_mod years = -1 mode = add }
+		}
+	}
+
+	# A1サブ: 法典・改革路線
+	pol_nieszawa_privileges = {
+		icon = legalism_advance
+		requires = { pol_great_sejm }
+		enabled = {
+			estate_satisfaction:nobles_estate >= 0.75
+			government_reform_slots >= 1
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_szlachta_rights_mod years = -1 mode = add }
+		}
+	}
+
+	pol_krakow_renaissance = {
+		icon = city_of_artists
+		requires = { pol_nieszawa_privileges }
+		enabled = {
+			location:krakow = { has_building = building_type:university }
+		}
+		on_completion = {
+			location:krakow = {
+				add_location_modifier = { modifier = pol_krakow_cultural_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	pol_jagiellonian_university = {
+		icon = encouragement_of_philosophers
+		requires = { pol_krakow_renaissance }
+		enabled = {
+			any_owned_location = {
+				has_building = building_type:university
+				count >= 5
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_jagiellonian_learning_mod years = -1 mode = add }
+		}
+	}
+
+	# A2サブ: 経済・都市路線
+	pol_support_merchants = {
+		icon = crossroads_of_commerce
+		requires = { pol_great_sejm }
+		enabled = {
+			any_owned_location = {
+				is_market_center = yes
+				count >= 3
+			}
+			monthly_income_trade_and_tax >= 50
+			estate_satisfaction:burghers_estate >= 0.70
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_merchant_support_mod years = -1 mode = add }
+		}
+	}
+
+	pol_breadbasket_of_europe = {
+		icon = continental_trade
+		requires = { pol_support_merchants }
+		enabled = {
+			produced_in_country:wheat > 30
+			produced_in_country:millet > 30
+		}
+		on_completion = {
+			set_variable = {
+				name = pol_breadbasket_unlocked
+				value = 1
+			}
+			custom_tooltip = { text = pol_breadbasket_town_right_tt }
+		}
+	}
+
+	pol_develop_krakow = {
+		icon = city_building_advance
+		requires = { pol_support_merchants }
+		enabled = {
+			location:krakow = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+			location:krakow = { development >= 30 }
+		}
+		on_completion = {
+			location:krakow = {
+				add_location_modifier = { modifier = pol_krakow_location_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	# A1+A2合流: ポーランドの黄金時代
+	pol_polish_golden_age = {
+		icon = legacy_of_great_empires
+		requires = { pol_jagiellonian_university pol_breadbasket_of_europe }
+		enabled = {
+			num_locations >= 700
+			monthly_income_trade_and_tax >= 500
+			prestige >= 70
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_golden_age_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH B: ヤギェウォ朝・リトアニア同君・東方 ====================
+
+
+	pol_lithuanian_relations = {
+		icon = a_magnanimous_empire
+		requires = { pol_kingdom_of_poland }
+		enabled = {
+			OR = {
+				c:LIT = { opinion = { target = root value >= 100 } }
+				is_allied_with = { target = c:LIT }
+				c:LIT = { is_rival_of = root }
+				owns_or_non_sovereign_subject_owns = location:vilnius
+			}
+		}
+		on_completion = {
+			if = {
+				limit = { country_exists = c:LIT }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:LIT
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	pol_jadwiga_union = {
+		icon = crown_power_advance_renaissance
+		requires = { pol_lithuanian_relations }
+		enabled = {
+			OR = {
+				c:LIT = { in_union_with = root }
+				c:LIT = { is_subject_of = root }
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = pol_events.10
+			if = {
+				limit = { country_exists = c:HAL }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:HAL
+					target_character = root.ruler
+					years = 100
+				}
+			}
+			if = {
+				limit = { country_exists = c:VOL }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:VOL
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	pol_develop_ruthenia = {
+		icon = arduous_terrain
+		requires = { pol_jadwiga_union }
+		enabled = {
+			OR = {
+				AND = {
+					c:HAL = { in_union_with = root }
+					c:VOL = { in_union_with = root }
+				}
+				AND = {
+					owns_or_non_sovereign_subject_owns = location:lviv
+					owns_or_non_sovereign_subject_owns = location:belz
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_ruthenia_dev_mod years = -1 mode = add }
+		}
+	}
+
+	pol_control_kyiv = {
+		icon = a_fortified_border
+		requires = { pol_develop_ruthenia }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:kyiv
+		}
+		on_completion = {
+			location:kyiv = {
+				add_location_modifier = { modifier = pol_kyiv_gateway_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	pol_push_east = {
+		icon = glorious_arms
+		requires = { pol_control_kyiv }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:minsk
+			owns_or_non_sovereign_subject_owns = location:smolensk
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_eastern_expansion_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH C: ドイツ騎士団・プロイセン・バルト海 ====================
+
+	pol_prussian_confederation = {
+		icon = a_neverending_crusade
+		requires = { pol_kingdom_of_poland }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:torun
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_teutonic_victory_mod years = 30 mode = add }
+		}
+	}
+
+	pol_gdansk_port = {
+		icon = continental_trade
+		requires = { pol_prussian_confederation }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:gdansk
+			location:gdansk = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:gdansk = {
+				add_location_modifier = { modifier = pol_gdansk_trade_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	pol_baltic_fleet = {
+		icon = development_of_maritime_law
+		requires = { pol_gdansk_port }
+		enabled = {
+			navy_size >= 20
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_baltic_fleet_mod years = -1 mode = add }
+		}
+	}
+
+	pol_livonian_expansion = {
+		icon = arduous_terrain
+		requires = { pol_baltic_fleet }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:riga
+			owns_or_non_sovereign_subject_owns = location:tallinn
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_livonia_mod years = -1 mode = add }
+		}
+	}
+
+	# B+C合流: バルト海から黒海まで（push_eastとlivonian_expansionが必要）
+	pol_sea_to_sea = {
+		icon = legacy_of_great_empires
+		requires = { pol_push_east pol_livonian_expansion }
+		enabled = {
+			navy_size >= 50
+			any_owned_location = {
+				region = region:steppes_region
+				count >= 100
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_sea_to_sea_mod years = -1 mode = add }
+		}
+	}
+
+	pol_master_of_the_north = {
+		icon = legacy_of_great_empires
+		requires = { pol_sea_to_sea }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:konigsberg
+			navy_size >= 100
+		}
+		on_completion = {
+			if = {
+				limit = { country_exists = c:SWE }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:SWE
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	# ==================== BRANCH D: ハンガリー同君連合・南方・オスマン ====================
+
+	pol_hungarian_union = {
+		icon = consolidate_the_royal_domain
+		requires = { pol_kingdom_of_poland }
+		enabled = {
+			OR = {
+				c:HUN = { in_union_with = root }
+				c:HUN = { is_subject_of = root }
+				owns = location:buda
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = pol_events.20
+		}
+	}
+
+	pol_moldavia_vassal = {
+		icon = balkan_hajduks
+		requires = { pol_hungarian_union }
+		enabled = {
+			OR = {
+				c:MOL = { in_union_with = root }
+				c:MOL = { is_subject_of = root }
+				OR = {
+					c:HUN = { owns_or_non_sovereign_subject_owns = location:iasi }
+					owns_or_non_sovereign_subject_owns = location:iasi
+				}
+			}
+		}
+		on_completion = {
+			if = {
+				limit = { location:targoviste = { exists = yes } }
+				add_casus_belli = {
+					target = location:targoviste.owner
+					type = casus_belli:cb_conquer_province
+					province = location:targoviste.province
+				}
+			}
+		}
+	}
+
+	pol_wallachia_control = {
+		icon = balkan_hajduks
+		requires = { pol_moldavia_vassal }
+		enabled = {
+			OR = {
+				c:WAL = { is_subject_of = root }
+				owns_or_non_sovereign_subject_owns = location:bucharest
+			}
+		}
+		on_completion = {
+			if = {
+				limit = { location:prizren = { exists = yes } }
+				add_casus_belli = {
+					target = location:prizren.owner
+					type = casus_belli:cb_conquer_province
+					province = location:prizren.province
+				}
+			}
+		}
+	}
+
+	pol_battle_of_grunwald = {
+		icon = a_neverending_crusade
+		requires = { pol_wallachia_control }
+		enabled = {
+			any_current_war = {
+				OR = {
+					attacker_leader = root
+					defender_leader = root
+				}
+				any_war_participant = {
+					religion.group = religion_group:muslim
+					NOT = { this = root }
+				}
+			}
+			army_size >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_crusader_glory_mod years = 100 mode = add }
+			add_prestige = 20
+		}
+	}
+
+	# B+D合流: キエフとワラキア両方確保で東方帝国
+	pol_eastern_empire = {
+		icon = legacy_of_great_empires
+		requires = { pol_push_east pol_battle_of_grunwald }
+		enabled = {
+			num_locations >= 500
+			any_owned_location = {
+				region = region:ruthenia_region
+				count >= 150
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_eastern_empire_mod years = -1 mode = add }
+		}
+	}
+
+	pol_shield_of_christendom = {
+		icon = crusader_tradition
+		requires = { pol_eastern_empire }
+		enabled = {
+			OR = {
+				AND = {
+					c:PAP = { opinion = { target = root value >= 150 } }
+					is_allied_with = { target = c:PAP }
+				}
+				owns_or_non_sovereign_subject_owns = location:rome
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_christendom_shield_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH E: シレジア・ボヘミア・HRE ====================
+
+	pol_silesia_integration = {
+		icon = fra_integration_of_new_territories
+		requires = { pol_kingdom_of_poland }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:wroclaw
+			any_owned_location = {
+				area = area:silesia_area
+				count >= 8
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_silesia_mod years = 100 mode = add }
+			if = {
+				limit = { country_exists = c:BOH }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:BOH
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	pol_bohemian_claim = {
+		icon = crown_power_advance_renaissance
+		requires = { pol_silesia_integration }
+		enabled = {
+			OR = {
+				c:BOH = { in_union_with = root }
+				c:BOH = { is_subject_of = root }
+				owns = location:prague
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_bohemian_crown_mod years = -1 mode = add }
+		}
+	}
+
+	pol_hre_influence = {
+		icon = a_magnanimous_empire
+		requires = { pol_bohemian_claim }
+		enabled = {
+			OR = {
+				is_allied_with = { target = c:HAB }
+				c:HAB = { opinion = { target = root value >= 150 } }
+				c:HAB = { is_rival_of = root }
+				power_projection >= 20
+			}
+		}
+		on_completion = {
+			if = {
+				limit = { country_exists = c:HAB }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:HAB
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	pol_challenge_habsburg = {
+		icon = glorious_arms
+		requires = { pol_hre_influence }
+		enabled = {
+			OR = {
+				owns_or_non_sovereign_subject_owns = location:vienna
+				c:HAB = { in_union_with = root }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_habsburg_victory_mod years = -1 mode = add }
+		}
+	}
+
+	# A+E合流: 黄金時代とボヘミア掌握で中欧の大国
+	pol_central_european_power = {
+		icon = legacy_of_great_empires
+		requires = { pol_polish_golden_age pol_bohemian_claim }
+		enabled = {
+			num_locations >= 1000
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_central_power_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== 大合流: 大コモンウェルス ====================
+
+	pol_grand_commonwealth = {
+		icon = legacy_of_great_empires
+		requires = { pol_master_of_the_north pol_shield_of_christendom pol_challenge_habsburg pol_central_european_power }
+		final = yes
+		enabled = {
+			num_locations >= 1200
+			prestige >= 90
+			monthly_income_trade_and_tax >= 1100
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_grand_commonwealth_mod years = -1 mode = add }
+			set_country_rank_effect = { rank = country_rank:rank_empire }
+		}
+	}
+
+
+	# ==================== BRANCH A延伸: 内政・法 ====================
+
+	pol_codify_law = {
+		icon = legalism_advance
+		requires = { pol_great_sejm }
+		enabled = {
+			any_owned_location = {
+				has_building = building_type:counting_house
+				count >= 4
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_law_codex_mod years = -1 mode = add }
+		}
+	}
+
+	pol_develop_warsaw = {
+		icon = city_building_advance
+		requires = { pol_great_sejm }
+		enabled = {
+			location:warsaw = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:warsaw = {
+				add_location_modifier = { modifier = pol_warsaw_location_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	pol_amber_road = {
+		icon = crossroads_of_commerce
+		requires = { pol_breadbasket_of_europe }
+		enabled = {
+			produced_in_country:amber > 5
+			monthly_income_trade_and_tax >= 150
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_amber_road_mod years = -1 mode = add }
+		}
+	}
+
+	pol_poznan_commerce = {
+		icon = city_building_advance
+		requires = { pol_support_merchants }
+		enabled = {
+			location:poznan = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:poznan = {
+				add_location_modifier = { modifier = pol_poznan_trade_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	# ==================== BRANCH B延伸: リトアニア・東方 ====================
+
+	pol_vilnius_capital = {
+		icon = city_building_advance
+		requires = { pol_develop_ruthenia }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:vilnius
+			location:vilnius = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:vilnius = {
+				add_location_modifier = { modifier = pol_vilnius_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	pol_black_sea_access = {
+		icon = continental_trade
+		requires = { pol_control_kyiv }
+		enabled = {
+			any_owned_location = {
+				area = area:zaporizhzhia_area
+				count >= 5
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_black_sea_mod years = -1 mode = add }
+		}
+	}
+
+	pol_russia_rivalry = {
+		icon = glorious_arms
+		requires = { pol_push_east }
+		enabled = {
+			OR = {
+				owns_or_non_sovereign_subject_owns = location:tver
+				is_allied_with = { target = c:MOS }
+				c:MOS = { is_rival_of = root }
+				c:RUS = { is_rival_of = root }
+			}
+		}
+		on_completion = {
+			if = {
+				limit = { country_exists = c:MOS }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:MOS
+					target_character = root.ruler
+					years = 100
+				}
+			}
+			if = {
+				limit = { country_exists = c:RUS }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:RUS
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	# ==================== BRANCH C延伸: バルト海・プロイセン ====================
+
+	pol_malbork_castle = {
+		icon = a_fortified_border
+		requires = { pol_gdansk_port }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:malbork
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_malbork_fortress_mod years = -1 mode = add }
+		}
+	}
+
+	pol_gniezno_church = {
+		icon = legalism_advance
+		requires = { pol_catholicism_of_lithuania }
+		enabled = {
+			location:gniezno = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:gniezno = {
+				add_location_modifier = { modifier = pol_gniezno_archbishopric_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	pol_hanseatic_ties = {
+		icon = continental_trade
+		requires = { pol_gdansk_port }
+		enabled = {
+			monthly_income_trade_and_tax >= 120
+			any_owned_location = {
+				is_market_center = yes
+				count >= 5
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_hanseatic_ties_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH D延伸: 南方・バルカン ====================
+
+	pol_transylvania_influence = {
+		icon = arduous_terrain
+		requires = { pol_moldavia_vassal }
+		enabled = {
+			OR = {
+				any_owned_location = {
+					area = area:transylvania_area
+					count >= 5
+				}
+				c:HUN = { in_union_with = root }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_transylvania_mod years = -1 mode = add }
+		}
+	}
+
+	pol_subjugate_serbia = {
+		icon = balkan_hajduks
+		requires = { pol_wallachia_control }
+		enabled = {
+			OR = {
+				c:SER = { is_subject_of = root }
+				owns_or_non_sovereign_subject_owns = location:prizren
+			}
+		}
+		on_completion = {
+			if = {
+				limit = { location:tarnovo = { exists = yes } }
+				add_casus_belli = {
+					target = location:tarnovo.owner
+					type = casus_belli:cb_conquer_province
+					province = location:tarnovo.province
+				}
+			}
+		}
+	}
+
+	pol_varna_revenge = {
+		icon = glorious_arms
+		requires = { pol_subjugate_serbia }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:varna
+			any_current_war = {
+				OR = {
+					attacker_leader = root
+					defender_leader = root
+				}
+				any_war_participant = {
+					religion.group = religion_group:muslim
+					NOT = { this = root }
+				}
+			}
+		}
+		on_completion = {
+			add_prestige = 20
+			add_country_modifier = { modifier = pol_varna_glory_mod years = 60 mode = add }
+		}
+	}
+
+	# ==================== BRANCH E延伸: HRE・西方 ====================
+
+	pol_upper_silesia_mines = {
+		icon = administrative_icon
+		requires = { pol_bohemian_claim }
+		enabled = {
+			any_owned_location = {
+				area = area:silesia_area
+				rgo_level >= 5
+				count >= 3
+			}
+		}
+		on_completion = {
+			set_variable = {
+				name = pol_silesia_mining_unlocked
+				value = 1
+			}
+			custom_tooltip = pol_upper_silesia_mines_unlock_tt
+		}
+	}
+
+	pol_pomeranian_coast = {
+		icon = ara_a_maritime_realm
+		requires = { pol_malbork_castle }
+		enabled = {
+			any_owned_location = {
+				area = area:pomerania_area
+				count >= 20
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_pomeranian_coast_mod years = -1 mode = add }
+		}
+	}
+
+	pol_prague_university = {
+		icon = city_of_artists
+		requires = { pol_bohemian_claim }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:prague
+			location:prague = { has_building = building_type:university }
+		}
+		on_completion = {
+			location:prague = {
+				add_location_modifier = { modifier = pol_prague_learning_mod years = -1 mode = add }
+			}
+		}
+	}
+
+
+	pol_catholicism_of_lithuania = {
+		icon = a_neverending_crusade
+		requires = { pol_develop_ruthenia }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:vilnius
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_lithuanian_church_mod years = -1 mode = add }
+		}
+	}
+
+	pol_royal_road = {
+		icon = crossroads_of_commerce
+		requires = { pol_integrate_mazovia pol_prussian_confederation }
+		enabled = {
+			num_locations >= 120
+			owns = location:gdansk
+			monthly_income_trade_and_tax >= 100
+		}
+		on_completion = {
+			add_country_modifier = { modifier = pol_royal_road_mod years = -1 mode = add }
+		}
+	}
+
+}

@@ -1,0 +1,602 @@
+﻿byz_restoration_mission_pack = {
+	icon = nmt_mediterranean_port
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = BYZ
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = {
+		always = yes
+	}
+
+	on_start = {
+		set_variable = byz_restoration_started
+	}
+
+	on_completion = {
+		remove_variable = byz_restoration_started
+	}
+
+	on_abort = {
+		remove_variable = byz_restoration_started
+		remove_variable = byz_faith_orthodox
+		remove_variable = byz_faith_hellenic
+	}
+
+	# ==================== PHASE 1: アナトリア旧領の奪還 ====================
+
+	# 始点
+	byz_avoid_collapse = {
+		icon = byz_shield_of_the_west
+		requires = { }
+
+		enabled = {
+			legitimacy >= 50
+			stability >= 0
+		}
+		duration = 60
+		on_completion = {
+			add_country_modifier = { modifier = byz_collapse_averted years = 30 mode = add }
+		}
+	}
+
+	# ---- 衰退からの回復（没落を回避せよからの寄り道） ----
+	byz_recovery_from_decline = {
+		icon = byz_the_new_imperial_army
+		requires = { byz_avoid_collapse }
+
+		enabled = {
+			"estate_power(estate_type:crown_estate)" >= 0.2
+		}
+		duration = 60
+		on_completion = {
+			add_country_modifier = { modifier = byz_recovery_from_decline_mod years = -1 mode = add }
+		}
+	}
+
+	# ---- 世界が焦がれる都（衰退からの回復からの寄り道） ----
+	byz_city_the_world_desires = {
+		icon = byz_autokratoria_rhomaion
+		requires = { byz_recovery_from_decline }
+
+		enabled = {
+			location:constantinople = {
+				population >= 400
+			}
+		}
+		duration = 60
+		on_completion = {
+			location:constantinople = {
+				add_location_modifier = { modifier = byz_city_the_world_desires_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	byz_reclaim_bursa = {
+		icon = byz_akritai_advance
+		requires = { byz_avoid_collapse }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:bursa
+		}
+		duration = 60
+		on_completion = {
+			trigger_event_non_silently = byz_events.20
+		}
+	}
+
+	byz_reclaim_nicomedia = {
+		icon = byz_cataphracts_advance
+		requires = { byz_reclaim_bursa }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:izmit
+			location:izmit = { local_control >= 0.50 }
+		}
+		duration = 60
+		on_completion = {
+			trigger_event_non_silently = byz_events.21
+		}
+	}
+
+	# ==================== PHASE 2: アナトリア奪還 ====================
+
+	byz_retake_anatolia_west = {
+		icon = byz_akritai_advance
+		requires = { byz_reclaim_nicomedia }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:smyrna
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = byz_anatolia_west years = 40 mode = add }
+			unlock_government_reform_effect = { type = byz_anatolian_synthesis }
+			add_reform = government_reform:byz_anatolian_synthesis
+			trigger_event_non_silently = byz_events.2
+		}
+	}
+
+	byz_retake_anatolia_east = {
+		icon = byz_akritai_advance
+		requires = { byz_retake_anatolia_west }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:ankara
+			owns_or_non_sovereign_subject_owns = location:konya
+			owns_or_non_sovereign_subject_owns = location:sivas
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = byz_anatolia_east years = 40 mode = add }
+		}
+	}
+
+	# ==================== PHASE 3: ギリシャ・バルカン ====================
+
+	byz_secure_greece = {
+		icon = byz_crossroads_of_continents
+		requires = { byz_reclaim_nicomedia }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:athens
+			owns_or_non_sovereign_subject_owns = location:corinth
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = byz_greece_restored years = 40 mode = add }
+			trigger_event_non_silently = byz_events.3
+		}
+	}
+
+
+	byz_balkan_dominance = {
+		icon = byz_modernized_strategikon
+		requires = { byz_secure_greece }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:belgrad
+			owns_or_non_sovereign_subject_owns = location:tarnovo
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = byz_balkan_order years = 50 mode = add }
+		}
+	}
+
+	# ==================== PHASE 4: 総主教座の奪還 ====================
+
+	byz_invasion_of_syria = {
+		icon = byz_the_new_imperial_army
+		requires = { byz_retake_anatolia_east }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:antioch
+		}
+		duration = 90
+		on_completion = {
+			add_country_modifier = { modifier = byz_syria_province years = -1 mode = add }
+		}
+	}
+
+	byz_protect_jerusalem = {
+		icon = jerusalem_focus
+		requires = { byz_invasion_of_syria }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:jerusalem
+			owns_or_non_sovereign_subject_owns = location:acre
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = byz_judaea_province years = -1 mode = add }
+		}
+	}
+
+	# ---- イスラムの中心地（エルサレムの保護からの寄り道） ----
+	byz_islamic_heartland = {
+		icon = mamluk_soldiers
+		requires = { byz_protect_jerusalem }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:medina
+			owns_or_non_sovereign_subject_owns = location:mecca
+		}
+		duration = 120
+		on_completion = {
+			trigger_event_non_silently = byz_events.22
+		}
+	}
+
+	byz_dominion_of_aegyptus = {
+		icon = royal_mamluks
+		requires = { byz_invasion_of_syria }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:alexandria
+			owns_or_non_sovereign_subject_owns = location:cairo
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = byz_aegyptus_province years = -1 mode = add }
+		}
+	}
+
+	# ==================== PHASE 5: 地中海制覇 ====================
+
+	byz_control_aegean = {
+		icon = byz_crossroads_of_continents
+		requires = { byz_secure_greece byz_retake_anatolia_west }
+
+		enabled = {
+			navy_size >= 20
+			total_effective_building_levels:wharf >= 10
+			owns_or_non_sovereign_subject_owns = location:candia
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = byz_aegean_mastery years = 50 mode = add }
+		}
+	}
+
+	byz_retake_italy_south = {
+		icon = secure_mediterranean_ports
+		requires = { byz_control_aegean }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:naples
+			owns_or_non_sovereign_subject_owns = location:palermo
+		}
+		duration = 120
+		on_completion = {
+			trigger_event_non_silently = byz_events.7
+		}
+	}
+
+	# ==================== PHASE 6: ローマ奪還 ====================
+
+	byz_reclaim_rome = {
+		icon = divine_supremacy
+		requires = { byz_retake_italy_south byz_balkan_dominance }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:rome
+			estate_satisfaction:clergy_estate >= 0.70
+			legitimacy >= 85
+		}
+		duration = 180
+		on_completion = {
+			set_variable = byz_rome_reclaimed
+			add_country_modifier = { modifier = byz_rome_restored years = -1 mode = add }
+			trigger_event_non_silently = byz_events.8
+		}
+	}
+
+	# ==================== PHASE 7: 最大版図 ====================
+
+	byz_north_africa = {
+		icon = secure_mediterranean_ports
+		requires = { byz_protect_jerusalem byz_dominion_of_aegyptus }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:tunis
+			owns_or_non_sovereign_subject_owns = location:tripoli
+			owns_or_non_sovereign_subject_owns = location:algiers
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = byz_africa_province_mod years = -1 mode = add }
+		}
+	}
+
+	# ---- イベリア半島の征服（北アフリカの奪還から） ----
+	byz_iberian_conquest = {
+		icon = byz_the_new_imperial_army
+		requires = { byz_north_africa }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:toledo
+			owns_or_non_sovereign_subject_owns = location:cordoba
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = byz_hispania_province years = -1 mode = add }
+		}
+	}
+
+	byz_north_italy = {
+		icon = secure_mediterranean_ports
+		requires = { byz_reclaim_rome }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:venice
+			owns_or_non_sovereign_subject_owns = location:genoa
+			owns_or_non_sovereign_subject_owns = location:milano
+			owns_or_non_sovereign_subject_owns = location:florence
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = byz_true_rome years = -1 mode = add }
+		}
+	}
+
+	# ---- フランス侵攻（北イタリア征服＋イベリア半島の征服から） ----
+	byz_invasion_of_france = {
+		icon = byz_the_new_imperial_army
+		requires = { byz_north_italy byz_iberian_conquest }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:paris
+			owns_or_non_sovereign_subject_owns = location:avignon
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = byz_gallia_province years = -1 mode = add }
+		}
+	}
+
+	# ==================== FINAL ====================
+
+	byz_renovatio_imperii = {
+		icon = byz_autokratoria_rhomaion
+		requires = { byz_invasion_of_france }
+		final = yes
+
+		enabled = {
+			num_locations >= 1000
+			monthly_income_trade_and_tax >= 2000
+		}
+		duration = 180
+		on_completion = {
+			set_variable = byz_renovatio_done
+			custom_tooltip = byz_renovatio_unlock_tt
+			trigger_event_non_silently = byz_events.10
+		}
+	}
+
+	# ==================== 信仰選択ルート（独立ツリー） ====================
+
+	byz_faith_choice = {
+		icon = byz_heart_of_orthodoxy_advance
+		requires = { }
+
+		enabled = {
+			current_year > 1400
+		}
+		duration = 0
+		on_completion = {
+			trigger_event_non_silently = byz_events.19
+		}
+	}
+
+	# ダミー：正教会ルート入口（信仰の選択からさらに1段下げる）
+	byz_orthodox_path_start = {
+		icon = roman_orthodoxy
+		requires = { byz_faith_choice }
+
+		enabled = {
+			custom_tooltip = {
+				text = byz_faith_orthodox_chosen_tt
+				has_variable = byz_faith_orthodox
+			}
+		}
+		duration = 0
+		on_completion = {
+			add_estate_satisfaction = {
+				type = estate_type:clergy_estate
+				value = estate_satisfaction_weak_bonus
+			}
+		}
+	}
+
+	# ダミー：ヘレニズムルート入口（信仰の選択からさらに1段下げる）
+	byz_hellenic_path_start = {
+		icon = religious_dialects_hellenic_faith_advance
+		requires = { byz_faith_choice }
+
+		enabled = {
+			custom_tooltip = {
+				text = byz_faith_hellenic_chosen_tt
+				has_variable = byz_faith_hellenic
+			}
+		}
+		duration = 0
+		on_completion = {
+			add_prestige = 20
+		}
+	}
+
+	byz_orthodox_antioch = {
+		icon = roman_orthodoxy
+		requires = { byz_orthodox_path_start }
+
+		enabled = {
+			custom_tooltip = {
+				text = byz_faith_orthodox_chosen_tt
+				has_variable = byz_faith_orthodox
+			}
+			location:antioch = {
+				owner = root
+			}
+			location:antioch.province = {
+				religion_percentage = { religion = religion:orthodox value >= 0.5 }
+			}
+		}
+		duration = 90
+		on_completion = {
+			trigger_event_non_silently = byz_events.11
+		}
+	}
+
+	byz_orthodox_jerusalem = {
+		icon = jerusalem_focus
+		requires = { byz_orthodox_antioch }
+
+		enabled = {
+			custom_tooltip = {
+				text = byz_faith_orthodox_chosen_tt
+				has_variable = byz_faith_orthodox
+			}
+			location:jerusalem = {
+				owner = root
+			}
+			location:jerusalem.province = {
+				religion_percentage = { religion = religion:orthodox value >= 0.5 }
+			}
+		}
+		duration = 90
+		on_completion = {
+			trigger_event_non_silently = byz_events.12
+		}
+	}
+
+	byz_orthodox_alexandria = {
+		icon = roman_orthodoxy
+		requires = { byz_orthodox_antioch }
+
+		enabled = {
+			custom_tooltip = {
+				text = byz_faith_orthodox_chosen_tt
+				has_variable = byz_faith_orthodox
+			}
+			location:alexandria = {
+				owner = root
+			}
+			location:alexandria.province = {
+				religion_percentage = { religion = religion:orthodox value >= 0.5 }
+			}
+		}
+		duration = 90
+		on_completion = {
+			trigger_event_non_silently = byz_events.13
+		}
+	}
+
+	byz_orthodox_rome = {
+		icon = divine_supremacy
+		requires = { byz_orthodox_jerusalem byz_orthodox_alexandria }
+
+		enabled = {
+			custom_tooltip = {
+				text = byz_faith_orthodox_chosen_tt
+				has_variable = byz_faith_orthodox
+			}
+			location:rome = {
+				owner = root
+			}
+			location:rome.province = {
+				religion_percentage = { religion = religion:orthodox value >= 0.5 }
+			}
+		}
+		duration = 120
+		on_completion = {
+			trigger_event_non_silently = byz_events.14
+		}
+	}
+
+	byz_hellenic_athens = {
+		icon = byz_ancient_greek_studies
+		requires = { byz_hellenic_path_start }
+
+		enabled = {
+			custom_tooltip = {
+				text = byz_faith_hellenic_chosen_tt
+				has_variable = byz_faith_hellenic
+			}
+			location:athens = {
+				owner = root
+			}
+			location:athens.province = {
+				religion_percentage = { religion = religion:hellenism_religion value >= 0.5 }
+			}
+		}
+		duration = 90
+		on_completion = {
+			location:athens = {
+				add_location_modifier = { modifier = byz_hellenic_sanctuary years = -1 mode = add }
+			}
+			trigger_event_non_silently = byz_events.15
+		}
+	}
+
+	byz_hellenic_corinth = {
+		icon = byz_ancient_greek_studies
+		requires = { byz_hellenic_athens }
+
+		enabled = {
+			custom_tooltip = {
+				text = byz_faith_hellenic_chosen_tt
+				has_variable = byz_faith_hellenic
+			}
+			location:corinth = {
+				owner = root
+			}
+			location:corinth.province = {
+				religion_percentage = { religion = religion:hellenism_religion value >= 0.5 }
+			}
+		}
+		duration = 90
+		on_completion = {
+			location:corinth = {
+				add_location_modifier = { modifier = byz_hellenic_sanctuary years = -1 mode = add }
+			}
+			trigger_event_non_silently = byz_events.16
+		}
+	}
+
+	byz_hellenic_mystras = {
+		icon = byz_ancient_greek_studies
+		requires = { byz_hellenic_athens }
+
+		enabled = {
+			custom_tooltip = {
+				text = byz_faith_hellenic_chosen_tt
+				has_variable = byz_faith_hellenic
+			}
+			location:mystras = {
+				owner = root
+			}
+			location:mystras.province = {
+				religion_percentage = { religion = religion:hellenism_religion value >= 0.5 }
+			}
+		}
+		duration = 90
+		on_completion = {
+			location:mystras = {
+				add_location_modifier = { modifier = byz_hellenic_sanctuary years = -1 mode = add }
+			}
+			trigger_event_non_silently = byz_events.17
+		}
+	}
+
+	byz_hellenic_alexandria = {
+		icon = byz_ancient_greek_studies
+		requires = { byz_hellenic_corinth byz_hellenic_mystras }
+
+		enabled = {
+			custom_tooltip = {
+				text = byz_faith_hellenic_chosen_tt
+				has_variable = byz_faith_hellenic
+			}
+			location:alexandria = {
+				owner = root
+			}
+			location:alexandria.province = {
+				religion_percentage = { religion = religion:hellenism_religion value >= 0.5 }
+			}
+		}
+		duration = 120
+		on_completion = {
+			location:alexandria = {
+				add_location_modifier = { modifier = byz_hellenic_serapeum years = -1 mode = add }
+			}
+			trigger_event_non_silently = byz_events.18
+		}
+	}
+
+}

@@ -1,0 +1,441 @@
+﻿pro_jewel_of_occitania_mission_pack = {
+	icon = pro_missions
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = PRO
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = {
+		always = yes
+	}
+
+	on_start = {
+		set_variable = pro_mission_started
+	}
+
+	on_completion = {
+		remove_variable = pro_mission_started
+	}
+
+	on_abort = {
+		remove_variable = pro_mission_started
+	}
+
+	# ==================== ROOT ====================
+
+	pro_house_of_anjou = {
+		icon = angevin_heraldry
+		requires = { }
+
+		enabled = {
+			always = yes
+		}
+		duration = 0
+		on_completion = {
+			trigger_event_non_silently = pro_events.3
+		}
+	}
+
+	# ==================== BRANCH 1: プロヴァンスの繁栄 ====================
+
+	pro_statutes_of_aix = {
+		icon = legalism_advance
+		requires = { pro_house_of_anjou }
+
+		enabled = {
+			average_control_in_home_region >= 0.50
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = pro_statutes_of_aix_mod years = -1 mode = add }
+			set_variable = {
+				name = pro_etats_de_provence_unlocked
+				value = 1
+			}
+			set_variable = {
+				name = pro_marseille_free_port_unlocked
+				value = 1
+			}
+			custom_tooltip = pro_statutes_of_aix_unlock_tt
+		}
+	}
+
+	pro_sponsor_the_arts = {
+		icon = fra_school_of_fontainebleau
+		requires = { pro_house_of_anjou }
+
+		enabled = {
+			has_embraced_institution = institution:renaissance
+			any_owned_location = {
+				has_building = building_type:theater
+				count >= 1
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = pro_sponsor_the_arts_mod years = -1 mode = add }
+		}
+	}
+
+	pro_develop_marseille = {
+		icon = renaissance_development
+		requires = { pro_statutes_of_aix pro_sponsor_the_arts }
+
+		enabled = {
+			location:marseille = {
+				development >= 35
+				population >= 30
+			}
+		}
+		duration = 180
+		on_completion = {
+			location:marseille = {
+				add_location_modifier = { modifier = pro_marseille_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	pro_toulon_dockyard = {
+		icon = rudimentary_coastal_ship_repair
+		requires = { pro_develop_marseille }
+
+		enabled = {
+			location:toulon = {
+				has_building = building_type:dock
+			}
+			navy_size >= 10
+		}
+		duration = 150
+		on_completion = {
+			location:toulon = {
+				add_location_modifier = { modifier = pro_toulon_dockyard_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	pro_lords_of_the_rhone = {
+		icon = lux_fortress_europe
+		requires = { pro_avignon_question }
+
+		enabled = {
+			any_owned_location = {
+				area = area:provence_area
+				count >= 20
+			}
+		}
+		duration = 150
+		on_completion = {
+			add_country_modifier = { modifier = pro_lords_of_the_rhone_mod years = -1 mode = add }
+		}
+	}
+
+	pro_avignon_question = {
+		icon = legalism_advance
+		requires = { pro_statutes_of_aix }
+
+		enabled = {
+			OR = {
+				owns = location:avignon
+				NOT = { country_exists = c:PAP }
+				AND = {
+					situation:western_schism = { situation_has_ended = yes }
+					c:PAP = { NOT = { capital = location:avignon } }
+					is_allied_with = { target = c:PAP }
+				}
+				AND = {
+					situation:western_schism = { situation_has_ended = yes }
+					c:PAP = { NOT = { capital = location:avignon } }
+					c:PAP = { opinion = { target = root value >= 180 } }
+				}
+			}
+		}
+		duration = 120
+		on_completion = {
+			trigger_event_non_silently = pro_events.6
+		}
+	}
+
+	pro_piqure_de_marseilles = {
+		icon = ira_improved_silk_road
+		requires = { pro_develop_marseille }
+
+		enabled = {
+			OR = {
+				produced_in_country:cloth > 8
+				produced_in_country:fine_cloth > 8
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = pro_piqure_de_marseilles_mod years = -1 mode = add }
+		}
+	}
+
+	pro_la_marseillaise = {
+		icon = elan
+		requires = { pro_lords_of_the_rhone }
+
+		enabled = {
+			army_size >= 15
+			monthly_army_tradition >= 0.05
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = pro_la_marseillaise_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH 2: アンジュー家の継承権 ====================
+
+	pro_claims_of_king_rene = {
+		icon = fra_expansion_of_france
+		requires = { pro_house_of_anjou }
+
+		enabled = {
+			num_locations >= 24
+		}
+		duration = 120
+		on_completion = {
+			trigger_event_non_silently = pro_events.2
+		}
+	}
+
+	pro_king_of_naples = {
+		icon = fra_gendarmes
+		requires = { pro_claims_of_king_rene }
+
+		enabled = {
+			OR = {
+				owns_or_non_sovereign_subject_owns = location:naples
+				c:NAP = { is_subject_of = root }
+				in_union_with = c:NAP
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = pro_king_of_naples_mod years = -1 mode = add }
+			set_country_rank_effect = { rank = country_rank:rank_kingdom }
+			if = {
+				limit = { country_exists = c:ARA }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:ARA
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	pro_king_of_sicily = {
+		icon = ara_a_maritime_realm
+		requires = { pro_king_of_naples }
+
+		enabled = {
+			any_owned_location = {
+				area = area:sicily_area
+				count >= 10
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = pro_king_of_sicily_mod years = -1 mode = add }
+			if = {
+				limit = { country_exists = c:HUN }
+				add_casus_belli = {
+					type = casus_belli:cb_claim_throne
+					target = c:HUN
+					target_character = root.ruler
+					years = 100
+				}
+			}
+		}
+	}
+
+	pro_king_of_aragon = {
+		icon = ara_desperta_ferro
+		requires = { pro_king_of_naples }
+
+		enabled = {
+			OR = {
+				c:ARA = { is_subject_of = root }
+				in_union_with = c:ARA
+				owns_or_non_sovereign_subject_owns = location:barcelona
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = pro_king_of_aragon_mod years = -1 mode = add }
+		}
+	}
+
+	pro_king_of_hungary = {
+		icon = fra_integration_of_new_territories
+		requires = { pro_king_of_aragon }
+
+		enabled = {
+			OR = {
+				c:HUN = { is_subject_of = root }
+				NOT = { country_exists = c:HUN }
+			}
+			any_owned_location = {
+				area = area:transdanubia_area
+				count >= 5
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = pro_king_of_hungary_mod years = 40 mode = add }
+		}
+	}
+
+	pro_king_of_jerusalem = {
+		icon = a_neverending_crusade
+		requires = { pro_king_of_sicily }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:jerusalem
+			any_owned_location = {
+				area = area:levant_area
+				count >= 3
+			}
+		}
+		duration = 365
+		on_completion = {
+			trigger_event_non_silently = pro_events.5
+		}
+	}
+
+	# ==================== BRANCH 3: ロレーヌとオクシタニア ====================
+
+	pro_lorraine_marriage = {
+		icon = lux_heirs_john_blind
+		requires = { pro_house_of_anjou }
+
+		enabled = {
+			OR = {
+				has_royal_marriage_with = c:LOR
+				NOT = { country_exists = c:LOR }
+				AND = {
+					is_allied_with = { target = c:LOR }
+					c:LOR = { opinion = { target = root value >= 200 } }
+				}
+			}
+		}
+		duration = 120
+		on_completion = {
+			trigger_event_non_silently = pro_events.4
+		}
+	}
+
+
+	pro_integrate_lorraine = {
+		icon = consolidate_the_royal_domain
+		requires = { pro_lorraine_marriage }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:nancy
+			any_owned_location = {
+				area = area:lorraine_area
+				count >= 5
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = pro_integrate_lorraine_mod years = -1 mode = add }
+		}
+	}
+
+	pro_join_the_empire = {
+		icon = lux_destined_rule
+		requires = { pro_integrate_lorraine }
+
+		enabled = {
+			OR = {
+				is_leader_of_international_organization = international_organization:hre
+				country_rank_level >= 4
+			}
+		}
+		duration = 120
+		on_completion = {
+			add_country_modifier = { modifier = pro_join_the_empire_mod years = 40 mode = add }
+		}
+	}
+
+	pro_unite_occitania = {
+		icon = fra_code_civil
+		requires = { pro_avignon_question pro_integrate_lorraine }
+
+		enabled = {
+			any_owned_location = {
+				area = area:languedoc_area
+				count >= 15
+			}
+			any_owned_location = {
+				area = area:provence_area
+				count >= 20
+			}
+		}
+		duration = 180
+		on_completion = {
+			add_country_modifier = { modifier = pro_unite_occitania_mod years = -1 mode = add }
+		}
+	}
+
+	pro_gascony = {
+		icon = french_tradition
+		requires = { pro_unite_occitania }
+
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:bordeaux
+			owns_or_non_sovereign_subject_owns = location:toulouse
+		}
+		duration = 150
+		on_completion = {
+			add_country_modifier = { modifier = pro_gascony_mod years = -1 mode = add }
+		}
+	}
+
+	pro_king_of_france = {
+		icon = french_language_in_all_courts
+		requires = { pro_gascony pro_unite_occitania }
+
+		enabled = {
+			OR = {
+				owns_or_non_sovereign_subject_owns = location:paris
+				NOT = { country_exists = c:FRA }
+			}
+			any_owned_location = {
+				region = region:france_region
+				count >= 30
+			}
+		}
+		duration = 365
+		on_completion = {
+			add_country_modifier = { modifier = pro_king_of_france_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== FINAL ====================
+
+	pro_king_of_kings = {
+		icon = legacy_of_great_empires
+		requires = { pro_king_of_hungary pro_king_of_jerusalem pro_join_the_empire pro_king_of_france pro_la_marseillaise }
+		final = yes
+
+		enabled = {
+			num_locations >= 400
+			total_population >= 5000
+		}
+		duration = 365
+		on_completion = {
+			add_country_modifier = { modifier = pro_king_of_kings_mod years = -1 mode = add }
+			set_country_rank_effect = { rank = country_rank:rank_empire }
+		}
+	}
+}

@@ -1,0 +1,542 @@
+﻿eth_ethiopia_mission_pack = {
+	icon = nmt_ethiopia
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = ETH
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = { always = yes }
+
+	on_start = { set_variable = eth_mission_started }
+	on_completion = { remove_variable = eth_mission_started }
+	on_abort = { remove_variable = eth_mission_started }
+
+	# ===== A: 帝国の確立 =====
+
+	eth_negus_authority = {
+		icon = consolidate_the_royal_domain
+		requires = { }
+		enabled = { legitimacy >= 100 }
+		on_completion = {
+			add_country_modifier = { modifier = eth_negus_mod years = 20 mode = add }
+		}
+	}
+
+	eth_mobile_court = {
+		icon = crown_power_advance_renaissance
+		requires = { eth_negus_authority }
+		enabled = {
+			has_reform = government_reform:eth_wandering_court
+		}
+		on_completion = {
+			unlock_government_reform_effect = { type = eth_mobile_court_reform }
+			add_reform = government_reform:eth_mobile_court_reform
+		}
+	}
+
+	eth_amba_geshen = {
+		icon = a_fortified_border
+		requires = { eth_negus_authority }
+		enabled = {
+			any_owned_location = {
+				has_building_with_at_least_one_level = castle
+				count >= 5
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = eth_amba_geshen_mod years = -1 mode = add }
+		}
+	}
+
+	eth_coptic_church = {
+		icon = national_churches
+		requires = { eth_negus_authority }
+		enabled = { estate_satisfaction:clergy_estate >= 0.75 }
+		on_completion = {
+			add_country_modifier = { modifier = eth_coptic_church_mod years = 20 mode = add }
+		}
+	}
+
+	eth_gondar_founding = {
+		icon = city_building_advance
+		requires = { eth_negus_authority }
+		enabled = {
+			location:gonder = {
+				owner = root
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+			}
+		}
+		on_completion = {
+			location:gonder = {
+				add_location_modifier = { modifier = eth_gondar_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	eth_royal_chronicle = {
+		icon = library_advance
+		requires = { eth_negus_authority }
+		enabled = { average_country_literacy >= 12 }
+		on_completion = {
+			add_country_modifier = { modifier = eth_chronicle_mod years = 20 mode = add }
+		}
+	}
+
+	eth_feudal_levies = {
+		icon = arm_mountain_armies
+		requires = { eth_negus_authority }
+		enabled = { army_tradition >= 5 }
+		on_completion = {
+			add_country_modifier = { modifier = eth_levies_mod years = 20 mode = add }
+		}
+	}
+
+	eth_negus_dynasty = {
+		icon = consolidate_the_royal_domain
+		requires = { eth_coptic_church eth_gondar_founding eth_royal_chronicle eth_feudal_levies }
+		enabled = {
+			"estate_power(estate_type:crown_estate)" >= 0.20
+		}
+		on_completion = {
+			add_country_modifier = { modifier = eth_dynasty_mod years = -1 mode = add }
+		}
+	}
+
+	# ===== B: クシート系民族政策 =====
+
+	eth_oromo_migration = {
+		icon = expansionism
+		requires = { eth_negus_dynasty }
+		enabled = {
+			OR = {
+				has_accepted_culture = culture:oromo_culture
+				culture_population_in_country = {
+					culture = culture:oromo_culture
+					value <= 10
+				}
+			}
+		}
+		on_completion = {
+			culture:oromo_culture = {
+				change_cultural_view = {
+					target = culture:amhara
+					change = 1
+				}
+			}
+		}
+	}
+
+	eth_agaw_people = {
+		icon = national_churches
+		requires = { eth_negus_dynasty }
+		enabled = {
+			has_accepted_culture = culture:agaw_culture
+		}
+		on_completion = {
+			culture:agaw_culture = {
+				change_cultural_view = {
+					target = culture:amhara
+					change = 1
+				}
+			}
+		}
+	}
+
+	eth_beta_israel = {
+		icon = national_churches
+		requires = { eth_negus_dynasty }
+		enabled = {
+			OR = {
+				has_tolerated_culture = culture:beyte_yisrael
+				has_accepted_culture = culture:beyte_yisrael
+			}
+		}
+		on_completion = {
+			culture:beyte_yisrael = {
+				change_cultural_view = {
+					target = culture:amhara
+					change = 1
+				}
+			}
+		}
+	}
+
+	eth_horn_hegemony = {
+		icon = legacy_of_great_empires
+		requires = { eth_oromo_migration eth_agaw_people eth_beta_israel }
+		enabled = {
+			any_owned_location = {
+				region = region:ethiopia_region
+				owner = root
+				count >= 70
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = eth_horn_hegemony_mod years = -1 mode = add }
+		}
+	}
+
+	# ===== C: コプト教徒の保護と中東 =====
+
+	eth_nubian_alliance = {
+		icon = ties_with_the_holy_see
+		requires = { eth_horn_hegemony }
+		enabled = {
+			OR = {
+				is_allied_with = { target = c:MAK }
+				is_allied_with = { target = c:ALO }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = eth_nubian_mod years = 20 mode = add }
+		}
+	}
+
+	eth_conquer_makuria = {
+		icon = a_fortified_border
+		requires = { eth_nubian_alliance }
+		enabled = {
+			OR = {
+				NOT = { country_exists = c:MAK }
+				c:MAK = { is_subject_of = root }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = eth_makuria_mod years = 20 mode = add }
+		}
+	}
+
+	eth_conquer_alodia = {
+		icon = a_fortified_border
+		requires = { eth_nubian_alliance }
+		enabled = {
+			OR = {
+				NOT = { country_exists = c:ALO }
+				c:ALO = { is_subject_of = root }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = eth_alodia_mod years = 20 mode = add }
+		}
+	}
+
+	eth_sudan_dominion = {
+		icon = legacy_of_great_empires
+		requires = { eth_conquer_makuria eth_conquer_alodia }
+		enabled = {
+			any_owned_location = {
+				region = region:nubia_region
+				owner = root
+				count >= 60
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = eth_sudan_mod years = -1 mode = add }
+		}
+	}
+
+	eth_mamluk_rivalry = {
+		icon = mamluk_soldiers
+		requires = { eth_sudan_dominion }
+		enabled = {
+			OR = {
+				c:MAM = { is_rival_of = root }
+				any_current_war = {
+					OR = { attacker_leader = root defender_leader = root }
+					any_war_participant = { NOT = { this = root } this = c:MAM }
+				}
+				NOT = { country_exists = c:MAM }
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = eth_mamluk_rivalry_mod years = 20 mode = add }
+		}
+	}
+
+	eth_liberate_jerusalem = {
+		icon = jerusalem_focus
+		requires = { eth_mamluk_rivalry }
+		enabled = {
+			location:jerusalem = {
+				owner = root
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = eth_events.1
+		}
+	}
+
+	eth_coptic_patriarchate = {
+		icon = primacy_of_alexandria
+		requires = { eth_liberate_jerusalem }
+		enabled = {
+			location:alexandria = {
+				owner = root
+			}
+		}
+		on_completion = {
+			remove_country_modifier = eth_jerusalem_mod
+			add_country_modifier = { modifier = eth_patriarchate_mod years = -1 mode = add }
+		}
+	}
+
+	eth_protector_of_copts = {
+		icon = ties_with_the_holy_see
+		requires = { eth_coptic_patriarchate }
+		enabled = {
+			location:jerusalem = { owner = root }
+			location:alexandria = { owner = root }
+			location:antioch = { owner = root }
+		}
+		on_completion = {
+			remove_country_modifier = eth_patriarchate_mod
+			add_country_modifier = { modifier = eth_protector_mod years = -1 mode = add }
+		}
+	}
+
+	# ===== D: アダル戦争と紅海進出 =====
+
+	eth_adal_wars = {
+		icon = eternal_crusade
+		requires = { eth_negus_dynasty }
+		enabled = {
+			any_owned_location = {
+				area = area:inner_somalia_area
+				owner = root
+				count >= 8
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = eth_adal_wars_mod years = 20 mode = add }
+		}
+	}
+
+	eth_conquer_zeila = {
+		icon = a_fortified_border
+		requires = { eth_adal_wars }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:zeila
+		}
+		on_completion = {
+			location:zeila = {
+				add_location_modifier = { modifier = eth_zeila_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	eth_conquer_harar = {
+		icon = a_fortified_border
+		requires = { eth_adal_wars }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:harar
+		}
+		on_completion = {
+			location:harar = {
+				add_location_modifier = { modifier = eth_harar_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	eth_conquer_adal = {
+		icon = eternal_crusade
+		requires = { eth_conquer_zeila eth_conquer_harar }
+		enabled = {
+			any_owned_location = {
+				area = area:inner_somalia_area
+				owner = root
+				count >= 20
+			}
+			NOT = { country_exists = c:ADA }
+		}
+		on_completion = {
+			add_country_modifier = { modifier = eth_conquer_adal_mod years = 20 mode = add }
+		}
+	}
+
+	eth_somali_coast = {
+		icon = continental_trade
+		requires = { eth_conquer_adal }
+		enabled = {
+			any_owned_location = {
+				area = area:northern_somalia_area
+				owner = root
+				count >= 20
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = eth_somali_coast_mod years = 20 mode = add }
+		}
+	}
+
+	eth_red_sea_access = {
+		icon = overseas_trade
+		requires = { eth_somali_coast }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:massawa
+		}
+		on_completion = {
+			add_country_modifier = { modifier = eth_red_sea_access_mod years = -1 mode = add }
+		}
+	}
+
+	# ===== E: 欧州との接触と近代化 =====
+
+	eth_portuguese_contact = {
+		icon = ties_with_the_holy_see
+		requires = { eth_negus_dynasty }
+		enabled = {
+			has_embraced_institution = institution:new_world
+		}
+		on_completion = {
+			add_country_modifier = { modifier = eth_portuguese_mod years = 20 mode = add }
+		}
+	}
+
+	eth_massawa_port = {
+		icon = crossroads_of_commerce
+		requires = { eth_portuguese_contact }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:massawa
+			location:massawa = {
+				OR = {
+					location_rank = location_rank:city
+					location_rank = location_rank:megalopolis
+				}
+				OR = {
+					has_building_with_at_least_one_level = dock
+					has_building_with_at_least_one_level = dry_dock
+				}
+			}
+		}
+		on_completion = {
+			location:massawa = {
+				add_location_modifier = { modifier = eth_massawa_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	eth_firearms_adoption = {
+		icon = modernization_of_the_military
+		requires = { eth_portuguese_contact }
+		enabled = {
+			produced_in_country:weaponry >= 12
+			produced_in_country:firearms >= 8
+		}
+		on_completion = {
+			add_country_modifier = { modifier = eth_firearms_mod years = 20 mode = add }
+		}
+	}
+
+	eth_european_trade = {
+		icon = continental_trade
+		requires = { eth_massawa_port }
+		enabled = {
+			monthly_income_trade_and_tax >= 100
+			any_owned_location = {
+				is_market_center = yes
+				count >= 2
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = eth_european_trade_mod years = 20 mode = add }
+		}
+	}
+
+	eth_modernize_army = {
+		icon = drill_army_advance
+		requires = { eth_firearms_adoption eth_european_trade }
+		enabled = { regular_army_size >= 10 }
+		on_completion = {
+			add_country_modifier = { modifier = eth_modernize_mod years = -1 mode = add }
+		}
+	}
+
+	# ===== F: アクスム帝国の再興 =====
+
+	eth_aksum_heritage = {
+		icon = legacy_of_great_empires
+		requires = { eth_negus_dynasty }
+		enabled = {
+			location:axum = {
+				owner = root
+				total_building_levels >= 30
+			}
+		}
+		on_completion = {
+			location:axum = {
+				add_location_modifier = { modifier = eth_aksum_heritage_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	eth_reclaim_aksum = {
+		icon = legacy_of_great_empires
+		requires = { eth_aksum_heritage }
+		enabled = {
+			any_owned_location = {
+				area = area:northern_ethiopia_area
+				owner = root
+				count >= 20
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = eth_reclaim_aksum_mod years = 30 mode = add }
+		}
+	}
+
+	eth_red_sea_empire = {
+		icon = imperial_school_of_naval_engineering
+		requires = { eth_reclaim_aksum eth_red_sea_access }
+		enabled = {
+			total_sub_unit_count:navy_heavy_ship >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = eth_red_sea_empire_mod years = -1 mode = add }
+		}
+	}
+
+	eth_horn_unification = {
+		icon = imperial_ambitions
+		requires = { eth_red_sea_empire eth_horn_hegemony }
+		enabled = {
+			any_owned_location = {
+				region = region:ethiopia_region
+				owner = root
+				count >= 90
+			}
+			any_owned_location = {
+				region = region:somalia_region
+				owner = root
+				count >= 70
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = eth_horn_unification_mod years = -1 mode = add }
+		}
+	}
+
+	# ===== FINAL =====
+
+	eth_new_solomonic_empire = {
+		icon = legacy_of_great_empires
+		requires = { eth_protector_of_copts eth_modernize_army eth_horn_unification }
+		final = yes
+		enabled = {
+			any_owned_location = {
+				OR = { owner = root owner = { is_subject_of = root } }
+				count >= 600
+			}
+		}
+		on_completion = {
+			trigger_event_non_silently = eth_events.99
+		}
+	}
+}

@@ -1,0 +1,783 @@
+﻿som_ottoman_mission_pack = {
+	icon = nmt_mediterranean_port
+	repeatable = no
+	player_playstyle = military
+	chance = 10000000
+
+	visible = {
+		game_has_missions_enabled = yes
+		has_or_had_tag = TUR
+		NOR = { country_type = pop country_type = building }
+	}
+
+	enabled = {
+		always = yes
+	}
+
+	on_start = { set_variable = som_mission_started }
+	on_completion = { remove_variable = som_mission_started }
+	on_abort = { remove_variable = som_mission_started }
+
+	# ==================== ROOT ====================
+
+	som_tur_secure_bursa = {
+		icon = city_building_advance
+		requires = { }
+		enabled = {
+			location:bursa = { local_control >= 0.50 }
+			location:iznik = { local_control >= 0.50 }
+			location:izmit = { local_control >= 0.50 }
+		}
+		on_completion = {
+			trigger_event_non_silently = som_ottoman_events.1
+		}
+	}
+
+	# ==================== BRANCH A: ガーズィーの道（バルカン征服） ====================
+
+
+	som_tur_cross_the_straits = {
+		icon = elan
+		requires = { som_tur_secure_bursa }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:canakkale
+			navy_size >= 5
+		}
+		on_completion = {
+			if = {
+				limit = { location:gallipoli = { exists = yes } }
+				add_casus_belli = {
+					target = location:gallipoli.owner
+					type = casus_belli:cb_conquer_province
+					province = location:gallipoli.province
+				}
+			}
+
+		}
+	}
+
+	som_tur_edirne_capital = {
+		icon = fortified_towns
+		requires = { som_tur_cross_the_straits }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:edirne
+		}
+		on_completion = {
+			location:edirne = {
+				add_location_modifier = { modifier = som_tur_edirne_trade_mod years = -1 mode = add }
+			}
+			if = {
+				limit = { location:tarnovo = { exists = yes } }
+				add_casus_belli = {
+					target = location:tarnovo.owner
+					type = casus_belli:cb_conquer_province
+					province = location:tarnovo.province
+				}
+			}
+		}
+	}
+
+	som_tur_conquer_bulgaria = {
+		icon = a_fortified_border
+		requires = { som_tur_edirne_capital }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:tarnovo
+		}
+		on_completion = {
+			if = {
+				limit = { location:prizren = { exists = yes } }
+				add_casus_belli = {
+					target = location:prizren.owner
+					type = casus_belli:cb_conquer_province
+					province = location:prizren.province
+				}
+			}
+			if = {
+				limit = { location:constantinople = { exists = yes } }
+				add_casus_belli = {
+					target = location:constantinople.owner
+					type = casus_belli:cb_conquer_province
+					province = location:constantinople.province
+				}
+			}
+		}
+	}
+
+	som_tur_siege_constantinople = {
+		icon = a_neverending_crusade
+		requires = { som_tur_conquer_bulgaria }
+		enabled = {
+			owns = location:constantinople
+		}
+		on_completion = {
+			trigger_event_non_silently = som_ottoman_events.4
+		}
+	}
+
+	som_tur_conquer_serbia = {
+		icon = glorious_arms
+		requires = { som_tur_siege_constantinople }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:novo_brdo
+		}
+		on_completion = {
+			location:novo_brdo = {
+				add_location_modifier = { modifier = som_tur_novo_brdo_silver_mod years = -1 mode = add }
+			}
+			if = {
+				limit = { location:buda = { exists = yes } }
+				add_casus_belli = {
+					target = location:buda.owner
+					type = casus_belli:cb_conquer_province
+					province = location:buda.province
+				}
+			}
+		}
+	}
+
+	som_tur_conquer_hungary = {
+		icon = elan
+		requires = { som_tur_conquer_serbia }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:buda
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_hungarian_march_mod years = -1 mode = add }
+		}
+	}
+
+	som_tur_siege_vienna = {
+		icon = legacy_of_great_empires
+		requires = { som_tur_conquer_hungary }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:vienna
+			army_size >= 50
+		}
+		on_completion = {
+			trigger_event_non_silently = som_ottoman_events.30
+		}
+	}
+
+	som_tur_true_rome = {
+		icon = legacy_of_great_empires
+		requires = { som_tur_siege_vienna }
+		enabled = {
+			num_locations >= 3000
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_true_rome_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH B: アナトリア統一・黒海 ====================
+
+	som_tur_vassalize_beyliks = {
+		icon = crusader_tradition
+		requires = { som_tur_secure_bursa }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:smyrna
+			owns_or_non_sovereign_subject_owns = location:ankara
+		}
+		on_completion = {
+			trigger_event_non_silently = som_ottoman_events.19
+		}
+	}
+
+	som_tur_anatolian_heartland = {
+		icon = a_magnanimous_empire
+		requires = { som_tur_vassalize_beyliks }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:konya
+			owns_or_non_sovereign_subject_owns = location:sivas
+			owns_or_non_sovereign_subject_owns = location:trebizond
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_anatolian_heartland_mod years = -1 mode = add }
+		}
+	}
+
+	som_tur_anatolia_unified = {
+		icon = consolidate_the_royal_domain
+		requires = { som_tur_anatolian_heartland }
+		enabled = {
+			any_owned_location = {
+				region = region:anatolia_region
+				count >= 200
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_anatolia_unified_mod years = -1 mode = add }
+		}
+	}
+
+	som_tur_fate_of_crimea = {
+		icon = arduous_terrain
+		requires = { som_tur_anatolia_unified }
+		enabled = {
+			any_owned_location = {
+				area = area:crimea_area
+				count >= 3
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_crimea_dominance years = -1 mode = add }
+		}
+	}
+
+	som_tur_black_sea_dominance = {
+		icon = ara_a_maritime_realm
+		requires = { som_tur_fate_of_crimea }
+		enabled = {
+			any_owned_location = {
+				area = area:crimea_area
+				count >= 10
+			}
+			navy_size >= 20
+			owns = location:kaffa
+		}
+		on_completion = {
+			trigger_event_non_silently = som_ottoman_events.20
+		}
+	}
+
+	som_tur_silk_road_revival = {
+		icon = ira_improved_silk_road
+		requires = { som_tur_black_sea_dominance }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:tabriz
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_silk_road_revival_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH C: イスラムの剣（南方・宗教） ====================
+
+
+	som_tur_conquer_syria = {
+		icon = a_neverending_crusade
+		requires = { som_tur_anatolian_heartland }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:aleppo
+			owns_or_non_sovereign_subject_owns = location:damascus
+		}
+		on_completion = {
+			location:aleppo = {
+				add_location_modifier = { modifier = som_tur_aleppo_learning_mod years = -1 mode = add }
+			}
+			location:damascus = {
+				add_location_modifier = { modifier = som_tur_damascus_learning_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	som_tur_defeat_mamluks = {
+		icon = glorious_arms
+		requires = { som_tur_conquer_syria }
+		enabled = {
+			is_at_war_with = c:MAM
+			location:cairo = { controller = root }
+		}
+		on_completion = {
+			trigger_event_non_silently = som_ottoman_events.61
+		}
+	}
+
+	som_tur_holy_cities = {
+		icon = crusader_tradition
+		requires = { som_tur_defeat_mamluks }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:jerusalem
+			owns_or_non_sovereign_subject_owns = location:mecca
+			estate_satisfaction:clergy_estate >= 0.60
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_caliph_successor years = -1 mode = add }
+		}
+	}
+
+	som_tur_red_sea_dominance = {
+		icon = ara_a_maritime_realm
+		requires = { som_tur_holy_cities }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:alexandria
+			navy_size >= 25
+			total_population >= 1000
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_red_sea_trade years = -1 mode = add }
+		}
+	}
+
+	som_tur_arabia_conquest = {
+		icon = a_neverending_crusade
+		requires = { som_tur_red_sea_dominance }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:medina
+			owns_or_non_sovereign_subject_owns = location:mecca
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_arabia_mod years = -1 mode = add }
+		}
+	}
+
+	som_tur_persian_gulf = {
+		icon = continental_trade
+		requires = { som_tur_arabia_conquest }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:hormuz
+			navy_size >= 30
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_gulf_trade years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH D: 地中海の覇者（海軍・西方） ====================
+
+	som_tur_frontier_warriors = {
+		icon = ara_desperta_ferro
+		requires = { som_tur_secure_bursa }
+		enabled = {
+			regular_army_size >= 2
+			monthly_income_trade_and_tax >= 15
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_ghazi_warriors years = 40 mode = add }
+		}
+	}
+
+	som_tur_aegean_dominance = {
+		icon = development_of_maritime_law
+		requires = { som_tur_frontier_warriors }
+		enabled = {
+			any_owned_location = {
+				area = area:aegean_archipelago_area
+				count >= 15
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_aegean_shipbuilding_mod years = -1 mode = add }
+		}
+	}
+
+	som_tur_italy_south = {
+		icon = elan
+		requires = { som_tur_aegean_dominance }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:naples
+			owns_or_non_sovereign_subject_owns = location:palermo
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_italy_south_mod years = -1 mode = add }
+		}
+	}
+
+	som_tur_italy_north = {
+		icon = renaissance_development
+		requires = { som_tur_italy_south }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:rome
+			owns_or_non_sovereign_subject_owns = location:florence
+			owns_or_non_sovereign_subject_owns = location:milano
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_italy_north_mod years = -1 mode = add }
+		}
+	}
+
+	som_tur_north_africa = {
+		icon = ara_desperta_ferro
+		requires = { som_tur_aegean_dominance }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:tunis
+			owns_or_non_sovereign_subject_owns = location:algiers
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_maghreb_mod years = -1 mode = add }
+		}
+	}
+
+	som_tur_morocco = {
+		icon = elan
+		requires = { som_tur_north_africa }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:fez
+			owns_or_non_sovereign_subject_owns = location:marrakesh
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_africa_final_mod years = -1 mode = add }
+		}
+	}
+
+
+	# ==================== BRANCH E: イェニチェリ軍団（軍制改革） ====================
+
+	som_tur_janissary_corps = {
+		icon = elan
+		requires = { som_tur_secure_bursa }
+		enabled = {
+			regular_army_size >= 2
+			monthly_legitimacy >= 0.05
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_janissary_mod years = -1 mode = add }
+		}
+	}
+
+	som_tur_devshirme_system = {
+		icon = ara_protection_of_the_little_folk
+		requires = { som_tur_janissary_corps }
+		enabled = {
+			total_population >= 1000
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_devshirme_mod years = -1 mode = add }
+		}
+	}
+
+	som_tur_elite_guard = {
+		icon = glorious_arms
+		requires = { som_tur_devshirme_system }
+		enabled = {
+			army_size >= 10
+			legitimacy >= 70
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_elite_guard_mod years = -1 mode = add }
+		}
+	}
+
+	som_tur_kanun_i_osmani = {
+		icon = legalism_advance
+		requires = { som_tur_elite_guard }
+		enabled = {
+			power_projection >= 15
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_kanun_mod years = -1 mode = add }
+		}
+	}
+
+	som_tur_imperial_army = {
+		icon = pie_ordinanza_piedmontese
+		requires = { som_tur_kanun_i_osmani }
+		enabled = {
+			army_size >= 30
+			army_tradition >= 40
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_imperial_army_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH F: ティマール封土制（行政改革） ====================
+
+	som_tur_timar_system = {
+		icon = consolidate_the_royal_domain
+		requires = { som_tur_secure_bursa }
+		enabled = {
+			num_locations >= 30
+			monthly_income_trade_and_tax >= 10
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_timar_mod years = -1 mode = add }
+		}
+	}
+
+	som_tur_sipahi_cavalry = {
+		icon = arduous_terrain
+		requires = { som_tur_timar_system }
+		enabled = {
+			army_heavy_cavalry_size >= 2
+			estate_satisfaction:nobles_estate >= 0.65
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_sipahi_mod years = -1 mode = add }
+		}
+	}
+
+	som_tur_eyalet_system = {
+		icon = bureaucracy_law_advance
+		requires = { som_tur_sipahi_cavalry }
+		enabled = {
+			num_locations >= 80
+			any_owned_location = {
+				has_building = building_type:castle
+				count >= 10
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_eyalet_mod years = -1 mode = add }
+		}
+	}
+
+	som_tur_grand_vizier = {
+		icon = court_accounting
+		requires = { som_tur_eyalet_system }
+		enabled = {
+			monthly_income_trade_and_tax >= 300
+			total_population >= 4000
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_vizier_mod years = -1 mode = add }
+		}
+	}
+
+	som_tur_imperial_bureaucracy = {
+		icon = fra_integration_of_new_territories
+		requires = { som_tur_grand_vizier }
+		enabled = {
+			num_locations >= 600
+			current_date > 1500.1.1
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_bureaucracy_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH G: イスタンブールの栄光（都市建設） ====================
+
+	som_tur_new_capital = {
+		icon = city_building_advance
+		requires = { som_tur_secure_bursa }
+		enabled = {
+			owns = location:constantinople
+			location:constantinople = {
+				total_building_levels >= 50
+			}
+		}
+		on_completion = {
+			set_variable = {
+				name = som_tur_constantinople_development_unlocked
+				value = 1
+			}
+			custom_tooltip = som_tur_new_capital_unlock_tt
+		}
+	}
+
+	som_tur_grand_bazaar = {
+		icon = crossroads_of_commerce
+		requires = { som_tur_new_capital }
+		enabled = {
+			custom_tooltip = {
+				text = som_tur_grand_bazaar_condition_tt
+				has_variable = som_tur_constantinople_dev_2_done
+			}
+		}
+		on_completion = {
+			location:constantinople = {
+				add_location_modifier = { modifier = som_tur_grand_bazaar_loc_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	som_tur_suleiman_mosque = {
+		icon = city_of_artists
+		requires = { som_tur_grand_bazaar }
+		enabled = {
+			location:constantinople = {
+				has_building = building_type:temple
+				has_building = building_type:art_school
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_mosque_mod years = -1 mode = add }
+		}
+	}
+
+	som_tur_topkapi_palace = {
+		icon = crown_power_advance_renaissance
+		requires = { som_tur_suleiman_mosque }
+		enabled = {
+			location:constantinople = {
+				has_building = building_type:arts_academy
+			}
+			total_population >= 1500
+			monthly_income_trade_and_tax >= 100
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_topkapi_mod years = -1 mode = add }
+		}
+	}
+
+	som_tur_city_of_worlds_desire = {
+		icon = city_of_artists
+		requires = { som_tur_topkapi_palace }
+		enabled = {
+			location:constantinople = {
+				total_population >= 200
+			}
+			monthly_income_trade_and_tax >= 200
+		}
+		on_completion = {
+			set_variable = {
+				name = som_tur_breadbasket_unlocked
+				value = 1
+			}
+			trigger_event_non_silently = som_ottoman_events.50
+		}
+	}
+
+	# ==================== BRANCH H: ミッレト制度（宗教・寛容） ====================
+
+	som_tur_ulema_authority = {
+		icon = legalism_advance
+		requires = { som_tur_secure_bursa }
+		enabled = {
+			estate_satisfaction:clergy_estate >= 0.80
+			monthly_legitimacy >= 0.05
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_ulema_mod years = -1 mode = add }
+		}
+	}
+
+	som_tur_millet_system = {
+		icon = ara_protection_of_the_little_folk
+		requires = { som_tur_ulema_authority }
+		enabled = {
+			tolerance_heretic >= 0
+			tolerance_heathen >= 0
+			num_locations >= 50
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_millet_mod years = -1 mode = add }
+		}
+	}
+
+	som_tur_kadi_courts = {
+		icon = bureaucracy_law_advance
+		requires = { som_tur_millet_system }
+		enabled = {
+			any_owned_location = {
+				has_building = building_type:temple
+				count >= 20
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_kadi_mod years = -1 mode = add }
+		}
+	}
+
+	som_tur_sufi_culture = {
+		icon = encouragement_of_philosophers
+		requires = { som_tur_kadi_courts }
+		enabled = {
+			any_owned_location = {
+				has_building = building_type:university
+				count >= 20
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_sufi_mod years = -1 mode = add }
+		}
+	}
+
+	som_tur_cultural_synthesis = {
+		icon = city_of_artists
+		requires = { som_tur_sufi_culture }
+		enabled = {
+			OR = {
+				any_owned_location = {
+					has_building = building_type:theater
+					count >= 40
+				}
+				any_owned_location = {
+					has_building = building_type:opera_house
+					count >= 40
+				}
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_synthesis_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== BRANCH I: 絹と交易（商業帝国） ====================
+
+	som_tur_bursa_silk_industry = {
+		icon = continental_trade
+		requires = { som_tur_secure_bursa }
+		enabled = {
+			OR = {
+				produced_in_country:silk > 10
+				produced_in_country:fine_cloth > 10
+			}
+		}
+		on_completion = {
+			location:bursa = {
+				add_location_modifier = { modifier = som_tur_bursa_silk_trade years = -1 mode = add }
+			}
+		}
+	}
+
+	som_tur_silk_road = {
+		icon = ira_improved_silk_road
+		requires = { som_tur_ankara_prosperity }
+		enabled = {
+			owns_or_non_sovereign_subject_owns = location:trebizond
+			monthly_income_trade_and_tax >= 30
+		}
+		on_completion = {
+			location:trebizond = {
+				add_location_modifier = { modifier = som_tur_trebizond_trade_mod years = -1 mode = add }
+			}
+		}
+	}
+
+	som_tur_ankara_prosperity = {
+		icon = crossroads_of_commerce
+		requires = { som_tur_bursa_silk_industry }
+		enabled = {
+			owns = location:ankara
+		}
+		on_completion = {
+			trigger_event_non_silently = som_ottoman_events.18
+		}
+	}
+
+	som_tur_trade_routes = {
+		icon = continental_trade
+		requires = { som_tur_silk_road }
+		enabled = {
+			monthly_income_trade_and_tax >= 80
+			num_locations >= 100
+			any_owned_location = {
+				is_market_center = yes
+				count >= 5
+			}
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_trade_empire_mod years = -1 mode = add }
+		}
+	}
+
+	som_tur_commercial_empire = {
+		icon = crossroads_of_commerce
+		requires = { som_tur_trade_routes }
+		enabled = {
+			monthly_income_trade_and_tax >= 200
+			owns_or_non_sovereign_subject_owns = location:aleppo
+			owns_or_non_sovereign_subject_owns = location:alexandria
+		}
+		on_completion = {
+			add_country_modifier = { modifier = som_tur_commercial_empire_mod years = -1 mode = add }
+		}
+	}
+
+	# ==================== FINAL ====================
+
+	som_tur_age_of_suleiman = {
+		icon = legacy_of_great_empires
+		requires = { som_tur_siege_vienna som_tur_black_sea_dominance som_tur_persian_gulf som_tur_imperial_army som_tur_imperial_bureaucracy som_tur_city_of_worlds_desire som_tur_cultural_synthesis som_tur_commercial_empire }
+		final = yes
+		enabled = {
+			num_locations >= 600
+			monthly_income_trade_and_tax >= 3000
+		}
+		on_completion = {
+			trigger_event_non_silently = som_ottoman_events.99
+		}
+	}
+}

@@ -1772,6 +1772,24 @@ cm_register_cmf_mod = {
 		alias = cm_placement_finder_accuracy
 	}
 
+	# cm_dev_perf +perf47: how the industry-support map counts, 2 = 0.4.1's rule
+	cmm_register_dropdown_setting = {
+		mod_id = cm
+		setting_id = industry_mode
+		tab_id = map_modes
+		group_id = industry
+		default_index = 2
+		option_count = 3
+	}
+	cmm_sync_setting_alias = {
+		setting = cm__industry_mode
+		alias = cm_ind_mode
+	}
+	if = {
+		limit = { has_variable = cm_ind_mode }
+		set_global_variable = { name = cm_ind_mode_g value = var:cm_ind_mode }
+	}
+
 	# Debug (debug) Tab
 	## Action Log (logging) Group
 	cmm_register_global_bool_setting = {
@@ -2570,6 +2588,14 @@ cm_handle_cmf_callback = {
 		}
 		flag:cm__placement_finder_naval = {
 			cm_apply_placement_finder_naval_change = yes
+		}
+		# cm_dev_perf +perf47
+		flag:cm__industry_mode = {
+			cmm_sync_setting_alias = {
+				setting = cm__industry_mode
+				alias = cm_ind_mode
+			}
+			cm_ind_mode_changed = yes
 		}
 		flag:cm__placement_finder_accuracy = {
 			cm_apply_placement_finder_accuracy_change = yes

@@ -1,0 +1,43 @@
+﻿# Poland (POL): decision unlocked by the mission pol_upper_silesia_mines
+pol_silesia_mining_decision = {
+	decision_category = country_specific_decisions
+
+	hide_repeatable_tag = yes
+
+	potential = {
+		has_variable = pol_silesia_mining_unlocked
+	}
+
+	allow = {
+		gold >= 1000
+		NOT = { has_variable = pol_silesia_mining_cooldown }
+		any_owned_location = {
+			area = area:silesia_area
+			NOT = { has_location_modifier = pol_silesia_mines_mod }
+		}
+	}
+
+	ai_will_do = {
+		value = -1
+	}
+
+	option = {
+		name = pol_silesia_mining_decision.a
+		ai_chance = { value = 100 }
+		effect = {
+			add_gold = -1000
+			set_variable = {
+				name = pol_silesia_mining_cooldown
+				value = 1
+				years = 10
+			}
+			random_owned_location = {
+				limit = {
+					area = area:silesia_area
+					NOT = { has_location_modifier = pol_silesia_mines_mod }
+				}
+				add_location_modifier = { modifier = pol_silesia_mines_mod years = -1 mode = add }
+			}
+		}
+	}
+}
