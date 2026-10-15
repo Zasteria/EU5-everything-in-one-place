@@ -156,6 +156,7 @@ bag_asp_plan = {
 		limit = { has_variable = bag_asp_log_on }
 		debug_log = "bag_asp: the seats after the pass:"
 		bag_asp_probe_seats = yes
+		bag_asp_probe_promote = yes
 	}
 	every_cabinet = {
 		limit = { exists = cabinet_member }
@@ -5632,6 +5633,39 @@ bag_asp_probe_order = {
 	}
 }
 
+# Probe, his run 15.10 16:57: no seat took urbanization once it needed
+# unfilled_jobs_in_province > 0. Whether it is available, how many provinces
+# pass, and the numbers of the best and the most populous.
+bag_asp_probe_promote = {
+	if = {
+		limit = { cabinet_action:pop_promote_action = { is_available_for = scope:actor } }
+		debug_log = "bag_asp: probe: urbanization is available"
+	}
+	else = {
+		debug_log = "bag_asp: probe: urbanization is not available"
+	}
+	set_global_variable = { name = bag_asp_probe value = 0 }
+	every_province = {
+		limit = { unfilled_jobs_in_province > 0 }
+		change_global_variable = { name = bag_asp_probe add = 1 }
+	}
+	debug_log = "bag_asp: probe: urbanization, provinces with unfilled jobs above 0: [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+	ordered_province = {
+		order_by = bag_asp_promote_score
+		set_global_variable = { name = bag_asp_probe value = unfilled_jobs_in_province }
+		debug_log = "bag_asp: probe: urbanization, most unfilled jobs [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|2]"
+		set_global_variable = { name = bag_asp_probe value = { value = unfilled_jobs_in_province_percentage multiply = 100 } }
+		debug_log = "bag_asp: probe: urbanization, there in percent [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|2], the province:"
+		debug_log_scopes = no
+	}
+	ordered_province = {
+		order_by = population
+		set_global_variable = { name = bag_asp_probe value = unfilled_jobs_in_province }
+		debug_log = "bag_asp: probe: urbanization, the most populous province has unfilled jobs [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|2]:"
+		debug_log_scopes = no
+	}
+}
+
 # Probe, his run 13.10 07:12: every seat as a pass leaves it.
 bag_asp_probe_seats = {
 	every_cabinet = {
@@ -5682,6 +5716,16 @@ bag_asp_probe_seats = {
 			limit = { cabinet_action = cabinet_action:increase_control_province }
 			set_global_variable = { name = bag_asp_probe value = cabinet_member.adm }
 			debug_log = "bag_asp: probe: a seat on increase_control_province, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			interaction_target:selected_province ?= {
+				set_global_variable = { name = bag_asp_probe value = { value = province_average_control multiply = 100 } }
+				debug_log = "bag_asp: probe: its province, control [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+				set_global_variable = { name = bag_asp_probe value = { value = province_average_max_control multiply = 100 } }
+				debug_log = "bag_asp: probe: its province, max [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+				set_global_variable = { name = bag_asp_probe value = { value = bag_asp_control_missing multiply = 100 } }
+				debug_log = "bag_asp: probe: its province, can still gain [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+				debug_log = "bag_asp: probe: that province:"
+				debug_log_scopes = no
+			}
 		}
 		else_if = {
 			limit = { cabinet_action = cabinet_action:integrate_area }
@@ -5697,6 +5741,16 @@ bag_asp_probe_seats = {
 			limit = { cabinet_action = cabinet_action:noblesse_oblige_cabinet_action }
 			set_global_variable = { name = bag_asp_probe value = cabinet_member.adm }
 			debug_log = "bag_asp: probe: a seat on noblesse_oblige_cabinet_action, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			interaction_target:selected_province ?= {
+				set_global_variable = { name = bag_asp_probe value = { value = province_average_control multiply = 100 } }
+				debug_log = "bag_asp: probe: its province, control [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+				set_global_variable = { name = bag_asp_probe value = { value = province_average_max_control multiply = 100 } }
+				debug_log = "bag_asp: probe: its province, max [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+				set_global_variable = { name = bag_asp_probe value = { value = bag_asp_control_missing multiply = 100 } }
+				debug_log = "bag_asp: probe: its province, can still gain [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+				debug_log = "bag_asp: probe: that province:"
+				debug_log_scopes = no
+			}
 		}
 		else_if = {
 			limit = { cabinet_action = cabinet_action:pacify_population }

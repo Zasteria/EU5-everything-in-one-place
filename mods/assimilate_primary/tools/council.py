@@ -1139,6 +1139,7 @@ bag_asp_unpair = {{
 
 
 PRINT = "[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+PRINT2 = "[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|2]"
 
 # His ask 13.10: every setting's value, logged after he changes one. A number
 # prints through a script value reading the variable outright: the form with
@@ -1198,6 +1199,16 @@ def probe_effects(actions: dict[str, str]) -> str:
                      f"\t\t\t\tset_global_variable = {{ name = bag_asp_probe value = bag_asp_half_rank }}\n"
                      f"\t\t\t\tdebug_log = \"bag_asp: probe: its province, rank {PRINT}:\"\n"
                      f"\t\t\t\tdebug_log_scopes = no\n\t\t\t}}\n")
+        elif k in SPEEDUP:
+            # Probe, his run 15.10 16:57: one seat swapped between the two
+            # control actions every month. Control, max and what it can still
+            # gain, in percent, where the seat stands.
+            where = "\t\t\tinteraction_target:selected_province ?= {\n"
+            for what, val in (("control", "province_average_control"), ("max", "province_average_max_control"),
+                              ("can still gain", "bag_asp_control_missing")):
+                where += (f"\t\t\t\tset_global_variable = {{ name = bag_asp_probe value = {{ value = {val} multiply = 100 }} }}\n"
+                          f"\t\t\t\tdebug_log = \"bag_asp: probe: its province, {what} {PRINT}\"\n")
+            where += "\t\t\t\tdebug_log = \"bag_asp: probe: that province:\"\n\t\t\t\tdebug_log_scopes = no\n\t\t\t}\n"
         seats.append(f"\t\telse_if = {{\n\t\t\tlimit = {{ cabinet_action = cabinet_action:{k} }}\n"
                      f"\t\t\tset_global_variable = {{ name = bag_asp_probe value = cabinet_member.{ability} }}\n"
                      f"\t\t\tdebug_log = \"bag_asp: probe: a seat on {k}, its advisor's {ability} {PRINT}\"\n"
@@ -1218,6 +1229,39 @@ bag_asp_probe_order = {{
 \t\t\t\t}}
 \t\t\t}}
 \t\t}}
+\t}}
+}}
+
+# Probe, his run 15.10 16:57: no seat took urbanization once it needed
+# unfilled_jobs_in_province > 0. Whether it is available, how many provinces
+# pass, and the numbers of the best and the most populous.
+bag_asp_probe_promote = {{
+\tif = {{
+\t\tlimit = {{ cabinet_action:pop_promote_action = {{ is_available_for = scope:actor }} }}
+\t\tdebug_log = "bag_asp: probe: urbanization is available"
+\t}}
+\telse = {{
+\t\tdebug_log = "bag_asp: probe: urbanization is not available"
+\t}}
+\tset_global_variable = {{ name = bag_asp_probe value = 0 }}
+\tevery_province = {{
+\t\tlimit = {{ unfilled_jobs_in_province > 0 }}
+\t\tchange_global_variable = {{ name = bag_asp_probe add = 1 }}
+\t}}
+\tdebug_log = "bag_asp: probe: urbanization, provinces with unfilled jobs above 0: {PRINT}"
+\tordered_province = {{
+\t\torder_by = bag_asp_promote_score
+\t\tset_global_variable = {{ name = bag_asp_probe value = unfilled_jobs_in_province }}
+\t\tdebug_log = "bag_asp: probe: urbanization, most unfilled jobs {PRINT2}"
+\t\tset_global_variable = {{ name = bag_asp_probe value = {{ value = unfilled_jobs_in_province_percentage multiply = 100 }} }}
+\t\tdebug_log = "bag_asp: probe: urbanization, there in percent {PRINT2}, the province:"
+\t\tdebug_log_scopes = no
+\t}}
+\tordered_province = {{
+\t\torder_by = population
+\t\tset_global_variable = {{ name = bag_asp_probe value = unfilled_jobs_in_province }}
+\t\tdebug_log = "bag_asp: probe: urbanization, the most populous province has unfilled jobs {PRINT2}:"
+\t\tdebug_log_scopes = no
 \t}}
 }}
 
@@ -2469,6 +2513,7 @@ bag_asp_plan = {{
 \t\tlimit = {{ has_variable = bag_asp_log_on }}
 \t\tdebug_log = "bag_asp: the seats after the pass:"
 \t\tbag_asp_probe_seats = yes
+\t\tbag_asp_probe_promote = yes
 \t}}
 \tevery_cabinet = {{
 \t\tlimit = {{ exists = cabinet_member }}
