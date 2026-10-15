@@ -58,3 +58,8 @@ gets a stale list. `error.log` says nothing, because nothing failed. Since
 read at build time and refused if its shape changes. Any mod that copies another
 mod's generated file needs a check like that written the same day the copy is
 made.
+
+**Не больше пяти знаков после точки.** `global_population_growth = 0.002175`
+пропал из подсказки бюрократии целиком, соседние строки блока остались
+(`nd_unnerf`, TESTLOG 10-14). В `common/` игры и ND шестого знака нет нигде.
+Отбрасывает игра такое число или только не показывает — не измерено.

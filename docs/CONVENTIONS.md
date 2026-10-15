@@ -52,6 +52,11 @@ the `id` inside its `metadata.json`.
 vanish at the next sync. It is for questions that need the whole load order:
 `tools/guicost.py` counts it, and it is where a mod nobody has looked at goes.
 
+**Older versions of a mod live only in git history**, one commit per refresh
+(`git log -- reference/mods/<folder>`). A session's clone is shallow and shows
+one commit: `git fetch --unshallow origin` first. `nd_unnerf` builds from the
+diff of two such commits (10-14).
+
 What is deliberately absent: `gfx`, `events`, `decisions`, map data, and most of
 `common/`. Ask for those if a task needs them, and add them here afterwards.
 
