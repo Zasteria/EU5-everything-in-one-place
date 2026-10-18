@@ -2,9 +2,10 @@
 #
 # Раз в месяц: пока свободных дипломатов больше, чем велено оставить, самое
 # дорогое творение отмеченного качества уходит той державе, что согласна охотнее
-# всех. Продаёт ванильное действие `sell_work_of_art` (цена, престиж, дипломат —
-# как у кнопки) через `fire_generic_action`. **Берёт ли он действие державы, а
-# не только `generic_actions`, — не проверено**: если владелец после вызова
+# всех. `fire_generic_action` действие державы не берёт (его прогон 10-18:
+# «PostValidate … returned false» при загрузке, `not sold` каждый месяц), и
+# других способов запустить его из скрипта нет — поэтому продажа повторена
+# здесь по правилам действия: цена, престиж, дипломат. Если владелец после неё
 # прежний, зонд пишет `not sold`, и месяц на этом кончается.
 
 # Scope: country
@@ -66,12 +67,25 @@ bag_rtk_art_fire = {
 			max = 1
 			save_scope_as = bag_rtk_art_buyer
 		}
-		fire_generic_action = {
-			type = sell_work_of_art
-			actor = scope:bag_rtk_seller
-			recipient = scope:bag_rtk_art_buyer
-			target = scope:bag_rtk_art
+		# Продажа — тело ванильного `sell_work_of_art` и его цена:
+		# `price:sell_work_of_art` = 1 золото × `art_price`, платит покупатель;
+		# престиж −2 % цены; дипломат — как у действия державы.
+		add_gold = scope:bag_rtk_art.art_price
+		add_prestige = {
+			value = scope:bag_rtk_art.art_price
+			multiply = -0.02
 		}
+		add_diplomats = -1
+	}
+	scope:bag_rtk_art_buyer = {
+		add_gold = {
+			value = scope:bag_rtk_art.art_price
+			multiply = -1
+		}
+	}
+	move_art_and_owner = {
+		location = scope:bag_rtk_art_buyer.capital
+		country = scope:bag_rtk_art_buyer
 	}
 	if = {
 		limit = { owner ?= scope:bag_rtk_art_buyer }
