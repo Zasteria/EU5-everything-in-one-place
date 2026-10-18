@@ -86,6 +86,7 @@ bag_wsl_mint_month = {
 		}
 		if = {
 			limit = { inflation > bag_wsl_inflation_stop }
+			bag_wsl_mint_count_miss = yes
 			bag_wsl_mint_rearm = yes
 			bag_wsl_mint_schedule = yes
 		}
@@ -169,6 +170,9 @@ bag_wsl_mint_arm = {
 		set_variable = { name = bag_wsl_held value = bag_wsl_mint_fraction }
 		set_variable = { name = bag_wsl_infl_prev value = inflation }
 		remove_variable = bag_wsl_drain
+		remove_variable = bag_wsl_mint_final
+		remove_variable = bag_wsl_mint_misses
+		remove_variable = bag_wsl_mint_force
 		set_variable = { name = bag_wsl_mint_target value = bag_wsl_mint_arm }
 		set_variable = { name = bag_wsl_mint_phase value = 1 }
 		set_variable = { name = bag_wsl_mint_go value = 1 }
@@ -183,6 +187,11 @@ bag_wsl_mint_arm = {
 # Scope: country
 bag_wsl_mint_aim = {
 	if = {
+		# Два последних шага подряд не дожали — ползунок в ноль до конца правки.
+		limit = { has_variable = bag_wsl_mint_force }
+		set_variable = { name = bag_wsl_mint_target value = 0 }
+	}
+	else_if = {
 		limit = {
 			var:bag_wsl_drain > 0
 			var:bag_wsl_m0 > var:bag_wsl_held
@@ -211,6 +220,14 @@ bag_wsl_mint_aim = {
 			set_local_variable = { name = bag_wsl_aim value = var:bag_wsl_mint_floor }
 		}
 		set_variable = { name = bag_wsl_mint_target value = local_var:bag_wsl_aim }
+		# Выше пола — значит, по прогнозу этот месяц правку заканчивает.
+		if = {
+			limit = { local_var:bag_wsl_aim > var:bag_wsl_mint_floor }
+			set_variable = { name = bag_wsl_mint_final value = 1 }
+		}
+		else = {
+			remove_variable = bag_wsl_mint_final
+		}
 	}
 	else = {
 		# Темпа нет (игра не ответила, месяц ничего не снял) — держим пол, как
@@ -222,10 +239,37 @@ bag_wsl_mint_aim = {
 	set_variable = { name = bag_wsl_held value = var:bag_wsl_mint_target }
 }
 
+# **Последний шаг не дожал** (его просьба 10-18). Золото в конце месяца
+# двигает инфляцию, и шаг, рассчитанный снять ровно остаток, может не снять
+# его — и так по кругу. Месяц, который по прогнозу заканчивал правку
+# (`bag_wsl_mint_final`, ставит `bag_wsl_mint_aim`), а инфляция всё ещё выше
+# цели, — промах. После двух промахов ползунок стоит в нуле
+# (`bag_wsl_mint_force`), пока инфляция не сойдёт к цели.
+# Scope: country
+bag_wsl_mint_count_miss = {
+	if = {
+		limit = { has_variable = bag_wsl_mint_final }
+		if = {
+			limit = { NOT = { has_variable = bag_wsl_mint_misses } }
+			set_variable = { name = bag_wsl_mint_misses value = 0 }
+		}
+		change_variable = { name = bag_wsl_mint_misses add = 1 }
+		debug_log = "bag_wsl: the last step missed"
+		if = {
+			limit = { var:bag_wsl_mint_misses >= 2 }
+			set_variable = { name = bag_wsl_mint_force value = 1 }
+			debug_log = "bag_wsl: two misses, minting to zero"
+		}
+	}
+}
+
 # Вернуть чеканку автоматике: интерфейс увидит `bag_wsl_mint_release` и
 # включит галочку обратно.
 # Scope: country
 bag_wsl_mint_stand_down = {
+	remove_variable = bag_wsl_mint_final
+	remove_variable = bag_wsl_mint_misses
+	remove_variable = bag_wsl_mint_force
 	remove_variable = bag_wsl_mint_phase
 	remove_variable = bag_wsl_mint_go
 	remove_variable = bag_wsl_mint_repost
