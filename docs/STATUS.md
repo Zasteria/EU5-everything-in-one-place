@@ -21,7 +21,7 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`speed_5`](../mods/speed_5/CLAUDE.md), [`speed_10`](../mods/speed_10/CLAUDE.md) | паузы, 10 скоростей | всё |
 | [`cmf_saved_settings`](../mods/cmf_saved_settings/CLAUDE.md) | 0.3.0: применение | 0.3.0 |
 | [`auto_marry`](../mods/auto_marry/CLAUDE.md) | автоженитьба под 1.4 | всё |
-| [`rulers_toolkit`](../mods/rulers_toolkit/CLAUDE.md) | 0.1.0: сборник автоматики | всё |
+| [`rulers_toolkit`](../mods/rulers_toolkit/CLAUDE.md) | 0.1.1: сборник автоматики | всё |
 | [`war_sliders`](../mods/war_sliders/CLAUDE.md) | **0.7.3**: сам после мира и восстания, кнопка CMF; к мастерской | автозапуск |
 
 Закрытые, но лежащие здесь: [`archive/status_closed.md`](archive/status_closed.md).

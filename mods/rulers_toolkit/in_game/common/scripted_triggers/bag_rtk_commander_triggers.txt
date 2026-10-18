@@ -24,14 +24,39 @@ bag_rtk_is_crown_commander = {
 	}
 }
 
-# Отряд, который стоит отдать коронному командиру. Scope: unit.
-# Наёмников, изгнанные отряды и отряды в бою не трогаем.
-bag_rtk_unit_open_to_crown = {
-	is_mercenary = no
+# Отряд, который считается в дележе власти от командования. Scope: unit.
+# Чисто наёмный отряд (ни своих полков, ни ополчения) и изгнанный — мимо.
+# `is_mercenary` — триггер полка, не отряда: в 0.1.0 стоял здесь, игра писала
+# «Inconsistent trigger scopes (unit vs. sub_unit)», и ни одна армия не
+# проходила (его прогон 10-18).
+bag_rtk_unit_counts = {
 	is_exiled = no
+	OR = {
+		has_regulars = yes
+		has_levies = yes
+	}
+}
+
+# Отряд, который стоит отдать коронному командиру. Scope: unit.
+bag_rtk_unit_open_to_crown = {
+	bag_rtk_unit_counts = yes
 	in_combat = no
 	OR = {
 		has_commander = no
 		leader = { NOT = { bag_rtk_is_crown_commander = yes } }
+	}
+}
+
+# Следующий правитель выгоднее на флоте (scope: country, счётчики
+# `bag_rtk_count_units`). Власть от командования армиями и от флотов — два
+# отдельных котла по 25 %, каждый делится между командирами своей ветви: один
+# правитель даёт 1/N своего котла. Значит, туда, где отрядов меньше; поровну —
+# в армию.
+bag_rtk_navy_pays_more = {
+	has_variable = bag_rtk_cmd_navy_on
+	any_navy = { bag_rtk_unit_open_to_crown = yes }
+	OR = {
+		NOT = { any_army = { bag_rtk_unit_open_to_crown = yes } }
+		var:bag_rtk_n_navy < var:bag_rtk_n_army
 	}
 }
