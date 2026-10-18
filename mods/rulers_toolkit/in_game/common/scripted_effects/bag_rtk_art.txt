@@ -2,11 +2,11 @@
 #
 # Раз в месяц: пока свободных дипломатов больше, чем велено оставить, самое
 # дорогое творение отмеченного качества уходит той державе, что согласна охотнее
-# всех. `fire_generic_action` действие державы не берёт (его прогон 10-18:
-# «PostValidate … returned false» при загрузке, `not sold` каждый месяц), и
-# других способов запустить его из скрипта нет — поэтому продажа повторена
-# здесь по правилам действия: цена, престиж, дипломат. Если владелец после неё
-# прежний, зонд пишет `not sold`, и месяц на этом кончается.
+# всех. Действие державы запускает `perform_diplomatic_action`;
+# `fire_generic_action` его не берёт (0.4.0, его прогон 10-18: «PostValidate …
+# returned false» при загрузке, `not sold` каждый месяц). Если владелец после
+# вызова прежний (отказ или ответ позже), зонд пишет `not sold`, и месяц на
+# этом кончается.
 
 # Scope: country
 bag_rtk_art_monthly = {
@@ -67,25 +67,17 @@ bag_rtk_art_fire = {
 			max = 1
 			save_scope_as = bag_rtk_art_buyer
 		}
-		# Продажа — тело ванильного `sell_work_of_art` и его цена:
-		# `price:sell_work_of_art` = 1 золото × `art_price`, платит покупатель;
-		# престиж −2 % цены; дипломат — как у действия державы.
-		add_gold = scope:bag_rtk_art.art_price
-		add_prestige = {
-			value = scope:bag_rtk_art.art_price
-			multiply = -0.02
+		# Ванильное действие целиком — цена, престиж, дипломат и решение
+		# покупателя за игрой. Форма — `peace_treaties/hegemon_demands.txt`
+		# (`force_embargo`, тоже действие державы). `mode = propose`: как кнопка,
+		# покупатель решает сам.
+		perform_diplomatic_action = {
+			type = sell_work_of_art
+			actor = scope:bag_rtk_seller
+			recipient = scope:bag_rtk_art_buyer
+			target = scope:bag_rtk_art
+			mode = propose
 		}
-		add_diplomats = -1
-	}
-	scope:bag_rtk_art_buyer = {
-		add_gold = {
-			value = scope:bag_rtk_art.art_price
-			multiply = -1
-		}
-	}
-	move_art_and_owner = {
-		location = scope:bag_rtk_art_buyer.capital
-		country = scope:bag_rtk_art_buyer
 	}
 	if = {
 		limit = { owner ?= scope:bag_rtk_art_buyer }
