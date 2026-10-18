@@ -28,14 +28,15 @@
 
 ## Пленники
 
-- **Выкуп после мира** (`bag_rtk_prisoners.txt`): раз в месяц в мире армии с
-  `can_ransom_prisoners` — `request_ransom_prisoners` и бомба антагонизма, как
-  ванильный `ransom_prisoners_effect` (у того root — отряд, поэтому тело
-  повторено). Зонд `bag_rtk: prisoners offered for ransom`.
-- **На войне (0.3.1, зонд, в игре не было)**: раз в месяц отряды с
-  `has_only_prisoners` — `remove_commander` (зонд `bag_rtk: general taken off a
-  prisoner unit`) и `move_prisoners_to_safety = {}` (по умолчанию выкл. — он не верит в эффект, которого у игрока нет, 10-18; зонд `bag_rtk: prisoners
-  sent to safety`; синтаксис `{}` по соседям, ванилла его не зовёт).
+- **Выкуп после мира** (`bag_rtk_prisoners.txt`): 1-го числа в мире, как
+  ванильный `ransom_prisoners_effect`. Зонд `bag_rtk: prisoners offered for ransom`.
+- **На войне**: 1-го числа с отрядов `has_only_prisoners` — `remove_commander`
+  (зонд `bag_rtk: general taken off a prisoner unit`, в игре не проверен).
+- **В тыл** (`move_prisoners_to_safety = {}` работает, 10-18): не больше двух
+  раз на отряд, переменная отряда `bag_rtk_safety` — первый раз из
+  `on_battle_won`/`on_overrun_imprisoned` или 1-го числа, второй — 1-го числа,
+  когда `is_moving = no`. 0.3.2 в игре не было; не проверено, что root
+  `on_battle_won` — победитель и что пленные к нему уже отделены.
 - **Своей точки и слияния скриптом нет** — чем проверено:
   [`rulers_toolkit_history.md`](../../docs/archive/rulers_toolkit_history.md).
 

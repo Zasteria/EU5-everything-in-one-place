@@ -9,12 +9,13 @@
 # Ванильный `ransom_prisoners_effect` пишет `root.prisoner_strength`, считая
 # root отрядом; у нас root — страна, поэтому тело повторено со своим скоупом.
 
-# На войне (0.3.1, зонд). Скриптом отряд не двинуть в выбранную точку и не
-# слить: «Объединить отряды» — движковая способность, в `unit_abilities` её нет,
-# эффекта нет. Есть `move_prisoners_to_safety` (unit): «Пленников перевезут в
-# район X» — место выбирает игра, ванилла его не зовёт ни разу. Куда она их
-# везёт и сходятся ли они в одно место — вопрос этого прогона. Генерала с
-# отряда из одних пленных снимаем: на него не тратится командир.
+# На войне. Скриптом отряд не двинуть в выбранную точку и не слить:
+# «Объединить отряды» — движковая способность, эффекта нет. Есть
+# `move_prisoners_to_safety` (unit): место выбирает игра, отряд на бегу
+# неуязвим. 0.3.1 звал его каждый месяц — и пленные бежали всё дальше без
+# конца (его прогон 10-18). Поэтому два раза на отряд, по переменной отряда
+# `bag_rtk_safety`: первый — как только отряд найден (сразу после боя или
+# 1-го числа), второй — когда он добежал (`is_moving = no`), 1-го числа.
 
 # Scope: country
 bag_rtk_prisoners_monthly = {
@@ -31,14 +32,7 @@ bag_rtk_prisoners_monthly = {
 				remove_commander = scope:bag_rtk_prison_leader
 				debug_log = "bag_rtk: general taken off a prisoner unit"
 			}
-			if = {
-				limit = {
-					prev = { has_variable = bag_rtk_pris_safety_on }
-					in_combat = no
-				}
-				move_prisoners_to_safety = {}
-				debug_log = "bag_rtk: prisoners sent to safety"
-			}
+			bag_rtk_safety_unit = yes
 		}
 	}
 	if = {
@@ -72,4 +66,50 @@ bag_rtk_ransom_unit = {
 	}
 	request_ransom_prisoners = {}
 	debug_log = "bag_rtk: prisoners offered for ransom"
+}
+
+# Отряд пленных — в тыл, не больше двух раз за жизнь отряда. Scope: unit
+bag_rtk_safety_unit = {
+	if = {
+		limit = {
+			has_only_prisoners = yes
+			in_combat = no
+			owner ?= { has_variable = bag_rtk_pris_safety_on }
+			OR = {
+				NOT = { has_variable = bag_rtk_safety }
+				AND = {
+					var:bag_rtk_safety = 1
+					is_moving = no
+				}
+			}
+		}
+		if = {
+			limit = { has_variable = bag_rtk_safety }
+			set_variable = { name = bag_rtk_safety value = 2 }
+			debug_log = "bag_rtk: prisoners sent to safety, second time"
+		}
+		else = {
+			set_variable = { name = bag_rtk_safety value = 1 }
+			debug_log = "bag_rtk: prisoners sent to safety, first time"
+		}
+		move_prisoners_to_safety = {}
+	}
+}
+
+# Scope: country (on_battle_won, победитель)
+bag_rtk_prisoners_after_battle = {
+	if = {
+		limit = {
+			is_ai = no
+			has_variable = bag_rtk_pris_safety_on
+			at_war = yes
+		}
+		every_army = {
+			limit = {
+				has_only_prisoners = yes
+				NOT = { has_variable = bag_rtk_safety }
+			}
+			bag_rtk_safety_unit = yes
+		}
+	}
 }
