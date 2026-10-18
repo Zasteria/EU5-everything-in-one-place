@@ -34,7 +34,7 @@
   повторено). Зонд `bag_rtk: prisoners offered for ransom`.
 - **На войне (0.3.1, зонд, в игре не было)**: раз в месяц отряды с
   `has_only_prisoners` — `remove_commander` (зонд `bag_rtk: general taken off a
-  prisoner unit`) и `move_prisoners_to_safety = {}` (зонд `bag_rtk: prisoners
+  prisoner unit`) и `move_prisoners_to_safety = {}` (по умолчанию выкл. — он не верит в эффект, которого у игрока нет, 10-18; зонд `bag_rtk: prisoners
   sent to safety`; синтаксис `{}` по соседям, ванилла его не зовёт).
 - **Своей точки и слияния скриптом нет** — чем проверено:
   [`rulers_toolkit_history.md`](../../docs/archive/rulers_toolkit_history.md).
