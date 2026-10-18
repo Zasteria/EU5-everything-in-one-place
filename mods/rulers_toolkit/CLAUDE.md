@@ -27,14 +27,14 @@ pass`, `bag_rtk: crown commander set`.
 - **Своей точки и слияния скриптом нет** — чем проверено:
   [`rulers_toolkit_history.md`](../../docs/archive/rulers_toolkit_history.md).
 
-## Творения (0.4.3, в игре не было; вкладка `art`, по умолчанию выкл.)
+## Творения (0.4.4, в игре не было; вкладка `art`, по умолчанию выкл.)
 
 `bag_rtk_art.txt`: 1-го числа, пока `num_of_diplomats` > «оставлять», до 5
 продаж — самое дорогое творение отмеченной ступени (8 галочек, ступени из
 `artists_l_russian.yml`) — державе с наибольшим `bag_rtk_art_accept` (ванильная
 формула, сверена с его скрином) и `gold >= art_price`. Продаёт ванильное
 действие: `perform_diplomatic_action = { type = sell_work_of_art … mode =
-accept }` (форма `hegemon_demands.txt`; `propose` в 0.4.2 — дипломат ушёл, продажи нет); **`fire_generic_action` его не берёт**
+accept }` (форма `hegemon_demands.txt`; `propose` 0.4.2 — дипломат ушёл, продажи нет; `accept` 0.4.3 — ничего; 0.4.4 — зонд `zz_bag_rtk_sell_work_of_art_probe.txt`, `REPLACE:` ванильного действия с `debug_log` в `effect`); **`fire_generic_action` его не берёт**
 (0.4.0). Зонды `work of art sold` / `not sold` / `no buyer for any work of art`.
 
 ## Ползунки после войны (бывший `war_sliders`)
