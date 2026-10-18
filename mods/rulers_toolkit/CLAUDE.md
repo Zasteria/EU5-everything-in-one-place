@@ -27,7 +27,7 @@ pass`, `bag_rtk: crown commander set`.
 - **Своей точки и слияния скриптом нет** — чем проверено:
   [`rulers_toolkit_history.md`](../../docs/archive/rulers_toolkit_history.md).
 
-## Творения (0.4.8; 0.4.6 в игре продаёт; вкладка `art`, по умолчанию выкл.)
+## Творения (0.4.9; 0.4.6 в игре продаёт; вкладка `art`, по умолчанию выкл.)
 
 `bag_rtk_art.txt`: 1-го числа, пока `num_of_diplomats` ≥ «оставлять» + 1 (дипломаты дробные, 0.4.6 продавал с 1,01), до 5
 продаж — самое дорогое творение отмеченной ступени (8 галочек, ступени из
@@ -37,10 +37,8 @@ pass`, `bag_rtk: crown commander set`.
 `country_interaction_acceptance(...|this)` + качество; после оплаты золота ≥ 6
 месяцев дохода; мнение о нас > 0; не враг и не соперник. **Продаёт сам**:
 `add_gold` обоим, престиж −2 %, `add_diplomats = -1`, `move_art_and_owner` —
-ванильное действие из скрипта до эффекта не доходило ни разу (0.4.0–0.4.5:
-`fire_generic_action`, `perform_diplomatic_action` `propose`/`accept`, с
-творением в переменной; [`TESTLOG`](../../docs/TESTLOG.md) 10-18), вручную
-продаётся. Зонды `work of art sold` / `not sold` / `no buyer for any work of art`.
+ванильное действие из скрипта до эффекта не доходит ни одним путём
+([`testlog_1018_art_action.md`](../../docs/archive/testlog_1018_art_action.md)). Зонды `work of art sold` / `not sold` / `no buyer for any work of art`; 0.4.8 продал одно и дальше «no buyer» → зонд 0.4.9 `bag_rtk_art_probe` (убрать, когда найдено).
 
 ## Ползунки после войны (бывший `war_sliders`)
 
