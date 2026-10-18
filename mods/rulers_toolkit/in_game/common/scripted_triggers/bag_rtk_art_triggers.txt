@@ -45,15 +45,26 @@ bag_rtk_art_for_sale = {
 	}
 }
 
-# Держава купит творение scope:bag_rtk_art. Scope: country. Деньги — как в
-# игре (кому не хватает, того нет в списке); согласие — ванильная формула
-# `accept` + `diplo_chance`, нужно не меньше 1 (его скрин 10-18: «на 1 больше
-# положительных»).
+# Держава купит творение scope:bag_rtk_art. Scope: country.
+#
+# Строже кнопки — его требование 10-18: мод продаёт без вопроса покупателю,
+# значит, не должен отбирать деньги у того, кто их не имеет или нас не любит.
+# - Согласие — дважды, и оба ≥ 1: своя копия ванильной формулы и **число самой
+#   игры** `country_interaction_acceptance` (оно без творения — цели не знает,
+#   — поэтому к нему добавлено качество, как в `accept`). Ошибись копия —
+#   решит число игры; не разберёт игра выражение — оно 0, и продаж нет.
+# - После покупки у него остаётся не меньше шести месяцев дохода (меньше —
+#   ванильные −60 «мало денег»): в долги не загоняем.
+# - Мнение о нас выше нуля, не враг, не соперник ни с какой стороны.
 bag_rtk_art_buyer = {
 	is_real_country = yes
 	NOT = { this = scope:bag_rtk_seller }
 	NOT = { country_type = building }
 	NOT = { is_enemy_of = scope:bag_rtk_seller }
-	gold >= scope:bag_rtk_art.art_price
+	NOT = { is_rival_of = scope:bag_rtk_seller }
+	NOT = { scope:bag_rtk_seller = { is_rival_of = prev } }
+	opinion = { target = scope:bag_rtk_seller value > 0 }
+	gold >= bag_rtk_art_buyer_floor
 	bag_rtk_art_accept >= 1
+	bag_rtk_art_accept_game >= 1
 }
