@@ -38,6 +38,8 @@ a filter that filters: the screenshot already says it.
 
 ## Runs
 
+**2026-10-18 (сообщение 21:22 UTC, журнал 02:17–02:20), 1.4.1: `rulers_toolkit` 0.4.2, его слова и логи.** `perform_diplomatic_action` с `mode = propose`: дипломаты пропадают по одному в месяц до нуля, денег не прибавляется, творения не уходят. В логах ни одной ошибки, `bag_rtk: work of art not sold` раз в месяц. → 0.4.3: `mode = accept`.
+
 **2026-10-18 (сообщение 20:59 UTC, журнал 01:56–01:58), 1.4.1: `rulers_toolkit` 0.4.0, его слова и логи.** «Не работает»: все качества отмечены, покупатели и дипломаты есть. `debug.log`: при загрузке `PostValidate of effect 'fire_generic_action' returned false at common/scripted_effects/bag_rtk_art.txt:69` и восемь `Expected "AND = {", but got "AND = "` (генератор написал `AND {`); затем `bag_rtk: work of art not sold` каждый месяц. Значит, `fire_generic_action` действие державы (`country_interactions/sell_work_of_art`) не запускает. → 0.4.1 (продажа повторена в скрипте) и 0.4.2 (по его требованию — ванильное действие через `perform_diplomatic_action`); `check_script` теперь ловит `ключ {` без `=`.
 
 **2026-10-18 (сообщение 20:32 UTC), 1.4.1: `rulers_toolkit` 0.3.2, его слова.** Пленные после битвы убежали в тыл, добежали и 1-го числа отбежали ещё раз — два раза, как задумано. Выкуп после мира не смотрел.
