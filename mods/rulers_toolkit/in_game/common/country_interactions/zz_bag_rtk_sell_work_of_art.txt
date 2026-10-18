@@ -1,7 +1,12 @@
-﻿# Зонд 0.4.4 (10-18): ванильный `country_interactions/sell_work_of_art.txt`
-# целиком, плюс две строки `debug_log` в `effect`. Ничего больше не меняет.
-# Вопрос: доходит ли `perform_diplomatic_action` до эффекта действия и с
-# творением ли (`scope:target`). Убрать, когда прогон ответит.
+﻿# 0.4.5 (10-18): ванильный `country_interactions/sell_work_of_art.txt`
+# целиком, плюс запасной путь для творения. Вручную продажа идёт (его скрины
+# 10-18); из `perform_diplomatic_action` — нет: 0.4.2 (`propose`) тратил
+# дипломата без продажи, 0.4.3 (`accept`) не делал ничего. Догадка: творение
+# (`target`) из скрипта до действия не доходит, и оно идёт веткой «без творения»
+# — цена 1 золото, ничего не переезжает. Поэтому мод кладёт творение ещё и в
+# переменную продавца `bag_rtk_art_pending`, а здесь цена, согласие и эффект
+# берут его оттуда, когда `scope:target` нет. Для ручной продажи ничего не
+# меняется: там `scope:target` есть. Зонды в `effect` говорят, какой путь шёл.
 REPLACE:sell_work_of_art = {
 	category = CATEGORY_ECONOMY_ACTIONS
 	type = diplomacy
@@ -23,6 +28,13 @@ REPLACE:sell_work_of_art = {
 			add = {
 				desc = "ART_SALE_VALUE"
 				value = scope:target.art_price
+			}
+		}
+		else_if = {
+			limit = { scope:actor ?= { has_variable = bag_rtk_art_pending } }
+			add = {
+				desc = "ART_SALE_VALUE"
+				value = scope:actor.var:bag_rtk_art_pending.art_price
 			}
 		}
 		else = {
@@ -99,6 +111,20 @@ REPLACE:sell_work_of_art = {
 				}
 			}
 		}
+		else_if = {
+			limit = { scope:actor ?= { has_variable = bag_rtk_art_pending } }
+			debug_log = "bag_rtk: probe, sell_work_of_art effect ran with the art from the variable"
+			scope:actor = {
+				add_prestige = {
+					value = var:bag_rtk_art_pending.art_price
+					multiply = -0.02
+				}
+				var:bag_rtk_art_pending = {
+					move_art_and_owner = { location = scope:recipient.capital country = scope:recipient }
+				}
+				remove_variable = bag_rtk_art_pending
+			}
+		}
 		else = {
 			debug_log = "bag_rtk: probe, sell_work_of_art effect ran without the art"
 			custom_tooltip = sell_work_of_art_move_art_generic_tt
@@ -150,21 +176,45 @@ REPLACE:sell_work_of_art = {
 				value = 30
 			}
 		}
-		scope:target ?= {
-			if = {
-				limit = { art_quality > 50 }
-				add = {
-					desc = "HIGH_QUALITY_ART"
-					value = art_quality
-					subtract = 50
+		if = {
+			limit = { exists = scope:target }
+			scope:target ?= {
+				if = {
+					limit = { art_quality > 50 }
+					add = {
+						desc = "HIGH_QUALITY_ART"
+						value = art_quality
+						subtract = 50
+					}
+				}
+				if = {
+					limit = { art_quality < 50 }
+					add = {
+						desc = "LOW_QUALITY_ART"
+						value = art_quality
+						subtract = 50
+					}
 				}
 			}
-			if = {
-				limit = { art_quality < 50 }
-				add = {
-					desc = "LOW_QUALITY_ART"
-					value = art_quality
-					subtract = 50
+		}
+		else_if = {
+			limit = { scope:actor ?= { has_variable = bag_rtk_art_pending } }
+			scope:actor.var:bag_rtk_art_pending ?= {
+				if = {
+					limit = { art_quality > 50 }
+					add = {
+						desc = "HIGH_QUALITY_ART"
+						value = art_quality
+						subtract = 50
+					}
+				}
+				if = {
+					limit = { art_quality < 50 }
+					add = {
+						desc = "LOW_QUALITY_ART"
+						value = art_quality
+						subtract = 50
+					}
 				}
 			}
 		}
