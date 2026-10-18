@@ -2,11 +2,11 @@
 #
 # Раз в месяц: пока свободных дипломатов больше, чем велено оставить, самое
 # дорогое творение отмеченного качества уходит той державе, что согласна охотнее
-# всех. Действие державы запускает `perform_diplomatic_action`;
-# `fire_generic_action` его не берёт (0.4.0, его прогон 10-18: «PostValidate …
-# returned false» при загрузке, `not sold` каждый месяц). Если владелец после
-# вызова прежний (отказ или ответ позже), зонд пишет `not sold`, и месяц на
-# этом кончается.
+# всех. Продажу мод проводит сам по правилам действия «Продажа творения»:
+# действие, вызванное из скрипта (`fire_generic_action`,
+# `perform_diplomatic_action` с `propose` и с `accept`), до своего эффекта не
+# доходило ни разу (0.4.0–0.4.5). Если владелец после продажи прежний, зонд
+# пишет `not sold`, и месяц на этом кончается.
 
 # Scope: country
 bag_rtk_art_monthly = {
@@ -67,21 +67,28 @@ bag_rtk_art_fire = {
 			max = 1
 			save_scope_as = bag_rtk_art_buyer
 		}
-		# Ванильное действие целиком — цена, престиж, дипломат, решение
-		# покупателя и сообщение за игрой; как кнопка (`mode = propose`). Творение
-		# — ещё и в переменной `bag_rtk_art_pending`: если `target` до действия
-		# не дойдёт, его возьмёт оттуда наша копия действия
-		# (`country_interactions/zz_bag_rtk_sell_work_of_art.txt`). Переменную
-		# снимает эффект действия; не дошло — её перепишет следующая попытка.
-		# 0.4.3 с `mode = accept` не делал ничего (его прогон 10-18).
-		set_variable = { name = bag_rtk_art_pending value = scope:bag_rtk_art }
-		perform_diplomatic_action = {
-			type = sell_work_of_art
-			actor = scope:bag_rtk_seller
-			recipient = scope:bag_rtk_art_buyer
-			target = scope:bag_rtk_art
-			mode = propose
+		# Продажа — тело ванильного `sell_work_of_art` и его цена
+		# (`price:sell_work_of_art` = 1 золото × `art_price`, платит
+		# покупатель; престиж −2 % цены; дипломат). Само действие из скрипта до
+		# эффекта не доходит ни одним путём (0.4.0–0.4.5, его прогоны 10-18,
+		# `docs/TESTLOG.md`), хотя вручную продаётся; согласие покупателя
+		# проверено выше его же формулой.
+		add_gold = scope:bag_rtk_art.art_price
+		add_prestige = {
+			value = scope:bag_rtk_art.art_price
+			multiply = -0.02
 		}
+		add_diplomats = -1
+	}
+	scope:bag_rtk_art_buyer = {
+		add_gold = {
+			value = scope:bag_rtk_art.art_price
+			multiply = -1
+		}
+	}
+	move_art_and_owner = {
+		location = scope:bag_rtk_art_buyer.capital
+		country = scope:bag_rtk_art_buyer
 	}
 	if = {
 		limit = { owner ?= scope:bag_rtk_art_buyer }

@@ -27,20 +27,17 @@ pass`, `bag_rtk: crown commander set`.
 - **Своей точки и слияния скриптом нет** — чем проверено:
   [`rulers_toolkit_history.md`](../../docs/archive/rulers_toolkit_history.md).
 
-## Творения (0.4.5, в игре не было; вкладка `art`, по умолчанию выкл.)
+## Творения (0.4.6, в игре не было; вкладка `art`, по умолчанию выкл.)
 
 `bag_rtk_art.txt`: 1-го числа, пока `num_of_diplomats` > «оставлять», до 5
 продаж — самое дорогое творение отмеченной ступени (8 галочек, ступени из
 `artists_l_russian.yml`) — державе с наибольшим `bag_rtk_art_accept` (ванильная
-формула, сверена с его скрином) и `gold >= art_price`. Продаёт ванильное
-действие `perform_diplomatic_action = { … mode = propose }`; творение ещё и в
-переменной продавца `bag_rtk_art_pending`, которую читает наша копия действия
-`zz_bag_rtk_sell_work_of_art.txt` (`REPLACE:`), если `target` не дошёл.
-Путь по прогонам — [`docs/TESTLOG.md`](../../docs/TESTLOG.md) 10-18: вручную
-продаётся; `fire_generic_action` — нет; `propose` без переменной — дипломат
-ушёл, продажи нет; `accept` — ничего. Зонды: `work of art sold` / `not sold`,
-`probe, sell_work_of_art effect ran with the art` / `…from the variable` /
-`…without the art`.
+формула, сверена с его скрином) и `gold >= art_price`. **Продаёт сам**:
+`add_gold` обоим, престиж −2 %, `add_diplomats = -1`, `move_art_and_owner` —
+ванильное действие из скрипта до эффекта не доходило ни разу (0.4.0–0.4.5:
+`fire_generic_action`, `perform_diplomatic_action` `propose`/`accept`, с
+творением в переменной; [`TESTLOG`](../../docs/TESTLOG.md) 10-18), вручную
+продаётся. Зонды `work of art sold` / `not sold` / `no buyer for any work of art`.
 
 ## Ползунки после войны (бывший `war_sliders`)
 

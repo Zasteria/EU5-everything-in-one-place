@@ -127,3 +127,4 @@ societal_value_type:… }` ставит действие с пустой пар�
 ## Действие державы из скрипта (10-18)
 
 `perform_diplomatic_action = { type = <country_interaction> actor recipient target mode = propose|accept|decline }` (scope: country; ваниль — `peace_treaties/hegemon_demands.txt`, `force_embargo`). `fire_generic_action` берёт только `generic_actions`: на `sell_work_of_art` — «PostValidate … returned false» при загрузке и ничего в игре (`rulers_toolkit` 0.4.0).
+**Но на `sell_work_of_art` (цель — творение) не работает ни один путь** (`rulers_toolkit` 0.4.2–0.4.5, 10-18): `propose` тратит дипломата, `accept` не делает ничего, эффект действия (зонд в `REPLACE:`-копии) не запускается ни разу, даже с творением в переменной; вручную та же продажа проходит. Действие с целью-страной (`force_embargo`) ваниль так зовёт; с иной целью — не доказано. Тело действия повторяется в скрипте.
