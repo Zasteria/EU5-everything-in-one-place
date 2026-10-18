@@ -80,7 +80,15 @@ bag_rtk_art_fire = {
 		}
 		add_diplomats = -1
 	}
+	# Для строки в журнал: согласие покупателя до оплаты.
 	scope:bag_rtk_art_buyer = {
+		set_variable = { name = bag_rtk_art_log_acc value = bag_rtk_art_accept }
+	}
+	scope:bag_rtk_seller = {
+		set_variable = { name = bag_rtk_art_log_acc value = scope:bag_rtk_art_buyer.var:bag_rtk_art_log_acc }
+	}
+	scope:bag_rtk_art_buyer = {
+		remove_variable = bag_rtk_art_log_acc
 		add_gold = {
 			value = scope:bag_rtk_art.art_price
 			multiply = -1
@@ -92,7 +100,13 @@ bag_rtk_art_fire = {
 	}
 	if = {
 		limit = { owner ?= scope:bag_rtk_art_buyer }
-		debug_log = "bag_rtk: work of art sold"
+		scope:bag_rtk_seller = {
+			set_variable = { name = bag_rtk_art_log_price value = scope:bag_rtk_art.art_price }
+			set_variable = { name = bag_rtk_art_log_q value = scope:bag_rtk_art.art_quality }
+			set_variable = { name = bag_rtk_art_log_gold value = scope:bag_rtk_art_buyer.gold }
+		}
+		debug_log = "bag_rtk: work of art sold, price=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_rtk_art_log_price')|1] quality=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_rtk_art_log_q')|0] accept=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_rtk_art_log_acc')|0] buyer gold left=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_rtk_art_log_gold')|0], buyer:"
+		scope:bag_rtk_art_buyer = { debug_log_scopes = no }
 		scope:bag_rtk_seller = { remove_variable = bag_rtk_art_stop }
 	}
 	else = {
