@@ -30,8 +30,8 @@
 
 - **Выкуп после мира** (`bag_rtk_prisoners.txt`): 1-го числа в мире, как
   ванильный `ransom_prisoners_effect`. Зонд `bag_rtk: prisoners offered for ransom`.
-- **На войне**: 1-го числа с отрядов `has_only_prisoners` — `remove_commander`
-  (зонд `bag_rtk: general taken off a prisoner unit`, в игре не проверен).
+- **Генерала с пленных не снимаем**: «Замена генералов» ставит нового сразу,
+  выключается только на всю страну; он выбрал оставить (10-18).
 - **В тыл** (`move_prisoners_to_safety = {}` работает, 10-18): не больше двух
   раз на отряд, переменная отряда `bag_rtk_safety` — первый раз из
   `on_battle_won`/`on_overrun_imprisoned` или 1-го числа, второй — 1-го числа,
