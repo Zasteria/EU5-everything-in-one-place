@@ -1,0 +1,84 @@
+﻿# Продажа творений (0.4.0, его просьба 10-18).
+#
+# Раз в месяц: пока свободных дипломатов больше, чем велено оставить, самое
+# дорогое творение отмеченного качества уходит той державе, что согласна охотнее
+# всех. Продаёт ванильное действие `sell_work_of_art` (цена, престиж, дипломат —
+# как у кнопки) через `fire_generic_action`. **Берёт ли он действие державы, а
+# не только `generic_actions`, — не проверено**: если владелец после вызова
+# прежний, зонд пишет `not sold`, и месяц на этом кончается.
+
+# Scope: country
+bag_rtk_art_monthly = {
+	if = {
+		limit = { has_variable = bag_rtk_art_on }
+		save_scope_as = bag_rtk_seller
+		while = {
+			count = 5
+			limit = {
+				NOT = { has_variable = bag_rtk_art_stop }
+				num_of_diplomats > bag_rtk_art_keep
+				any_work_of_art_in_country = { bag_rtk_art_for_sale = yes }
+			}
+			bag_rtk_art_sell_one = yes
+		}
+		remove_variable = bag_rtk_art_stop
+	}
+}
+
+# Одна продажа: творения от дорогих к дешёвым, первое, у которого есть
+# покупатель. `bag_rtk_art_stop` снимается только продажей — иначе месяц кончен.
+# Scope: country (scope:bag_rtk_seller)
+bag_rtk_art_sell_one = {
+	set_variable = { name = bag_rtk_art_stop value = yes }
+	remove_variable = bag_rtk_art_tried
+	ordered_work_of_art_in_country = {
+		limit = { bag_rtk_art_for_sale = yes }
+		order_by = art_price
+		max = 100
+		check_range_bounds = no
+		if = {
+			limit = { scope:bag_rtk_seller = { NOT = { has_variable = bag_rtk_art_tried } } }
+			save_scope_as = bag_rtk_art
+			if = {
+				limit = {
+					scope:bag_rtk_seller = {
+						any_country_in_diplomatic_range = { bag_rtk_art_buyer = yes }
+					}
+				}
+				bag_rtk_art_fire = yes
+			}
+		}
+	}
+	if = {
+		limit = { NOT = { has_variable = bag_rtk_art_tried } }
+		debug_log = "bag_rtk: no buyer for any work of art"
+	}
+	remove_variable = bag_rtk_art_tried
+}
+
+# Scope: work_of_art (scope:bag_rtk_art), покупатель есть.
+bag_rtk_art_fire = {
+	scope:bag_rtk_seller = {
+		set_variable = { name = bag_rtk_art_tried value = yes }
+		ordered_country_in_diplomatic_range = {
+			limit = { bag_rtk_art_buyer = yes }
+			order_by = bag_rtk_art_accept
+			max = 1
+			save_scope_as = bag_rtk_art_buyer
+		}
+		fire_generic_action = {
+			type = sell_work_of_art
+			actor = scope:bag_rtk_seller
+			recipient = scope:bag_rtk_art_buyer
+			target = scope:bag_rtk_art
+		}
+	}
+	if = {
+		limit = { owner ?= scope:bag_rtk_art_buyer }
+		debug_log = "bag_rtk: work of art sold"
+		scope:bag_rtk_seller = { remove_variable = bag_rtk_art_stop }
+	}
+	else = {
+		debug_log = "bag_rtk: work of art not sold"
+	}
+}

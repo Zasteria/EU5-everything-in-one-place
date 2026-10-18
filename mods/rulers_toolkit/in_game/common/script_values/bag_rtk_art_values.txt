@@ -1,0 +1,34 @@
+﻿# Согласие державы купить scope:bag_rtk_art у scope:bag_rtk_seller.
+# Scope: country (покупатель). Повтор ванильного `sell_work_of_art`: `accept`
+# и `diplo_chance = { base = -30 }`. Сверено с его скрином 10-18: +66.66 мнение,
+# +30 казна, −30 база, −39 качество = +27.66.
+bag_rtk_art_accept = {
+	value = -30
+	add = {
+		value = "opinion(scope:bag_rtk_seller)"
+		divide = 3
+	}
+	if = {
+		limit = { gold < { value = monthly_income_total multiply = 6 } }
+		add = -60
+	}
+	if = {
+		limit = { gold > { value = monthly_income_total multiply = 24 } }
+		add = 30
+	}
+	add = scope:bag_rtk_art.art_quality
+	add = -50
+	if = {
+		limit = { is_rival_of = scope:bag_rtk_seller }
+		add = -100
+	}
+}
+
+# Сколько дипломатов не трогать. Scope: country.
+bag_rtk_art_keep = {
+	value = 0
+	if = {
+		limit = { has_variable = bag_rtk_art_keep_dipl }
+		value = var:bag_rtk_art_keep_dipl
+	}
+}
