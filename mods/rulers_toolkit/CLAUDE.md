@@ -27,7 +27,7 @@ pass`, `bag_rtk: crown commander set`.
 - **Своей точки и слияния скриптом нет** — чем проверено:
   [`rulers_toolkit_history.md`](../../docs/archive/rulers_toolkit_history.md).
 
-## Творения (0.4.12; 0.4.6 в игре продаёт; вкладка `art`, по умолчанию выкл.)
+## Творения (0.4.12 работает в игре, 10-18; вкладка `art`, по умолчанию выкл.)
 
 `bag_rtk_art.txt`: 1-го числа, пока дипломатов ≥ «оставлять» + 1 (они дробные),
 до 5 продаж: самое дорогое творение отмеченной ступени — державе с наибольшим
@@ -38,8 +38,7 @@ pass`, `bag_rtk: crown commander set`.
 `move_art_and_owner`): ванильное действие из скрипта не доходит до эффекта
 ([`testlog_1018_art_action.md`](../../docs/archive/testlog_1018_art_action.md)).
 Зонды: `work of art sold, price= quality= accept= buyer gold left=` + имя,
-`not sold`, `no buyer for any work of art`. История 10 продаж в игре (0.4.12, не
-смотрено): галочка `art_log`, кнопка `art_log_show` → событие `bag_rtk_art.1`.
+`not sold`, `no buyer for any work of art`. История 10 продаж в игре (работает, цены = ручным): галочка `art_log`, кнопка `art_log_show` → событие `bag_rtk_art.1`.
 
 ## Ползунки после войны (бывший `war_sliders`)
 
