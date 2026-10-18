@@ -153,6 +153,52 @@ def age_number(age: str) -> int:
     return int(match.group(1)) if match else 0
 
 
+AGES = range(1, 9)
+
+
+def _at_age(block: list, n: int) -> bool | None:
+    """A trigger block read in age `n`, its age checks alone: True, False, or
+    None where only the other checks could tell."""
+    results = []
+    for entry in block:
+        key = entry.key
+        if key == "current_age" and isinstance(entry.value, str):
+            results.append(age_number(entry.value) == n)
+        elif key == "current_age_or_later" and isinstance(entry.value, list):
+            age = pdx.get(entry.value, "age")
+            results.append(n >= age_number(age) if isinstance(age, str) else None)
+        elif key in ("NOT", "NOR", "NAND", "OR", "AND") and isinstance(entry.value, list):
+            inner = [_at_age([e], n) for e in entry.value]
+            any_of = (True if True in inner else None if None in inner else False)
+            all_of = (False if False in inner else None if None in inner else True)
+            value = {"OR": any_of, "AND": all_of,
+                     "NOT": None if all_of is None else not all_of,
+                     "NOR": None if any_of is None else not any_of,
+                     "NAND": None if all_of is None else not all_of}[key]
+            results.append(value)
+        else:
+            results.append(None)
+    if False in results:
+        return False
+    return None if None in results else True
+
+
+def earliest_age(triggers: list[str]) -> int:
+    """The first age in which these triggers can all hold, by their age checks
+    (`current_age`, `current_age_or_later`); 0 when they name none.
+
+    «Элитная подготовка» opened its row with «(II)», the age of the advance
+    that unlocks its law, while its own `allow` wants the sixth (10-18)."""
+    text = " ".join(triggers)
+    if "current_age" not in text:
+        return 0
+    block = pdx.parse(text)
+    for n in AGES:
+        if _at_age(block, n) is not False:
+            return n
+    return 0
+
+
 def _why(advances: Advances, unlocking: list[str], age: str | None) -> dict:
     """What a «not yet» line says it waits on: the advance that unlocks it, or
     the age it belongs to. Neither: «requirements not met», as the game says."""
