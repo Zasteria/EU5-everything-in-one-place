@@ -26,16 +26,18 @@
 - **Зонд:** `bag_rtk: month, peace pass` (настройка включена, мир),
   `bag_rtk: crown commander set` на каждое назначение.
 
-## Пленники (0.3.0, в игре не было)
+## Пленники
 
 - **Выкуп после мира** (`bag_rtk_prisoners.txt`): раз в месяц в мире армии с
   `can_ransom_prisoners` — `request_ransom_prisoners` и бомба антагонизма, как
   ванильный `ransom_prisoners_effect` (у того root — отряд, поэтому тело
   повторено). Зонд `bag_rtk: prisoners offered for ransom`.
-- **Сбор в точку — не сделан.** Двигать отряд скрипт не умеет; у игры есть
-  цель «Сбор в районе» (`join_in_location`) и
-  `MilitaryObjectiveGroupsView.AddUnitToGroup(группа, отряд)`. Сначала он
-  руками проверяет, берёт ли такую цель отряд из одних пленных.
+- **На войне (0.3.1, зонд, в игре не было)**: раз в месяц отряды с
+  `has_only_prisoners` — `remove_commander` (зонд `bag_rtk: general taken off a
+  prisoner unit`) и `move_prisoners_to_safety = {}` (зонд `bag_rtk: prisoners
+  sent to safety`; синтаксис `{}` по соседям, ванилла его не зовёт).
+- **Своей точки и слияния скриптом нет** — чем проверено:
+  [`rulers_toolkit_history.md`](../../docs/archive/rulers_toolkit_history.md).
 
 ## Ползунки после войны (бывший `war_sliders`)
 

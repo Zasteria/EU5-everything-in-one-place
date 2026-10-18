@@ -9,8 +9,38 @@
 # Ванильный `ransom_prisoners_effect` пишет `root.prisoner_strength`, считая
 # root отрядом; у нас root — страна, поэтому тело повторено со своим скоупом.
 
+# На войне (0.3.1, зонд). Скриптом отряд не двинуть в выбранную точку и не
+# слить: «Объединить отряды» — движковая способность, в `unit_abilities` её нет,
+# эффекта нет. Есть `move_prisoners_to_safety` (unit): «Пленников перевезут в
+# район X» — место выбирает игра, ванилла его не зовёт ни разу. Куда она их
+# везёт и сходятся ли они в одно место — вопрос этого прогона. Генерала с
+# отряда из одних пленных снимаем: на него не тратится командир.
+
 # Scope: country
 bag_rtk_prisoners_monthly = {
+	if = {
+		limit = { at_war = yes }
+		every_army = {
+			limit = { has_only_prisoners = yes }
+			if = {
+				limit = {
+					prev = { has_variable = bag_rtk_pris_nogeneral_on }
+					has_commander = yes
+				}
+				leader = { save_scope_as = bag_rtk_prison_leader }
+				remove_commander = scope:bag_rtk_prison_leader
+				debug_log = "bag_rtk: general taken off a prisoner unit"
+			}
+			if = {
+				limit = {
+					prev = { has_variable = bag_rtk_pris_safety_on }
+					in_combat = no
+				}
+				move_prisoners_to_safety = {}
+				debug_log = "bag_rtk: prisoners sent to safety"
+			}
+		}
+	}
 	if = {
 		limit = {
 			has_variable = bag_rtk_pris_ransom_on
