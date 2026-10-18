@@ -1,0 +1,45 @@
+﻿# Пленники (0.3.0, его просьба 10-18).
+#
+# После мира пленные обычно сами уходят к прежним владельцам; если нет — он
+# отпускает их за выкуп, чтобы не злить соседей. Мод делает это сам: раз в
+# месяц, в мирное время, каждая армия с пленными, которых можно выкупить,
+# отправляет предложение выкупа — то же, что кнопка игры
+# (`unit_abilities/ransom_prisoners.txt` → `ransom_prisoners_effect`).
+#
+# Ванильный `ransom_prisoners_effect` пишет `root.prisoner_strength`, считая
+# root отрядом; у нас root — страна, поэтому тело повторено со своим скоупом.
+
+# Scope: country
+bag_rtk_prisoners_monthly = {
+	if = {
+		limit = {
+			has_variable = bag_rtk_pris_ransom_on
+			at_war = no
+		}
+		every_army = {
+			limit = {
+				has_prisoners = yes
+				can_ransom_prisoners = yes
+			}
+			bag_rtk_ransom_unit = yes
+		}
+	}
+}
+
+# Scope: unit
+bag_rtk_ransom_unit = {
+	save_scope_as = bag_rtk_prison_unit
+	owner ?= {
+		drop_antagonism_bomb = {
+			modifier = antagonism_ransomed_prisoners
+			target = scope:bag_rtk_prison_unit.unit_location
+			value = {
+				value = scope:bag_rtk_prison_unit.prisoner_strength
+				multiply = -0.1
+				min = -1
+			}
+		}
+	}
+	request_ransom_prisoners = {}
+	debug_log = "bag_rtk: prisoners offered for ransom"
+}
