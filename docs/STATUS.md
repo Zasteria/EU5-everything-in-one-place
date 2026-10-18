@@ -21,7 +21,7 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`speed_5`](../mods/speed_5/CLAUDE.md), [`speed_10`](../mods/speed_10/CLAUDE.md) | паузы, 10 скоростей | всё |
 | [`cmf_saved_settings`](../mods/cmf_saved_settings/CLAUDE.md) | 0.3.0: применение | 0.3.0 |
 | [`auto_marry`](../mods/auto_marry/CLAUDE.md) | автоженитьба под 1.4 | всё |
-| [`rulers_toolkit`](../mods/rulers_toolkit/CLAUDE.md) | 0.4.9: командиры, War Sliders, пленные, творения | флоты, советники |
+| [`rulers_toolkit`](../mods/rulers_toolkit/CLAUDE.md) | 0.4.10: командиры, War Sliders, пленные, творения | флоты, советники |
 | [`war_sliders`](../mods/war_sliders/CLAUDE.md) | 0.7.3; **10-18 перенесён в `rulers_toolkit`** | автозапуск |
 
 Закрытые, но лежащие здесь: [`archive/status_closed.md`](archive/status_closed.md).

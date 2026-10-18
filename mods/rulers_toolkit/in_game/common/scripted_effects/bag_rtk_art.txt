@@ -53,7 +53,6 @@ bag_rtk_art_sell_one = {
 	if = {
 		limit = { NOT = { has_variable = bag_rtk_art_tried } }
 		debug_log = "bag_rtk: no buyer for any work of art"
-		bag_rtk_art_probe = yes
 	}
 	remove_variable = bag_rtk_art_tried
 }
@@ -98,78 +97,5 @@ bag_rtk_art_fire = {
 	}
 	else = {
 		debug_log = "bag_rtk: work of art not sold"
-	}
-}
-
-# Зонд 0.4.9: почему покупателя нет. На самом дешёвом творении — кто проходит
-# условия по одному и накопительно; строки, которых нет, — условие, где
-# покупатели кончились. Scope: country (scope:bag_rtk_seller).
-bag_rtk_art_probe = {
-	ordered_work_of_art_in_country = {
-		limit = { bag_rtk_art_for_sale = yes }
-		order_by = { value = art_price multiply = -1 }
-		max = 1
-		check_range_bounds = no
-		save_scope_as = bag_rtk_art
-	}
-	if = {
-		limit = { exists = scope:bag_rtk_art }
-		debug_log = "bag_rtk: probe, cheapest art chosen"
-		if = {
-			limit = { any_country_in_diplomatic_range = { is_real_country = yes NOT = { this = scope:bag_rtk_seller } NOT = { country_type = building } NOT = { is_enemy_of = scope:bag_rtk_seller }  } }
-			debug_log = "bag_rtk: probe, in range, base"
-		}
-		if = {
-			limit = { any_country_in_diplomatic_range = { is_real_country = yes NOT = { this = scope:bag_rtk_seller } NOT = { country_type = building } NOT = { is_enemy_of = scope:bag_rtk_seller } gold >= scope:bag_rtk_art.art_price } }
-			debug_log = "bag_rtk: probe, alone: gold >= price"
-		}
-		if = {
-			limit = { any_country_in_diplomatic_range = { is_real_country = yes NOT = { this = scope:bag_rtk_seller } NOT = { country_type = building } NOT = { is_enemy_of = scope:bag_rtk_seller } opinion = { target = scope:bag_rtk_seller value >= 0 } } }
-			debug_log = "bag_rtk: probe, alone: opinion >= 0"
-		}
-		if = {
-			limit = { any_country_in_diplomatic_range = { is_real_country = yes NOT = { this = scope:bag_rtk_seller } NOT = { country_type = building } NOT = { is_enemy_of = scope:bag_rtk_seller } opinion = { target = scope:bag_rtk_seller value > 0 } } }
-			debug_log = "bag_rtk: probe, alone: opinion > 0"
-		}
-		if = {
-			limit = { any_country_in_diplomatic_range = { is_real_country = yes NOT = { this = scope:bag_rtk_seller } NOT = { country_type = building } NOT = { is_enemy_of = scope:bag_rtk_seller } gold >= bag_rtk_art_buyer_floor } }
-			debug_log = "bag_rtk: probe, alone: gold >= price + 6 months"
-		}
-		if = {
-			limit = { any_country_in_diplomatic_range = { is_real_country = yes NOT = { this = scope:bag_rtk_seller } NOT = { country_type = building } NOT = { is_enemy_of = scope:bag_rtk_seller } bag_rtk_art_accept >= 1 } }
-			debug_log = "bag_rtk: probe, alone: our formula >= 1"
-		}
-		if = {
-			limit = { any_country_in_diplomatic_range = { is_real_country = yes NOT = { this = scope:bag_rtk_seller } NOT = { country_type = building } NOT = { is_enemy_of = scope:bag_rtk_seller } bag_rtk_art_accept_game >= 1 } }
-			debug_log = "bag_rtk: probe, alone: game formula >= 1"
-		}
-		if = {
-			limit = { any_country_in_diplomatic_range = { is_real_country = yes NOT = { this = scope:bag_rtk_seller } NOT = { country_type = building } NOT = { is_enemy_of = scope:bag_rtk_seller } bag_rtk_art_accept_game >= -50 } }
-			debug_log = "bag_rtk: probe, alone: game formula >= -50"
-		}
-		if = {
-			limit = { any_country_in_diplomatic_range = { is_real_country = yes NOT = { this = scope:bag_rtk_seller } NOT = { country_type = building } NOT = { is_enemy_of = scope:bag_rtk_seller } bag_rtk_art_accept_game > -1000 } }
-			debug_log = "bag_rtk: probe, alone: game formula > -1000"
-		}
-		if = {
-			limit = { any_country_in_diplomatic_range = { is_real_country = yes NOT = { this = scope:bag_rtk_seller } NOT = { country_type = building } NOT = { is_enemy_of = scope:bag_rtk_seller }  NOT = { is_rival_of = scope:bag_rtk_seller } NOT = { scope:bag_rtk_seller = { is_rival_of = prev } } } }
-			debug_log = "bag_rtk: probe, chain: not rival"
-		}
-		if = {
-			limit = { any_country_in_diplomatic_range = { is_real_country = yes NOT = { this = scope:bag_rtk_seller } NOT = { country_type = building } NOT = { is_enemy_of = scope:bag_rtk_seller }  NOT = { is_rival_of = scope:bag_rtk_seller } NOT = { scope:bag_rtk_seller = { is_rival_of = prev } } opinion = { target = scope:bag_rtk_seller value > 0 } } }
-			debug_log = "bag_rtk: probe, chain: opinion > 0"
-		}
-		if = {
-			limit = { any_country_in_diplomatic_range = { is_real_country = yes NOT = { this = scope:bag_rtk_seller } NOT = { country_type = building } NOT = { is_enemy_of = scope:bag_rtk_seller }  NOT = { is_rival_of = scope:bag_rtk_seller } NOT = { scope:bag_rtk_seller = { is_rival_of = prev } } opinion = { target = scope:bag_rtk_seller value > 0 } gold >= bag_rtk_art_buyer_floor } }
-			debug_log = "bag_rtk: probe, chain: gold >= price + 6 months"
-		}
-		if = {
-			limit = { any_country_in_diplomatic_range = { is_real_country = yes NOT = { this = scope:bag_rtk_seller } NOT = { country_type = building } NOT = { is_enemy_of = scope:bag_rtk_seller }  NOT = { is_rival_of = scope:bag_rtk_seller } NOT = { scope:bag_rtk_seller = { is_rival_of = prev } } opinion = { target = scope:bag_rtk_seller value > 0 } gold >= bag_rtk_art_buyer_floor bag_rtk_art_accept >= 1 } }
-			debug_log = "bag_rtk: probe, chain: our formula >= 1"
-		}
-		if = {
-			limit = { any_country_in_diplomatic_range = { is_real_country = yes NOT = { this = scope:bag_rtk_seller } NOT = { country_type = building } NOT = { is_enemy_of = scope:bag_rtk_seller }  NOT = { is_rival_of = scope:bag_rtk_seller } NOT = { scope:bag_rtk_seller = { is_rival_of = prev } } opinion = { target = scope:bag_rtk_seller value > 0 } gold >= bag_rtk_art_buyer_floor bag_rtk_art_accept >= 1 bag_rtk_art_accept_game >= 1 } }
-			debug_log = "bag_rtk: probe, chain: game formula >= 1"
-		}
 	}
 }
