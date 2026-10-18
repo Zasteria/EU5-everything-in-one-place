@@ -1,0 +1,115 @@
+﻿# Коронные командиры (0.1.0, его просьба 10-18).
+#
+# Мир: каждый месяц армии от самой большой к меньшей получают коронного
+# командира — сначала правителя, потом свободных людей короны, не сидящих в
+# совете. Армия, которой уже командует корона, не трогается, так что правитель
+# не скачет между армиями. Кому не хватило — остаётся как есть. Флот — так же,
+# если включено, после армий.
+#
+# Война: раздача стоит, перестановку делает игра. Одно исключение: при
+# политике, требующей правителя во главе армии (`ruler_must_be_commander_during_war`,
+# политика «Правитель-полководец»), правитель без отряда ставится на самую
+# большую армию. Штраф игры (`ruler_is_not_a_commander_during_war`,
+# auto_modifiers/country.txt) не берётся, когда правитель командует своим
+# отрядом.
+
+# Scope: country
+bag_rtk_commanders_monthly = {
+	if = {
+		limit = {
+			has_variable = bag_rtk_cmd_on
+			at_war = no
+		}
+		bag_rtk_assign_crown_armies = yes
+		if = {
+			limit = { has_variable = bag_rtk_cmd_navy_on }
+			bag_rtk_assign_crown_navies = yes
+		}
+	}
+	else_if = {
+		limit = {
+			has_variable = bag_rtk_cmd_war_ruler_on
+			at_war = yes
+			modifier:ruler_must_be_commander_during_war = yes
+		}
+		bag_rtk_ruler_to_largest_army = yes
+	}
+}
+
+# Scope: country
+bag_rtk_assign_crown_armies = {
+	ordered_army = {
+		limit = { bag_rtk_unit_open_to_crown = yes }
+		order_by = num_subunits
+		check_range_bounds = no
+		max = 100
+		if = {
+			limit = {
+				root = { any_character = { bag_rtk_crown_commander_candidate = yes } }
+			}
+			save_scope_as = bag_rtk_unit
+			root = {
+				ordered_character = {
+					limit = { bag_rtk_crown_commander_candidate = yes }
+					order_by = bag_rtk_commander_order
+					max = 1
+					check_range_bounds = no
+					scope:bag_rtk_unit = { set_as_commander = prev }
+					debug_log = "bag_rtk: crown commander set"
+				}
+			}
+		}
+	}
+}
+
+# Scope: country
+bag_rtk_assign_crown_navies = {
+	ordered_navy = {
+		limit = { bag_rtk_unit_open_to_crown = yes }
+		order_by = num_subunits
+		check_range_bounds = no
+		max = 100
+		if = {
+			limit = {
+				root = { any_character = { bag_rtk_crown_commander_candidate = yes } }
+			}
+			save_scope_as = bag_rtk_unit
+			root = {
+				ordered_character = {
+					limit = { bag_rtk_crown_commander_candidate = yes }
+					order_by = bag_rtk_commander_order
+					max = 1
+					check_range_bounds = no
+					scope:bag_rtk_unit = { set_as_commander = prev }
+					debug_log = "bag_rtk: crown commander set"
+				}
+			}
+		}
+	}
+}
+
+# Scope: country
+bag_rtk_ruler_to_largest_army = {
+	if = {
+		limit = {
+			ruler ?= {
+				is_general = no
+				is_admiral = no
+				is_eligible_military_leader = root
+			}
+		}
+		ruler = { save_scope_as = bag_rtk_ruler }
+		ordered_army = {
+			limit = {
+				is_mercenary = no
+				is_exiled = no
+				in_combat = no
+			}
+			order_by = num_subunits
+			max = 1
+			check_range_bounds = no
+			set_as_commander = scope:bag_rtk_ruler
+			debug_log = "bag_rtk: war, ruler put on the largest army"
+		}
+	}
+}
