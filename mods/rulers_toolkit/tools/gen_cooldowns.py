@@ -196,14 +196,23 @@ def actions():
             text = strip_comments(open(f, encoding='utf-8-sig').read())
             for m in re.finditer(r'^([a-z_0-9]+) = \{(.*?)^\}', text, re.M | re.S):
                 name, body = m.groups()
-                cd = block(body, 'cooldown', '\t') or (re.search(r'^\tcooldown = \{([^}]*)\}', body, re.M) or [None, None])[1]
-                if cd is None:
-                    continue
-                ty = re.search(r'type = (\w+)', cd)
-                du = re.search(r'(years|months|days) = ([\d.]+)', cd)
                 t = re.search(r'^\ttype = (\w+)', body, re.M)
                 t = t.group(1) if t else 'diplomacy'
-                yield os.path.basename(f), kind, t, name, ty.group(1) if ty else name, du, body
+                cd = block(body, 'cooldown', '\t')
+                if cd is not None:
+                    ty = re.search(r'type = (\w+)', cd)
+                    du = re.search(r'(years|months|days) = ([\d.]+)', cd)
+                    yield os.path.basename(f), kind, t, name, ty.group(1) if ty else name, du, body, 'has_cooldown'
+                    continue
+                # Откат модификатором: `allow` не пускает, пока держится модификатор, который
+                # вешает само действие («Привлечь чужеземного священнослужителя», его скрин 10-19).
+                if kind != 'generic_actions':
+                    continue
+                allow, eff = block(body, 'allow', '\t') or '', block(body, 'effect', '\t') or ''
+                for mod in re.findall(r'NOT = \{\s*has_country_modifier = (\w+)\s*\}', allow):
+                    add = re.search(r'modifier = ' + mod + r'\b[^}]*?(years|months|days) = ([\d.]+)', eff)
+                    if re.search(r'modifier = ' + mod + r'\b', eff):
+                        yield os.path.basename(f), kind, t, name, mod, add, body, 'has_country_modifier'
 
 
 def list_of(fname, kind, t):
@@ -228,7 +237,11 @@ def main():
     rows = {}  # type -> dict
     order = []
     missing = []
-    for fname, kind, t, name, ty, du, body in actions():
+    later = []  # строки-модификаторы — в конец списков, чтобы старые не сдвинулись (галочка — по номеру)
+    for item in actions():
+        if item[-1] == 'has_country_modifier':
+            later.append(item)
+    for fname, kind, t, name, ty, du, body, test in [a for a in actions() if a[-1] == 'has_cooldown'] + later:
         if fname == ESTATE_FILE and name in ESTATE_ACTIONS:
             for est in ESTATE_ACTIONS[name]:
                 key = f'{name}__{est}'
@@ -246,7 +259,7 @@ def main():
             r, e = FIX.get(ty) or FIX.get(name) or (plain(ru.get(name), ru), plain(en.get(name), en))
             if not r or not e:
                 missing.append(f'{ty} ({name}): ru={ru.get(name)!r} en={en.get(name)!r}')
-            rows[ty] = {'list': lst, 'ru': r, 'en': e, 'gates': [], 'open': False, 'du': du}
+            rows[ty] = {'list': lst, 'ru': r, 'en': e, 'gates': [], 'open': False, 'du': du, 'test': test}
             order.append(ty)
         row = rows[ty]
         if g is None:
@@ -296,7 +309,7 @@ def main():
             if 'action' in rows[ty]:
                 out.append(f'\tbag_rtk_cd_gate_est_row = {{ sid = {lid} i = {i} key = {ty} }}\n')
             else:
-                out.append(f'\tbag_rtk_cd_gate_row = {{ sid = {lid} i = {i} type = {ty} }}\n')
+                out.append(f'\tbag_rtk_cd_gate_row = {{ sid = {lid} i = {i} type = {ty} test = {rows[ty]["test"]} }}\n')
     out.append('}\n\n# Каждая отмеченная строка, 1-го числа. Scope: country.\nbag_rtk_cd_check_all = {\n')
     for lid, tab, color, view, *_ in lists:
         for i, ty in enumerate(table[lid], 1):
@@ -305,9 +318,9 @@ def main():
                 out.append(f'\tbag_rtk_cd_check_est = {{ sid = {lid} i = {i} key = {ty} action = {row["action"]} '
                            f'est = {row["est"]} type = {row["type"]} view = {view} }}\n')
             elif view:
-                out.append(f'\tbag_rtk_cd_check_row = {{ sid = {lid} i = {i} type = {ty} view = {view} }}\n')
+                out.append(f'\tbag_rtk_cd_check_row = {{ sid = {lid} i = {i} type = {ty} test = {row["test"]} view = {view} }}\n')
             else:
-                out.append(f'\tbag_rtk_cd_check_row_noview = {{ sid = {lid} i = {i} type = {ty} }}\n')
+                out.append(f'\tbag_rtk_cd_check_row_noview = {{ sid = {lid} i = {i} type = {ty} test = {row["test"]} }}\n')
     out.append('}\n\n# Клик по напоминанию — убрать его. Scope: country.\nbag_rtk_cd_callback = {\n\tswitch = {\n'
                '\t\ttrigger = var:cmf_callback\n')
     for ty in order:
@@ -349,7 +362,13 @@ def main():
             for i, ty in enumerate(table[lid], 1):
                 n, d = rows[ty][idx], duration(rows[ty]['du'], isru)
                 L.append(f' bag_rtk__{lid}_i{i}_name: "{n}"\n')
-                L.append(f' bag_rtk__{lid}_i{i}_desc: "{("Откат " + d + ".") if isru else ("Cooldown " + d + ".")}"\n')
+                if rows[ty].get('test') == 'has_country_modifier':
+                    tail = (f' ({d})' if d else '')
+                    text = (f'Своего отката нет: не пускает модификатор, который вешает само действие{tail}.' if isru
+                            else f'No cooldown of its own: the modifier the action applies blocks it{tail}.')
+                else:
+                    text = f'Откат {d}.' if isru else f'Cooldown {d}.'
+                L.append(f' bag_rtk__{lid}_i{i}_desc: "{text}"\n')
                 L.append(f' bag_rtk_rel_ready_{ty}_color: "{color}"\n')
                 L.append(f' bag_rtk_rel_ready_{ty}_icon: "@time!"\n')
                 L.append(f' bag_rtk_rel_ready_{ty}_name: "{n} — {"доступно" if isru else "available"}"\n')

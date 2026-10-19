@@ -15,14 +15,16 @@
 # напоминание; отката нет, а был — напоминание `bag_rtk_rel_ready_<тип>` цвета
 # своего списка; клик убирает его и открывает вкладку игры, если она есть.
 
-# Scope: country, scope:actor — она же. Args: sid, i, type.
+# Scope: country, scope:actor — она же. Args: sid, i, type, test — `has_cooldown`
+# (откат действия, `type` — его тип) или `has_country_modifier` (у действия
+# отката нет, его не пускает модификатор `type`, который оно само вешает).
 bag_rtk_cd_gate_row = {
 	set_local_variable = { name = bag_rtk_cd_flag value = flag:bag_rtk__$sid$_i$i$_f1 }
 	if = {
 		limit = {
 			OR = {
 				has_variable = bag_rtk_cd_all
-				has_cooldown = $type$
+				$test$ = $type$
 				"global_variable_map(cmm|local_var:bag_rtk_cd_flag)" >= 1
 				bag_rtk_cd_gate_$type$ = yes
 			}
@@ -35,7 +37,7 @@ bag_rtk_cd_gate_row = {
 	}
 }
 
-# Откат отмеченной строки. Scope: country. Args: sid, i, type.
+# Откат отмеченной строки. Scope: country. Args: sid, i, type, test.
 # Возвращает в `bag_rtk_cd_fire` (локальная), если пора напомнить.
 bag_rtk_cd_track = {
 	remove_local_variable = bag_rtk_cd_fire
@@ -43,7 +45,7 @@ bag_rtk_cd_track = {
 	if = {
 		limit = { "global_variable_map(cmm|local_var:bag_rtk_cd_flag)" >= 1 }
 		if = {
-			limit = { has_cooldown = $type$ }
+			limit = { $test$ = $type$ }
 			if = {
 				limit = { NOT = { has_variable = bag_rtk_rel_cd_$type$ } }
 				set_variable = { name = bag_rtk_rel_cd_$type$ value = yes }
@@ -62,10 +64,10 @@ bag_rtk_cd_track = {
 	}
 }
 
-# Scope: country. Args: sid, i, type, view — вкладка игры по клику
+# Scope: country. Args: sid, i, type, test, view — вкладка игры по клику
 # (`OpenLateralView`, как у ванильных алертов в `alertmanager.gui`).
 bag_rtk_cd_check_row = {
-	bag_rtk_cd_track = { sid = $sid$ i = $i$ type = $type$ }
+	bag_rtk_cd_track = { sid = $sid$ i = $i$ type = $type$ test = $test$ }
 	if = {
 		limit = { has_local_variable = bag_rtk_cd_fire }
 		cmf_show_alert = { alert = bag_rtk_rel_ready_$type$ }
@@ -74,9 +76,9 @@ bag_rtk_cd_check_row = {
 	}
 }
 
-# То же без вкладки: клик только убирает. Scope: country. Args: sid, i, type.
+# То же без вкладки: клик только убирает. Scope: country. Args: sid, i, type, test.
 bag_rtk_cd_check_row_noview = {
-	bag_rtk_cd_track = { sid = $sid$ i = $i$ type = $type$ }
+	bag_rtk_cd_track = { sid = $sid$ i = $i$ type = $type$ test = $test$ }
 	if = {
 		limit = { has_local_variable = bag_rtk_cd_fire }
 		cmf_show_alert = { alert = bag_rtk_rel_ready_$type$ }
