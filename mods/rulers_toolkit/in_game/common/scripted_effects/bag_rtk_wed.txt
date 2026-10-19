@@ -1,0 +1,83 @@
+﻿# Женитьба династии (0.7.0, его просьба 10-19): каждый член правящей семьи
+# игрока без пары с 16 лет — 1-го числа предложение династического брака самому
+# молодому подходящему члену правящей семьи другой страны (16 лет — первым).
+# Страна значения не имеет; согласие — решение самой страны: предложение идёт
+# через игровое `royal_marriage` в режиме `propose`, без окна. Отказали —
+# следующий по возрасту, до пяти за месяц на человека.
+#
+# Не мерено: имена аргументов `royal_marriage` (`target` — наш, `target_1` —
+# их, угадано по описанию эффекта), ответ ИИ сразу или позже, и цена
+# предложения. Зонд: `bag_rtk: wedding proposed …` с исходом и обеими сторонами.
+
+# Scope: country (игрок).
+bag_rtk_wed_monthly = {
+	if = {
+		limit = { has_variable = bag_rtk_wed_on }
+		save_scope_as = bag_rtk_wed_home
+		every_character = {
+			limit = {
+				bag_rtk_wed_single = yes
+				OR = {
+					is_female = no
+					root = { has_variable = bag_rtk_wed_women_on }
+				}
+			}
+			save_scope_as = bag_rtk_wed_one
+			bag_rtk_wed_try = yes
+		}
+	}
+}
+
+# Один наш член семьи — `scope:bag_rtk_wed_one`. Scope: character.
+bag_rtk_wed_try = {
+	clear_variable_list = bag_rtk_wed_pool
+	set_global_variable = { name = bag_rtk_wed_pool_n value = 0 }
+	every_country = {
+		limit = { bag_rtk_wed_country_ok = yes }
+		every_character = {
+			limit = { bag_rtk_wed_match = yes }
+			save_scope_as = bag_rtk_wed_cand
+			scope:bag_rtk_wed_one = {
+				add_to_variable_list = { name = bag_rtk_wed_pool target = scope:bag_rtk_wed_cand }
+			}
+			change_global_variable = { name = bag_rtk_wed_pool_n add = 1 }
+		}
+	}
+	debug_log = "bag_rtk: wedding search, candidates=[GetGlobalVariable('bag_rtk_wed_pool_n').GetValue|0], for:"
+	debug_log_scopes = no
+	ordered_in_list = {
+		variable = bag_rtk_wed_pool
+		order_by = bag_rtk_wed_youth
+		max = 5
+		check_range_bounds = no
+		save_scope_as = bag_rtk_wed_cand
+		if = {
+			limit = {
+				scope:bag_rtk_wed_one = {
+					is_married = no
+					is_betrothed = no
+				}
+			}
+			scope:bag_rtk_wed_home = {
+				perform_diplomatic_action = {
+					type = royal_marriage
+					actor = scope:bag_rtk_wed_home
+					recipient = scope:bag_rtk_wed_cand.owner
+					target = scope:bag_rtk_wed_one
+					target_1 = scope:bag_rtk_wed_cand
+					mode = propose
+					hidden = yes
+				}
+			}
+			if = {
+				limit = { scope:bag_rtk_wed_one = { is_married = yes } }
+				debug_log = "bag_rtk: wedding proposed, married yes, to:"
+			}
+			else = {
+				debug_log = "bag_rtk: wedding proposed, married no, to:"
+			}
+			debug_log_scopes = no
+		}
+	}
+	clear_variable_list = bag_rtk_wed_pool
+}

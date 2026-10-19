@@ -1,0 +1,54 @@
+﻿# Женитьба династии (`bag_rtk_wed.txt`). Правила игры для династического брака:
+# член правящей семьи (правитель или его близкий родственник), годен для брака,
+# одна группа вер, не близкие родственники друг другу, между странами ещё нет
+# брака (`has_potential_royal_marriage`).
+
+# Наш член семьи без пары. Scope: character.
+bag_rtk_wed_single = {
+	age_in_years >= 16
+	is_married = no
+	is_betrothed = no
+	character_can_marry_trigger = yes
+	is_eligible_for_royal_marriage = yes
+	bag_rtk_wed_royal = yes
+}
+
+# Правитель своей страны или его близкий родственник. Scope: character.
+bag_rtk_wed_royal = {
+	OR = {
+		is_ruler = yes
+		AND = {
+			exists = owner.ruler
+			is_close_relative = owner.ruler
+		}
+	}
+}
+
+# Страна, с которой можно заключить брак. Scope: country; scope:bag_rtk_wed_home — игрок.
+bag_rtk_wed_country_ok = {
+	NOT = { this = scope:bag_rtk_wed_home }
+	has_potential_royal_marriage = scope:bag_rtk_wed_home
+	NOT = { has_royal_marriage_with = scope:bag_rtk_wed_home }
+}
+
+# Пара для scope:bag_rtk_wed_one. Scope: character.
+bag_rtk_wed_match = {
+	age_in_years >= 16
+	is_married = no
+	is_betrothed = no
+	character_can_marry_trigger = yes
+	is_eligible_for_royal_marriage = yes
+	bag_rtk_wed_royal = yes
+	OR = {
+		AND = {
+			is_female = yes
+			scope:bag_rtk_wed_one = { is_female = no }
+		}
+		AND = {
+			is_female = no
+			scope:bag_rtk_wed_one = { is_female = yes }
+		}
+	}
+	religion.group = scope:bag_rtk_wed_one.religion.group
+	NOT = { is_close_relative = scope:bag_rtk_wed_one }
+}

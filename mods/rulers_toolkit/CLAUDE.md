@@ -2,11 +2,9 @@
 
 **Сборник мелкой автоматики для страны игрока** (его решение 10-18: «не хочется
 плодить микромоды»). «Помощник правителя» / «Ruler's Toolkit», id
-`bag.rulers_toolkit`, префикс `bag_rtk_`, нужен CMF. Одна вкладка CMF, по
-группе на функцию; месячный такт один — `bag_rtk_monthly`
-(`cmf_monthly_human_country_pulse`, только игрок), новая функция дописывает туда
-строку. Кандидаты на перенос сюда: `war_sliders`, автоматика совета из
-`assimilate_primary`, своё из `auto_marry`.
+`bag.rulers_toolkit`, префикс `bag_rtk_`, нужен CMF. Месячный такт один —
+`bag_rtk_monthly` (`cmf_monthly_human_country_pulse`, только игрок), новая
+функция дописывает туда строку.
 
 ## Командиры из правителей (работает на армиях, 10-18)
 
@@ -20,10 +18,8 @@ pass`, `bag_rtk: crown commander set`.
   ванильный `ransom_prisoners_effect`. Зонд `bag_rtk: prisoners offered for ransom`.
 - **Генерала с пленных не снимаем**: «Замена генералов» ставит нового сразу,
   выключается только на всю страну; он выбрал оставить (10-18).
-- **В тыл** (`move_prisoners_to_safety = {}` работает, 10-18): не больше двух
-  раз на отряд, переменная отряда `bag_rtk_safety` — первый раз из
-  `on_battle_won`/`on_overrun_imprisoned` или 1-го числа, второй — 1-го числа,
-  когда `is_moving = no`. **В игре 10-18: работает** (после боя, затем 1-го числа).
+- **В тыл** (`bag_rtk_safety`, не больше двух раз на отряд): **в игре 10-18
+  работает** (после боя, затем 1-го числа).
 - **Своей точки и слияния скриптом нет** — чем проверено:
   [`rulers_toolkit_history.md`](../../docs/archive/rulers_toolkit_history.md).
 
@@ -42,6 +38,12 @@ pass`, `bag_rtk: crown commander set`.
 зонд `list … rebuilt`; сословный зонд `estate action closed`.
 Строки не переставлять и не убирать (галочка — по номеру строки): иначе новый
 `setting_id`; генератор сверяет с `tools/cd_lists.json` и сам остановится.
+
+## Женитьба династии (0.7.0; вкладка `family`, по умолчанию выкл.)
+
+Его просьба 10-19, не `auto_marry` — [`README.md`](README.md#женитьба-династии).
+**Не мерено:** аргументы `royal_marriage` в `perform_diplomatic_action`, ответ
+ИИ сразу или позже, цена. Зонд `bag_rtk: wedding search` / `wedding proposed`.
 
 ## Ползунки после войны (бывший `war_sliders`)
 
