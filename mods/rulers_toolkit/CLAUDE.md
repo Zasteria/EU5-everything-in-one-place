@@ -39,11 +39,11 @@ pass`, `bag_rtk: crown commander set`.
 Строки не переставлять и не убирать (галочка — по номеру строки): иначе новый
 `setting_id`; генератор сверяет с `tools/cd_lists.json` и сам остановится.
 
-## Женитьба династии (0.7.2; вкладка `family`, по умолчанию выкл.)
+## Женитьба династии (0.7.3; вкладка `family`, по умолчанию выкл.)
 
 Его просьба 10-19, не `auto_marry` — [`README.md`](README.md#женитьба-династии).
 **Не мерено:** аргументы `royal_marriage` в `perform_diplomatic_action`, ответ
-ИИ сразу или позже, цена. Зонд `bag_rtk: wedding search` / `wedding proposed`.
+ИИ сразу или позже; совпадает ли `bag_rtk_wed_accept` с подсказкой игры. Зонд `bag_rtk: wedding search` / `wedding proposed`.
 
 ## Ползунки после войны (бывший `war_sliders`)
 

@@ -13,3 +13,51 @@ bag_rtk_wed_youth = {
 	value = age_in_years
 	multiply = -1
 }
+
+# Согласие на династический брак — числа `royal_marriage` из
+# `ai_diplochance/00_ai_diplochance.txt`; игра соглашается от +1 (его скрин 10-19:
+# ранг +15, доверие +14, мнение +3, другая культура −5, расстояние −13 = +14).
+# Scope: страна-получатель; scope:bag_rtk_wed_home — игрок. Соперники и другая
+# группа вер (−100, −200) отсеяны раньше. Не посчитаны: `heir`, `age_female`,
+# `marriage_desirability`, `culture_view`, `religion_view`, `union_size` — на его
+# скрине их нет; зонд печатает итог рядом с подсказкой игры.
+bag_rtk_wed_accept = {
+	value = 0
+	add = {
+		value = country_rank_level
+		multiply = -15
+	}
+	add = {
+		scope:bag_rtk_wed_home = {
+			value = country_rank_level
+			multiply = 15
+		}
+	}
+	add = {
+		value = "opinion(scope:bag_rtk_wed_home)"
+		multiply = 0.1
+	}
+	add = {
+		value = "trust(scope:bag_rtk_wed_home)"
+		multiply = 2
+	}
+	if = {
+		limit = { culture = scope:bag_rtk_wed_home.culture }
+		add = 5
+	}
+	else = {
+		add = -5
+	}
+	if = {
+		limit = { NOT = { religion = scope:bag_rtk_wed_home.religion } }
+		add = -40
+	}
+	if = {
+		limit = { court_language = scope:bag_rtk_wed_home.court_language }
+		add = 5
+	}
+	add = {
+		value = "border_distance_to(scope:bag_rtk_wed_home)"
+		multiply = -0.025
+	}
+}

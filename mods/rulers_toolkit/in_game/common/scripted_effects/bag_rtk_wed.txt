@@ -4,7 +4,8 @@
 # Страна значения не имеет; согласие — решение самой страны: предложение идёт
 # через игровое `royal_marriage` в режиме `propose`, без окна. Предложение
 # тратит дипломата (его слова 10-19): одно в месяц на человека и только при
-# свободном дипломате; отказавший запоминается и больше не берётся.
+# свободном дипломате; отказавший запоминается и больше не берётся. Страна —
+# только та, что по формуле игры согласится (`bag_rtk_wed_accept` ≥ 1, 0.7.3).
 #
 # Не мерено: имена аргументов `royal_marriage` (`target` — наш, `target_1` —
 # их, угадано по описанию эффекта), ответ ИИ сразу или позже, и цена
@@ -67,12 +68,15 @@ bag_rtk_wed_try = {
 					hidden = yes
 				}
 			}
+			scope:bag_rtk_wed_cand.owner = {
+				set_global_variable = { name = bag_rtk_wed_acc value = bag_rtk_wed_accept }
+			}
 			if = {
 				limit = { scope:bag_rtk_wed_one = { is_married = yes } }
-				debug_log = "bag_rtk: wedding proposed, married yes, to:"
+				debug_log = "bag_rtk: wedding proposed, our acceptance=[GetGlobalVariable('bag_rtk_wed_acc').GetValue|2], married yes, to:"
 			}
 			else = {
-				debug_log = "bag_rtk: wedding proposed, married no, to:"
+				debug_log = "bag_rtk: wedding proposed, our acceptance=[GetGlobalVariable('bag_rtk_wed_acc').GetValue|2], married no, to:"
 				scope:bag_rtk_wed_one = {
 					add_to_variable_list = { name = bag_rtk_wed_refused target = scope:bag_rtk_wed_cand }
 				}
