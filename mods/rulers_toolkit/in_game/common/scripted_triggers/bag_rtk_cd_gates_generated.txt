@@ -12,6 +12,7 @@ bag_rtk_cd_gate_request_papal_donation = {
 bag_rtk_cd_gate_grant_latin_merchants_privileges = {
 	OR = {
 	AND = {
+			custom_tooltip = { text = grant_latin_merchants_privileges_tooltip region:italy_region = { any_country_with_capital_in_geography = { has_reform = government_reform:merchant_republic NOR = { is_rival_of = scope:actor is_enemy_of = scope:actor is_subject = yes hidden_trigger = { scope:actor = { is_subject_of = prev } } } } } }
 			any_active_disaster = { disaster_type = disaster_type:fate_of_the_phoenix disaster_is_active = yes }
 		}
 	}
@@ -27,7 +28,6 @@ bag_rtk_cd_gate_accept_catholic_delegation = {
 bag_rtk_cd_gate_attract_italian_engineer = {
 	OR = {
 	AND = {
-			} allow = { scope:actor = { OR = { any_related_country = { type = alliance culture = { has_culture_group = culture_group:italian_group } } any_loyal_subject = { culture = { has_culture_group = culture_group:italian_group } } } }
 			any_active_disaster = { disaster_type = disaster_type:fate_of_the_phoenix disaster_is_active = yes }
 		}
 	}
@@ -57,25 +57,44 @@ bag_rtk_cd_gate_reform_imperial_armies = {
 bag_rtk_cd_gate_patronize_athonite_monastery = {
 	OR = {
 	AND = {
-			} allow = { scope:actor = { religion = religion:orthodox total_effective_building_levels:orthodox_monastery > 0 }
 			any_active_disaster = { disaster_type = disaster_type:fate_of_the_phoenix disaster_is_active = yes }
 		}
 	}
 }
 bag_rtk_cd_gate_sponsor_troop_feast = {
-	always = yes
+	OR = {
+	AND = {
+			has_dlc = "d008_fate_of_the_phoenix" scope:actor.religion ?= religion:hellenism_religion
+		}
+	}
 }
 bag_rtk_cd_gate_grant_a_triumph = {
-	always = yes
+	OR = {
+	AND = {
+			has_dlc = "d008_fate_of_the_phoenix" scope:actor.religion ?= religion:hellenism_religion
+		}
+	}
 }
 bag_rtk_cd_gate_roman_festivals = {
-	always = yes
+	OR = {
+	AND = {
+			has_dlc = "d008_fate_of_the_phoenix" scope:actor.religion ?= religion:hellenism_religion
+		}
+	}
 }
 bag_rtk_cd_gate_greek_festivals = {
-	always = yes
+	OR = {
+	AND = {
+			has_dlc = "d008_fate_of_the_phoenix" scope:actor.religion ?= religion:hellenism_religion
+		}
+	}
 }
 bag_rtk_cd_gate_host_olympiad = {
-	always = yes
+	OR = {
+	AND = {
+			has_dlc = "d008_fate_of_the_phoenix" scope:actor.religion ?= religion:hellenism_religion
+		}
+	}
 }
 bag_rtk_cd_gate_recently_demanded_church_tax = {
 	OR = {
@@ -248,7 +267,11 @@ bag_rtk_cd_gate_concede_to_the_schismatics = {
 	}
 }
 bag_rtk_cd_gate_claim_crusade_war_leadership = {
-	always = yes
+	OR = {
+	AND = {
+			any_international_organization = { exists = international_organization:crusade this = international_organization:crusade scope:actor = { is_member_of_international_organization = prev NOT = { is_leader_of_international_organization = prev } } }
+		}
+	}
 }
 bag_rtk_cd_gate_offer_cardinal_seat_for_crusade = {
 	OR = {
@@ -286,11 +309,7 @@ bag_rtk_cd_gate_recover_holy_relics = {
 	}
 }
 bag_rtk_cd_gate_convert_culture = {
-	OR = {
-	AND = {
-			
-		}
-	}
+	always = yes
 }
 bag_rtk_cd_gate_cd_inspect_area = {
 	OR = {
@@ -353,15 +372,7 @@ bag_rtk_cd_gate_reach_compromise_with_huguenots = {
 	}
 }
 bag_rtk_cd_gate_convert_religion = {
-	OR = {
-	AND = {
-			
-		}
-	AND = {
-			scope:actor = { religion = religion:catholic NOT = { tag = PAP } }
-			situation:reformation ?= { situation:reformation = this situation_is_active = yes }
-		}
-	}
+	always = yes
 }
 bag_rtk_cd_gate_create_allied_pirate_nation = {
 	OR = {
@@ -404,7 +415,32 @@ bag_rtk_cd_gate_migrate_to_new_waters = {
 	}
 }
 bag_rtk_cd_gate_transition_government = {
-	always = yes
+	OR = {
+	AND = {
+			scope:actor = { government_type = government_type:steppe_horde NOT = { has_variable = is_about_to_reform_government } }
+		}
+	AND = {
+			scope:actor = { government_type = government_type:monarchy NOR = { tag = CHI tag = PAP international_organization:hre ?= { leader_country ?= prev } international_organization:hre ?= { OR = { country_has_special_status = { type = special_status:elector country = scope:actor } country_has_special_status = { type = special_status:archbishop_elector country = scope:actor } } } } }
+		}
+	AND = {
+			scope:actor = { government_type = government_type:monarchy NOR = { tag = CHI tag = PAP international_organization:hre ?= { leader_country ?= prev } international_organization:hre ?= { OR = { country_has_special_status = { type = special_status:elector country = prev } country_has_special_status = { type = special_status:archbishop_elector country = scope:actor } } } } }
+		}
+	AND = {
+			scope:actor = { government_type = government_type:theocracy religion.group = religion_group:christian NOR = { tag = CHI tag = PAP international_organization:hre ?= { leader_country ?= prev } international_organization:hre ?= { country_has_special_status = { type = special_status:archbishop_elector country = scope:actor } } } }
+		}
+	AND = {
+			scope:actor = { government_type = government_type:theocracy NOR = { tag = CHI tag = PAP international_organization:hre ?= { leader_country ?= prev } international_organization:hre ?= { OR = { country_has_special_status = { type = special_status:elector country = scope:actor } country_has_special_status = { type = special_status:archbishop_elector country = scope:actor } } } } }
+		}
+	AND = {
+			scope:actor = { government_type = government_type:republic NOR = { tag = CHI tag = PAP international_organization:hre ?= { leader_country ?= prev } international_organization:hre ?= { OR = { country_has_special_status = { type = special_status:elector country = scope:actor } country_has_special_status = { type = special_status:archbishop_elector country = scope:actor } } } } }
+		}
+	AND = {
+			scope:actor = { government_type = government_type:republic NOR = { tag = CHI tag = PAP international_organization:hre ?= { leader_country ?= prev } international_organization:hre ?= { OR = { country_has_special_status = { type = special_status:elector country = prev } country_has_special_status = { type = special_status:archbishop_elector country = scope:actor } } } } }
+		}
+	AND = {
+			scope:actor = { government_type = government_type:tribe NOR = { tag = CHI tag = PAP international_organization:hre ?= { leader_country ?= prev } international_organization:hre ?= { OR = { country_has_special_status = { type = special_status:elector country = scope:actor } country_has_special_status = { type = special_status:archbishop_elector country = scope:actor } } } } }
+		}
+	}
 }
 bag_rtk_cd_gate_recently_sanctioned = {
 	OR = {
@@ -485,6 +521,7 @@ bag_rtk_cd_gate_convert_occupied_territory = {
 	OR = {
 	AND = {
 			scope:actor = { any_controlled_location = { owner = { is_at_war_with = scope:actor } religion_percentage = { religion = scope:actor.religion value < 0.25 } } }
+			any_international_organization = { trigger_if = { limit = { OR = { international_organization_type = international_organization_type:crusade international_organization_type = international_organization_type:jihad } has_variable = phase } var:phase = 2 } trigger_else = { always = no } scope:actor = { is_member_of_international_organization = prev } }
 		}
 	}
 }
@@ -510,19 +547,45 @@ bag_rtk_cd_gate_hasten_holy_war_preparations = {
 	}
 }
 bag_rtk_cd_gate_distribute_imperial_grant = {
-	always = yes
+	OR = {
+	AND = {
+			scope:actor = { is_imperial_circle_leader = yes international_organization:hre = { circles_are_active = yes } }
+		}
+	}
 }
 bag_rtk_cd_gate_demand_circle_loyalty = {
-	always = yes
+	OR = {
+	AND = {
+			scope:actor = { is_imperial_circle_leader = yes international_organization:hre = { circles_are_active = yes } }
+		}
+	}
 }
 bag_rtk_cd_gate_reform_coinage_in_circle = {
-	always = yes
+	OR = {
+	AND = {
+			scope:actor = { is_imperial_circle_leader = yes international_organization:hre = { circles_are_active = yes } }
+		}
+	}
 }
 bag_rtk_cd_gate_reduction_of_circle_titles = {
-	always = yes
+	OR = {
+	AND = {
+			scope:actor = { is_imperial_circle_leader = yes international_organization:hre = { circles_are_active = yes } }
+		}
+	}
 }
 bag_rtk_cd_gate_vote_in_organization_parliament = {
-	always = yes
+	OR = {
+	AND = {
+			scope:actor = { international_organization:hre = { circles_are_active = yes resolution_is_active = resolution:policy_vote } }
+		}
+	AND = {
+			scope:actor = { international_organization:hre = { circles_are_active = yes resolution_is_active = resolution:policy_vote } }
+		}
+	AND = {
+			any_international_organization = { has_parliament = yes modifier:has_international_parliament = yes is_active_parliament = yes NOT = { international_organization_type = international_organization_type:union } }
+		}
+	}
 }
 bag_rtk_cd_gate_demand_autonomy = {
 	OR = {
@@ -615,6 +678,7 @@ bag_rtk_cd_gate_hyw_defect_action = {
 bag_rtk_cd_gate_crown_new_ruler = {
 	OR = {
 	AND = {
+			scope:actor = { OR = { AND = { this = c:FRA in_union_with = c:ENG } AND = { this = c:ENG in_union_with = c:FRA } } NOT = { any_union_partner = { union = { custom_tooltip = { text = empty_text country_has_special_status = { type = special_status:senior_partner country = prev } } } } } }
 			situation:hundred_years_war ?= { situation:hundred_years_war = this situation_is_active = yes }
 		}
 	}
@@ -703,7 +767,6 @@ bag_rtk_cd_gate_elect_imam = {
 bag_rtk_cd_gate_contribute_to_organization_treasury = {
 	OR = {
 	AND = {
-			
 			any_international_organization = { has_enabled_currency = gold modifier:unlock_contribute_to_organization_treasury = yes }
 		}
 	}
@@ -711,7 +774,6 @@ bag_rtk_cd_gate_contribute_to_organization_treasury = {
 bag_rtk_cd_gate_withdraw_from_organization_treasury = {
 	OR = {
 	AND = {
-			
 			any_international_organization = { has_enabled_currency = gold modifier:unlock_withdraw_from_organization_treasury = yes leader_country ?= scope:actor gold > 0 }
 		}
 	}
@@ -751,17 +813,12 @@ bag_rtk_cd_gate_iw_send_aid = {
 bag_rtk_cd_gate_expel_league_member = {
 	OR = {
 	AND = {
-			
 			any_international_organization = { OR = { AND = { exists = international_organization:italian_league_1 this = international_organization:italian_league_1 } AND = { exists = international_organization:italian_league_2 this = international_organization:italian_league_2 } AND = { exists = international_organization:italian_league_3 this = international_organization:italian_league_3 } } leader_country ?= scope:actor }
 		}
 	}
 }
 bag_rtk_cd_gate_challenge_league_leadership = {
-	OR = {
-	AND = {
-			
-		}
-	}
+	always = yes
 }
 bag_rtk_cd_gate_grant_shugo_office = {
 	OR = {
@@ -788,7 +845,11 @@ bag_rtk_cd_gate_claim_shugo_office = {
 	}
 }
 bag_rtk_cd_gate_claim_jihad_leadership = {
-	always = yes
+	OR = {
+	AND = {
+			any_international_organization = { international_organization_type = international_organization_type:jihad leader_country ?= { religion.group ?= religion_group:muslim } scope:actor = { is_member_of_international_organization = prev NOT = { is_leader_of_international_organization = prev } } }
+		}
+	}
 }
 bag_rtk_cd_gate_offer_recognition_for_jihad = {
 	OR = {
@@ -822,6 +883,7 @@ bag_rtk_cd_gate_plunder_the_conquered = {
 	OR = {
 	AND = {
 			scope:actor = { any_controlled_location = { owner = { is_at_war_with = scope:actor } } }
+			any_international_organization = { trigger_if = { limit = { international_organization_type = international_organization_type:jihad has_variable = phase } var:phase = 2 } trigger_else = { always = no } leader_country ?= { religion.group ?= religion_group:muslim } scope:actor = { is_member_of_international_organization = prev } }
 		}
 	}
 }
@@ -833,18 +895,10 @@ bag_rtk_cd_gate_proclaim_jihad_privileges = {
 	}
 }
 bag_rtk_cd_gate_change_liturgical_language = {
-	OR = {
-	AND = {
-			
-		}
-	}
+	always = yes
 }
 bag_rtk_cd_gate_change_court_language = {
-	OR = {
-	AND = {
-			
-		}
-	}
+	always = yes
 }
 bag_rtk_cd_gate_enforce_rationing_policies = {
 	OR = {
@@ -1315,7 +1369,6 @@ bag_rtk_cd_gate_rt_support_conversion_efforts = {
 bag_rtk_cd_gate_press_claims_cooldown_key = {
 	OR = {
 	AND = {
-			
 			situation:rise_of_the_ottomans ?= { situation:rise_of_the_ottomans = this situation_is_active = yes var:strongest_beylik_variable = scope:actor }
 		}
 	}
@@ -1521,7 +1574,6 @@ bag_rtk_cd_gate_break_the_yoke = {
 bag_rtk_cd_gate_institute_governmental_purges_key = {
 	OR = {
 	AND = {
-			} allow = {
 			situation:the_revolution ?= { situation:the_revolution = this situation_is_active = yes }
 		}
 	}
@@ -1650,7 +1702,6 @@ bag_rtk_cd_gate_tordesillas_demand_transfer_colony = {
 bag_rtk_cd_gate_bul_restore_the_realms_unity = {
 	OR = {
 	AND = {
-			
 			any_active_disaster = { disaster_type = disaster_type:twilight_of_the_tsardom disaster_is_active = yes }
 		}
 	}
@@ -1680,7 +1731,6 @@ bag_rtk_cd_gate_prepare_military_escalation = {
 bag_rtk_cd_gate_demand_member_removal = {
 	OR = {
 	AND = {
-			
 			situation:war_of_religions ?= { situation:war_of_religions = this situation_is_active = yes }
 		}
 	}
@@ -1718,25 +1768,13 @@ bag_rtk_cd_gate_schism_demand_support_from_one_pope = {
 	}
 }
 bag_rtk_cd_gate_ask_for_money = {
-	OR = {
-	AND = {
-			
-		}
-	}
+	always = yes
 }
 bag_rtk_cd_gate_enforce_culture = {
-	OR = {
-	AND = {
-			
-		}
-	}
+	always = yes
 }
 bag_rtk_cd_gate_enforce_religion = {
-	OR = {
-	AND = {
-			
-		}
-	}
+	always = yes
 }
 bag_rtk_cd_gate_enforce_landfriede = {
 	OR = {
@@ -1769,7 +1807,7 @@ bag_rtk_cd_gate_request_circle_privilege = {
 		}
 	}
 }
-bag_rtk_cd_gate_building = {
+bag_rtk_cd_gate_challenge_circle_leadership = {
 	OR = {
 	AND = {
 			scope:actor = { is_member_of_international_organization = international_organization:hre is_imperial_circle_leader = no is_emperor = no NOT = { country_type = building } is_subject = no any_imperial_circle_country_is_member_of = { has_circle_leader = yes NOT = { is_dormant_imperial_circle = yes } } }
@@ -1840,11 +1878,7 @@ bag_rtk_cd_gate_lend_unit_to_ally = {
 	}
 }
 bag_rtk_cd_gate_mil_order_request_funds = {
-	OR = {
-	AND = {
-			
-		}
-	}
+	always = yes
 }
 bag_rtk_cd_gate_offer_war_leadership = {
 	OR = {

@@ -1,4 +1,4 @@
-﻿# `rulers_toolkit` — устройство
+# `rulers_toolkit` — устройство
 
 ## Ползунки после войны (бывший `war_sliders`, 0.2.0, его просьба 10-18)
 
@@ -47,3 +47,18 @@ zero` в `debug.log`. В игре не было.
 ([`testlog_1018_art_action.md`](../../docs/archive/testlog_1018_art_action.md)).
 Зонды: `work of art sold, price= quality= accept= buyer gold left=` + имя,
 `not sold`, `no buyer for any work of art`. История 10 продаж в игре (работает, цены = ручным): галочка `art_log`, кнопка `art_log_show` → событие `bag_rtk_art.1`.
+
+## Напоминалка об откатах
+
+254 типа отката из `generic_actions` и `country_interactions` — списки CMF
+(≤ 50 строк) на четырёх подвкладках (`cmm_register_subtab`: `cd_faith`,
+`cd_realm`, `cd_orgs`, `cd_crisis`), по цвету алерта на список;
+`tools/gen_cooldowns.py` пишет `bag_rtk_cd_*generated*` и `bag_rtk_cd_l_*.yml`
+(после патча — перегенерировать). Религия — `cd_rel1` и `cd_rel2` под одним
+именем (второй — Индия, Япония, Америка). Строка видна, если ворота (копия
+`potential` и `visible` получателя действия; `= scope:target` снят, выбранная
+вера — своя) пропускают, или откат, или галочка, или «Показывать все»; список
+без видимых строк прячет его `_on_changed` (`bag_rtk_cd_shown_<список>`). Ворота
+— при регистрации, т. е. на каждое открытие меню. Галочка — поле `watch` в
+глобальной карте `cmm`. 1-го числа: откат был и кончился → алерт
+`bag_rtk_rel_ready_<тип>`, клик убирает и открывает вкладку списка.

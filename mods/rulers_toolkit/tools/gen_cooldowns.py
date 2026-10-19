@@ -21,32 +21,28 @@ MOD = os.path.join(ROOT, 'mods', 'rulers_toolkit')
 GAME = os.path.join(ROOT, 'reference', 'game')
 GEN = 'СГЕНЕРИРОВАНО mods/rulers_toolkit/tools/gen_cooldowns.py — руками не править.'
 
-# Вкладки: id, ru, en.
-TABS = [('faith', 'Религия', 'Faith'), ('realm', 'Держава', 'Realm'),
-        ('orgs', 'Организации', 'Organizations'), ('crisis', 'Ситуации и бедствия', 'Situations and disasters')]
+# Вкладка-родитель и её подвкладки (`cmm_register_subtab`): id, ru, en.
+PARENT = ('cooldowns', 'Перезарядки', 'Cooldowns')
+TABS = [('cd_faith', 'Религия', 'Faith'), ('cd_realm', 'Держава', 'Realm'),
+        ('cd_orgs', 'Организации', 'Organizations'), ('cd_crisis', 'Ситуации и бедствия', 'Situations and disasters')]
 # Списки: id, вкладка, цвет алерта (палитра CMF), вкладка игры по клику (или None), ru, en.
+# Религия — один список, но в CMF потолок 50 строк: второй держит то, что бывает
+# только у своих вер (Индия, Япония, Америка), так что держава видит один.
+# Список без видимых строк прячется целиком, с заголовком.
 LISTS = [
-    ('cd_orders', 'faith', 'purple', 'country_religion', 'Религиозные ордена', 'Religious orders'),
-    ('cd_christian', 'faith', 'purple', 'country_religion', 'Христианство', 'Christianity'),
-    ('cd_islam', 'faith', 'purple', 'country_religion', 'Ислам', 'Islam'),
-    ('cd_dharma', 'faith', 'purple', 'country_religion', 'Индуизм и буддизм', 'Hinduism and Buddhism'),
-    ('cd_japan', 'faith', 'purple', 'country_religion', 'Япония', 'Japan'),
-    ('cd_americas', 'faith', 'purple', 'country_religion', 'Америка', 'Americas'),
-    ('cd_relother', 'faith', 'purple', 'country_religion', 'Прочее', 'Other'),
-    ('cd_own', 'realm', 'blue', 'government', 'Своя держава и парламент', 'Own country and parliament'),
-    ('cd_diplo', 'realm', 'green', 'diplomacy', 'Действия с другими державами', 'Actions with other countries'),
-    ('cd_io', 'orgs', 'yellow', None, 'Международные организации', 'International organizations'),
-    ('cd_sit1', 'crisis', 'orange', None, 'Ситуации (1)', 'Situations (1)'),
-    ('cd_sit2', 'crisis', 'orange', None, 'Ситуации (2)', 'Situations (2)'),
-    ('cd_dis', 'crisis', 'red', None, 'Бедствия', 'Disasters'),
+    ('cd_rel1', 'cd_faith', 'purple', 'country_religion', 'Религиозные действия', 'Religious actions'),
+    ('cd_rel2', 'cd_faith', 'purple', 'country_religion', 'Религиозные действия', 'Religious actions'),
+    ('cd_own', 'cd_realm', 'blue', 'government', 'Своя держава и парламент', 'Own country and parliament'),
+    ('cd_diplo', 'cd_realm', 'green', 'diplomacy', 'Действия с другими державами', 'Actions with other countries'),
+    ('cd_io', 'cd_orgs', 'yellow', None, 'Международные организации', 'International organizations'),
+    ('cd_sit1', 'cd_crisis', 'orange', None, 'Ситуации', 'Situations'),
+    ('cd_sit2', 'cd_crisis', 'orange', None, 'Ситуации', 'Situations'),
+    ('cd_dis', 'cd_crisis', 'red', None, 'Бедствия', 'Disasters'),
 ]
+# Религиозный файл игры -> список; чего нет — `cd_rel1`.
 RELIGION_FILE = {
-    'religious_orders.txt': 'cd_orders',
-    'catholic.txt': 'cd_christian', 'orthodox.txt': 'cd_christian', 'church_power.txt': 'cd_christian',
-    'muslim.txt': 'cd_islam', 'ibadi.txt': 'cd_islam',
-    'hindu_branches.txt': 'cd_dharma', 'sects.txt': 'cd_dharma',
-    'religious_factions.txt': 'cd_japan',
-    'mayan.txt': 'cd_americas', 'nahuatl.txt': 'cd_americas', 'yanantin.txt': 'cd_americas',
+    'hindu_branches.txt': 'cd_rel2', 'sects.txt': 'cd_rel2', 'religious_factions.txt': 'cd_rel2',
+    'mayan.txt': 'cd_rel2', 'nahuatl.txt': 'cd_rel2', 'yanantin.txt': 'cd_rel2',
 }
 COLOR_RU = {'purple': 'фиолетовые', 'blue': 'синие', 'green': 'зелёные', 'yellow': 'жёлтые',
             'orange': 'оранжевые', 'red': 'красные'}
@@ -78,7 +74,8 @@ FIX = {
     'create_uc_bey': ('Создать удж-бея', 'Create an uc bey'),
     'break_the_yoke': ('Освобождение от татарского ига', 'Break free from the Tatar yoke'),
 }
-OUTSIDE = re.compile(r'scope:(?!actor\b)\w+|\broot\b|\bprev\b|\bROOT\b|\bPREV\b')
+# `prev` в условиях игры — всегда внутри своего блока, и копия сохраняет его смысл.
+OUTSIDE = re.compile(r'scope:(?!actor\b)\w+|\broot\b|\bROOT\b')
 
 
 def loadloc(lang):
@@ -105,8 +102,17 @@ def plain(text, loc, depth=0):
 
 
 def block(body, key, indent):
-    m = re.search(r'^' + indent + key + r' = \{(.*?)^' + indent + r'\}', body, re.M | re.S)
-    return m.group(1) if m else None
+    """Тело `key = { … }`, начатого с отступом `indent`, по парным скобкам (0.6.0 брал
+    до первой `}` с тем же отступом и при однострочном блоке захватывал соседний
+    `allow` — «Unknown trigger type: allow» в его логе 10-19)."""
+    m = re.search(r'^' + indent + key + r' = \{', body, re.M)
+    if not m:
+        return None
+    depth, i = 1, m.end()
+    while depth and i < len(body):
+        depth += {'{': 1, '}': -1}.get(body[i], 0)
+        i += 1
+    return body[m.end():i - 1]
 
 
 def strip_comments(text):
@@ -117,15 +123,21 @@ def gate(body):
     """Условие «это действие тебе доступно» (scope: держава, scope:actor — она же) или None."""
     parts = []
     pot = block(body, 'potential', '\t')
-    if pot is not None:
-        pot = strip_comments(pot)
-        if not OUTSIDE.search(pot):
-            parts.append(pot)
     st = block(body, 'select_trigger', '\t')
+    if pot is not None and st is not None and 'looking_for_a = religion' in st:
+        # Эллинские действия: `scope:recipient ?= religion:…` — выбранная вера, она же своя.
+        flag = re.search(r'target_flag = (\w+)', st)
+        if flag:
+            pot = pot.replace('scope:' + flag.group(1), 'scope:actor.religion')
+    if pot is not None:
+        # `is_member_of_circle = scope:target` и такие же: без выбранного получателя
+        # условие снимаем — ворота шире, но не врут (круги Империи, 0.6.1).
+        pot = re.sub(r'\b\w+ \??= scope:(?!actor\b)\w+', '', pot)
+        if pot.strip() and not OUTSIDE.search(pot):
+            parts.append(pot)
     if st is not None:
         kind = re.search(r'looking_for_a = (\w+)', st).group(1)
         vis = block(st, 'visible', '\t\t')
-        vis = strip_comments(vis) if vis is not None else None
         if vis and vis.strip() and not OUTSIDE.search(vis):
             if kind == 'religion':
                 parts.append('scope:actor.religion ?= {%s}' % vis)
@@ -145,7 +157,7 @@ def gate(body):
 def actions():
     for kind in ('generic_actions', 'country_interactions'):
         for f in sorted(glob.glob(os.path.join(GAME, 'in_game', 'common', kind, '*.txt'))):
-            text = open(f, encoding='utf-8-sig').read()
+            text = strip_comments(open(f, encoding='utf-8-sig').read())
             for m in re.finditer(r'^([a-z_0-9]+) = \{(.*?)^\}', text, re.M | re.S):
                 name, body = m.groups()
                 cd = block(body, 'cooldown', '\t') or (re.search(r'^\tcooldown = \{([^}]*)\}', body, re.M) or [None, None])[1]
@@ -161,7 +173,7 @@ def actions():
 def list_of(fname, kind, t):
     if kind == 'country_interactions':
         return 'cd_diplo'
-    return {'religious': RELIGION_FILE.get(fname, 'cd_relother'), 'religiousfaction': 'cd_japan',
+    return {'religious': RELIGION_FILE.get(fname, 'cd_rel1'), 'religiousfaction': 'cd_rel2',
             'owncountry': 'cd_own', 'parliament': 'cd_own', 'internationalorganization': 'cd_io',
             'situation': 'cd_sit', 'disaster': 'cd_dis'}.get(t)
 
@@ -171,7 +183,7 @@ def duration(du, ru):
         return ''
     n, unit = du.group(2), du.group(1)
     if ru:
-        return {'years': f'{n} г.', 'months': f'{n} мес.', 'days': f'{n} дн.'}[unit]
+        return {'years': f'{n} г', 'months': f'{n} мес', 'days': f'{n} дн'}[unit]
     return f'{n} {unit}'
 
 
@@ -221,17 +233,33 @@ def main():
          'w', encoding='utf-8').write(''.join(trig))
 
     # --- эффекты
-    out = ['﻿# ' + GEN + '\n\n# Регистрация списков. Scope: country.\nbag_rtk_cd_register_lists = {\n']
+    out = ['﻿# ' + GEN + '\n\n# Регистрация подвкладок и списков. Scope: country.\nbag_rtk_cd_register_lists = {\n']
+    for tid, *_ in TABS:
+        out.append(f'\tcmm_register_subtab = {{ mod_id = bag_rtk tab_id = {tid} parent_tab_id = {PARENT[0]} }}\n')
     for lid, tab, *_ in lists:
         out.append(f'\tcmm_register_global_settings_list = {{ mod_id = bag_rtk setting_id = {lid} tab_id = {tab} '
                    f'item_count = {len(table[lid])} is_ordered = 0 }}\n')
     for lid, *_ in lists:
         out.append(f'\tcmm_register_list_bool_field = {{ mod_id = bag_rtk setting_id = {lid} field_id = watch default_value = 0 }}\n')
-    out.append('}\n\n# Показать или спрятать каждую строку по воротам. Scope: country.\nbag_rtk_cd_gate_all = {\n'
+    out.append('}\n\n# Показать или спрятать каждую строку по воротам; список, где не видно ни одной,\n'
+               '# прячет его `_on_changed` (`bag_rtk_cd_shown_<список>`). Scope: country.\nbag_rtk_cd_gate_all = {\n'
                '\tsave_scope_as = actor\n')
+    for lid, *_ in lists:
+        out.append(f'\tremove_variable = bag_rtk_cd_shown_{lid}\n')
     for lid, *_ in lists:
         for i, ty in enumerate(table[lid], 1):
             out.append(f'\tbag_rtk_cd_gate_row = {{ sid = {lid} i = {i} type = {ty} }}\n')
+    out.append('\tbag_rtk_cd_probe_lists = yes\n')
+    out.append('}\n\n# Зонд строки ERROR_FLAG_INDEX (0.6.0, его скрин 10-19): лишний элемент в списке строк\n'
+               '# CMF или строка без своих переменных у игрока. Scope: country.\nbag_rtk_cd_probe_lists = {\n')
+    for lid, *_ in lists:
+        n = len(table[lid])
+        out.append(f'\tif = {{ limit = {{ NOT = {{ global_variable_list_size = {{ name = cmm_list_items_bag_rtk__{lid} value = {n} }} }} }} '
+                   f'debug_log = "bag_rtk: cooldown list {lid} does not hold {n} rows" }}\n')
+        for i in range(1, n + 1):
+            out.append(f'\tif = {{ limit = {{ NOT = {{ has_variable = bag_rtk__{lid}_i{i}_name }} }} '
+                       f'debug_log = "bag_rtk: cooldown list {lid} row {i} has no name variable" }}'
+                       f' # check-script: never set — ставит CMF\n')
     out.append('}\n\n# Каждая отмеченная строка, 1-го числа. Scope: country.\nbag_rtk_cd_check_all = {\n')
     for lid, tab, color, view, *_ in lists:
         for i, ty in enumerate(table[lid], 1):
@@ -248,9 +276,11 @@ def main():
          'w', encoding='utf-8').write(''.join(out))
 
     # --- _on_changed списков
-    sg = ['﻿# ' + GEN + '\n# Без `_on_changed` CMF прячет список целиком; правка строки применяется здесь.\n\n']
+    sg = ['﻿# ' + GEN + '\n# Без `_on_changed` CMF прячет список целиком; правка строки применяется здесь,\n# а `is_shown` прячет список без видимых строк.\n\n']
     for lid, *_ in lists:
-        sg.append(f'bag_rtk__{lid}_on_changed = {{\n\tscope = country\n\teffect = {{\n'
+        sg.append(f'bag_rtk__{lid}_on_changed = {{\n\tscope = country\n'
+                  f'\tis_shown = {{ has_variable = bag_rtk_cd_shown_{lid} }} # check-script: never set — `bag_rtk_cd_gate_row`\n'
+                  f'\teffect = {{\n'
                   f'\t\tcmm_apply_list_change = {{ setting = bag_rtk__{lid} }}\n\t}}\n}}\n\n')
     open(os.path.join(MOD, 'in_game', 'common', 'scripted_guis', 'bag_rtk_cd_generated_sgui.txt'),
          'w', encoding='utf-8').write(''.join(sg))
@@ -259,7 +289,7 @@ def main():
     for lang, idx, head in (('russian', 'ru', 'l_russian'), ('english', 'en', 'l_english')):
         isru = lang == 'russian'
         L = [f'﻿{head}:\n', f' # {GEN}\n']
-        for tid, tru, ten in TABS:
+        for tid, tru, ten in [PARENT] + TABS:
             L.append(f' bag_rtk__{tid}_name: "{tru if isru else ten}"\n')
         for lid, tab, color, view, lru, len_ in lists:
             title = lru if isru else len_
