@@ -16,11 +16,19 @@ bag_rtk_wed_youth = {
 
 # Согласие на династический брак — числа `royal_marriage` из
 # `ai_diplochance/00_ai_diplochance.txt`; игра соглашается от +1 (его скрин 10-19:
-# ранг +15, доверие +14, мнение +3, другая культура −5, расстояние −13 = +14).
-# Scope: страна-получатель; scope:bag_rtk_wed_home — игрок. Соперники и другая
-# группа вер (−100, −200) отсеяны раньше. Не посчитаны: `heir`, `age_female`,
-# `marriage_desirability`, `culture_view`, `religion_view`, `union_size` — на его
-# скрине их нет; зонд печатает итог рядом с подсказкой игры.
+# ранг +15, доверие +14, мнение +3, другая культура −5, расстояние −13 = +14,
+# сходится). Соперники и другая группа вер (−100, −200) отсеяны раньше.
+# Чего игра не раскрывает, посчитано осторожно: плюсы, которых не знаем, не
+# прибавляем, минусы вычитаем — лучше пропустить согласного, чем потратить
+# дипломата на отказ:
+#   `culture_view` 10, `religion_view` 20 — ступень мнения (враг, плохое,
+#     нейтральное, хорошее, родственное); вычитаем только плохое и вражду;
+#   `union_size` −4 — за страну в униях их династии;
+#   `heir` +10 — не прибавляем (у его наследника на скрине его нет);
+#   `age_female` −10 — за год жены старше 35 (`PREGNANCY_AGE_THRESHOLD`; так
+#     считает `AI_NOBLE_MARRIAGE_FERTILITY_WEIGHT`) — вывод, не мерено;
+#   `marriage_desirability` 1 — модификатор нашего человека.
+# Scope: страна-получатель; scope:bag_rtk_wed_home — игрок.
 bag_rtk_wed_accept = {
 	value = 0
 	add = {
@@ -47,10 +55,26 @@ bag_rtk_wed_accept = {
 	}
 	else = {
 		add = -5
+		if = {
+			limit = { culture = { cultural_view = { target = scope:bag_rtk_wed_home.culture value = enemy } } }
+			add = -20
+		}
+		else_if = {
+			limit = { culture = { cultural_view = { target = scope:bag_rtk_wed_home.culture value <= negative } } }
+			add = -10
+		}
 	}
 	if = {
 		limit = { NOT = { religion = scope:bag_rtk_wed_home.religion } }
 		add = -40
+		if = {
+			limit = { religion = { religious_view = { target = scope:bag_rtk_wed_home.religion value = enemy } } }
+			add = -40
+		}
+		else_if = {
+			limit = { religion = { religious_view = { target = scope:bag_rtk_wed_home.religion value <= negative } } }
+			add = -20
+		}
 	}
 	if = {
 		limit = { court_language = scope:bag_rtk_wed_home.court_language }
@@ -59,5 +83,57 @@ bag_rtk_wed_accept = {
 	add = {
 		value = "border_distance_to(scope:bag_rtk_wed_home)"
 		multiply = -0.025
+	}
+	if = {
+		limit = { exists = ruler.dynasty }
+		add = {
+			ruler.dynasty = {
+				value = num_union_countries
+				multiply = -4
+			}
+		}
+	}
+}
+
+# Согласие на пару: страна плюс то, что зависит от людей. Scope: их человек;
+# scope:bag_rtk_wed_one — наш.
+bag_rtk_wed_pair_accept = {
+	value = 0
+	add = {
+		owner = {
+			value = bag_rtk_wed_accept
+		}
+	}
+	add = {
+		scope:bag_rtk_wed_one = {
+			value = modifier:marriage_desirability
+		}
+	}
+	if = {
+		limit = {
+			is_female = yes
+			age_in_years > 35
+		}
+		add = {
+			value = age_in_years
+			subtract = 35
+			multiply = -10
+		}
+	}
+	else_if = {
+		limit = {
+			is_female = no
+			scope:bag_rtk_wed_one = {
+				is_female = yes
+				age_in_years > 35
+			}
+		}
+		add = {
+			scope:bag_rtk_wed_one = {
+				value = age_in_years
+				subtract = 35
+				multiply = -10
+			}
+		}
 	}
 }

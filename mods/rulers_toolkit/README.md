@@ -105,7 +105,10 @@ zero` в `debug.log`. В игре не было.
 одна группа вер, не близкие родственники, страна — `has_potential_royal_marriage`
 и без брака с нами, не соперник нам и нашим сюзеренам — в `ai_diplochance` это −100) по возрасту, младшие первыми (`bag_rtk_wed_youth`); одно предложение в месяц
 на человека и только при свободном дипломате (оно его тратит), отказавший — в
-`bag_rtk_wed_refused` и больше не берётся; страна — только с согласием ≥ +1 по
-формуле игры (`bag_rtk_wed_accept`, числа `ai_diplochance`; зонд печатает итог): `perform_diplomatic_action = { type = royal_marriage … mode = propose
+`bag_rtk_wed_refused` и больше не берётся; пара — только с согласием ≥ +1 по
+формуле игры (`bag_rtk_wed_pair_accept`: страна — `bag_rtk_wed_accept`, числа
+`ai_diplochance`; что игра не раскрывает, посчитано осторожно — неизвестные плюсы
+не прибавлены, минусы вычтены; зонд печатает итог). Аргументы `target_1` (наш) и
+`target_2` (их) — как scope у `on_royal_marriage` в `_hardcoded.txt`: `perform_diplomatic_action = { type = royal_marriage … mode = propose
 hidden = yes }`: согласие решает та страна по правилам игры. Женщин — только с
 галочкой `wed_women` (по умолчанию вкл.).
