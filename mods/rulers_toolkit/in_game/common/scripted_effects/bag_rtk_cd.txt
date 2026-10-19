@@ -1,0 +1,82 @@
+﻿# Напоминалка об откатах (0.6.0, его просьба 10-19): по образцу напоминалок
+# Calidad de vida (`qol_cooldown_effects.txt`), но по всем действиям игры с
+# откатом и только по отмеченным. Таблица, ворота и тексты —
+# `bag_rtk_cd_generated.txt` и соседи из `tools/gen_cooldowns.py`.
+#
+# Строка списка — тип отката. Галочка — поле `watch` (слот 1) в глобальной
+# карте `cmm`, как у списков Calidad de vida. Видна строка, если действие тебе
+# доступно (ворота — копия его условий), или оно на откате, или отмечено, или
+# включено «Показывать все». Ворота пересчитываются при открытии меню CMF:
+# регистрация идёт заново на каждое открытие.
+#
+# 1-го числа: откат идёт — запоминаем (`bag_rtk_rel_cd_<тип>`) и убираем старое
+# напоминание; отката нет, а был — напоминание `bag_rtk_rel_ready_<тип>` цвета
+# своего списка; клик убирает его и открывает вкладку игры, если она есть.
+
+# Scope: country, scope:actor — она же. Args: sid, i, type.
+bag_rtk_cd_gate_row = {
+	set_local_variable = { name = bag_rtk_cd_flag value = flag:bag_rtk__$sid$_i$i$_f1 }
+	if = {
+		limit = {
+			OR = {
+				has_variable = bag_rtk_cd_all
+				has_cooldown = $type$
+				"global_variable_map(cmm|local_var:bag_rtk_cd_flag)" >= 1
+				bag_rtk_cd_gate_$type$ = yes
+			}
+		}
+		cmm_show_list_item = { mod_id = bag_rtk setting_id = $sid$ item = $i$ }
+	}
+	else = {
+		cmm_hide_list_item = { mod_id = bag_rtk setting_id = $sid$ item = $i$ }
+	}
+}
+
+# Откат отмеченной строки. Scope: country. Args: sid, i, type.
+# Возвращает в `bag_rtk_cd_fire` (локальная), если пора напомнить.
+bag_rtk_cd_track = {
+	remove_local_variable = bag_rtk_cd_fire
+	set_local_variable = { name = bag_rtk_cd_flag value = flag:bag_rtk__$sid$_i$i$_f1 }
+	if = {
+		limit = { "global_variable_map(cmm|local_var:bag_rtk_cd_flag)" >= 1 }
+		if = {
+			limit = { has_cooldown = $type$ }
+			if = {
+				limit = { NOT = { has_variable = bag_rtk_rel_cd_$type$ } }
+				set_variable = { name = bag_rtk_rel_cd_$type$ value = yes }
+				cmf_remove_alert = { alert = bag_rtk_rel_ready_$type$ }
+			}
+		}
+		else_if = {
+			limit = { has_variable = bag_rtk_rel_cd_$type$ }
+			remove_variable = bag_rtk_rel_cd_$type$
+			set_local_variable = { name = bag_rtk_cd_fire value = yes }
+		}
+	}
+	else_if = {
+		limit = { has_variable = bag_rtk_rel_cd_$type$ }
+		remove_variable = bag_rtk_rel_cd_$type$
+	}
+}
+
+# Scope: country. Args: sid, i, type, view — вкладка игры по клику
+# (`OpenLateralView`, как у ванильных алертов в `alertmanager.gui`).
+bag_rtk_cd_check_row = {
+	bag_rtk_cd_track = { sid = $sid$ i = $i$ type = $type$ }
+	if = {
+		limit = { has_local_variable = bag_rtk_cd_fire }
+		cmf_show_alert = { alert = bag_rtk_rel_ready_$type$ }
+		cmf_set_alert_open_view = { alert = bag_rtk_rel_ready_$type$ view = $view$ }
+		debug_log = "bag_rtk: cooldown reminder shown, $type$"
+	}
+}
+
+# То же без вкладки: клик только убирает. Scope: country. Args: sid, i, type.
+bag_rtk_cd_check_row_noview = {
+	bag_rtk_cd_track = { sid = $sid$ i = $i$ type = $type$ }
+	if = {
+		limit = { has_local_variable = bag_rtk_cd_fire }
+		cmf_show_alert = { alert = bag_rtk_rel_ready_$type$ }
+		debug_log = "bag_rtk: cooldown reminder shown, $type$"
+	}
+}

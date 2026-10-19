@@ -201,8 +201,21 @@ bag_rtk_register = {
 		setting_id = art_log_show
 	}
 
-	# Вкладка «Религия»: напоминалка об откатах (`bag_rtk_faith_generated.txt`).
-	bag_rtk_faith_register = yes
+	# Вкладки напоминалки об откатах (`bag_rtk_cd.txt`): «Показывать все», списки,
+	# затем ворота строк — после регистрации списков.
+	cmm_register_bool_setting = {
+		mod_id = bag_rtk
+		setting_id = cd_show_all
+		tab_id = faith
+		group_id = show
+		default_value = 0
+	}
+	cmm_sync_bool_alias = {
+		setting = bag_rtk__cd_show_all
+		alias = bag_rtk_cd_all
+	}
+	bag_rtk_cd_register_lists = yes
+	bag_rtk_cd_gate_all = yes
 
 	# Вкладка «Ползунки после войны» (бывший War Sliders) — после командиров
 	# (порядок вкладок по регистрации — не проверено). `bag_wsl_cmm_effects.txt`.
@@ -213,7 +226,7 @@ bag_rtk_register = {
 # Scope: country
 bag_rtk_handle_callback = {
 	bag_wsl_handle_callback = yes
-	bag_rtk_faith_callback = yes
+	bag_rtk_cd_callback = yes
 	switch = {
 		trigger = var:cmf_callback
 		flag:bag_rtk__cmd_enabled = {
@@ -233,6 +246,13 @@ bag_rtk_handle_callback = {
 				setting = bag_rtk__art_enabled
 				alias = bag_rtk_art_on
 			}
+		}
+		flag:bag_rtk__cd_show_all = {
+			cmm_sync_bool_alias = {
+				setting = bag_rtk__cd_show_all
+				alias = bag_rtk_cd_all
+			}
+			bag_rtk_cd_gate_all = yes
 		}
 		flag:bag_rtk__art_log = {
 			cmm_sync_bool_alias = {
