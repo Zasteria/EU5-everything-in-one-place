@@ -32,7 +32,8 @@ TABS = [('cd_faith', 'Религия', 'Faith'), ('cd_realm', 'Держава', 
 LISTS = [
     ('cd_rel1', 'cd_faith', 'purple', 'country_religion', 'Религиозные действия', 'Religious actions'),
     ('cd_rel2', 'cd_faith', 'purple', 'country_religion', 'Религиозные действия', 'Religious actions'),
-    ('cd_own', 'cd_realm', 'blue', 'government', 'Своя держава и парламент', 'Own country and parliament'),
+    ('cd_estate', 'cd_realm', 'blue', 'government', 'Сословные действия', 'Estate actions'),
+    ('cd_country', 'cd_realm', 'blue', 'government', 'Своя держава и парламент', 'Own country and parliament'),  # не `cd_own`: тот был на 17 строк, а CMF список не укорачивает (0.6.2)
     ('cd_diplo', 'cd_realm', 'green', 'diplomacy', 'Действия с другими державами', 'Actions with other countries'),
     ('cd_io', 'cd_orgs', 'yellow', None, 'Международные организации', 'International organizations'),
     ('cd_sit1', 'cd_crisis', 'orange', None, 'Ситуации', 'Situations'),
@@ -44,6 +45,16 @@ RELIGION_FILE = {
     'hindu_branches.txt': 'cd_rel2', 'sects.txt': 'cd_rel2', 'religious_factions.txt': 'cd_rel2',
     'mayan.txt': 'cd_rel2', 'nahuatl.txt': 'cd_rel2', 'yanantin.txt': 'cd_rel2',
 }
+# Сословные действия: откат у каждого сословия свой (его слова 10-19), кроме
+# созыва парламента, — строка на пару «действие, сословие». Действие -> сословия.
+ESTATES = ['nobles', 'clergy', 'burghers', 'peasants', 'dhimmi', 'tribes', 'cossacks']
+ESTATE_ACTIONS = {
+    'ask_for_extra_levies': ESTATES, 'extraordinary_taxes': ESTATES,
+    'ask_clergy_for_legitimacy': ['clergy'], 'ask_nobility_for_diplomats': ['nobles'],
+    'ask_burghers_for_loan': ['burghers'], 'ask_commoners_for_stability': ['peasants', 'dhimmi'],
+    'ask_tribes_for_manpower': ['tribes', 'cossacks'], 'press_estate_private_regiments_action': ESTATES,
+}
+ESTATE_FILE = 'estate_emergency_actions.txt'
 COLOR_RU = {'purple': 'фиолетовые', 'blue': 'синие', 'green': 'зелёные', 'yellow': 'жёлтые',
             'orange': 'оранжевые', 'red': 'красные'}
 # Тип отката -> своё имя (ru, en), когда у действий общий откат.
@@ -144,13 +155,38 @@ def gate(body):
             elif kind == 'disaster':
                 parts.append('any_active_disaster = {%s}' % vis)
             elif kind == 'international_organization':
-                parts.append('any_international_organization = {%s}' % vis)
+                parts.append('any_international_organization = {%s %s}' % (IO_MEMBER, vis))
             elif kind == 'situation':
                 sit = re.search(r'situation:(\w+)', vis)
                 if sit:
                     parts.append('situation:%s ?= {%s}' % (sit.group(1), vis))
+    if st is not None and 'looking_for_a = international_organization' in st and 'source = actor' in st \
+            and not any(p.startswith('any_international_organization') for p in parts):
+        # Без своих условий — хотя бы своя организация («Перехват лидерства в лиге»).
+        parts.append('any_international_organization = { %s }' % IO_MEMBER)
     if not parts:
         return None
+    return 'AND = {\n' + '\n'.join('\t\t' + ' '.join(p.split()) for p in parts) + '\n\t}'
+
+
+# Организации выбираются из своих (`source = actor`): 0.6.1 проверял любую в мире, и
+# у него стояли действия верховного королевства и ирландского лордства (10-19).
+IO_MEMBER = 'scope:actor = { is_member_of_international_organization = prev }'
+
+
+def estate_gate(body, est):
+    """Ворота пары «действие, сословие»: условия действия и это сословие у державы."""
+    pot = block(body, 'potential', '\t')
+    st = block(body, 'select_trigger', '\t')
+    parts = [pot] if pot and pot.strip() and not OUTSIDE.search(pot) else []
+    # `visible` и `enabled` выбора сословия: без налоговой базы, без частных полков,
+    # священники у католика для налогов — такой пары в игре нет.
+    inner = ''
+    for key in ('visible', 'enabled'):
+        b = block(st, key, '\t\t') if st else None
+        if b and b.strip() and not OUTSIDE.search(b):
+            inner += ' ' + b
+    parts.append('scope:actor = { any_estate = { estate_type = estate_type:%s_estate %s } }' % (est, inner))
     return 'AND = {\n' + '\n'.join('\t\t' + ' '.join(p.split()) for p in parts) + '\n\t}'
 
 
@@ -174,7 +210,7 @@ def list_of(fname, kind, t):
     if kind == 'country_interactions':
         return 'cd_diplo'
     return {'religious': RELIGION_FILE.get(fname, 'cd_rel1'), 'religiousfaction': 'cd_rel2',
-            'owncountry': 'cd_own', 'parliament': 'cd_own', 'internationalorganization': 'cd_io',
+            'owncountry': 'cd_country', 'parliament': 'cd_country', 'internationalorganization': 'cd_io',
             'situation': 'cd_sit', 'disaster': 'cd_dis'}.get(t)
 
 
@@ -193,7 +229,16 @@ def main():
     order = []
     missing = []
     for fname, kind, t, name, ty, du, body in actions():
-        lst = list_of(fname, kind, t)
+        if fname == ESTATE_FILE and name in ESTATE_ACTIONS:
+            for est in ESTATE_ACTIONS[name]:
+                key = f'{name}__{est}'
+                r = '%s: %s' % (plain(ru.get(name), ru), ru[est + '_estate'].lower())
+                e = '%s: %s' % (plain(en.get(name), en), en[est + '_estate'].lower())
+                rows[key] = {'list': 'cd_estate', 'ru': r, 'en': e, 'gates': [estate_gate(body, est)],
+                             'open': False, 'du': du, 'action': name, 'est': est, 'type': ty}
+                order.append(key)
+            continue
+        lst = 'cd_estate' if fname == ESTATE_FILE else list_of(fname, kind, t)
         if lst is None:
             continue
         g = gate(body)
@@ -248,22 +293,18 @@ def main():
         out.append(f'\tremove_variable = bag_rtk_cd_shown_{lid}\n')
     for lid, *_ in lists:
         for i, ty in enumerate(table[lid], 1):
-            out.append(f'\tbag_rtk_cd_gate_row = {{ sid = {lid} i = {i} type = {ty} }}\n')
-    out.append('\tbag_rtk_cd_probe_lists = yes\n')
-    out.append('}\n\n# Зонд строки ERROR_FLAG_INDEX (0.6.0, его скрин 10-19): лишний элемент в списке строк\n'
-               '# CMF или строка без своих переменных у игрока. Scope: country.\nbag_rtk_cd_probe_lists = {\n')
-    for lid, *_ in lists:
-        n = len(table[lid])
-        out.append(f'\tif = {{ limit = {{ NOT = {{ global_variable_list_size = {{ name = cmm_list_items_bag_rtk__{lid} value = {n} }} }} }} '
-                   f'debug_log = "bag_rtk: cooldown list {lid} does not hold {n} rows" }}\n')
-        for i in range(1, n + 1):
-            out.append(f'\tif = {{ limit = {{ NOT = {{ has_variable = bag_rtk__{lid}_i{i}_name }} }} '
-                       f'debug_log = "bag_rtk: cooldown list {lid} row {i} has no name variable" }}'
-                       f' # check-script: never set — ставит CMF\n')
+            if 'action' in rows[ty]:
+                out.append(f'\tbag_rtk_cd_gate_est_row = {{ sid = {lid} i = {i} key = {ty} }}\n')
+            else:
+                out.append(f'\tbag_rtk_cd_gate_row = {{ sid = {lid} i = {i} type = {ty} }}\n')
     out.append('}\n\n# Каждая отмеченная строка, 1-го числа. Scope: country.\nbag_rtk_cd_check_all = {\n')
     for lid, tab, color, view, *_ in lists:
         for i, ty in enumerate(table[lid], 1):
-            if view:
+            row = rows[ty]
+            if 'action' in row:
+                out.append(f'\tbag_rtk_cd_check_est = {{ sid = {lid} i = {i} key = {ty} action = {row["action"]} '
+                           f'est = {row["est"]} type = {row["type"]} view = {view} }}\n')
+            elif view:
                 out.append(f'\tbag_rtk_cd_check_row = {{ sid = {lid} i = {i} type = {ty} view = {view} }}\n')
             else:
                 out.append(f'\tbag_rtk_cd_check_row_noview = {{ sid = {lid} i = {i} type = {ty} }}\n')
