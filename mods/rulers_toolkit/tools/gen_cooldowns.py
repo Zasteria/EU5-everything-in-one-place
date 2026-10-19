@@ -339,11 +339,13 @@ def main():
     for lid, *_ in lists:
         out.append(f'\tcmm_register_list_bool_field = {{ mod_id = bag_rtk setting_id = {lid} field_id = watch default_value = 0 }}\n')
     out.append('\tbag_rtk_cd_repair_lists = yes\n}\n\n')
-    # Строка `ERROR_FLAG_INDEX` без галочки (0.6.0 и 0.6.3, его скрины 10-19) — запись
-    # в хранилище строк CMF, которая не разрешается ни в одну строку списка: её не
-    # прячет `cmm_hide_list_item` и у неё нет поля. Откуда она, не названо; здесь
-    # хранилище пересобирается из 1..N, если в нём чужое или число не то, а подпись
-    # и подсказка строки пишутся заново. Зонд — строка `list rebuilt` в debug.log.
+    # Строка `ERROR_FLAG_INDEX` без галочки (0.6.0, 0.6.3, его скрины 10-19) — строка без
+    # своих переменных CMF: подпись `<строка>_name` и владелец
+    # `cmm_list_item_owner_setting_<строка>`, по которому считаются поля. 0.6.4 вернул
+    # подпись — галочки не было: нет владельца. Почему CMF их не записал строке,
+    # добавленной к списку, не мерено; здесь они пишутся каждой строке заново, как
+    # `_cmm_initialize_list_item_metadata`, а хранилище строк сверяется с 1..N
+    # (зонд `list … rebuilt` в debug.log).
     out.append('# Хранилище строк каждого списка — ровно 1..N; подписи строк. Scope: country.\nbag_rtk_cd_repair_lists = {\n')
     for lid, *_ in lists:
         n = len(table[lid])
@@ -364,6 +366,9 @@ def main():
             out.append(f'\t\tadd_to_global_variable_list = {{ name = {store} target = flag:bag_rtk__{lid}_i{i} }}\n')
         out.append('\t}\n')
         for i in range(1, n + 1):
+            # Владелец строки: по нему CMF считает поля строки — без него нет галочки
+            # (0.6.4: подпись вернулась, галочки у выросшей строки нет, его скрин 10-19).
+            out.append(f'\tset_variable = {{ name = cmm_list_item_owner_setting_bag_rtk__{lid}_i{i} value = flag:bag_rtk__{lid} }}\n')
             for suf in ('name', 'desc'):
                 out.append(f'\tset_variable = {{ name = bag_rtk__{lid}_i{i}_{suf} value = flag:bag_rtk__{lid}_i{i}_{suf} }}\n')
     out.append('}\n\n# Показать или спрятать каждую строку по воротам; список, где не видно ни одной,\n'
