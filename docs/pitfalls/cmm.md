@@ -63,3 +63,11 @@ new game, a save load and a country transfer only, whatever it reads like:
 player had just computed was gone by the time he reached the button that reopens
 it. Registration is for making things exist. Anything it destroys, it destroys on
 a schedule nobody chose.
+
+**A list row reading `ERROR_FLAG_INDEX`, with no checkbox, is an entry in the
+list store that resolves to no row** — so `cmm_hide_list_item` cannot hide it
+and it has no field. Seen twice in `rulers_toolkit` (0.6.0 on a new list, 0.6.3
+on a list that grew from 27 to 31 rows); the cause is still unnamed. 0.6.4 checks
+`cmm_list_items_<mod>__<setting>` against 1..N after registration and rebuilds it,
+logging what it found. Rows are also stored by their position, so a list that
+loses or reorders rows needs a new `setting_id`.

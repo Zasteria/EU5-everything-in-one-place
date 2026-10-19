@@ -9,21 +9,1046 @@ bag_rtk_cd_register_lists = {
 	cmm_register_global_settings_list = { mod_id = bag_rtk setting_id = cd_rel1 tab_id = cd_faith item_count = 31 is_ordered = 0 }
 	cmm_register_global_settings_list = { mod_id = bag_rtk setting_id = cd_rel2 tab_id = cd_faith item_count = 36 is_ordered = 0 }
 	cmm_register_global_settings_list = { mod_id = bag_rtk setting_id = cd_estate tab_id = cd_realm item_count = 29 is_ordered = 0 }
-	cmm_register_global_settings_list = { mod_id = bag_rtk setting_id = cd_country tab_id = cd_realm item_count = 15 is_ordered = 0 }
-	cmm_register_global_settings_list = { mod_id = bag_rtk setting_id = cd_diplo tab_id = cd_realm item_count = 21 is_ordered = 0 }
+	cmm_register_global_settings_list = { mod_id = bag_rtk setting_id = cd_state tab_id = cd_realm item_count = 5 is_ordered = 0 }
+	cmm_register_global_settings_list = { mod_id = bag_rtk setting_id = cd_foreign tab_id = cd_realm item_count = 12 is_ordered = 0 }
 	cmm_register_global_settings_list = { mod_id = bag_rtk setting_id = cd_io tab_id = cd_orgs item_count = 34 is_ordered = 0 }
+	cmm_register_global_settings_list = { mod_id = bag_rtk setting_id = cd_hre tab_id = cd_orgs item_count = 14 is_ordered = 0 }
 	cmm_register_global_settings_list = { mod_id = bag_rtk setting_id = cd_sit1 tab_id = cd_crisis item_count = 50 is_ordered = 0 }
 	cmm_register_global_settings_list = { mod_id = bag_rtk setting_id = cd_sit2 tab_id = cd_crisis item_count = 31 is_ordered = 0 }
 	cmm_register_global_settings_list = { mod_id = bag_rtk setting_id = cd_dis tab_id = cd_crisis item_count = 44 is_ordered = 0 }
 	cmm_register_list_bool_field = { mod_id = bag_rtk setting_id = cd_rel1 field_id = watch default_value = 0 }
 	cmm_register_list_bool_field = { mod_id = bag_rtk setting_id = cd_rel2 field_id = watch default_value = 0 }
 	cmm_register_list_bool_field = { mod_id = bag_rtk setting_id = cd_estate field_id = watch default_value = 0 }
-	cmm_register_list_bool_field = { mod_id = bag_rtk setting_id = cd_country field_id = watch default_value = 0 }
-	cmm_register_list_bool_field = { mod_id = bag_rtk setting_id = cd_diplo field_id = watch default_value = 0 }
+	cmm_register_list_bool_field = { mod_id = bag_rtk setting_id = cd_state field_id = watch default_value = 0 }
+	cmm_register_list_bool_field = { mod_id = bag_rtk setting_id = cd_foreign field_id = watch default_value = 0 }
 	cmm_register_list_bool_field = { mod_id = bag_rtk setting_id = cd_io field_id = watch default_value = 0 }
+	cmm_register_list_bool_field = { mod_id = bag_rtk setting_id = cd_hre field_id = watch default_value = 0 }
 	cmm_register_list_bool_field = { mod_id = bag_rtk setting_id = cd_sit1 field_id = watch default_value = 0 }
 	cmm_register_list_bool_field = { mod_id = bag_rtk setting_id = cd_sit2 field_id = watch default_value = 0 }
 	cmm_register_list_bool_field = { mod_id = bag_rtk setting_id = cd_dis field_id = watch default_value = 0 }
+	bag_rtk_cd_repair_lists = yes
+}
+
+# Хранилище строк каждого списка — ровно 1..N; подписи строк. Scope: country.
+bag_rtk_cd_repair_lists = {
+	set_global_variable = { name = bag_rtk_cd_total value = 0 }
+	set_global_variable = { name = bag_rtk_cd_foreign value = 0 }
+	every_in_global_list = {
+		variable = cmm_list_items_bag_rtk__cd_rel1
+		change_global_variable = { name = bag_rtk_cd_total add = 1 }
+		if = {
+			limit = { NOT = { OR = { this = flag:bag_rtk__cd_rel1_i1 this = flag:bag_rtk__cd_rel1_i2 this = flag:bag_rtk__cd_rel1_i3 this = flag:bag_rtk__cd_rel1_i4 this = flag:bag_rtk__cd_rel1_i5 this = flag:bag_rtk__cd_rel1_i6 this = flag:bag_rtk__cd_rel1_i7 this = flag:bag_rtk__cd_rel1_i8 this = flag:bag_rtk__cd_rel1_i9 this = flag:bag_rtk__cd_rel1_i10 this = flag:bag_rtk__cd_rel1_i11 this = flag:bag_rtk__cd_rel1_i12 this = flag:bag_rtk__cd_rel1_i13 this = flag:bag_rtk__cd_rel1_i14 this = flag:bag_rtk__cd_rel1_i15 this = flag:bag_rtk__cd_rel1_i16 this = flag:bag_rtk__cd_rel1_i17 this = flag:bag_rtk__cd_rel1_i18 this = flag:bag_rtk__cd_rel1_i19 this = flag:bag_rtk__cd_rel1_i20 this = flag:bag_rtk__cd_rel1_i21 this = flag:bag_rtk__cd_rel1_i22 this = flag:bag_rtk__cd_rel1_i23 this = flag:bag_rtk__cd_rel1_i24 this = flag:bag_rtk__cd_rel1_i25 this = flag:bag_rtk__cd_rel1_i26 this = flag:bag_rtk__cd_rel1_i27 this = flag:bag_rtk__cd_rel1_i28 this = flag:bag_rtk__cd_rel1_i29 this = flag:bag_rtk__cd_rel1_i30 this = flag:bag_rtk__cd_rel1_i31 } } }
+			change_global_variable = { name = bag_rtk_cd_foreign add = 1 }
+			set_global_variable = { name = bag_rtk_cd_bad value = this }
+		}
+	}
+	if = {
+		limit = { OR = { global_var:bag_rtk_cd_foreign > 0 NOT = { global_var:bag_rtk_cd_total = 31 } } }
+		debug_log = "bag_rtk: list cd_rel1 rebuilt, entries [GetGlobalVariable('bag_rtk_cd_total').GetValue|0] of 31, foreign [GetGlobalVariable('bag_rtk_cd_foreign').GetValue|0], last foreign [GetGlobalVariable('bag_rtk_cd_bad').GetFlagName]"
+		clear_global_variable_list = cmm_list_items_bag_rtk__cd_rel1
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i1 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i2 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i3 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i4 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i5 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i6 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i7 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i8 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i9 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i10 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i11 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i12 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i13 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i14 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i15 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i16 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i17 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i18 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i19 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i20 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i21 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i22 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i23 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i24 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i25 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i26 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i27 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i28 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i29 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i30 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel1 target = flag:bag_rtk__cd_rel1_i31 }
+	}
+	set_variable = { name = bag_rtk__cd_rel1_i1_name value = flag:bag_rtk__cd_rel1_i1_name }
+	set_variable = { name = bag_rtk__cd_rel1_i1_desc value = flag:bag_rtk__cd_rel1_i1_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i2_name value = flag:bag_rtk__cd_rel1_i2_name }
+	set_variable = { name = bag_rtk__cd_rel1_i2_desc value = flag:bag_rtk__cd_rel1_i2_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i3_name value = flag:bag_rtk__cd_rel1_i3_name }
+	set_variable = { name = bag_rtk__cd_rel1_i3_desc value = flag:bag_rtk__cd_rel1_i3_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i4_name value = flag:bag_rtk__cd_rel1_i4_name }
+	set_variable = { name = bag_rtk__cd_rel1_i4_desc value = flag:bag_rtk__cd_rel1_i4_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i5_name value = flag:bag_rtk__cd_rel1_i5_name }
+	set_variable = { name = bag_rtk__cd_rel1_i5_desc value = flag:bag_rtk__cd_rel1_i5_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i6_name value = flag:bag_rtk__cd_rel1_i6_name }
+	set_variable = { name = bag_rtk__cd_rel1_i6_desc value = flag:bag_rtk__cd_rel1_i6_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i7_name value = flag:bag_rtk__cd_rel1_i7_name }
+	set_variable = { name = bag_rtk__cd_rel1_i7_desc value = flag:bag_rtk__cd_rel1_i7_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i8_name value = flag:bag_rtk__cd_rel1_i8_name }
+	set_variable = { name = bag_rtk__cd_rel1_i8_desc value = flag:bag_rtk__cd_rel1_i8_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i9_name value = flag:bag_rtk__cd_rel1_i9_name }
+	set_variable = { name = bag_rtk__cd_rel1_i9_desc value = flag:bag_rtk__cd_rel1_i9_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i10_name value = flag:bag_rtk__cd_rel1_i10_name }
+	set_variable = { name = bag_rtk__cd_rel1_i10_desc value = flag:bag_rtk__cd_rel1_i10_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i11_name value = flag:bag_rtk__cd_rel1_i11_name }
+	set_variable = { name = bag_rtk__cd_rel1_i11_desc value = flag:bag_rtk__cd_rel1_i11_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i12_name value = flag:bag_rtk__cd_rel1_i12_name }
+	set_variable = { name = bag_rtk__cd_rel1_i12_desc value = flag:bag_rtk__cd_rel1_i12_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i13_name value = flag:bag_rtk__cd_rel1_i13_name }
+	set_variable = { name = bag_rtk__cd_rel1_i13_desc value = flag:bag_rtk__cd_rel1_i13_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i14_name value = flag:bag_rtk__cd_rel1_i14_name }
+	set_variable = { name = bag_rtk__cd_rel1_i14_desc value = flag:bag_rtk__cd_rel1_i14_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i15_name value = flag:bag_rtk__cd_rel1_i15_name }
+	set_variable = { name = bag_rtk__cd_rel1_i15_desc value = flag:bag_rtk__cd_rel1_i15_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i16_name value = flag:bag_rtk__cd_rel1_i16_name }
+	set_variable = { name = bag_rtk__cd_rel1_i16_desc value = flag:bag_rtk__cd_rel1_i16_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i17_name value = flag:bag_rtk__cd_rel1_i17_name }
+	set_variable = { name = bag_rtk__cd_rel1_i17_desc value = flag:bag_rtk__cd_rel1_i17_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i18_name value = flag:bag_rtk__cd_rel1_i18_name }
+	set_variable = { name = bag_rtk__cd_rel1_i18_desc value = flag:bag_rtk__cd_rel1_i18_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i19_name value = flag:bag_rtk__cd_rel1_i19_name }
+	set_variable = { name = bag_rtk__cd_rel1_i19_desc value = flag:bag_rtk__cd_rel1_i19_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i20_name value = flag:bag_rtk__cd_rel1_i20_name }
+	set_variable = { name = bag_rtk__cd_rel1_i20_desc value = flag:bag_rtk__cd_rel1_i20_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i21_name value = flag:bag_rtk__cd_rel1_i21_name }
+	set_variable = { name = bag_rtk__cd_rel1_i21_desc value = flag:bag_rtk__cd_rel1_i21_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i22_name value = flag:bag_rtk__cd_rel1_i22_name }
+	set_variable = { name = bag_rtk__cd_rel1_i22_desc value = flag:bag_rtk__cd_rel1_i22_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i23_name value = flag:bag_rtk__cd_rel1_i23_name }
+	set_variable = { name = bag_rtk__cd_rel1_i23_desc value = flag:bag_rtk__cd_rel1_i23_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i24_name value = flag:bag_rtk__cd_rel1_i24_name }
+	set_variable = { name = bag_rtk__cd_rel1_i24_desc value = flag:bag_rtk__cd_rel1_i24_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i25_name value = flag:bag_rtk__cd_rel1_i25_name }
+	set_variable = { name = bag_rtk__cd_rel1_i25_desc value = flag:bag_rtk__cd_rel1_i25_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i26_name value = flag:bag_rtk__cd_rel1_i26_name }
+	set_variable = { name = bag_rtk__cd_rel1_i26_desc value = flag:bag_rtk__cd_rel1_i26_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i27_name value = flag:bag_rtk__cd_rel1_i27_name }
+	set_variable = { name = bag_rtk__cd_rel1_i27_desc value = flag:bag_rtk__cd_rel1_i27_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i28_name value = flag:bag_rtk__cd_rel1_i28_name }
+	set_variable = { name = bag_rtk__cd_rel1_i28_desc value = flag:bag_rtk__cd_rel1_i28_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i29_name value = flag:bag_rtk__cd_rel1_i29_name }
+	set_variable = { name = bag_rtk__cd_rel1_i29_desc value = flag:bag_rtk__cd_rel1_i29_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i30_name value = flag:bag_rtk__cd_rel1_i30_name }
+	set_variable = { name = bag_rtk__cd_rel1_i30_desc value = flag:bag_rtk__cd_rel1_i30_desc }
+	set_variable = { name = bag_rtk__cd_rel1_i31_name value = flag:bag_rtk__cd_rel1_i31_name }
+	set_variable = { name = bag_rtk__cd_rel1_i31_desc value = flag:bag_rtk__cd_rel1_i31_desc }
+	set_global_variable = { name = bag_rtk_cd_total value = 0 }
+	set_global_variable = { name = bag_rtk_cd_foreign value = 0 }
+	every_in_global_list = {
+		variable = cmm_list_items_bag_rtk__cd_rel2
+		change_global_variable = { name = bag_rtk_cd_total add = 1 }
+		if = {
+			limit = { NOT = { OR = { this = flag:bag_rtk__cd_rel2_i1 this = flag:bag_rtk__cd_rel2_i2 this = flag:bag_rtk__cd_rel2_i3 this = flag:bag_rtk__cd_rel2_i4 this = flag:bag_rtk__cd_rel2_i5 this = flag:bag_rtk__cd_rel2_i6 this = flag:bag_rtk__cd_rel2_i7 this = flag:bag_rtk__cd_rel2_i8 this = flag:bag_rtk__cd_rel2_i9 this = flag:bag_rtk__cd_rel2_i10 this = flag:bag_rtk__cd_rel2_i11 this = flag:bag_rtk__cd_rel2_i12 this = flag:bag_rtk__cd_rel2_i13 this = flag:bag_rtk__cd_rel2_i14 this = flag:bag_rtk__cd_rel2_i15 this = flag:bag_rtk__cd_rel2_i16 this = flag:bag_rtk__cd_rel2_i17 this = flag:bag_rtk__cd_rel2_i18 this = flag:bag_rtk__cd_rel2_i19 this = flag:bag_rtk__cd_rel2_i20 this = flag:bag_rtk__cd_rel2_i21 this = flag:bag_rtk__cd_rel2_i22 this = flag:bag_rtk__cd_rel2_i23 this = flag:bag_rtk__cd_rel2_i24 this = flag:bag_rtk__cd_rel2_i25 this = flag:bag_rtk__cd_rel2_i26 this = flag:bag_rtk__cd_rel2_i27 this = flag:bag_rtk__cd_rel2_i28 this = flag:bag_rtk__cd_rel2_i29 this = flag:bag_rtk__cd_rel2_i30 this = flag:bag_rtk__cd_rel2_i31 this = flag:bag_rtk__cd_rel2_i32 this = flag:bag_rtk__cd_rel2_i33 this = flag:bag_rtk__cd_rel2_i34 this = flag:bag_rtk__cd_rel2_i35 this = flag:bag_rtk__cd_rel2_i36 } } }
+			change_global_variable = { name = bag_rtk_cd_foreign add = 1 }
+			set_global_variable = { name = bag_rtk_cd_bad value = this }
+		}
+	}
+	if = {
+		limit = { OR = { global_var:bag_rtk_cd_foreign > 0 NOT = { global_var:bag_rtk_cd_total = 36 } } }
+		debug_log = "bag_rtk: list cd_rel2 rebuilt, entries [GetGlobalVariable('bag_rtk_cd_total').GetValue|0] of 36, foreign [GetGlobalVariable('bag_rtk_cd_foreign').GetValue|0], last foreign [GetGlobalVariable('bag_rtk_cd_bad').GetFlagName]"
+		clear_global_variable_list = cmm_list_items_bag_rtk__cd_rel2
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i1 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i2 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i3 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i4 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i5 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i6 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i7 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i8 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i9 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i10 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i11 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i12 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i13 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i14 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i15 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i16 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i17 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i18 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i19 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i20 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i21 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i22 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i23 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i24 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i25 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i26 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i27 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i28 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i29 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i30 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i31 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i32 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i33 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i34 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i35 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_rel2 target = flag:bag_rtk__cd_rel2_i36 }
+	}
+	set_variable = { name = bag_rtk__cd_rel2_i1_name value = flag:bag_rtk__cd_rel2_i1_name }
+	set_variable = { name = bag_rtk__cd_rel2_i1_desc value = flag:bag_rtk__cd_rel2_i1_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i2_name value = flag:bag_rtk__cd_rel2_i2_name }
+	set_variable = { name = bag_rtk__cd_rel2_i2_desc value = flag:bag_rtk__cd_rel2_i2_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i3_name value = flag:bag_rtk__cd_rel2_i3_name }
+	set_variable = { name = bag_rtk__cd_rel2_i3_desc value = flag:bag_rtk__cd_rel2_i3_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i4_name value = flag:bag_rtk__cd_rel2_i4_name }
+	set_variable = { name = bag_rtk__cd_rel2_i4_desc value = flag:bag_rtk__cd_rel2_i4_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i5_name value = flag:bag_rtk__cd_rel2_i5_name }
+	set_variable = { name = bag_rtk__cd_rel2_i5_desc value = flag:bag_rtk__cd_rel2_i5_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i6_name value = flag:bag_rtk__cd_rel2_i6_name }
+	set_variable = { name = bag_rtk__cd_rel2_i6_desc value = flag:bag_rtk__cd_rel2_i6_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i7_name value = flag:bag_rtk__cd_rel2_i7_name }
+	set_variable = { name = bag_rtk__cd_rel2_i7_desc value = flag:bag_rtk__cd_rel2_i7_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i8_name value = flag:bag_rtk__cd_rel2_i8_name }
+	set_variable = { name = bag_rtk__cd_rel2_i8_desc value = flag:bag_rtk__cd_rel2_i8_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i9_name value = flag:bag_rtk__cd_rel2_i9_name }
+	set_variable = { name = bag_rtk__cd_rel2_i9_desc value = flag:bag_rtk__cd_rel2_i9_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i10_name value = flag:bag_rtk__cd_rel2_i10_name }
+	set_variable = { name = bag_rtk__cd_rel2_i10_desc value = flag:bag_rtk__cd_rel2_i10_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i11_name value = flag:bag_rtk__cd_rel2_i11_name }
+	set_variable = { name = bag_rtk__cd_rel2_i11_desc value = flag:bag_rtk__cd_rel2_i11_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i12_name value = flag:bag_rtk__cd_rel2_i12_name }
+	set_variable = { name = bag_rtk__cd_rel2_i12_desc value = flag:bag_rtk__cd_rel2_i12_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i13_name value = flag:bag_rtk__cd_rel2_i13_name }
+	set_variable = { name = bag_rtk__cd_rel2_i13_desc value = flag:bag_rtk__cd_rel2_i13_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i14_name value = flag:bag_rtk__cd_rel2_i14_name }
+	set_variable = { name = bag_rtk__cd_rel2_i14_desc value = flag:bag_rtk__cd_rel2_i14_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i15_name value = flag:bag_rtk__cd_rel2_i15_name }
+	set_variable = { name = bag_rtk__cd_rel2_i15_desc value = flag:bag_rtk__cd_rel2_i15_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i16_name value = flag:bag_rtk__cd_rel2_i16_name }
+	set_variable = { name = bag_rtk__cd_rel2_i16_desc value = flag:bag_rtk__cd_rel2_i16_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i17_name value = flag:bag_rtk__cd_rel2_i17_name }
+	set_variable = { name = bag_rtk__cd_rel2_i17_desc value = flag:bag_rtk__cd_rel2_i17_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i18_name value = flag:bag_rtk__cd_rel2_i18_name }
+	set_variable = { name = bag_rtk__cd_rel2_i18_desc value = flag:bag_rtk__cd_rel2_i18_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i19_name value = flag:bag_rtk__cd_rel2_i19_name }
+	set_variable = { name = bag_rtk__cd_rel2_i19_desc value = flag:bag_rtk__cd_rel2_i19_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i20_name value = flag:bag_rtk__cd_rel2_i20_name }
+	set_variable = { name = bag_rtk__cd_rel2_i20_desc value = flag:bag_rtk__cd_rel2_i20_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i21_name value = flag:bag_rtk__cd_rel2_i21_name }
+	set_variable = { name = bag_rtk__cd_rel2_i21_desc value = flag:bag_rtk__cd_rel2_i21_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i22_name value = flag:bag_rtk__cd_rel2_i22_name }
+	set_variable = { name = bag_rtk__cd_rel2_i22_desc value = flag:bag_rtk__cd_rel2_i22_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i23_name value = flag:bag_rtk__cd_rel2_i23_name }
+	set_variable = { name = bag_rtk__cd_rel2_i23_desc value = flag:bag_rtk__cd_rel2_i23_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i24_name value = flag:bag_rtk__cd_rel2_i24_name }
+	set_variable = { name = bag_rtk__cd_rel2_i24_desc value = flag:bag_rtk__cd_rel2_i24_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i25_name value = flag:bag_rtk__cd_rel2_i25_name }
+	set_variable = { name = bag_rtk__cd_rel2_i25_desc value = flag:bag_rtk__cd_rel2_i25_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i26_name value = flag:bag_rtk__cd_rel2_i26_name }
+	set_variable = { name = bag_rtk__cd_rel2_i26_desc value = flag:bag_rtk__cd_rel2_i26_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i27_name value = flag:bag_rtk__cd_rel2_i27_name }
+	set_variable = { name = bag_rtk__cd_rel2_i27_desc value = flag:bag_rtk__cd_rel2_i27_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i28_name value = flag:bag_rtk__cd_rel2_i28_name }
+	set_variable = { name = bag_rtk__cd_rel2_i28_desc value = flag:bag_rtk__cd_rel2_i28_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i29_name value = flag:bag_rtk__cd_rel2_i29_name }
+	set_variable = { name = bag_rtk__cd_rel2_i29_desc value = flag:bag_rtk__cd_rel2_i29_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i30_name value = flag:bag_rtk__cd_rel2_i30_name }
+	set_variable = { name = bag_rtk__cd_rel2_i30_desc value = flag:bag_rtk__cd_rel2_i30_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i31_name value = flag:bag_rtk__cd_rel2_i31_name }
+	set_variable = { name = bag_rtk__cd_rel2_i31_desc value = flag:bag_rtk__cd_rel2_i31_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i32_name value = flag:bag_rtk__cd_rel2_i32_name }
+	set_variable = { name = bag_rtk__cd_rel2_i32_desc value = flag:bag_rtk__cd_rel2_i32_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i33_name value = flag:bag_rtk__cd_rel2_i33_name }
+	set_variable = { name = bag_rtk__cd_rel2_i33_desc value = flag:bag_rtk__cd_rel2_i33_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i34_name value = flag:bag_rtk__cd_rel2_i34_name }
+	set_variable = { name = bag_rtk__cd_rel2_i34_desc value = flag:bag_rtk__cd_rel2_i34_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i35_name value = flag:bag_rtk__cd_rel2_i35_name }
+	set_variable = { name = bag_rtk__cd_rel2_i35_desc value = flag:bag_rtk__cd_rel2_i35_desc }
+	set_variable = { name = bag_rtk__cd_rel2_i36_name value = flag:bag_rtk__cd_rel2_i36_name }
+	set_variable = { name = bag_rtk__cd_rel2_i36_desc value = flag:bag_rtk__cd_rel2_i36_desc }
+	set_global_variable = { name = bag_rtk_cd_total value = 0 }
+	set_global_variable = { name = bag_rtk_cd_foreign value = 0 }
+	every_in_global_list = {
+		variable = cmm_list_items_bag_rtk__cd_estate
+		change_global_variable = { name = bag_rtk_cd_total add = 1 }
+		if = {
+			limit = { NOT = { OR = { this = flag:bag_rtk__cd_estate_i1 this = flag:bag_rtk__cd_estate_i2 this = flag:bag_rtk__cd_estate_i3 this = flag:bag_rtk__cd_estate_i4 this = flag:bag_rtk__cd_estate_i5 this = flag:bag_rtk__cd_estate_i6 this = flag:bag_rtk__cd_estate_i7 this = flag:bag_rtk__cd_estate_i8 this = flag:bag_rtk__cd_estate_i9 this = flag:bag_rtk__cd_estate_i10 this = flag:bag_rtk__cd_estate_i11 this = flag:bag_rtk__cd_estate_i12 this = flag:bag_rtk__cd_estate_i13 this = flag:bag_rtk__cd_estate_i14 this = flag:bag_rtk__cd_estate_i15 this = flag:bag_rtk__cd_estate_i16 this = flag:bag_rtk__cd_estate_i17 this = flag:bag_rtk__cd_estate_i18 this = flag:bag_rtk__cd_estate_i19 this = flag:bag_rtk__cd_estate_i20 this = flag:bag_rtk__cd_estate_i21 this = flag:bag_rtk__cd_estate_i22 this = flag:bag_rtk__cd_estate_i23 this = flag:bag_rtk__cd_estate_i24 this = flag:bag_rtk__cd_estate_i25 this = flag:bag_rtk__cd_estate_i26 this = flag:bag_rtk__cd_estate_i27 this = flag:bag_rtk__cd_estate_i28 this = flag:bag_rtk__cd_estate_i29 } } }
+			change_global_variable = { name = bag_rtk_cd_foreign add = 1 }
+			set_global_variable = { name = bag_rtk_cd_bad value = this }
+		}
+	}
+	if = {
+		limit = { OR = { global_var:bag_rtk_cd_foreign > 0 NOT = { global_var:bag_rtk_cd_total = 29 } } }
+		debug_log = "bag_rtk: list cd_estate rebuilt, entries [GetGlobalVariable('bag_rtk_cd_total').GetValue|0] of 29, foreign [GetGlobalVariable('bag_rtk_cd_foreign').GetValue|0], last foreign [GetGlobalVariable('bag_rtk_cd_bad').GetFlagName]"
+		clear_global_variable_list = cmm_list_items_bag_rtk__cd_estate
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i1 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i2 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i3 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i4 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i5 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i6 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i7 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i8 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i9 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i10 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i11 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i12 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i13 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i14 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i15 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i16 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i17 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i18 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i19 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i20 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i21 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i22 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i23 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i24 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i25 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i26 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i27 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i28 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_estate target = flag:bag_rtk__cd_estate_i29 }
+	}
+	set_variable = { name = bag_rtk__cd_estate_i1_name value = flag:bag_rtk__cd_estate_i1_name }
+	set_variable = { name = bag_rtk__cd_estate_i1_desc value = flag:bag_rtk__cd_estate_i1_desc }
+	set_variable = { name = bag_rtk__cd_estate_i2_name value = flag:bag_rtk__cd_estate_i2_name }
+	set_variable = { name = bag_rtk__cd_estate_i2_desc value = flag:bag_rtk__cd_estate_i2_desc }
+	set_variable = { name = bag_rtk__cd_estate_i3_name value = flag:bag_rtk__cd_estate_i3_name }
+	set_variable = { name = bag_rtk__cd_estate_i3_desc value = flag:bag_rtk__cd_estate_i3_desc }
+	set_variable = { name = bag_rtk__cd_estate_i4_name value = flag:bag_rtk__cd_estate_i4_name }
+	set_variable = { name = bag_rtk__cd_estate_i4_desc value = flag:bag_rtk__cd_estate_i4_desc }
+	set_variable = { name = bag_rtk__cd_estate_i5_name value = flag:bag_rtk__cd_estate_i5_name }
+	set_variable = { name = bag_rtk__cd_estate_i5_desc value = flag:bag_rtk__cd_estate_i5_desc }
+	set_variable = { name = bag_rtk__cd_estate_i6_name value = flag:bag_rtk__cd_estate_i6_name }
+	set_variable = { name = bag_rtk__cd_estate_i6_desc value = flag:bag_rtk__cd_estate_i6_desc }
+	set_variable = { name = bag_rtk__cd_estate_i7_name value = flag:bag_rtk__cd_estate_i7_name }
+	set_variable = { name = bag_rtk__cd_estate_i7_desc value = flag:bag_rtk__cd_estate_i7_desc }
+	set_variable = { name = bag_rtk__cd_estate_i8_name value = flag:bag_rtk__cd_estate_i8_name }
+	set_variable = { name = bag_rtk__cd_estate_i8_desc value = flag:bag_rtk__cd_estate_i8_desc }
+	set_variable = { name = bag_rtk__cd_estate_i9_name value = flag:bag_rtk__cd_estate_i9_name }
+	set_variable = { name = bag_rtk__cd_estate_i9_desc value = flag:bag_rtk__cd_estate_i9_desc }
+	set_variable = { name = bag_rtk__cd_estate_i10_name value = flag:bag_rtk__cd_estate_i10_name }
+	set_variable = { name = bag_rtk__cd_estate_i10_desc value = flag:bag_rtk__cd_estate_i10_desc }
+	set_variable = { name = bag_rtk__cd_estate_i11_name value = flag:bag_rtk__cd_estate_i11_name }
+	set_variable = { name = bag_rtk__cd_estate_i11_desc value = flag:bag_rtk__cd_estate_i11_desc }
+	set_variable = { name = bag_rtk__cd_estate_i12_name value = flag:bag_rtk__cd_estate_i12_name }
+	set_variable = { name = bag_rtk__cd_estate_i12_desc value = flag:bag_rtk__cd_estate_i12_desc }
+	set_variable = { name = bag_rtk__cd_estate_i13_name value = flag:bag_rtk__cd_estate_i13_name }
+	set_variable = { name = bag_rtk__cd_estate_i13_desc value = flag:bag_rtk__cd_estate_i13_desc }
+	set_variable = { name = bag_rtk__cd_estate_i14_name value = flag:bag_rtk__cd_estate_i14_name }
+	set_variable = { name = bag_rtk__cd_estate_i14_desc value = flag:bag_rtk__cd_estate_i14_desc }
+	set_variable = { name = bag_rtk__cd_estate_i15_name value = flag:bag_rtk__cd_estate_i15_name }
+	set_variable = { name = bag_rtk__cd_estate_i15_desc value = flag:bag_rtk__cd_estate_i15_desc }
+	set_variable = { name = bag_rtk__cd_estate_i16_name value = flag:bag_rtk__cd_estate_i16_name }
+	set_variable = { name = bag_rtk__cd_estate_i16_desc value = flag:bag_rtk__cd_estate_i16_desc }
+	set_variable = { name = bag_rtk__cd_estate_i17_name value = flag:bag_rtk__cd_estate_i17_name }
+	set_variable = { name = bag_rtk__cd_estate_i17_desc value = flag:bag_rtk__cd_estate_i17_desc }
+	set_variable = { name = bag_rtk__cd_estate_i18_name value = flag:bag_rtk__cd_estate_i18_name }
+	set_variable = { name = bag_rtk__cd_estate_i18_desc value = flag:bag_rtk__cd_estate_i18_desc }
+	set_variable = { name = bag_rtk__cd_estate_i19_name value = flag:bag_rtk__cd_estate_i19_name }
+	set_variable = { name = bag_rtk__cd_estate_i19_desc value = flag:bag_rtk__cd_estate_i19_desc }
+	set_variable = { name = bag_rtk__cd_estate_i20_name value = flag:bag_rtk__cd_estate_i20_name }
+	set_variable = { name = bag_rtk__cd_estate_i20_desc value = flag:bag_rtk__cd_estate_i20_desc }
+	set_variable = { name = bag_rtk__cd_estate_i21_name value = flag:bag_rtk__cd_estate_i21_name }
+	set_variable = { name = bag_rtk__cd_estate_i21_desc value = flag:bag_rtk__cd_estate_i21_desc }
+	set_variable = { name = bag_rtk__cd_estate_i22_name value = flag:bag_rtk__cd_estate_i22_name }
+	set_variable = { name = bag_rtk__cd_estate_i22_desc value = flag:bag_rtk__cd_estate_i22_desc }
+	set_variable = { name = bag_rtk__cd_estate_i23_name value = flag:bag_rtk__cd_estate_i23_name }
+	set_variable = { name = bag_rtk__cd_estate_i23_desc value = flag:bag_rtk__cd_estate_i23_desc }
+	set_variable = { name = bag_rtk__cd_estate_i24_name value = flag:bag_rtk__cd_estate_i24_name }
+	set_variable = { name = bag_rtk__cd_estate_i24_desc value = flag:bag_rtk__cd_estate_i24_desc }
+	set_variable = { name = bag_rtk__cd_estate_i25_name value = flag:bag_rtk__cd_estate_i25_name }
+	set_variable = { name = bag_rtk__cd_estate_i25_desc value = flag:bag_rtk__cd_estate_i25_desc }
+	set_variable = { name = bag_rtk__cd_estate_i26_name value = flag:bag_rtk__cd_estate_i26_name }
+	set_variable = { name = bag_rtk__cd_estate_i26_desc value = flag:bag_rtk__cd_estate_i26_desc }
+	set_variable = { name = bag_rtk__cd_estate_i27_name value = flag:bag_rtk__cd_estate_i27_name }
+	set_variable = { name = bag_rtk__cd_estate_i27_desc value = flag:bag_rtk__cd_estate_i27_desc }
+	set_variable = { name = bag_rtk__cd_estate_i28_name value = flag:bag_rtk__cd_estate_i28_name }
+	set_variable = { name = bag_rtk__cd_estate_i28_desc value = flag:bag_rtk__cd_estate_i28_desc }
+	set_variable = { name = bag_rtk__cd_estate_i29_name value = flag:bag_rtk__cd_estate_i29_name }
+	set_variable = { name = bag_rtk__cd_estate_i29_desc value = flag:bag_rtk__cd_estate_i29_desc }
+	set_global_variable = { name = bag_rtk_cd_total value = 0 }
+	set_global_variable = { name = bag_rtk_cd_foreign value = 0 }
+	every_in_global_list = {
+		variable = cmm_list_items_bag_rtk__cd_state
+		change_global_variable = { name = bag_rtk_cd_total add = 1 }
+		if = {
+			limit = { NOT = { OR = { this = flag:bag_rtk__cd_state_i1 this = flag:bag_rtk__cd_state_i2 this = flag:bag_rtk__cd_state_i3 this = flag:bag_rtk__cd_state_i4 this = flag:bag_rtk__cd_state_i5 } } }
+			change_global_variable = { name = bag_rtk_cd_foreign add = 1 }
+			set_global_variable = { name = bag_rtk_cd_bad value = this }
+		}
+	}
+	if = {
+		limit = { OR = { global_var:bag_rtk_cd_foreign > 0 NOT = { global_var:bag_rtk_cd_total = 5 } } }
+		debug_log = "bag_rtk: list cd_state rebuilt, entries [GetGlobalVariable('bag_rtk_cd_total').GetValue|0] of 5, foreign [GetGlobalVariable('bag_rtk_cd_foreign').GetValue|0], last foreign [GetGlobalVariable('bag_rtk_cd_bad').GetFlagName]"
+		clear_global_variable_list = cmm_list_items_bag_rtk__cd_state
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_state target = flag:bag_rtk__cd_state_i1 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_state target = flag:bag_rtk__cd_state_i2 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_state target = flag:bag_rtk__cd_state_i3 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_state target = flag:bag_rtk__cd_state_i4 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_state target = flag:bag_rtk__cd_state_i5 }
+	}
+	set_variable = { name = bag_rtk__cd_state_i1_name value = flag:bag_rtk__cd_state_i1_name }
+	set_variable = { name = bag_rtk__cd_state_i1_desc value = flag:bag_rtk__cd_state_i1_desc }
+	set_variable = { name = bag_rtk__cd_state_i2_name value = flag:bag_rtk__cd_state_i2_name }
+	set_variable = { name = bag_rtk__cd_state_i2_desc value = flag:bag_rtk__cd_state_i2_desc }
+	set_variable = { name = bag_rtk__cd_state_i3_name value = flag:bag_rtk__cd_state_i3_name }
+	set_variable = { name = bag_rtk__cd_state_i3_desc value = flag:bag_rtk__cd_state_i3_desc }
+	set_variable = { name = bag_rtk__cd_state_i4_name value = flag:bag_rtk__cd_state_i4_name }
+	set_variable = { name = bag_rtk__cd_state_i4_desc value = flag:bag_rtk__cd_state_i4_desc }
+	set_variable = { name = bag_rtk__cd_state_i5_name value = flag:bag_rtk__cd_state_i5_name }
+	set_variable = { name = bag_rtk__cd_state_i5_desc value = flag:bag_rtk__cd_state_i5_desc }
+	set_global_variable = { name = bag_rtk_cd_total value = 0 }
+	set_global_variable = { name = bag_rtk_cd_foreign value = 0 }
+	every_in_global_list = {
+		variable = cmm_list_items_bag_rtk__cd_foreign
+		change_global_variable = { name = bag_rtk_cd_total add = 1 }
+		if = {
+			limit = { NOT = { OR = { this = flag:bag_rtk__cd_foreign_i1 this = flag:bag_rtk__cd_foreign_i2 this = flag:bag_rtk__cd_foreign_i3 this = flag:bag_rtk__cd_foreign_i4 this = flag:bag_rtk__cd_foreign_i5 this = flag:bag_rtk__cd_foreign_i6 this = flag:bag_rtk__cd_foreign_i7 this = flag:bag_rtk__cd_foreign_i8 this = flag:bag_rtk__cd_foreign_i9 this = flag:bag_rtk__cd_foreign_i10 this = flag:bag_rtk__cd_foreign_i11 this = flag:bag_rtk__cd_foreign_i12 } } }
+			change_global_variable = { name = bag_rtk_cd_foreign add = 1 }
+			set_global_variable = { name = bag_rtk_cd_bad value = this }
+		}
+	}
+	if = {
+		limit = { OR = { global_var:bag_rtk_cd_foreign > 0 NOT = { global_var:bag_rtk_cd_total = 12 } } }
+		debug_log = "bag_rtk: list cd_foreign rebuilt, entries [GetGlobalVariable('bag_rtk_cd_total').GetValue|0] of 12, foreign [GetGlobalVariable('bag_rtk_cd_foreign').GetValue|0], last foreign [GetGlobalVariable('bag_rtk_cd_bad').GetFlagName]"
+		clear_global_variable_list = cmm_list_items_bag_rtk__cd_foreign
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_foreign target = flag:bag_rtk__cd_foreign_i1 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_foreign target = flag:bag_rtk__cd_foreign_i2 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_foreign target = flag:bag_rtk__cd_foreign_i3 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_foreign target = flag:bag_rtk__cd_foreign_i4 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_foreign target = flag:bag_rtk__cd_foreign_i5 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_foreign target = flag:bag_rtk__cd_foreign_i6 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_foreign target = flag:bag_rtk__cd_foreign_i7 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_foreign target = flag:bag_rtk__cd_foreign_i8 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_foreign target = flag:bag_rtk__cd_foreign_i9 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_foreign target = flag:bag_rtk__cd_foreign_i10 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_foreign target = flag:bag_rtk__cd_foreign_i11 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_foreign target = flag:bag_rtk__cd_foreign_i12 }
+	}
+	set_variable = { name = bag_rtk__cd_foreign_i1_name value = flag:bag_rtk__cd_foreign_i1_name }
+	set_variable = { name = bag_rtk__cd_foreign_i1_desc value = flag:bag_rtk__cd_foreign_i1_desc }
+	set_variable = { name = bag_rtk__cd_foreign_i2_name value = flag:bag_rtk__cd_foreign_i2_name }
+	set_variable = { name = bag_rtk__cd_foreign_i2_desc value = flag:bag_rtk__cd_foreign_i2_desc }
+	set_variable = { name = bag_rtk__cd_foreign_i3_name value = flag:bag_rtk__cd_foreign_i3_name }
+	set_variable = { name = bag_rtk__cd_foreign_i3_desc value = flag:bag_rtk__cd_foreign_i3_desc }
+	set_variable = { name = bag_rtk__cd_foreign_i4_name value = flag:bag_rtk__cd_foreign_i4_name }
+	set_variable = { name = bag_rtk__cd_foreign_i4_desc value = flag:bag_rtk__cd_foreign_i4_desc }
+	set_variable = { name = bag_rtk__cd_foreign_i5_name value = flag:bag_rtk__cd_foreign_i5_name }
+	set_variable = { name = bag_rtk__cd_foreign_i5_desc value = flag:bag_rtk__cd_foreign_i5_desc }
+	set_variable = { name = bag_rtk__cd_foreign_i6_name value = flag:bag_rtk__cd_foreign_i6_name }
+	set_variable = { name = bag_rtk__cd_foreign_i6_desc value = flag:bag_rtk__cd_foreign_i6_desc }
+	set_variable = { name = bag_rtk__cd_foreign_i7_name value = flag:bag_rtk__cd_foreign_i7_name }
+	set_variable = { name = bag_rtk__cd_foreign_i7_desc value = flag:bag_rtk__cd_foreign_i7_desc }
+	set_variable = { name = bag_rtk__cd_foreign_i8_name value = flag:bag_rtk__cd_foreign_i8_name }
+	set_variable = { name = bag_rtk__cd_foreign_i8_desc value = flag:bag_rtk__cd_foreign_i8_desc }
+	set_variable = { name = bag_rtk__cd_foreign_i9_name value = flag:bag_rtk__cd_foreign_i9_name }
+	set_variable = { name = bag_rtk__cd_foreign_i9_desc value = flag:bag_rtk__cd_foreign_i9_desc }
+	set_variable = { name = bag_rtk__cd_foreign_i10_name value = flag:bag_rtk__cd_foreign_i10_name }
+	set_variable = { name = bag_rtk__cd_foreign_i10_desc value = flag:bag_rtk__cd_foreign_i10_desc }
+	set_variable = { name = bag_rtk__cd_foreign_i11_name value = flag:bag_rtk__cd_foreign_i11_name }
+	set_variable = { name = bag_rtk__cd_foreign_i11_desc value = flag:bag_rtk__cd_foreign_i11_desc }
+	set_variable = { name = bag_rtk__cd_foreign_i12_name value = flag:bag_rtk__cd_foreign_i12_name }
+	set_variable = { name = bag_rtk__cd_foreign_i12_desc value = flag:bag_rtk__cd_foreign_i12_desc }
+	set_global_variable = { name = bag_rtk_cd_total value = 0 }
+	set_global_variable = { name = bag_rtk_cd_foreign value = 0 }
+	every_in_global_list = {
+		variable = cmm_list_items_bag_rtk__cd_io
+		change_global_variable = { name = bag_rtk_cd_total add = 1 }
+		if = {
+			limit = { NOT = { OR = { this = flag:bag_rtk__cd_io_i1 this = flag:bag_rtk__cd_io_i2 this = flag:bag_rtk__cd_io_i3 this = flag:bag_rtk__cd_io_i4 this = flag:bag_rtk__cd_io_i5 this = flag:bag_rtk__cd_io_i6 this = flag:bag_rtk__cd_io_i7 this = flag:bag_rtk__cd_io_i8 this = flag:bag_rtk__cd_io_i9 this = flag:bag_rtk__cd_io_i10 this = flag:bag_rtk__cd_io_i11 this = flag:bag_rtk__cd_io_i12 this = flag:bag_rtk__cd_io_i13 this = flag:bag_rtk__cd_io_i14 this = flag:bag_rtk__cd_io_i15 this = flag:bag_rtk__cd_io_i16 this = flag:bag_rtk__cd_io_i17 this = flag:bag_rtk__cd_io_i18 this = flag:bag_rtk__cd_io_i19 this = flag:bag_rtk__cd_io_i20 this = flag:bag_rtk__cd_io_i21 this = flag:bag_rtk__cd_io_i22 this = flag:bag_rtk__cd_io_i23 this = flag:bag_rtk__cd_io_i24 this = flag:bag_rtk__cd_io_i25 this = flag:bag_rtk__cd_io_i26 this = flag:bag_rtk__cd_io_i27 this = flag:bag_rtk__cd_io_i28 this = flag:bag_rtk__cd_io_i29 this = flag:bag_rtk__cd_io_i30 this = flag:bag_rtk__cd_io_i31 this = flag:bag_rtk__cd_io_i32 this = flag:bag_rtk__cd_io_i33 this = flag:bag_rtk__cd_io_i34 } } }
+			change_global_variable = { name = bag_rtk_cd_foreign add = 1 }
+			set_global_variable = { name = bag_rtk_cd_bad value = this }
+		}
+	}
+	if = {
+		limit = { OR = { global_var:bag_rtk_cd_foreign > 0 NOT = { global_var:bag_rtk_cd_total = 34 } } }
+		debug_log = "bag_rtk: list cd_io rebuilt, entries [GetGlobalVariable('bag_rtk_cd_total').GetValue|0] of 34, foreign [GetGlobalVariable('bag_rtk_cd_foreign').GetValue|0], last foreign [GetGlobalVariable('bag_rtk_cd_bad').GetFlagName]"
+		clear_global_variable_list = cmm_list_items_bag_rtk__cd_io
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i1 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i2 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i3 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i4 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i5 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i6 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i7 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i8 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i9 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i10 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i11 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i12 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i13 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i14 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i15 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i16 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i17 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i18 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i19 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i20 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i21 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i22 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i23 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i24 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i25 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i26 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i27 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i28 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i29 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i30 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i31 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i32 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i33 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_io target = flag:bag_rtk__cd_io_i34 }
+	}
+	set_variable = { name = bag_rtk__cd_io_i1_name value = flag:bag_rtk__cd_io_i1_name }
+	set_variable = { name = bag_rtk__cd_io_i1_desc value = flag:bag_rtk__cd_io_i1_desc }
+	set_variable = { name = bag_rtk__cd_io_i2_name value = flag:bag_rtk__cd_io_i2_name }
+	set_variable = { name = bag_rtk__cd_io_i2_desc value = flag:bag_rtk__cd_io_i2_desc }
+	set_variable = { name = bag_rtk__cd_io_i3_name value = flag:bag_rtk__cd_io_i3_name }
+	set_variable = { name = bag_rtk__cd_io_i3_desc value = flag:bag_rtk__cd_io_i3_desc }
+	set_variable = { name = bag_rtk__cd_io_i4_name value = flag:bag_rtk__cd_io_i4_name }
+	set_variable = { name = bag_rtk__cd_io_i4_desc value = flag:bag_rtk__cd_io_i4_desc }
+	set_variable = { name = bag_rtk__cd_io_i5_name value = flag:bag_rtk__cd_io_i5_name }
+	set_variable = { name = bag_rtk__cd_io_i5_desc value = flag:bag_rtk__cd_io_i5_desc }
+	set_variable = { name = bag_rtk__cd_io_i6_name value = flag:bag_rtk__cd_io_i6_name }
+	set_variable = { name = bag_rtk__cd_io_i6_desc value = flag:bag_rtk__cd_io_i6_desc }
+	set_variable = { name = bag_rtk__cd_io_i7_name value = flag:bag_rtk__cd_io_i7_name }
+	set_variable = { name = bag_rtk__cd_io_i7_desc value = flag:bag_rtk__cd_io_i7_desc }
+	set_variable = { name = bag_rtk__cd_io_i8_name value = flag:bag_rtk__cd_io_i8_name }
+	set_variable = { name = bag_rtk__cd_io_i8_desc value = flag:bag_rtk__cd_io_i8_desc }
+	set_variable = { name = bag_rtk__cd_io_i9_name value = flag:bag_rtk__cd_io_i9_name }
+	set_variable = { name = bag_rtk__cd_io_i9_desc value = flag:bag_rtk__cd_io_i9_desc }
+	set_variable = { name = bag_rtk__cd_io_i10_name value = flag:bag_rtk__cd_io_i10_name }
+	set_variable = { name = bag_rtk__cd_io_i10_desc value = flag:bag_rtk__cd_io_i10_desc }
+	set_variable = { name = bag_rtk__cd_io_i11_name value = flag:bag_rtk__cd_io_i11_name }
+	set_variable = { name = bag_rtk__cd_io_i11_desc value = flag:bag_rtk__cd_io_i11_desc }
+	set_variable = { name = bag_rtk__cd_io_i12_name value = flag:bag_rtk__cd_io_i12_name }
+	set_variable = { name = bag_rtk__cd_io_i12_desc value = flag:bag_rtk__cd_io_i12_desc }
+	set_variable = { name = bag_rtk__cd_io_i13_name value = flag:bag_rtk__cd_io_i13_name }
+	set_variable = { name = bag_rtk__cd_io_i13_desc value = flag:bag_rtk__cd_io_i13_desc }
+	set_variable = { name = bag_rtk__cd_io_i14_name value = flag:bag_rtk__cd_io_i14_name }
+	set_variable = { name = bag_rtk__cd_io_i14_desc value = flag:bag_rtk__cd_io_i14_desc }
+	set_variable = { name = bag_rtk__cd_io_i15_name value = flag:bag_rtk__cd_io_i15_name }
+	set_variable = { name = bag_rtk__cd_io_i15_desc value = flag:bag_rtk__cd_io_i15_desc }
+	set_variable = { name = bag_rtk__cd_io_i16_name value = flag:bag_rtk__cd_io_i16_name }
+	set_variable = { name = bag_rtk__cd_io_i16_desc value = flag:bag_rtk__cd_io_i16_desc }
+	set_variable = { name = bag_rtk__cd_io_i17_name value = flag:bag_rtk__cd_io_i17_name }
+	set_variable = { name = bag_rtk__cd_io_i17_desc value = flag:bag_rtk__cd_io_i17_desc }
+	set_variable = { name = bag_rtk__cd_io_i18_name value = flag:bag_rtk__cd_io_i18_name }
+	set_variable = { name = bag_rtk__cd_io_i18_desc value = flag:bag_rtk__cd_io_i18_desc }
+	set_variable = { name = bag_rtk__cd_io_i19_name value = flag:bag_rtk__cd_io_i19_name }
+	set_variable = { name = bag_rtk__cd_io_i19_desc value = flag:bag_rtk__cd_io_i19_desc }
+	set_variable = { name = bag_rtk__cd_io_i20_name value = flag:bag_rtk__cd_io_i20_name }
+	set_variable = { name = bag_rtk__cd_io_i20_desc value = flag:bag_rtk__cd_io_i20_desc }
+	set_variable = { name = bag_rtk__cd_io_i21_name value = flag:bag_rtk__cd_io_i21_name }
+	set_variable = { name = bag_rtk__cd_io_i21_desc value = flag:bag_rtk__cd_io_i21_desc }
+	set_variable = { name = bag_rtk__cd_io_i22_name value = flag:bag_rtk__cd_io_i22_name }
+	set_variable = { name = bag_rtk__cd_io_i22_desc value = flag:bag_rtk__cd_io_i22_desc }
+	set_variable = { name = bag_rtk__cd_io_i23_name value = flag:bag_rtk__cd_io_i23_name }
+	set_variable = { name = bag_rtk__cd_io_i23_desc value = flag:bag_rtk__cd_io_i23_desc }
+	set_variable = { name = bag_rtk__cd_io_i24_name value = flag:bag_rtk__cd_io_i24_name }
+	set_variable = { name = bag_rtk__cd_io_i24_desc value = flag:bag_rtk__cd_io_i24_desc }
+	set_variable = { name = bag_rtk__cd_io_i25_name value = flag:bag_rtk__cd_io_i25_name }
+	set_variable = { name = bag_rtk__cd_io_i25_desc value = flag:bag_rtk__cd_io_i25_desc }
+	set_variable = { name = bag_rtk__cd_io_i26_name value = flag:bag_rtk__cd_io_i26_name }
+	set_variable = { name = bag_rtk__cd_io_i26_desc value = flag:bag_rtk__cd_io_i26_desc }
+	set_variable = { name = bag_rtk__cd_io_i27_name value = flag:bag_rtk__cd_io_i27_name }
+	set_variable = { name = bag_rtk__cd_io_i27_desc value = flag:bag_rtk__cd_io_i27_desc }
+	set_variable = { name = bag_rtk__cd_io_i28_name value = flag:bag_rtk__cd_io_i28_name }
+	set_variable = { name = bag_rtk__cd_io_i28_desc value = flag:bag_rtk__cd_io_i28_desc }
+	set_variable = { name = bag_rtk__cd_io_i29_name value = flag:bag_rtk__cd_io_i29_name }
+	set_variable = { name = bag_rtk__cd_io_i29_desc value = flag:bag_rtk__cd_io_i29_desc }
+	set_variable = { name = bag_rtk__cd_io_i30_name value = flag:bag_rtk__cd_io_i30_name }
+	set_variable = { name = bag_rtk__cd_io_i30_desc value = flag:bag_rtk__cd_io_i30_desc }
+	set_variable = { name = bag_rtk__cd_io_i31_name value = flag:bag_rtk__cd_io_i31_name }
+	set_variable = { name = bag_rtk__cd_io_i31_desc value = flag:bag_rtk__cd_io_i31_desc }
+	set_variable = { name = bag_rtk__cd_io_i32_name value = flag:bag_rtk__cd_io_i32_name }
+	set_variable = { name = bag_rtk__cd_io_i32_desc value = flag:bag_rtk__cd_io_i32_desc }
+	set_variable = { name = bag_rtk__cd_io_i33_name value = flag:bag_rtk__cd_io_i33_name }
+	set_variable = { name = bag_rtk__cd_io_i33_desc value = flag:bag_rtk__cd_io_i33_desc }
+	set_variable = { name = bag_rtk__cd_io_i34_name value = flag:bag_rtk__cd_io_i34_name }
+	set_variable = { name = bag_rtk__cd_io_i34_desc value = flag:bag_rtk__cd_io_i34_desc }
+	set_global_variable = { name = bag_rtk_cd_total value = 0 }
+	set_global_variable = { name = bag_rtk_cd_foreign value = 0 }
+	every_in_global_list = {
+		variable = cmm_list_items_bag_rtk__cd_hre
+		change_global_variable = { name = bag_rtk_cd_total add = 1 }
+		if = {
+			limit = { NOT = { OR = { this = flag:bag_rtk__cd_hre_i1 this = flag:bag_rtk__cd_hre_i2 this = flag:bag_rtk__cd_hre_i3 this = flag:bag_rtk__cd_hre_i4 this = flag:bag_rtk__cd_hre_i5 this = flag:bag_rtk__cd_hre_i6 this = flag:bag_rtk__cd_hre_i7 this = flag:bag_rtk__cd_hre_i8 this = flag:bag_rtk__cd_hre_i9 this = flag:bag_rtk__cd_hre_i10 this = flag:bag_rtk__cd_hre_i11 this = flag:bag_rtk__cd_hre_i12 this = flag:bag_rtk__cd_hre_i13 this = flag:bag_rtk__cd_hre_i14 } } }
+			change_global_variable = { name = bag_rtk_cd_foreign add = 1 }
+			set_global_variable = { name = bag_rtk_cd_bad value = this }
+		}
+	}
+	if = {
+		limit = { OR = { global_var:bag_rtk_cd_foreign > 0 NOT = { global_var:bag_rtk_cd_total = 14 } } }
+		debug_log = "bag_rtk: list cd_hre rebuilt, entries [GetGlobalVariable('bag_rtk_cd_total').GetValue|0] of 14, foreign [GetGlobalVariable('bag_rtk_cd_foreign').GetValue|0], last foreign [GetGlobalVariable('bag_rtk_cd_bad').GetFlagName]"
+		clear_global_variable_list = cmm_list_items_bag_rtk__cd_hre
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_hre target = flag:bag_rtk__cd_hre_i1 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_hre target = flag:bag_rtk__cd_hre_i2 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_hre target = flag:bag_rtk__cd_hre_i3 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_hre target = flag:bag_rtk__cd_hre_i4 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_hre target = flag:bag_rtk__cd_hre_i5 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_hre target = flag:bag_rtk__cd_hre_i6 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_hre target = flag:bag_rtk__cd_hre_i7 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_hre target = flag:bag_rtk__cd_hre_i8 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_hre target = flag:bag_rtk__cd_hre_i9 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_hre target = flag:bag_rtk__cd_hre_i10 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_hre target = flag:bag_rtk__cd_hre_i11 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_hre target = flag:bag_rtk__cd_hre_i12 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_hre target = flag:bag_rtk__cd_hre_i13 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_hre target = flag:bag_rtk__cd_hre_i14 }
+	}
+	set_variable = { name = bag_rtk__cd_hre_i1_name value = flag:bag_rtk__cd_hre_i1_name }
+	set_variable = { name = bag_rtk__cd_hre_i1_desc value = flag:bag_rtk__cd_hre_i1_desc }
+	set_variable = { name = bag_rtk__cd_hre_i2_name value = flag:bag_rtk__cd_hre_i2_name }
+	set_variable = { name = bag_rtk__cd_hre_i2_desc value = flag:bag_rtk__cd_hre_i2_desc }
+	set_variable = { name = bag_rtk__cd_hre_i3_name value = flag:bag_rtk__cd_hre_i3_name }
+	set_variable = { name = bag_rtk__cd_hre_i3_desc value = flag:bag_rtk__cd_hre_i3_desc }
+	set_variable = { name = bag_rtk__cd_hre_i4_name value = flag:bag_rtk__cd_hre_i4_name }
+	set_variable = { name = bag_rtk__cd_hre_i4_desc value = flag:bag_rtk__cd_hre_i4_desc }
+	set_variable = { name = bag_rtk__cd_hre_i5_name value = flag:bag_rtk__cd_hre_i5_name }
+	set_variable = { name = bag_rtk__cd_hre_i5_desc value = flag:bag_rtk__cd_hre_i5_desc }
+	set_variable = { name = bag_rtk__cd_hre_i6_name value = flag:bag_rtk__cd_hre_i6_name }
+	set_variable = { name = bag_rtk__cd_hre_i6_desc value = flag:bag_rtk__cd_hre_i6_desc }
+	set_variable = { name = bag_rtk__cd_hre_i7_name value = flag:bag_rtk__cd_hre_i7_name }
+	set_variable = { name = bag_rtk__cd_hre_i7_desc value = flag:bag_rtk__cd_hre_i7_desc }
+	set_variable = { name = bag_rtk__cd_hre_i8_name value = flag:bag_rtk__cd_hre_i8_name }
+	set_variable = { name = bag_rtk__cd_hre_i8_desc value = flag:bag_rtk__cd_hre_i8_desc }
+	set_variable = { name = bag_rtk__cd_hre_i9_name value = flag:bag_rtk__cd_hre_i9_name }
+	set_variable = { name = bag_rtk__cd_hre_i9_desc value = flag:bag_rtk__cd_hre_i9_desc }
+	set_variable = { name = bag_rtk__cd_hre_i10_name value = flag:bag_rtk__cd_hre_i10_name }
+	set_variable = { name = bag_rtk__cd_hre_i10_desc value = flag:bag_rtk__cd_hre_i10_desc }
+	set_variable = { name = bag_rtk__cd_hre_i11_name value = flag:bag_rtk__cd_hre_i11_name }
+	set_variable = { name = bag_rtk__cd_hre_i11_desc value = flag:bag_rtk__cd_hre_i11_desc }
+	set_variable = { name = bag_rtk__cd_hre_i12_name value = flag:bag_rtk__cd_hre_i12_name }
+	set_variable = { name = bag_rtk__cd_hre_i12_desc value = flag:bag_rtk__cd_hre_i12_desc }
+	set_variable = { name = bag_rtk__cd_hre_i13_name value = flag:bag_rtk__cd_hre_i13_name }
+	set_variable = { name = bag_rtk__cd_hre_i13_desc value = flag:bag_rtk__cd_hre_i13_desc }
+	set_variable = { name = bag_rtk__cd_hre_i14_name value = flag:bag_rtk__cd_hre_i14_name }
+	set_variable = { name = bag_rtk__cd_hre_i14_desc value = flag:bag_rtk__cd_hre_i14_desc }
+	set_global_variable = { name = bag_rtk_cd_total value = 0 }
+	set_global_variable = { name = bag_rtk_cd_foreign value = 0 }
+	every_in_global_list = {
+		variable = cmm_list_items_bag_rtk__cd_sit1
+		change_global_variable = { name = bag_rtk_cd_total add = 1 }
+		if = {
+			limit = { NOT = { OR = { this = flag:bag_rtk__cd_sit1_i1 this = flag:bag_rtk__cd_sit1_i2 this = flag:bag_rtk__cd_sit1_i3 this = flag:bag_rtk__cd_sit1_i4 this = flag:bag_rtk__cd_sit1_i5 this = flag:bag_rtk__cd_sit1_i6 this = flag:bag_rtk__cd_sit1_i7 this = flag:bag_rtk__cd_sit1_i8 this = flag:bag_rtk__cd_sit1_i9 this = flag:bag_rtk__cd_sit1_i10 this = flag:bag_rtk__cd_sit1_i11 this = flag:bag_rtk__cd_sit1_i12 this = flag:bag_rtk__cd_sit1_i13 this = flag:bag_rtk__cd_sit1_i14 this = flag:bag_rtk__cd_sit1_i15 this = flag:bag_rtk__cd_sit1_i16 this = flag:bag_rtk__cd_sit1_i17 this = flag:bag_rtk__cd_sit1_i18 this = flag:bag_rtk__cd_sit1_i19 this = flag:bag_rtk__cd_sit1_i20 this = flag:bag_rtk__cd_sit1_i21 this = flag:bag_rtk__cd_sit1_i22 this = flag:bag_rtk__cd_sit1_i23 this = flag:bag_rtk__cd_sit1_i24 this = flag:bag_rtk__cd_sit1_i25 this = flag:bag_rtk__cd_sit1_i26 this = flag:bag_rtk__cd_sit1_i27 this = flag:bag_rtk__cd_sit1_i28 this = flag:bag_rtk__cd_sit1_i29 this = flag:bag_rtk__cd_sit1_i30 this = flag:bag_rtk__cd_sit1_i31 this = flag:bag_rtk__cd_sit1_i32 this = flag:bag_rtk__cd_sit1_i33 this = flag:bag_rtk__cd_sit1_i34 this = flag:bag_rtk__cd_sit1_i35 this = flag:bag_rtk__cd_sit1_i36 this = flag:bag_rtk__cd_sit1_i37 this = flag:bag_rtk__cd_sit1_i38 this = flag:bag_rtk__cd_sit1_i39 this = flag:bag_rtk__cd_sit1_i40 this = flag:bag_rtk__cd_sit1_i41 this = flag:bag_rtk__cd_sit1_i42 this = flag:bag_rtk__cd_sit1_i43 this = flag:bag_rtk__cd_sit1_i44 this = flag:bag_rtk__cd_sit1_i45 this = flag:bag_rtk__cd_sit1_i46 this = flag:bag_rtk__cd_sit1_i47 this = flag:bag_rtk__cd_sit1_i48 this = flag:bag_rtk__cd_sit1_i49 this = flag:bag_rtk__cd_sit1_i50 } } }
+			change_global_variable = { name = bag_rtk_cd_foreign add = 1 }
+			set_global_variable = { name = bag_rtk_cd_bad value = this }
+		}
+	}
+	if = {
+		limit = { OR = { global_var:bag_rtk_cd_foreign > 0 NOT = { global_var:bag_rtk_cd_total = 50 } } }
+		debug_log = "bag_rtk: list cd_sit1 rebuilt, entries [GetGlobalVariable('bag_rtk_cd_total').GetValue|0] of 50, foreign [GetGlobalVariable('bag_rtk_cd_foreign').GetValue|0], last foreign [GetGlobalVariable('bag_rtk_cd_bad').GetFlagName]"
+		clear_global_variable_list = cmm_list_items_bag_rtk__cd_sit1
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i1 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i2 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i3 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i4 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i5 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i6 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i7 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i8 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i9 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i10 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i11 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i12 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i13 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i14 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i15 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i16 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i17 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i18 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i19 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i20 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i21 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i22 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i23 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i24 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i25 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i26 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i27 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i28 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i29 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i30 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i31 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i32 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i33 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i34 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i35 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i36 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i37 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i38 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i39 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i40 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i41 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i42 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i43 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i44 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i45 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i46 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i47 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i48 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i49 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit1 target = flag:bag_rtk__cd_sit1_i50 }
+	}
+	set_variable = { name = bag_rtk__cd_sit1_i1_name value = flag:bag_rtk__cd_sit1_i1_name }
+	set_variable = { name = bag_rtk__cd_sit1_i1_desc value = flag:bag_rtk__cd_sit1_i1_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i2_name value = flag:bag_rtk__cd_sit1_i2_name }
+	set_variable = { name = bag_rtk__cd_sit1_i2_desc value = flag:bag_rtk__cd_sit1_i2_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i3_name value = flag:bag_rtk__cd_sit1_i3_name }
+	set_variable = { name = bag_rtk__cd_sit1_i3_desc value = flag:bag_rtk__cd_sit1_i3_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i4_name value = flag:bag_rtk__cd_sit1_i4_name }
+	set_variable = { name = bag_rtk__cd_sit1_i4_desc value = flag:bag_rtk__cd_sit1_i4_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i5_name value = flag:bag_rtk__cd_sit1_i5_name }
+	set_variable = { name = bag_rtk__cd_sit1_i5_desc value = flag:bag_rtk__cd_sit1_i5_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i6_name value = flag:bag_rtk__cd_sit1_i6_name }
+	set_variable = { name = bag_rtk__cd_sit1_i6_desc value = flag:bag_rtk__cd_sit1_i6_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i7_name value = flag:bag_rtk__cd_sit1_i7_name }
+	set_variable = { name = bag_rtk__cd_sit1_i7_desc value = flag:bag_rtk__cd_sit1_i7_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i8_name value = flag:bag_rtk__cd_sit1_i8_name }
+	set_variable = { name = bag_rtk__cd_sit1_i8_desc value = flag:bag_rtk__cd_sit1_i8_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i9_name value = flag:bag_rtk__cd_sit1_i9_name }
+	set_variable = { name = bag_rtk__cd_sit1_i9_desc value = flag:bag_rtk__cd_sit1_i9_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i10_name value = flag:bag_rtk__cd_sit1_i10_name }
+	set_variable = { name = bag_rtk__cd_sit1_i10_desc value = flag:bag_rtk__cd_sit1_i10_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i11_name value = flag:bag_rtk__cd_sit1_i11_name }
+	set_variable = { name = bag_rtk__cd_sit1_i11_desc value = flag:bag_rtk__cd_sit1_i11_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i12_name value = flag:bag_rtk__cd_sit1_i12_name }
+	set_variable = { name = bag_rtk__cd_sit1_i12_desc value = flag:bag_rtk__cd_sit1_i12_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i13_name value = flag:bag_rtk__cd_sit1_i13_name }
+	set_variable = { name = bag_rtk__cd_sit1_i13_desc value = flag:bag_rtk__cd_sit1_i13_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i14_name value = flag:bag_rtk__cd_sit1_i14_name }
+	set_variable = { name = bag_rtk__cd_sit1_i14_desc value = flag:bag_rtk__cd_sit1_i14_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i15_name value = flag:bag_rtk__cd_sit1_i15_name }
+	set_variable = { name = bag_rtk__cd_sit1_i15_desc value = flag:bag_rtk__cd_sit1_i15_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i16_name value = flag:bag_rtk__cd_sit1_i16_name }
+	set_variable = { name = bag_rtk__cd_sit1_i16_desc value = flag:bag_rtk__cd_sit1_i16_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i17_name value = flag:bag_rtk__cd_sit1_i17_name }
+	set_variable = { name = bag_rtk__cd_sit1_i17_desc value = flag:bag_rtk__cd_sit1_i17_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i18_name value = flag:bag_rtk__cd_sit1_i18_name }
+	set_variable = { name = bag_rtk__cd_sit1_i18_desc value = flag:bag_rtk__cd_sit1_i18_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i19_name value = flag:bag_rtk__cd_sit1_i19_name }
+	set_variable = { name = bag_rtk__cd_sit1_i19_desc value = flag:bag_rtk__cd_sit1_i19_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i20_name value = flag:bag_rtk__cd_sit1_i20_name }
+	set_variable = { name = bag_rtk__cd_sit1_i20_desc value = flag:bag_rtk__cd_sit1_i20_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i21_name value = flag:bag_rtk__cd_sit1_i21_name }
+	set_variable = { name = bag_rtk__cd_sit1_i21_desc value = flag:bag_rtk__cd_sit1_i21_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i22_name value = flag:bag_rtk__cd_sit1_i22_name }
+	set_variable = { name = bag_rtk__cd_sit1_i22_desc value = flag:bag_rtk__cd_sit1_i22_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i23_name value = flag:bag_rtk__cd_sit1_i23_name }
+	set_variable = { name = bag_rtk__cd_sit1_i23_desc value = flag:bag_rtk__cd_sit1_i23_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i24_name value = flag:bag_rtk__cd_sit1_i24_name }
+	set_variable = { name = bag_rtk__cd_sit1_i24_desc value = flag:bag_rtk__cd_sit1_i24_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i25_name value = flag:bag_rtk__cd_sit1_i25_name }
+	set_variable = { name = bag_rtk__cd_sit1_i25_desc value = flag:bag_rtk__cd_sit1_i25_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i26_name value = flag:bag_rtk__cd_sit1_i26_name }
+	set_variable = { name = bag_rtk__cd_sit1_i26_desc value = flag:bag_rtk__cd_sit1_i26_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i27_name value = flag:bag_rtk__cd_sit1_i27_name }
+	set_variable = { name = bag_rtk__cd_sit1_i27_desc value = flag:bag_rtk__cd_sit1_i27_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i28_name value = flag:bag_rtk__cd_sit1_i28_name }
+	set_variable = { name = bag_rtk__cd_sit1_i28_desc value = flag:bag_rtk__cd_sit1_i28_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i29_name value = flag:bag_rtk__cd_sit1_i29_name }
+	set_variable = { name = bag_rtk__cd_sit1_i29_desc value = flag:bag_rtk__cd_sit1_i29_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i30_name value = flag:bag_rtk__cd_sit1_i30_name }
+	set_variable = { name = bag_rtk__cd_sit1_i30_desc value = flag:bag_rtk__cd_sit1_i30_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i31_name value = flag:bag_rtk__cd_sit1_i31_name }
+	set_variable = { name = bag_rtk__cd_sit1_i31_desc value = flag:bag_rtk__cd_sit1_i31_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i32_name value = flag:bag_rtk__cd_sit1_i32_name }
+	set_variable = { name = bag_rtk__cd_sit1_i32_desc value = flag:bag_rtk__cd_sit1_i32_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i33_name value = flag:bag_rtk__cd_sit1_i33_name }
+	set_variable = { name = bag_rtk__cd_sit1_i33_desc value = flag:bag_rtk__cd_sit1_i33_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i34_name value = flag:bag_rtk__cd_sit1_i34_name }
+	set_variable = { name = bag_rtk__cd_sit1_i34_desc value = flag:bag_rtk__cd_sit1_i34_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i35_name value = flag:bag_rtk__cd_sit1_i35_name }
+	set_variable = { name = bag_rtk__cd_sit1_i35_desc value = flag:bag_rtk__cd_sit1_i35_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i36_name value = flag:bag_rtk__cd_sit1_i36_name }
+	set_variable = { name = bag_rtk__cd_sit1_i36_desc value = flag:bag_rtk__cd_sit1_i36_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i37_name value = flag:bag_rtk__cd_sit1_i37_name }
+	set_variable = { name = bag_rtk__cd_sit1_i37_desc value = flag:bag_rtk__cd_sit1_i37_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i38_name value = flag:bag_rtk__cd_sit1_i38_name }
+	set_variable = { name = bag_rtk__cd_sit1_i38_desc value = flag:bag_rtk__cd_sit1_i38_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i39_name value = flag:bag_rtk__cd_sit1_i39_name }
+	set_variable = { name = bag_rtk__cd_sit1_i39_desc value = flag:bag_rtk__cd_sit1_i39_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i40_name value = flag:bag_rtk__cd_sit1_i40_name }
+	set_variable = { name = bag_rtk__cd_sit1_i40_desc value = flag:bag_rtk__cd_sit1_i40_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i41_name value = flag:bag_rtk__cd_sit1_i41_name }
+	set_variable = { name = bag_rtk__cd_sit1_i41_desc value = flag:bag_rtk__cd_sit1_i41_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i42_name value = flag:bag_rtk__cd_sit1_i42_name }
+	set_variable = { name = bag_rtk__cd_sit1_i42_desc value = flag:bag_rtk__cd_sit1_i42_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i43_name value = flag:bag_rtk__cd_sit1_i43_name }
+	set_variable = { name = bag_rtk__cd_sit1_i43_desc value = flag:bag_rtk__cd_sit1_i43_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i44_name value = flag:bag_rtk__cd_sit1_i44_name }
+	set_variable = { name = bag_rtk__cd_sit1_i44_desc value = flag:bag_rtk__cd_sit1_i44_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i45_name value = flag:bag_rtk__cd_sit1_i45_name }
+	set_variable = { name = bag_rtk__cd_sit1_i45_desc value = flag:bag_rtk__cd_sit1_i45_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i46_name value = flag:bag_rtk__cd_sit1_i46_name }
+	set_variable = { name = bag_rtk__cd_sit1_i46_desc value = flag:bag_rtk__cd_sit1_i46_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i47_name value = flag:bag_rtk__cd_sit1_i47_name }
+	set_variable = { name = bag_rtk__cd_sit1_i47_desc value = flag:bag_rtk__cd_sit1_i47_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i48_name value = flag:bag_rtk__cd_sit1_i48_name }
+	set_variable = { name = bag_rtk__cd_sit1_i48_desc value = flag:bag_rtk__cd_sit1_i48_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i49_name value = flag:bag_rtk__cd_sit1_i49_name }
+	set_variable = { name = bag_rtk__cd_sit1_i49_desc value = flag:bag_rtk__cd_sit1_i49_desc }
+	set_variable = { name = bag_rtk__cd_sit1_i50_name value = flag:bag_rtk__cd_sit1_i50_name }
+	set_variable = { name = bag_rtk__cd_sit1_i50_desc value = flag:bag_rtk__cd_sit1_i50_desc }
+	set_global_variable = { name = bag_rtk_cd_total value = 0 }
+	set_global_variable = { name = bag_rtk_cd_foreign value = 0 }
+	every_in_global_list = {
+		variable = cmm_list_items_bag_rtk__cd_sit2
+		change_global_variable = { name = bag_rtk_cd_total add = 1 }
+		if = {
+			limit = { NOT = { OR = { this = flag:bag_rtk__cd_sit2_i1 this = flag:bag_rtk__cd_sit2_i2 this = flag:bag_rtk__cd_sit2_i3 this = flag:bag_rtk__cd_sit2_i4 this = flag:bag_rtk__cd_sit2_i5 this = flag:bag_rtk__cd_sit2_i6 this = flag:bag_rtk__cd_sit2_i7 this = flag:bag_rtk__cd_sit2_i8 this = flag:bag_rtk__cd_sit2_i9 this = flag:bag_rtk__cd_sit2_i10 this = flag:bag_rtk__cd_sit2_i11 this = flag:bag_rtk__cd_sit2_i12 this = flag:bag_rtk__cd_sit2_i13 this = flag:bag_rtk__cd_sit2_i14 this = flag:bag_rtk__cd_sit2_i15 this = flag:bag_rtk__cd_sit2_i16 this = flag:bag_rtk__cd_sit2_i17 this = flag:bag_rtk__cd_sit2_i18 this = flag:bag_rtk__cd_sit2_i19 this = flag:bag_rtk__cd_sit2_i20 this = flag:bag_rtk__cd_sit2_i21 this = flag:bag_rtk__cd_sit2_i22 this = flag:bag_rtk__cd_sit2_i23 this = flag:bag_rtk__cd_sit2_i24 this = flag:bag_rtk__cd_sit2_i25 this = flag:bag_rtk__cd_sit2_i26 this = flag:bag_rtk__cd_sit2_i27 this = flag:bag_rtk__cd_sit2_i28 this = flag:bag_rtk__cd_sit2_i29 this = flag:bag_rtk__cd_sit2_i30 this = flag:bag_rtk__cd_sit2_i31 } } }
+			change_global_variable = { name = bag_rtk_cd_foreign add = 1 }
+			set_global_variable = { name = bag_rtk_cd_bad value = this }
+		}
+	}
+	if = {
+		limit = { OR = { global_var:bag_rtk_cd_foreign > 0 NOT = { global_var:bag_rtk_cd_total = 31 } } }
+		debug_log = "bag_rtk: list cd_sit2 rebuilt, entries [GetGlobalVariable('bag_rtk_cd_total').GetValue|0] of 31, foreign [GetGlobalVariable('bag_rtk_cd_foreign').GetValue|0], last foreign [GetGlobalVariable('bag_rtk_cd_bad').GetFlagName]"
+		clear_global_variable_list = cmm_list_items_bag_rtk__cd_sit2
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i1 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i2 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i3 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i4 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i5 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i6 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i7 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i8 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i9 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i10 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i11 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i12 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i13 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i14 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i15 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i16 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i17 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i18 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i19 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i20 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i21 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i22 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i23 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i24 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i25 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i26 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i27 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i28 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i29 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i30 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_sit2 target = flag:bag_rtk__cd_sit2_i31 }
+	}
+	set_variable = { name = bag_rtk__cd_sit2_i1_name value = flag:bag_rtk__cd_sit2_i1_name }
+	set_variable = { name = bag_rtk__cd_sit2_i1_desc value = flag:bag_rtk__cd_sit2_i1_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i2_name value = flag:bag_rtk__cd_sit2_i2_name }
+	set_variable = { name = bag_rtk__cd_sit2_i2_desc value = flag:bag_rtk__cd_sit2_i2_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i3_name value = flag:bag_rtk__cd_sit2_i3_name }
+	set_variable = { name = bag_rtk__cd_sit2_i3_desc value = flag:bag_rtk__cd_sit2_i3_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i4_name value = flag:bag_rtk__cd_sit2_i4_name }
+	set_variable = { name = bag_rtk__cd_sit2_i4_desc value = flag:bag_rtk__cd_sit2_i4_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i5_name value = flag:bag_rtk__cd_sit2_i5_name }
+	set_variable = { name = bag_rtk__cd_sit2_i5_desc value = flag:bag_rtk__cd_sit2_i5_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i6_name value = flag:bag_rtk__cd_sit2_i6_name }
+	set_variable = { name = bag_rtk__cd_sit2_i6_desc value = flag:bag_rtk__cd_sit2_i6_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i7_name value = flag:bag_rtk__cd_sit2_i7_name }
+	set_variable = { name = bag_rtk__cd_sit2_i7_desc value = flag:bag_rtk__cd_sit2_i7_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i8_name value = flag:bag_rtk__cd_sit2_i8_name }
+	set_variable = { name = bag_rtk__cd_sit2_i8_desc value = flag:bag_rtk__cd_sit2_i8_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i9_name value = flag:bag_rtk__cd_sit2_i9_name }
+	set_variable = { name = bag_rtk__cd_sit2_i9_desc value = flag:bag_rtk__cd_sit2_i9_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i10_name value = flag:bag_rtk__cd_sit2_i10_name }
+	set_variable = { name = bag_rtk__cd_sit2_i10_desc value = flag:bag_rtk__cd_sit2_i10_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i11_name value = flag:bag_rtk__cd_sit2_i11_name }
+	set_variable = { name = bag_rtk__cd_sit2_i11_desc value = flag:bag_rtk__cd_sit2_i11_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i12_name value = flag:bag_rtk__cd_sit2_i12_name }
+	set_variable = { name = bag_rtk__cd_sit2_i12_desc value = flag:bag_rtk__cd_sit2_i12_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i13_name value = flag:bag_rtk__cd_sit2_i13_name }
+	set_variable = { name = bag_rtk__cd_sit2_i13_desc value = flag:bag_rtk__cd_sit2_i13_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i14_name value = flag:bag_rtk__cd_sit2_i14_name }
+	set_variable = { name = bag_rtk__cd_sit2_i14_desc value = flag:bag_rtk__cd_sit2_i14_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i15_name value = flag:bag_rtk__cd_sit2_i15_name }
+	set_variable = { name = bag_rtk__cd_sit2_i15_desc value = flag:bag_rtk__cd_sit2_i15_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i16_name value = flag:bag_rtk__cd_sit2_i16_name }
+	set_variable = { name = bag_rtk__cd_sit2_i16_desc value = flag:bag_rtk__cd_sit2_i16_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i17_name value = flag:bag_rtk__cd_sit2_i17_name }
+	set_variable = { name = bag_rtk__cd_sit2_i17_desc value = flag:bag_rtk__cd_sit2_i17_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i18_name value = flag:bag_rtk__cd_sit2_i18_name }
+	set_variable = { name = bag_rtk__cd_sit2_i18_desc value = flag:bag_rtk__cd_sit2_i18_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i19_name value = flag:bag_rtk__cd_sit2_i19_name }
+	set_variable = { name = bag_rtk__cd_sit2_i19_desc value = flag:bag_rtk__cd_sit2_i19_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i20_name value = flag:bag_rtk__cd_sit2_i20_name }
+	set_variable = { name = bag_rtk__cd_sit2_i20_desc value = flag:bag_rtk__cd_sit2_i20_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i21_name value = flag:bag_rtk__cd_sit2_i21_name }
+	set_variable = { name = bag_rtk__cd_sit2_i21_desc value = flag:bag_rtk__cd_sit2_i21_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i22_name value = flag:bag_rtk__cd_sit2_i22_name }
+	set_variable = { name = bag_rtk__cd_sit2_i22_desc value = flag:bag_rtk__cd_sit2_i22_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i23_name value = flag:bag_rtk__cd_sit2_i23_name }
+	set_variable = { name = bag_rtk__cd_sit2_i23_desc value = flag:bag_rtk__cd_sit2_i23_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i24_name value = flag:bag_rtk__cd_sit2_i24_name }
+	set_variable = { name = bag_rtk__cd_sit2_i24_desc value = flag:bag_rtk__cd_sit2_i24_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i25_name value = flag:bag_rtk__cd_sit2_i25_name }
+	set_variable = { name = bag_rtk__cd_sit2_i25_desc value = flag:bag_rtk__cd_sit2_i25_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i26_name value = flag:bag_rtk__cd_sit2_i26_name }
+	set_variable = { name = bag_rtk__cd_sit2_i26_desc value = flag:bag_rtk__cd_sit2_i26_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i27_name value = flag:bag_rtk__cd_sit2_i27_name }
+	set_variable = { name = bag_rtk__cd_sit2_i27_desc value = flag:bag_rtk__cd_sit2_i27_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i28_name value = flag:bag_rtk__cd_sit2_i28_name }
+	set_variable = { name = bag_rtk__cd_sit2_i28_desc value = flag:bag_rtk__cd_sit2_i28_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i29_name value = flag:bag_rtk__cd_sit2_i29_name }
+	set_variable = { name = bag_rtk__cd_sit2_i29_desc value = flag:bag_rtk__cd_sit2_i29_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i30_name value = flag:bag_rtk__cd_sit2_i30_name }
+	set_variable = { name = bag_rtk__cd_sit2_i30_desc value = flag:bag_rtk__cd_sit2_i30_desc }
+	set_variable = { name = bag_rtk__cd_sit2_i31_name value = flag:bag_rtk__cd_sit2_i31_name }
+	set_variable = { name = bag_rtk__cd_sit2_i31_desc value = flag:bag_rtk__cd_sit2_i31_desc }
+	set_global_variable = { name = bag_rtk_cd_total value = 0 }
+	set_global_variable = { name = bag_rtk_cd_foreign value = 0 }
+	every_in_global_list = {
+		variable = cmm_list_items_bag_rtk__cd_dis
+		change_global_variable = { name = bag_rtk_cd_total add = 1 }
+		if = {
+			limit = { NOT = { OR = { this = flag:bag_rtk__cd_dis_i1 this = flag:bag_rtk__cd_dis_i2 this = flag:bag_rtk__cd_dis_i3 this = flag:bag_rtk__cd_dis_i4 this = flag:bag_rtk__cd_dis_i5 this = flag:bag_rtk__cd_dis_i6 this = flag:bag_rtk__cd_dis_i7 this = flag:bag_rtk__cd_dis_i8 this = flag:bag_rtk__cd_dis_i9 this = flag:bag_rtk__cd_dis_i10 this = flag:bag_rtk__cd_dis_i11 this = flag:bag_rtk__cd_dis_i12 this = flag:bag_rtk__cd_dis_i13 this = flag:bag_rtk__cd_dis_i14 this = flag:bag_rtk__cd_dis_i15 this = flag:bag_rtk__cd_dis_i16 this = flag:bag_rtk__cd_dis_i17 this = flag:bag_rtk__cd_dis_i18 this = flag:bag_rtk__cd_dis_i19 this = flag:bag_rtk__cd_dis_i20 this = flag:bag_rtk__cd_dis_i21 this = flag:bag_rtk__cd_dis_i22 this = flag:bag_rtk__cd_dis_i23 this = flag:bag_rtk__cd_dis_i24 this = flag:bag_rtk__cd_dis_i25 this = flag:bag_rtk__cd_dis_i26 this = flag:bag_rtk__cd_dis_i27 this = flag:bag_rtk__cd_dis_i28 this = flag:bag_rtk__cd_dis_i29 this = flag:bag_rtk__cd_dis_i30 this = flag:bag_rtk__cd_dis_i31 this = flag:bag_rtk__cd_dis_i32 this = flag:bag_rtk__cd_dis_i33 this = flag:bag_rtk__cd_dis_i34 this = flag:bag_rtk__cd_dis_i35 this = flag:bag_rtk__cd_dis_i36 this = flag:bag_rtk__cd_dis_i37 this = flag:bag_rtk__cd_dis_i38 this = flag:bag_rtk__cd_dis_i39 this = flag:bag_rtk__cd_dis_i40 this = flag:bag_rtk__cd_dis_i41 this = flag:bag_rtk__cd_dis_i42 this = flag:bag_rtk__cd_dis_i43 this = flag:bag_rtk__cd_dis_i44 } } }
+			change_global_variable = { name = bag_rtk_cd_foreign add = 1 }
+			set_global_variable = { name = bag_rtk_cd_bad value = this }
+		}
+	}
+	if = {
+		limit = { OR = { global_var:bag_rtk_cd_foreign > 0 NOT = { global_var:bag_rtk_cd_total = 44 } } }
+		debug_log = "bag_rtk: list cd_dis rebuilt, entries [GetGlobalVariable('bag_rtk_cd_total').GetValue|0] of 44, foreign [GetGlobalVariable('bag_rtk_cd_foreign').GetValue|0], last foreign [GetGlobalVariable('bag_rtk_cd_bad').GetFlagName]"
+		clear_global_variable_list = cmm_list_items_bag_rtk__cd_dis
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i1 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i2 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i3 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i4 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i5 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i6 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i7 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i8 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i9 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i10 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i11 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i12 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i13 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i14 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i15 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i16 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i17 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i18 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i19 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i20 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i21 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i22 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i23 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i24 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i25 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i26 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i27 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i28 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i29 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i30 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i31 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i32 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i33 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i34 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i35 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i36 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i37 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i38 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i39 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i40 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i41 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i42 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i43 }
+		add_to_global_variable_list = { name = cmm_list_items_bag_rtk__cd_dis target = flag:bag_rtk__cd_dis_i44 }
+	}
+	set_variable = { name = bag_rtk__cd_dis_i1_name value = flag:bag_rtk__cd_dis_i1_name }
+	set_variable = { name = bag_rtk__cd_dis_i1_desc value = flag:bag_rtk__cd_dis_i1_desc }
+	set_variable = { name = bag_rtk__cd_dis_i2_name value = flag:bag_rtk__cd_dis_i2_name }
+	set_variable = { name = bag_rtk__cd_dis_i2_desc value = flag:bag_rtk__cd_dis_i2_desc }
+	set_variable = { name = bag_rtk__cd_dis_i3_name value = flag:bag_rtk__cd_dis_i3_name }
+	set_variable = { name = bag_rtk__cd_dis_i3_desc value = flag:bag_rtk__cd_dis_i3_desc }
+	set_variable = { name = bag_rtk__cd_dis_i4_name value = flag:bag_rtk__cd_dis_i4_name }
+	set_variable = { name = bag_rtk__cd_dis_i4_desc value = flag:bag_rtk__cd_dis_i4_desc }
+	set_variable = { name = bag_rtk__cd_dis_i5_name value = flag:bag_rtk__cd_dis_i5_name }
+	set_variable = { name = bag_rtk__cd_dis_i5_desc value = flag:bag_rtk__cd_dis_i5_desc }
+	set_variable = { name = bag_rtk__cd_dis_i6_name value = flag:bag_rtk__cd_dis_i6_name }
+	set_variable = { name = bag_rtk__cd_dis_i6_desc value = flag:bag_rtk__cd_dis_i6_desc }
+	set_variable = { name = bag_rtk__cd_dis_i7_name value = flag:bag_rtk__cd_dis_i7_name }
+	set_variable = { name = bag_rtk__cd_dis_i7_desc value = flag:bag_rtk__cd_dis_i7_desc }
+	set_variable = { name = bag_rtk__cd_dis_i8_name value = flag:bag_rtk__cd_dis_i8_name }
+	set_variable = { name = bag_rtk__cd_dis_i8_desc value = flag:bag_rtk__cd_dis_i8_desc }
+	set_variable = { name = bag_rtk__cd_dis_i9_name value = flag:bag_rtk__cd_dis_i9_name }
+	set_variable = { name = bag_rtk__cd_dis_i9_desc value = flag:bag_rtk__cd_dis_i9_desc }
+	set_variable = { name = bag_rtk__cd_dis_i10_name value = flag:bag_rtk__cd_dis_i10_name }
+	set_variable = { name = bag_rtk__cd_dis_i10_desc value = flag:bag_rtk__cd_dis_i10_desc }
+	set_variable = { name = bag_rtk__cd_dis_i11_name value = flag:bag_rtk__cd_dis_i11_name }
+	set_variable = { name = bag_rtk__cd_dis_i11_desc value = flag:bag_rtk__cd_dis_i11_desc }
+	set_variable = { name = bag_rtk__cd_dis_i12_name value = flag:bag_rtk__cd_dis_i12_name }
+	set_variable = { name = bag_rtk__cd_dis_i12_desc value = flag:bag_rtk__cd_dis_i12_desc }
+	set_variable = { name = bag_rtk__cd_dis_i13_name value = flag:bag_rtk__cd_dis_i13_name }
+	set_variable = { name = bag_rtk__cd_dis_i13_desc value = flag:bag_rtk__cd_dis_i13_desc }
+	set_variable = { name = bag_rtk__cd_dis_i14_name value = flag:bag_rtk__cd_dis_i14_name }
+	set_variable = { name = bag_rtk__cd_dis_i14_desc value = flag:bag_rtk__cd_dis_i14_desc }
+	set_variable = { name = bag_rtk__cd_dis_i15_name value = flag:bag_rtk__cd_dis_i15_name }
+	set_variable = { name = bag_rtk__cd_dis_i15_desc value = flag:bag_rtk__cd_dis_i15_desc }
+	set_variable = { name = bag_rtk__cd_dis_i16_name value = flag:bag_rtk__cd_dis_i16_name }
+	set_variable = { name = bag_rtk__cd_dis_i16_desc value = flag:bag_rtk__cd_dis_i16_desc }
+	set_variable = { name = bag_rtk__cd_dis_i17_name value = flag:bag_rtk__cd_dis_i17_name }
+	set_variable = { name = bag_rtk__cd_dis_i17_desc value = flag:bag_rtk__cd_dis_i17_desc }
+	set_variable = { name = bag_rtk__cd_dis_i18_name value = flag:bag_rtk__cd_dis_i18_name }
+	set_variable = { name = bag_rtk__cd_dis_i18_desc value = flag:bag_rtk__cd_dis_i18_desc }
+	set_variable = { name = bag_rtk__cd_dis_i19_name value = flag:bag_rtk__cd_dis_i19_name }
+	set_variable = { name = bag_rtk__cd_dis_i19_desc value = flag:bag_rtk__cd_dis_i19_desc }
+	set_variable = { name = bag_rtk__cd_dis_i20_name value = flag:bag_rtk__cd_dis_i20_name }
+	set_variable = { name = bag_rtk__cd_dis_i20_desc value = flag:bag_rtk__cd_dis_i20_desc }
+	set_variable = { name = bag_rtk__cd_dis_i21_name value = flag:bag_rtk__cd_dis_i21_name }
+	set_variable = { name = bag_rtk__cd_dis_i21_desc value = flag:bag_rtk__cd_dis_i21_desc }
+	set_variable = { name = bag_rtk__cd_dis_i22_name value = flag:bag_rtk__cd_dis_i22_name }
+	set_variable = { name = bag_rtk__cd_dis_i22_desc value = flag:bag_rtk__cd_dis_i22_desc }
+	set_variable = { name = bag_rtk__cd_dis_i23_name value = flag:bag_rtk__cd_dis_i23_name }
+	set_variable = { name = bag_rtk__cd_dis_i23_desc value = flag:bag_rtk__cd_dis_i23_desc }
+	set_variable = { name = bag_rtk__cd_dis_i24_name value = flag:bag_rtk__cd_dis_i24_name }
+	set_variable = { name = bag_rtk__cd_dis_i24_desc value = flag:bag_rtk__cd_dis_i24_desc }
+	set_variable = { name = bag_rtk__cd_dis_i25_name value = flag:bag_rtk__cd_dis_i25_name }
+	set_variable = { name = bag_rtk__cd_dis_i25_desc value = flag:bag_rtk__cd_dis_i25_desc }
+	set_variable = { name = bag_rtk__cd_dis_i26_name value = flag:bag_rtk__cd_dis_i26_name }
+	set_variable = { name = bag_rtk__cd_dis_i26_desc value = flag:bag_rtk__cd_dis_i26_desc }
+	set_variable = { name = bag_rtk__cd_dis_i27_name value = flag:bag_rtk__cd_dis_i27_name }
+	set_variable = { name = bag_rtk__cd_dis_i27_desc value = flag:bag_rtk__cd_dis_i27_desc }
+	set_variable = { name = bag_rtk__cd_dis_i28_name value = flag:bag_rtk__cd_dis_i28_name }
+	set_variable = { name = bag_rtk__cd_dis_i28_desc value = flag:bag_rtk__cd_dis_i28_desc }
+	set_variable = { name = bag_rtk__cd_dis_i29_name value = flag:bag_rtk__cd_dis_i29_name }
+	set_variable = { name = bag_rtk__cd_dis_i29_desc value = flag:bag_rtk__cd_dis_i29_desc }
+	set_variable = { name = bag_rtk__cd_dis_i30_name value = flag:bag_rtk__cd_dis_i30_name }
+	set_variable = { name = bag_rtk__cd_dis_i30_desc value = flag:bag_rtk__cd_dis_i30_desc }
+	set_variable = { name = bag_rtk__cd_dis_i31_name value = flag:bag_rtk__cd_dis_i31_name }
+	set_variable = { name = bag_rtk__cd_dis_i31_desc value = flag:bag_rtk__cd_dis_i31_desc }
+	set_variable = { name = bag_rtk__cd_dis_i32_name value = flag:bag_rtk__cd_dis_i32_name }
+	set_variable = { name = bag_rtk__cd_dis_i32_desc value = flag:bag_rtk__cd_dis_i32_desc }
+	set_variable = { name = bag_rtk__cd_dis_i33_name value = flag:bag_rtk__cd_dis_i33_name }
+	set_variable = { name = bag_rtk__cd_dis_i33_desc value = flag:bag_rtk__cd_dis_i33_desc }
+	set_variable = { name = bag_rtk__cd_dis_i34_name value = flag:bag_rtk__cd_dis_i34_name }
+	set_variable = { name = bag_rtk__cd_dis_i34_desc value = flag:bag_rtk__cd_dis_i34_desc }
+	set_variable = { name = bag_rtk__cd_dis_i35_name value = flag:bag_rtk__cd_dis_i35_name }
+	set_variable = { name = bag_rtk__cd_dis_i35_desc value = flag:bag_rtk__cd_dis_i35_desc }
+	set_variable = { name = bag_rtk__cd_dis_i36_name value = flag:bag_rtk__cd_dis_i36_name }
+	set_variable = { name = bag_rtk__cd_dis_i36_desc value = flag:bag_rtk__cd_dis_i36_desc }
+	set_variable = { name = bag_rtk__cd_dis_i37_name value = flag:bag_rtk__cd_dis_i37_name }
+	set_variable = { name = bag_rtk__cd_dis_i37_desc value = flag:bag_rtk__cd_dis_i37_desc }
+	set_variable = { name = bag_rtk__cd_dis_i38_name value = flag:bag_rtk__cd_dis_i38_name }
+	set_variable = { name = bag_rtk__cd_dis_i38_desc value = flag:bag_rtk__cd_dis_i38_desc }
+	set_variable = { name = bag_rtk__cd_dis_i39_name value = flag:bag_rtk__cd_dis_i39_name }
+	set_variable = { name = bag_rtk__cd_dis_i39_desc value = flag:bag_rtk__cd_dis_i39_desc }
+	set_variable = { name = bag_rtk__cd_dis_i40_name value = flag:bag_rtk__cd_dis_i40_name }
+	set_variable = { name = bag_rtk__cd_dis_i40_desc value = flag:bag_rtk__cd_dis_i40_desc }
+	set_variable = { name = bag_rtk__cd_dis_i41_name value = flag:bag_rtk__cd_dis_i41_name }
+	set_variable = { name = bag_rtk__cd_dis_i41_desc value = flag:bag_rtk__cd_dis_i41_desc }
+	set_variable = { name = bag_rtk__cd_dis_i42_name value = flag:bag_rtk__cd_dis_i42_name }
+	set_variable = { name = bag_rtk__cd_dis_i42_desc value = flag:bag_rtk__cd_dis_i42_desc }
+	set_variable = { name = bag_rtk__cd_dis_i43_name value = flag:bag_rtk__cd_dis_i43_name }
+	set_variable = { name = bag_rtk__cd_dis_i43_desc value = flag:bag_rtk__cd_dis_i43_desc }
+	set_variable = { name = bag_rtk__cd_dis_i44_name value = flag:bag_rtk__cd_dis_i44_name }
+	set_variable = { name = bag_rtk__cd_dis_i44_desc value = flag:bag_rtk__cd_dis_i44_desc }
 }
 
 # Показать или спрятать каждую строку по воротам; список, где не видно ни одной,
@@ -33,9 +1058,10 @@ bag_rtk_cd_gate_all = {
 	remove_variable = bag_rtk_cd_shown_cd_rel1
 	remove_variable = bag_rtk_cd_shown_cd_rel2
 	remove_variable = bag_rtk_cd_shown_cd_estate
-	remove_variable = bag_rtk_cd_shown_cd_country
-	remove_variable = bag_rtk_cd_shown_cd_diplo
+	remove_variable = bag_rtk_cd_shown_cd_state
+	remove_variable = bag_rtk_cd_shown_cd_foreign
 	remove_variable = bag_rtk_cd_shown_cd_io
+	remove_variable = bag_rtk_cd_shown_cd_hre
 	remove_variable = bag_rtk_cd_shown_cd_sit1
 	remove_variable = bag_rtk_cd_shown_cd_sit2
 	remove_variable = bag_rtk_cd_shown_cd_dis
@@ -135,42 +1161,23 @@ bag_rtk_cd_gate_all = {
 	bag_rtk_cd_gate_est_row = { sid = cd_estate i = 27 key = press_estate_private_regiments_action__dhimmi }
 	bag_rtk_cd_gate_est_row = { sid = cd_estate i = 28 key = press_estate_private_regiments_action__tribes }
 	bag_rtk_cd_gate_est_row = { sid = cd_estate i = 29 key = press_estate_private_regiments_action__cossacks }
-	bag_rtk_cd_gate_row = { sid = cd_country i = 1 type = convert_culture test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_country i = 2 type = convert_religion test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_country i = 3 type = transition_government test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_country i = 4 type = distribute_imperial_grant test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_country i = 5 type = demand_circle_loyalty test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_country i = 6 type = reform_coinage_in_circle test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_country i = 7 type = reduction_of_circle_titles test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_country i = 8 type = vote_in_organization_parliament test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_country i = 9 type = change_liturgical_language test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_country i = 10 type = change_court_language test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_country i = 11 type = has_forced_parliament_issue test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_country i = 12 type = seat_the_itinerant_court test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_country i = 13 type = parliament_approved_extra_taxes test = has_country_modifier }
-	bag_rtk_cd_gate_row = { sid = cd_country i = 14 type = parliament_approved_extra_levies test = has_country_modifier }
-	bag_rtk_cd_gate_row = { sid = cd_country i = 15 type = parliament_declared_holidays test = has_country_modifier }
-	bag_rtk_cd_gate_row = { sid = cd_diplo i = 1 type = ask_for_money test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_diplo i = 2 type = enforce_culture test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_diplo i = 3 type = enforce_religion test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_diplo i = 4 type = enforce_landfriede test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_diplo i = 5 type = ask_to_vote_for_me_as_emperor test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_diplo i = 6 type = petition_imperial_diet test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_diplo i = 7 type = request_circle_privilege test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_diplo i = 8 type = challenge_circle_leadership test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_diplo i = 9 type = appeal_to_emperor test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_diplo i = 10 type = appeal_to_circle_diet test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_diplo i = 11 type = request_circle_infrastructure_expansion test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_diplo i = 12 type = request_new_circle_titles test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_diplo i = 13 type = improve_cultural_view_subject test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_diplo i = 14 type = incite_desertion test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_diplo i = 15 type = invite_settlers test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_diplo i = 16 type = violate_italian_sovereignty test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_diplo i = 17 type = lend_unit_to_ally test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_diplo i = 18 type = mil_order_request_funds test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_diplo i = 19 type = offer_war_leadership test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_diplo i = 20 type = rtr_demand_annexation test = has_cooldown }
-	bag_rtk_cd_gate_row = { sid = cd_diplo i = 21 type = take_over_seniority test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_state i = 1 type = convert_culture test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_state i = 2 type = convert_religion test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_state i = 3 type = transition_government test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_state i = 4 type = change_liturgical_language test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_state i = 5 type = change_court_language test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_foreign i = 1 type = ask_for_money test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_foreign i = 2 type = enforce_culture test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_foreign i = 3 type = enforce_religion test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_foreign i = 4 type = improve_cultural_view_subject test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_foreign i = 5 type = incite_desertion test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_foreign i = 6 type = invite_settlers test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_foreign i = 7 type = violate_italian_sovereignty test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_foreign i = 8 type = lend_unit_to_ally test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_foreign i = 9 type = mil_order_request_funds test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_foreign i = 10 type = offer_war_leadership test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_foreign i = 11 type = rtr_demand_annexation test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_foreign i = 12 type = take_over_seniority test = has_cooldown }
 	bag_rtk_cd_gate_row = { sid = cd_io i = 1 type = claim_crusade_war_leadership test = has_cooldown }
 	bag_rtk_cd_gate_row = { sid = cd_io i = 2 type = offer_cardinal_seat_for_crusade test = has_cooldown }
 	bag_rtk_cd_gate_row = { sid = cd_io i = 3 type = preach_the_crusade test = has_cooldown }
@@ -205,6 +1212,20 @@ bag_rtk_cd_gate_all = {
 	bag_rtk_cd_gate_row = { sid = cd_io i = 32 type = proclaim_decree test = has_cooldown }
 	bag_rtk_cd_gate_row = { sid = cd_io i = 33 type = exempt_from_tribute test = has_cooldown }
 	bag_rtk_cd_gate_row = { sid = cd_io i = 34 type = break_the_yoke test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_hre i = 1 type = distribute_imperial_grant test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_hre i = 2 type = demand_circle_loyalty test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_hre i = 3 type = reform_coinage_in_circle test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_hre i = 4 type = reduction_of_circle_titles test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_hre i = 5 type = vote_in_organization_parliament test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_hre i = 6 type = enforce_landfriede test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_hre i = 7 type = ask_to_vote_for_me_as_emperor test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_hre i = 8 type = petition_imperial_diet test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_hre i = 9 type = request_circle_privilege test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_hre i = 10 type = challenge_circle_leadership test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_hre i = 11 type = appeal_to_emperor test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_hre i = 12 type = appeal_to_circle_diet test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_hre i = 13 type = request_circle_infrastructure_expansion test = has_cooldown }
+	bag_rtk_cd_gate_row = { sid = cd_hre i = 14 type = request_new_circle_titles test = has_cooldown }
 	bag_rtk_cd_gate_row = { sid = cd_sit1 i = 1 type = seek_alliance_with_overlord_rival_cooldown_key test = has_cooldown }
 	bag_rtk_cd_gate_row = { sid = cd_sit1 i = 2 type = recently_established_goods_act test = has_cooldown }
 	bag_rtk_cd_gate_row = { sid = cd_sit1 i = 3 type = recently_aid_colonial_war test = has_cooldown }
@@ -430,42 +1451,23 @@ bag_rtk_cd_check_all = {
 	bag_rtk_cd_check_est = { sid = cd_estate i = 27 key = press_estate_private_regiments_action__dhimmi action = press_estate_private_regiments_action est = dhimmi type = press_estate_private_regiments_cooldown view = government }
 	bag_rtk_cd_check_est = { sid = cd_estate i = 28 key = press_estate_private_regiments_action__tribes action = press_estate_private_regiments_action est = tribes type = press_estate_private_regiments_cooldown view = government }
 	bag_rtk_cd_check_est = { sid = cd_estate i = 29 key = press_estate_private_regiments_action__cossacks action = press_estate_private_regiments_action est = cossacks type = press_estate_private_regiments_cooldown view = government }
-	bag_rtk_cd_check_row = { sid = cd_country i = 1 type = convert_culture test = has_cooldown view = government }
-	bag_rtk_cd_check_row = { sid = cd_country i = 2 type = convert_religion test = has_cooldown view = government }
-	bag_rtk_cd_check_row = { sid = cd_country i = 3 type = transition_government test = has_cooldown view = government }
-	bag_rtk_cd_check_row = { sid = cd_country i = 4 type = distribute_imperial_grant test = has_cooldown view = government }
-	bag_rtk_cd_check_row = { sid = cd_country i = 5 type = demand_circle_loyalty test = has_cooldown view = government }
-	bag_rtk_cd_check_row = { sid = cd_country i = 6 type = reform_coinage_in_circle test = has_cooldown view = government }
-	bag_rtk_cd_check_row = { sid = cd_country i = 7 type = reduction_of_circle_titles test = has_cooldown view = government }
-	bag_rtk_cd_check_row = { sid = cd_country i = 8 type = vote_in_organization_parliament test = has_cooldown view = government }
-	bag_rtk_cd_check_row = { sid = cd_country i = 9 type = change_liturgical_language test = has_cooldown view = government }
-	bag_rtk_cd_check_row = { sid = cd_country i = 10 type = change_court_language test = has_cooldown view = government }
-	bag_rtk_cd_check_row = { sid = cd_country i = 11 type = has_forced_parliament_issue test = has_cooldown view = government }
-	bag_rtk_cd_check_row = { sid = cd_country i = 12 type = seat_the_itinerant_court test = has_cooldown view = government }
-	bag_rtk_cd_check_row = { sid = cd_country i = 13 type = parliament_approved_extra_taxes test = has_country_modifier view = government }
-	bag_rtk_cd_check_row = { sid = cd_country i = 14 type = parliament_approved_extra_levies test = has_country_modifier view = government }
-	bag_rtk_cd_check_row = { sid = cd_country i = 15 type = parliament_declared_holidays test = has_country_modifier view = government }
-	bag_rtk_cd_check_row = { sid = cd_diplo i = 1 type = ask_for_money test = has_cooldown view = diplomacy }
-	bag_rtk_cd_check_row = { sid = cd_diplo i = 2 type = enforce_culture test = has_cooldown view = diplomacy }
-	bag_rtk_cd_check_row = { sid = cd_diplo i = 3 type = enforce_religion test = has_cooldown view = diplomacy }
-	bag_rtk_cd_check_row = { sid = cd_diplo i = 4 type = enforce_landfriede test = has_cooldown view = diplomacy }
-	bag_rtk_cd_check_row = { sid = cd_diplo i = 5 type = ask_to_vote_for_me_as_emperor test = has_cooldown view = diplomacy }
-	bag_rtk_cd_check_row = { sid = cd_diplo i = 6 type = petition_imperial_diet test = has_cooldown view = diplomacy }
-	bag_rtk_cd_check_row = { sid = cd_diplo i = 7 type = request_circle_privilege test = has_cooldown view = diplomacy }
-	bag_rtk_cd_check_row = { sid = cd_diplo i = 8 type = challenge_circle_leadership test = has_cooldown view = diplomacy }
-	bag_rtk_cd_check_row = { sid = cd_diplo i = 9 type = appeal_to_emperor test = has_cooldown view = diplomacy }
-	bag_rtk_cd_check_row = { sid = cd_diplo i = 10 type = appeal_to_circle_diet test = has_cooldown view = diplomacy }
-	bag_rtk_cd_check_row = { sid = cd_diplo i = 11 type = request_circle_infrastructure_expansion test = has_cooldown view = diplomacy }
-	bag_rtk_cd_check_row = { sid = cd_diplo i = 12 type = request_new_circle_titles test = has_cooldown view = diplomacy }
-	bag_rtk_cd_check_row = { sid = cd_diplo i = 13 type = improve_cultural_view_subject test = has_cooldown view = diplomacy }
-	bag_rtk_cd_check_row = { sid = cd_diplo i = 14 type = incite_desertion test = has_cooldown view = diplomacy }
-	bag_rtk_cd_check_row = { sid = cd_diplo i = 15 type = invite_settlers test = has_cooldown view = diplomacy }
-	bag_rtk_cd_check_row = { sid = cd_diplo i = 16 type = violate_italian_sovereignty test = has_cooldown view = diplomacy }
-	bag_rtk_cd_check_row = { sid = cd_diplo i = 17 type = lend_unit_to_ally test = has_cooldown view = diplomacy }
-	bag_rtk_cd_check_row = { sid = cd_diplo i = 18 type = mil_order_request_funds test = has_cooldown view = diplomacy }
-	bag_rtk_cd_check_row = { sid = cd_diplo i = 19 type = offer_war_leadership test = has_cooldown view = diplomacy }
-	bag_rtk_cd_check_row = { sid = cd_diplo i = 20 type = rtr_demand_annexation test = has_cooldown view = diplomacy }
-	bag_rtk_cd_check_row = { sid = cd_diplo i = 21 type = take_over_seniority test = has_cooldown view = diplomacy }
+	bag_rtk_cd_check_row = { sid = cd_state i = 1 type = convert_culture test = has_cooldown view = government }
+	bag_rtk_cd_check_row = { sid = cd_state i = 2 type = convert_religion test = has_cooldown view = government }
+	bag_rtk_cd_check_row = { sid = cd_state i = 3 type = transition_government test = has_cooldown view = government }
+	bag_rtk_cd_check_row = { sid = cd_state i = 4 type = change_liturgical_language test = has_cooldown view = government }
+	bag_rtk_cd_check_row = { sid = cd_state i = 5 type = change_court_language test = has_cooldown view = government }
+	bag_rtk_cd_check_row = { sid = cd_foreign i = 1 type = ask_for_money test = has_cooldown view = diplomacy }
+	bag_rtk_cd_check_row = { sid = cd_foreign i = 2 type = enforce_culture test = has_cooldown view = diplomacy }
+	bag_rtk_cd_check_row = { sid = cd_foreign i = 3 type = enforce_religion test = has_cooldown view = diplomacy }
+	bag_rtk_cd_check_row = { sid = cd_foreign i = 4 type = improve_cultural_view_subject test = has_cooldown view = diplomacy }
+	bag_rtk_cd_check_row = { sid = cd_foreign i = 5 type = incite_desertion test = has_cooldown view = diplomacy }
+	bag_rtk_cd_check_row = { sid = cd_foreign i = 6 type = invite_settlers test = has_cooldown view = diplomacy }
+	bag_rtk_cd_check_row = { sid = cd_foreign i = 7 type = violate_italian_sovereignty test = has_cooldown view = diplomacy }
+	bag_rtk_cd_check_row = { sid = cd_foreign i = 8 type = lend_unit_to_ally test = has_cooldown view = diplomacy }
+	bag_rtk_cd_check_row = { sid = cd_foreign i = 9 type = mil_order_request_funds test = has_cooldown view = diplomacy }
+	bag_rtk_cd_check_row = { sid = cd_foreign i = 10 type = offer_war_leadership test = has_cooldown view = diplomacy }
+	bag_rtk_cd_check_row = { sid = cd_foreign i = 11 type = rtr_demand_annexation test = has_cooldown view = diplomacy }
+	bag_rtk_cd_check_row = { sid = cd_foreign i = 12 type = take_over_seniority test = has_cooldown view = diplomacy }
 	bag_rtk_cd_check_row_noview = { sid = cd_io i = 1 type = claim_crusade_war_leadership test = has_cooldown }
 	bag_rtk_cd_check_row_noview = { sid = cd_io i = 2 type = offer_cardinal_seat_for_crusade test = has_cooldown }
 	bag_rtk_cd_check_row_noview = { sid = cd_io i = 3 type = preach_the_crusade test = has_cooldown }
@@ -500,6 +1502,20 @@ bag_rtk_cd_check_all = {
 	bag_rtk_cd_check_row_noview = { sid = cd_io i = 32 type = proclaim_decree test = has_cooldown }
 	bag_rtk_cd_check_row_noview = { sid = cd_io i = 33 type = exempt_from_tribute test = has_cooldown }
 	bag_rtk_cd_check_row_noview = { sid = cd_io i = 34 type = break_the_yoke test = has_cooldown }
+	bag_rtk_cd_check_row_noview = { sid = cd_hre i = 1 type = distribute_imperial_grant test = has_cooldown }
+	bag_rtk_cd_check_row_noview = { sid = cd_hre i = 2 type = demand_circle_loyalty test = has_cooldown }
+	bag_rtk_cd_check_row_noview = { sid = cd_hre i = 3 type = reform_coinage_in_circle test = has_cooldown }
+	bag_rtk_cd_check_row_noview = { sid = cd_hre i = 4 type = reduction_of_circle_titles test = has_cooldown }
+	bag_rtk_cd_check_row_noview = { sid = cd_hre i = 5 type = vote_in_organization_parliament test = has_cooldown }
+	bag_rtk_cd_check_row_noview = { sid = cd_hre i = 6 type = enforce_landfriede test = has_cooldown }
+	bag_rtk_cd_check_row_noview = { sid = cd_hre i = 7 type = ask_to_vote_for_me_as_emperor test = has_cooldown }
+	bag_rtk_cd_check_row_noview = { sid = cd_hre i = 8 type = petition_imperial_diet test = has_cooldown }
+	bag_rtk_cd_check_row_noview = { sid = cd_hre i = 9 type = request_circle_privilege test = has_cooldown }
+	bag_rtk_cd_check_row_noview = { sid = cd_hre i = 10 type = challenge_circle_leadership test = has_cooldown }
+	bag_rtk_cd_check_row_noview = { sid = cd_hre i = 11 type = appeal_to_emperor test = has_cooldown }
+	bag_rtk_cd_check_row_noview = { sid = cd_hre i = 12 type = appeal_to_circle_diet test = has_cooldown }
+	bag_rtk_cd_check_row_noview = { sid = cd_hre i = 13 type = request_circle_infrastructure_expansion test = has_cooldown }
+	bag_rtk_cd_check_row_noview = { sid = cd_hre i = 14 type = request_new_circle_titles test = has_cooldown }
 	bag_rtk_cd_check_row_noview = { sid = cd_sit1 i = 1 type = seek_alliance_with_overlord_rival_cooldown_key test = has_cooldown }
 	bag_rtk_cd_check_row_noview = { sid = cd_sit1 i = 2 type = recently_established_goods_act test = has_cooldown }
 	bag_rtk_cd_check_row_noview = { sid = cd_sit1 i = 3 type = recently_aid_colonial_war test = has_cooldown }
@@ -798,8 +1814,6 @@ bag_rtk_cd_callback = {
 		flag:bag_rtk_rel_ready_negotiate_estate_concessions = { cmf_remove_alert = { alert = bag_rtk_rel_ready_negotiate_estate_concessions } }
 		flag:bag_rtk_rel_ready_orthodox_synod = { cmf_remove_alert = { alert = bag_rtk_rel_ready_orthodox_synod } }
 		flag:bag_rtk_rel_ready_invite_patriarch_delegation = { cmf_remove_alert = { alert = bag_rtk_rel_ready_invite_patriarch_delegation } }
-		flag:bag_rtk_rel_ready_has_forced_parliament_issue = { cmf_remove_alert = { alert = bag_rtk_rel_ready_has_forced_parliament_issue } }
-		flag:bag_rtk_rel_ready_seat_the_itinerant_court = { cmf_remove_alert = { alert = bag_rtk_rel_ready_seat_the_itinerant_court } }
 		flag:bag_rtk_rel_ready_pw_push_for_serfdom = { cmf_remove_alert = { alert = bag_rtk_rel_ready_pw_push_for_serfdom } }
 		flag:bag_rtk_rel_ready_pilgrimage_action = { cmf_remove_alert = { alert = bag_rtk_rel_ready_pilgrimage_action } }
 		flag:bag_rtk_rel_ready_spread_reformation_through_trade = { cmf_remove_alert = { alert = bag_rtk_rel_ready_spread_reformation_through_trade } }
@@ -915,9 +1929,6 @@ bag_rtk_cd_callback = {
 		flag:bag_rtk_rel_ready_delhi_reaffirm_vassal_relations_modifier = { cmf_remove_alert = { alert = bag_rtk_rel_ready_delhi_reaffirm_vassal_relations_modifier } }
 		flag:bag_rtk_rel_ready_delhi_appeased_the_nobles_modifier = { cmf_remove_alert = { alert = bag_rtk_rel_ready_delhi_appeased_the_nobles_modifier } }
 		flag:bag_rtk_rel_ready_invited_foreign_cleric_modifier = { cmf_remove_alert = { alert = bag_rtk_rel_ready_invited_foreign_cleric_modifier } }
-		flag:bag_rtk_rel_ready_parliament_approved_extra_taxes = { cmf_remove_alert = { alert = bag_rtk_rel_ready_parliament_approved_extra_taxes } }
-		flag:bag_rtk_rel_ready_parliament_approved_extra_levies = { cmf_remove_alert = { alert = bag_rtk_rel_ready_parliament_approved_extra_levies } }
-		flag:bag_rtk_rel_ready_parliament_declared_holidays = { cmf_remove_alert = { alert = bag_rtk_rel_ready_parliament_declared_holidays } }
 		flag:bag_rtk_rel_ready_fervor_of_the_faithful_modifier = { cmf_remove_alert = { alert = bag_rtk_rel_ready_fervor_of_the_faithful_modifier } }
 		flag:bag_rtk_rel_ready_studying_jurisprudence_modifier = { cmf_remove_alert = { alert = bag_rtk_rel_ready_studying_jurisprudence_modifier } }
 		flag:bag_rtk_rel_ready_rtr_appeased_the_court = { cmf_remove_alert = { alert = bag_rtk_rel_ready_rtr_appeased_the_court } }

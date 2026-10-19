@@ -14,7 +14,7 @@
 что это за получатель. Где их нет или они ссылаются на то, чего вне действия
 нет (`scope:target`, `root`, `prev`), ворот нет — строка видна всегда.
 """
-import glob, os, re, sys
+import glob, json, os, re, sys
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 MOD = os.path.join(ROOT, 'mods', 'rulers_toolkit')
@@ -33,13 +33,21 @@ LISTS = [
     ('cd_rel1', 'cd_faith', 'purple', 'country_religion', 'Религиозные действия', 'Religious actions'),
     ('cd_rel2', 'cd_faith', 'purple', 'country_religion', 'Религиозные действия', 'Religious actions'),
     ('cd_estate', 'cd_realm', 'blue', 'government', 'Сословные действия', 'Estate actions'),
-    ('cd_country', 'cd_realm', 'blue', 'government', 'Своя держава и парламент', 'Own country and parliament'),  # не `cd_own`: тот был на 17 строк, а CMF список не укорачивает (0.6.2)
-    ('cd_diplo', 'cd_realm', 'green', 'diplomacy', 'Действия с другими державами', 'Actions with other countries'),
+    ('cd_state', 'cd_realm', 'blue', 'government', 'Своя держава', 'Own country'),
+    ('cd_foreign', 'cd_realm', 'green', 'diplomacy', 'Действия с другими державами', 'Actions with other countries'),
     ('cd_io', 'cd_orgs', 'yellow', None, 'Международные организации', 'International organizations'),
+    ('cd_hre', 'cd_orgs', 'yellow', None, 'Священная Римская империя', 'Holy Roman Empire'),
     ('cd_sit1', 'cd_crisis', 'orange', None, 'Ситуации', 'Situations'),
     ('cd_sit2', 'cd_crisis', 'orange', None, 'Ситуации', 'Situations'),
     ('cd_dis', 'cd_crisis', 'red', None, 'Бедствия', 'Disasters'),
 ]
+# Строки списка не переставлять и не убирать: галочка CMF хранится по номеру
+# строки. Генератор сверяет с `cd_lists.json` и останавливается, если старые
+# строки списка — не начало новых: тогда списку новое имя (так `cd_own` стал
+# `cd_country`, а 0.6.4 — `cd_state`).
+MANIFEST = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cd_lists.json')
+# Всё про Империю и императора — во вкладке организаций (его слова 10-19).
+HRE_FILES = {'hre.txt', 'imperial_circles.txt', 'hre_circle_actions.txt'}
 # Религиозный файл игры -> список; чего нет — `cd_rel1`.
 RELIGION_FILE = {
     'hindu_branches.txt': 'cd_rel2', 'sects.txt': 'cd_rel2', 'religious_factions.txt': 'cd_rel2',
@@ -84,9 +92,21 @@ FIX = {
     'favor_buddhist_schools_from_religious_sects': ('Поддержка буддизма', 'Favor Buddhist schools'),
     'create_uc_bey': ('Создать удж-бея', 'Create an uc bey'),
     'break_the_yoke': ('Освобождение от татарского ига', 'Break free from the Tatar yoke'),
+    # Один откат у голосования в парламенте организации и у предложений округа.
+    'vote_in_organization_parliament': ('Голосование в парламенте организации или округа', 'Vote in an organization or circle parliament'),
 }
 # `prev` в условиях игры — всегда внутри своего блока, и копия сохраняет его смысл.
-OUTSIDE = re.compile(r'scope:(?!actor\b)\w+|\broot\b|\bROOT\b')
+# В `visible` выбора получателя `root` и `scope:<target_flag>` — сам кандидат
+# (`is_member_of_international_organization = root` у лиги): копия запоминает его.
+CAND = 'scope:bag_rtk_cd_cand'
+
+
+def outside(text):
+    """Ссылается ли условие на то, чего вне действия нет; то, что оно само запомнило
+    (`save_temporary_scope_as = actor_culture` у поселенцев), — своё."""
+    own = set(re.findall(r'save_temporary_scope_as = (\w+)', text))
+    return any(m.group(1) not in own if m.group(1) else True
+               for m in re.finditer(r'scope:(?!actor\b|bag_rtk_cd_cand\b)(\w+)|\broot\b|\bROOT\b', text))
 
 
 def loadloc(lang):
@@ -144,18 +164,27 @@ def gate(body):
         # `is_member_of_circle = scope:target` и такие же: без выбранного получателя
         # условие снимаем — ворота шире, но не врут (круги Империи, 0.6.1).
         pot = re.sub(r'\b\w+ \??= scope:(?!actor\b)\w+', '', pot)
-        if pot.strip() and not OUTSIDE.search(pot):
+        if pot.strip() and not outside(pot):
             parts.append(pot)
     if st is not None:
         kind = re.search(r'looking_for_a = (\w+)', st).group(1)
         vis = block(st, 'visible', '\t\t')
-        if vis and vis.strip() and not OUTSIDE.search(vis):
+        if vis and vis.strip():
+            flag = re.search(r'target_flag = (\w+)', st)
+            vis = re.sub(r'\b(root|ROOT)\b', CAND, vis)
+            if flag:
+                vis = vis.replace('scope:' + flag.group(1), CAND)
+            vis = 'save_temporary_scope_as = bag_rtk_cd_cand ' + vis
+        if vis and vis.strip() and not outside(vis):
             if kind == 'religion':
                 parts.append('scope:actor.religion ?= {%s}' % vis)
             elif kind == 'disaster':
                 parts.append('any_active_disaster = {%s}' % vis)
             elif kind == 'international_organization':
                 parts.append('any_international_organization = {%s %s}' % (IO_MEMBER, vis))
+            elif kind == 'country':
+                # Есть ли сейчас хоть один получатель: округа Империи без округов — нет.
+                parts.append('any_country = {%s}' % vis)
             elif kind == 'situation':
                 sit = re.search(r'situation:(\w+)', vis)
                 if sit:
@@ -178,13 +207,13 @@ def estate_gate(body, est):
     """Ворота пары «действие, сословие»: условия действия и это сословие у державы."""
     pot = block(body, 'potential', '\t')
     st = block(body, 'select_trigger', '\t')
-    parts = [pot] if pot and pot.strip() and not OUTSIDE.search(pot) else []
+    parts = [pot] if pot and pot.strip() and not outside(pot) else []
     # `visible` и `enabled` выбора сословия: без налоговой базы, без частных полков,
     # священники у католика для налогов — такой пары в игре нет.
     inner = ''
     for key in ('visible', 'enabled'):
         b = block(st, key, '\t\t') if st else None
-        if b and b.strip() and not OUTSIDE.search(b):
+        if b and b.strip() and not outside(b):
             inner += ' ' + b
     parts.append('scope:actor = { any_estate = { estate_type = estate_type:%s_estate %s } }' % (est, inner))
     return 'AND = {\n' + '\n'.join('\t\t' + ' '.join(p.split()) for p in parts) + '\n\t}'
@@ -216,10 +245,14 @@ def actions():
 
 
 def list_of(fname, kind, t):
+    if fname in HRE_FILES:
+        return 'cd_hre'
     if kind == 'country_interactions':
-        return 'cd_diplo'
+        return 'cd_foreign'
+    # Парламентские (`type = parliament`) — только пока идёт парламент, и он их не
+    # отслеживает (10-19); экстренный созыв — в сословных.
     return {'religious': RELIGION_FILE.get(fname, 'cd_rel1'), 'religiousfaction': 'cd_rel2',
-            'owncountry': 'cd_country', 'parliament': 'cd_country', 'internationalorganization': 'cd_io',
+            'owncountry': 'cd_state', 'internationalorganization': 'cd_io',
             'situation': 'cd_sit', 'disaster': 'cd_dis'}.get(t)
 
 
@@ -276,6 +309,12 @@ def main():
     for lid, tys in table.items():
         if len(tys) > 50:
             sys.exit(f'{lid}: {len(tys)} строк, у списка CMF потолок 50')
+    old = json.load(open(MANIFEST, encoding='utf-8')) if os.path.exists(MANIFEST) else {}
+    moved = [lid for lid, tys in table.items() if lid in old and tys[:len(old[lid])] != old[lid]]
+    if moved:
+        sys.exit('строки сдвинулись или пропали (галочки съедут) — дай этим спискам новое имя: ' + ', '.join(moved))
+    old.update({lid: tys for lid, tys in table.items() if tys})
+    json.dump(old, open(MANIFEST, 'w', encoding='utf-8'), ensure_ascii=False, indent=1, sort_keys=True)
     lists = [l for l in LISTS if table[l[0]]]
 
     # --- ворота
@@ -299,6 +338,34 @@ def main():
                    f'item_count = {len(table[lid])} is_ordered = 0 }}\n')
     for lid, *_ in lists:
         out.append(f'\tcmm_register_list_bool_field = {{ mod_id = bag_rtk setting_id = {lid} field_id = watch default_value = 0 }}\n')
+    out.append('\tbag_rtk_cd_repair_lists = yes\n}\n\n')
+    # Строка `ERROR_FLAG_INDEX` без галочки (0.6.0 и 0.6.3, его скрины 10-19) — запись
+    # в хранилище строк CMF, которая не разрешается ни в одну строку списка: её не
+    # прячет `cmm_hide_list_item` и у неё нет поля. Откуда она, не названо; здесь
+    # хранилище пересобирается из 1..N, если в нём чужое или число не то, а подпись
+    # и подсказка строки пишутся заново. Зонд — строка `list rebuilt` в debug.log.
+    out.append('# Хранилище строк каждого списка — ровно 1..N; подписи строк. Scope: country.\nbag_rtk_cd_repair_lists = {\n')
+    for lid, *_ in lists:
+        n = len(table[lid])
+        store = f'cmm_list_items_bag_rtk__{lid}'
+        known = ' '.join(f'this = flag:bag_rtk__{lid}_i{i}' for i in range(1, n + 1))
+        out.append(f'\tset_global_variable = {{ name = bag_rtk_cd_total value = 0 }}\n'
+                   f'\tset_global_variable = {{ name = bag_rtk_cd_foreign value = 0 }}\n'
+                   f'\tevery_in_global_list = {{\n\t\tvariable = {store}\n'
+                   f'\t\tchange_global_variable = {{ name = bag_rtk_cd_total add = 1 }}\n'
+                   f'\t\tif = {{\n\t\t\tlimit = {{ NOT = {{ OR = {{ {known} }} }} }}\n'
+                   f'\t\t\tchange_global_variable = {{ name = bag_rtk_cd_foreign add = 1 }}\n'
+                   f'\t\t\tset_global_variable = {{ name = bag_rtk_cd_bad value = this }}\n\t\t}}\n\t}}\n'
+                   f'\tif = {{\n\t\tlimit = {{ OR = {{ global_var:bag_rtk_cd_foreign > 0 NOT = {{ global_var:bag_rtk_cd_total = {n} }} }} }}\n'
+                   f'\t\tdebug_log = "bag_rtk: list {lid} rebuilt, entries [GetGlobalVariable(\'bag_rtk_cd_total\').GetValue|0] of {n}, '
+                   f'foreign [GetGlobalVariable(\'bag_rtk_cd_foreign\').GetValue|0], last foreign [GetGlobalVariable(\'bag_rtk_cd_bad\').GetFlagName]"\n'
+                   f'\t\tclear_global_variable_list = {store}\n')
+        for i in range(1, n + 1):
+            out.append(f'\t\tadd_to_global_variable_list = {{ name = {store} target = flag:bag_rtk__{lid}_i{i} }}\n')
+        out.append('\t}\n')
+        for i in range(1, n + 1):
+            for suf in ('name', 'desc'):
+                out.append(f'\tset_variable = {{ name = bag_rtk__{lid}_i{i}_{suf} value = flag:bag_rtk__{lid}_i{i}_{suf} }}\n')
     out.append('}\n\n# Показать или спрятать каждую строку по воротам; список, где не видно ни одной,\n'
                '# прячет его `_on_changed` (`bag_rtk_cd_shown_<список>`). Scope: country.\nbag_rtk_cd_gate_all = {\n'
                '\tsave_scope_as = actor\n')
