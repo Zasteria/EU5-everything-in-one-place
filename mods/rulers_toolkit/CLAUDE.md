@@ -32,12 +32,12 @@ pass`, `bag_rtk: crown commander set`.
 Как продаёт, кому и почему сам, зонды и окно истории —
 [`README.md`](README.md#творения).
 
-## Религиозная напоминалка (0.5.0, в игре не было; вкладка `faith`)
+## Религиозная напоминалка (0.5.0 работает в игре, 10-19; вкладка `faith`)
 
 Галочка на тип отката (63, из `generic_actions` с `type = religious`) —
 `tools/gen_faith.py` пишет `bag_rtk_faith_generated.txt` и `bag_rtk_faith_l_*.yml`
 (после патча — перегенерировать). 1-го числа, как Calidad de vida: откат был и
-кончился → алерт CMF `bag_rtk_rel_ready_<тип>`, клик убирает. Галочка читается
+кончился → алерт CMF `bag_rtk_rel_ready_<тип>`, клик убирает и (0.5.1, не смотрено) открывает `country_religion`; само действие CMF-алерт открыть не умеет (ваниль — `PerformGenericAction`, только своим виджетом). Галочка читается
 из карты `cmm` державы, без синхронизации. Зонд `bag_rtk: faith reminder shown`.
 
 ## Ползунки после войны (бывший `war_sliders`)
