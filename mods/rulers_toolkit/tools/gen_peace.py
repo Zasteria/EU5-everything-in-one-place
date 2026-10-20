@@ -97,7 +97,9 @@ def debug_loc() -> str:
                       for i, _, _, mr, _, _ in ITEMS if mr)
            + " en=" + _yn("PeaceTreaty.IsEnabled") + " sel=" + _yn("PeaceTreaty.IsSelected")
            + " fits=" + _yn(FITS) + " [PeaceTreaty.GetWarScoreCost|1]\"\n")
-    return head + row
+    cat = (" BAG_RTK_PT_DBG_CAT: \"# [PeaceOfferCategory.GetName] exp=" + _yn("PeaceOfferCategory.IsExpanded")
+           + " poss=" + _yn("PeaceOfferCategory.HasPossibleTreaties") + "\"\n")
+    return head + row + cat
 FITS = ("LessThanOrEqualTo_CFixedPoint(Add_CFixedPoint(IntToFixedPoint(PeaceOfferLateralView.GetTotalWarScoreCost), "
         "PeaceTreaty.GetWarScoreCost), PeaceOfferLateralView.GetWarScore)")
 
@@ -267,12 +269,33 @@ def driver():
 {t}		vbox = {{
 {t}			layoutpolicy_horizontal = expanding
 {t}			ignoreinvisible = yes
+{t}			# Свёрнутая категория не отдаёт пунктов (его скрины 10-20: строк не было):
+{t}			# на время шаблона категории с пунктами раскрываются.
+{t}			widget = {{
+{t}				size = {{ 1 1 }}
+{t}				visible_at_creation = no
+{t}				visible = "[And3({RUN}, Not(PeaceOfferCategory.IsExpanded), PeaceOfferCategory.HasPossibleTreaties)]"
+{t}				state = {{
+{t}					name = _show
+{t}					duration = 0.05
+{t}					on_finish = "[PeaceOfferCategory.Expand]"
+{t}				}}
+{t}			}}
+{t}			text_single = {{
+{t}				visible = "[{LOG}]"
+{t}				fontsize = 11
+{t}				text = "BAG_RTK_PT_DBG_CAT"
+{t}			}}
+{t}			vbox = {{
+{t}			layoutpolicy_horizontal = expanding
+{t}			ignoreinvisible = yes
 {t}			datamodel = "[PeaceOfferCategory.GetTreaties]"
 {t}			item = {{
 {t}				vbox = {{
 {t}					layoutpolicy_horizontal = expanding
 {t}					ignoreinvisible = yes
 """ + "".join(helpers) + f"""{t}				}}
+{t}			}}
 {t}			}}
 {t}		}}
 {t}	}}
