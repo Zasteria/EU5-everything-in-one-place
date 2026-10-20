@@ -842,6 +842,24 @@ for _key, _labels in NEW_LABELS.items():
         _table = "scaled" if _key in NEW_SCALED_KEYS else "conditional"
         _phrases[_table][_key] = _labels[_lang]
 
+# A share of the population that pushes a value (generate.py, share_note): the
+# share from which the push is whole, or what each ten per cent of it gives.
+# «Процент солдат −0.05» left him asking how many soldiers make 0.20 (10-18).
+SHARE_WORDS = {
+    "english": {"full": "in full from {pct}%", "per": "{v} per 10%"},
+    "russian": {"full": "полностью от {pct} %", "per": "{v} за каждые 10 %"},
+    "french": {"full": "entier dès {pct} %", "per": "{v} par tranche de 10 %"},
+    "german": {"full": "voll ab {pct} %", "per": "{v} je 10 %"},
+    "spanish": {"full": "completo desde el {pct} %", "per": "{v} por cada 10 %"},
+    "braz_por": {"full": "completo a partir de {pct}%", "per": "{v} a cada 10%"},
+    "polish": {"full": "w pełni od {pct}%", "per": "{v} za każde 10%"},
+    "turkish": {"full": "%{pct} ve üstünde tam", "per": "her %10 için {v}"},
+    "simp_chinese": {"full": "达到{pct}%时满额", "per": "每10%为{v}"},
+    "japanese": {"full": "{pct}%以上で満額", "per": "10%ごとに{v}"},
+    "korean": {"full": "{pct}% 이상이면 최대", "per": "10%마다 {v}"},
+}
+assert set(SHARE_WORDS) == set(LANGUAGES), "a language without share words"
+
 assert set(GLORP_UI_FIXES) <= set(LANGUAGES), "a fix for a language that is not one"
 assert set(PHRASES) == set(LANGUAGES), "a language is in one list and not the other"
 

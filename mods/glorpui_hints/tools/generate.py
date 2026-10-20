@@ -269,6 +269,41 @@ def collect() -> dict[str, list[dict]]:
     return out
 
 
+def population_shares() -> dict[str, tuple[float, bool]]:
+    """auto modifier scaled by a pop type's share of the population -> the
+    share, in per cent, at which it is whole, and whether `max = 1` stops it
+    there. `percentage_pop_type_in_country` is a fraction: 1.40 % soldiers gave
+    0.05 of the 0.20 in game (his screenshot, 10-18), 0.014 × 20 × 0.2."""
+    found = {}
+    for name, (block, _) in pdx.objects(GAME / AUTO_MODIFIERS).items():
+        scales = pdx.get(block, "scales_with")
+        if not isinstance(scales, list):
+            continue
+        value = pdx.get(scales, "value")
+        if not isinstance(value, str) or not value.startswith("percentage_pop_type_in_country:"):
+            continue
+        multiply = pdx.get(scales, "multiply")
+        factor = float(multiply) if isinstance(multiply, str) else 1.0
+        found[name] = (100 / factor, pdx.get(scales, "max") == "1")
+    return found
+
+
+POPULATION_SHARES = population_shares()
+
+
+def share_note(line: dict, lang: str) -> str | None:
+    """«полностью от 5 %» where the push stops at a share, else what each ten
+    per cent of the population gives."""
+    share = POPULATION_SHARES.get(line["object"])
+    if not share:
+        return None
+    pct, capped = share
+    words = svx_languages.SHARE_WORDS[lang]
+    if capped:
+        return words["full"].format(pct="%g" % pct)
+    return words["per"].format(v=number(line["value"] * 10 / pct))
+
+
 def line_text(line: dict, lang: str, glorp: dict[str, dict[str, str]]) -> str:
     phrases = svx_languages.PHRASES[lang]
     value = (phrases["up_to"] if line["up_to"] else "") + number(line["value"])
@@ -295,8 +330,9 @@ def line_text(line: dict, lang: str, glorp: dict[str, dict[str, str]]) -> str:
             label = phrases["catalog"].format(concept=concept, ref=reference)
         return "@hint! %s: #color_green %s#!\\n" % (label, value)
     if kind == "scaled":
+        note = share_note(line, lang) or phrases["scales"]
         return "@hint! %s #help (%s)#!: #color_green %s#!\\n" % (
-            phrases["scaled"][line["object"]], phrases["scales"], value)
+            phrases["scaled"][line["object"]], note, value)
     if kind == "conditional":
         return "@hint! %s: #color_green %s#!\\n" % (phrases["conditional"][line["object"]], value)
     if kind == "cabinet":
@@ -359,10 +395,14 @@ def before_number(text: str, note: str) -> str:
 
 def age_label(line: dict) -> str | None:
     """The age an object belongs to, as the numeral his ask wants: its own age,
-    else the age of the earliest advance that unlocks it."""
+    else the age of the earliest advance that unlocks it — and never earlier
+    than the age its own conditions ask for (10-18: «Элитная подготовка» said
+    «(II)» from its law's advance, its `allow` wanting the sixth)."""
     why = line.get("why") or {}
-    age = why.get("age") or why.get("advance_age")
-    return "(%s)" % ROMAN[core.age_number(age)] if age else None
+    ages = [core.age_number(a) for a in (why.get("age"), why.get("advance_age")) if a]
+    ages.append(core.earliest_age(line.get("needs") or []))
+    age = max(ages)
+    return "(%s)" % ROMAN[age] if age else None
 
 
 def linked(text: str, line: dict) -> str:

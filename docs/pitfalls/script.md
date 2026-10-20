@@ -60,6 +60,11 @@ perfectly good *scope* to read through, and to iterate from.
 
 ## Синтаксис, который принимается и не работает
 
+**A trigger outside its scope is false, and only `debug.log` says so.**
+`is_mercenary` (a `sub_unit` trigger) on an army: one line `Inconsistent trigger
+scopes (unit vs. sub_unit)` at load, nothing in `error.log`, no army passed for
+six months (`rulers_toolkit`, 10-18). Read `Supported Scopes` in `triggers.log`.
+
 **A `trigger_if` chain must end in a `trigger_else`.** Ending on a
 `trigger_else_if` logs `PostValidate of trigger 'trigger_else_if' returned false`
 and voids the whole trigger — `where_to_produce`'s «only where the building can
@@ -156,18 +161,10 @@ trigger name in the file against what exists. **Put the confirmation in a
 checker, not in a comment** — a comment records what someone believed once, and
 a checker re-establishes it on every run.
 
-## Чтение игровых файлов генератором
+## Генераторы, читающие файлы игры — в архиве
 
-**Numeric-looking keys are not all goods.** `debug_max_profit = -1` on the
-plantations was being counted as an input, turning four recipes' total input
-weight negative. Match keys against the goods catalogue rather than against
-"is it a number".
-
-**A method with no `produced` outputs nothing.** A monastery burns clay for
-upkeep, so it has no production efficiency for local clay to improve — which is
-why the game gates its own shovel badge on `IsProducing`. Counting upkeep
-methods put castles and monasteries in a list of things to build for their raw
-materials.
+Как генератор читает блоки игры и где его подводит скобка:
+[`../archive/pitfalls_script_generators.md`](../archive/pitfalls_script_generators.md).
 
 ## Скоуп, операции и форматы — цена одного слова
 
@@ -233,17 +230,6 @@ for the same reason; it applies to a grep over the tree just as much.
 перечисли всё, что игра в нём спрашивала.** `can_build_building` — это ранг
 **и** `location_potential`; замена, которая вернула одно из двух, тише, чем та,
 которая не вернула ничего.
-
-## Нежадная скобка в начале строки — это не конец блока
-
-**`^\tX = {(.*?)^\t}` ловит закрывающую скобку СЛЕДУЮЩЕГО блока**, если
-искомый написан одной строкой. `nd_drr_jezail_tradition` пишет `potential = {
-has_or_had_tag = DRR }` в строку, а ниже несёт `ai_weight = {` … `\n\t}` — и
-разбор отдал в ворота всё содержимое продвижения целиком, вместе с `requires`,
-`icon`, `unlock_unit` и `ai_weight`. Игра писала «Unknown trigger type:
-ai_weight» шестнадцать раз за загрузку, ворота были мусором, и на экране это не
-проявлялось ничем. **Однострочную форму пробуют первой**, и она обязана
-требовать, чтобы скобки сошлись в той же строке (`[^{}\n]*`).
 
 ## Чтение переменной, которой нет, стоит строки в логе на каждый кадр
 

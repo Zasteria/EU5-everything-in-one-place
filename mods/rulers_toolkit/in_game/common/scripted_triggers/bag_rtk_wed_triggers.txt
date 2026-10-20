@@ -1,0 +1,74 @@
+﻿# Женитьба династии (`bag_rtk_wed.txt`). Правила игры для династического брака:
+# член правящей семьи (правитель или его близкий родственник), годен для брака,
+# одна группа вер, не близкие родственники друг другу, между странами ещё нет
+# брака (`has_potential_royal_marriage`).
+
+# Наш член семьи без пары. Scope: character.
+bag_rtk_wed_single = {
+	age_in_years >= 16
+	is_married = no
+	is_betrothed = no
+	character_can_marry_trigger = yes
+	is_eligible_for_royal_marriage = yes
+	bag_rtk_wed_royal = yes
+}
+
+# Правитель своей страны или его близкий родственник. Scope: character.
+bag_rtk_wed_royal = {
+	OR = {
+		is_ruler = yes
+		AND = {
+			exists = owner.ruler
+			is_close_relative = owner.ruler
+		}
+	}
+}
+
+# Страна, с которой можно заключить брак. Scope: country; scope:bag_rtk_wed_home — игрок.
+bag_rtk_wed_country_ok = {
+	NOT = { this = scope:bag_rtk_wed_home }
+	save_temporary_scope_as = bag_rtk_wed_land
+	has_potential_royal_marriage = scope:bag_rtk_wed_home
+	NOT = { has_royal_marriage_with = scope:bag_rtk_wed_home }
+	# В пределах нашей дипломатической дистанции — как фильтр «Дипломатическая
+	# дистанция» в окне брака игры и форма ваниллы (`request_loan`). 0.7.4 слал
+	# предложение в Гренландию и Уэльс (его прогон 10-19).
+	within_diplomatic_range = scope:bag_rtk_wed_home
+	# Соперничество — −100 к согласию в `ai_diplochance` (у нас и у сюзеренов):
+	# такие почти всегда отказывают, им не предлагаем. Остальное решает сама страна.
+	NOT = { is_rival_of = scope:bag_rtk_wed_home }
+	NOT = { scope:bag_rtk_wed_home = { is_rival_of = scope:bag_rtk_wed_land } }
+	NOT = { any_overlord_or_above = { is_rival_of = scope:bag_rtk_wed_home } }
+	NOT = { scope:bag_rtk_wed_home = { any_overlord_or_above = { is_rival_of = scope:bag_rtk_wed_land } } }
+}
+
+# Годится в пару scope:bag_rtk_wed_one по правилам игры (без согласия). Scope: character.
+bag_rtk_wed_basic = {
+	age_in_years >= 16
+	is_married = no
+	is_betrothed = no
+	character_can_marry_trigger = yes
+	is_eligible_for_royal_marriage = yes
+	bag_rtk_wed_royal = yes
+	OR = {
+		AND = {
+			is_female = yes
+			scope:bag_rtk_wed_one = { is_female = no }
+		}
+		AND = {
+			is_female = no
+			scope:bag_rtk_wed_one = { is_female = yes }
+		}
+	}
+	religion.group = scope:bag_rtk_wed_one.religion.group
+	NOT = { is_close_relative = scope:bag_rtk_wed_one }
+}
+
+# Пара для scope:bag_rtk_wed_one: годится, согласятся, ещё не отказывали. Scope: character.
+bag_rtk_wed_match = {
+	bag_rtk_wed_basic = yes
+	# Согласятся: по формуле игры не меньше +1 (`bag_rtk_wed_pair_accept`).
+	bag_rtk_wed_pair_accept >= 1
+	# Уже отказывал ему (или ответ ещё не пришёл) — второй раз дипломата не тратим.
+	NOT = { scope:bag_rtk_wed_one = { is_target_in_variable_list = { name = bag_rtk_wed_refused target = prev } } }
+}

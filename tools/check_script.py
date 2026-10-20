@@ -388,6 +388,17 @@ def problems(root: Path) -> list[str]:
                 found.append(f"{where}:{line}: `{token}` in script — a "
                              f"generator's f-string escaped one level too many, "
                              f"and the engine reads the whole block as one key")
+            # **A key with no `=` before its block** — `AND {`. 2026-10-18,
+            # `rulers_toolkit` 0.4.0: eight quality tiers written `AND {` by a
+            # generator; the engine logged «Expected "AND = {"» once at load
+            # and the whole OR of tiers was gone. In a `.gui` `type {` is legal.
+            if path.suffix == ".txt":
+                bare_key = re.search(r"^\s*([A-Za-z_][\w.:]*)\s+\{", body, re.M)
+                if bare_key:
+                    line = body[:bare_key.start()].count("\n") + 1
+                    found.append(f"{where}:{line}: `{bare_key.group(1)} {{` with "
+                                 f"no `=` — the engine expects `{bare_key.group(1)} "
+                                 f"= {{` and drops the block")
             opened, closed = text.count("{"), text.count("}")
             if opened != closed:
                 found.append(f"{where}: {opened} `{{` against {closed} `}}` — "

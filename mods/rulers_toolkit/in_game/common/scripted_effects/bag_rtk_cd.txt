@@ -1,0 +1,165 @@
+﻿# Напоминалка об откатах (0.6.0, его просьба 10-19): по образцу напоминалок
+# Calidad de vida (`qol_cooldown_effects.txt`), но по всем действиям игры с
+# откатом и только по отмеченным. Таблица, ворота и тексты —
+# `bag_rtk_cd_generated.txt` и соседи из `tools/gen_cooldowns.py`.
+#
+# Строка списка — тип отката. Галочка — поле `watch` (слот 1) в глобальной
+# карте `cmm`, как у списков Calidad de vida. Видна строка, если действие тебе
+# доступно (ворота — копия его условий), или оно на откате, или отмечено, или
+# включено «Показывать все». Ворота пересчитываются при открытии меню CMF:
+# регистрация идёт заново на каждое открытие. Список, где не видно ни одной
+# строки, прячется целиком (`bag_rtk_cd_shown_<список>`, его `_on_changed`), а
+# с ним и пустая подвкладка «Перезарядок».
+#
+# 1-го числа: откат идёт — запоминаем (`bag_rtk_rel_cd_<тип>`) и убираем старое
+# напоминание; отката нет, а был — напоминание `bag_rtk_rel_ready_<тип>` цвета
+# своего списка; клик убирает его и открывает вкладку игры, если она есть.
+
+# Scope: country, scope:actor — она же. Args: sid, i, type, test — `has_cooldown`
+# (откат действия, `type` — его тип) или `has_country_modifier` (у действия
+# отката нет, его не пускает модификатор `type`, который оно само вешает).
+bag_rtk_cd_gate_row = {
+	set_local_variable = { name = bag_rtk_cd_flag value = flag:bag_rtk__$sid$_i$i$_f1 }
+	if = {
+		limit = {
+			OR = {
+				has_variable = bag_rtk_cd_all
+				$test$ = $type$
+				"global_variable_map(cmm|local_var:bag_rtk_cd_flag)" >= 1
+				bag_rtk_cd_gate_$type$ = yes
+			}
+		}
+		cmm_show_list_item = { mod_id = bag_rtk setting_id = $sid$ item = $i$ }
+		set_variable = { name = bag_rtk_cd_shown_$sid$ value = yes }
+	}
+	else = {
+		cmm_hide_list_item = { mod_id = bag_rtk setting_id = $sid$ item = $i$ }
+	}
+}
+
+# Откат отмеченной строки. Scope: country. Args: sid, i, type, test.
+# Возвращает в `bag_rtk_cd_fire` (локальная), если пора напомнить.
+bag_rtk_cd_track = {
+	remove_local_variable = bag_rtk_cd_fire
+	set_local_variable = { name = bag_rtk_cd_flag value = flag:bag_rtk__$sid$_i$i$_f1 }
+	if = {
+		limit = { "global_variable_map(cmm|local_var:bag_rtk_cd_flag)" >= 1 }
+		if = {
+			limit = { $test$ = $type$ }
+			if = {
+				limit = { NOT = { has_variable = bag_rtk_rel_cd_$type$ } }
+				set_variable = { name = bag_rtk_rel_cd_$type$ value = yes }
+				cmf_remove_alert = { alert = bag_rtk_rel_ready_$type$ }
+			}
+		}
+		else_if = {
+			limit = { has_variable = bag_rtk_rel_cd_$type$ }
+			remove_variable = bag_rtk_rel_cd_$type$
+			set_local_variable = { name = bag_rtk_cd_fire value = yes }
+		}
+	}
+	else_if = {
+		limit = { has_variable = bag_rtk_rel_cd_$type$ }
+		remove_variable = bag_rtk_rel_cd_$type$
+	}
+}
+
+# Scope: country. Args: sid, i, type, test, view — вкладка игры по клику
+# (`OpenLateralView`, как у ванильных алертов в `alertmanager.gui`).
+bag_rtk_cd_check_row = {
+	bag_rtk_cd_track = { sid = $sid$ i = $i$ type = $type$ test = $test$ }
+	if = {
+		limit = { has_local_variable = bag_rtk_cd_fire }
+		cmf_show_alert = { alert = bag_rtk_rel_ready_$type$ }
+		cmf_set_alert_open_view = { alert = bag_rtk_rel_ready_$type$ view = $view$ }
+		debug_log = "bag_rtk: cooldown reminder shown, $type$"
+	}
+}
+
+# То же без вкладки: клик только убирает. Scope: country. Args: sid, i, type, test.
+bag_rtk_cd_check_row_noview = {
+	bag_rtk_cd_track = { sid = $sid$ i = $i$ type = $type$ test = $test$ }
+	if = {
+		limit = { has_local_variable = bag_rtk_cd_fire }
+		cmf_show_alert = { alert = bag_rtk_rel_ready_$type$ }
+		debug_log = "bag_rtk: cooldown reminder shown, $type$"
+	}
+}
+
+# Сословные строки (0.6.2): откат у каждого сословия свой (его слова 10-19), а
+# `has_cooldown` спрашивает державу и сословия не различает. Так что «на откате»
+# здесь — «игра не даёт сделать это действие с этим сословием»
+# (`can_do_generic_action`, как у CM в `cm_ln_govt_effects.txt`); учитывает ли он
+# откат и не мешает ли ему цена — не мерено, поэтому зонд пишет, что видит
+# `has_cooldown` в ту же минуту.
+
+# Scope: country, scope:actor — она же. Args: sid, i, key (пара «действие__сословие»).
+bag_rtk_cd_gate_est_row = {
+	set_local_variable = { name = bag_rtk_cd_flag value = flag:bag_rtk__$sid$_i$i$_f1 }
+	if = {
+		limit = {
+			OR = {
+				has_variable = bag_rtk_cd_all
+				"global_variable_map(cmm|local_var:bag_rtk_cd_flag)" >= 1
+				bag_rtk_cd_gate_$key$ = yes
+			}
+		}
+		cmm_show_list_item = { mod_id = bag_rtk setting_id = $sid$ item = $i$ }
+		set_variable = { name = bag_rtk_cd_shown_$sid$ value = yes }
+	}
+	else = {
+		cmm_hide_list_item = { mod_id = bag_rtk setting_id = $sid$ item = $i$ }
+	}
+}
+
+# Scope: country. Args: sid, i, key, action, est (nobles, clergy…), type — откат
+# действия (для зонда), view — вкладка игры по клику.
+bag_rtk_cd_check_est = {
+	remove_local_variable = bag_rtk_cd_fire
+	set_local_variable = { name = bag_rtk_cd_flag value = flag:bag_rtk__$sid$_i$i$_f1 }
+	if = {
+		limit = { "global_variable_map(cmm|local_var:bag_rtk_cd_flag)" >= 1 }
+		every_estate = {
+			limit = { estate_type = estate_type:$est$_estate }
+			save_scope_as = bag_rtk_cd_est_$est$
+		}
+		if = {
+			limit = {
+				exists = scope:bag_rtk_cd_est_$est$
+				NOT = {
+					can_do_generic_action = {
+						generic_action = generic_action:$action$
+						target = scope:bag_rtk_cd_est_$est$
+					}
+				}
+			}
+			if = {
+				limit = { NOT = { has_variable = bag_rtk_rel_cd_$key$ } }
+				set_variable = { name = bag_rtk_rel_cd_$key$ value = yes }
+				cmf_remove_alert = { alert = bag_rtk_rel_ready_$key$ }
+				if = {
+					limit = { has_cooldown = $type$ }
+					debug_log = "bag_rtk: estate action closed, $key$, country cooldown yes"
+				}
+				else = {
+					debug_log = "bag_rtk: estate action closed, $key$, country cooldown no"
+				}
+			}
+		}
+		else_if = {
+			limit = { has_variable = bag_rtk_rel_cd_$key$ }
+			remove_variable = bag_rtk_rel_cd_$key$
+			set_local_variable = { name = bag_rtk_cd_fire value = yes }
+		}
+	}
+	else_if = {
+		limit = { has_variable = bag_rtk_rel_cd_$key$ }
+		remove_variable = bag_rtk_rel_cd_$key$
+	}
+	if = {
+		limit = { has_local_variable = bag_rtk_cd_fire }
+		cmf_show_alert = { alert = bag_rtk_rel_ready_$key$ }
+		cmf_set_alert_open_view = { alert = bag_rtk_rel_ready_$key$ view = $view$ }
+		debug_log = "bag_rtk: cooldown reminder shown, $key$"
+	}
+}

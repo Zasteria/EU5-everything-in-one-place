@@ -63,3 +63,13 @@ new game, a save load and a country transfer only, whatever it reads like:
 player had just computed was gone by the time he reached the button that reopens
 it. Registration is for making things exist. Anything it destroys, it destroys on
 a schedule nobody chose.
+
+**A list row reading `ERROR_FLAG_INDEX`, with no checkbox, is a row without
+its per-row variables**: the label `<row>_name` and the owner
+`cmm_list_item_owner_setting_<row>`, from which the GUI counts the row's fields.
+Seen in `rulers_toolkit` 0.6.0 and 0.6.3, the second time on a list grown from
+27 to 31 rows. 0.6.4 rewrote the label and the label came back; the checkbox did
+not, because the owner was still missing. Why CMF left them unwritten is not
+measured. 0.6.5 writes all three on every registration, as
+`_cmm_initialize_list_item_metadata` does. Rows are also stored by position, so
+a list that loses or reorders rows needs a new `setting_id`.

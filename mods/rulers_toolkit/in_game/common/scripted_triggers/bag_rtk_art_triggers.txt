@@ -1,0 +1,69 @@
+﻿# Творения на продажу (0.4.0, его просьба 10-18). scope:bag_rtk_seller — наша
+# страна.
+
+# Творение можно и нужно продать. Scope: work_of_art. Условия видимости —
+# из ванильного `country_interactions/sell_work_of_art.txt`; ступени качества —
+# из `artists_l_russian.yml` (0–11, 12–24, … 87–100), по галочке на ступень.
+bag_rtk_art_for_sale = {
+	owner ?= scope:bag_rtk_seller
+	art_is_priceless = no
+	is_art_destroyed = no
+	work_of_art_is_imperial_regalia = no
+	OR = {
+		AND = {
+			scope:bag_rtk_seller = { has_variable = bag_rtk_art_q1 }
+			art_quality < 12
+		}
+		AND = {
+			scope:bag_rtk_seller = { has_variable = bag_rtk_art_q2 }
+			art_quality >= 12 art_quality < 25
+		}
+		AND = {
+			scope:bag_rtk_seller = { has_variable = bag_rtk_art_q3 }
+			art_quality >= 25 art_quality < 37
+		}
+		AND = {
+			scope:bag_rtk_seller = { has_variable = bag_rtk_art_q4 }
+			art_quality >= 37 art_quality < 50
+		}
+		AND = {
+			scope:bag_rtk_seller = { has_variable = bag_rtk_art_q5 }
+			art_quality >= 50 art_quality < 62
+		}
+		AND = {
+			scope:bag_rtk_seller = { has_variable = bag_rtk_art_q6 }
+			art_quality >= 62 art_quality < 75
+		}
+		AND = {
+			scope:bag_rtk_seller = { has_variable = bag_rtk_art_q7 }
+			art_quality >= 75 art_quality < 87
+		}
+		AND = {
+			scope:bag_rtk_seller = { has_variable = bag_rtk_art_q8 }
+			art_quality >= 87
+		}
+	}
+}
+
+# Держава купит творение scope:bag_rtk_art. Scope: country.
+#
+# Строже кнопки — его требование 10-18: мод продаёт без вопроса покупателю,
+# значит, не должен отбирать деньги у того, кто их не имеет или нас не любит.
+# - Согласие ≥ 1 по копии ванильной формулы (`diplo_chance` в
+#   `sell_work_of_art.txt`, сверена строка в строку). Число игры
+#   `country_interaction_acceptance(...|this)` не годится: зонд 0.4.9 — ни у кого
+#   ≥ 1, хотя по копии согласны; оно ведёт себя как 0 (TESTLOG 10-18).
+# - После покупки у него остаётся не меньше шести месяцев дохода (меньше —
+#   ванильные −60 «мало денег»): в долги не загоняем.
+# - Мнение о нас выше нуля, не враг, не соперник ни с какой стороны.
+bag_rtk_art_buyer = {
+	is_real_country = yes
+	NOT = { this = scope:bag_rtk_seller }
+	NOT = { country_type = building }
+	NOT = { is_enemy_of = scope:bag_rtk_seller }
+	NOT = { is_rival_of = scope:bag_rtk_seller }
+	NOT = { scope:bag_rtk_seller = { is_rival_of = prev } }
+	opinion = { target = scope:bag_rtk_seller value > 0 }
+	gold >= bag_rtk_art_buyer_floor
+	bag_rtk_art_accept >= 1
+}
