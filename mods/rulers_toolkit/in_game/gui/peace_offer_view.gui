@@ -1111,37 +1111,34 @@ lateralview = {
 			using = bg_main_inner_alt
 			using = window_main_tabs_margin_alt
 			# BAG_RTK_PT_DRIVER_BEGIN — сгенерировано mods/rulers_toolkit/tools/gen_peace.py
-			# Шаблон договора: шагомер и помощники. Невидимые, нулевого размера; живут здесь,
-			# а не в кнопке — в 0.9.1 внутри кнопки они не срабатывали.
+			# Шаблон договора: шагомер (приоритет × категория), раскрытие категорий и
+			# помощники у пунктов. Невидимое места в окне не берёт.
 			widget = {
 				size = { 0 0 }
-
 				text_single = {
 					visible = "[GetPlayer.MakeScope.GetVariable('bag_rtk_log_on').IsSet]"
 					position = { 0 -18 }
 					fontsize = 11
 					text = "BAG_RTK_PT_DBG"
 				}
-
-				# Шагомер: пока идёт шаблон — каждые 0.4 с следующий приоритет.
+				# Шагомер: каждые 0.35 с следующая фаза (категория), потом приоритет.
 				widget = {
 					size = { 1 1 }
 					visible_at_creation = no
 					visible = "[GetPlayer.MakeScope.GetVariable('bag_rtk_pt_run').IsSet]"
 					state = {
 						name = _show
-						duration = 0.4
+						duration = 0.35
 						next = bag_rtk_pt_tick
 						on_finish = "[GetScriptedGui('bag_rtk_pt_next').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
 					}
 					state = {
 						name = bag_rtk_pt_tick
-						duration = 0.4
+						duration = 0.35
 						next = bag_rtk_pt_tick
 						on_finish = "[GetScriptedGui('bag_rtk_pt_next').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
 					}
 				}
-
 				# Золото: жать «+», пока на своём шаге и есть свободные очки.
 				widget = {
 					size = { 1 1 }
@@ -1149,7 +1146,7 @@ lateralview = {
 					widget = {
 						size = { 1 1 }
 						visible_at_creation = no
-						visible = "[And4(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_run').IsSet, EqualTo_CFixedPoint(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_step').GetValue, GetPlayer.MakeScope.GetVariable('bag_rtk_pt_p_gold').GetValue), PeaceOfferWarScoreTreatyGlue.IsIncWarScoreEnabled, GreaterThan_CFixedPoint(PeaceOfferLateralView.GetWarScore, IntToFixedPoint(PeaceOfferLateralView.GetTotalWarScoreCost)))]"
+						visible = "[And5(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_run').IsSet, EqualTo_CFixedPoint(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_step').GetValue, GetPlayer.MakeScope.GetVariable('bag_rtk_pt_p_gold').GetValue), EqualTo_CFixedPoint(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_sub').GetValue, '(CFixedPoint)1'), PeaceOfferWarScoreTreatyGlue.IsIncWarScoreEnabled, GreaterThan_CFixedPoint(PeaceOfferLateralView.GetWarScore, IntToFixedPoint(PeaceOfferLateralView.GetTotalWarScoreCost)))]"
 						state = {
 							name = _show
 							duration = 0.03
@@ -1164,21 +1161,41 @@ lateralview = {
 						}
 					}
 				}
-
 			}
 
-			# Пункты договора: по помощнику на пункт. Категории окна — гармошка: раскрыта
-			# одна, и только она отдаёт свои пункты (его скрины 10-20; раскрывать их по
-			# очереди — мерцание). Поэтому весь список договора разом —
-			# `PeaceOfferLateralView.GetAllTreaties`, ванилью не используемый.
+			# Категории — гармошка: пункты отдаёт только раскрытая. Своя фаза раскрывает
+			# свою категорию; помощники у пунктов жмут то, что на этом приоритете.
 			vbox = {
 				layoutpolicy_horizontal = expanding
 				ignoreinvisible = yes
-				datamodel = "[PeaceOfferLateralView.GetAllTreaties]"
+				datamodel = "[PeaceOfferLateralView.GetCategories]"
 				item = {
 					vbox = {
 						layoutpolicy_horizontal = expanding
 						ignoreinvisible = yes
+						widget = {
+							size = { 1 1 }
+							visible_at_creation = no
+							visible = "[And4(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_run').IsSet, Or(And(EqualTo_CFixedPoint(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_sub').GetValue, '(CFixedPoint)1'), EqualTo_string(PeaceOfferCategory.GetName, Localize('MISC_CATEGORY'))), And(EqualTo_CFixedPoint(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_sub').GetValue, '(CFixedPoint)2'), EqualTo_string(PeaceOfferCategory.GetName, Localize('COUNTRY_CATEGORY')))), Not(PeaceOfferCategory.IsExpanded), PeaceOfferCategory.HasPossibleTreaties)]"
+							state = {
+								name = _show
+								duration = 0.03
+								on_finish = "[PeaceOfferCategory.Expand]"
+							}
+						}
+						text_single = {
+							visible = "[GetPlayer.MakeScope.GetVariable('bag_rtk_log_on').IsSet]"
+							fontsize = 11
+							text = "BAG_RTK_PT_DBG_CAT"
+						}
+						vbox = {
+							layoutpolicy_horizontal = expanding
+							ignoreinvisible = yes
+							datamodel = "[PeaceOfferCategory.GetTreaties]"
+							item = {
+								vbox = {
+									layoutpolicy_horizontal = expanding
+									ignoreinvisible = yes
 									widget = {
 										size = { 1 1 }
 										visible_at_creation = no
@@ -1272,6 +1289,9 @@ lateralview = {
 										fontsize = 11
 										text = "BAG_RTK_PT_DBG_ROW"
 									}
+								}
+							}
+						}
 					}
 				}
 			}
