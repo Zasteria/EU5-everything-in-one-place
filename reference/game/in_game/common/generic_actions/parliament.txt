@@ -315,7 +315,7 @@ request_more_taxes = {
 		scope:actor = {	
 			is_active_parliament = yes
 			NOT = { has_country_modifier = parliament_approved_extra_taxes }
-			parliament_issue_support > modifier:parliament_request_issue_support_needed
+			parliament_issue_support >= parliament_request_support
 		}
 	}
 	
@@ -323,7 +323,7 @@ request_more_taxes = {
 		scope:actor = {
 			add_country_modifier = { modifier = parliament_approved_extra_taxes years = 1 mode = add_and_extend }  
 			change_parliament_issue_support = {
-				value = modifier:parliament_request_issue_support_needed
+				value = parliament_request_support
 				multiply = -1
 			}
 		}
@@ -375,7 +375,7 @@ prepare_for_war = {
 		scope:actor = {	
 			country_type = location
 			is_active_parliament = yes
-			parliament_issue_support > {
+			parliament_issue_support >= {
                 value = parliament_request_support
             }
 		}
@@ -530,7 +530,7 @@ prepare_for_war = {
 			}
 			else = { custom_tooltip = select_a_country_to_get_casus_belli_on }			
 			change_parliament_issue_support = {
-				value = modifier:parliament_request_issue_support_needed
+				value = parliament_request_support
 				multiply = -1
 			}
 		}
@@ -612,7 +612,7 @@ ask_for_larger_levies = {
 		scope:actor = {	
 			is_active_parliament = yes
 			NOT = { has_country_modifier = parliament_approved_extra_levies }
-			parliament_issue_support > modifier:parliament_request_issue_support_needed
+			parliament_issue_support >= parliament_request_support
 		}
 	}
 	
@@ -620,7 +620,7 @@ ask_for_larger_levies = {
 		scope:actor = {
 			add_country_modifier = { modifier = parliament_approved_extra_levies years = 3 mode = add_and_extend }  
 			change_parliament_issue_support = {
-				value = modifier:parliament_request_issue_support_needed
+				value = parliament_request_support
 				multiply = -1
 			}
 		}
@@ -666,7 +666,15 @@ ask_for_law_changes = {
 	allow = {
 		scope:actor = {
 			is_active_parliament = yes
-			parliament_issue_support > modifier:parliament_request_issue_support_needed
+			parliament_issue_support >= parliament_request_support
+		}
+	}
+
+	price = price:change_policy
+	price_modifier = {
+		add = {
+			value = 0.2
+			desc = ask_for_law_changes_price_reason
 		}
 	}
 
@@ -741,13 +749,8 @@ ask_for_law_changes = {
 			else = {
 				custom_tooltip = ask_for_law_changes_select_law_title
 			}
-			pay_scaled_price = {
-				price = price:change_policy
-				scale = 0.2
-				reason = ask_for_law_changes_price_reason
-			}
 			change_parliament_issue_support = {
-				value = modifier:parliament_request_issue_support_needed
+				value = parliament_request_support
 				multiply = -1
 			}
 		}
@@ -925,7 +928,7 @@ challenge_bureaucratic_entrenchment = {
 		scope:actor = {
 			is_active_parliament = yes
 			modifier:parliament_abolished = no
-			parliament_issue_support > modifier:parliament_request_issue_support_needed
+			parliament_issue_support >= parliament_request_support
 			any_current_bureaucracy = { entrenchment > entrenchment_radical_penalty }
 		}
 	}
@@ -984,7 +987,7 @@ challenge_bureaucratic_entrenchment = {
 		}
 		scope:actor = {
 			change_parliament_issue_support = {
-				value = modifier:parliament_request_issue_support_needed
+				value = parliament_request_support
 				multiply = -1
 			}
 		}
@@ -1028,7 +1031,7 @@ declare_holidays_request = {
 			has_reform = government_reform:enlightened_council_reform
 			is_active_parliament = yes
 			NOT = { has_country_modifier = parliament_declared_holidays }
-			parliament_issue_support > modifier:parliament_request_issue_support_needed
+			parliament_issue_support >= parliament_request_support
 		}
 	}
 	
@@ -1037,7 +1040,7 @@ declare_holidays_request = {
 			add_country_modifier = { modifier = parliament_declared_holidays years = 1 mode = add_and_extend }  
 			add_stability = stability_severe_bonus
 			change_parliament_issue_support = {
-				value = modifier:parliament_request_issue_support_needed
+				value = parliament_request_support
 				multiply = -1
 			}
 		}
@@ -1153,7 +1156,7 @@ force_parliament_support = {
 				limit = {
 					scope:actor = {
 						or = {
-							parliament_issue_support >= modifier:parliament_request_issue_support_needed
+							parliament_issue_support >= parliament_request_support
 							parliament_issue_support < 0.25
 						}
 					}
@@ -1168,7 +1171,7 @@ force_parliament_support = {
 			if = {
 				limit = {
 					scope:actor = {
-						parliament_issue_support < modifier:parliament_request_issue_support_needed
+						parliament_issue_support < parliament_request_support
 					}
 				}
 				value = 5
@@ -1239,7 +1242,7 @@ iw_militarize_country = {
 		scope:actor = {	
 			is_active_parliament = yes
 			NOT = { has_country_modifier = parliament_approved_extra_levies }
-			parliament_issue_support > modifier:parliament_request_issue_support_needed
+			parliament_issue_support >= parliament_request_support
 			regular_army_size > 0
 		}
 
@@ -1270,7 +1273,7 @@ iw_militarize_country = {
 				}
 			}
 			change_parliament_issue_support = {
-				value = modifier:parliament_request_issue_support_needed
+				value = parliament_request_support
 				multiply = -1
 			}
 		}
@@ -1307,7 +1310,7 @@ seat_the_itinerant_court = {
 		scope:actor = {
 			is_active_parliament = yes
 			has_policy = itinerant_court_policy
-			parliament_issue_support > modifier:parliament_request_issue_support_needed
+			parliament_issue_support >= parliament_request_support
 		}
 	}
 
@@ -1338,12 +1341,8 @@ seat_the_itinerant_court = {
 			controller ?= scope:actor
 			local_control > 0
 			is_core_of = scope:actor
-			# Cannot Seat the Itinerant Court where it, a Local Governor or a Lieutenancy already sits
-			NOR = {
-				has_building = building_type:itinerant_court_seat
-				has_building = building_type:local_governor
-				has_building = building_type:lieutenancy
-			}
+			has_proximity_source_building = no
+			is_historical_capital = no
 			OR = {
 				is_city = yes
 				# Rural locations qualify only if they are a province capital.
@@ -1390,7 +1389,7 @@ seat_the_itinerant_court = {
 				}
 			}
 			change_parliament_issue_support = {
-				value = modifier:parliament_request_issue_support_needed
+				value = parliament_request_support
 				multiply = -1
 			}
 			hidden_effect = {

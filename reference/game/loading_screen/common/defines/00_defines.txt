@@ -782,6 +782,7 @@ NAI = {
 	INPUT_GOODS_SHORTAGE_UTILITY_FACTOR = 0.02
 	LOCAL_OVERSUPPLY_UTILITY_FACTOR = 0.02 # Utility penalty per unit of output a building adds to a good its own market already cannot absorb
 	LOCAL_OVERSUPPLY_STOCKPILE_THRESHOLD = 0.9 # Stockpile fraction above which a market counts as unable to absorb more of a good
+	AI_STOCKPILE_CAPACITY_UTILITY = 0.1 # Utility per point of maximum_stockpile_capacity, scaled by the fraction of goods in the market already at the ceiling
 	SELL_PROVINCE_DEBT_CAP = 2 # Max bonus from being in debt, in percentage
 	SELL_PROVINCE_DEBT_CASH_CAP = 2 # Multiplied with the Total Debt and cap the bonus from cash, in percentage
 	SELL_PROVINCE_ACCEPTABLE_PAYBACK_MONTHS = 240 # A bought location is considered fairly priced when its tax base repays the price within this many months
@@ -879,6 +880,7 @@ NAI = {
 	MARKET_OWNING_IMPORTANCE = 0.0005 # How much the AI values owning the market center per raw tax base, measured in monthly ducats
 
 	MERCHANT_CAPACITY_GOLD_RELATION_FACTOR = 0.25 # Estimated profitability of trade per merchant capacity, used when AI has 0 trades so there is nothing to calc profitability on
+	MERCHANT_CAPACITY_SLACK_SCALE = 2 # Unused merchant capacity beyond the first point at which extra capacity is worth half its realized profitability
 
 	RECRUITMENT_TIME_BASE_DAYS = 10 # Base number of days to consider getting a new unit to a place
 	RECRUITMENT_TIME_FACTOR = 0.1 # Multiplier for how significant recruitment time is for AI recruitment decisions
@@ -921,7 +923,8 @@ NAI = {
 	AI_UNLOCK_BUILDING_ADVANCE_UTIL_PER_UPGRADE = 200 # score from unlocking a building from number of buildings upgrades per tax base
 	AI_UNLOCK_PM_ADVANCE_UTIL = 50 # score for unlocking a pm from number of buildings using it per tax base
 
-	AI_GLOBAL_RGO_SIZE_UTIL = 0.1
+	AI_GLOBAL_RGO_SIZE_UTIL = 0.6
+	AI_GLOBAL_RURAL_RGO_SIZE_UTIL = 0.3
 	AI_GLOBAL_BUILDING_COST_UTIL = -0.75
 	AI_GLOBAL_URBAN_BUILDING_COST_UTIL = -0.5
 
@@ -1335,6 +1338,7 @@ NAI = {
 	MIN_MONTHS_BETWEEN_REJECTED_LOANS = 120
 
 	LOCAL_POPULATION_IMPORTANCE = 4
+	LOCAL_POP_GROWTH_UTIL = 100 # util from local pop growth, divided by population of location 
 
 	MAX_VALUE_SAMPLES_FOR_TARGETTED_ACTIONS = 6 #when looking for a value in targeted actions, how many iterations will we do before settling on the best value we found
 
@@ -1397,6 +1401,7 @@ NAI = {
 	AI_ENEMY_LAND_SUPREMACY_THRESHOLD = 3 # If enemies have this much more land armies than us and we are in a defensive war then we will hang back and defend
 	AI_REASSIGN_UNIT_THRESHOLD = 1.33 # how much more score is needed for a new objective in order for a unit to be reassigned to it
 	AI_MAX_RECRUIT_DISTANCE_FROM_UNIT = 500 # maximum distance allowed from where a unit recruit is started to which unit it is supposed to join into
+	AI_UNIT_WAIT_FOR_WAR_DISTANCE_THRESHOLD = 100 # allowed distance for units to go avoiding attrition from the enemy border
 	MILITARY_ACCESS_MAX_OBJECTIVES = 3
 
 	THREAT_CALCULATION_BASE_VALUE = 10
@@ -1457,6 +1462,7 @@ NAI = {
 	AI_LAND_MORALE_UTILITY = 0.15
 	AI_LAND_MORALE_ATTRITION_UTILITY = -4.5
 	AI_LAND_MORALE_MOVEMENT_COST_UTILITY = -50
+	AI_LAND_UNIT_ATTRITION_UTILITY = -2
 
 	AI_GOVERNMENT_SIZE_UTILITY = 0.5
 	AI_SATISFACTION_RECOVERY_UTILITY = 5
@@ -1773,6 +1779,7 @@ NPop = {
 	DEVELOPMENT_SCALE_ON_DEMAND = 0.05
 	POP_NEEDS_INCOME_SCALE = 1.33
 	DISPLAY_SIZE = 1000
+	POP_STATISTICS_MIN_CONTROL_WEIGHT = 0.05 # floor on a location's control when weighting its pops into religious and cultural unity
 	GARRISON_MANPOWER_LOSS_IMPACT = 0.5
 	ARMY_MANPOWER_LOSS_IMPACT = 1.0
 	NAVY_SAILOR_LOSS_IMPACT = 1.0
@@ -1898,6 +1905,7 @@ NEstate = {
 	ESTATE_DOMINANCE_CULTURE_DISCRIMINATED_WEIGHT = 0.25
 	ESTATE_DOMINANCE_RELIGION_TOLERANCE_SCALE     = 1.00
 	ESTATE_DOMINANCE_RELIGION_MIN_WEIGHT          = 0.10
+	ESTATE_DOMINANCE_MIN_CONTROL_WEIGHT           = 0.05 # floor on control x local estate power when weighting a pop into estate culture and religion dominance
 	ESTATE_DOMINANCE_OVERRIDE_THRESHOLD           = 1.10
 
 }
@@ -2249,9 +2257,9 @@ NDiplomacy = {
 	MULTIPLE_ANNEX_PENALTY = -0.5
 	SUBJECT_LOYALTY_ANNEXATION_SPEED_FACTOR = 0.2
 
-	SUBJECTS_STRENGTH_THRESHOLD = 0.25			# bloc-balance fraction in [0, 1]: subjects-as-bloc cross this share of total-bloc-vs-overlord on the 3-pillar (army/income/population) balance before the loyalty penalty applies
+	SUBJECTS_STRENGTH_THRESHOLD = 0.20			# bloc-balance fraction in [0, 1]: subjects-as-bloc cross this share of total-bloc-vs-overlord on the 3-pillar (army/income/population) balance before the loyalty penalty applies
 	SUBJECTS_STRENGTH_SCALE = -2				# default value; drives CalcRelativeSubjectPower (estate-power feedback), NOT the bloc loyalty penalty
-	SUBJECTS_STRENGTH_LOYALTY_SCALE = -50		# default per-subject-type scale for the bloc loyalty penalty: vRelativeStrength = (BlocBalance - SUBJECTS_STRENGTH_THRESHOLD) * scale
+	SUBJECTS_STRENGTH_LOYALTY_SCALE = -60		# default per-subject-type scale for the bloc loyalty penalty: vRelativeStrength = (BlocBalance - SUBJECTS_STRENGTH_THRESHOLD) * scale
 	LOYALTY_FROM_INDEPENDENCE_MOVEMENT_SCALE = 10	# how much each unit of relative IO strength reduces loyalty
 	LOYALTY_FROM_INDEPENDENCE_MOVEMENT_MAX = 20		# maximum loyalty reduction from independence movement strength
 	MIN_SUBJECT_LOYALTY_FOR_ACTION = 50

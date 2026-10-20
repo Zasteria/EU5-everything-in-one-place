@@ -70,7 +70,6 @@
 				ruler_or_heir_if_regent.dynasty = {
 					every_available_dynasty_member = {
 						limit = {
-							religion = scope:actor.religion
 							modifier:blocked_from_character_interactions = no
 						}
 						add_to_list = source
@@ -95,14 +94,22 @@
 			has_dynasty = yes
 			dynasty = scope:actor.ruler_or_heir_if_regent.dynasty
 			is_adult = yes
-			religion = scope:actor.religion
 			modifier:blocked_from_character_interactions = no
+		}
+		enabled = {
+			custom_tooltip = {
+				text = is_eligible_heir_tt
+				is_eligible_heir = scope:recipient
+			}
 		}
 	}
 	
 	effect = {
 		if = {
-			limit = { exists = scope:target }
+			limit = {
+				exists = scope:target
+				scope:target = { is_eligible_heir = scope:recipient }
+			}
 			scope:target = { move_country = scope:recipient }
 			scope:recipient = { set_new_ruler = scope:target }
 		}

@@ -84,6 +84,15 @@
 		
 		# HRE
 		international_organization:hre ?= {
+			if = {
+				limit = {
+					NOT = { has_variable = hre_setup_fanning_out_ai_requests }
+				}
+				every_international_organization_member = {
+					hre_set_ai_diplo_action_cooldown = yes
+				}
+				set_variable = hre_setup_fanning_out_ai_requests
+			}
 			every_international_organization_owned_location = {
 				limit = {
 					is_capital = yes
@@ -3815,6 +3824,7 @@ on_new_ruler = {
 			limit = {
 				root = {
 					has_game_rule = change_countries_dynastic_naming
+					NOT = { has_variable = jap_adopted_japan_identity }
 					OR = {
 						has_reform = government_reform:japanese_imperial_family
 						has_reform = government_reform:japanese_clan
@@ -5280,10 +5290,26 @@ on_location_changed_owner = {
 		}
 		if = {
 			limit = {
-				exists = cardinal
+				exists = scope:loser
+				exists = scope:winner
 			}
-			cardinal = {
-				move_country = scope:winner
+			save_scope_as = cardinal_seat_location
+			scope:loser = {
+				random_character = {
+					limit = {
+						religious_figure ?= religious_figure:cardinal
+						location = scope:cardinal_seat_location
+					}
+					if = {
+						limit = {
+							scope:winner = { religion = religion:catholic }
+						}
+						move_country = scope:winner
+					}
+					else = {
+						remove_cardinal_variables = yes
+					}
+				}
 			}
 		}
 		if = {

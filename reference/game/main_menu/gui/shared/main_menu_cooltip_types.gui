@@ -756,48 +756,48 @@ template tooltip_conditionlist_content {
 			}
 
 			blockoverride "field_content" {
-					block "conditionlist_item_setup" {}
-						margin = { 10 5 }
-						margin_left = "[Add_int32(Multiply_int32(ConditionLine.GetIndent,'(int32)5'),'(int32)10')]"
-						spacing = 10
+				block "conditionlist_item_setup" {}
+					margin = { 10 5 }
+					margin_left = "[Add_int32(Multiply_int32(ConditionLine.GetIndent,'(int32)5'),'(int32)10')]"
+					spacing = 10
 
-					TooltipYesNoCheckbox = {
-						visible = "[Or3(ConditionLine.HasPassed, ConditionLine.HasFailed, ConditionLine.IsWarning)]"
-						blockoverride "yes_visible" { visible = "[ConditionLine.HasPassed]" }
-						blockoverride "no_visible" { visible = "[ConditionLine.HasFailed]" }
-						blockoverride "warning_visible" { visible = "[ConditionLine.IsWarning]" }
-					}
+				TooltipYesNoCheckbox = {
+					visible = "[Or3(ConditionLine.HasPassed, ConditionLine.HasFailed, ConditionLine.IsWarning)]"
+					blockoverride "yes_visible" { visible = "[ConditionLine.HasPassed]" }
+					blockoverride "no_visible" { visible = "[ConditionLine.HasFailed]" }
+					blockoverride "warning_visible" { visible = "[ConditionLine.IsWarning]" }
+				}
 
-					textbox = {
-						layoutpolicy_horizontal = expanding
-						autoresize = yes
+				textbox = {
+					layoutpolicy_horizontal = expanding
+					autoresize = yes
 
-						align = nobaseline
-						using = text_multi_template
-						elide = right
+					align = nobaseline
+					using = text_multi_template
+					elide = right
 
-							text = "[ConditionLine.GetText]"
-							block "field_text_format" {}
+						text = "[ConditionLine.GetText]"
+						block "field_text_format" {}
 
-						block "conditionlist_collapsed_tooltip" {
-							tooltip_enabled = "[ConditionList.HasCollapsedText]"
-							tooltipwidget = {
-								ContextualTooltipTypeBase = {
-									datacontext = "[StringToRequirementsList(ConditionList.GetCollapsedText)]"
-									TooltipScrolledRequirementsList = {
-										blockoverride "block_title" {
-											text = "LIST_TITLE_REQUIREMENTS"
-										}
-
-										set_parent_size_to_minimum = yes
-										margin = { 5 5 }
+					block "conditionlist_collapsed_tooltip" {
+						tooltip_enabled = "[ConditionList.HasCollapsedText]"
+						tooltipwidget = {
+							ContextualTooltipTypeBase = {
+								datacontext = "[StringToRequirementsList(ConditionList.GetCollapsedText)]"
+								TooltipScrolledRequirementsList = {
+									blockoverride "block_title" {
+										text = "LIST_TITLE_REQUIREMENTS"
 									}
 
-									widget = { using = bg_tooltip_frame }
+									set_parent_size_to_minimum = yes
+									margin = { 5 5 }
 								}
+
+								widget = { using = bg_tooltip_frame }
 							}
 						}
 					}
+				}
 			}
 		}
 	}
@@ -1301,6 +1301,12 @@ types ContextualTooltipTypes
 
 			visible = "[And3(UIAction.IsRightClickVisible, Not(UIAction.IsRightClickEnabled), Not(StringIsEmpty(StringToConditionListOnlyFail(UIAction.GetRightClickTooltip).GetOutput)))]"
 			datacontext = "[StringToConditionListOnlyFailAndWarningCollapseRequirement(UIAction.GetRightClickTooltip)]"
+			blockoverride "conditionlist_collapsed_tooltip" {}
+			tooltipwidget = {
+				TooltipConditionListType = {
+					textcontext = "[UIAction.GetRightClickTooltip]"
+				}
+			}
 		}
 
 		TooltipConditionList = {
@@ -1309,6 +1315,12 @@ types ContextualTooltipTypes
 
 			visible = "[And3(UIAction.IsRightClickAndConfirmVisible, Not(UIAction.IsRightClickAndConfirmEnabled), Not(StringIsEmpty(StringToConditionListOnlyFail(UIAction.GetRightClickAndConfirmTooltip).GetOutput)))]"
 			datacontext = "[StringToConditionListOnlyFailAndWarningCollapseRequirement(UIAction.GetRightClickAndConfirmTooltip)]"
+			blockoverride "conditionlist_collapsed_tooltip" {}
+			tooltipwidget = {
+				TooltipConditionListType = {
+					textcontext = "[UIAction.GetRightClickAndConfirmTooltip]"
+				}
+			}
 		}
 
 		blockoverride "action_left" {

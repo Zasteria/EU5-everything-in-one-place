@@ -475,7 +475,6 @@ types BuildingBlocksTooltipsTypes
 		}
 
 		TooltipListScrollArea = {
-			autoresize_axis = vertical
 			visible = "[And(HasStringPairListContext(PdxGuiWidget.Self), DataModelHasItems(StringPairList.GetRows))]"
 
 			blockoverride "scrollarea_content" {
@@ -490,11 +489,25 @@ types BuildingBlocksTooltipsTypes
 		}
 	}
 
-	type TooltipDebugStringPairList = TooltipStringPairList {
+	type TooltipDebugStringPairList = TooltipListBase {
 		using = tooltip_debug_delayed_block
 
-		blockoverride "set_textcontext" {
-			ontextcontextchanged = "[SetStringPairListFromTextContext(PdxGuiWidget.AccessSelf)]"
+		ontextcontextchanged = "[SetStringPairListFromTextContext(PdxGuiWidget.AccessSelf)]"
+
+		TooltipListScrollArea = {
+			autoresize_axis = vertical
+			visible = "[DataModelHasItems(StringPairList.GetRows)]"
+			blockoverride "block_scrollarea" { maximumsize = { -1 500 } }
+
+			blockoverride "scrollarea_content" {
+				TooltipStringPairListContent = {
+					set_parent_dimension_to_minimum = height
+				}
+			}
+		}
+
+		TooltipListEmptyContent = {
+			visible = "[IsDataModelEmpty(StringPairList.GetRows)]"
 		}
 
 		blockoverride "bg_listbase" {
@@ -885,7 +898,7 @@ types BuildingBlocksTooltipsTypes
 
 
 	type TooltipStringPairListFixedContent = fixedgridbox {
-		addcolumn = "[AutoTableWidth.GetTableMinimumWidth('(float)420', '(float)20')]"
+		addcolumn = "[AutoTableWidth.GetTableWidth]"
 		addrow = 30
 		setitemsizefromcell = no
 
@@ -894,7 +907,7 @@ types BuildingBlocksTooltipsTypes
 		}
 		item = {
 			widget = {
-				size = "[ToVector2f(AutoTableWidth.GetTableMinimumWidth('(float)420', '(float)20'), '(float)30')]"
+				size = "[ToVector2f(AutoTableWidth.GetTableWidth, '(float)30')]"
 				background = {
 					visible = "[IsOdd_int32(PdxGuiWidget.GetIndexInDataModel)]"
 					using = tooltip_table_field_texture

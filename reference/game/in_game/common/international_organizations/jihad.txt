@@ -57,9 +57,8 @@
 
 	can_target_trigger = {
 		NOT = {
-			any_international_organization = {
+			any_international_organizations_target_of = {
 				international_organization_type = international_organization_type:jihad
-				international_organization_target ?= this
 			}
 		}
 		NOT = { has_variable = recently_declared_war_on }
@@ -212,6 +211,21 @@
 
 	on_disband = {
 		holy_war_payout_war_end = yes
+		if = {
+			limit = {
+				var:phase = 2
+				exists = var:active_war
+			}
+			var:active_war = { save_scope_as = jihad_active_war }
+			if = {
+				limit = {
+					any_international_organization_member = {
+						any_current_war = { this = scope:jihad_active_war }
+					}
+				}
+				white_peace = scope:jihad_active_war
+			}
+		}
 	}
 
 	monthly_effect = {

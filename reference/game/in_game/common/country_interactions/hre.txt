@@ -277,13 +277,31 @@ request_elector_status = {
 	}
 
 	effect = {
+		scope:actor = {
+			hre_set_ai_diplo_action_cooldown = yes
+		}
 		hre_grant_elector_role = { country = scope:actor }
+	}
+	reject_effect = {
+		scope:actor = {
+			hre_set_ai_diplo_action_cooldown = yes
+		}
 	}
 	ai_will_do = {
 		add = {
 			desc = "TARGET_ACCEPTANCE"
 			value = "scope:actor.country_interaction_acceptance(country_interaction:request_elector_status|scope:recipient)"
 			subtract = 50	#just so the AI doesn't spam it
+		}
+		if = {
+			limit = {
+				exists = scope:actor
+				scope:actor = { has_cooldown = hre_did_diplo_request_already }
+			}
+			subtract = {
+				desc = "We do not want to annoy the Emperor now, do we"
+				value = 1000
+			}
 		}
 	}
 	
@@ -744,6 +762,9 @@ request_free_city_status = {
 		}
 	}
 	effect = {
+		scope:actor = {
+			hre_set_ai_diplo_action_cooldown = yes
+		}
 		international_organization:hre = {
 			international_organization_add_special_status = {
 				type = special_status:free_city
@@ -814,10 +835,21 @@ request_free_city_status = {
 				value = 2
 			}
 		}
+		if = {
+			limit = {
+				exists = scope:actor
+				scope:actor = { has_cooldown = hre_did_diplo_request_already }
+			}
+			subtract = {
+				desc = "We do not want to annoy the Emperor now, do we"
+				value = 1000
+			}
+		}
 	}
 	reject_effect = {
 		hidden_effect = {
 			scope:actor = {
+				hre_set_ai_diplo_action_cooldown = yes
 				add_cooldown = {
 					type = ai_spam_protection_request_free_city_status
 					years = 5
@@ -1042,6 +1074,7 @@ request_kingdom_title = {
 			}
 		}
 		scope:actor = {
+			hre_set_ai_diplo_action_cooldown = yes
 			transfer_gold_to_org_country_effect = {
 				international_organization = international_organization:hre
 				country = scope:recipient
@@ -1054,10 +1087,25 @@ request_kingdom_title = {
 			}
 		}
 	}
+	reject_effect = {
+		scope:actor = {
+			hre_set_ai_diplo_action_cooldown = yes
+		}
+	}
 	ai_will_do = {
 		add = {
 			desc = "TARGET_ACCEPTANCE"
 			value = "scope:actor.country_interaction_acceptance(country_interaction:request_kingdom_title|scope:recipient)"
+		}
+		if = {
+			limit = {
+				exists = scope:actor
+				scope:actor = { has_cooldown = hre_did_diplo_request_already }
+			}
+			subtract = {
+				desc = "We do not want to annoy the Emperor now, do we"
+				value = 1000
+			}
 		}
 	}	
 	accept = {
@@ -1156,6 +1204,7 @@ ask_for_dukedom = {
 	}
 	effect = {
 		scope:actor = {
+			hre_set_ai_diplo_action_cooldown = yes
 			set_country_rank_effect = { rank = country_rank:rank_duchy }
 			add_opinion = {
 				target = scope:recipient
@@ -1163,11 +1212,26 @@ ask_for_dukedom = {
 			}
 		}
 	}
+	reject_effect = {
+		scope:actor = {
+			hre_set_ai_diplo_action_cooldown = yes
+		}
+	}
 	ai_will_do = {
 		scope:actor = { add = ai_spam_protection }
 		add = {
 			desc = "TARGET_ACCEPTANCE"
 			value = "scope:actor.country_interaction_acceptance(country_interaction:ask_for_dukedom|scope:recipient)"
+		}
+		if = {
+			limit = {
+				exists = scope:actor
+				scope:actor = { has_cooldown = hre_did_diplo_request_already }
+			}
+			subtract = {
+				desc = "We do not want to annoy the Emperor now, do we"
+				value = 1000
+			}
 		}
 	}
 	accept = {
@@ -1339,6 +1403,7 @@ request_county_privileges = {
 	}
 	effect = {
 		scope:actor = {
+			hre_set_ai_diplo_action_cooldown = yes
 			transfer_gold_to_org_country_effect = {
 				international_organization = international_organization:hre
 				country = scope:recipient
@@ -1352,6 +1417,11 @@ request_county_privileges = {
 				limit = { exists = scope:target }
 				add_reform = scope:target
 			}
+		}
+	}
+	reject_effect = {
+		scope:actor = {
+			hre_set_ai_diplo_action_cooldown = yes
 		}
 	}
 	ai_will_do = {
@@ -1373,6 +1443,16 @@ request_county_privileges = {
 		add = {
 			desc = "TARGET_ACCEPTANCE"
 			value = "scope:actor.country_interaction_acceptance(country_interaction:request_county_privileges|scope:recipient)"
+		}
+		if = {
+			limit = {
+				exists = scope:actor
+				scope:actor = { has_cooldown = hre_did_diplo_request_already }
+			}
+			subtract = {
+				desc = "We do not want to annoy the Emperor now, do we"
+				value = 1000
+			}
 		}
 	}
 	accept = {
@@ -3238,6 +3318,7 @@ request_legatus_natus_status = {
 			}
 		}
 		scope:actor = {
+			hre_set_ai_diplo_action_cooldown = yes
 			add_reform = government_reform:legatus_natus
 			add_opinion = { target = scope:recipient modifier = opinion_granted_legatus_natus }
 		}
@@ -3271,7 +3352,16 @@ request_legatus_natus_status = {
 				value = 10000
 			}
 		}
-
+		if = {
+			limit = {
+				exists = scope:actor
+				scope:actor = { has_cooldown = hre_did_diplo_request_already }
+			}
+			subtract = {
+				desc = "We do not want to annoy the Emperor now, do we"
+				value = 1000
+			}
+		}
 	}
 	accept = {
 		add = {
@@ -3306,6 +3396,7 @@ request_legatus_natus_status = {
 	reject_effect = {
 		hidden_effect = {
 			scope:actor = {
+				hre_set_ai_diplo_action_cooldown = yes
 				add_cooldown = {
 					type = ai_spam_protection_request_legatus_natus_status
 					years = 5
@@ -3566,6 +3657,7 @@ request_primas_germaniae_status = {
 			}
 		}
 		scope:actor = {
+			hre_set_ai_diplo_action_cooldown = yes
 			add_reform = government_reform:primas_germaniae
 			add_opinion = { target = scope:recipient modifier = opinion_granted_primas_germaniae }
 		}
@@ -3599,7 +3691,16 @@ request_primas_germaniae_status = {
 				value = 10000
 			}
 		}
-
+		if = {
+			limit = {
+				exists = scope:actor
+				scope:actor = { has_cooldown = hre_did_diplo_request_already }
+			}
+			subtract = {
+				desc = "We do not want to annoy the Emperor now, do we"
+				value = 1000
+			}
+		}
 	}
 	accept = {
 		add = {
@@ -3634,6 +3735,7 @@ request_primas_germaniae_status = {
 	reject_effect = {
 		hidden_effect = {
 			scope:actor = {
+				hre_set_ai_diplo_action_cooldown = yes
 				add_cooldown = {
 					type = ai_spam_protection_request_primas_germaniae_status
 					years = 5
