@@ -1,20 +1,16 @@
-﻿# Женитьба династии (0.7.0–0.7.5, его просьба 10-19): каждый член правящей семьи
-# игрока без пары с 16 лет — 1-го числа предложение династического брака самому
-# молодому подходящему члену правящей семьи другой страны (16 лет — первым).
-# Страна значения не имеет; согласие — решение самой страны: предложение идёт
-# через игровое `royal_marriage` в режиме `propose`, без окна. Предложение
-# тратит дипломата (его слова 10-19): одно в месяц на человека и только при
-# свободном дипломате; отказавший запоминается и больше не берётся. Страна —
-# только та, что по формуле игры согласится (`bag_rtk_wed_accept` ≥ 1, 0.7.3).
+﻿# Женитьба династии (0.7.0–0.8.0, его просьба 10-19): каждый член правящей семьи
+# игрока без пары с 16 лет — 1-го числа женится на самом молодом подходящем
+# члене правящей семьи любой страны (16 лет — первым).
 #
-# Аргументы — как scope у `on_royal_marriage` (`_hardcoded.txt`: «target_1 =
-# character of scope:actor who gets married, target_2 = character of
-# scope:recipient»). Не мерено: ответ ИИ сразу или позже.
-#
-# Зонд 0.7.5 (его прогон 10-19: шесть предложений, ни одного брака, а окно игры
-# согласными считает другие страны): по стране — каждое слагаемое согласия
-# (`wedding look`), по человеку — возраст, его слагаемые и итог (`wedding
-# candidate`), у предложения — дипломаты до и после (потрачен ли) и исход.
+# 0.8.0 — как `auto_marry` (`mods/auto_marry/own/in_game/events/auto_marry_royal.txt`),
+# который у него работал (его слова 10-19 13:55): брак — игровым `royal_marriage`
+# с вынужденным согласием (`mode = accept`), без дипломатов; если после него
+# человек не женат — прямым `marry_character`. Предложения с ожиданием согласия
+# (0.7.x) не женили никого: шесть отказов за шесть месяцев (TESTLOG 10-19 13:41).
+# Аргументы пробуются в обоих видах: `target_1`/`target_2`, как scope у
+# `on_royal_marriage` в `_hardcoded.txt`, затем `target`/`target_1`, как у
+# `auto_marry`. Не мерено, какой из путей женит: зонд `bag_rtk: wedding done`
+# пишет путь и появился ли династический брак между странами.
 
 # Scope: country (игрок).
 bag_rtk_wed_monthly = {
@@ -30,6 +26,7 @@ bag_rtk_wed_monthly = {
 				}
 			}
 			save_scope_as = bag_rtk_wed_one
+			save_scope_as = recipient
 			bag_rtk_wed_try = yes
 		}
 	}
@@ -38,84 +35,75 @@ bag_rtk_wed_monthly = {
 # Один наш член семьи — `scope:bag_rtk_wed_one`. Scope: character.
 bag_rtk_wed_try = {
 	clear_variable_list = bag_rtk_wed_pool
-	set_global_variable = { name = bag_rtk_wed_pool_n value = 0 }
-	debug_log = "bag_rtk: wedding search, for:"
-	debug_log_scopes = no
 	every_country = {
 		limit = {
-			bag_rtk_wed_country_ok = yes
-			any_character = { bag_rtk_wed_basic = yes }
+			NOT = { this = scope:bag_rtk_wed_home }
+			any_character = { bag_rtk_wed_match = yes }
 		}
-		set_global_variable = { name = bag_rtk_wed_g_rank value = bag_rtk_wed_t_rank }
-		set_global_variable = { name = bag_rtk_wed_g_opinion value = bag_rtk_wed_t_opinion }
-		set_global_variable = { name = bag_rtk_wed_g_trust value = bag_rtk_wed_t_trust }
-		set_global_variable = { name = bag_rtk_wed_g_culture value = bag_rtk_wed_t_culture }
-		set_global_variable = { name = bag_rtk_wed_g_religion value = bag_rtk_wed_t_religion }
-		set_global_variable = { name = bag_rtk_wed_g_language value = bag_rtk_wed_t_language }
-		set_global_variable = { name = bag_rtk_wed_g_distance value = bag_rtk_wed_t_distance }
-		set_global_variable = { name = bag_rtk_wed_g_union value = bag_rtk_wed_t_union }
-		set_global_variable = { name = bag_rtk_wed_g_country value = bag_rtk_wed_accept }
-		debug_log = "bag_rtk: wedding look, rank=[GetGlobalVariable('bag_rtk_wed_g_rank').GetValue|1] opinion=[GetGlobalVariable('bag_rtk_wed_g_opinion').GetValue|1] trust=[GetGlobalVariable('bag_rtk_wed_g_trust').GetValue|1] culture=[GetGlobalVariable('bag_rtk_wed_g_culture').GetValue|1] religion=[GetGlobalVariable('bag_rtk_wed_g_religion').GetValue|1] language=[GetGlobalVariable('bag_rtk_wed_g_language').GetValue|1] distance=[GetGlobalVariable('bag_rtk_wed_g_distance').GetValue|1] union=[GetGlobalVariable('bag_rtk_wed_g_union').GetValue|1], country total=[GetGlobalVariable('bag_rtk_wed_g_country').GetValue|1]:"
-		debug_log_scopes = no
 		every_character = {
-			limit = { bag_rtk_wed_basic = yes }
+			limit = { bag_rtk_wed_match = yes }
 			save_scope_as = bag_rtk_wed_cand
-			set_global_variable = { name = bag_rtk_wed_g_age value = age_in_years }
-			set_global_variable = { name = bag_rtk_wed_g_desire value = bag_rtk_wed_t_desire }
-			set_global_variable = { name = bag_rtk_wed_g_agepen value = bag_rtk_wed_t_age }
-			set_global_variable = { name = bag_rtk_wed_acc value = bag_rtk_wed_pair_accept }
-			if = {
-				limit = { bag_rtk_wed_match = yes }
-				scope:bag_rtk_wed_one = {
-					add_to_variable_list = { name = bag_rtk_wed_pool target = scope:bag_rtk_wed_cand }
-				}
-				change_global_variable = { name = bag_rtk_wed_pool_n add = 1 }
-				debug_log = "bag_rtk: wedding candidate, age=[GetGlobalVariable('bag_rtk_wed_g_age').GetValue|0] desirability=[GetGlobalVariable('bag_rtk_wed_g_desire').GetValue|1] wife age=[GetGlobalVariable('bag_rtk_wed_g_agepen').GetValue|1], pair total=[GetGlobalVariable('bag_rtk_wed_acc').GetValue|1], taken:"
+			scope:bag_rtk_wed_one = {
+				add_to_variable_list = { name = bag_rtk_wed_pool target = scope:bag_rtk_wed_cand }
 			}
-			else = {
-				debug_log = "bag_rtk: wedding candidate, age=[GetGlobalVariable('bag_rtk_wed_g_age').GetValue|0] desirability=[GetGlobalVariable('bag_rtk_wed_g_desire').GetValue|1] wife age=[GetGlobalVariable('bag_rtk_wed_g_agepen').GetValue|1], pair total=[GetGlobalVariable('bag_rtk_wed_acc').GetValue|1], left out (below +1 or refused before):"
-			}
-			debug_log_scopes = no
 		}
 	}
-	debug_log = "bag_rtk: wedding search done, taken=[GetGlobalVariable('bag_rtk_wed_pool_n').GetValue|0]"
 	ordered_in_list = {
 		variable = bag_rtk_wed_pool
 		order_by = bag_rtk_wed_youth
 		position = 0
 		check_range_bounds = no
 		save_scope_as = bag_rtk_wed_cand
-		if = {
-			limit = {
-				scope:bag_rtk_wed_home = { num_of_diplomats >= 1 }
+		owner = { save_scope_as = bag_rtk_wed_land }
+		scope:bag_rtk_wed_home = {
+			perform_diplomatic_action = {
+				type = royal_marriage
+				actor = scope:bag_rtk_wed_home
+				recipient = scope:bag_rtk_wed_land
+				target_1 = scope:bag_rtk_wed_one
+				target_2 = scope:bag_rtk_wed_cand
+				mode = accept
+				hidden = yes
 			}
+		}
+		if = {
+			limit = { scope:bag_rtk_wed_one = { is_married = yes } }
+			debug_log = "bag_rtk: wedding done, path target_1/target_2, to:"
+		}
+		else = {
 			scope:bag_rtk_wed_home = {
-				set_global_variable = { name = bag_rtk_wed_dip0 value = num_of_diplomats }
 				perform_diplomatic_action = {
 					type = royal_marriage
 					actor = scope:bag_rtk_wed_home
-					recipient = scope:bag_rtk_wed_cand.owner
-					target_1 = scope:bag_rtk_wed_one
-					target_2 = scope:bag_rtk_wed_cand
-					mode = propose
+					recipient = scope:bag_rtk_wed_land
+					target = scope:bag_rtk_wed_one
+					target_1 = scope:bag_rtk_wed_cand
+					mode = accept
 					hidden = yes
 				}
-				set_global_variable = { name = bag_rtk_wed_dip1 value = num_of_diplomats }
-			}
-			scope:bag_rtk_wed_cand = {
-				set_global_variable = { name = bag_rtk_wed_acc value = bag_rtk_wed_pair_accept }
 			}
 			if = {
-				limit = { scope:bag_rtk_wed_one = { OR = { is_married = yes is_betrothed = yes } } }
-				debug_log = "bag_rtk: wedding proposed, our acceptance=[GetGlobalVariable('bag_rtk_wed_acc').GetValue|2], diplomats [GetGlobalVariable('bag_rtk_wed_dip0').GetValue|0] then [GetGlobalVariable('bag_rtk_wed_dip1').GetValue|0], married yes, to:"
+				limit = { scope:bag_rtk_wed_one = { is_married = yes } }
+				debug_log = "bag_rtk: wedding done, path target/target_1, to:"
 			}
 			else = {
-				debug_log = "bag_rtk: wedding proposed, our acceptance=[GetGlobalVariable('bag_rtk_wed_acc').GetValue|2], diplomats [GetGlobalVariable('bag_rtk_wed_dip0').GetValue|0] then [GetGlobalVariable('bag_rtk_wed_dip1').GetValue|0], married no, to:"
-				scope:bag_rtk_wed_one = {
-					add_to_variable_list = { name = bag_rtk_wed_refused target = scope:bag_rtk_wed_cand }
+				scope:bag_rtk_wed_one = { marry_character = scope:bag_rtk_wed_cand }
+				if = {
+					limit = { scope:bag_rtk_wed_one = { is_married = yes } }
+					debug_log = "bag_rtk: wedding done, path marry_character, to:"
+				}
+				else = {
+					debug_log = "bag_rtk: wedding failed, all three paths, to:"
 				}
 			}
-			debug_log_scopes = no
+		}
+		debug_log_scopes = no
+		if = {
+			limit = { scope:bag_rtk_wed_home = { has_royal_marriage_with = scope:bag_rtk_wed_land } }
+			debug_log = "bag_rtk: wedding, royal marriage between countries yes"
+		}
+		else = {
+			debug_log = "bag_rtk: wedding, royal marriage between countries no"
 		}
 	}
 	clear_variable_list = bag_rtk_wed_pool
