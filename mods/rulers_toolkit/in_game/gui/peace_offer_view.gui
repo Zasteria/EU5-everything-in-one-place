@@ -1111,71 +1111,6 @@ lateralview = {
 			using = bg_main_inner_alt
 			using = window_main_tabs_margin_alt
 
-			# ---- bag_rtk ЗОНД (временно): что окно мира отдаёт моду ----
-			vbox = {
-				layoutpolicy_horizontal = expanding
-				margin = { 6 4 }
-				using = bg_text_mask_container_dark_blue
-				text_single = {
-					layoutpolicy_horizontal = expanding
-					autoresize = no
-					size = { -1 18 }
-					fontsize = 12
-					text = "BAG_RTK_PROBE_HEAD"
-				}
-				text_single = {
-					datacontext = "[PeaceOfferLateralView.GetGoldTreaty]"
-					layoutpolicy_horizontal = expanding
-					autoresize = no
-					size = { -1 18 }
-					fontsize = 12
-					text = "BAG_RTK_PROBE_GOLD"
-				}
-				vbox = {
-					layoutpolicy_horizontal = expanding
-					datamodel = "[PeaceOfferLateralView.GetCategories]"
-					item = {
-						vbox = {
-							layoutpolicy_horizontal = expanding
-							text_single = {
-								layoutpolicy_horizontal = expanding
-								autoresize = no
-								size = { -1 16 }
-								fontsize = 12
-								text = "BAG_RTK_PROBE_CAT"
-							}
-							vbox = {
-								layoutpolicy_horizontal = expanding
-								datamodel = "[PeaceOfferLateralView.GetWarScoreTreatiesForCategory(PeaceOfferCategory.Self)]"
-								item = {
-									text_single = {
-										layoutpolicy_horizontal = expanding
-										autoresize = no
-										size = { -1 16 }
-										fontsize = 11
-										text = "BAG_RTK_PROBE_WS"
-									}
-								}
-							}
-							vbox = {
-								layoutpolicy_horizontal = expanding
-								datamodel = "[PeaceOfferCategory.GetTreaties]"
-								item = {
-									text_single = {
-										visible = "[Not(PeaceTreaty.NotShownInPossibleTreaties)]"
-										layoutpolicy_horizontal = expanding
-										autoresize = no
-										size = { -1 16 }
-										fontsize = 11
-										text = "BAG_RTK_PROBE_TREATY"
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-			# ---- конец зонда ----
 
 			vbox = {
 				using = layoutpolicy_expanding
@@ -1896,6 +1831,174 @@ lateralview = {
 													on_action = "[GetScriptedGui('bag_rtk_rep_toggle').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
 												}
 											}
+
+											# BAG_RTK_PT_BEGIN — сгенерировано mods/rulers_toolkit/tools/gen_peace.py
+											#bag_rtk: ШАБЛОН ДОГОВОРА (Помощник правителя). Сбросить договор и пройти
+											# приоритеты 1..9 со страницы CMF «Мир»: на каждом шаге берётся всё
+											# своего приоритета, на что хватает очков.
+											header_button_left = {
+												size = {30 30}
+												visible = "[PeaceOfferLateralView.IsDemanding]"
+												blockoverride "header_button_full_content" {
+													icon = {
+														size = {22 22 }
+														texture = "gfx/interface/icons/peace_treaty/demand_peace.dds"
+													}
+												}
+												tooltipwidget = {
+													BasicFunctionalTooltip = {}
+												}
+												action_tooltip = {
+													click_type = left
+													click_mode = single
+													title = "BAG_RTK_PT_TT"
+													description = "BAG_RTK_PT_DESC"
+													on_action = "[PeaceOfferLateralView.OnResetPeaceOffer]"
+													on_action = "[GetScriptedGui('bag_rtk_pt_start').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+												}
+
+												# Шагомер: пока идёт шаблон — каждые 0.4 с следующий приоритет.
+												widget = {
+													size = { 1 1 }
+													visible_at_creation = no
+													visible = "[GetPlayer.MakeScope.GetVariable('bag_rtk_pt_run').IsSet]"
+													state = {
+														name = _show
+														duration = 0.4
+														next = bag_rtk_pt_tick
+														on_finish = "[GetScriptedGui('bag_rtk_pt_next').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+													}
+													state = {
+														name = bag_rtk_pt_tick
+														duration = 0.4
+														next = bag_rtk_pt_tick
+														on_finish = "[GetScriptedGui('bag_rtk_pt_next').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+													}
+												}
+
+												# Золото: жать «+», пока на своём шаге и есть свободные очки.
+												widget = {
+													size = { 1 1 }
+													datacontext = "[PeaceOfferLateralView.GetGoldTreaty]"
+													widget = {
+														size = { 1 1 }
+														visible_at_creation = no
+														visible = "[And4(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_run').IsSet, EqualTo_CFixedPoint(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_step').GetValue, GetPlayer.MakeScope.GetVariable('bag_rtk_pt_p_gold').GetValue), PeaceOfferWarScoreTreatyGlue.IsIncWarScoreEnabled, GreaterThan_CFixedPoint(PeaceOfferLateralView.GetWarScore, IntToFixedPoint(PeaceOfferLateralView.GetTotalWarScoreCost)))]"
+														state = {
+															name = _show
+															duration = 0.03
+															next = bag_rtk_pt_gold_more
+															on_finish = "[PeaceOfferWarScoreTreatyGlue.OnIncLeftClick]"
+														}
+														state = {
+															name = bag_rtk_pt_gold_more
+															duration = 0.03
+															next = bag_rtk_pt_gold_more
+															on_finish = "[PeaceOfferWarScoreTreatyGlue.OnIncLeftClick]"
+														}
+													}
+												}
+
+												# Пункты договора: по помощнику на пункт в каждой строке списка.
+												widget = {
+													size = { 1 1 }
+													visible = "[GetPlayer.MakeScope.GetVariable('bag_rtk_pt_run').IsSet]"
+													vbox = {
+														datamodel = "[PeaceOfferLateralView.GetCategories]"
+														item = {
+															vbox = {
+																datamodel = "[PeaceOfferCategory.GetTreaties]"
+																item = {
+																	widget = {
+																		size = { 1 1 }
+																	widget = {
+																		size = { 1 1 }
+																		visible_at_creation = no
+																		visible = "[And6(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_run').IsSet, EqualTo_CFixedPoint(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_step').GetValue, GetPlayer.MakeScope.GetVariable('bag_rtk_pt_p_rep').GetValue), StringContains(PeaceTreaty.GetShortName, Localize('BAG_RTK_PT_MATCH_REP')), PeaceTreaty.IsEnabled, Not(PeaceTreaty.IsSelected), LessThanOrEqualTo_CFixedPoint(Add_CFixedPoint(IntToFixedPoint(PeaceOfferLateralView.GetTotalWarScoreCost), PeaceTreaty.GetWarScoreCost), PeaceOfferLateralView.GetWarScore))]"
+																		state = {
+																			name = _show
+																			duration = 0.05
+																			on_finish = "[PeaceTreaty.OnClick]"
+																		}
+																	}
+																	widget = {
+																		size = { 1 1 }
+																		visible_at_creation = no
+																		visible = "[And6(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_run').IsSet, EqualTo_CFixedPoint(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_step').GetValue, GetPlayer.MakeScope.GetVariable('bag_rtk_pt_p_annul').GetValue), StringContains(PeaceTreaty.GetShortName, Localize('BAG_RTK_PT_MATCH_ANNUL')), PeaceTreaty.IsEnabled, Not(PeaceTreaty.IsSelected), LessThanOrEqualTo_CFixedPoint(Add_CFixedPoint(IntToFixedPoint(PeaceOfferLateralView.GetTotalWarScoreCost), PeaceTreaty.GetWarScoreCost), PeaceOfferLateralView.GetWarScore))]"
+																		state = {
+																			name = _show
+																			duration = 0.05
+																			on_finish = "[PeaceTreaty.OnClick]"
+																		}
+																	}
+																	widget = {
+																		size = { 1 1 }
+																		visible_at_creation = no
+																		visible = "[And6(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_run').IsSet, EqualTo_CFixedPoint(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_step').GetValue, GetPlayer.MakeScope.GetVariable('bag_rtk_pt_p_access').GetValue), StringContains(PeaceTreaty.GetShortName, Localize('BAG_RTK_PT_MATCH_ACCESS')), PeaceTreaty.IsEnabled, Not(PeaceTreaty.IsSelected), LessThanOrEqualTo_CFixedPoint(Add_CFixedPoint(IntToFixedPoint(PeaceOfferLateralView.GetTotalWarScoreCost), PeaceTreaty.GetWarScoreCost), PeaceOfferLateralView.GetWarScore))]"
+																		state = {
+																			name = _show
+																			duration = 0.05
+																			on_finish = "[PeaceTreaty.OnClick]"
+																		}
+																	}
+																	widget = {
+																		size = { 1 1 }
+																		visible_at_creation = no
+																		visible = "[And6(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_run').IsSet, EqualTo_CFixedPoint(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_step').GetValue, GetPlayer.MakeScope.GetVariable('bag_rtk_pt_p_food').GetValue), StringContains(PeaceTreaty.GetShortName, Localize('BAG_RTK_PT_MATCH_FOOD')), PeaceTreaty.IsEnabled, Not(PeaceTreaty.IsSelected), LessThanOrEqualTo_CFixedPoint(Add_CFixedPoint(IntToFixedPoint(PeaceOfferLateralView.GetTotalWarScoreCost), PeaceTreaty.GetWarScoreCost), PeaceOfferLateralView.GetWarScore))]"
+																		state = {
+																			name = _show
+																			duration = 0.05
+																			on_finish = "[PeaceTreaty.OnClick]"
+																		}
+																	}
+																	widget = {
+																		size = { 1 1 }
+																		visible_at_creation = no
+																		visible = "[And6(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_run').IsSet, EqualTo_CFixedPoint(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_step').GetValue, GetPlayer.MakeScope.GetVariable('bag_rtk_pt_p_piracy').GetValue), StringContains(PeaceTreaty.GetShortName, Localize('BAG_RTK_PT_MATCH_PIRACY')), PeaceTreaty.IsEnabled, Not(PeaceTreaty.IsSelected), LessThanOrEqualTo_CFixedPoint(Add_CFixedPoint(IntToFixedPoint(PeaceOfferLateralView.GetTotalWarScoreCost), PeaceTreaty.GetWarScoreCost), PeaceOfferLateralView.GetWarScore))]"
+																		state = {
+																			name = _show
+																			duration = 0.05
+																			on_finish = "[PeaceTreaty.OnClick]"
+																		}
+																	}
+																	widget = {
+																		size = { 1 1 }
+																		visible_at_creation = no
+																		visible = "[And6(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_run').IsSet, EqualTo_CFixedPoint(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_step').GetValue, GetPlayer.MakeScope.GetVariable('bag_rtk_pt_p_build').GetValue), StringContains(PeaceTreaty.GetShortName, Localize('BAG_RTK_PT_MATCH_BUILD')), PeaceTreaty.IsEnabled, Not(PeaceTreaty.IsSelected), LessThanOrEqualTo_CFixedPoint(Add_CFixedPoint(IntToFixedPoint(PeaceOfferLateralView.GetTotalWarScoreCost), PeaceTreaty.GetWarScoreCost), PeaceOfferLateralView.GetWarScore))]"
+																		state = {
+																			name = _show
+																			duration = 0.05
+																			on_finish = "[PeaceTreaty.OnClick]"
+																		}
+																	}
+																	widget = {
+																		size = { 1 1 }
+																		visible_at_creation = no
+																		visible = "[And6(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_run').IsSet, EqualTo_CFixedPoint(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_step').GetValue, GetPlayer.MakeScope.GetVariable('bag_rtk_pt_p_slaves').GetValue), StringContains(PeaceTreaty.GetShortName, Localize('BAG_RTK_PT_MATCH_SLAVES')), PeaceTreaty.IsEnabled, Not(PeaceTreaty.IsSelected), LessThanOrEqualTo_CFixedPoint(Add_CFixedPoint(IntToFixedPoint(PeaceOfferLateralView.GetTotalWarScoreCost), PeaceTreaty.GetWarScoreCost), PeaceOfferLateralView.GetWarScore))]"
+																		state = {
+																			name = _show
+																			duration = 0.05
+																			on_finish = "[PeaceTreaty.OnClick]"
+																		}
+																	}
+																	widget = {
+																		size = { 1 1 }
+																		visible_at_creation = no
+																		visible = "[And6(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_run').IsSet, EqualTo_CFixedPoint(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_step').GetValue, GetPlayer.MakeScope.GetVariable('bag_rtk_pt_p_hum').GetValue), StringContains(PeaceTreaty.GetShortName, Localize('BAG_RTK_PT_MATCH_HUM')), PeaceTreaty.IsEnabled, Not(PeaceTreaty.IsSelected), LessThanOrEqualTo_CFixedPoint(Add_CFixedPoint(IntToFixedPoint(PeaceOfferLateralView.GetTotalWarScoreCost), PeaceTreaty.GetWarScoreCost), PeaceOfferLateralView.GetWarScore))]"
+																		state = {
+																			name = _show
+																			duration = 0.05
+																			on_finish = "[PeaceTreaty.OnClick]"
+																		}
+																	}
+																	}
+																}
+															}
+														}
+													}
+												}
+											}
+											# BAG_RTK_PT_END
 
 											#RESET OFFER
 											header_button_left = {

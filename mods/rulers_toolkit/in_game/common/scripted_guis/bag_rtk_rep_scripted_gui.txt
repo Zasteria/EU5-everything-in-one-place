@@ -50,3 +50,30 @@ bag_rtk_rep_clear_go = {
 		debug_log = "bag_rtk: rep, diplomacy slider posted"
 	}
 }
+
+# Шаблон договора (`tools/gen_peace.py`): кнопка запускает шагомер. Scope: country.
+bag_rtk_pt_start = {
+	scope = country
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+	effect = {
+		set_variable = { name = bag_rtk_pt_step value = 0 }
+		set_variable = { name = bag_rtk_pt_run value = yes }
+		debug_log = "bag_rtk: peace template started"
+	}
+}
+
+# Следующий приоритет; после последнего — стоп. Scope: country.
+bag_rtk_pt_next = {
+	scope = country
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+	effect = {
+		change_variable = { name = bag_rtk_pt_step add = 1 }
+		if = {
+			limit = { var:bag_rtk_pt_step > 9 }
+			remove_variable = bag_rtk_pt_run
+			debug_log = "bag_rtk: peace template done"
+		}
+	}
+}
