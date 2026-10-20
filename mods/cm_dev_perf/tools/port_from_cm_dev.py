@@ -1651,7 +1651,7 @@ def _gate_vanilla_toggles(text: str) -> tuple[str, int]:
 
 
 # Bump with every change to what cm_rio_patch ships; `mods.bat` compares it.
-RIO_PATCH_REVISION = 2
+RIO_PATCH_REVISION = 3
 
 
 def _rio_patch() -> str:
@@ -1680,6 +1680,26 @@ def _rio_patch() -> str:
         text, n = _gate_vanilla_toggles(text)
         gated += n
         (out / window).write_text("﻿" + text, encoding="utf-8")
+    # 1.4.x took `use_global_input_instance` out of the engine (the game's own
+    # diplomacydialogs.gui says so in a comment); Río still sets it, and every
+    # one is «untyped is not a valid type» in error.log (10-20, 1.4.2: 34 a
+    # load). His word: fix it here, leave Glorp's own mod alone until its author
+    # catches up. Río's files that carry it, copied whole minus that line; a
+    # file a spec above already rebuilt is cleaned in place.
+    stripped = 0
+    for src in sorted(rio_root.rglob("*.gui")):
+        raw = src.read_text(encoding="utf-8-sig").replace("\r\n", "\n")
+        if not re.search(r"(?m)^\s*use_global_input_instance = yes\s*$", raw):
+            continue
+        rel = src.relative_to(rio_root)
+        dest = RIO_PATCH / rel
+        base = dest.read_text(encoding="utf-8-sig") if dest.exists() else raw
+        lines = base.split("\n")
+        kept = [ln for ln in lines if ln.strip() != "use_global_input_instance = yes"]
+        stripped += len(lines) - len(kept)
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text("﻿" + "\n".join(kept), encoding="utf-8")
+    print(f"cm_rio_patch: {stripped} dead use_global_input_instance lines dropped from Río's windows")
     rio_meta = json.loads((rio_root / ".metadata/metadata.json").read_text(encoding="utf-8-sig"))
     meta = {
         "name": "CM Perf x Glorp UI Rio",
