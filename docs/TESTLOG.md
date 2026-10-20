@@ -205,3 +205,5 @@ Kept here so it is one list rather than scattered through prose:
   the urban-rights and the governor mode drew. What is still never run is the
   **food-potential map**, the icon strip, and the two 2026-09-19 fixes
   themselves.
+
+**Загрузка 1.4.2 (10-20, прогон без игрока):** ошибок от «Автоматики совета», CM, `cm_rio_patch` (GlorpUI) и rulers_toolkit нет, кроме исправленных в той же сессии: пометки совета на сословиях (тоже без переменных) и ворота перезарядок (`?=` берёт только `this`, остальным — `exists`).

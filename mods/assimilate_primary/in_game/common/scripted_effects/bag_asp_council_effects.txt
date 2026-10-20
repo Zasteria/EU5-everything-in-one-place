@@ -177,7 +177,7 @@ bag_asp_mark_busy = {
 		limit = { has_cabinet_action = yes }
 		if = {
 			limit = { cabinet_action = cabinet_action:appease_estate }
-			interaction_target:target ?= { set_variable = { name = bag_asp_busy_appease_estate value = yes } }
+			interaction_target:target ?= { add_to_global_variable_list = { name = bag_asp_busy_appease_estate target = this } }
 		}
 		if = {
 			limit = { cabinet_action = cabinet_action:develop_province }
@@ -242,7 +242,7 @@ bag_asp_clear_busy = {
 		limit = { has_cabinet_action = yes }
 		if = {
 			limit = { cabinet_action = cabinet_action:appease_estate }
-			interaction_target:target ?= { remove_variable = bag_asp_busy_appease_estate }
+			interaction_target:target ?= { remove_list_global_variable = { name = bag_asp_busy_appease_estate target = this } }
 		}
 		if = {
 			limit = { cabinet_action = cabinet_action:develop_province }
@@ -299,7 +299,7 @@ bag_asp_clear_busy = {
 	}
 	every_province = {
 		limit = { bag_asp_busy_any = yes }
-		remove_variable = bag_asp_busy_appease_estate
+		remove_list_global_variable = { name = bag_asp_busy_appease_estate target = this }
 		remove_variable = bag_asp_busy_develop_province
 		remove_list_global_variable = { name = bag_asp_busy_increase_control_area target = this }
 		remove_variable = bag_asp_busy_increase_control_province
@@ -316,23 +316,7 @@ bag_asp_clear_busy = {
 	}
 	clear_global_variable_list = bag_asp_busy_increase_control_area
 	clear_global_variable_list = bag_asp_busy_integrate_area
-	every_estate = {
-		limit = { bag_asp_busy_any = yes }
-		remove_variable = bag_asp_busy_appease_estate
-		remove_variable = bag_asp_busy_develop_province
-		remove_list_global_variable = { name = bag_asp_busy_increase_control_area target = this }
-		remove_variable = bag_asp_busy_increase_control_province
-		remove_list_global_variable = { name = bag_asp_busy_integrate_area target = this }
-		remove_variable = bag_asp_busy_integrate_province
-		remove_variable = bag_asp_busy_noblesse_oblige_cabinet_action
-		remove_variable = bag_asp_busy_pacify_population
-		remove_variable = bag_asp_busy_pop_promote_action
-		remove_variable = bag_asp_busy_promote_culture
-		remove_variable = bag_asp_busy_promote_religion
-		remove_variable = bag_asp_busy_recovery_effort
-		remove_variable = bag_asp_busy_send_secret_royal_inspectors
-		remove_variable = bag_asp_busy_study_institutions
-	}
+	clear_global_variable_list = bag_asp_busy_appease_estate
 }
 
 # Scope: cabinet (a seat). Stops its action and takes back what the pass gave
@@ -343,7 +327,7 @@ bag_asp_vacate = {
 		limit = { has_cabinet_action = yes }
 		if = {
 			limit = { cabinet_action = cabinet_action:appease_estate }
-			interaction_target:target ?= { remove_variable = bag_asp_busy_appease_estate }
+			interaction_target:target ?= { remove_list_global_variable = { name = bag_asp_busy_appease_estate target = this } }
 		}
 		if = {
 			limit = { cabinet_action = cabinet_action:develop_province }
@@ -906,7 +890,7 @@ bag_asp_try_appease_estate = {
 		scope:actor = {
 			ordered_estate = {
 				limit = {
-					NOT = { has_variable = bag_asp_busy_appease_estate }
+					NOT = { is_target_in_global_variable_list = { name = bag_asp_busy_appease_estate target = this } }
 					estate_type = {
 						always_loyal = no
 					}
@@ -919,7 +903,7 @@ bag_asp_try_appease_estate = {
 					bag_asp_vacate = yes
 					set_cabinet_action = { type = cabinet_action:appease_estate target = scope:bag_asp_pick }
 				}
-				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_appease_estate value = yes } }
+				scope:bag_asp_pick = { add_to_global_variable_list = { name = bag_asp_busy_appease_estate target = this } }
 				scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 				scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
 				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to appease_estate" }

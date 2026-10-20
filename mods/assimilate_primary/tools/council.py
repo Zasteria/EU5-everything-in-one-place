@@ -2578,10 +2578,6 @@ bag_asp_clear_busy = {{
 {sweep}
 \t}}
 {area_sweep}
-\tevery_estate = {{
-\t\tlimit = {{ bag_asp_busy_any = yes }}
-{sweep}
-\t}}
 }}
 
 # Scope: cabinet (a seat). Stops its action and takes back what the pass gave
@@ -2992,8 +2988,9 @@ bag_asp_paired_seat = {{
 # area action never stuck and two seats could take the same area. Those keys
 # keep their mark in a global list of areas instead; every other target keeps
 # its variable. The test reads `this`, so it is right in any scope: a province
-# or an estate is simply never in the list.
-AREA_KEYS = ("increase_control_area", "integrate_area")
+# is simply never in the list. An estate holds none either (the 1.4.2 load
+# check, 10-20), so appease_estate's mark moves too.
+AREA_KEYS = ("increase_control_area", "integrate_area", "appease_estate")
 
 
 def area_marks(text: str) -> str:

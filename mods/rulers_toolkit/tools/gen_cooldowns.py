@@ -18,6 +18,19 @@ import glob, json, os, re, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'tools'))
 import quiet_logs  # noqa: E402  строки журнала — под галочкой «Журнал»
 
+
+def _tag_safe(m):
+    """`this = c:ENG` errors when England is gone (1773, 10-20). `this ?=` is the
+    game's own form; any other trigger takes no `?=` (the 1.4.2 load check:
+    «Trigger is simple assign»), so it waits on `exists` instead. Field names
+    (`target =`, `region =`) and `country_exists` stay as they are."""
+    trig, tag = m.group(1), m.group(2)
+    if trig == 'this':
+        return f'this ?= {tag}'
+    if trig in ('country_exists', 'target', 'region', 'actor', 'recipient', 'name', 'value'):
+        return m.group(0)
+    return f'AND = {{ exists = {tag} {trig} = {tag} }}'
+
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 MOD = os.path.join(ROOT, 'mods', 'rulers_toolkit')
 GAME = os.path.join(ROOT, 'reference', 'game')
@@ -331,7 +344,7 @@ def main():
     open(os.path.join(MOD, 'in_game', 'common', 'scripted_triggers', 'bag_rtk_cd_gates_generated.txt'),
          # Страны может не быть в мире (Англия к 1773-му): `?=`, как в ванили
          # (situation_triggers.txt), а не ошибка «Invalid right side 'c'» (10-20).
-         'w', encoding='utf-8').write(re.sub(r'\b(\w+) = (c:[A-Z0-9_]+)\b', r'\1 ?= \2', ''.join(trig)))
+         'w', encoding='utf-8').write(re.sub(r'\b(\w+) = (c:[A-Z0-9_]+)\b', _tag_safe, ''.join(trig)))
 
     # --- эффекты
     out = ['﻿# ' + GEN + '\n\n# Регистрация подвкладок и списков. Scope: country.\nbag_rtk_cd_register_lists = {\n']
