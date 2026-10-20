@@ -23,9 +23,19 @@ bag_rtk_wed_royal = {
 	}
 }
 
+# Страна невесты, как в окне игры: не наша, монархия (республики и купеческие
+# семьи вроде Фуггеров династических браков не делают), в дипломатической
+# дистанции. Scope: country.
+bag_rtk_wed_land_ok = {
+	NOT = { this = scope:bag_rtk_wed_home }
+	government_type = government_type:monarchy
+	within_diplomatic_range = scope:bag_rtk_wed_home
+}
+
 # Пара для scope:bag_rtk_wed_one (он же scope:recipient для проверки игры
 # `character_can_marry_recipient_trigger`) — как `auto_marry_royal_partner`:
-# член короны, годен для династического брака, противоположный пол, одна группа
+# правитель или его близкая родственница («closely related enough to their
+# ruler» в окне игры), член короны, годен для династического брака, противоположный пол, одна группа
 # вер (правило игры для династического брака), не близкий родственник. Scope: character.
 bag_rtk_wed_match = {
 	age_in_years >= 16
@@ -46,6 +56,7 @@ bag_rtk_wed_match = {
 		}
 	}
 	religion.group = scope:bag_rtk_wed_one.religion.group
+	bag_rtk_wed_royal = yes
 	NOT = { is_close_relative = scope:bag_rtk_wed_one }
 	character_can_marry_recipient_trigger = yes
 }
