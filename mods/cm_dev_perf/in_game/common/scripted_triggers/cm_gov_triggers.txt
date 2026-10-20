@@ -13,6 +13,7 @@ cm_gov_is_governor_type = {
 # naval type is for: in_game/common/building_types/capital_buildings.txt:799-803.
 cm_gov_site_is_naval = {
 	NOT = { is_connected_to_through_realm = owner.capital }
+	cm_gov_site_has_other_source = no # cm_dev_perf +perf46
 	is_overseas_for_owner = no
 	is_port = yes
 }
@@ -20,7 +21,19 @@ cm_gov_site_is_naval = {
 # Root is the location. local_governor's allow refuses a site holding a seljuk_mint:
 # in_game/common/building_types/capital_buildings.txt:634-637.
 cm_gov_site_blocks_land_governor = {
-	has_building = building_type:seljuk_mint
+	OR = {
+		has_building = building_type:seljuk_mint
+		cm_gov_site_has_other_source = yes
+	}
+}
+
+# cm_dev_perf +perf46: another proximity source already stands here (the Italian
+# administration centre, a lieutenancy, a mod's): 1.4.2 lets no governor join it.
+# Root is the location.
+cm_gov_site_has_other_source = {
+	has_proximity_source_building = yes
+	NOT = { has_building = building_type:local_governor }
+	NOT = { has_building = building_type:naval_governor }
 }
 
 # Root is the location. Whether either vanilla governor type could ever stand here, whatever gets

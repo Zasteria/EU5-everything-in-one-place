@@ -272,6 +272,79 @@ def _roads_ignore_shortage(text: str) -> str:
                              "\t\t\t\tcm_market_has_construction_goods_for_road = yes\n\t\t\t}\n")
 
 
+FOOD_13 = ("rice", "wheat", "maize", "potato", "livestock", "millet", "legumes", "fish", "olives",
+           "fruit", "wild_game", "beeswax", "fur")
+
+
+def _food_goods() -> list[str]:
+    """Every raw good the game gives food to (`food = ` in goods/*.txt), in file order."""
+    out = []
+    for f in sorted((refs.GAME / "in_game/common/goods").glob("*.txt")):
+        text = re.sub(r"#[^\n]*", "", f.read_text(encoding="utf-8-sig"))
+        for m in re.finditer(r"(?m)^(\w+)\s*=\s*\{", text):
+            depth, i = 1, m.end()
+            while depth:
+                depth += (text[i] == "{") - (text[i] == "}")
+                i += 1
+            body = text[m.end():i]
+            food = re.search(r"\bfood\s*=\s*([\d.]+)", body)
+            if food and float(food.group(1)) > 0 and "category = raw_material" in body:
+                out.append(m.group(1))
+    if not set(FOOD_13) <= set(out):
+        raise SystemExit("food goods: one of CM's 13 lost its food in the game's files")
+    return out
+
+
+def _food_rgo_trigger(text: str) -> str:
+    """CM names its 13 food goods by hand; 1.4.2 gives food to wool and horses
+    too (pastoral locations feed themselves). The list is the game's own now:
+    every raw good with `food` (+perf46, his word 10-20: «мод сам определяет, что
+    даёт еду»)."""
+    goods = _food_goods()
+    for tabs in ("\t\t\t", "\t\t"):
+        old = "".join(f"{tabs}raw_material = goods:{g}\n" for g in FOOD_13)
+        if old in text:
+            new = "".join(f"{tabs}raw_material = goods:{g}\n" for g in goods)
+            return text.replace(old, new, 1)
+    raise SystemExit("food goods: CM's 13-good list has changed shape")
+
+
+def _food_rgo_list(text: str) -> str:
+    goods = _food_goods()
+    line = "\tadd_to_variable_list = {{ name = cm_auto_food_rgo_types_list target = goods:{} }}\n"
+    old = "".join(line.format(g) for g in FOOD_13)
+    if text.count(old) != 1:
+        raise SystemExit("food goods: cm_auto_food_rgo_types_list has changed shape")
+    return text.replace(old, "".join(line.format(g) for g in goods), 1)
+
+
+def _gov_other_sources(text: str) -> str:
+    """The governor plan leaves alone a location that already holds another
+    proximity source (+perf46, his word 10-20): he put the Italian
+    administration centre on a good spot and CM put a local governor on the
+    same location right after, and the second source's proximity burned for
+    nothing. Game 1.4.2 says the same in both governors' `allow`
+    (`has_proximity_source_building = no`, capital_buildings.txt): the sources
+    are mutually exclusive now. A location whose own source is a governor keeps
+    its seat, which the plan may still re-score."""
+    old = "cm_gov_site_blocks_land_governor = {\n\thas_building = building_type:seljuk_mint\n}\n"
+    if text.count(old) != 1:
+        raise SystemExit("governor triggers: cm_gov_site_blocks_land_governor has changed shape")
+    new = ("cm_gov_site_blocks_land_governor = {\n\tOR = {\n\t\thas_building = building_type:seljuk_mint\n"
+           "\t\tcm_gov_site_has_other_source = yes\n\t}\n}\n\n"
+           "# cm_dev_perf +perf46: another proximity source already stands here (the Italian\n"
+           "# administration centre, a lieutenancy, a mod's): 1.4.2 lets no governor join it.\n"
+           "# Root is the location.\n"
+           "cm_gov_site_has_other_source = {\n\thas_proximity_source_building = yes\n"
+           "\tNOT = { has_building = building_type:local_governor }\n"
+           "\tNOT = { has_building = building_type:naval_governor }\n}\n")
+    text = text.replace(old, new, 1)
+    naval = "cm_gov_site_is_naval = {\n\tNOT = { is_connected_to_through_realm = owner.capital }\n"
+    if text.count(naval) != 1:
+        raise SystemExit("governor triggers: cm_gov_site_is_naval has changed shape")
+    return text.replace(naval, naval + "\tcm_gov_site_has_other_source = no # cm_dev_perf +perf46\n", 1)
+
+
 # CM turns the game's own building automation off on load and on a change of
 # country. +perf24..+perf31 also turned it off every month; he had that taken
 # out 10-06 («Убери выключение каждый месяц, зачем это?» — the ask of 10-04 was
@@ -1478,6 +1551,11 @@ EDITS = (
     (LOG, "mirror the Debug tab's log into debug.log", _mirror_log),
     (ROADS, "say the roads plan's gates in its probe", _probe_road_gates),
     (ROADS, "let roads go ahead through a market shortage", _roads_ignore_shortage),
+    ("in_game/common/scripted_triggers/cm_gov_triggers.txt", "no governor beside another proximity source",
+     _gov_other_sources),
+    ("in_game/common/scripted_guis/cm_food_auto_build_scripted_gui.txt", "every food good of the game", _food_rgo_trigger),
+    ("in_game/common/scripted_triggers/cm_ab_triggers.txt", "every food good of the game", _food_rgo_trigger),
+    ("in_game/common/scripted_effects/cm_game_load_setup_effects.txt", "every food good of the game", _food_rgo_list),
     (CMM, "the checkbox for it", _register_ignore_shortage),
     (CORE, "work core goods in markets centred elsewhere", _core_foreign_markets),
     (CMM, "the checkbox for it", _register_core_foreign),
@@ -1668,15 +1746,8 @@ def main() -> int:
     _split_glorp_shared()
     # The beta's buildings and National Destinies' in Custom auto-build (buildings.py).
     buildings.vanilla_checks(refs.GAME / "in_game/common/building_types")
-    try:
-        nd_root = refs.mod("trin.national_destinies")
-    except SystemExit:
-        nd_root = None
-    nd = buildings.ND(nd_root)
-    if nd.most_rows() > buildings.ND_ROWS:
-        raise SystemExit(f"National Destinies: a country can claim {nd.most_rows()} rows, the list has {buildings.ND_ROWS}")
-    if nd.most_rows() > buildings.INFO_ROWS:
-        raise SystemExit(f"National Destinies: a country has {nd.most_rows()} buildings, the info list {buildings.INFO_ROWS} rows")
+    # Other mods' buildings are found by the game at load (buildings.Others, his word 10-20).
+    nd = buildings.Others(refs.GAME / "in_game/common/building_types")
     (MOD / "in_game/common/scripted_triggers/cm_perf_buildings_triggers.txt").write_text(
         buildings.scripted_triggers(), encoding="utf-8")
     (MOD / "in_game/common/customizable_localization").mkdir(parents=True, exist_ok=True)
@@ -1779,8 +1850,8 @@ def main() -> int:
     print("cm_dev_perf: %d files copied from %s, %d edits applied, rebuilt on the beta: %s"
           % (copied, SRC.name, len(EDITS), ", ".join(rebuilt)))
     print(f"cm_dev_perf: {gated} vanilla auto-expand toggles gated on CM; cm_rio_patch: {patch}")
-    print("cm_dev_perf: National Destinies %s: %d buildings for its list (at most %d rows a country)"
-          % ("read" if nd_root else "absent", nd.count(), nd.most_rows()))
+    print("cm_dev_perf: other mods' buildings found at load; the game's own files name %d types"
+          % len(nd.vanilla))
     return 0
 
 
