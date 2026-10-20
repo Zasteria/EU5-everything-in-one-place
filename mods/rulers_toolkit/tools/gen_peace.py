@@ -254,20 +254,25 @@ def driver():
 {t}		}}
 {t}	}}
 
-{t}	# Пункты договора: по помощнику на пункт в каждой строке списка.
-{t}	widget = {{
-{t}		size = {{ 1 1 }}
+{t}}}
+
+{t}# Пункты договора: по помощнику на пункт в каждой строке списка. В потоке
+{t}# панели, как зонд 10-20 (тогда строки списка были), а не в виджете нулевого
+{t}# размера: там (0.9.4–0.9.7) списка не было вовсе. Невидимое места не берёт.
+{t}vbox = {{
+{t}	layoutpolicy_horizontal = expanding
+{t}	ignoreinvisible = yes
+{t}	datamodel = "[PeaceOfferLateralView.GetCategories]"
+{t}	item = {{
 {t}		vbox = {{
-{t}			datamodel = "[PeaceOfferLateralView.GetCategories]"
+{t}			layoutpolicy_horizontal = expanding
+{t}			ignoreinvisible = yes
+{t}			datamodel = "[PeaceOfferCategory.GetTreaties]"
 {t}			item = {{
 {t}				vbox = {{
-{t}					datamodel = "[PeaceOfferCategory.GetTreaties]"
-{t}					item = {{
-{t}						widget = {{
-{t}							size = {{ 1 1 }}
-""" + "".join(helpers) + f"""{t}						}}
-{t}					}}
-{t}				}}
+{t}					layoutpolicy_horizontal = expanding
+{t}					ignoreinvisible = yes
+""" + "".join(helpers) + f"""{t}				}}
 {t}			}}
 {t}		}}
 {t}	}}
