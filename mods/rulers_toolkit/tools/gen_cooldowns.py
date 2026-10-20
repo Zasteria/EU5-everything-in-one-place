@@ -213,6 +213,34 @@ def gate(body):
     return 'AND = {\n' + '\n'.join('\t\t' + ' '.join(p.split()) for p in parts) + '\n\t}'
 
 
+# Кому-то из действий нужно больше, чем «доступно вообще»: орден, которому можно
+# дать владение (его скрин 10-20: напоминание пришло, а дать некому).
+READY_EXTRA = {
+    'invite_religious_order': 'scope:actor.religion = { any_religious_order_in_religion = '
+                              '{ order_type = { religious_order_type_foundable_by = scope:actor } } }',
+}
+
+
+def ready(body, name):
+    """«Сделать можно сейчас» (scope: держава, scope:actor — она же): ворота и `allow`
+    самого действия. Напоминание ждёт его, а не только конца отката: западный раскол
+    кончился, а напоминания шли (10-20). None — проверять нечего."""
+    parts = []
+    g = gate(body)
+    if g:
+        parts.append(g)
+    allow = block(body, 'allow', '\t')
+    if allow and allow.strip() and not outside(allow):
+        # `c:PAP = { gold > 500 }`: Папы может не быть в мире.
+        allow = re.sub(r'\b(c:[A-Z0-9_]+) = \{', r'\1 ?= {', allow)
+        parts.append('AND = { ' + ' '.join(allow.split()) + ' }')
+    if name in READY_EXTRA:
+        parts.append(READY_EXTRA[name])
+    if not parts:
+        return None
+    return 'AND = {\n' + '\n'.join('\t\t' + ' '.join(p.split()) for p in parts) + '\n\t}'
+
+
 # Организации выбираются из своих (`source = actor`): 0.6.1 проверял любую в мире, и
 # у него стояли действия верховного королевства и ирландского лордства (10-19).
 IO_MEMBER = 'scope:actor = { is_member_of_international_organization = prev }'
@@ -307,9 +335,15 @@ def main():
             r, e = FIX.get(ty) or FIX.get(name) or (plain(ru.get(name), ru), plain(en.get(name), en))
             if not r or not e:
                 missing.append(f'{ty} ({name}): ru={ru.get(name)!r} en={en.get(name)!r}')
-            rows[ty] = {'list': lst, 'ru': r, 'en': e, 'gates': [], 'open': False, 'du': du, 'test': test}
+            rows[ty] = {'list': lst, 'ru': r, 'en': e, 'gates': [], 'open': False, 'du': du, 'test': test,
+                        'ready': [], 'ready_open': False}
             order.append(ty)
         row = rows[ty]
+        rd = ready(body, name)
+        if rd is None:
+            row['ready_open'] = True
+        else:
+            row['ready'].append(rd)
         if g is None:
             row['open'] = True
         else:
@@ -333,7 +367,7 @@ def main():
     lists = [l for l in LISTS if table[l[0]]]
 
     # --- ворота
-    trig = ['﻿# ' + GEN + '\n# Ворота строк напоминалки: копия условий действия. Scope: держава, scope:actor — она же.\n\n']
+    trig = ['﻿# ' + GEN + '\n# Ворота строк напоминалки: копия условий действия; `_ready_` — ещё и его `allow`. Scope: держава, scope:actor — она же.\n\n']
     for ty in order:
         row = rows[ty]
         if row['open'] or not row['gates']:
@@ -341,6 +375,13 @@ def main():
         else:
             body = '\tOR = {\n' + '\n'.join('\t' + g.replace('\n', '\n\t') for g in row['gates']) + '\n\t}'
         trig.append(f'bag_rtk_cd_gate_{ty} = {{\n{body}\n}}\n')
+        if 'action' in row:
+            continue
+        if row['ready_open'] or not row['ready']:
+            body = '\talways = yes'
+        else:
+            body = '\tOR = {\n' + '\n'.join('\t' + g.replace('\n', '\n\t') for g in row['ready']) + '\n\t}'
+        trig.append(f'bag_rtk_cd_ready_{ty} = {{\n{body}\n}}\n')
     open(os.path.join(MOD, 'in_game', 'common', 'scripted_triggers', 'bag_rtk_cd_gates_generated.txt'),
          # Страны может не быть в мире (Англия к 1773-му): `?=`, как в ванили
          # (situation_triggers.txt), а не ошибка «Invalid right side 'c'» (10-20).

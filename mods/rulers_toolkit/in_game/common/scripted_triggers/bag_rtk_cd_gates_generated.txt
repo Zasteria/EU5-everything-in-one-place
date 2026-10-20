@@ -1,11 +1,19 @@
 ﻿# СГЕНЕРИРОВАНО mods/rulers_toolkit/tools/gen_cooldowns.py — руками не править.
-# Ворота строк напоминалки: копия условий действия. Scope: держава, scope:actor — она же.
+# Ворота строк напоминалки: копия условий действия; `_ready_` — ещё и его `allow`. Scope: держава, scope:actor — она же.
 
 bag_rtk_cd_gate_request_papal_donation = {
 	OR = {
 	AND = {
 			country_exists = c:PAP c:PAP = { OR = { is_subject = no is_subject_of = scope:actor } }
 			any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:fate_of_the_phoenix disaster_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_request_papal_donation = {
+	OR = {
+	AND = {
+			AND = { country_exists = c:PAP c:PAP = { OR = { is_subject = no is_subject_of = scope:actor } } any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:fate_of_the_phoenix disaster_is_active = yes } }
+			AND = { scope:actor = { NOR = { AND = { exists = c:PAP is_rival_of = c:PAP } AND = { exists = c:PAP is_enemy_of = c:PAP } AND = { exists = c:PAP is_at_war_with = c:PAP } } } c:PAP ?= { gold > 500 } }
 		}
 	}
 }
@@ -17,6 +25,14 @@ bag_rtk_cd_gate_grant_latin_merchants_privileges = {
 		}
 	}
 }
+bag_rtk_cd_ready_grant_latin_merchants_privileges = {
+	OR = {
+	AND = {
+			AND = { custom_tooltip = { text = grant_latin_merchants_privileges_tooltip region:italy_region = { any_country_with_capital_in_geography = { has_reform = government_reform:merchant_republic NOR = { is_rival_of = scope:actor is_enemy_of = scope:actor is_subject = yes hidden_trigger = { scope:actor = { is_subject_of = prev } } } } } } any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:fate_of_the_phoenix disaster_is_active = yes } }
+			AND = { location:constantinople = { owner = scope:actor is_capital = yes } scope:actor = { at_war = no is_during_bankruptcy = no } }
+		}
+	}
+}
 bag_rtk_cd_gate_accept_catholic_delegation = {
 	OR = {
 	AND = {
@@ -25,10 +41,26 @@ bag_rtk_cd_gate_accept_catholic_delegation = {
 		}
 	}
 }
+bag_rtk_cd_ready_accept_catholic_delegation = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { religion != religion:catholic } any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:fate_of_the_phoenix disaster_is_active = yes } }
+			AND = { scope:actor = { at_war = no } }
+		}
+	}
+}
 bag_rtk_cd_gate_attract_italian_engineer = {
 	OR = {
 	AND = {
 			any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:fate_of_the_phoenix disaster_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_attract_italian_engineer = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:fate_of_the_phoenix disaster_is_active = yes } }
+			AND = { scope:actor = { OR = { any_related_country = { type = alliance culture = { has_culture_group = culture_group:italian_group } } any_loyal_subject = { culture = { has_culture_group = culture_group:italian_group } } } } }
 		}
 	}
 }
@@ -40,10 +72,26 @@ bag_rtk_cd_gate_demand_beylik_tribute = {
 		}
 	}
 }
+bag_rtk_cd_ready_demand_beylik_tribute = {
+	OR = {
+	AND = {
+			AND = { location:bursa = { owner ?= { OR = { this = scope:actor top_overlord ?= scope:actor } } } any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:fate_of_the_phoenix disaster_is_active = yes } }
+			AND = { is_situation_active = situation:rise_of_the_ottomans }
+		}
+	}
+}
 bag_rtk_cd_gate_summon_patriarchate_member = {
 	OR = {
 	AND = {
 			any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:fate_of_the_phoenix disaster_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_summon_patriarchate_member = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:fate_of_the_phoenix disaster_is_active = yes } }
+			AND = { scope:actor = { any_international_organizations_member_of = { international_organization_type = international_organization_type:autocephalous_patriarchate leader_country = prev any_international_organization_member = { NOR = { is_rival_of = scope:actor is_enemy_of = scope:actor } is_neighbor_of = scope:actor at_war = no } } custom_tooltip = { text = at_war_with_heathens_or_heretics_tt any_current_war = { OR = { AND = { defender_leader = scope:actor attacker_leader = { religion != scope:actor.religion } } AND = { attacker_leader = scope:actor defender_leader = { religion != scope:actor.religion } } } } } } }
 		}
 	}
 }
@@ -54,10 +102,26 @@ bag_rtk_cd_gate_reform_imperial_armies = {
 		}
 	}
 }
+bag_rtk_cd_ready_reform_imperial_armies = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:fate_of_the_phoenix disaster_is_active = yes } }
+			AND = { scope:actor = { at_war = no regular_army_size > 0 navy_size > 0 has_raised_levies = no gold > { value = monthly_income_total multiply = 4 } custom_tooltip = { text = has_not_completed_all_six_reforms_tt OR = { NOT = { has_variable = count_military_reforms_variable } var:count_military_reforms_variable < 6 } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_patronize_athonite_monastery = {
 	OR = {
 	AND = {
 			any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:fate_of_the_phoenix disaster_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_patronize_athonite_monastery = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:fate_of_the_phoenix disaster_is_active = yes } }
+			AND = { scope:actor = { religion = religion:orthodox total_effective_building_levels:orthodox_monastery > 0 } }
 		}
 	}
 }
@@ -68,10 +132,26 @@ bag_rtk_cd_gate_sponsor_troop_feast = {
 		}
 	}
 }
+bag_rtk_cd_ready_sponsor_troop_feast = {
+	OR = {
+	AND = {
+			AND = { has_dlc = "d008_fate_of_the_phoenix" scope:actor.religion ?= religion:hellenism_religion }
+			AND = { scope:actor = { has_religious_aspect = religious_aspect:mithraic_mysteries_aspect } }
+		}
+	}
+}
 bag_rtk_cd_gate_grant_a_triumph = {
 	OR = {
 	AND = {
 			has_dlc = "d008_fate_of_the_phoenix" scope:actor.religion ?= religion:hellenism_religion
+		}
+	}
+}
+bag_rtk_cd_ready_grant_a_triumph = {
+	OR = {
+	AND = {
+			AND = { has_dlc = "d008_fate_of_the_phoenix" scope:actor.religion ?= religion:hellenism_religion }
+			AND = { scope:actor = { custom_tooltip = { text = grant_a_triumph_tt has_variable = recently_won_a_war } societal_value:latinization_vs_hellenization < 0 } }
 		}
 	}
 }
@@ -82,10 +162,26 @@ bag_rtk_cd_gate_roman_festivals = {
 		}
 	}
 }
+bag_rtk_cd_ready_roman_festivals = {
+	OR = {
+	AND = {
+			AND = { has_dlc = "d008_fate_of_the_phoenix" scope:actor.religion ?= religion:hellenism_religion }
+			AND = { scope:actor = { societal_value:latinization_vs_hellenization < 0 } }
+		}
+	}
+}
 bag_rtk_cd_gate_greek_festivals = {
 	OR = {
 	AND = {
 			has_dlc = "d008_fate_of_the_phoenix" scope:actor.religion ?= religion:hellenism_religion
+		}
+	}
+}
+bag_rtk_cd_ready_greek_festivals = {
+	OR = {
+	AND = {
+			AND = { has_dlc = "d008_fate_of_the_phoenix" scope:actor.religion ?= religion:hellenism_religion }
+			AND = { scope:actor = { societal_value:latinization_vs_hellenization > 0 } }
 		}
 	}
 }
@@ -96,10 +192,26 @@ bag_rtk_cd_gate_host_olympiad = {
 		}
 	}
 }
+bag_rtk_cd_ready_host_olympiad = {
+	OR = {
+	AND = {
+			AND = { has_dlc = "d008_fate_of_the_phoenix" scope:actor.religion ?= religion:hellenism_religion }
+			AND = { scope:actor = { has_religious_aspect = religious_aspect:olympiad_aspect } }
+		}
+	}
+}
 bag_rtk_cd_gate_recently_demanded_church_tax = {
 	OR = {
 	AND = {
 			scope:actor.religion = religion:catholic scope:actor = { tag = PAP }
+		}
+	}
+}
+bag_rtk_cd_ready_recently_demanded_church_tax = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = religion:catholic scope:actor = { tag = PAP } }
+			AND = { papacy_active = yes religion:catholic = { any_country_in_religion = { has_estate_privilege = estate_privilege:apostolic_tax_privilege } } }
 		}
 	}
 }
@@ -110,6 +222,14 @@ bag_rtk_cd_gate_recently_requested_aid = {
 		}
 	}
 }
+bag_rtk_cd_ready_recently_requested_aid = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = religion:catholic scope:actor = { NOT = { tag = PAP } has_reform = government_reform:military_order_reform } }
+			AND = { papacy_active = yes scope:actor = { NOR = { AND = { exists = c:PAP is_rival_of = c:PAP } AND = { exists = c:PAP is_enemy_of = c:PAP } } c:PAP ?= { this_opinion_of_prev > 100 } } country_exists = c:PAP }
+		}
+	}
+}
 bag_rtk_cd_gate_recently_requested_cardinal = {
 	OR = {
 	AND = {
@@ -117,10 +237,25 @@ bag_rtk_cd_gate_recently_requested_cardinal = {
 		}
 	}
 }
+bag_rtk_cd_ready_recently_requested_cardinal = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = religion:catholic }
+			AND = { papacy_active = yes country_exists = c:PAP scope:actor = { OR = { country_rank = country_rank:rank_duchy country_rank = country_rank:rank_kingdom country_rank = country_rank:rank_empire is_emperor = yes } total_effective_building_levels:cathedral > 0 any_owned_location = { has_building = building_type:cathedral NOT = { has_building = building_type:seat_of_cardinal } } custom_tooltip = { text = request_cardinal_seat_opinion_tt OR = { tag = PAP c:PAP ?= { opinion = { target = scope:actor value >= 0 } } } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_summon_the_strojnici_council = {
 	OR = {
 	AND = {
 			scope:actor.religion = religion:bosnian_church
+		}
+	}
+}
+bag_rtk_cd_ready_summon_the_strojnici_council = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = religion:bosnian_church }
 		}
 	}
 }
@@ -132,11 +267,26 @@ bag_rtk_cd_gate_seek_alliance_with_overlord_rival_cooldown_key = {
 		}
 	}
 }
+bag_rtk_cd_ready_seek_alliance_with_overlord_rival_cooldown_key = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { is_subject = yes is_colonial_subject = yes } situation:colonial_revolution ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:colonial_revolution = this situation_is_active = yes } }
+			AND = { scope:actor = { overlord ?= { num_rivals >= 1 } } custom_tooltip = { text = overlord_rival_is_available.tt } }
+		}
+	}
+}
 bag_rtk_cd_gate_recently_established_goods_act = {
 	OR = {
 	AND = {
 			scope:actor ?= { is_colonial_overlord = yes }
 			situation:colonial_revolution ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:colonial_revolution = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_recently_established_goods_act = {
+	OR = {
+	AND = {
+			AND = { scope:actor ?= { is_colonial_overlord = yes } situation:colonial_revolution ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:colonial_revolution = this situation_is_active = yes } }
 		}
 	}
 }
@@ -148,11 +298,25 @@ bag_rtk_cd_gate_recently_aid_colonial_war = {
 		}
 	}
 }
+bag_rtk_cd_ready_recently_aid_colonial_war = {
+	OR = {
+	AND = {
+			AND = { scope:actor ?= { is_colonial_overlord = yes } situation:colonial_revolution ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:colonial_revolution = this situation_is_active = yes } }
+		}
+	}
+}
 bag_rtk_cd_gate_learn_from_foreigners = {
 	OR = {
 	AND = {
 			scope:actor ?= { country_type = location culture = { is_culture_native_american =yes } }
 			situation:columbian_exchange ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:columbian_exchange = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_learn_from_foreigners = {
+	OR = {
+	AND = {
+			AND = { scope:actor ?= { country_type = location culture = { is_culture_native_american =yes } } situation:columbian_exchange ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:columbian_exchange = this situation_is_active = yes } }
 		}
 	}
 }
@@ -164,10 +328,25 @@ bag_rtk_cd_gate_absorb_institutions = {
 		}
 	}
 }
+bag_rtk_cd_ready_absorb_institutions = {
+	OR = {
+	AND = {
+			AND = { scope:actor ?= { country_type = location culture = { is_culture_native_american =yes } } situation:columbian_exchange ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:columbian_exchange = this situation_is_active = yes } }
+		}
+	}
+}
 bag_rtk_cd_gate_conduct_investigation = {
 	OR = {
 	AND = {
 			any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:coup_attempt disaster_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_conduct_investigation = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:coup_attempt disaster_is_active = yes } }
+			AND = { scope:actor = { custom_tooltip = { text = any_conspirators_are_active_tt any_character = { NOR = { is_ruler_of = prev is_regent_of = prev } has_variable = potential_conspirator_variable } } } }
 		}
 	}
 }
@@ -178,10 +357,26 @@ bag_rtk_cd_gate_execute_court_member = {
 		}
 	}
 }
+bag_rtk_cd_ready_execute_court_member = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:coup_attempt disaster_is_active = yes } }
+			AND = { scope:actor = { custom_tooltip = { text = any_conspirators_are_active_tt any_character = { has_variable = potential_conspirator_variable NOR = { is_ruler_of = prev is_regent_of = prev } } } custom_tooltip = { text = has_relevant_event_to_the_disaster_tt NOT = { has_variable = relevant_event_variable } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_call_private_council = {
 	OR = {
 	AND = {
 			any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:coup_attempt disaster_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_call_private_council = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:coup_attempt disaster_is_active = yes } }
+			AND = { scope:actor = { custom_tooltip = { text = any_conspirators_are_active_tt any_character = { has_variable = potential_conspirator_variable NOR = { is_ruler_of = prev is_regent_of = prev } } } OR = { num_possible_estate_privileges:nobles_estate > 0 num_possible_estate_privileges:burghers_estate > 0 num_possible_estate_privileges:clergy_estate > 0 } } }
 		}
 	}
 }
@@ -192,10 +387,26 @@ bag_rtk_cd_gate_legitimize_parliament_abolition_key = {
 		}
 	}
 }
+bag_rtk_cd_ready_legitimize_parliament_abolition_key = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:court_and_country disaster_is_active = yes } }
+			AND = { scope:actor = { OR = { parliament_type = parliament_type:autocratic_parliament parliament_type = parliament_type:no_parliament has_policy = absolute_rule_policy } NOT = { has_country_modifier = supreme_authority_modifier } } }
+		}
+	}
+}
 bag_rtk_cd_gate_reinstate_the_legislative_assembly_key = {
 	OR = {
 	AND = {
 			any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand OR = { disaster_type = disaster_type:court_and_country disaster_type = disaster_type:aspiration_for_liberty } disaster_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_reinstate_the_legislative_assembly_key = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand OR = { disaster_type = disaster_type:court_and_country disaster_type = disaster_type:aspiration_for_liberty } disaster_is_active = yes } }
+			AND = { scope:actor = { OR = { parliament_type = parliament_type:autocratic_parliament has_policy = absolute_rule_policy has_country_modifier = supreme_authority_modifier } } }
 		}
 	}
 }
@@ -207,11 +418,27 @@ bag_rtk_cd_gate_rein_in_nobles_key = {
 		}
 	}
 }
+bag_rtk_cd_ready_rein_in_nobles_key = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { country_has_estate = estate_type:nobles_estate } any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:court_and_country disaster_is_active = yes } }
+			AND = { scope:actor = { "estate_power(estate_type:crown_estate)" > { value = { add = "estate_power(estate_type:nobles_estate)" divide = 2 min = 0.2 } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_rein_in_burghers_key = {
 	OR = {
 	AND = {
 			scope:actor = { country_has_estate = estate_type:burghers_estate }
 			any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:court_and_country disaster_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_rein_in_burghers_key = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { country_has_estate = estate_type:burghers_estate } any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:court_and_country disaster_is_active = yes } }
+			AND = { scope:actor = { "estate_power(estate_type:crown_estate)" > { value = { add = "estate_power(estate_type:burghers_estate)" divide = 2 min = 0.2 } } } }
 		}
 	}
 }
@@ -223,11 +450,27 @@ bag_rtk_cd_gate_rein_in_clergy_key = {
 		}
 	}
 }
+bag_rtk_cd_ready_rein_in_clergy_key = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { country_has_estate = estate_type:clergy_estate } any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:court_and_country disaster_is_active = yes } }
+			AND = { scope:actor = { "estate_power(estate_type:crown_estate)" > { value = { add = "estate_power(estate_type:clergy_estate)" divide = 2 min = 0.2 } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_rein_in_peasants_key = {
 	OR = {
 	AND = {
 			scope:actor = { country_has_estate = estate_type:peasants_estate }
 			any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:court_and_country disaster_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_rein_in_peasants_key = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { country_has_estate = estate_type:peasants_estate } any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:court_and_country disaster_is_active = yes } }
+			AND = { scope:actor = { "estate_power(estate_type:crown_estate)" > { value = { add = "estate_power(estate_type:peasants_estate)" divide = 2 min = 0.2 } } } }
 		}
 	}
 }
@@ -238,10 +481,26 @@ bag_rtk_cd_gate_preach_renewal = {
 		}
 	}
 }
+bag_rtk_cd_ready_preach_renewal = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:crisis_of_faith disaster_is_active = yes } }
+			AND = { scope:actor = { custom_tooltip = { text = schismatic_clergy_active_tt exists = var:schismatic_clergy_rebel } } }
+		}
+	}
+}
 bag_rtk_cd_gate_convene_a_synod = {
 	OR = {
 	AND = {
 			any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:crisis_of_faith disaster_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_convene_a_synod = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:crisis_of_faith disaster_is_active = yes } }
+			AND = { scope:actor = { custom_tooltip = { text = schismatic_clergy_active_tt exists = var:schismatic_clergy_rebel } } }
 		}
 	}
 }
@@ -252,10 +511,26 @@ bag_rtk_cd_gate_identify_the_heresiarch = {
 		}
 	}
 }
+bag_rtk_cd_ready_identify_the_heresiarch = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:crisis_of_faith disaster_is_active = yes } }
+			AND = { scope:actor = { custom_tooltip = { text = crisis_of_faith_heresiarch_active_tt exists = var:crisis_of_faith_heresiarch_variable } custom_tooltip = { text = crisis_of_faith_heresiarch_not_yet_identified_tt NOT = { has_variable = crisis_of_faith_heresiarch_revealed_variable } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_denounce_the_heresiarch = {
 	OR = {
 	AND = {
 			any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:crisis_of_faith disaster_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_denounce_the_heresiarch = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:crisis_of_faith disaster_is_active = yes } }
+			AND = { scope:actor = { custom_tooltip = { text = crisis_of_faith_heresiarch_identified_tt has_variable = crisis_of_faith_heresiarch_revealed_variable } } }
 		}
 	}
 }
@@ -266,10 +541,26 @@ bag_rtk_cd_gate_concede_to_the_schismatics = {
 		}
 	}
 }
+bag_rtk_cd_ready_concede_to_the_schismatics = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:crisis_of_faith disaster_is_active = yes } }
+			AND = { scope:actor = { custom_tooltip = { text = schismatic_clergy_active_tt exists = var:schismatic_clergy_rebel } } }
+		}
+	}
+}
 bag_rtk_cd_gate_claim_crusade_war_leadership = {
 	OR = {
 	AND = {
 			any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand exists = international_organization:crusade this = international_organization:crusade scope:actor = { is_member_of_international_organization = prev NOT = { is_leader_of_international_organization = prev } } }
+		}
+	}
+}
+bag_rtk_cd_ready_claim_crusade_war_leadership = {
+	OR = {
+	AND = {
+			AND = { any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand exists = international_organization:crusade this = international_organization:crusade scope:actor = { is_member_of_international_organization = prev NOT = { is_leader_of_international_organization = prev } } } }
+			AND = { scope:actor = { is_member_of_international_organization = international_organization:crusade NOT = { is_leader_of_international_organization = international_organization:crusade } } }
 		}
 	}
 }
@@ -280,10 +571,24 @@ bag_rtk_cd_gate_offer_cardinal_seat_for_crusade = {
 		}
 	}
 }
+bag_rtk_cd_ready_offer_cardinal_seat_for_crusade = {
+	OR = {
+	AND = {
+			AND = { any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand trigger_if = { limit = { exists = international_organization:crusade this = international_organization:crusade has_variable = phase } var:phase = 1 } trigger_else = { always = no } leader_country ?= scope:actor has_enabled_currency = gold gold > 0 } }
+		}
+	}
+}
 bag_rtk_cd_gate_preach_the_crusade = {
 	OR = {
 	AND = {
 			any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand trigger_if = { limit = { exists = international_organization:crusade this = international_organization:crusade has_variable = phase } var:phase = 1 } trigger_else = { always = no } leader_country ?= scope:actor }
+		}
+	}
+}
+bag_rtk_cd_ready_preach_the_crusade = {
+	OR = {
+	AND = {
+			AND = { any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand trigger_if = { limit = { exists = international_organization:crusade this = international_organization:crusade has_variable = phase } var:phase = 1 } trigger_else = { always = no } leader_country ?= scope:actor } }
 		}
 	}
 }
@@ -294,10 +599,24 @@ bag_rtk_cd_gate_grant_indulgence = {
 		}
 	}
 }
+bag_rtk_cd_ready_grant_indulgence = {
+	OR = {
+	AND = {
+			AND = { any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand exists = international_organization:crusade this = international_organization:crusade leader_country ?= scope:actor } }
+		}
+	}
+}
 bag_rtk_cd_gate_levy_the_saladin_tithe = {
 	OR = {
 	AND = {
 			any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand trigger_if = { limit = { exists = international_organization:crusade this = international_organization:crusade has_variable = phase } var:phase = 1 } trigger_else = { always = no } leader_country ?= scope:actor }
+		}
+	}
+}
+bag_rtk_cd_ready_levy_the_saladin_tithe = {
+	OR = {
+	AND = {
+			AND = { any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand trigger_if = { limit = { exists = international_organization:crusade this = international_organization:crusade has_variable = phase } var:phase = 1 } trigger_else = { always = no } leader_country ?= scope:actor } }
 		}
 	}
 }
@@ -308,8 +627,22 @@ bag_rtk_cd_gate_recover_holy_relics = {
 		}
 	}
 }
+bag_rtk_cd_ready_recover_holy_relics = {
+	OR = {
+	AND = {
+			AND = { any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand trigger_if = { limit = { exists = international_organization:crusade this = international_organization:crusade has_variable = phase } var:phase = 2 } trigger_else = { always = no } } }
+		}
+	}
+}
 bag_rtk_cd_gate_convert_culture = {
 	always = yes
+}
+bag_rtk_cd_ready_convert_culture = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { is_colonial_subject = no in_civil_war = no } }
+		}
+	}
 }
 bag_rtk_cd_gate_cd_inspect_area = {
 	OR = {
@@ -318,10 +651,26 @@ bag_rtk_cd_gate_cd_inspect_area = {
 		}
 	}
 }
+bag_rtk_cd_ready_cd_inspect_area = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:decline_of_empire disaster_is_active = yes } }
+			AND = { scope:actor = { at_war = no is_during_bankruptcy = no } }
+		}
+	}
+}
 bag_rtk_cd_gate_cd_purge_cabinet_member = {
 	OR = {
 	AND = {
 			any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:decline_of_empire disaster_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_cd_purge_cabinet_member = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:decline_of_empire disaster_is_active = yes } }
+			AND = { scope:actor = { at_war = no is_during_bankruptcy = no any_cabinet_character = { count > 0 } } }
 		}
 	}
 }
@@ -493,6 +842,14 @@ bag_rtk_cd_gate_call_emergency_parliament_cooldown = {
 		}
 	}
 }
+bag_rtk_cd_ready_call_emergency_parliament_cooldown = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { has_parliament = yes } }
+			AND = { scope:actor = { is_active_parliament = no months_since_last_parliament_called <= "define:NCountry|PARLIAMENT_COOLDOWN_MONTHS" at_war = yes NOT = { modifier:parliament_abolished = yes modifier:has_a_parliamentary_system = no } } }
+		}
+	}
+}
 bag_rtk_cd_gate_press_estate_private_regiments_action__nobles = {
 	OR = {
 	AND = {
@@ -557,10 +914,26 @@ bag_rtk_cd_gate_strengthen_neighbor_relations = {
 		}
 	}
 }
+bag_rtk_cd_ready_strengthen_neighbor_relations = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { tag = DLH } situation:fall_of_delhi ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:fall_of_delhi = this situation_is_active = yes } }
+			AND = { scope:actor = { num_of_diplomats > diplomats_mild_bonus } }
+		}
+	}
+}
 bag_rtk_cd_gate_reach_compromise_with_huguenots = {
 	OR = {
 	AND = {
 			any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:french_wars_religion disaster_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_reach_compromise_with_huguenots = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:french_wars_religion disaster_is_active = yes } }
+			AND = { scope:actor = { NOT = { modifier:parliament_abolished = yes } has_ongoing_parliament_debate = no societal_value:spiritualist_vs_humanist > 90 religion = religion:catholic } }
 		}
 	}
 }
@@ -575,11 +948,31 @@ bag_rtk_cd_gate_convert_religion = {
 		}
 	}
 }
+bag_rtk_cd_ready_convert_religion = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion ?= {save_temporary_scope_as = bag_rtk_cd_cand trigger_if = { limit = { has_game_rule = dynamic_religion } not = { religious_head ?= scope:actor } is_religion_enabled = yes not = { this = scope:actor.religion } } trigger_else_if = { limit = { has_game_rule = religion_group_only } group = scope:actor.religion.group } trigger_else_if = { limit = { has_game_rule = religion_present_in_country } scope:actor = { religion_population_in_country = { religion = scope:bag_rtk_cd_cand value > 0 } } } trigger_else = { always = yes } trigger_if = { limit = { scope:actor = { is_emperor = yes } } group = scope:actor.religion.group } } }
+			AND = { trigger_if = { limit = { exists = scope:actor } scope:actor = { modifier:blocked_from_conversion = no is_colonial_subject = no custom_tooltip = { text = theocracy_subject_cannot_convert_tt NOT = { AND = { government_type = government_type:theocracy is_subject = yes overlord ?= { government_type = government_type:theocracy } } } } } } }
+		}
+	AND = {
+			AND = { scope:actor = { religion = religion:catholic NOT = { tag = PAP } } situation:reformation ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:reformation = this situation_is_active = yes } }
+			AND = { is_situation_active = situation:reformation trigger_if = { limit = { scope:actor = { is_human = no } } religion:lutheran = { num_countries_in_religion < 20 } religion:calvinist = { num_countries_in_religion < 20 } scope:actor = { OR = { religion_percentage_in_country = { religion = religion:lutheran value > 0 } religion_percentage_in_country = { religion = religion:calvinist value > 0 } } } } trigger_else = { scope:actor = { OR = { religion_percentage_in_country = { religion = religion:lutheran value > 0 } religion_percentage_in_country = { religion = religion:calvinist value > 0 } } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_create_allied_pirate_nation = {
 	OR = {
 	AND = {
 			scope:actor = { NOT = { country_type = navy } }
 			situation:golden_age_of_piracy ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:golden_age_of_piracy = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_create_allied_pirate_nation = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { NOT = { country_type = navy } } situation:golden_age_of_piracy ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:golden_age_of_piracy = this situation_is_active = yes } }
+			AND = { scope:actor = { num_of_ports >= 10 navy_size_percentage >= 0.25 monthly_sailors > 0 } }
 		}
 	}
 }
@@ -591,11 +984,26 @@ bag_rtk_cd_gate_request_antipiracy_policy = {
 		}
 	}
 }
+bag_rtk_cd_ready_request_antipiracy_policy = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { NOT = {country_type = navy} } situation:golden_age_of_piracy ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:golden_age_of_piracy = this situation_is_active = yes } }
+			AND = { scope:actor = { has_policy = anti_piracy_policy } }
+		}
+	}
+}
 bag_rtk_cd_gate_abandon_piracy_action = {
 	OR = {
 	AND = {
 			scope:actor = { has_reform = government_reform:pirate_brethren_reform }
 			situation:golden_age_of_piracy ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:golden_age_of_piracy = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_abandon_piracy_action = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { has_reform = government_reform:pirate_brethren_reform } situation:golden_age_of_piracy ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:golden_age_of_piracy = this situation_is_active = yes } }
 		}
 	}
 }
@@ -607,11 +1015,25 @@ bag_rtk_cd_gate_attract_sailors = {
 		}
 	}
 }
+bag_rtk_cd_ready_attract_sailors = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { has_reform = government_reform:pirate_brethren_reform country_type = navy } situation:golden_age_of_piracy ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:golden_age_of_piracy = this situation_is_active = yes } }
+		}
+	}
+}
 bag_rtk_cd_gate_migrate_to_new_waters = {
 	OR = {
 	AND = {
 			scope:actor = { has_reform = government_reform:pirate_brethren_reform country_type = navy }
 			situation:golden_age_of_piracy ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:golden_age_of_piracy = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_migrate_to_new_waters = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { has_reform = government_reform:pirate_brethren_reform country_type = navy } situation:golden_age_of_piracy ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:golden_age_of_piracy = this situation_is_active = yes } }
 		}
 	}
 }
@@ -643,6 +1065,42 @@ bag_rtk_cd_gate_transition_government = {
 		}
 	}
 }
+bag_rtk_cd_ready_transition_government = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { government_type = government_type:steppe_horde NOT = { has_variable = is_about_to_reform_government } } }
+			AND = { scope:actor = { capital = { dominant_culture = scope:actor.culture is_city = yes } at_war = no average_control_in_home_region > 0.25 any_subject = { subject_loyalty > 50 count = all } NOT = { has_country_modifier = reformation_of_the_horde } custom_tooltip = { text = not_in_union_tt NOT = { exists = union } } } }
+		}
+	AND = {
+			AND = { scope:actor = { government_type = government_type:monarchy NOR = { tag = CHI tag = PAP international_organization:hre ?= { leader_country ?= prev } international_organization:hre ?= { OR = { country_has_special_status = { type = special_status:elector country = scope:actor } country_has_special_status = { type = special_status:archbishop_elector country = scope:actor } } } } } }
+			AND = { scope:actor = { at_war = no has_any_active_disaster = no is_during_bankruptcy = no country_has_estate = estate_type:burghers_estate trigger_if = { limit = { custom_tooltip = { text = variable_rise_of_szlachta_burghers_outcome_variable_tt has_variable = rise_of_szlachta_burghers_outcome_variable } } "estate_power(estate_type:burghers_estate)" > { value = "estate_power(estate_type:nobles_estate)" multiply = 0.5 } societal_value:aristocracy_vs_plutocracy >= 50 legitimacy > 50 } trigger_else = { "estate_power(estate_type:burghers_estate)" > "estate_power(estate_type:nobles_estate)" societal_value:aristocracy_vs_plutocracy >= 95 legitimacy > 80 } stability > 0 custom_tooltip = { text = not_in_union_tt NOT = { exists = union } } } }
+		}
+	AND = {
+			AND = { scope:actor = { government_type = government_type:monarchy NOR = { tag = CHI tag = PAP international_organization:hre ?= { leader_country ?= prev } international_organization:hre ?= { OR = { country_has_special_status = { type = special_status:elector country = prev } country_has_special_status = { type = special_status:archbishop_elector country = scope:actor } } } } } }
+			AND = { scope:actor = { at_war = no has_any_active_disaster = no is_during_bankruptcy = no country_has_estate = estate_type:clergy_estate "estate_power(estate_type:clergy_estate)" > 0.35 societal_value:spiritualist_vs_humanist <= -95 legitimacy > 80 stability > 0 custom_tooltip = { text = not_in_union_tt NOT = { exists = union } } } }
+		}
+	AND = {
+			AND = { scope:actor = { government_type = government_type:theocracy religion.group = religion_group:christian NOR = { tag = CHI tag = PAP international_organization:hre ?= { leader_country ?= prev } international_organization:hre ?= { country_has_special_status = { type = special_status:archbishop_elector country = scope:actor } } } } }
+			AND = { scope:actor = { at_war = no has_any_active_disaster = no is_during_bankruptcy = no country_has_estate = estate_type:nobles_estate "estate_power(estate_type:nobles_estate)" > "estate_power(estate_type:clergy_estate)" societal_value:spiritualist_vs_humanist > 0 societal_value:aristocracy_vs_plutocracy <= -95 legitimacy > 80 stability > 0 custom_tooltip = { text = not_in_union_tt NOT = { exists = union } } } }
+		}
+	AND = {
+			AND = { scope:actor = { government_type = government_type:theocracy NOR = { tag = CHI tag = PAP international_organization:hre ?= { leader_country ?= prev } international_organization:hre ?= { OR = { country_has_special_status = { type = special_status:elector country = scope:actor } country_has_special_status = { type = special_status:archbishop_elector country = scope:actor } } } } } }
+			AND = { scope:actor = { at_war = no has_any_active_disaster = no is_during_bankruptcy = no country_has_estate = estate_type:burghers_estate "estate_power(estate_type:burghers_estate)" > "estate_power(estate_type:clergy_estate)" OR = { societal_value:aristocracy_vs_plutocracy >= 95 societal_value:spiritualist_vs_humanist >= 50 } legitimacy > 80 stability > 0 custom_tooltip = { text = not_in_union_tt NOT = { exists = union } } } }
+		}
+	AND = {
+			AND = { scope:actor = { government_type = government_type:republic NOR = { tag = CHI tag = PAP international_organization:hre ?= { leader_country ?= prev } international_organization:hre ?= { OR = { country_has_special_status = { type = special_status:elector country = scope:actor } country_has_special_status = { type = special_status:archbishop_elector country = scope:actor } } } } } }
+			AND = { scope:actor = { at_war = no has_any_active_disaster = no is_during_bankruptcy = no country_has_estate = estate_type:nobles_estate "estate_power(estate_type:nobles_estate)" > "estate_power(estate_type:burghers_estate)" societal_value:aristocracy_vs_plutocracy <= -95 legitimacy > 80 stability > 0 custom_tooltip = { text = not_in_union_tt NOT = { exists = union } } } }
+		}
+	AND = {
+			AND = { scope:actor = { government_type = government_type:republic NOR = { tag = CHI tag = PAP international_organization:hre ?= { leader_country ?= prev } international_organization:hre ?= { OR = { country_has_special_status = { type = special_status:elector country = prev } country_has_special_status = { type = special_status:archbishop_elector country = scope:actor } } } } } }
+			AND = { scope:actor = { at_war = no has_any_active_disaster = no is_during_bankruptcy = no country_has_estate = estate_type:clergy_estate "estate_power(estate_type:clergy_estate)" > 0.35 societal_value:spiritualist_vs_humanist <= -95 legitimacy > 80 stability > 0 custom_tooltip = { text = not_in_union_tt NOT = { exists = union } } } }
+		}
+	AND = {
+			AND = { scope:actor = { government_type = government_type:tribe NOR = { tag = CHI tag = PAP international_organization:hre ?= { leader_country ?= prev } international_organization:hre ?= { OR = { country_has_special_status = { type = special_status:elector country = scope:actor } country_has_special_status = { type = special_status:archbishop_elector country = scope:actor } } } } } }
+			AND = { scope:actor = { at_war = no has_any_active_disaster = no is_during_bankruptcy = no societal_value:aristocracy_vs_plutocracy < -25 societal_value:centralization_vs_decentralization < 0 legitimacy > 80 stability > 0 custom_tooltip = { text = not_in_union_tt NOT = { exists = union } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_recently_sanctioned = {
 	OR = {
 	AND = {
@@ -655,10 +1113,30 @@ bag_rtk_cd_gate_recently_sanctioned = {
 		}
 	}
 }
+bag_rtk_cd_ready_recently_sanctioned = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { is_member_of_international_organization = international_organization:guelphs_io } situation:guelphs_and_ghibellines ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:guelphs_and_ghibellines = this situation_is_active = yes } }
+			AND = { scope:actor = { is_leader_of_international_organization = international_organization:guelphs_io } }
+		}
+	AND = {
+			AND = { scope:actor = { is_member_of_international_organization = international_organization:ghibellines_io } situation:guelphs_and_ghibellines ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:guelphs_and_ghibellines = this situation_is_active = yes } }
+			AND = { scope:actor = { is_leader_of_international_organization = international_organization:ghibellines_io } }
+		}
+	}
+}
 bag_rtk_cd_gate_reclaim_high_kingship_land = {
 	OR = {
 	AND = {
 			any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand international_organization_type = international_organization_type:high_kingship }
+		}
+	}
+}
+bag_rtk_cd_ready_reclaim_high_kingship_land = {
+	OR = {
+	AND = {
+			AND = { any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand international_organization_type = international_organization_type:high_kingship } }
+			AND = { scope:actor = { at_war = no any_international_organizations_member_of = { international_organization_type = international_organization_type:high_kingship international_organization_has_leader = yes leader_country = prev } } region:ireland_region = { any_ownable_location_in_region = { owner = { NOT = { any_international_organizations_member_of = { international_organization_type = international_organization_type:high_kingship } } } } } }
 		}
 	}
 }
@@ -669,10 +1147,26 @@ bag_rtk_cd_gate_overthrow_high_king = {
 		}
 	}
 }
+bag_rtk_cd_ready_overthrow_high_king = {
+	OR = {
+	AND = {
+			AND = { any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand international_organization_type = international_organization_type:high_kingship } }
+			AND = { scope:actor = { at_war = no any_international_organizations_member_of = { international_organization_type = international_organization_type:high_kingship international_organization_has_leader = yes NOT = { leader_country = prev } leader_country = { scope:actor = { can_declare_war_on = prev } } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_subjugate_high_kingship_member = {
 	OR = {
 	AND = {
 			any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand international_organization_type = international_organization_type:high_kingship }
+		}
+	}
+}
+bag_rtk_cd_ready_subjugate_high_kingship_member = {
+	OR = {
+	AND = {
+			AND = { any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand international_organization_type = international_organization_type:high_kingship } }
+			AND = { scope:actor = { at_war = no any_international_organizations_member_of = { international_organization_type = international_organization_type:high_kingship NOT = { leader_country ?= prev } scope:actor = { can_declare_war_on = prev.leader_country } } } }
 		}
 	}
 }
@@ -683,10 +1177,24 @@ bag_rtk_cd_gate_join_branch = {
 		}
 	}
 }
+bag_rtk_cd_ready_join_branch = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = religion:hindu }
+		}
+	}
+}
 bag_rtk_cd_gate_reroll_avatar = {
 	OR = {
 	AND = {
 			scope:actor = { religion = religion:hindu any_international_organizations_member_of = { international_organization_type = international_organization_type:hindu_branch international_organization_has_policy = policy:shaktism } }
+		}
+	}
+}
+bag_rtk_cd_ready_reroll_avatar = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { religion = religion:hindu any_international_organizations_member_of = { international_organization_type = international_organization_type:hindu_branch international_organization_has_policy = policy:shaktism } } }
 		}
 	}
 }
@@ -697,10 +1205,24 @@ bag_rtk_cd_gate_perform_yoga = {
 		}
 	}
 }
+bag_rtk_cd_ready_perform_yoga = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { modifier:allow_self_control = yes } }
+		}
+	}
+}
 bag_rtk_cd_gate_indulge_in_feasts = {
 	OR = {
 	AND = {
 			scope:actor = { modifier:allow_self_control = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_indulge_in_feasts = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { modifier:allow_self_control = yes } }
 		}
 	}
 }
@@ -711,10 +1233,25 @@ bag_rtk_cd_gate_discard_worldly_possessions = {
 		}
 	}
 }
+bag_rtk_cd_ready_discard_worldly_possessions = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { modifier:allow_self_control = yes } }
+		}
+	}
+}
 bag_rtk_cd_gate_indulge_in_bloodbath = {
 	OR = {
 	AND = {
 			scope:actor = { modifier:allow_self_control = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_indulge_in_bloodbath = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { modifier:allow_self_control = yes } }
+			AND = { scope:actor = { at_war = yes } }
 		}
 	}
 }
@@ -726,10 +1263,25 @@ bag_rtk_cd_gate_convert_occupied_territory = {
 		}
 	}
 }
+bag_rtk_cd_ready_convert_occupied_territory = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { any_controlled_location = { owner = { is_at_war_with = scope:actor } religion_percentage = { religion = scope:actor.religion value < 0.25 } } } any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand trigger_if = { limit = { OR = { international_organization_type = international_organization_type:crusade international_organization_type = international_organization_type:jihad } has_variable = phase } var:phase = 2 } trigger_else = { always = no } scope:actor = { is_member_of_international_organization = prev } } }
+		}
+	}
+}
 bag_rtk_cd_gate_discipline_the_faithless = {
 	OR = {
 	AND = {
 			any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand trigger_if = { limit = { OR = { international_organization_type = international_organization_type:crusade international_organization_type = international_organization_type:jihad } has_variable = phase } var:phase = 2 } trigger_else = { always = no } leader_country ?= scope:actor }
+		}
+	}
+}
+bag_rtk_cd_ready_discipline_the_faithless = {
+	OR = {
+	AND = {
+			AND = { any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand trigger_if = { limit = { OR = { international_organization_type = international_organization_type:crusade international_organization_type = international_organization_type:jihad } has_variable = phase } var:phase = 2 } trigger_else = { always = no } leader_country ?= scope:actor } }
+			AND = { scope:actor = { has_meaningful_holy_war_participation = yes } }
 		}
 	}
 }
@@ -740,10 +1292,24 @@ bag_rtk_cd_gate_distribute_holy_war_spoils = {
 		}
 	}
 }
+bag_rtk_cd_ready_distribute_holy_war_spoils = {
+	OR = {
+	AND = {
+			AND = { any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand trigger_if = { limit = { OR = { international_organization_type = international_organization_type:crusade international_organization_type = international_organization_type:jihad } has_variable = phase } var:phase = 2 } trigger_else = { always = no } leader_country ?= scope:actor has_enabled_currency = gold gold > 0 } }
+		}
+	}
+}
 bag_rtk_cd_gate_hasten_holy_war_preparations = {
 	OR = {
 	AND = {
 			any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand trigger_if = { limit = { OR = { international_organization_type = international_organization_type:crusade international_organization_type = international_organization_type:jihad } has_variable = phase } var:phase = 1 } trigger_else = { always = no } }
+		}
+	}
+}
+bag_rtk_cd_ready_hasten_holy_war_preparations = {
+	OR = {
+	AND = {
+			AND = { any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand trigger_if = { limit = { OR = { international_organization_type = international_organization_type:crusade international_organization_type = international_organization_type:jihad } has_variable = phase } var:phase = 1 } trigger_else = { always = no } } }
 		}
 	}
 }
@@ -754,10 +1320,25 @@ bag_rtk_cd_gate_distribute_imperial_grant = {
 		}
 	}
 }
+bag_rtk_cd_ready_distribute_imperial_grant = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { is_imperial_circle_leader = yes international_organization:hre = { circles_are_active = yes } } }
+			AND = { scope:actor = { gold >= { value = country_economical_base multiply = 0.20 } } }
+		}
+	}
+}
 bag_rtk_cd_gate_demand_circle_loyalty = {
 	OR = {
 	AND = {
 			scope:actor = { is_imperial_circle_leader = yes international_organization:hre = { circles_are_active = yes } }
+		}
+	}
+}
+bag_rtk_cd_ready_demand_circle_loyalty = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { is_imperial_circle_leader = yes international_organization:hre = { circles_are_active = yes } } }
 		}
 	}
 }
@@ -768,10 +1349,26 @@ bag_rtk_cd_gate_reform_coinage_in_circle = {
 		}
 	}
 }
+bag_rtk_cd_ready_reform_coinage_in_circle = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { is_imperial_circle_leader = yes international_organization:hre = { circles_are_active = yes } } }
+			AND = { scope:actor = { government_power >= 95 } }
+		}
+	}
+}
 bag_rtk_cd_gate_reduction_of_circle_titles = {
 	OR = {
 	AND = {
 			scope:actor = { is_imperial_circle_leader = yes international_organization:hre = { circles_are_active = yes } }
+		}
+	}
+}
+bag_rtk_cd_ready_reduction_of_circle_titles = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { is_imperial_circle_leader = yes international_organization:hre = { circles_are_active = yes } } }
+			AND = { scope:actor = { government_power >= 95 } }
 		}
 	}
 }
@@ -788,11 +1385,32 @@ bag_rtk_cd_gate_vote_in_organization_parliament = {
 		}
 	}
 }
+bag_rtk_cd_ready_vote_in_organization_parliament = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { international_organization:hre = { circles_are_active = yes resolution_is_active = resolution:policy_vote } } }
+		}
+	AND = {
+			AND = { scope:actor = { international_organization:hre = { circles_are_active = yes resolution_is_active = resolution:policy_vote } } }
+		}
+	AND = {
+			AND = { any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand has_parliament = yes modifier:has_international_parliament = yes is_active_parliament = yes NOT = { international_organization_type = international_organization_type:union } } }
+		}
+	}
+}
 bag_rtk_cd_gate_demand_autonomy = {
 	OR = {
 	AND = {
 			scope:actor = { AND = { exists = c:FRA is_subject_of = c:FRA } is_subject_type = appanage }
 			situation:hundred_years_war ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hundred_years_war = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_demand_autonomy = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { AND = { exists = c:FRA is_subject_of = c:FRA } is_subject_type = appanage } situation:hundred_years_war ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hundred_years_war = this situation_is_active = yes } }
+			AND = { scope:actor = { custom_tooltip = { text = another_appanage_capital_area_stronger_tt NOT = { c:FRA ?= { any_subject = { exists = capital capital.area = scope:actor.capital.area is_subject_type = appanage relative_strength = { target = scope:actor value >= 0.5 } } } } } at_war = no } c:FRA ?= { custom_tooltip = { text = hyw_france_recently_received_demand_tt NOT = { has_variable = hyw_recent_subject_demand } } } }
 		}
 	}
 }
@@ -804,11 +1422,27 @@ bag_rtk_cd_gate_request_papal_delegates = {
 		}
 	}
 }
+bag_rtk_cd_ready_request_papal_delegates = {
+	OR = {
+	AND = {
+			AND = { c:PAP ?= { NOR = { AND = { exists = c:FRA is_subject_of = c:FRA } AND = { exists = c:ENG is_subject_of = c:ENG } } } scope:actor = { OR = { tag = FRA tag = ENG } NOT = { AND = { exists = c:PAP is_at_war_with = c:PAP } } } situation:hundred_years_war ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hundred_years_war = this situation_is_active = yes } }
+			AND = { c:PAP ?= { opinion = { target = scope:actor value > 0 } } scope:actor = { ruler_or_regent ?= { NOT = { has_character_modifier = excommunicated } } trigger_if = { limit = { scope:actor = c:FRA } any_current_war = { AND = { exists = c:ENG attacker_leader = c:ENG } defender_leader = scope:actor war_length_in_years > 4 } } trigger_else = { any_current_war = { AND = { exists = c:FRA attacker_leader = c:FRA } defender_leader = scope:actor war_length_in_years > 4 } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_influence_french_subject = {
 	OR = {
 	AND = {
 			scope:actor = { tag = ENG }
 			situation:hundred_years_war ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hundred_years_war = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_influence_french_subject = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { tag = ENG } situation:hundred_years_war ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hundred_years_war = this situation_is_active = yes } }
+			AND = { c:FRA ?= { any_subject = { OR = { is_subject_type = appanage is_subject_type = vassal } NOR = { has_country_modifier = diplomatic_betrayal_modifier has_country_modifier = strong_diplomacy_modifier } } } scope:actor = { gold >= monthly_income_trade_and_tax NOT = { AND = { exists = c:FRA has_truce_with = c:FRA } } at_war = no } }
 		}
 	}
 }
@@ -820,11 +1454,27 @@ bag_rtk_cd_gate_fra_diplomacy_with_subjects = {
 		}
 	}
 }
+bag_rtk_cd_ready_fra_diplomacy_with_subjects = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { tag = FRA } c:FRA ?= { any_subject = { exists = capital capital.region = c:FRA.capital.region } } situation:hundred_years_war ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hundred_years_war = this situation_is_active = yes } }
+			AND = { c:FRA ?= { any_subject = { NOT = { modifier:french_subject_prevented_from_call_to_war = yes } NOT = { has_country_modifier = strong_diplomacy_modifier } subject_loyalty < 50 } } }
+		}
+	}
+}
 bag_rtk_cd_gate_demand_appanage_promotion = {
 	OR = {
 	AND = {
 			scope:actor = { AND = { exists = c:FRA is_subject_of = c:FRA } is_subject_type = vassal }
 			situation:hundred_years_war ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hundred_years_war = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_demand_appanage_promotion = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { AND = { exists = c:FRA is_subject_of = c:FRA } is_subject_type = vassal } situation:hundred_years_war ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hundred_years_war = this situation_is_active = yes } }
+			AND = { c:FRA ?= { has_ruler = yes ruler = { has_dynasty = yes } opinion = { target = scope:actor value > 75 } } scope:actor = { government_power > 90 has_ruler = yes ruler = { has_dynasty = yes } custom_tooltip = { text = fra_has_eligible_child_tt c:FRA.ruler = { dynasty = { any_character_in_dynasty = { AND = { exists = c:FRA owner = c:FRA } is_eligible_heir = scope:actor NOR = { is_heir = yes is_ruler = yes is_regent = yes } } } } } } c:FRA ?= { custom_tooltip = { text = hyw_france_recently_received_demand_tt NOT = { has_variable = hyw_recent_subject_demand } } } }
 		}
 	}
 }
@@ -836,11 +1486,27 @@ bag_rtk_cd_gate_demand_territory_return = {
 		}
 	}
 }
+bag_rtk_cd_ready_demand_territory_return = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { AND = { exists = c:FRA is_subject_of = c:FRA } } situation:hundred_years_war ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hundred_years_war = this situation_is_active = yes } }
+			AND = { scope:actor = { at_war = no } c:FRA ?= { at_war = no custom_tooltip = { text = hyw_france_recently_received_demand_tt NOT = { has_variable = hyw_recent_subject_demand } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_betray_our_allegiance = {
 	OR = {
 	AND = {
 			scope:actor = { OR = { has_mutual_scripted_relation = { type = relation_type:alliance target = c:FRA } AND = { exists = c:FRA is_subject_of = c:FRA } has_mutual_scripted_relation = { type = relation_type:alliance target = c:ENG } AND = { exists = c:ENG is_subject_of = c:ENG } } }
 			situation:hundred_years_war ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hundred_years_war = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_betray_our_allegiance = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { OR = { has_mutual_scripted_relation = { type = relation_type:alliance target = c:FRA } AND = { exists = c:FRA is_subject_of = c:FRA } has_mutual_scripted_relation = { type = relation_type:alliance target = c:ENG } AND = { exists = c:ENG is_subject_of = c:ENG } } } situation:hundred_years_war ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hundred_years_war = this situation_is_active = yes } }
+			AND = { scope:actor = { any_current_war = { custom_tooltip = { text = war_goal_owned_by_us_tt war_goal_province ?= { owner != scope:actor } } custom_tooltip = { text = eng_leads_one_side_france_another_tt OR = { AND = { AND = { exists = c:ENG attacker_leader = c:ENG } AND = { exists = c:FRA defender_leader = c:FRA } } AND = { AND = { exists = c:FRA attacker_leader = c:FRA } AND = { exists = c:ENG defender_leader = c:ENG } } } } trigger_if = { limit = { exists = this } war_length > 12 } trigger_else = { custom_tooltip = war_going_on_longer_than_year_tt } } trigger_if = { limit = { is_subject = yes } OR = { AND = { exists = c:FRA is_subject_of = c:FRA } AND = { exists = c:ENG is_subject_of = c:ENG } } } } }
 		}
 	}
 }
@@ -852,11 +1518,27 @@ bag_rtk_cd_gate_procure_core_claim = {
 		}
 	}
 }
+bag_rtk_cd_ready_procure_core_claim = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { OR = { this ?= c:ENG this ?= c:FRA AND = { exists = c:ENG is_subject_or_below_of = c:ENG } AND = { exists = c:FRA is_subject_or_below_of = c:FRA } } } situation:hundred_years_war ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hundred_years_war = this situation_is_active = yes } }
+			AND = { scope:actor = { at_war = no any_core_location = { owner != scope:actor owner = { is_neighbor_of = scope:actor } has_owner = yes is_core_of = scope:actor scope:actor = { can_declare_war_on = prev.owner } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_request_war_entry = {
 	OR = {
 	AND = {
 			scope:actor = { OR = { this ?= c:ENG this ?= c:FRA } }
 			situation:hundred_years_war ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hundred_years_war = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_request_war_entry = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { OR = { this ?= c:ENG this ?= c:FRA } } situation:hundred_years_war ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hundred_years_war = this situation_is_active = yes } }
+			AND = { scope:actor = { gold >= { value = monthly_income_trade_and_tax multiply = 7 } trigger_if = { limit = { tag = FRA } any_current_war = { AND = { exists = c:ENG attacker_leader = c:ENG } defender_leader = scope:actor } } trigger_else = { any_current_war = { AND = { exists = c:FRA attacker_leader = c:FRA } defender_leader = scope:actor } } sub_continent:western_europe = { any_country_with_capital_in_geography = { custom_tooltip = { text = not_recently_asked_to_join_tt NOT = { has_variable = request_war_entry_variable } } at_war = no is_subject = no opinion = { target = scope:actor value > 0 } NOT = { has_truce_with = scope:actor } NOR = { is_rival_of = scope:actor is_enemy_of = scope:actor } NOR = { AND = { scope:actor = c:ENG is_allied_with = { target = c:FRA } } AND = { scope:actor = c:FRA is_allied_with = { target = c:ENG } } } relative_strength = { target = scope:actor value >= 0.1 } } } } }
 		}
 	}
 }
@@ -868,11 +1550,27 @@ bag_rtk_cd_gate_hyw_sign_truce = {
 		}
 	}
 }
+bag_rtk_cd_ready_hyw_sign_truce = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { OR = { this ?= c:ENG this ?= c:FRA } } situation:hundred_years_war ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hundred_years_war = this situation_is_active = yes } }
+			AND = { scope:actor = { any_neighbor_country = { can_declare_war_on = prev NOT = { has_truce_with = prev } } gold >= { value = monthly_income_total multiply = 6 } } }
+		}
+	}
+}
 bag_rtk_cd_gate_hyw_defect_action = {
 	OR = {
 	AND = {
 			scope:actor = { OR = { AND = { exists = c:FRA is_subject_of = c:FRA } AND = { exists = c:ENG is_subject_of = c:ENG } } OR = { capital.region = region:france_region capital.area = area:brabant_area capital.area = area:flanders_area capital.area = area:holland_area } }
 			situation:hundred_years_war ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hundred_years_war = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_hyw_defect_action = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { OR = { AND = { exists = c:FRA is_subject_of = c:FRA } AND = { exists = c:ENG is_subject_of = c:ENG } } OR = { capital.region = region:france_region capital.area = area:brabant_area capital.area = area:flanders_area capital.area = area:holland_area } } situation:hundred_years_war ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hundred_years_war = this situation_is_active = yes } }
+			AND = { scope:actor = { custom_tooltip = { text = hyw_defect_not_at_war_outside_hyw_tt trigger_if = { limit = { situation:hundred_years_war = { situation_is_active = yes } OR = { AND = { AND = { exists = c:FRA is_subject_of = c:FRA } c:FRA ?= { AND = { exists = c:ENG is_at_war_with = c:ENG } } } AND = { AND = { exists = c:ENG is_subject_of = c:ENG } c:ENG ?= { AND = { exists = c:FRA is_at_war_with = c:FRA } } } } } always = yes } trigger_else = { at_war = no } } custom_tooltip = { text = ruler_regent_heir_not_overlord_dynasty_tt trigger_if = { limit = { AND = { exists = c:FRA is_subject_of = c:FRA } c:FRA ?= { ruler_or_regent = { has_dynasty = yes } } } NOR = { ruler_or_regent ?= { dynasty ?= c:FRA.ruler_or_regent.dynasty } heir ?= { dynasty ?= c:FRA.ruler_or_regent.dynasty } } } trigger_else_if = { limit = { AND = { exists = c:ENG is_subject_of = c:ENG } c:ENG ?= { ruler_or_regent = { has_dynasty = yes } } } NOR = { ruler_or_regent ?= { dynasty ?= c:ENG.ruler_or_regent.dynasty } heir ?= { dynasty ?= c:ENG.ruler_or_regent.dynasty } } } trigger_else = { always = yes } } is_disloyal_subject = yes } }
 		}
 	}
 }
@@ -884,11 +1582,27 @@ bag_rtk_cd_gate_crown_new_ruler = {
 		}
 	}
 }
+bag_rtk_cd_ready_crown_new_ruler = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { OR = { AND = { this ?= c:FRA AND = { exists = c:ENG in_union_with = c:ENG } } AND = { this ?= c:ENG AND = { exists = c:FRA in_union_with = c:FRA } } } NOT = { any_union_partner = { union = { custom_tooltip = { text = empty_text country_has_special_status = { type = special_status:senior_partner country = prev } } } } } } situation:hundred_years_war ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hundred_years_war = this situation_is_active = yes } }
+			AND = { scope:actor = { government_type = government_type:monarchy at_war = no is_during_bankruptcy = no any_character = { is_adult = yes is_eligible_heir = prev NOR = { is_ruler_of = prev is_heir_of = prev is_regent_of = prev } } trigger_if = { limit = { this ?= c:FRA } NOT = { AND = { exists = c:ENG has_truce_with = c:ENG } } ruler_or_regent = { culture = { NOT = { has_culture_group = culture_group:french_group } } } } trigger_else = { NOT = { AND = { exists = c:FRA has_truce_with = c:FRA } } ruler_or_regent = { culture = { NOT = { has_culture_group = culture_group:british_group } } } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_convert_heretics_hw_action = {
 	OR = {
 	AND = {
 			scope:actor = { NOT = { religion = religion:catholic } }
 			situation:hussite_wars ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hussite_wars = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_convert_heretics_hw_action = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { NOT = { religion = religion:catholic } } situation:hussite_wars ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hussite_wars = this situation_is_active = yes } }
+			AND = { scope:actor = { any_province = { NOT = { has_province_modifier = hw_heretic_conversions_modifier } any_location_in_province = { is_ownable = yes owner = scope:actor OR = { dominant_religion ?= { this != scope:actor.religion } local_religious_unity < 1.0 } } } } }
 		}
 	}
 }
@@ -904,11 +1618,30 @@ bag_rtk_cd_gate_demand_noble_donations_hw_action = {
 		}
 	}
 }
+bag_rtk_cd_ready_demand_noble_donations_hw_action = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { NOT = { religion = religion:catholic } country_has_estate = estate_type:nobles_estate } situation:hussite_wars ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hussite_wars = this situation_is_active = yes } }
+			AND = { scope:actor = { estate_satisfaction:nobles_estate > 0.5 "estate_power(estate_type:nobles_estate)" > 0 } }
+		}
+	AND = {
+			AND = { scope:actor = { NOT = { religion = religion:catholic } } situation:hussite_wars ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hussite_wars = this situation_is_active = yes } }
+		}
+	}
+}
 bag_rtk_cd_gate_demand_clergy_donations_hw_action = {
 	OR = {
 	AND = {
 			scope:actor = { NOT = { religion = religion:catholic } country_has_estate = estate_type:clergy_estate }
 			situation:hussite_wars ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hussite_wars = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_demand_clergy_donations_hw_action = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { NOT = { religion = religion:catholic } country_has_estate = estate_type:clergy_estate } situation:hussite_wars ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hussite_wars = this situation_is_active = yes } }
+			AND = { scope:actor = { estate_satisfaction:clergy_estate > 0.5 "estate_power(estate_type:clergy_estate)" > 0 } }
 		}
 	}
 }
@@ -920,6 +1653,14 @@ bag_rtk_cd_gate_demand_burgher_donations_hw_action = {
 		}
 	}
 }
+bag_rtk_cd_ready_demand_burgher_donations_hw_action = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { NOT = { religion = religion:catholic } country_has_estate = estate_type:burghers_estate } situation:hussite_wars ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hussite_wars = this situation_is_active = yes } }
+			AND = { scope:actor = { estate_satisfaction:burghers_estate > 0.5 "estate_power(estate_type:burghers_estate)" > 0 } }
+		}
+	}
+}
 bag_rtk_cd_gate_prepare_defenses_hw_action = {
 	OR = {
 	AND = {
@@ -928,11 +1669,27 @@ bag_rtk_cd_gate_prepare_defenses_hw_action = {
 		}
 	}
 }
+bag_rtk_cd_ready_prepare_defenses_hw_action = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { NOT = { religion = religion:catholic } } situation:hussite_wars ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hussite_wars = this situation_is_active = yes } }
+			AND = { scope:actor = { any_province = { NOT = { has_province_modifier = hw_prepared_defenses_modifier } } gold > 100 } }
+		}
+	}
+}
 bag_rtk_cd_gate_align_with_moderates_help_hw_action = {
 	OR = {
 	AND = {
 			scope:actor = { NOT = { religion = religion:catholic } }
 			situation:hussite_wars ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hussite_wars = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_align_with_moderates_help_hw_action = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { NOT = { religion = religion:catholic } } situation:hussite_wars ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hussite_wars = this situation_is_active = yes } }
+			AND = { scope:actor = { any_neighbor_country = { NOT = { religion = prev.religion } NOR = { is_at_war_with = prev is_rival_of = prev is_enemy_of = prev AND = { country_exists = international_organization:hre.leader_country OR = { has_mutual_scripted_relation = { type = relation_type:alliance target = international_organization:hre.leader_country } is_subject_of = international_organization:hre.leader_country } } } } } }
 		}
 	}
 }
@@ -948,10 +1705,30 @@ bag_rtk_cd_gate_join_the_imperial_side_hw_action = {
 		}
 	}
 }
+bag_rtk_cd_ready_join_the_imperial_side_hw_action = {
+	OR = {
+	AND = {
+			AND = { country_exists = international_organization:hre.leader_country country_exists = c:BOH scope:actor = { NOR = { tag = PAP tag = BOH } OR = { religion = religion:hussite religion = religion:catholic } } situation:hussite_wars ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hussite_wars = this situation_is_active = yes } }
+			AND = { scope:actor = { at_war = no is_subject = no is_during_bankruptcy = no OR = { capital.region = c:BOH.capital.region is_member_of_international_organization = international_organization:hre AND = { exists = c:BOH is_neighbor_of = c:BOH } is_neighbor_of = international_organization:hre.leader_country } NOT = { AND = { exists = c:BOH has_truce_with = c:BOH } } NOT = { has_mutual_scripted_relation = { type = relation_type:alliance target = c:BOH } } } custom_tooltip = { text = bohemia_and_emperor_at_war_with_both_being_leaders_tt situation:hussite_wars = { has_variable = hussite_wars_current_war } } situation:hussite_wars = { var:hussite_wars_catholic_leader ?= { opinion = { target = scope:actor value > 0 } } } }
+		}
+	AND = {
+			AND = { country_exists = international_organization:hre.leader_country country_exists = c:BOH scope:actor = { NOR = { tag = PAP tag = BOH } OR = { religion = religion:hussite religion = religion:catholic } } situation:hussite_wars ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:hussite_wars = this situation_is_active = yes } }
+			AND = { scope:actor = { is_subject = no at_war = no OR = { capital.region = c:BOH.capital.region is_member_of_international_organization = international_organization:hre AND = { exists = c:BOH is_neighbor_of = c:BOH } is_neighbor_of = international_organization:hre.leader_country } NOT = { has_truce_with = international_organization:hre.leader_country } NOT = { has_mutual_scripted_relation = { type = relation_type:alliance target = international_organization:hre.leader_country } } } custom_tooltip = { text = bohemia_and_emperor_at_war_with_both_being_leaders_tt situation:hussite_wars = { has_variable = hussite_wars_current_war } } c:BOH ?= { opinion = { target = scope:actor value > 0 } } }
+		}
+	}
+}
 bag_rtk_cd_gate_mobilize_the_shurat_action = {
 	OR = {
 	AND = {
 			scope:actor = { religion = religion:ibadi NOT = { ruler_or_regent = { has_variable = shari_imam } } OR = { has_policy = ibadi_institutionalize_the_shurat_policy has_policy = ibadi_maintain_the_status_of_imam_policy } }
+		}
+	}
+}
+bag_rtk_cd_ready_mobilize_the_shurat_action = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { religion = religion:ibadi NOT = { ruler_or_regent = { has_variable = shari_imam } } OR = { has_policy = ibadi_institutionalize_the_shurat_policy has_policy = ibadi_maintain_the_status_of_imam_policy } } }
+			AND = { scope:actor = { is_forced_into_kitman_state = no NOT = { has_policy = ibadi_daif_imam_policy } } }
 		}
 	}
 }
@@ -965,6 +1742,18 @@ bag_rtk_cd_gate_elect_imam = {
 		}
 	}
 }
+bag_rtk_cd_ready_elect_imam = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { religion = religion:ibadi } }
+			AND = { scope:actor = { OR = { has_policy = ibadi_zuhur_imam_policy has_policy = ibadi_shari_imam_policy } country_allows_a_weak_imam = yes } }
+		}
+	AND = {
+			AND = { scope:actor = { religion = religion:ibadi } }
+			AND = { scope:actor = { has_policy = ibadi_daif_imam_policy } }
+		}
+	}
+}
 bag_rtk_cd_gate_contribute_to_organization_treasury = {
 	OR = {
 	AND = {
@@ -972,10 +1761,25 @@ bag_rtk_cd_gate_contribute_to_organization_treasury = {
 		}
 	}
 }
+bag_rtk_cd_ready_contribute_to_organization_treasury = {
+	OR = {
+	AND = {
+			AND = { any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand has_enabled_currency = gold modifier:unlock_contribute_to_organization_treasury = yes } }
+			AND = { scope:actor = { gold > 0 } }
+		}
+	}
+}
 bag_rtk_cd_gate_withdraw_from_organization_treasury = {
 	OR = {
 	AND = {
 			any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand has_enabled_currency = gold modifier:unlock_withdraw_from_organization_treasury = yes leader_country ?= scope:actor gold > 0 }
+		}
+	}
+}
+bag_rtk_cd_ready_withdraw_from_organization_treasury = {
+	OR = {
+	AND = {
+			AND = { any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand has_enabled_currency = gold modifier:unlock_withdraw_from_organization_treasury = yes leader_country ?= scope:actor gold > 0 } }
 		}
 	}
 }
@@ -987,11 +1791,27 @@ bag_rtk_cd_gate_join_a_league = {
 		}
 	}
 }
+bag_rtk_cd_ready_join_a_league = {
+	OR = {
+	AND = {
+			AND = { scope:actor ?= { OR = { tag = PAP capital.region = region:italy_region } } situation:italian_wars ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:italian_wars = this situation_is_active = yes } }
+			AND = { scope:actor ?= { trigger_if = { limit = { NOT = { tag = PAP } } capital.region = region:italy_region } at_war = no custom_tooltip = { text = is_not_leader_of_any_leagues_tt is_leader_of_any_league = no } } }
+		}
+	}
+}
 bag_rtk_cd_gate_plan_campaign_in_italy = {
 	OR = {
 	AND = {
 			scope:actor ?= { OR = { is_leader_of_international_organization = international_organization:foreign_league_balkan is_leader_of_international_organization = international_organization:foreign_league_france is_leader_of_international_organization = international_organization:foreign_league_hre is_leader_of_international_organization = international_organization:foreign_league_iberia } }
 			situation:italian_wars ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:italian_wars = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_plan_campaign_in_italy = {
+	OR = {
+	AND = {
+			AND = { scope:actor ?= { OR = { is_leader_of_international_organization = international_organization:foreign_league_balkan is_leader_of_international_organization = international_organization:foreign_league_france is_leader_of_international_organization = international_organization:foreign_league_hre is_leader_of_international_organization = international_organization:foreign_league_iberia } } situation:italian_wars ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:italian_wars = this situation_is_active = yes } }
+			AND = { scope:actor ?= { at_war = no has_raised_levies = no NOT = { receiving_scripted_relation_of_type = relation_type:rein_in_junior_diplomacy } } }
 		}
 	}
 }
@@ -1003,11 +1823,27 @@ bag_rtk_cd_gate_fortify_key_location = {
 		}
 	}
 }
+bag_rtk_cd_ready_fortify_key_location = {
+	OR = {
+	AND = {
+			AND = { trigger_if = { limit = { situation:italian_wars = { has_variable = iw_tension } } situation:italian_wars.var:iw_tension >= 25 } trigger_else = { always = no } scope:actor ?= { OR = { is_member_of_international_organization = international_organization:italian_league_1 is_member_of_international_organization = international_organization:italian_league_2 is_member_of_international_organization = international_organization:italian_league_3 is_member_of_international_organization = international_organization:foreign_league_france is_member_of_international_organization = international_organization:foreign_league_hre is_member_of_international_organization = international_organization:foreign_league_iberia is_member_of_international_organization = international_organization:foreign_league_balkan capital.region = region:italy_region } } situation:italian_wars ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:italian_wars = this situation_is_active = yes } }
+			AND = { scope:actor ?= { is_during_bankruptcy = no } }
+		}
+	}
+}
 bag_rtk_cd_gate_iw_send_aid = {
 	OR = {
 	AND = {
 			scope:actor ?= { OR = { is_leader_of_any_league = yes is_great_power = yes trigger_if = { limit = { exists = international_organization:foreign_league_balkan international_organization:foreign_league_balkan = { international_organization_has_leader = yes } } OR = { is_enemy_of = international_organization:foreign_league_balkan.leader_country is_rival_of = international_organization:foreign_league_balkan.leader_country } } trigger_if = { limit = { exists = international_organization:foreign_league_france international_organization:foreign_league_france = { international_organization_has_leader = yes } } OR = { is_enemy_of = international_organization:foreign_league_france.leader_country is_rival_of = international_organization:foreign_league_france.leader_country } } trigger_if = { limit = { exists = international_organization:foreign_league_hre international_organization:foreign_league_hre = { international_organization_has_leader = yes } } OR = { is_enemy_of = international_organization:foreign_league_hre.leader_country is_rival_of = international_organization:foreign_league_hre.leader_country } } trigger_if = { limit = { exists = international_organization:foreign_league_iberia international_organization:foreign_league_iberia = { international_organization_has_leader = yes } } OR = { is_enemy_of = international_organization:foreign_league_iberia.leader_country is_rival_of = international_organization:foreign_league_iberia.leader_country } } } }
 			situation:italian_wars ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:italian_wars = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_iw_send_aid = {
+	OR = {
+	AND = {
+			AND = { scope:actor ?= { OR = { is_leader_of_any_league = yes is_great_power = yes trigger_if = { limit = { exists = international_organization:foreign_league_balkan international_organization:foreign_league_balkan = { international_organization_has_leader = yes } } OR = { is_enemy_of = international_organization:foreign_league_balkan.leader_country is_rival_of = international_organization:foreign_league_balkan.leader_country } } trigger_if = { limit = { exists = international_organization:foreign_league_france international_organization:foreign_league_france = { international_organization_has_leader = yes } } OR = { is_enemy_of = international_organization:foreign_league_france.leader_country is_rival_of = international_organization:foreign_league_france.leader_country } } trigger_if = { limit = { exists = international_organization:foreign_league_hre international_organization:foreign_league_hre = { international_organization_has_leader = yes } } OR = { is_enemy_of = international_organization:foreign_league_hre.leader_country is_rival_of = international_organization:foreign_league_hre.leader_country } } trigger_if = { limit = { exists = international_organization:foreign_league_iberia international_organization:foreign_league_iberia = { international_organization_has_leader = yes } } OR = { is_enemy_of = international_organization:foreign_league_iberia.leader_country is_rival_of = international_organization:foreign_league_iberia.leader_country } } } } situation:italian_wars ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:italian_wars = this situation_is_active = yes } }
+			AND = { scope:actor ?= { at_war = no OR = { manpower_percentage >= 0.1 gold >= { value = scope:actor.monthly_income_total multiply = 3 } } } }
 		}
 	}
 }
@@ -1018,10 +1854,24 @@ bag_rtk_cd_gate_expel_league_member = {
 		}
 	}
 }
+bag_rtk_cd_ready_expel_league_member = {
+	OR = {
+	AND = {
+			AND = { any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand OR = { AND = { exists = international_organization:italian_league_1 this = international_organization:italian_league_1 } AND = { exists = international_organization:italian_league_2 this = international_organization:italian_league_2 } AND = { exists = international_organization:italian_league_3 this = international_organization:italian_league_3 } } leader_country ?= scope:actor } }
+		}
+	}
+}
 bag_rtk_cd_gate_challenge_league_leadership = {
 	OR = {
 	AND = {
 			any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand OR = { AND = { exists = international_organization:italian_league_1 this = international_organization:italian_league_1 } AND = { exists = international_organization:italian_league_2 this = international_organization:italian_league_2 } AND = { exists = international_organization:italian_league_3 this = international_organization:italian_league_3 } } scope:actor = { is_member_of_international_organization = scope:bag_rtk_cd_cand NOT = { is_leader_of_international_organization = scope:bag_rtk_cd_cand } NOT = { has_special_status_in_international_organization = { type = special_status:italian_league_sponsor international_organization = scope:bag_rtk_cd_cand } } } }
+		}
+	}
+}
+bag_rtk_cd_ready_challenge_league_leadership = {
+	OR = {
+	AND = {
+			AND = { any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand OR = { AND = { exists = international_organization:italian_league_1 this = international_organization:italian_league_1 } AND = { exists = international_organization:italian_league_2 this = international_organization:italian_league_2 } AND = { exists = international_organization:italian_league_3 this = international_organization:italian_league_3 } } scope:actor = { is_member_of_international_organization = scope:bag_rtk_cd_cand NOT = { is_leader_of_international_organization = scope:bag_rtk_cd_cand } NOT = { has_special_status_in_international_organization = { type = special_status:italian_league_sponsor international_organization = scope:bag_rtk_cd_cand } } } } }
 		}
 	}
 }
@@ -1033,11 +1883,27 @@ bag_rtk_cd_gate_grant_shugo_office = {
 		}
 	}
 }
+bag_rtk_cd_ready_grant_shugo_office = {
+	OR = {
+	AND = {
+			AND = { exists = international_organization:japanese_shogunate scope:actor = { is_member_of_international_organization = international_organization:japanese_shogunate } any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand international_organization_type = international_organization_type:japanese_shogunate } }
+			AND = { international_organization:japanese_shogunate ?= { international_organization_has_policy = policy:appointed_posts_policy leader_country ?= scope:actor } }
+		}
+	}
+}
 bag_rtk_cd_gate_revoke_shugo_office = {
 	OR = {
 	AND = {
 			exists = international_organization:japanese_shogunate scope:actor = { is_member_of_international_organization = international_organization:japanese_shogunate }
 			any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand international_organization_type = international_organization_type:japanese_shogunate }
+		}
+	}
+}
+bag_rtk_cd_ready_revoke_shugo_office = {
+	OR = {
+	AND = {
+			AND = { exists = international_organization:japanese_shogunate scope:actor = { is_member_of_international_organization = international_organization:japanese_shogunate } any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand international_organization_type = international_organization_type:japanese_shogunate } }
+			AND = { international_organization:japanese_shogunate ?= { international_organization_has_policy = policy:appointed_posts_policy leader_country ?= scope:actor } }
 		}
 	}
 }
@@ -1049,10 +1915,26 @@ bag_rtk_cd_gate_claim_shugo_office = {
 		}
 	}
 }
+bag_rtk_cd_ready_claim_shugo_office = {
+	OR = {
+	AND = {
+			AND = { exists = international_organization:japanese_shogunate scope:actor = { is_member_of_international_organization = international_organization:japanese_shogunate } any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand international_organization_type = international_organization_type:japanese_shogunate } }
+			AND = { international_organization:japanese_shogunate ?= { OR = { international_organization_has_policy = policy:appointed_posts_policy international_organization_has_policy = policy:established_domains_policy } OR = { international_organization_has_leader = no scope:actor = { NOT = { is_leader_of_international_organization = prev } NOT = { is_at_war_with = prev.leader_country } } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_claim_jihad_leadership = {
 	OR = {
 	AND = {
 			any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand international_organization_type = international_organization_type:jihad leader_country ?= { religion.group ?= religion_group:muslim } scope:actor = { is_member_of_international_organization = prev NOT = { is_leader_of_international_organization = prev } } }
+		}
+	}
+}
+bag_rtk_cd_ready_claim_jihad_leadership = {
+	OR = {
+	AND = {
+			AND = { any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand international_organization_type = international_organization_type:jihad leader_country ?= { religion.group ?= religion_group:muslim } scope:actor = { is_member_of_international_organization = prev NOT = { is_leader_of_international_organization = prev } } } }
+			AND = { scope:actor = { is_subject = no } }
 		}
 	}
 }
@@ -1063,10 +1945,24 @@ bag_rtk_cd_gate_offer_recognition_for_jihad = {
 		}
 	}
 }
+bag_rtk_cd_ready_offer_recognition_for_jihad = {
+	OR = {
+	AND = {
+			AND = { any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand trigger_if = { limit = { international_organization_type = international_organization_type:jihad has_variable = phase } var:phase = 1 } trigger_else = { always = no } leader_country ?= scope:actor leader_country ?= { religion.group ?= religion_group:muslim } has_enabled_currency = gold gold > 0 } }
+		}
+	}
+}
 bag_rtk_cd_gate_issue_a_fatwa = {
 	OR = {
 	AND = {
 			any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand trigger_if = { limit = { international_organization_type = international_organization_type:jihad has_variable = phase } var:phase = 1 } trigger_else = { always = no } leader_country ?= { religion.group ?= religion_group:muslim } leader_country ?= scope:actor }
+		}
+	}
+}
+bag_rtk_cd_ready_issue_a_fatwa = {
+	OR = {
+	AND = {
+			AND = { any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand trigger_if = { limit = { international_organization_type = international_organization_type:jihad has_variable = phase } var:phase = 1 } trigger_else = { always = no } leader_country ?= { religion.group ?= religion_group:muslim } leader_country ?= scope:actor } }
 		}
 	}
 }
@@ -1077,10 +1973,24 @@ bag_rtk_cd_gate_promise_of_martyrdom = {
 		}
 	}
 }
+bag_rtk_cd_ready_promise_of_martyrdom = {
+	OR = {
+	AND = {
+			AND = { any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand international_organization_type = international_organization_type:jihad leader_country ?= scope:actor leader_country ?= { religion.group ?= religion_group:muslim } } }
+		}
+	}
+}
 bag_rtk_cd_gate_levy_the_war_zakat = {
 	OR = {
 	AND = {
 			any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand trigger_if = { limit = { international_organization_type = international_organization_type:jihad has_variable = phase } var:phase = 1 } trigger_else = { always = no } leader_country ?= scope:actor leader_country ?= { religion.group ?= religion_group:muslim } }
+		}
+	}
+}
+bag_rtk_cd_ready_levy_the_war_zakat = {
+	OR = {
+	AND = {
+			AND = { any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand trigger_if = { limit = { international_organization_type = international_organization_type:jihad has_variable = phase } var:phase = 1 } trigger_else = { always = no } leader_country ?= scope:actor leader_country ?= { religion.group ?= religion_group:muslim } } }
 		}
 	}
 }
@@ -1092,6 +2002,13 @@ bag_rtk_cd_gate_plunder_the_conquered = {
 		}
 	}
 }
+bag_rtk_cd_ready_plunder_the_conquered = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { any_controlled_location = { owner = { is_at_war_with = scope:actor } } } any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand trigger_if = { limit = { international_organization_type = international_organization_type:jihad has_variable = phase } var:phase = 2 } trigger_else = { always = no } leader_country ?= { religion.group ?= religion_group:muslim } scope:actor = { is_member_of_international_organization = prev } } }
+		}
+	}
+}
 bag_rtk_cd_gate_proclaim_jihad_privileges = {
 	OR = {
 	AND = {
@@ -1099,16 +2016,45 @@ bag_rtk_cd_gate_proclaim_jihad_privileges = {
 		}
 	}
 }
+bag_rtk_cd_ready_proclaim_jihad_privileges = {
+	OR = {
+	AND = {
+			AND = { any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand international_organization_type = international_organization_type:jihad leader_country ?= scope:actor leader_country ?= { religion.group ?= religion_group:muslim } NOT = { any_international_organization_member = { has_country_modifier = jihad_privileges } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_change_liturgical_language = {
 	always = yes
 }
+bag_rtk_cd_ready_change_liturgical_language = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { OR = { religion = { has_fixed_liturgical_language = no } is_protestant = yes } NOT = { has_country_modifier = parliament_recently_changed_liturgical_language } NOT = { has_cooldown = change_liturgical_language } } }
+		}
+	}
+}
 bag_rtk_cd_gate_change_court_language = {
 	always = yes
+}
+bag_rtk_cd_ready_change_court_language = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { modifier:prevented_from_changing_court_language_by_overlord = no not = { has_cooldown = force_change_court_language } not = { has_cooldown = change_court_language } NOT = { has_country_modifier = parliament_recently_changed_court_language } trigger_if = { limit = { is_subject = yes } subject_type = { only_allowed_overlord_court_language = no } } trigger_if = { limit = { OR = { has_reform = government_reform:papacy_reform has_reform = government_reform:kingdom_of_god_reform } court_language = language:latin_language } always = no } } }
+		}
+	}
 }
 bag_rtk_cd_gate_enforce_rationing_policies = {
 	OR = {
 	AND = {
 			situation:little_ice_age ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:little_ice_age = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_enforce_rationing_policies = {
+	OR = {
+	AND = {
+			AND = { situation:little_ice_age ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:little_ice_age = this situation_is_active = yes } }
+			AND = { scope:actor = { any_market_present_in_country ?= { market_food_percentage < 0.3 } stability > 0 } }
 		}
 	}
 }
@@ -1119,10 +2065,26 @@ bag_rtk_cd_gate_expand_provincial_food_production = {
 		}
 	}
 }
+bag_rtk_cd_ready_expand_provincial_food_production = {
+	OR = {
+	AND = {
+			AND = { situation:little_ice_age ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:little_ice_age = this situation_is_active = yes } }
+			AND = { scope:actor = { stability > 0 any_province = { area = { has_extended_winter = yes } province_food_percentage < 0.5 NOT = { has_province_modifier = expanded_food_production_modifier } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_send_food_aid = {
 	OR = {
 	AND = {
 			situation:little_ice_age ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:little_ice_age = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_send_food_aid = {
+	OR = {
+	AND = {
+			AND = { situation:little_ice_age ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:little_ice_age = this situation_is_active = yes } }
+			AND = { scope:actor = { stability > 0 any_province = { area = { has_extended_winter = yes } province_food_percentage < 0.1 region = scope:actor.capital.region } any_province = { custom_tooltip = { text = has_not_recently_given_food_tt NOT = { has_variable = recently_gave_food_variable } } region = scope:actor.capital.region province_food_percentage > 0.8 } } }
 		}
 	}
 }
@@ -1134,10 +2096,24 @@ bag_rtk_cd_gate_lordship_of_ireland_invite_planters = {
 		}
 	}
 }
+bag_rtk_cd_ready_lordship_of_ireland_invite_planters = {
+	OR = {
+	AND = {
+			AND = { exists = international_organization:lordship_of_ireland any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand international_organization_type = international_organization_type:lordship_of_ireland } }
+		}
+	}
+}
 bag_rtk_cd_gate_sacrifice_noble_blood = {
 	OR = {
 	AND = {
 			scope:actor.religion = religion:mayan
+		}
+	}
+}
+bag_rtk_cd_ready_sacrifice_noble_blood = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = religion:mayan }
 		}
 	}
 }
@@ -1157,6 +2133,26 @@ bag_rtk_cd_gate_prepare_for_katun = {
 		}
 	}
 }
+bag_rtk_cd_ready_prepare_for_katun = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { religion = religion:mayan has_country_modifier = prepare_for_katun } }
+			AND = { scope:actor = { NOT = { has_cooldown = prepare_for_katun } } }
+		}
+	AND = {
+			AND = { scope:actor.religion = religion:mayan }
+			AND = { scope:actor = { NOT = { has_cooldown = prepare_for_katun } } }
+		}
+	AND = {
+			AND = { scope:actor.religion = religion:mayan }
+			AND = { scope:actor = { NOT = { has_cooldown = prepare_for_katun } } }
+		}
+	AND = {
+			AND = { scope:actor.religion = religion:mayan }
+			AND = { scope:actor = { NOT = { has_cooldown = prepare_for_katun } } }
+		}
+	}
+}
 bag_rtk_cd_gate_inti_ceremonial_festivals = {
 	OR = {
 	AND = {
@@ -1164,6 +2160,18 @@ bag_rtk_cd_gate_inti_ceremonial_festivals = {
 		}
 	AND = {
 			scope:actor.religion = religion:inti
+		}
+	}
+}
+bag_rtk_cd_ready_inti_ceremonial_festivals = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = religion:mayan }
+			AND = { scope:actor.gold >= { value = scope:actor.monthly_income_trade_and_tax multiply = 4 } }
+		}
+	AND = {
+			AND = { scope:actor.religion = religion:inti }
+			AND = { scope:actor.gold >= { value = scope:actor.monthly_income_trade_and_tax multiply = 4 } }
 		}
 	}
 }
@@ -1175,11 +2183,27 @@ bag_rtk_cd_gate_conduct_keju_examination = {
 		}
 	}
 }
+bag_rtk_cd_ready_conduct_keju_examination = {
+	OR = {
+	AND = {
+			AND = { exists = international_organization:middle_kingdom scope:actor = { is_member_of_international_organization = international_organization:middle_kingdom } any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand international_organization_type = international_organization_type:middle_kingdom } }
+			AND = { international_organization:middle_kingdom = { var:celestial_authority > 5 NOT = { international_organization_has_policy = policy:direct_appointment } } scope:actor = { is_leader_of_international_organization = international_organization:middle_kingdom } }
+		}
+	}
+}
 bag_rtk_cd_gate_reshape_bureaucracy = {
 	OR = {
 	AND = {
 			exists = international_organization:middle_kingdom scope:actor = { is_member_of_international_organization = international_organization:middle_kingdom }
 			any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand international_organization_type = international_organization_type:middle_kingdom }
+		}
+	}
+}
+bag_rtk_cd_ready_reshape_bureaucracy = {
+	OR = {
+	AND = {
+			AND = { exists = international_organization:middle_kingdom scope:actor = { is_member_of_international_organization = international_organization:middle_kingdom } any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand international_organization_type = international_organization_type:middle_kingdom } }
+			AND = { international_organization:middle_kingdom = { var:celestial_authority > 10 } scope:actor = { is_leader_of_international_organization = international_organization:middle_kingdom } }
 		}
 	}
 }
@@ -1191,11 +2215,27 @@ bag_rtk_cd_gate_strengthen_ministry = {
 		}
 	}
 }
+bag_rtk_cd_ready_strengthen_ministry = {
+	OR = {
+	AND = {
+			AND = { exists = international_organization:middle_kingdom scope:actor = { is_member_of_international_organization = international_organization:middle_kingdom } any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand international_organization_type = international_organization_type:middle_kingdom } }
+			AND = { scope:actor = { has_reform = government_reform:three_departments_system } }
+		}
+	}
+}
 bag_rtk_cd_gate_proclaim_decree = {
 	OR = {
 	AND = {
 			exists = international_organization:middle_kingdom scope:actor = { is_member_of_international_organization = international_organization:middle_kingdom }
 			any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand international_organization_type = international_organization_type:middle_kingdom }
+		}
+	}
+}
+bag_rtk_cd_ready_proclaim_decree = {
+	OR = {
+	AND = {
+			AND = { exists = international_organization:middle_kingdom scope:actor = { is_member_of_international_organization = international_organization:middle_kingdom } any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand international_organization_type = international_organization_type:middle_kingdom } }
+			AND = { international_organization:middle_kingdom = { var:celestial_authority > 10 } scope:actor = { is_leader_of_international_organization = international_organization:middle_kingdom } }
 		}
 	}
 }
@@ -1207,10 +2247,25 @@ bag_rtk_cd_gate_exempt_from_tribute = {
 		}
 	}
 }
+bag_rtk_cd_ready_exempt_from_tribute = {
+	OR = {
+	AND = {
+			AND = { exists = international_organization:middle_kingdom scope:actor = { is_leader_of_international_organization = international_organization:middle_kingdom } any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand international_organization_type = international_organization_type:middle_kingdom } }
+		}
+	}
+}
 bag_rtk_cd_gate_call_jihad = {
 	OR = {
 	AND = {
 			scope:actor = { religion.group = religion_group:muslim OR = { country_rank = country_rank:rank_kingdom country_rank = country_rank:rank_empire } }
+		}
+	}
+}
+bag_rtk_cd_ready_call_jihad = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { religion.group = religion_group:muslim OR = { country_rank = country_rank:rank_kingdom country_rank = country_rank:rank_empire } } }
+			AND = { game_is_initialized = yes scope:actor = { is_subject = no } scope:actor ?= { monthly_manpower > 0 } }
 		}
 	}
 }
@@ -1221,10 +2276,26 @@ bag_rtk_cd_gate_appease_the_gods = {
 		}
 	}
 }
+bag_rtk_cd_ready_appease_the_gods = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = religion:nahuatl scope:actor = { NOT = { has_variable = completed_nahuatl_reform_society_disaster_variable } } }
+			AND = { scope:actor = { pop_type_population_in_country = { pop_type = pop_type:slaves value > 0.1 } } }
+		}
+	}
+}
 bag_rtk_cd_gate_ceremonial_festivals = {
 	OR = {
 	AND = {
 			scope:actor.religion = religion:nahuatl scope:actor = { NOT = { has_variable = completed_nahuatl_reform_society_disaster_variable } }
+		}
+	}
+}
+bag_rtk_cd_ready_ceremonial_festivals = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = religion:nahuatl scope:actor = { NOT = { has_variable = completed_nahuatl_reform_society_disaster_variable } } }
+			AND = { scope:actor = { pop_type_population_in_country = { pop_type = pop_type:slaves value > 0.1 } } }
 		}
 	}
 }
@@ -1235,10 +2306,26 @@ bag_rtk_cd_gate_open_war_path = {
 		}
 	}
 }
+bag_rtk_cd_ready_open_war_path = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = religion:nahuatl scope:actor = { NOT = { has_variable = completed_nahuatl_reform_society_disaster_variable } } }
+			AND = { scope:actor = { has_completed_religious_focus = institute_flower_wars } }
+		}
+	}
+}
 bag_rtk_cd_gate_pilgrimage_to_cholula = {
 	OR = {
 	AND = {
 			scope:actor.religion = religion:nahuatl
+		}
+	}
+}
+bag_rtk_cd_ready_pilgrimage_to_cholula = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = religion:nahuatl }
+			AND = { scope:actor ?= { has_religious_aspect = religious_aspect:worship_quetzalcoatl_god } }
 		}
 	}
 }
@@ -1249,10 +2336,26 @@ bag_rtk_cd_gate_rally_the_citizenry = {
 		}
 	}
 }
+bag_rtk_cd_ready_rally_the_citizenry = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:oligarchic_capture disaster_is_active = yes } }
+			AND = { scope:actor = { custom_tooltip = { text = oligarchic_faction_active_tt exists = var:oligarchic_faction_rebel } } }
+		}
+	}
+}
 bag_rtk_cd_gate_purge_the_oligarchs = {
 	OR = {
 	AND = {
 			any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:oligarchic_capture disaster_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_purge_the_oligarchs = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:oligarchic_capture disaster_is_active = yes } }
+			AND = { scope:actor = { custom_tooltip = { text = oligarchic_faction_active_tt exists = var:oligarchic_faction_rebel } } }
 		}
 	}
 }
@@ -1263,10 +2366,26 @@ bag_rtk_cd_gate_identify_the_ringleader = {
 		}
 	}
 }
+bag_rtk_cd_ready_identify_the_ringleader = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:oligarchic_capture disaster_is_active = yes } }
+			AND = { scope:actor = { custom_tooltip = { text = oligarchic_ringleader_active_tt exists = var:oligarchic_ringleader_variable } custom_tooltip = { text = oligarchic_ringleader_not_yet_identified_tt NOT = { has_variable = oligarchic_ringleader_revealed_variable } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_confront_the_ringleader = {
 	OR = {
 	AND = {
 			any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:oligarchic_capture disaster_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_confront_the_ringleader = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:oligarchic_capture disaster_is_active = yes } }
+			AND = { scope:actor = { custom_tooltip = { text = oligarchic_ringleader_identified_tt has_variable = oligarchic_ringleader_revealed_variable } } }
 		}
 	}
 }
@@ -1277,6 +2396,14 @@ bag_rtk_cd_gate_negotiate_estate_concessions = {
 		}
 	}
 }
+bag_rtk_cd_ready_negotiate_estate_concessions = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:oligarchic_capture disaster_is_active = yes } }
+			AND = { scope:actor = { custom_tooltip = { text = oligarchic_faction_active_tt exists = var:oligarchic_faction_rebel } } }
+		}
+	}
+}
 bag_rtk_cd_gate_orthodox_synod = {
 	OR = {
 	AND = {
@@ -1284,10 +2411,25 @@ bag_rtk_cd_gate_orthodox_synod = {
 		}
 	}
 }
+bag_rtk_cd_ready_orthodox_synod = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = religion:orthodox }
+		}
+	}
+}
 bag_rtk_cd_gate_invite_patriarch_delegation = {
 	OR = {
 	AND = {
 			scope:actor = { religion = religion:orthodox is_member_of_international_organization_of_type = { type = autocephalous_patriarchate } }
+		}
+	}
+}
+bag_rtk_cd_ready_invite_patriarch_delegation = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { religion = religion:orthodox is_member_of_international_organization_of_type = { type = autocephalous_patriarchate } } }
+			AND = { scope:actor = { NOT = { is_leader_of_international_organization_of_type = { type = autocephalous_patriarchate } } } }
 		}
 	}
 }
@@ -1301,10 +2443,30 @@ bag_rtk_cd_gate_pw_push_for_serfdom = {
 		}
 	}
 }
+bag_rtk_cd_ready_pw_push_for_serfdom = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:peasants_war disaster_is_active = yes } }
+			AND = { scope:actor = { estate_satisfaction:peasants_estate > estate_satisfaction_mild_bonus societal_value:serfdom_vs_free_subjects > -95 } }
+		}
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:peasants_war disaster_is_active = yes } }
+			AND = { scope:actor = { estate_satisfaction:nobles_estate > estate_satisfaction_mild_bonus societal_value:serfdom_vs_free_subjects < 95 } }
+		}
+	}
+}
 bag_rtk_cd_gate_pilgrimage_action = {
 	OR = {
 	AND = {
 			scope:actor.religion = { has_holy_sites = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_pilgrimage_action = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = { has_holy_sites = yes } }
+			AND = { scope:actor = { has_ruler = yes ruler = { NOT = { has_character_modifier = character_on_pilgrimage } owner = scope:actor } } }
 		}
 	}
 }
@@ -1316,10 +2478,26 @@ bag_rtk_cd_gate_spread_reformation_through_trade = {
 		}
 	}
 }
+bag_rtk_cd_ready_spread_reformation_through_trade = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { religion = religion:catholic country_type = building } situation:reformation ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:reformation = this situation_is_active = yes } }
+			AND = { is_situation_active = situation:reformation scope:actor = { any_owned_foreign_building = { building_type = building_type:hanseatic_kontor linked_pop = { religion = religion:catholic } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_get_claim_from_imperial_court = {
 	OR = {
 	AND = {
 			scope:actor.religion = { has_religious_factions = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_get_claim_from_imperial_court = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = { has_religious_factions = yes } }
+			AND = { scope:actor ?= { at_war = no NOT = { is_leader_of_international_organization = international_organization:japanese_shogunate } } }
 		}
 	}
 }
@@ -1330,10 +2508,25 @@ bag_rtk_cd_gate_get_marriage_from_imperial_court = {
 		}
 	}
 }
+bag_rtk_cd_ready_get_marriage_from_imperial_court = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = { has_religious_factions = yes } }
+		}
+	}
+}
 bag_rtk_cd_gate_become_shogun_from_imperial_court = {
 	OR = {
 	AND = {
 			scope:actor ?= { any_international_organizations_member_of = { international_organization_type = international_organization_type:japanese_shogunate } } scope:actor.religion = { has_religious_factions = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_become_shogun_from_imperial_court = {
+	OR = {
+	AND = {
+			AND = { scope:actor ?= { any_international_organizations_member_of = { international_organization_type = international_organization_type:japanese_shogunate } } scope:actor.religion = { has_religious_factions = yes } }
+			AND = { scope:actor ?= { has_regent = no has_ruler = yes ruler ?= { NOT = { has_character_modifier = allowed_shogun_title } } is_japanese_emperor_or_shogun = no } }
 		}
 	}
 }
@@ -1344,10 +2537,26 @@ bag_rtk_cd_gate_appease_nobles_estate_from_shogun_court = {
 		}
 	}
 }
+bag_rtk_cd_ready_appease_nobles_estate_from_shogun_court = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = { has_religious_factions = yes } }
+			AND = { trigger_if = { limit = { international_organization:japanese_shogunate ?= { exists = leader_country } } scope:actor ?= { NOT = { is_at_war_with = international_organization:japanese_shogunate.leader_country } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_increase_levies_from_shogun_court = {
 	OR = {
 	AND = {
 			scope:actor.religion = { has_religious_factions = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_increase_levies_from_shogun_court = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = { has_religious_factions = yes } }
+			AND = { trigger_if = { limit = { international_organization:japanese_shogunate ?= { exists = leader_country } } scope:actor ?= { NOT = { is_at_war_with = international_organization:japanese_shogunate.leader_country } } } }
 		}
 	}
 }
@@ -1358,10 +2567,26 @@ bag_rtk_cd_gate_increase_tax_income_from_shogun_court = {
 		}
 	}
 }
+bag_rtk_cd_ready_increase_tax_income_from_shogun_court = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = { has_religious_factions = yes } }
+			AND = { trigger_if = { limit = { international_organization:japanese_shogunate ?= { exists = leader_country } } scope:actor ?= { NOT = { is_at_war_with = international_organization:japanese_shogunate.leader_country } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_demand_extra_payment_from_shogun_court = {
 	OR = {
 	AND = {
 			scope:actor.religion = { has_religious_factions = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_demand_extra_payment_from_shogun_court = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = { has_religious_factions = yes } }
+			AND = { international_organization:japanese_shogunate ?= { exists = leader_country } scope:actor ?= { NOT = { is_leader_of_international_organization = international_organization:japanese_shogunate } NOT = { is_at_war_with = international_organization:japanese_shogunate.leader_country } OR = { monthly_income_trade_and_tax > 0 monthly_manpower > 0 } } international_organization:japanese_shogunate.leader_country ?= { opinion = { target = scope:actor value >= -50 } } }
 		}
 	}
 }
@@ -1372,10 +2597,25 @@ bag_rtk_cd_gate_increase_peasant_satisfaction_from_ikko_ikki = {
 		}
 	}
 }
+bag_rtk_cd_ready_increase_peasant_satisfaction_from_ikko_ikki = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = { has_religious_factions = yes } }
+		}
+	}
+}
 bag_rtk_cd_gate_reduce_rebels_from_ikko_ikki = {
 	OR = {
 	AND = {
 			scope:actor.religion = { has_religious_factions = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_reduce_rebels_from_ikko_ikki = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = { has_religious_factions = yes } }
+			AND = { scope:actor ?= { any_rebel = { rebel_progress > 0.5 rebel_category = religious } } }
 		}
 	}
 }
@@ -1386,10 +2626,25 @@ bag_rtk_cd_gate_allow_safe_refuge = {
 		}
 	}
 }
+bag_rtk_cd_ready_allow_safe_refuge = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = { has_religious_factions = yes } }
+		}
+	}
+}
 bag_rtk_cd_gate_crackdown_their_strongholds = {
 	OR = {
 	AND = {
 			scope:actor.religion = { has_religious_factions = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_crackdown_their_strongholds = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = { has_religious_factions = yes } }
+			AND = { scope:actor ?= { NOT = { is_member_of_international_organization = "religion:shinto.var:ikko_ikki_enabled" } OR = { AND = { country_type = building any_owned_foreign_building_location = { is_owned_by_international_organization = "religion:shinto.var:ikko_ikki_enabled" } } AND = { country_type = location any_owned_location = { is_owned_by_international_organization = "religion:shinto.var:ikko_ikki_enabled" } } } } }
 		}
 	}
 }
@@ -1400,10 +2655,24 @@ bag_rtk_cd_gate_increase_literacy_from_religious_sects = {
 		}
 	}
 }
+bag_rtk_cd_ready_increase_literacy_from_religious_sects = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = { has_religious_factions = yes } }
+		}
+	}
+}
 bag_rtk_cd_gate_increase_clergy_satisfaction_from_religious_sects = {
 	OR = {
 	AND = {
 			scope:actor.religion = { has_religious_factions = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_increase_clergy_satisfaction_from_religious_sects = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = { has_religious_factions = yes } }
 		}
 	}
 }
@@ -1414,10 +2683,26 @@ bag_rtk_cd_gate_favor_buddhist_schools_from_religious_sects = {
 		}
 	}
 }
+bag_rtk_cd_ready_favor_buddhist_schools_from_religious_sects = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = { has_religious_factions = yes } }
+			AND = { scope:actor = { NOT = { has_country_modifier = favoring_buddhism_schools } } }
+		}
+	}
+}
 bag_rtk_cd_gate_favor_kami_worship_from_religious_sects = {
 	OR = {
 	AND = {
 			scope:actor.religion = { has_religious_factions = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_favor_kami_worship_from_religious_sects = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = { has_religious_factions = yes } }
+			AND = { scope:actor = { NOT = { has_country_modifier = favoring_kami_worship } } }
 		}
 	}
 }
@@ -1428,10 +2713,26 @@ bag_rtk_cd_gate_keep_kami_and_buddha_balanced_from_religious_sects = {
 		}
 	}
 }
+bag_rtk_cd_ready_keep_kami_and_buddha_balanced_from_religious_sects = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = { has_religious_factions = yes } }
+			AND = { scope:actor = { OR = { has_country_modifier = favoring_kami_worship has_country_modifier = favoring_buddhism_schools } } }
+		}
+	}
+}
 bag_rtk_cd_gate_baptize_ruler_from_kirishitan = {
 	OR = {
 	AND = {
 			scope:actor.religion = { has_religious_factions = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_baptize_ruler_from_kirishitan = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = { has_religious_factions = yes } }
+			AND = { scope:actor ?= { ruler ?= { religion.group != religion_group:christian } NOT = { has_country_modifier = limited_kirishitan_movement } } }
 		}
 	}
 }
@@ -1442,10 +2743,26 @@ bag_rtk_cd_gate_hold_public_kirishitan_mass = {
 		}
 	}
 }
+bag_rtk_cd_ready_hold_public_kirishitan_mass = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = { has_religious_factions = yes } }
+			AND = { scope:actor ?= { exists = capital NOT = { has_country_modifier = limited_kirishitan_movement } } }
+		}
+	}
+}
 bag_rtk_cd_gate_establish_treaty_with_kirishitan = {
 	OR = {
 	AND = {
 			scope:actor.religion = { has_religious_factions = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_establish_treaty_with_kirishitan = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = { has_religious_factions = yes } }
+			AND = { scope:actor = { exists = capital NOT = { has_country_modifier = limited_kirishitan_movement } } }
 		}
 	}
 }
@@ -1456,10 +2773,26 @@ bag_rtk_cd_gate_limit_movement_of_kirishitan = {
 		}
 	}
 }
+bag_rtk_cd_ready_limit_movement_of_kirishitan = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = { has_religious_factions = yes } }
+		}
+	}
+}
 bag_rtk_cd_gate_invite_religious_order = {
 	OR = {
 	AND = {
 			scope:actor.religion = { has_religious_orders = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_invite_religious_order = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = { has_religious_orders = yes } }
+			AND = { scope:actor = { at_war = no any_owned_location = { location_can_host_order_holding_trigger = yes } } }
+			scope:actor.religion = { any_religious_order_in_religion = { order_type = { religious_order_type_foundable_by = scope:actor } } }
 		}
 	}
 }
@@ -1470,10 +2803,26 @@ bag_rtk_cd_gate_cabalgada_raids = {
 		}
 	}
 }
+bag_rtk_cd_ready_cabalgada_raids = {
+	OR = {
+	AND = {
+			AND = { actor_has_order_of_calling_trigger = { CALLING = wardens_calling } }
+			AND = { scope:actor = { at_war = yes any_enemy_war_leader = { NOT = { religion.group = scope:actor.religion.group } } NOT = { has_country_modifier = wardens_cabalgada_modifier } } }
+		}
+	}
+}
 bag_rtk_cd_gate_feed_the_poor = {
 	OR = {
 	AND = {
 			actor_has_order_of_calling_trigger = { CALLING = almoners_calling }
+		}
+	}
+}
+bag_rtk_cd_ready_feed_the_poor = {
+	OR = {
+	AND = {
+			AND = { actor_has_order_of_calling_trigger = { CALLING = almoners_calling } }
+			AND = { scope:actor = { country_has_estate = estate_type:peasants_estate } }
 		}
 	}
 }
@@ -1484,10 +2833,26 @@ bag_rtk_cd_gate_bless_the_banners = {
 		}
 	}
 }
+bag_rtk_cd_ready_bless_the_banners = {
+	OR = {
+	AND = {
+			AND = { actor_has_order_of_calling_trigger = { CALLING = crusaders_calling } }
+			AND = { scope:actor = { at_war = yes any_enemy_war_leader = { NOT = { religion.group = scope:actor.religion.group } } NOT = { has_country_modifier = crusaders_blessed_banners_modifier } } }
+		}
+	}
+}
 bag_rtk_cd_gate_escort_the_sea_lanes = {
 	OR = {
 	AND = {
 			actor_has_order_of_calling_trigger = { CALLING = mariners_calling }
+		}
+	}
+}
+bag_rtk_cd_ready_escort_the_sea_lanes = {
+	OR = {
+	AND = {
+			AND = { actor_has_order_of_calling_trigger = { CALLING = mariners_calling } }
+			AND = { scope:actor = { NOT = { has_country_modifier = mariners_escort_modifier } } }
 		}
 	}
 }
@@ -1498,10 +2863,26 @@ bag_rtk_cd_gate_entrust_the_chancery = {
 		}
 	}
 }
+bag_rtk_cd_ready_entrust_the_chancery = {
+	OR = {
+	AND = {
+			AND = { actor_has_order_of_calling_trigger = { CALLING = confidants_calling } }
+			AND = { scope:actor = { NOT = { has_country_modifier = confidants_chancery_modifier } } }
+		}
+	}
+}
 bag_rtk_cd_gate_pray_for_the_realm = {
 	OR = {
 	AND = {
 			actor_has_order_of_calling_trigger = { CALLING = contemplatives_calling }
+		}
+	}
+}
+bag_rtk_cd_ready_pray_for_the_realm = {
+	OR = {
+	AND = {
+			AND = { actor_has_order_of_calling_trigger = { CALLING = contemplatives_calling } }
+			AND = { scope:actor = { NOT = { has_country_modifier = contemplatives_intercessions_modifier } } }
 		}
 	}
 }
@@ -1512,10 +2893,25 @@ bag_rtk_cd_gate_open_the_scriptoria = {
 		}
 	}
 }
+bag_rtk_cd_ready_open_the_scriptoria = {
+	OR = {
+	AND = {
+			AND = { actor_has_order_of_calling_trigger = { CALLING = scholars_calling } }
+			AND = { scope:actor = { NOT = { has_country_modifier = scholars_scriptoria_modifier } } }
+		}
+	}
+}
 bag_rtk_cd_gate_break_new_ground = {
 	OR = {
 	AND = {
 			actor_has_order_of_calling_trigger = { CALLING = cultivators_calling }
+		}
+	}
+}
+bag_rtk_cd_ready_break_new_ground = {
+	OR = {
+	AND = {
+			AND = { actor_has_order_of_calling_trigger = { CALLING = cultivators_calling } }
 		}
 	}
 }
@@ -1526,10 +2922,25 @@ bag_rtk_cd_gate_preach_a_mission = {
 		}
 	}
 }
+bag_rtk_cd_ready_preach_a_mission = {
+	OR = {
+	AND = {
+			AND = { actor_has_order_of_calling_trigger = { CALLING = preachers_calling } }
+			AND = { scope:actor = { any_owned_location = { NOT = { dominant_religion = scope:actor.religion } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_absolve_the_court = {
 	OR = {
 	AND = {
 			actor_has_order_of_calling_trigger = { CALLING = confessors_calling } scope:actor = { uses_government_power = legitimacy }
+		}
+	}
+}
+bag_rtk_cd_ready_absolve_the_court = {
+	OR = {
+	AND = {
+			AND = { actor_has_order_of_calling_trigger = { CALLING = confessors_calling } scope:actor = { uses_government_power = legitimacy } }
 		}
 	}
 }
@@ -1540,10 +2951,25 @@ bag_rtk_cd_gate_change_order_calling = {
 		}
 	}
 }
+bag_rtk_cd_ready_change_order_calling = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { has_any_religious_order_presence = yes } }
+			AND = { scope:actor = { num_order_holdings > 0 } }
+		}
+	}
+}
 bag_rtk_cd_gate_rt_push_for_spiritualist = {
 	OR = {
 	AND = {
 			any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:religious_turmoil disaster_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_rt_push_for_spiritualist = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:religious_turmoil disaster_is_active = yes } }
 		}
 	}
 }
@@ -1554,6 +2980,13 @@ bag_rtk_cd_gate_rt_push_for_humanist = {
 		}
 	}
 }
+bag_rtk_cd_ready_rt_push_for_humanist = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:religious_turmoil disaster_is_active = yes } }
+		}
+	}
+}
 bag_rtk_cd_gate_rt_support_conversion_efforts = {
 	OR = {
 	AND = {
@@ -1561,10 +2994,25 @@ bag_rtk_cd_gate_rt_support_conversion_efforts = {
 		}
 	}
 }
+bag_rtk_cd_ready_rt_support_conversion_efforts = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:religious_turmoil disaster_is_active = yes } }
+		}
+	}
+}
 bag_rtk_cd_gate_press_claims_cooldown_key = {
 	OR = {
 	AND = {
 			situation:rise_of_the_ottomans ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:rise_of_the_ottomans = this situation_is_active = yes var:strongest_beylik_variable = scope:actor }
+		}
+	}
+}
+bag_rtk_cd_ready_press_claims_cooldown_key = {
+	OR = {
+	AND = {
+			AND = { situation:rise_of_the_ottomans ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:rise_of_the_ottomans = this situation_is_active = yes var:strongest_beylik_variable = scope:actor } }
+			AND = { scope:actor = { at_war = no has_raised_levies = no } }
 		}
 	}
 }
@@ -1576,11 +3024,27 @@ bag_rtk_cd_gate_raise_bey_fortress_key = {
 		}
 	}
 }
+bag_rtk_cd_ready_raise_bey_fortress_key = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { has_reform = government_reform:anatolian_beylik } situation:rise_of_the_ottomans ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:rise_of_the_ottomans = this situation_is_active = yes } }
+			AND = { scope:actor = { at_war = no is_during_bankruptcy = no } }
+		}
+	}
+}
 bag_rtk_cd_gate_seek_relations_with_the_byzantines_cooldown_key = {
 	OR = {
 	AND = {
 			scope:actor = { has_reform = government_reform:anatolian_beylik } country_exists = c:BYZ c:BYZ ?= { is_subject = no owns = location:constantinople }
 			situation:rise_of_the_ottomans ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:rise_of_the_ottomans = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_seek_relations_with_the_byzantines_cooldown_key = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { has_reform = government_reform:anatolian_beylik } country_exists = c:BYZ c:BYZ ?= { is_subject = no owns = location:constantinople } situation:rise_of_the_ottomans ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:rise_of_the_ottomans = this situation_is_active = yes } }
+			AND = { scope:actor = { relative_strength = { target = c:BYZ value > 0.5 } government_power > 60 NOT = { AND = { exists = c:BYZ is_at_war_with = c:BYZ } } } custom_tooltip = { text = byz_not_considering_proposal_from_another_beylik c:BYZ ?= { NOR = { has_variable = beylik_requests_official_sponsorship_var has_variable = beylik_requests_money_var has_variable = beylik_requests_royal_gifts_var } } } }
 		}
 	}
 }
@@ -1592,11 +3056,27 @@ bag_rtk_cd_gate_examine_our_fortifications_key = {
 		}
 	}
 }
+bag_rtk_cd_ready_examine_our_fortifications_key = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { has_reform = government_reform:anatolian_beylik } situation:rise_of_the_ottomans ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:rise_of_the_ottomans = this situation_is_active = yes } }
+			AND = { scope:actor = { any_fort_in_country = { count > 0 } at_war = no } }
+		}
+	}
+}
 bag_rtk_cd_gate_offer_diplomatic_protection_key = {
 	OR = {
 	AND = {
 			scope:actor = { has_reform = government_reform:anatolian_beylik }
 			situation:rise_of_the_ottomans ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:rise_of_the_ottomans = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_offer_diplomatic_protection_key = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { has_reform = government_reform:anatolian_beylik } situation:rise_of_the_ottomans ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:rise_of_the_ottomans = this situation_is_active = yes } }
+			AND = { scope:actor = { at_war = no has_regent = no ruler ?= { has_dynasty = yes } } }
 		}
 	}
 }
@@ -1608,6 +3088,14 @@ bag_rtk_cd_gate_invade_neighbor_beylik = {
 		}
 	}
 }
+bag_rtk_cd_ready_invade_neighbor_beylik = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { has_reform = government_reform:anatolian_beylik } situation:rise_of_the_ottomans ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:rise_of_the_ottomans = this situation_is_active = yes } }
+			AND = { scope:actor = { at_war = no has_regent = no } }
+		}
+	}
+}
 bag_rtk_cd_gate_invite_turkic_migration = {
 	OR = {
 	AND = {
@@ -1616,11 +3104,27 @@ bag_rtk_cd_gate_invite_turkic_migration = {
 		}
 	}
 }
+bag_rtk_cd_ready_invite_turkic_migration = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { has_variable = enable_turkic_migration_variable culture = { has_culture_group = culture_group:turkic_group } } situation:rise_of_the_ottomans ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:rise_of_the_ottomans = this situation_is_active = yes var:strongest_beylik_variable = scope:actor } }
+			AND = { scope:actor = { any_province = { culture_percentage = { culture = scope:actor.culture value > 0.5 } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_create_uc_bey = {
 	OR = {
 	AND = {
 			scope:actor = { has_reform = government_reform:anatolian_beylik }
 			situation:rise_of_the_ottomans ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:rise_of_the_ottomans = this situation_is_active = yes var:strongest_beylik_variable = scope:actor }
+		}
+	}
+}
+bag_rtk_cd_ready_create_uc_bey = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { has_reform = government_reform:anatolian_beylik } situation:rise_of_the_ottomans ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:rise_of_the_ottomans = this situation_is_active = yes var:strongest_beylik_variable = scope:actor } }
+			AND = { scope:actor = { at_war = no any_subject = { is_subject_type = vassal is_disloyal_subject = no monthly_manpower > 0 at_war = no } } }
 		}
 	}
 }
@@ -1634,11 +3138,31 @@ bag_rtk_cd_gate_pw_push_for_aristocracy = {
 		}
 	}
 }
+bag_rtk_cd_ready_pw_push_for_aristocracy = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:rise_of_the_szlachta disaster_is_active = yes } }
+			AND = { scope:actor = { estate_satisfaction:peasants_estate > estate_satisfaction_mild_bonus societal_value:aristocracy_vs_plutocracy > -95 } }
+		}
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:rise_of_the_szlachta disaster_is_active = yes } }
+			AND = { scope:actor = { estate_satisfaction:peasants_estate > estate_satisfaction_mild_bonus societal_value:aristocracy_vs_plutocracy < 90 } }
+		}
+	}
+}
 bag_rtk_cd_gate_rot_declare_conquest_ambition = {
 	OR = {
 	AND = {
 			scope:actor = { tag = TIM }
 			situation:rise_of_timur ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:rise_of_timur = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_rot_declare_conquest_ambition = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { tag = TIM } situation:rise_of_timur ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:rise_of_timur = this situation_is_active = yes } }
+			AND = { scope:actor = { is_rebel_country = no } }
 		}
 	}
 }
@@ -1650,11 +3174,26 @@ bag_rtk_cd_gate_rot_plan_invasion = {
 		}
 	}
 }
+bag_rtk_cd_ready_rot_plan_invasion = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { tag = TIM } situation:rise_of_timur ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:rise_of_timur = this situation_is_active = yes } }
+			AND = { scope:actor = { is_rebel_country = no } }
+		}
+	}
+}
 bag_rtk_cd_gate_perform_tantric_ritual = {
 	OR = {
 	AND = {
 			scope:actor = { any_international_organizations_member_of = { international_organization_has_policy = policy:vajrayana_policy } }
 			scope:actor.religion ?= {save_temporary_scope_as = bag_rtk_cd_cand has_sects = yes scope:actor = { any_international_organizations_member_of = { international_organization_has_policy = policy:vajrayana_policy has_variable = religion var:religion ?= scope:bag_rtk_cd_cand } } }
+		}
+	}
+}
+bag_rtk_cd_ready_perform_tantric_ritual = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { any_international_organizations_member_of = { international_organization_has_policy = policy:vajrayana_policy } } scope:actor.religion ?= {save_temporary_scope_as = bag_rtk_cd_cand has_sects = yes scope:actor = { any_international_organizations_member_of = { international_organization_has_policy = policy:vajrayana_policy has_variable = religion var:religion ?= scope:bag_rtk_cd_cand } } } }
 		}
 	}
 }
@@ -1666,11 +3205,25 @@ bag_rtk_cd_gate_organize_spiritual_retreat = {
 		}
 	}
 }
+bag_rtk_cd_ready_organize_spiritual_retreat = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { any_international_organizations_member_of = { international_organization_has_policy = policy:vajrayana_policy } } scope:actor.religion ?= {save_temporary_scope_as = bag_rtk_cd_cand has_sects = yes scope:actor = { any_international_organizations_member_of = { international_organization_has_policy = policy:vajrayana_policy has_variable = religion var:religion ?= scope:bag_rtk_cd_cand } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_commission_religious_images = {
 	OR = {
 	AND = {
 			scope:actor = { any_international_organizations_member_of = { international_organization_has_policy = policy:vajrayana_policy } }
 			scope:actor.religion ?= {save_temporary_scope_as = bag_rtk_cd_cand has_sects = yes scope:actor = { any_international_organizations_member_of = { international_organization_has_policy = policy:vajrayana_policy has_variable = religion var:religion ?= scope:bag_rtk_cd_cand } } }
+		}
+	}
+}
+bag_rtk_cd_ready_commission_religious_images = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { any_international_organizations_member_of = { international_organization_has_policy = policy:vajrayana_policy } } scope:actor.religion ?= {save_temporary_scope_as = bag_rtk_cd_cand has_sects = yes scope:actor = { any_international_organizations_member_of = { international_organization_has_policy = policy:vajrayana_policy has_variable = religion var:religion ?= scope:bag_rtk_cd_cand } } } }
 		}
 	}
 }
@@ -1682,11 +3235,27 @@ bag_rtk_cd_gate_sengoku_revoke_clans_land = {
 		}
 	}
 }
+bag_rtk_cd_ready_sengoku_revoke_clans_land = {
+	OR = {
+	AND = {
+			AND = { scope:actor ?= { is_leader_of_international_organization = international_organization:japanese_shogunate } situation:sengoku ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:sengoku = this situation_is_active = yes } }
+			AND = { scope:actor ?= { at_war = no } }
+		}
+	}
+}
 bag_rtk_cd_gate_sengoku_limit_clans_autonomy = {
 	OR = {
 	AND = {
 			scope:actor ?= { is_leader_of_international_organization = international_organization:japanese_shogunate }
 			situation:sengoku ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:sengoku = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_sengoku_limit_clans_autonomy = {
+	OR = {
+	AND = {
+			AND = { scope:actor ?= { is_leader_of_international_organization = international_organization:japanese_shogunate } situation:sengoku ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:sengoku = this situation_is_active = yes } }
+			AND = { scope:actor ?= { at_war = no } }
 		}
 	}
 }
@@ -1698,11 +3267,27 @@ bag_rtk_cd_gate_sengoku_summon_to_court = {
 		}
 	}
 }
+bag_rtk_cd_ready_sengoku_summon_to_court = {
+	OR = {
+	AND = {
+			AND = { scope:actor ?= { is_leader_of_international_organization = international_organization:japanese_shogunate } situation:sengoku ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:sengoku = this situation_is_active = yes } }
+			AND = { scope:actor ?= { at_war = no } }
+		}
+	}
+}
 bag_rtk_cd_gate_sengoku_offer_hostage = {
 	OR = {
 	AND = {
 			scope:actor ?= { is_member_of_international_organization = international_organization:japanese_shogunate }
 			situation:sengoku ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:sengoku = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_sengoku_offer_hostage = {
+	OR = {
+	AND = {
+			AND = { scope:actor ?= { is_member_of_international_organization = international_organization:japanese_shogunate } situation:sengoku ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:sengoku = this situation_is_active = yes } }
+			AND = { scope:actor ?= { at_war = no ruler ?= { any_close_relative = { owner ?= scope:actor OR = { is_adult = no AND = { is_female = yes is_married = no } } } } } }
 		}
 	}
 }
@@ -1714,6 +3299,14 @@ bag_rtk_cd_gate_sengoku_ask_for_hostage = {
 		}
 	}
 }
+bag_rtk_cd_ready_sengoku_ask_for_hostage = {
+	OR = {
+	AND = {
+			AND = { scope:actor ?= { is_member_of_international_organization = international_organization:japanese_shogunate } situation:sengoku ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:sengoku = this situation_is_active = yes } }
+			AND = { scope:actor ?= { at_war = no } }
+		}
+	}
+}
 bag_rtk_cd_gate_sengoku_prove_heritage = {
 	OR = {
 	AND = {
@@ -1722,10 +3315,26 @@ bag_rtk_cd_gate_sengoku_prove_heritage = {
 		}
 	}
 }
+bag_rtk_cd_ready_sengoku_prove_heritage = {
+	OR = {
+	AND = {
+			AND = { scope:actor ?= { is_member_of_international_organization = international_organization:japanese_shogunate NOT = { has_reform = government_reform:japanese_imperial_family } } situation:sengoku ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:sengoku = this situation_is_active = yes } }
+			AND = { scope:actor ?= { at_war = no } }
+		}
+	}
+}
 bag_rtk_cd_gate_sc_seek_foreign_aid = {
 	OR = {
 	AND = {
 			any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand OR = { disaster_type = disaster_type:byzantine_succession_crisis disaster_type = disaster_type:castilian_civil_war disaster_type = disaster_type:succession_crisis } disaster_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_sc_seek_foreign_aid = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand OR = { disaster_type = disaster_type:byzantine_succession_crisis disaster_type = disaster_type:castilian_civil_war disaster_type = disaster_type:succession_crisis } disaster_is_active = yes } }
+			AND = { scope:actor = { in_civil_war = no at_war = no } }
 		}
 	}
 }
@@ -1737,11 +3346,27 @@ bag_rtk_cd_gate_sc_commission_dynastic_history = {
 		}
 	}
 }
+bag_rtk_cd_ready_sc_commission_dynastic_history = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { has_ruler = yes ruler ?= { has_dynasty = yes } } any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_is_active = yes OR = { disaster_type = disaster_type:byzantine_succession_crisis disaster_type = disaster_type:castilian_civil_war disaster_type = disaster_type:succession_crisis } } }
+			AND = { scope:actor = { in_civil_war = no at_war = no any_artist = { artist_type = writer } } }
+		}
+	}
+}
 bag_rtk_cd_gate_sc_ask_help_from_the_nobility = {
 	OR = {
 	AND = {
 			scope:actor = { country_has_estate = estate_type:nobles_estate }
 			any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand OR = { disaster_type = disaster_type:byzantine_succession_crisis disaster_type = disaster_type:castilian_civil_war disaster_type = disaster_type:succession_crisis } disaster_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_sc_ask_help_from_the_nobility = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { country_has_estate = estate_type:nobles_estate } any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand OR = { disaster_type = disaster_type:byzantine_succession_crisis disaster_type = disaster_type:castilian_civil_war disaster_type = disaster_type:succession_crisis } disaster_is_active = yes } }
+			AND = { scope:actor = { in_civil_war = no at_war = no num_possible_estate_privileges:nobles_estate > 0 trigger_if = { limit = { has_variable = succession_crisis_pretender_variable } var:succession_crisis_pretender_variable = { has_support_from = pop_type:nobles } } } }
 		}
 	}
 }
@@ -1753,11 +3378,27 @@ bag_rtk_cd_gate_sc_ask_help_from_the_clergy = {
 		}
 	}
 }
+bag_rtk_cd_ready_sc_ask_help_from_the_clergy = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { country_has_estate = estate_type:clergy_estate } any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand OR = { disaster_type = disaster_type:byzantine_succession_crisis disaster_type = disaster_type:castilian_civil_war disaster_type = disaster_type:succession_crisis } disaster_is_active = yes } }
+			AND = { scope:actor = { in_civil_war = no at_war = no num_possible_estate_privileges:clergy_estate > 0 trigger_if = { limit = { has_variable = succession_crisis_pretender_variable } var:succession_crisis_pretender_variable = { has_support_from = pop_type:nobles } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_sc_ask_help_from_the_burghers = {
 	OR = {
 	AND = {
 			scope:actor = { country_has_estate = estate_type:burghers_estate }
 			any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand OR = { disaster_type = disaster_type:byzantine_succession_crisis disaster_type = disaster_type:castilian_civil_war disaster_type = disaster_type:succession_crisis } disaster_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_sc_ask_help_from_the_burghers = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { country_has_estate = estate_type:burghers_estate } any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand OR = { disaster_type = disaster_type:byzantine_succession_crisis disaster_type = disaster_type:castilian_civil_war disaster_type = disaster_type:succession_crisis } disaster_is_active = yes } }
+			AND = { scope:actor = { in_civil_war = no at_war = no num_possible_estate_privileges:burghers_estate > 0 trigger_if = { limit = { has_variable = succession_crisis_pretender_variable } var:succession_crisis_pretender_variable = { has_support_from = pop_type:nobles } } } }
 		}
 	}
 }
@@ -1769,10 +3410,25 @@ bag_rtk_cd_gate_break_the_yoke = {
 		}
 	}
 }
+bag_rtk_cd_ready_break_the_yoke = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { is_member_of_international_organization = international_organization:tatar_yoke NOT = { is_leader_of_international_organization = international_organization:tatar_yoke } } any_international_organization = {scope:actor = { is_member_of_international_organization = prev } save_temporary_scope_as = bag_rtk_cd_cand this = international_organization:tatar_yoke } }
+			AND = { scope:actor = { is_subject = no NOT = { is_at_war_with = international_organization:tatar_yoke.leader_country } NOT = { has_truce_with = international_organization:tatar_yoke.leader_country } NOT = { receiving_scripted_relation_of_type = relation_type:rein_in_junior_diplomacy } } }
+		}
+	}
+}
 bag_rtk_cd_gate_institute_governmental_purges_key = {
 	OR = {
 	AND = {
 			situation:the_revolution ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:the_revolution = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_institute_governmental_purges_key = {
+	OR = {
+	AND = {
+			AND = { situation:the_revolution ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:the_revolution = this situation_is_active = yes } }
 		}
 	}
 }
@@ -1784,11 +3440,27 @@ bag_rtk_cd_gate_suppress_foreign_revolutionaries_key = {
 		}
 	}
 }
+bag_rtk_cd_ready_suppress_foreign_revolutionaries_key = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { NOT = { revolutionary_target ?= this } is_revolutionary = no } situation:the_revolution ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:the_revolution = this situation_is_active = yes } }
+			AND = { scope:actor = { at_war = no } }
+		}
+	}
+}
 bag_rtk_cd_gate_assist_foreign_revolutionaries_key = {
 	OR = {
 	AND = {
 			scope:actor = { OR = { is_revolutionary = yes is_revolution_target = yes } }
 			situation:the_revolution ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:the_revolution = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_assist_foreign_revolutionaries_key = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { OR = { is_revolutionary = yes is_revolution_target = yes } } situation:the_revolution ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:the_revolution = this situation_is_active = yes } }
+			AND = { scope:actor = { at_war = no manpower_percentage > 0.2 } }
 		}
 	}
 }
@@ -1799,10 +3471,26 @@ bag_rtk_cd_gate_elevate_local_aristocracy_key = {
 		}
 	}
 }
+bag_rtk_cd_ready_elevate_local_aristocracy_key = {
+	OR = {
+	AND = {
+			AND = { situation:the_revolution ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:the_revolution = this situation_is_active = yes } }
+			AND = { scope:actor = { at_war = no } }
+		}
+	}
+}
 bag_rtk_cd_gate_demote_local_aristocracy_key = {
 	OR = {
 	AND = {
 			situation:the_revolution ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:the_revolution = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_demote_local_aristocracy_key = {
+	OR = {
+	AND = {
+			AND = { situation:the_revolution ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:the_revolution = this situation_is_active = yes } }
+			AND = { scope:actor = { at_war = no } }
 		}
 	}
 }
@@ -1813,11 +3501,27 @@ bag_rtk_cd_gate_reestablish_the_parliament_key = {
 		}
 	}
 }
+bag_rtk_cd_ready_reestablish_the_parliament_key = {
+	OR = {
+	AND = {
+			AND = { situation:the_revolution ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:the_revolution = this situation_is_active = yes } }
+			AND = { scope:actor = { has_policy = absolute_rule_policy government_power >= { value = { add = 100 multiply = "scope:actor.estate_power(estate_type:crown_estate)" add = 1 ceiling = yes } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_spread_revolutionary_sentiment = {
 	OR = {
 	AND = {
 			scope:actor = { is_revolutionary = yes }
 			situation:the_revolution ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:the_revolution = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_spread_revolutionary_sentiment = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { is_revolutionary = yes } situation:the_revolution ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:the_revolution = this situation_is_active = yes } }
+			AND = { scope:actor = { at_war = no is_subject = no } }
 		}
 	}
 }
@@ -1833,6 +3537,17 @@ bag_rtk_cd_gate_tordesillas_claim_area_cooldown = {
 		}
 	}
 }
+bag_rtk_cd_ready_tordesillas_claim_area_cooldown = {
+	OR = {
+	AND = {
+			AND = { situation:treaty_of_tordesillas = { has_variable = var_west_country has_variable = var_east_country } trigger_if = { limit = { situation:treaty_of_tordesillas = { has_variable = var_west_country has_variable = var_east_country } } OR = { scope:actor = situation:treaty_of_tordesillas.var:var_west_country scope:actor = situation:treaty_of_tordesillas.var:var_east_country } } situation:treaty_of_tordesillas.var:var_treaty_phase ?= 1.0 situation:treaty_of_tordesillas ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:treaty_of_tordesillas = this situation_is_active = yes } }
+		}
+	AND = {
+			AND = { situation:treaty_of_tordesillas = { has_variable = var_west_country has_variable = var_east_country } trigger_if = { limit = { situation:treaty_of_tordesillas = { has_variable = var_west_country has_variable = var_east_country } } OR = { scope:actor = situation:treaty_of_tordesillas.var:var_west_country scope:actor = situation:treaty_of_tordesillas.var:var_east_country } } situation:treaty_of_tordesillas.var:var_treaty_phase ?= 1.0 situation:treaty_of_tordesillas ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:treaty_of_tordesillas = this situation_is_active = yes } }
+			AND = { trigger_if = { limit = { scope:actor = situation:treaty_of_tordesillas.var:var_west_country } scope:actor.modifier:diplomatic_reputation > situation:treaty_of_tordesillas.var:var_east_country.modifier:diplomatic_reputation "c:PAP.opinion(scope:actor)">= "c:PAP.opinion(situation:treaty_of_tordesillas.var:var_east_country)" } trigger_else = { scope:actor.modifier:diplomatic_reputation > situation:treaty_of_tordesillas.var:var_west_country.modifier:diplomatic_reputation "c:PAP.opinion(scope:actor)">= "c:PAP.opinion(situation:treaty_of_tordesillas.var:var_west_country)" } }
+		}
+	}
+}
 bag_rtk_cd_gate_tordesillas_revoke_claim = {
 	OR = {
 	AND = {
@@ -1845,11 +3560,29 @@ bag_rtk_cd_gate_tordesillas_revoke_claim = {
 		}
 	}
 }
+bag_rtk_cd_ready_tordesillas_revoke_claim = {
+	OR = {
+	AND = {
+			AND = { situation:treaty_of_tordesillas = { has_variable = var_west_country has_variable = var_east_country } trigger_if = { limit = { situation:treaty_of_tordesillas = { has_variable = var_west_country has_variable = var_east_country } } OR = { scope:actor = situation:treaty_of_tordesillas.var:var_west_country scope:actor = situation:treaty_of_tordesillas.var:var_east_country } } situation:treaty_of_tordesillas.var:var_treaty_phase ?= 1.0 situation:treaty_of_tordesillas ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:treaty_of_tordesillas = this situation_is_active = yes } }
+			AND = { trigger_if = { limit = { scope:actor = situation:treaty_of_tordesillas.var:var_west_country } scope:actor.modifier:diplomatic_reputation > situation:treaty_of_tordesillas.var:var_east_country.modifier:diplomatic_reputation "c:PAP.opinion(scope:actor)">= "c:PAP.opinion(situation:treaty_of_tordesillas.var:var_east_country)" } trigger_else = { scope:actor.modifier:diplomatic_reputation > situation:treaty_of_tordesillas.var:var_west_country.modifier:diplomatic_reputation "c:PAP.opinion(scope:actor)">= "c:PAP.opinion(situation:treaty_of_tordesillas.var:var_west_country)" } }
+		}
+	AND = {
+			AND = { scope:actor = { any_colonial_claim_province_definition = { count > 0 } } situation:treaty_of_tordesillas ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:treaty_of_tordesillas = this situation_is_active = yes situation:treaty_of_tordesillas.var:var_treaty_phase = 2.0 } }
+		}
+	}
+}
 bag_rtk_cd_gate_tordesillas_push_to_settle_treaty = {
 	OR = {
 	AND = {
 			situation:treaty_of_tordesillas = { has_variable = var_west_country has_variable = var_east_country } trigger_if = { limit = { situation:treaty_of_tordesillas = { has_variable = var_west_country has_variable = var_east_country } } OR = { scope:actor = situation:treaty_of_tordesillas.var:var_west_country scope:actor = situation:treaty_of_tordesillas.var:var_east_country } } situation:treaty_of_tordesillas.var:var_treaty_phase ?= 1.0
 			situation:treaty_of_tordesillas ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:treaty_of_tordesillas = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_tordesillas_push_to_settle_treaty = {
+	OR = {
+	AND = {
+			AND = { situation:treaty_of_tordesillas = { has_variable = var_west_country has_variable = var_east_country } trigger_if = { limit = { situation:treaty_of_tordesillas = { has_variable = var_west_country has_variable = var_east_country } } OR = { scope:actor = situation:treaty_of_tordesillas.var:var_west_country scope:actor = situation:treaty_of_tordesillas.var:var_east_country } } situation:treaty_of_tordesillas.var:var_treaty_phase ?= 1.0 situation:treaty_of_tordesillas ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:treaty_of_tordesillas = this situation_is_active = yes } }
 		}
 	}
 }
@@ -1861,11 +3594,25 @@ bag_rtk_cd_gate_tordesillas_move_the_line = {
 		}
 	}
 }
+bag_rtk_cd_ready_tordesillas_move_the_line = {
+	OR = {
+	AND = {
+			AND = { situation:treaty_of_tordesillas = { has_variable = var_west_country has_variable = var_east_country } trigger_if = { limit = { situation:treaty_of_tordesillas = { has_variable = var_west_country has_variable = var_east_country } } OR = { scope:actor = situation:treaty_of_tordesillas.var:var_west_country scope:actor = situation:treaty_of_tordesillas.var:var_east_country } } situation:treaty_of_tordesillas.var:var_treaty_phase ?= 1.0 situation:treaty_of_tordesillas ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:treaty_of_tordesillas = this situation_is_active = yes } }
+		}
+	}
+}
 bag_rtk_cd_gate_tordesillas_swap_sides = {
 	OR = {
 	AND = {
 			situation:treaty_of_tordesillas = { has_variable = var_west_country has_variable = var_east_country } trigger_if = { limit = { exists = situation:treaty_of_tordesillas.var:var_west_country exists = situation:treaty_of_tordesillas.var:var_east_country } OR = { scope:actor = situation:treaty_of_tordesillas.var:var_west_country scope:actor = situation:treaty_of_tordesillas.var:var_east_country } } trigger_else = { always = no } situation:treaty_of_tordesillas.var:var_treaty_phase ?= 1.0
 			situation:treaty_of_tordesillas ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:treaty_of_tordesillas = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_tordesillas_swap_sides = {
+	OR = {
+	AND = {
+			AND = { situation:treaty_of_tordesillas = { has_variable = var_west_country has_variable = var_east_country } trigger_if = { limit = { exists = situation:treaty_of_tordesillas.var:var_west_country exists = situation:treaty_of_tordesillas.var:var_east_country } OR = { scope:actor = situation:treaty_of_tordesillas.var:var_west_country scope:actor = situation:treaty_of_tordesillas.var:var_east_country } } trigger_else = { always = no } situation:treaty_of_tordesillas.var:var_treaty_phase ?= 1.0 situation:treaty_of_tordesillas ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:treaty_of_tordesillas = this situation_is_active = yes } }
 		}
 	}
 }
@@ -1881,11 +3628,30 @@ bag_rtk_cd_gate_violate_treaty_of_tordesillas = {
 		}
 	}
 }
+bag_rtk_cd_ready_violate_treaty_of_tordesillas = {
+	OR = {
+	AND = {
+			AND = { situation:treaty_of_tordesillas = { has_variable = var_east_country } scope:actor ?= { trigger_if = { limit = { situation:treaty_of_tordesillas = { has_variable = var_east_country } } religion = situation:treaty_of_tordesillas.var:var_east_country.religion } NOT = { has_country_modifier = violate_treaty_of_tordesillas } trigger_if = { limit = { situation:treaty_of_tordesillas = { has_variable = var_west_country has_variable = var_east_country } } NAND = { scope:actor = situation:treaty_of_tordesillas.var:var_west_country scope:actor = situation:treaty_of_tordesillas.var:var_east_country } } } situation:treaty_of_tordesillas.var:var_treaty_phase ?= 2.0 situation:treaty_of_tordesillas ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:treaty_of_tordesillas = this situation_is_active = yes } }
+			AND = { scope:actor ?= { trigger_if = { limit = { is_subject = yes exists = top_overlord OR = { scope:actor.top_overlord = situation:treaty_of_tordesillas.var:var_east_country scope:actor.top_overlord = situation:treaty_of_tordesillas.var:var_west_country } } scope:actor.top_overlord ?= { has_country_modifier = violate_treaty_of_tordesillas } } } }
+		}
+	AND = {
+			AND = { scope:actor ?= { has_country_modifier = violate_treaty_of_tordesillas } situation:treaty_of_tordesillas.var:var_treaty_phase ?= 2.0 situation:treaty_of_tordesillas ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:treaty_of_tordesillas = this situation_is_active = yes } }
+			AND = { scope:actor = { NOT = { has_cooldown = violate_treaty_of_tordesillas } } }
+		}
+	}
+}
 bag_rtk_cd_gate_tordesillas_upheld_treaty_relevance = {
 	OR = {
 	AND = {
 			situation:treaty_of_tordesillas = { has_variable = var_west_country has_variable = var_east_country } trigger_if = { limit = { situation:treaty_of_tordesillas = { has_variable = var_west_country has_variable = var_east_country } } OR = { scope:actor = situation:treaty_of_tordesillas.var:var_west_country scope:actor = situation:treaty_of_tordesillas.var:var_east_country } } situation:treaty_of_tordesillas.var:var_treaty_phase ?= 2.0
 			situation:treaty_of_tordesillas ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:treaty_of_tordesillas = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_tordesillas_upheld_treaty_relevance = {
+	OR = {
+	AND = {
+			AND = { situation:treaty_of_tordesillas = { has_variable = var_west_country has_variable = var_east_country } trigger_if = { limit = { situation:treaty_of_tordesillas = { has_variable = var_west_country has_variable = var_east_country } } OR = { scope:actor = situation:treaty_of_tordesillas.var:var_west_country scope:actor = situation:treaty_of_tordesillas.var:var_east_country } } situation:treaty_of_tordesillas.var:var_treaty_phase ?= 2.0 situation:treaty_of_tordesillas ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:treaty_of_tordesillas = this situation_is_active = yes } }
 		}
 	}
 }
@@ -1897,10 +3663,25 @@ bag_rtk_cd_gate_tordesillas_demand_transfer_colony = {
 		}
 	}
 }
+bag_rtk_cd_ready_tordesillas_demand_transfer_colony = {
+	OR = {
+	AND = {
+			AND = { situation:treaty_of_tordesillas = { has_variable = var_west_country has_variable = var_east_country } trigger_if = { limit = { situation:treaty_of_tordesillas = { has_variable = var_west_country has_variable = var_east_country } } OR = { scope:actor = situation:treaty_of_tordesillas.var:var_west_country scope:actor = situation:treaty_of_tordesillas.var:var_east_country } } situation:treaty_of_tordesillas.var:var_treaty_phase ?= 2.0 situation:treaty_of_tordesillas ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:treaty_of_tordesillas = this situation_is_active = yes } }
+		}
+	}
+}
 bag_rtk_cd_gate_bul_restore_the_realms_unity = {
 	OR = {
 	AND = {
 			any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:twilight_of_the_tsardom disaster_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_bul_restore_the_realms_unity = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:twilight_of_the_tsardom disaster_is_active = yes } }
+			AND = { scope:actor = { at_war = no is_subject = no any_neighbor_country = { culture = scope:actor.culture NOT = { is_subject_or_below_of = scope:actor } } } }
 		}
 	}
 }
@@ -1911,10 +3692,26 @@ bag_rtk_cd_gate_bul_reassert_our_authority = {
 		}
 	}
 }
+bag_rtk_cd_ready_bul_reassert_our_authority = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:twilight_of_the_tsardom disaster_is_active = yes } }
+			AND = { scope:actor = { any_owned_location = { has_location_modifier = bul_powerful_local_elites } } }
+		}
+	}
+}
 bag_rtk_cd_gate_bul_push_for_diplomatic_reintegration = {
 	OR = {
 	AND = {
 			any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:twilight_of_the_tsardom disaster_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_bul_push_for_diplomatic_reintegration = {
+	OR = {
+	AND = {
+			AND = { any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:twilight_of_the_tsardom disaster_is_active = yes } }
+			AND = { scope:actor = { num_subjects >= 1 NOT = { has_country_modifier = bul_diplomatic_reintegration } } }
 		}
 	}
 }
@@ -1926,10 +3723,26 @@ bag_rtk_cd_gate_prepare_military_escalation = {
 		}
 	}
 }
+bag_rtk_cd_ready_prepare_military_escalation = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { OR = { is_leader_of_international_organization = international_organization:protestant_union is_leader_of_international_organization = international_organization:catholic_league } NOT = { in_war_of_casus_belli = casus_belli:cb_religious_superiority } } situation:war_of_religions ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:war_of_religions = this situation_is_active = yes } }
+			AND = { situation:war_of_religions = { years_since_situation_start > 10 } exists = international_organization:protestant_union.leader_country exists = international_organization:catholic_league.leader_country }
+		}
+	}
+}
 bag_rtk_cd_gate_demand_member_removal = {
 	OR = {
 	AND = {
 			situation:war_of_religions ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:war_of_religions = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_demand_member_removal = {
+	OR = {
+	AND = {
+			AND = { situation:war_of_religions ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:war_of_religions = this situation_is_active = yes } }
+			AND = { exists = international_organization:protestant_union.leader_country exists = international_organization:catholic_league.leader_country scope:actor = { OR = { is_leader_of_international_organization = international_organization:protestant_union is_leader_of_international_organization = international_organization:catholic_league } NOT = { in_war_of_casus_belli = casus_belli:cb_religious_superiority } } }
 		}
 	}
 }
@@ -1941,11 +3754,27 @@ bag_rtk_cd_gate_wotr_bribe_garrison = {
 		}
 	}
 }
+bag_rtk_cd_ready_wotr_bribe_garrison = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { has_variable = wotr_bribe_garrison_variable } any_active_disaster = {save_temporary_scope_as = bag_rtk_cd_cand disaster_type = disaster_type:war_of_the_roses disaster_is_active = yes } }
+			AND = { scope:actor = { in_civil_war = yes stability > 0 } }
+		}
+	}
+}
 bag_rtk_cd_gate_schism_show_support_for_one_pope = {
 	OR = {
 	AND = {
 			scope:actor = { religion = religion:catholic is_member_of_international_organization = international_organization:catholic_church num_cardinals = 0 NOT = { tag = PAP } }
 			situation:western_schism ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:western_schism = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_schism_show_support_for_one_pope = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { religion = religion:catholic is_member_of_international_organization = international_organization:catholic_church num_cardinals = 0 NOT = { tag = PAP } } situation:western_schism ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:western_schism = this situation_is_active = yes } }
+			AND = { is_situation_active = situation:western_schism }
 		}
 	}
 }
@@ -1957,11 +3786,27 @@ bag_rtk_cd_gate_schism_show_unity_of_faith = {
 		}
 	}
 }
+bag_rtk_cd_ready_schism_show_unity_of_faith = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { religion = religion:catholic is_member_of_international_organization = international_organization:catholic_church } situation:western_schism ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:western_schism = this situation_is_active = yes } }
+			AND = { is_situation_active = situation:western_schism scope:actor = { any_province = { NOT = { has_province_modifier = ws_show_unity_of_faith } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_schism_demand_support_from_one_pope = {
 	OR = {
 	AND = {
 			scope:actor = { religion = religion:catholic is_member_of_international_organization = international_organization:catholic_church num_cardinals = 0 NOT = { tag = PAP } }
 			situation:western_schism ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:western_schism = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_schism_demand_support_from_one_pope = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { religion = religion:catholic is_member_of_international_organization = international_organization:catholic_church num_cardinals = 0 NOT = { tag = PAP } } situation:western_schism ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:western_schism = this situation_is_active = yes } }
+			AND = { is_situation_active = situation:western_schism situation:western_schism = { days_since_situation_start > 365 } }
 		}
 	}
 }
@@ -1972,10 +3817,24 @@ bag_rtk_cd_gate_ask_for_money = {
 		}
 	}
 }
+bag_rtk_cd_ready_ask_for_money = {
+	OR = {
+	AND = {
+			AND = { any_country = {save_temporary_scope_as = bag_rtk_cd_cand not = { scope:bag_rtk_cd_cand = { giving_scripted_relation = { type = relation_type:military_sponsorship target = scope:actor } } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_enforce_culture = {
 	OR = {
 	AND = {
 			any_country = {save_temporary_scope_as = bag_rtk_cd_cand not = { culture = scope:actor.culture } }
+		}
+	}
+}
+bag_rtk_cd_ready_enforce_culture = {
+	OR = {
+	AND = {
+			AND = { any_country = {save_temporary_scope_as = bag_rtk_cd_cand not = { culture = scope:actor.culture } } }
 		}
 	}
 }
@@ -1986,11 +3845,26 @@ bag_rtk_cd_gate_enforce_religion = {
 		}
 	}
 }
+bag_rtk_cd_ready_enforce_religion = {
+	OR = {
+	AND = {
+			AND = { any_country = {save_temporary_scope_as = bag_rtk_cd_cand not = { religion = scope:actor.religion } } }
+		}
+	}
+}
 bag_rtk_cd_gate_enforce_landfriede = {
 	OR = {
 	AND = {
 			exists = international_organization:hre scope:actor = { modifier:allow_landfriede = yes is_emperor = yes }
 			any_country = {save_temporary_scope_as = bag_rtk_cd_cand is_member_of_international_organization = international_organization:hre }
+		}
+	}
+}
+bag_rtk_cd_ready_enforce_landfriede = {
+	OR = {
+	AND = {
+			AND = { exists = international_organization:hre scope:actor = { modifier:allow_landfriede = yes is_emperor = yes } any_country = {save_temporary_scope_as = bag_rtk_cd_cand is_member_of_international_organization = international_organization:hre } }
+			AND = { has_gold_org_country_trigger = { international_organization = international_organization:hre country = scope:actor value = enforce_landfriede_cost } }
 		}
 	}
 }
@@ -2006,11 +3880,31 @@ bag_rtk_cd_gate_ask_to_vote_for_me_as_emperor = {
 		}
 	}
 }
+bag_rtk_cd_ready_ask_to_vote_for_me_as_emperor = {
+	OR = {
+	AND = {
+			AND = { unique_international_organization_type_exists = international_organization_type:hre any_country = {save_temporary_scope_as = bag_rtk_cd_cand is_elector = yes } }
+			AND = { scope:actor = { can_lead_international_organization = international_organization:hre } }
+		}
+	AND = {
+			AND = { unique_international_organization_type_exists = international_organization_type:hre any_country = {save_temporary_scope_as = bag_rtk_cd_cand is_elector = yes } }
+			AND = { scope:actor = { can_lead_international_organization = international_organization:hre } }
+		}
+	}
+}
 bag_rtk_cd_gate_petition_imperial_diet = {
 	OR = {
 	AND = {
 			scope:actor = { is_imperial_circle_leader = yes is_emperor = no }
 			any_country = {save_temporary_scope_as = bag_rtk_cd_cand international_organization:hre = { circles_are_active = yes } }
+		}
+	}
+}
+bag_rtk_cd_ready_petition_imperial_diet = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { is_imperial_circle_leader = yes is_emperor = no } any_country = {save_temporary_scope_as = bag_rtk_cd_cand international_organization:hre = { circles_are_active = yes } } }
+			AND = { scope:actor = { } international_organization:hre ?= { has_ongoing_parliament_debate = no } international_organization:hre ?= { NOT = { resolution_is_active = resolution:policy_vote } } }
 		}
 	}
 }
@@ -2022,11 +3916,26 @@ bag_rtk_cd_gate_request_circle_privilege = {
 		}
 	}
 }
+bag_rtk_cd_ready_request_circle_privilege = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { is_imperial_circle_leader = yes } any_country = {save_temporary_scope_as = bag_rtk_cd_cand international_organization:hre = { circles_are_active = yes } } }
+			AND = { scope:actor = { not = { has_country_modifier = granted_circle_privilege } } }
+		}
+	}
+}
 bag_rtk_cd_gate_challenge_circle_leadership = {
 	OR = {
 	AND = {
 			scope:actor = { is_member_of_international_organization = international_organization:hre is_imperial_circle_leader = no is_emperor = no NOT = { country_type = building } is_subject = no any_imperial_circle_country_is_member_of = { has_circle_leader = yes NOT = { is_dormant_imperial_circle = yes } } }
 			any_country = {save_temporary_scope_as = bag_rtk_cd_cand international_organization:hre = { circles_are_active = yes } NOT = { is_leader_of_international_organization = international_organization:hre } }
+		}
+	}
+}
+bag_rtk_cd_ready_challenge_circle_leadership = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { is_member_of_international_organization = international_organization:hre is_imperial_circle_leader = no is_emperor = no NOT = { country_type = building } is_subject = no any_imperial_circle_country_is_member_of = { has_circle_leader = yes NOT = { is_dormant_imperial_circle = yes } } } any_country = {save_temporary_scope_as = bag_rtk_cd_cand international_organization:hre = { circles_are_active = yes } NOT = { is_leader_of_international_organization = international_organization:hre } } }
 		}
 	}
 }
@@ -2038,11 +3947,27 @@ bag_rtk_cd_gate_appeal_to_emperor = {
 		}
 	}
 }
+bag_rtk_cd_ready_appeal_to_emperor = {
+	OR = {
+	AND = {
+			AND = { always = no scope:actor = { is_member_of_international_organization = international_organization:hre is_imperial_circle_leader = no is_emperor = no } any_country = {save_temporary_scope_as = bag_rtk_cd_cand international_organization:hre = { circles_are_active = yes } } }
+			AND = { scope:actor = { any_imperial_circle_country_is_member_of = { has_circle_leader = yes circle_leader ?= { NOT = { has_country_modifier = imperial_intervention } } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_appeal_to_circle_diet = {
 	OR = {
 	AND = {
 			scope:actor = { is_member_of_international_organization = international_organization:hre is_imperial_circle_leader = no is_emperor = no }
 			any_country = {save_temporary_scope_as = bag_rtk_cd_cand is_imperial_circle_leader = yes in_same_imperial_circle = scope:actor }
+		}
+	}
+}
+bag_rtk_cd_ready_appeal_to_circle_diet = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { is_member_of_international_organization = international_organization:hre is_imperial_circle_leader = no is_emperor = no } any_country = {save_temporary_scope_as = bag_rtk_cd_cand is_imperial_circle_leader = yes in_same_imperial_circle = scope:actor } }
+			AND = { scope:actor = { any_imperial_circle_country_is_member_of = { has_circle_leader = yes circle_leader ?= { custom_tooltip = { text = appeal_to_circle_diet_timeout_tt NOT = { has_variable = appeal_to_circle_diet_timeout } } gold >= { value = monthly_income_trade_and_tax multiply = 4 } } } } }
 		}
 	}
 }
@@ -2054,11 +3979,27 @@ bag_rtk_cd_gate_request_circle_infrastructure_expansion = {
 		}
 	}
 }
+bag_rtk_cd_ready_request_circle_infrastructure_expansion = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { is_member_of_international_organization = international_organization:hre is_imperial_circle_leader = no is_emperor = no } any_country = {save_temporary_scope_as = bag_rtk_cd_cand is_imperial_circle_leader = yes in_same_imperial_circle = scope:actor } }
+			AND = { scope:actor = { any_imperial_circle_country_is_member_of = { has_circle_leader = yes circle_leader ?= { custom_tooltip = { text = request_circle_infrastructure_expansion_timeout_tt NOT = { has_variable = request_circle_infrastructure_expansion_timeout } } } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_request_new_circle_titles = {
 	OR = {
 	AND = {
 			scope:actor = { is_member_of_international_organization = international_organization:hre is_imperial_circle_leader = no is_emperor = no }
 			any_country = {save_temporary_scope_as = bag_rtk_cd_cand is_imperial_circle_leader = yes in_same_imperial_circle = scope:actor }
+		}
+	}
+}
+bag_rtk_cd_ready_request_new_circle_titles = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { is_member_of_international_organization = international_organization:hre is_imperial_circle_leader = no is_emperor = no } any_country = {save_temporary_scope_as = bag_rtk_cd_cand is_imperial_circle_leader = yes in_same_imperial_circle = scope:actor } }
+			AND = { scope:actor = { any_imperial_circle_country_is_member_of = { has_circle_leader = yes circle_leader ?= { custom_tooltip = { text = request_new_circle_titles_timeout_tt NOT = { has_variable = request_new_circle_titles_timeout } } } } } }
 		}
 	}
 }
@@ -2070,11 +4011,25 @@ bag_rtk_cd_gate_improve_cultural_view_subject = {
 		}
 	}
 }
+bag_rtk_cd_ready_improve_cultural_view_subject = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { culture = { dominant_country ?= scope:actor } } any_country = {save_temporary_scope_as = bag_rtk_cd_cand culture = { dominant_country ?= scope:bag_rtk_cd_cand } } }
+		}
+	}
+}
 bag_rtk_cd_gate_incite_desertion = {
 	OR = {
 	AND = {
 			scope:actor = { any_international_organization = { OR = { international_organization_type = international_organization_type:crusade international_organization_type = international_organization_type:jihad } international_organization_target ?= scope:actor total_members > 0 } }
 			any_country = {save_temporary_scope_as = bag_rtk_cd_cand any_international_organizations_member_of = { OR = { international_organization_type = international_organization_type:crusade international_organization_type = international_organization_type:jihad } international_organization_target ?= scope:actor NOT = { leader_country = scope:bag_rtk_cd_cand } } trigger_if = { limit = { exists = international_organization:crusade } NOT = { has_special_status_in_international_organization = { type = special_status:crusade_temporal_leader international_organization = international_organization:crusade } } } }
+		}
+	}
+}
+bag_rtk_cd_ready_incite_desertion = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { any_international_organization = { OR = { international_organization_type = international_organization_type:crusade international_organization_type = international_organization_type:jihad } international_organization_target ?= scope:actor total_members > 0 } } any_country = {save_temporary_scope_as = bag_rtk_cd_cand any_international_organizations_member_of = { OR = { international_organization_type = international_organization_type:crusade international_organization_type = international_organization_type:jihad } international_organization_target ?= scope:actor NOT = { leader_country = scope:bag_rtk_cd_cand } } trigger_if = { limit = { exists = international_organization:crusade } NOT = { has_special_status_in_international_organization = { type = special_status:crusade_temporal_leader international_organization = international_organization:crusade } } } } }
 		}
 	}
 }
@@ -2086,11 +4041,26 @@ bag_rtk_cd_gate_invite_settlers = {
 		}
 	}
 }
+bag_rtk_cd_ready_invite_settlers = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { country_type = location } any_country = {save_temporary_scope_as = bag_rtk_cd_cand scope:actor = { culture = { save_temporary_scope_as = actor_culture } } culture = { any_culture_group = { scope:actor_culture = { has_culture_group = prev } } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_violate_italian_sovereignty = {
 	OR = {
 	AND = {
 			situation:italian_wars = { situation_is_active = yes } scope:actor = { is_leader_of_any_league = yes }
 			any_country = {save_temporary_scope_as = bag_rtk_cd_cand OR = { capital.region = region:italy_region is_member_of_any_italian_wars_league = yes } at_war = no NOT = { this = scope:actor } NOT = { is_leader_of_any_league = yes } NOR = { international_organization:italian_league_1 ?= { country_has_special_status = { type = special_status:italian_league_sponsor country = scope:bag_rtk_cd_cand } } international_organization:italian_league_2 ?= { country_has_special_status = { type = special_status:italian_league_sponsor country = scope:bag_rtk_cd_cand } } international_organization:italian_league_3 ?= { country_has_special_status = { type = special_status:italian_league_sponsor country = scope:bag_rtk_cd_cand } } } NOT = { any_international_organizations_member_of = { has_member = scope:bag_rtk_cd_cand international_organization_has_leader = yes leader_country = scope:actor OR = { international_organization_type = international_organization_type:foreign_league_balkan international_organization_type = international_organization_type:foreign_league_france international_organization_type = international_organization_type:foreign_league_hre international_organization_type = international_organization_type:foreign_league_iberia international_organization_type = international_organization_type:italian_league_1 international_organization_type = international_organization_type:italian_league_2 international_organization_type = international_organization_type:italian_league_3 } } } scope:actor = { custom_tooltip = { text = violate_italian_sovereignty_not_already_full_access_tt NAND = { receives_military_access_from = scope:bag_rtk_cd_cand receives_food_access_from = scope:bag_rtk_cd_cand } } } }
+		}
+	}
+}
+bag_rtk_cd_ready_violate_italian_sovereignty = {
+	OR = {
+	AND = {
+			AND = { situation:italian_wars = { situation_is_active = yes } scope:actor = { is_leader_of_any_league = yes } any_country = {save_temporary_scope_as = bag_rtk_cd_cand OR = { capital.region = region:italy_region is_member_of_any_italian_wars_league = yes } at_war = no NOT = { this = scope:actor } NOT = { is_leader_of_any_league = yes } NOR = { international_organization:italian_league_1 ?= { country_has_special_status = { type = special_status:italian_league_sponsor country = scope:bag_rtk_cd_cand } } international_organization:italian_league_2 ?= { country_has_special_status = { type = special_status:italian_league_sponsor country = scope:bag_rtk_cd_cand } } international_organization:italian_league_3 ?= { country_has_special_status = { type = special_status:italian_league_sponsor country = scope:bag_rtk_cd_cand } } } NOT = { any_international_organizations_member_of = { has_member = scope:bag_rtk_cd_cand international_organization_has_leader = yes leader_country = scope:actor OR = { international_organization_type = international_organization_type:foreign_league_balkan international_organization_type = international_organization_type:foreign_league_france international_organization_type = international_organization_type:foreign_league_hre international_organization_type = international_organization_type:foreign_league_iberia international_organization_type = international_organization_type:italian_league_1 international_organization_type = international_organization_type:italian_league_2 international_organization_type = international_organization_type:italian_league_3 } } } scope:actor = { custom_tooltip = { text = violate_italian_sovereignty_not_already_full_access_tt NAND = { receives_military_access_from = scope:bag_rtk_cd_cand receives_food_access_from = scope:bag_rtk_cd_cand } } } } }
+			AND = { scope:actor = { at_war = yes } situation:italian_wars = { var:iw_tension >= 75 } }
 		}
 	}
 }
@@ -2102,6 +4072,13 @@ bag_rtk_cd_gate_lend_unit_to_ally = {
 		}
 	}
 }
+bag_rtk_cd_ready_lend_unit_to_ally = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { at_war = yes NOT = { country_type = army } } any_country = {save_temporary_scope_as = bag_rtk_cd_cand always = yes } }
+		}
+	}
+}
 bag_rtk_cd_gate_mil_order_request_funds = {
 	OR = {
 	AND = {
@@ -2109,10 +4086,25 @@ bag_rtk_cd_gate_mil_order_request_funds = {
 		}
 	}
 }
+bag_rtk_cd_ready_mil_order_request_funds = {
+	OR = {
+	AND = {
+			AND = { any_country = {save_temporary_scope_as = bag_rtk_cd_cand giving_scripted_relation = { type = relation_type:military_sponsorship target = scope:actor } } }
+			AND = { scope:actor = { at_war = yes } }
+		}
+	}
+}
 bag_rtk_cd_gate_offer_war_leadership = {
 	OR = {
 	AND = {
 			scope:actor = { at_war = yes any_current_war = { or = { attacker_leader = scope:actor defender_leader = scope:actor } not = { is_civil_war_for = scope:actor } } }
+		}
+	}
+}
+bag_rtk_cd_ready_offer_war_leadership = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { at_war = yes any_current_war = { or = { attacker_leader = scope:actor defender_leader = scope:actor } not = { is_civil_war_for = scope:actor } } } }
 		}
 	}
 }
@@ -2124,6 +4116,14 @@ bag_rtk_cd_gate_rtr_demand_annexation = {
 		}
 	}
 }
+bag_rtk_cd_ready_rtr_demand_annexation = {
+	OR = {
+	AND = {
+			AND = { is_situation_active = situation:red_turban_rebellions scope:actor = { OR = { is_member_of_international_organization = international_organization:red_turban_rebels modifier:can_create_red_turban_rebellions_cb = yes tag = CHI } } any_country = {save_temporary_scope_as = bag_rtk_cd_cand capital ?= { is_discovered_by = scope:actor OR = { region = region:east_china_region region = region:north_china_region region = region:south_china_region region = region:west_china_region } } NOT = { country_type = pop } within_diplomatic_range = scope:actor NOT = { is_at_war_with = scope:actor } NOT = { is_fighting_war_together_with = scope:actor } NOT = { is_subject_of = scope:actor } NOT = { trigger_if = { limit = { exists = scope:actor.ruler } ruler ?= scope:actor.ruler } trigger_else = { always = no } } } }
+			AND = { scope:actor = { OR = { tag = CHI AND = { modifier:can_create_red_turban_rebellions_cb = yes is_subject = no } } } }
+		}
+	}
+}
 bag_rtk_cd_gate_take_over_seniority = {
 	OR = {
 	AND = {
@@ -2132,10 +4132,26 @@ bag_rtk_cd_gate_take_over_seniority = {
 		}
 	}
 }
+bag_rtk_cd_ready_take_over_seniority = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { exists = union union ?= { custom_tooltip = { text = variable_union_senior_partner_tt has_variable = union_senior_partner } international_organization_has_policy = policy:union_establish_seniority_policy NOT = { country_is_senior_partner = { country = scope:actor } } } } any_country = {save_temporary_scope_as = bag_rtk_cd_cand in_union_with = scope:actor union = { country_is_senior_partner = { country = scope:bag_rtk_cd_cand } } } }
+			AND = { scope:actor = { union ?= { is_active_parliament = no } } }
+		}
+	}
+}
 bag_rtk_cd_gate_affirmation_of_biljno_polje = {
 	OR = {
 	AND = {
 			scope:actor.religion = religion:bosnian_church
+		}
+	}
+}
+bag_rtk_cd_ready_affirmation_of_biljno_polje = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion = religion:bosnian_church }
+			AND = { scope:actor = { NOT = { has_country_modifier = affirmation_of_biljno_polje } } }
 		}
 	}
 }
@@ -2147,11 +4163,27 @@ bag_rtk_cd_gate_delhi_embassies_modifier = {
 		}
 	}
 }
+bag_rtk_cd_ready_delhi_embassies_modifier = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { tag = DLH } situation:fall_of_delhi ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:fall_of_delhi = this situation_is_active = yes } }
+			AND = { scope:actor = { gold >= { value = scope:actor.monthly_income_trade_and_tax multiply = 2 } } scope:actor = { NOT = { has_country_modifier = delhi_embassies_modifier } } }
+		}
+	}
+}
 bag_rtk_cd_gate_delhi_loyal_governors_modifier = {
 	OR = {
 	AND = {
 			scope:actor = { tag = DLH }
 			situation:fall_of_delhi ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:fall_of_delhi = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_delhi_loyal_governors_modifier = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { tag = DLH } situation:fall_of_delhi ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:fall_of_delhi = this situation_is_active = yes } }
+			AND = { scope:actor = { gold >= { value = scope:actor.monthly_income_trade_and_tax multiply = 2 } } scope:actor = { NOT = { has_country_modifier = delhi_loyal_governors_modifier } } }
 		}
 	}
 }
@@ -2163,11 +4195,27 @@ bag_rtk_cd_gate_delhi_reaffirm_vassal_relations_modifier = {
 		}
 	}
 }
+bag_rtk_cd_ready_delhi_reaffirm_vassal_relations_modifier = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { tag = DLH } situation:fall_of_delhi ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:fall_of_delhi = this situation_is_active = yes } }
+			AND = { scope:actor = { gold >= { value = scope:actor.monthly_income_trade_and_tax multiply = 2 } } scope:actor = { NOT = { has_country_modifier = delhi_reaffirm_vassal_relations_modifier } } }
+		}
+	}
+}
 bag_rtk_cd_gate_delhi_appeased_the_nobles_modifier = {
 	OR = {
 	AND = {
 			scope:actor = { tag = DLH }
 			situation:fall_of_delhi ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:fall_of_delhi = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_delhi_appeased_the_nobles_modifier = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { tag = DLH } situation:fall_of_delhi ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:fall_of_delhi = this situation_is_active = yes } }
+			AND = { scope:actor = { gold >= { value = scope:actor.monthly_income_trade_and_tax multiply = 2 } government_power > 10 } scope:actor = { NOT = { has_country_modifier = delhi_appeased_the_nobles_modifier } } }
 		}
 	}
 }
@@ -2178,6 +4226,14 @@ bag_rtk_cd_gate_invited_foreign_cleric_modifier = {
 		}
 	}
 }
+bag_rtk_cd_ready_invited_foreign_cleric_modifier = {
+	OR = {
+	AND = {
+			AND = { scope:actor.religion ?= {save_temporary_scope_as = bag_rtk_cd_cand has_religious_influence = yes } }
+			AND = { scope:actor = { estate_type_allowed_in_cabinet = { estate_type = estate_type:clergy_estate } NOT = { has_country_modifier = invited_foreign_cleric_modifier } } }
+		}
+	}
+}
 bag_rtk_cd_gate_fervor_of_the_faithful_modifier = {
 	OR = {
 	AND = {
@@ -2185,10 +4241,26 @@ bag_rtk_cd_gate_fervor_of_the_faithful_modifier = {
 		}
 	}
 }
+bag_rtk_cd_ready_fervor_of_the_faithful_modifier = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { modifier:allow_mysticism_vs_jurisprudence = yes } }
+			AND = { scope:actor = { societal_value:mysticism_vs_jurisprudence < -50 NOT = { has_country_modifier = fervor_of_the_faithful_modifier } } }
+		}
+	}
+}
 bag_rtk_cd_gate_studying_jurisprudence_modifier = {
 	OR = {
 	AND = {
 			scope:actor = { modifier:allow_mysticism_vs_jurisprudence = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_studying_jurisprudence_modifier = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { modifier:allow_mysticism_vs_jurisprudence = yes } }
+			AND = { scope:actor = { societal_value:mysticism_vs_jurisprudence > 50 NOT = { has_country_modifier = studying_jurisprudence_modifier } } }
 		}
 	}
 }
@@ -2200,11 +4272,27 @@ bag_rtk_cd_gate_rtr_appeased_the_court = {
 		}
 	}
 }
+bag_rtk_cd_ready_rtr_appeased_the_court = {
+	OR = {
+	AND = {
+			AND = { scope:actor = { tag = CHI } situation:red_turban_rebellions ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:red_turban_rebellions = this situation_is_active = yes } }
+			AND = { scope:actor = { NOT = { has_country_modifier = rtr_appeased_the_court } } }
+		}
+	}
+}
 bag_rtk_cd_gate_sengoku_incrementing_recruitment = {
 	OR = {
 	AND = {
 			scope:actor ?= { is_member_of_international_organization = international_organization:japanese_shogunate }
 			situation:sengoku ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:sengoku = this situation_is_active = yes }
+		}
+	}
+}
+bag_rtk_cd_ready_sengoku_incrementing_recruitment = {
+	OR = {
+	AND = {
+			AND = { scope:actor ?= { is_member_of_international_organization = international_organization:japanese_shogunate } situation:sengoku ?= {save_temporary_scope_as = bag_rtk_cd_cand situation:sengoku = this situation_is_active = yes } }
+			AND = { scope:actor ?= { at_war = no NOT = { has_country_modifier = sengoku_incrementing_recruitment } monthly_manpower > 0 } }
 		}
 	}
 }
