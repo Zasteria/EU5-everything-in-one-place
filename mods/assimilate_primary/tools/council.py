@@ -2551,6 +2551,8 @@ bag_asp_plan = {{
     keys = sorted({k for k, _ in BUSY})
     sweep = "\n".join(f"\t\tremove_variable = bag_asp_busy_{k}" for k in keys)
     busy_any = " ".join(f"has_variable = bag_asp_busy_{k}" for k in keys)
+    # Areas hold no variables: their marks are global lists (area_marks), swept whole.
+    area_sweep = "\n".join(f"\tclear_global_variable_list = bag_asp_busy_{k}" for k in AREA_KEYS)
     stopped = "\n".join(
         f"\t\tif = {{ limit = {{ cabinet_action = cabinet_action:{k} }} debug_log = \"bag_asp: {k} stopped on a seat\" }}"
         for k in sorted({act(r) for r, *_ in POOL}))
@@ -2575,14 +2577,7 @@ bag_asp_clear_busy = {{
 \t\tlimit = {{ bag_asp_busy_any = yes }}
 {sweep}
 \t}}
-\tevery_province = {{
-\t\tarea ?= {{
-\t\t\tif = {{
-\t\t\t\tlimit = {{ bag_asp_busy_any = yes }}
-{sweep.replace(chr(9) * 2, chr(9) * 4)}
-\t\t\t}}
-\t\t}}
-\t}}
+{area_sweep}
 \tevery_estate = {{
 \t\tlimit = {{ bag_asp_busy_any = yes }}
 {sweep}
