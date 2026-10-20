@@ -88,6 +88,12 @@ POOL = [
     # His spec 12.10–13.10: the pairs ticked in «Общественные ценности», one
     # seat, through the game's window (value_effects, value_window.py).
     ("change_societal_values", "values", None, ""),
+    # His word 10-20: area assimilation, the cultural hegemon's from age 3, works
+    # as the province one over a whole area; another advisor on a province
+    # inside that area makes it go much faster (the culture rows below prefer
+    # such provinces). The area of the most populous province still short of
+    # 95 % unity goes first.
+    ("assimilate_area", "culture_area", "population", ""),
 ]
 
 # A row that is not an action of its own: the action it places.
@@ -127,6 +133,10 @@ ROW_NOTE = {
     "change_societal_values": {
         "english": ("", "Pushes the pairs ticked in «Societal values» (Fine tuning), in that list's order, toward the side chosen there: the advisor best in diplomacy among the free ones takes the first pair he would move at least one whole point, at 0.1 a month or more. One seat. The pair is picked in the game's own window, which opens and closes by itself."),
         "russian": ("", "Двигает пары, отмеченные в «Общественных ценностях» («Тонкие настройки»), в порядке того списка, в выбранную там сторону: лучший по дипломатии свободный советник берёт первую пару, которую сдвинет хотя бы на одну целую единицу, не меньше 0.1 в месяц. Одно место. Пару выбирает окно игры, оно само открывается и закрывается."),
+    },
+    "assimilate_area": {
+        "english": ("", "The cultural hegemon's area assimilation (age 3 on), into the same culture the province rows use: the area of the most populous province still below 95 % cultural unity first. Province assimilation then prefers provinces inside that area, which makes both go much faster."),
+        "russian": ("", "Ассимиляция области у культурного гегемона (с 3-й эпохи), в ту же культуру, что и у строк провинций: сначала область самой населённой провинции, где единство ниже 95 %. Ассимиляция провинций потом берёт провинции внутри этой области — так обе идут гораздо быстрее."),
     },
     "diplomatic_antagonism": {
         "english": (" (antagonism)", "For lowering antagonism: diplomatic reputation reduces it. Taken only while a country is near a coalition against you."),
@@ -711,11 +721,25 @@ def try_effect(row: str, kind: str, order: str | None, gate: str, actions: dict[
         pflag = flag_of(sel)
         own = f"\t\t\t\t\t{ROW_TARGET[row]}\n" if row in ROW_TARGET else ""
         rule = lead_rule(cflag)
+        # His word 10-20: a province advisor inside an area under area
+        # assimilation makes it go much faster, so such provinces come first.
+        stacked = (f"{{ value = {order} if = {{ limit = {{ area ?= {{ is_target_in_global_variable_list = "
+                   f"{{ name = bag_asp_busy_assimilate_area target = this }} }} }} add = 1000000 }} }}")
         inner = (culture_choice(cflag) +
                  f"\t\tscope:actor = {{\n\t\t\tordered_province = {{\n\t\t\t\tlimit = {{\n"
-                 f"{target_test(sel, 5, actions, key)}\n{rule}\n{own}\t\t\t\t}}\n\t\t\t\torder_by = {order}\n"
+                 f"{target_test(sel, 5, actions, key)}\n{rule}\n{own}\t\t\t\t}}\n\t\t\t\torder_by = {stacked}\n"
                  f"\t\t\t\tsave_temporary_scope_as = bag_asp_pick\n"
                  f"{assign(f' {cflag} = scope:{cflag} {pflag} = scope:bag_asp_pick', pflag)}\n\t\t\t}}\n\t\t}}")
+    elif kind == "culture_area":
+        sel = select(action, "area")
+        cflag = flag_of(select(action, "culture"))
+        aflag = flag_of(sel)
+        inner = (culture_choice(cflag) +
+                 f"\t\tscope:actor = {{\n\t\t\tordered_province = {{\n\t\t\t\tlimit = {{\n"
+                 f"\t\t\t\t\tarea ?= {{\n{target_test(sel, 6, actions, key)}\n\t\t\t\t\t}}\n\t\t\t\t}}\n"
+                 f"\t\t\t\torder_by = {order}\n"
+                 f"\t\t\t\tarea = {{ save_temporary_scope_as = bag_asp_pick }}\n"
+                 f"{assign(f' {cflag} = scope:{cflag} {aflag} = scope:bag_asp_pick', aflag)}\n\t\t\t}}\n\t\t}}")
     elif kind == "religion":
         sel = select(action, "province")
         rflag = flag_of(select(action, "religion"))
@@ -2990,7 +3014,7 @@ bag_asp_paired_seat = {{
 # its variable. The test reads `this`, so it is right in any scope: a province
 # is simply never in the list. An estate holds none either (the 1.4.2 load
 # check, 10-20), so appease_estate's mark moves too.
-AREA_KEYS = ("increase_control_area", "integrate_area", "appease_estate")
+AREA_KEYS = ("increase_control_area", "integrate_area", "appease_estate", "assimilate_area")
 
 
 def area_marks(text: str) -> str:

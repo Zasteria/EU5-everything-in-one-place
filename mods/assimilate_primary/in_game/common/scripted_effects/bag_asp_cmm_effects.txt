@@ -43,7 +43,7 @@ bag_asp_register = {
 		mod_id = bag_asp
 		setting_id = available
 		tab_id = actions
-		item_count = 24
+		item_count = 25
 		is_ordered = 0
 	}
 	cmm_register_list_bool_field = {
@@ -56,7 +56,7 @@ bag_asp_register = {
 		mod_id = bag_asp
 		setting_id = priority
 		tab_id = actions
-		item_count = 24
+		item_count = 25
 		is_ordered = 1
 	}
 	cmm_register_list_text_field = {
@@ -256,6 +256,9 @@ bag_asp_register = {
 	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 24 value = flag:bag_asp_change_societal_values }
 	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 24 value = flag:bag_asp_change_societal_values }
 	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 24 value = flag:bag_asp_ability_dip }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 25 value = flag:bag_asp_assimilate_area }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 25 value = flag:bag_asp_assimilate_area }
+	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 25 value = flag:bag_asp_ability_dip }
 
 	bag_asp_sync = yes
 	bag_asp_rebuild = yes
@@ -706,6 +709,23 @@ bag_asp_rebuild = {
 		else = {
 			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 24 }
 		}
+		if = {
+			limit = { cabinet_action:assimilate_area = { is_visible_for = root } }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = available item = 25 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = available item = 25 }
+		}
+		if = {
+			limit = {
+				cabinet_action:assimilate_area = { is_visible_for = root }
+				is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_assimilate_area }
+			}
+			cmm_show_list_item = { mod_id = bag_asp setting_id = priority item = 25 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 25 }
+		}
 		# Each action's place in «Приоритет» (1 = top), +100 when not ticked:
 		# the emergency gives up the seat whose action ranks lowest.
 		set_variable = { name = bag_asp_rank_counter value = 0 }
@@ -740,6 +760,7 @@ bag_asp_rebuild = {
 					flag:bag_asp_diplomatic_antagonism = { set_variable = { name = bag_asp_rank_diplomatic_antagonism value = var:bag_asp_rank_counter } }
 					flag:bag_asp_promote_culture_full = { set_variable = { name = bag_asp_rank_promote_culture_full value = var:bag_asp_rank_counter } }
 					flag:bag_asp_change_societal_values = { set_variable = { name = bag_asp_rank_change_societal_values value = var:bag_asp_rank_counter } }
+					flag:bag_asp_assimilate_area = { set_variable = { name = bag_asp_rank_assimilate_area value = var:bag_asp_rank_counter } }
 				}
 			}
 		}
@@ -838,6 +859,10 @@ bag_asp_rebuild = {
 		if = {
 			limit = { NOT = { is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_change_societal_values } } }
 			change_variable = { name = bag_asp_rank_change_societal_values add = 100 }
+		}
+		if = {
+			limit = { NOT = { is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_assimilate_area } } }
+			change_variable = { name = bag_asp_rank_assimilate_area add = 100 }
 		}
 		# The «№» box of each row shows its place among the shown rows (cmf_dev_beta).
 		cmf_beta_list_renumber = { setting = bag_asp__priority }
