@@ -84,114 +84,125 @@ def at_step(i):
     return f"EqualTo_CFixedPoint({STEP}, {PV}('{var(i)}').GetValue)"
 
 
-def gui():
-    t = "\t" * 11
+def button():
+    t = "	" * 11
+    return f"""{t}# BAG_RTK_PT_BUTTON_BEGIN — сгенерировано mods/rulers_toolkit/tools/gen_peace.py
+{t}#bag_rtk: ШАБЛОН ДОГОВОРА (Помощник правителя): сбросить договор и запустить
+{t}# шагомер (сам он — в начале панели, BAG_RTK_PT_DRIVER).
+{t}header_button_left = {{
+{t}	size = {{30 30}}
+{t}	visible = "[PeaceOfferLateralView.IsDemanding]"
+{t}	blockoverride "header_button_full_content" {{
+{t}		icon = {{
+{t}			size = {{22 22 }}
+{t}			texture = "gfx/interface/icons/peace_treaty/demand_peace.dds"
+{t}		}}
+{t}	}}
+{t}	tooltipwidget = {{
+{t}		BasicFunctionalTooltip = {{}}
+{t}	}}
+{t}	action_tooltip = {{
+{t}		click_type = left
+{t}		click_mode = single
+{t}		title = "BAG_RTK_PT_TT"
+{t}		description = "BAG_RTK_PT_DESC"
+{t}		on_action = "[PeaceOfferLateralView.OnResetPeaceOffer]"
+{t}		on_action = "[GetScriptedGui('bag_rtk_pt_start').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+{t}	}}
+{t}}}
+{t}# BAG_RTK_PT_BUTTON_END
+"""
+
+
+def driver():
+    t = "	" * 3
     helpers = []
     for i, _, _, _, _, _ in ITEMS:
         if i == "gold":
             continue
         cond = (f"And6({RUN}, {at_step(i)}, StringContains(PeaceTreaty.GetShortName, Localize('BAG_RTK_PT_MATCH_{i.upper()}')), "
                 f"PeaceTreaty.IsEnabled, Not(PeaceTreaty.IsSelected), {FITS})")
-        helpers.append(f"""{t}\t\t\t\t\t\twidget = {{
-{t}\t\t\t\t\t\t\tsize = {{ 1 1 }}
-{t}\t\t\t\t\t\t\tvisible_at_creation = no
-{t}\t\t\t\t\t\t\tvisible = "[{cond}]"
-{t}\t\t\t\t\t\t\tstate = {{
-{t}\t\t\t\t\t\t\t\tname = _show
-{t}\t\t\t\t\t\t\t\tduration = 0.05
-{t}\t\t\t\t\t\t\t\ton_finish = "[PeaceTreaty.OnClick]"
-{t}\t\t\t\t\t\t\t}}
-{t}\t\t\t\t\t\t}}
+        helpers.append(f"""{t}						widget = {{
+{t}							size = {{ 1 1 }}
+{t}							visible_at_creation = no
+{t}							visible = "[{cond}]"
+{t}							state = {{
+{t}								name = _show
+{t}								duration = 0.05
+{t}								on_finish = "[PeaceTreaty.OnClick]"
+{t}								on_finish = "[GetScriptedGui('bag_rtk_pt_clicked').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+{t}							}}
+{t}						}}
 """)
     gold = (f"And4({RUN}, {at_step('gold')}, PeaceOfferWarScoreTreatyGlue.IsIncWarScoreEnabled, "
             f"GreaterThan_CFixedPoint(PeaceOfferLateralView.GetWarScore, IntToFixedPoint(PeaceOfferLateralView.GetTotalWarScoreCost)))")
-    return f"""{t}# BAG_RTK_PT_BEGIN — сгенерировано mods/rulers_toolkit/tools/gen_peace.py
-{t}#bag_rtk: ШАБЛОН ДОГОВОРА (Помощник правителя). Сбросить договор и пройти
-{t}# приоритеты 1..{MAX_STEP} со страницы CMF «Мир»: на каждом шаге берётся всё
-{t}# своего приоритета, на что хватает очков.
-{t}header_button_left = {{
-{t}\tsize = {{30 30}}
-{t}\tvisible = "[PeaceOfferLateralView.IsDemanding]"
-{t}\tblockoverride "header_button_full_content" {{
-{t}\t\ticon = {{
-{t}\t\t\tsize = {{22 22 }}
-{t}\t\t\ttexture = "gfx/interface/icons/peace_treaty/demand_peace.dds"
-{t}\t\t}}
-{t}\t}}
-{t}\ttooltipwidget = {{
-{t}\t\tBasicFunctionalTooltip = {{}}
-{t}\t}}
-{t}\taction_tooltip = {{
-{t}\t\tclick_type = left
-{t}\t\tclick_mode = single
-{t}\t\ttitle = "BAG_RTK_PT_TT"
-{t}\t\tdescription = "BAG_RTK_PT_DESC"
-{t}\t\ton_action = "[PeaceOfferLateralView.OnResetPeaceOffer]"
-{t}\t\ton_action = "[GetScriptedGui('bag_rtk_pt_start').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-{t}\t}}
+    return f"""{t}# BAG_RTK_PT_DRIVER_BEGIN — сгенерировано mods/rulers_toolkit/tools/gen_peace.py
+{t}# Шаблон договора: шагомер и помощники. Невидимые, нулевого размера; живут здесь,
+{t}# а не в кнопке — в 0.9.1 внутри кнопки они не срабатывали.
+{t}widget = {{
+{t}	size = {{ 0 0 }}
 
-{t}\t# Шагомер: пока идёт шаблон — каждые 0.4 с следующий приоритет.
-{t}\twidget = {{
-{t}\t\tsize = {{ 1 1 }}
-{t}\t\tvisible_at_creation = no
-{t}\t\tvisible = "[{RUN}]"
-{t}\t\tstate = {{
-{t}\t\t\tname = _show
-{t}\t\t\tduration = 0.4
-{t}\t\t\tnext = bag_rtk_pt_tick
-{t}\t\t\ton_finish = "[GetScriptedGui('bag_rtk_pt_next').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-{t}\t\t}}
-{t}\t\tstate = {{
-{t}\t\t\tname = bag_rtk_pt_tick
-{t}\t\t\tduration = 0.4
-{t}\t\t\tnext = bag_rtk_pt_tick
-{t}\t\t\ton_finish = "[GetScriptedGui('bag_rtk_pt_next').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-{t}\t\t}}
-{t}\t}}
+{t}	# Шагомер: пока идёт шаблон — каждые 0.4 с следующий приоритет.
+{t}	widget = {{
+{t}		size = {{ 1 1 }}
+{t}		visible_at_creation = no
+{t}		visible = "[{RUN}]"
+{t}		state = {{
+{t}			name = _show
+{t}			duration = 0.4
+{t}			next = bag_rtk_pt_tick
+{t}			on_finish = "[GetScriptedGui('bag_rtk_pt_next').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+{t}		}}
+{t}		state = {{
+{t}			name = bag_rtk_pt_tick
+{t}			duration = 0.4
+{t}			next = bag_rtk_pt_tick
+{t}			on_finish = "[GetScriptedGui('bag_rtk_pt_next').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+{t}		}}
+{t}	}}
 
-{t}\t# Золото: жать «+», пока на своём шаге и есть свободные очки.
-{t}\twidget = {{
-{t}\t\tsize = {{ 1 1 }}
-{t}\t\tdatacontext = "[PeaceOfferLateralView.GetGoldTreaty]"
-{t}\t\twidget = {{
-{t}\t\t\tsize = {{ 1 1 }}
-{t}\t\t\tvisible_at_creation = no
-{t}\t\t\tvisible = "[{gold}]"
-{t}\t\t\tstate = {{
-{t}\t\t\t\tname = _show
-{t}\t\t\t\tduration = 0.03
-{t}\t\t\t\tnext = bag_rtk_pt_gold_more
-{t}\t\t\t\ton_finish = "[PeaceOfferWarScoreTreatyGlue.OnIncLeftClick]"
-{t}\t\t\t}}
-{t}\t\t\tstate = {{
-{t}\t\t\t\tname = bag_rtk_pt_gold_more
-{t}\t\t\t\tduration = 0.03
-{t}\t\t\t\tnext = bag_rtk_pt_gold_more
-{t}\t\t\t\ton_finish = "[PeaceOfferWarScoreTreatyGlue.OnIncLeftClick]"
-{t}\t\t\t}}
-{t}\t\t}}
-{t}\t}}
+{t}	# Золото: жать «+», пока на своём шаге и есть свободные очки.
+{t}	widget = {{
+{t}		size = {{ 1 1 }}
+{t}		datacontext = "[PeaceOfferLateralView.GetGoldTreaty]"
+{t}		widget = {{
+{t}			size = {{ 1 1 }}
+{t}			visible_at_creation = no
+{t}			visible = "[{gold}]"
+{t}			state = {{
+{t}				name = _show
+{t}				duration = 0.03
+{t}				next = bag_rtk_pt_gold_more
+{t}				on_finish = "[PeaceOfferWarScoreTreatyGlue.OnIncLeftClick]"
+{t}			}}
+{t}			state = {{
+{t}				name = bag_rtk_pt_gold_more
+{t}				duration = 0.03
+{t}				next = bag_rtk_pt_gold_more
+{t}				on_finish = "[PeaceOfferWarScoreTreatyGlue.OnIncLeftClick]"
+{t}			}}
+{t}		}}
+{t}	}}
 
-{t}\t# Пункты договора: по помощнику на пункт в каждой строке списка.
-{t}\twidget = {{
-{t}\t\tsize = {{ 1 1 }}
-{t}\t\tvisible = "[{RUN}]"
-{t}\t\tvbox = {{
-{t}\t\t\tdatamodel = "[PeaceOfferLateralView.GetCategories]"
-{t}\t\t\titem = {{
-{t}\t\t\t\tvbox = {{
-{t}\t\t\t\t\tdatamodel = "[PeaceOfferCategory.GetTreaties]"
-{t}\t\t\t\t\titem = {{
-{t}\t\t\t\t\t\twidget = {{
-{t}\t\t\t\t\t\t\tsize = {{ 1 1 }}
-""" + "".join(helpers) + f"""{t}\t\t\t\t\t\t}}
-{t}\t\t\t\t\t}}
-{t}\t\t\t\t}}
-{t}\t\t\t}}
-{t}\t\t}}
-{t}\t}}
+{t}	# Пункты договора: по помощнику на пункт в каждой строке списка.
+{t}	widget = {{
+{t}		size = {{ 1 1 }}
+{t}		vbox = {{
+{t}			datamodel = "[PeaceOfferLateralView.GetCategories]"
+{t}			item = {{
+{t}				vbox = {{
+{t}					datamodel = "[PeaceOfferCategory.GetTreaties]"
+{t}					item = {{
+{t}						widget = {{
+{t}							size = {{ 1 1 }}
+""" + "".join(helpers) + f"""{t}						}}
+{t}					}}
+{t}				}}
+{t}			}}
+{t}		}}
+{t}	}}
 {t}}}
-{t}# BAG_RTK_PT_END
+{t}# BAG_RTK_PT_DRIVER_END
 """
 
 
@@ -215,22 +226,43 @@ def loc(lang):
     return "".join(lines)
 
 
+def splice(s, begin, end, text, anchor, before):
+    if begin in s:
+        a = s.rindex("\n", 0, s.index(begin)) + 1
+        b = s.index("\n", s.index(end, a)) + 1
+        return s[:a] + text + s[b:]
+    assert s.count(anchor) == 1, anchor
+    return s.replace(anchor, text + "\n" + anchor, 1) if before else s.replace(anchor, anchor + text, 1)
+
+
+def start_effect():
+    """Недостающие приоритеты (сейв старше вкладки «Мир») — по умолчанию."""
+    out = []
+    for i, *_, d in ITEMS:
+        out.append(f"\tif = {{\n\t\tlimit = {{ NOT = {{ has_variable = {var(i)} }} }}\n"
+                   f"\t\tset_variable = {{ name = {var(i)} value = {d} }}\n"
+                   f"\t\tdebug_log = \"bag_rtk: peace template, {i} priority missing, default {d}\"\n\t}}\n")
+    return "# Сгенерировано tools/gen_peace.py. Scope: country.\nbag_rtk_pt_defaults = {\n" + "".join(out) + "}\n"
+
+
 def main():
-    (MOD / "in_game/common/scripted_effects/bag_rtk_pt_generated.txt").write_text(effects(), encoding="utf-8", newline="\n")
+    (MOD / "in_game/common/scripted_effects/bag_rtk_pt_generated.txt").write_text(
+        effects() + "\n" + start_effect(), encoding="utf-8", newline="\n")
     for lang in ("russian", "english"):
         (MOD / f"main_menu/localization/{lang}/bag_rtk_pt_l_{lang}.yml").write_text(loc(lang), encoding="utf-8", newline="\n")
     p = MOD / "in_game/gui/peace_offer_view.gui"
     s = p.read_text(encoding="utf-8-sig")
-    t = "\t" * 11
-    begin, end = f"{t}# BAG_RTK_PT_BEGIN", "# BAG_RTK_PT_END\n"
-    if begin in s:
-        a = s.index(begin)
-        b = s.index(end, a) + len(end)
-        s = s[:a] + gui() + s[b:]
-    else:
-        anchor = f"{t}#RESET OFFER\n"
-        assert s.count(anchor) == 1
-        s = s.replace(anchor, gui() + "\n" + anchor, 1)
+    reset = "\t" * 11 + "#RESET OFFER\n"
+    # 0.9.1 держал весь кусок у кнопки — убрать.
+    if "# BAG_RTK_PT_BEGIN" in s:
+        a = s.rindex("\n", 0, s.index("# BAG_RTK_PT_BEGIN")) + 1
+        b = s.index("\n", s.index("# BAG_RTK_PT_END")) + 1
+        s = s[:a] + s[b:]
+        s = s.replace("\n\n" + reset, "\n" + reset, 1)
+    s = splice(s, "# BAG_RTK_PT_BUTTON_BEGIN", "# BAG_RTK_PT_BUTTON_END", button(), reset, True)
+    panel = ("\tblockoverride \"panel_content\" {\n\t\tvbox = {\n\t\t\tusing = layoutpolicy_expanding\n"
+             "\t\t\tusing = bg_main_inner_alt\n\t\t\tusing = window_main_tabs_margin_alt\n")
+    s = splice(s, "# BAG_RTK_PT_DRIVER_BEGIN", "# BAG_RTK_PT_DRIVER_END", driver(), panel, False)
     p.write_text(BOM + s, encoding="utf-8", newline="\n")
     print("peace template: generated")
 
