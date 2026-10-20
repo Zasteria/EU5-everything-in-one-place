@@ -45,6 +45,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "tools"))
 
 import refs  # noqa: E402
+import quiet_logs  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import council  # noqa: E402
@@ -153,6 +154,8 @@ def loc_text(language: str) -> str:
 def write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     old = path.read_text(encoding="utf-8-sig") if path.exists() else None
+    if path.suffix == ".txt":
+        text = quiet_logs.quiet(text, "bag_asp_log")
     if old != text:
         path.write_text(text, encoding="utf-8-sig")
         print(f"{path.relative_to(refs.REPO)}: rebuilt")

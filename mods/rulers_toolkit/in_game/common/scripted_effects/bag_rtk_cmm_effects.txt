@@ -43,6 +43,20 @@ bag_rtk_register = {
 		alias = bag_rtk_cmd_war_ruler_on
 	}
 
+	# Журнал (log): строки мода в debug.log — только с галочкой (его слово 10-20).
+	cmm_register_bool_setting = {
+		mod_id = bag_rtk
+		setting_id = log_enabled
+		tab_id = main
+		group_id = log
+		default_value = 0
+	}
+	cmm_sync_bool_alias = {
+		setting = bag_rtk__log_enabled
+		alias = bag_rtk_log_on
+	}
+	bag_rtk_log_sync = yes
+
 	# Пленники (prisoners)
 	cmm_register_bool_setting = {
 		mod_id = bag_rtk
@@ -275,6 +289,13 @@ bag_rtk_handle_callback = {
 				alias = bag_rtk_art_on
 			}
 		}
+		flag:bag_rtk__log_enabled = {
+			cmm_sync_bool_alias = {
+				setting = bag_rtk__log_enabled
+				alias = bag_rtk_log_on
+			}
+			bag_rtk_log_sync = yes
+		}
 		flag:bag_rtk__wed_enabled = {
 			cmm_sync_bool_alias = {
 				setting = bag_rtk__wed_enabled
@@ -372,5 +393,18 @@ bag_rtk_handle_callback = {
 				alias = bag_rtk_cmd_war_ruler_on
 			}
 		}
+	}
+}
+
+# Журнал: строки `debug_log` мода обёрнуты в `has_global_variable = bag_rtk_log`
+# (tools/quiet_logs.py) — флаг глобальный, потому что запись бывает в любом
+# масштабе. Scope: country (игрок).
+bag_rtk_log_sync = {
+	if = {
+		limit = { has_variable = bag_rtk_log_on }
+		set_global_variable = { name = bag_rtk_log value = yes }
+	}
+	else = {
+		remove_global_variable = bag_rtk_log
 	}
 }

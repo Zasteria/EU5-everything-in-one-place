@@ -20,7 +20,7 @@ bag_asp_tick = {
 	}
 	change_variable = { name = bag_asp_months add = 1 }
 	change_variable = { name = bag_asp_review_months add = 1 }
-	debug_log = "bag_asp: month"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: month" }
 	bag_asp_assim_check = yes
 	if = {
 		limit = {
@@ -40,13 +40,13 @@ bag_asp_tick = {
 
 # Scope: country. Every seat handed out down «Приоритет».
 bag_asp_plan_all = {
-	debug_log = "bag_asp: handing out every seat"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: handing out every seat" }
 	bag_asp_plan = yes
 }
 
 # Scope: country. Only seats without an action: the others are taken as chosen.
 bag_asp_plan_fill = {
-	debug_log = "bag_asp: filling empty seats"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: filling empty seats" }
 	set_variable = { name = bag_asp_fill_only value = yes }
 	bag_asp_plan = yes
 	remove_variable = bag_asp_fill_only
@@ -65,12 +65,12 @@ bag_asp_plan = {
 	# hand between two passes shows against the last pass's «after».
 	if = {
 		limit = { has_variable = bag_asp_log_on }
-		debug_log = "bag_asp: the seats before the pass:"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: the seats before the pass:" }
 		bag_asp_probe_seats = yes
 	}
 	if = {
 		limit = { NOT = { any_in_list = { variable = bag_asp_used } } }
-		debug_log = "bag_asp: no action is ticked in use"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: no action is ticked in use" }
 	}
 	# His rule 13.10: an assimilation whose province has every location at
 	# half is freed, unless the full row is in use; before the marking, so its
@@ -84,7 +84,7 @@ bag_asp_plan = {
 				interaction_target:target_1 ?= { NOT = { bag_asp_needs_half = yes } }
 			}
 			stop_cabinet_action = {}
-			debug_log = "bag_asp: an assimilation freed, every location of its province is at half"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: an assimilation freed, every location of its province is at half" }
 		}
 	}
 	bag_asp_mark_busy = yes
@@ -150,11 +150,11 @@ bag_asp_plan = {
 	}
 	if = {
 		limit = { any_cabinet = { bag_asp_free_seat = yes } }
-		debug_log = "bag_asp: a seat is left as it was, nothing in use fits it"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: a seat is left as it was, nothing in use fits it" }
 	}
 	if = {
 		limit = { has_variable = bag_asp_log_on }
-		debug_log = "bag_asp: the seats after the pass:"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: the seats after the pass:" }
 		bag_asp_probe_seats = yes
 		bag_asp_probe_promote = yes
 	}
@@ -416,28 +416,28 @@ bag_asp_vacate = {
 			limit = { cabinet_action = cabinet_action:study_institutions }
 			interaction_target:target ?= { remove_variable = bag_asp_busy_study_institutions }
 		}
-		if = { limit = { cabinet_action = cabinet_action:alleviate_concerns } debug_log = "bag_asp: alleviate_concerns stopped on a seat" }
-		if = { limit = { cabinet_action = cabinet_action:appease_estate } debug_log = "bag_asp: appease_estate stopped on a seat" }
-		if = { limit = { cabinet_action = cabinet_action:change_societal_values } debug_log = "bag_asp: change_societal_values stopped on a seat" }
-		if = { limit = { cabinet_action = cabinet_action:counter_espionage_action } debug_log = "bag_asp: counter_espionage_action stopped on a seat" }
-		if = { limit = { cabinet_action = cabinet_action:develop_province } debug_log = "bag_asp: develop_province stopped on a seat" }
-		if = { limit = { cabinet_action = cabinet_action:diplomatic_endeavors } debug_log = "bag_asp: diplomatic_endeavors stopped on a seat" }
-		if = { limit = { cabinet_action = cabinet_action:increase_control_area } debug_log = "bag_asp: increase_control_area stopped on a seat" }
-		if = { limit = { cabinet_action = cabinet_action:increase_control_province } debug_log = "bag_asp: increase_control_province stopped on a seat" }
-		if = { limit = { cabinet_action = cabinet_action:integrate_area } debug_log = "bag_asp: integrate_area stopped on a seat" }
-		if = { limit = { cabinet_action = cabinet_action:integrate_province } debug_log = "bag_asp: integrate_province stopped on a seat" }
-		if = { limit = { cabinet_action = cabinet_action:noblesse_oblige_cabinet_action } debug_log = "bag_asp: noblesse_oblige_cabinet_action stopped on a seat" }
-		if = { limit = { cabinet_action = cabinet_action:pacify_population } debug_log = "bag_asp: pacify_population stopped on a seat" }
-		if = { limit = { cabinet_action = cabinet_action:pop_promote_action } debug_log = "bag_asp: pop_promote_action stopped on a seat" }
-		if = { limit = { cabinet_action = cabinet_action:promote_culture } debug_log = "bag_asp: promote_culture stopped on a seat" }
-		if = { limit = { cabinet_action = cabinet_action:promote_religion } debug_log = "bag_asp: promote_religion stopped on a seat" }
-		if = { limit = { cabinet_action = cabinet_action:recovery_effort } debug_log = "bag_asp: recovery_effort stopped on a seat" }
-		if = { limit = { cabinet_action = cabinet_action:reduce_inflation } debug_log = "bag_asp: reduce_inflation stopped on a seat" }
-		if = { limit = { cabinet_action = cabinet_action:reduce_war_exhaustion } debug_log = "bag_asp: reduce_war_exhaustion stopped on a seat" }
-		if = { limit = { cabinet_action = cabinet_action:send_secret_royal_inspectors } debug_log = "bag_asp: send_secret_royal_inspectors stopped on a seat" }
-		if = { limit = { cabinet_action = cabinet_action:stabilize_country } debug_log = "bag_asp: stabilize_country stopped on a seat" }
-		if = { limit = { cabinet_action = cabinet_action:strengthen_government } debug_log = "bag_asp: strengthen_government stopped on a seat" }
-		if = { limit = { cabinet_action = cabinet_action:study_institutions } debug_log = "bag_asp: study_institutions stopped on a seat" }
+		if = { limit = { cabinet_action = cabinet_action:alleviate_concerns } if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: alleviate_concerns stopped on a seat" } }
+		if = { limit = { cabinet_action = cabinet_action:appease_estate } if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: appease_estate stopped on a seat" } }
+		if = { limit = { cabinet_action = cabinet_action:change_societal_values } if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: change_societal_values stopped on a seat" } }
+		if = { limit = { cabinet_action = cabinet_action:counter_espionage_action } if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: counter_espionage_action stopped on a seat" } }
+		if = { limit = { cabinet_action = cabinet_action:develop_province } if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: develop_province stopped on a seat" } }
+		if = { limit = { cabinet_action = cabinet_action:diplomatic_endeavors } if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: diplomatic_endeavors stopped on a seat" } }
+		if = { limit = { cabinet_action = cabinet_action:increase_control_area } if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: increase_control_area stopped on a seat" } }
+		if = { limit = { cabinet_action = cabinet_action:increase_control_province } if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: increase_control_province stopped on a seat" } }
+		if = { limit = { cabinet_action = cabinet_action:integrate_area } if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: integrate_area stopped on a seat" } }
+		if = { limit = { cabinet_action = cabinet_action:integrate_province } if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: integrate_province stopped on a seat" } }
+		if = { limit = { cabinet_action = cabinet_action:noblesse_oblige_cabinet_action } if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: noblesse_oblige_cabinet_action stopped on a seat" } }
+		if = { limit = { cabinet_action = cabinet_action:pacify_population } if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: pacify_population stopped on a seat" } }
+		if = { limit = { cabinet_action = cabinet_action:pop_promote_action } if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: pop_promote_action stopped on a seat" } }
+		if = { limit = { cabinet_action = cabinet_action:promote_culture } if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: promote_culture stopped on a seat" } }
+		if = { limit = { cabinet_action = cabinet_action:promote_religion } if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: promote_religion stopped on a seat" } }
+		if = { limit = { cabinet_action = cabinet_action:recovery_effort } if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: recovery_effort stopped on a seat" } }
+		if = { limit = { cabinet_action = cabinet_action:reduce_inflation } if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: reduce_inflation stopped on a seat" } }
+		if = { limit = { cabinet_action = cabinet_action:reduce_war_exhaustion } if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: reduce_war_exhaustion stopped on a seat" } }
+		if = { limit = { cabinet_action = cabinet_action:send_secret_royal_inspectors } if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: send_secret_royal_inspectors stopped on a seat" } }
+		if = { limit = { cabinet_action = cabinet_action:stabilize_country } if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: stabilize_country stopped on a seat" } }
+		if = { limit = { cabinet_action = cabinet_action:strengthen_government } if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: strengthen_government stopped on a seat" } }
+		if = { limit = { cabinet_action = cabinet_action:study_institutions } if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: study_institutions stopped on a seat" } }
 		stop_cabinet_action = {}
 	}
 	cabinet_member ?= {
@@ -494,7 +494,7 @@ bag_asp_try_integrate_province = {
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_integrate_province value = yes } }
 				scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 				scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-				debug_log = "bag_asp: seat set to integrate_province"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to integrate_province" }
 			}
 		}
 	}
@@ -549,7 +549,7 @@ bag_asp_try_integrate_area = {
 				scope:bag_asp_pick = { add_to_global_variable_list = { name = bag_asp_busy_integrate_area target = this } }
 				scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 				scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-				debug_log = "bag_asp: seat set to integrate_area"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to integrate_area" }
 			}
 		}
 	}
@@ -568,7 +568,7 @@ bag_asp_try_reduce_war_exhaustion = {
 		}
 		scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 		scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-		debug_log = "bag_asp: seat set to reduce_war_exhaustion"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to reduce_war_exhaustion" }
 	}
 }
 
@@ -586,7 +586,7 @@ bag_asp_try_stabilize_country = {
 		}
 		scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 		scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-		debug_log = "bag_asp: seat set to stabilize_country"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to stabilize_country" }
 	}
 }
 
@@ -616,7 +616,7 @@ bag_asp_try_increase_control_province = {
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_increase_control_province value = yes } }
 				scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 				scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-				debug_log = "bag_asp: seat set to increase_control_province"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to increase_control_province" }
 			}
 		}
 	}
@@ -649,7 +649,7 @@ bag_asp_try_increase_control_area = {
 				scope:bag_asp_pick = { add_to_global_variable_list = { name = bag_asp_busy_increase_control_area target = this } }
 				scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 				scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-				debug_log = "bag_asp: seat set to increase_control_area"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to increase_control_area" }
 			}
 		}
 	}
@@ -680,7 +680,7 @@ bag_asp_try_send_secret_royal_inspectors = {
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_send_secret_royal_inspectors value = yes } }
 				scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 				scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-				debug_log = "bag_asp: seat set to send_secret_royal_inspectors"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to send_secret_royal_inspectors" }
 			}
 		}
 	}
@@ -781,7 +781,7 @@ bag_asp_try_promote_culture = {
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_promote_culture value = yes } }
 				scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 				scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-				debug_log = "bag_asp: seat set to promote_culture"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to promote_culture" }
 			}
 		}
 	}
@@ -836,7 +836,7 @@ bag_asp_try_promote_religion = {
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_promote_religion value = yes } }
 				scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 				scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-				debug_log = "bag_asp: seat set to promote_religion"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to promote_religion" }
 			}
 		}
 	}
@@ -866,7 +866,7 @@ bag_asp_try_pacify_population = {
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_pacify_population value = yes } }
 				scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 				scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-				debug_log = "bag_asp: seat set to pacify_population"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to pacify_population" }
 			}
 		}
 	}
@@ -909,7 +909,7 @@ bag_asp_try_recovery_effort = {
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_recovery_effort value = yes } }
 				scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 				scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-				debug_log = "bag_asp: seat set to recovery_effort"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to recovery_effort" }
 			}
 		}
 	}
@@ -941,7 +941,7 @@ bag_asp_try_appease_estate = {
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_appease_estate value = yes } }
 				scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 				scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-				debug_log = "bag_asp: seat set to appease_estate"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to appease_estate" }
 			}
 		}
 	}
@@ -960,7 +960,7 @@ bag_asp_try_alleviate_concerns = {
 		}
 		scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 		scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-		debug_log = "bag_asp: seat set to alleviate_concerns"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to alleviate_concerns" }
 	}
 }
 
@@ -978,7 +978,7 @@ bag_asp_try_reduce_inflation = {
 		}
 		scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 		scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-		debug_log = "bag_asp: seat set to reduce_inflation"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to reduce_inflation" }
 	}
 }
 
@@ -1005,7 +1005,7 @@ bag_asp_try_develop_province = {
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_develop_province value = yes } }
 				scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 				scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-				debug_log = "bag_asp: seat set to develop_province"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to develop_province" }
 			}
 		}
 	}
@@ -1038,7 +1038,7 @@ bag_asp_try_study_institutions = {
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_study_institutions value = yes } }
 				scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 				scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-				debug_log = "bag_asp: seat set to study_institutions"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to study_institutions" }
 			}
 		}
 	}
@@ -1066,7 +1066,7 @@ bag_asp_try_pop_promote_action = {
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_pop_promote_action value = yes } }
 				scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 				scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-				debug_log = "bag_asp: seat set to pop_promote_action"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to pop_promote_action" }
 			}
 		}
 	}
@@ -1085,7 +1085,7 @@ bag_asp_try_strengthen_government = {
 		}
 		scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 		scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-		debug_log = "bag_asp: seat set to strengthen_government"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to strengthen_government" }
 	}
 }
 
@@ -1102,7 +1102,7 @@ bag_asp_try_diplomatic_endeavors = {
 		}
 		scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 		scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-		debug_log = "bag_asp: seat set to diplomatic_endeavors"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to diplomatic_endeavors" }
 	}
 }
 
@@ -1119,7 +1119,7 @@ bag_asp_try_counter_espionage_action = {
 		}
 		scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 		scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-		debug_log = "bag_asp: seat set to counter_espionage_action"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to counter_espionage_action" }
 	}
 }
 
@@ -1149,7 +1149,7 @@ bag_asp_try_noblesse_oblige_cabinet_action = {
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_noblesse_oblige_cabinet_action value = yes } }
 				scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 				scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-				debug_log = "bag_asp: seat set to noblesse_oblige_cabinet_action"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to noblesse_oblige_cabinet_action" }
 			}
 		}
 	}
@@ -1169,7 +1169,7 @@ bag_asp_try_diplomatic_antagonism = {
 		}
 		scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 		scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-		debug_log = "bag_asp: seat set to diplomatic_antagonism"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to diplomatic_antagonism" }
 	}
 }
 
@@ -1267,7 +1267,7 @@ bag_asp_try_promote_culture_full = {
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_promote_culture value = yes } }
 				scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 				scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-				debug_log = "bag_asp: seat set to promote_culture_full"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to promote_culture_full" }
 			}
 		}
 	}
@@ -1297,7 +1297,7 @@ bag_asp_try_at_noblesse_oblige_cabinet_action = {
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_noblesse_oblige_cabinet_action value = yes } }
 				scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 				scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-				debug_log = "bag_asp: seat set to noblesse_oblige_cabinet_action"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to noblesse_oblige_cabinet_action" }
 			}
 		}
 	}
@@ -1327,7 +1327,7 @@ bag_asp_try_at_increase_control_province = {
 				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_increase_control_province value = yes } }
 				scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 				scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
-				debug_log = "bag_asp: seat set to increase_control_province"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: seat set to increase_control_province" }
 			}
 		}
 	}
@@ -1343,7 +1343,7 @@ bag_asp_place_change_societal_values = {
 				NOT = { bag_asp_free_seat = yes }
 			}
 		}
-		debug_log = "bag_asp: values, the seat on values stays: this pass fills empty seats only"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the seat on values stays: this pass fills empty seats only" }
 	}
 	else = {
 		# What the mod asked for last holds only while a seat is still on values.
@@ -1373,7 +1373,7 @@ bag_asp_place_change_societal_values = {
 			if = {
 				limit = { has_variable = bag_asp_log_on }
 				set_global_variable = { name = bag_asp_sv_n3 value = local_var:bag_asp_sv_p }
-				debug_log = "bag_asp: values, the best free diplomat would push [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the best free diplomat would push [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 			}
 			bag_asp_sv_choose = yes
 			if = {
@@ -1392,7 +1392,7 @@ bag_asp_place_change_societal_values = {
 					limit = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					cabinet_member ?= { set_variable = { name = bag_asp_claimed value = yes } }
 				}
-				debug_log = "bag_asp: values, the seat keeps its pair"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the seat keeps its pair" }
 			}
 			else_if = {
 				limit = { has_variable = bag_asp_sv_want }
@@ -1423,7 +1423,7 @@ bag_asp_place_change_societal_values = {
 				bag_asp_sv_ask = yes
 			}
 			else = {
-				debug_log = "bag_asp: values, no ticked pair would move a whole point"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, no ticked pair would move a whole point" }
 			}
 			if = { limit = { has_variable = bag_asp_sv_want } remove_variable = bag_asp_sv_want }
 			if = { limit = { has_variable = bag_asp_sv_want_side } remove_variable = bag_asp_sv_want_side }
@@ -1467,7 +1467,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, centralization_vs_decentralization toward decentralization: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, centralization_vs_decentralization toward decentralization: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 							else = {
@@ -1494,7 +1494,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, centralization_vs_decentralization toward centralization: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, centralization_vs_decentralization toward centralization: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 						}
@@ -1523,7 +1523,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, traditionalist_vs_innovative toward innovative: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, traditionalist_vs_innovative toward innovative: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 							else = {
@@ -1550,7 +1550,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, traditionalist_vs_innovative toward traditionalist: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, traditionalist_vs_innovative toward traditionalist: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 						}
@@ -1579,7 +1579,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, spiritualist_vs_humanist toward humanist: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, spiritualist_vs_humanist toward humanist: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 							else = {
@@ -1606,7 +1606,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, spiritualist_vs_humanist toward spiritualist: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, spiritualist_vs_humanist toward spiritualist: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 						}
@@ -1635,7 +1635,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, aristocracy_vs_plutocracy toward plutocracy: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, aristocracy_vs_plutocracy toward plutocracy: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 							else = {
@@ -1662,7 +1662,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, aristocracy_vs_plutocracy toward aristocracy: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, aristocracy_vs_plutocracy toward aristocracy: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 						}
@@ -1691,7 +1691,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, serfdom_vs_free_subjects toward free_subjects: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, serfdom_vs_free_subjects toward free_subjects: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 							else = {
@@ -1718,7 +1718,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, serfdom_vs_free_subjects toward serfdom: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, serfdom_vs_free_subjects toward serfdom: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 						}
@@ -1747,7 +1747,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, mercantilism_vs_free_trade toward free_trade: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, mercantilism_vs_free_trade toward free_trade: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 							else = {
@@ -1774,7 +1774,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, mercantilism_vs_free_trade toward mercantilism: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, mercantilism_vs_free_trade toward mercantilism: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 						}
@@ -1803,7 +1803,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, belligerent_vs_conciliatory toward conciliatory: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, belligerent_vs_conciliatory toward conciliatory: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 							else = {
@@ -1830,7 +1830,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, belligerent_vs_conciliatory toward belligerent: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, belligerent_vs_conciliatory toward belligerent: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 						}
@@ -1859,7 +1859,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, quality_vs_quantity toward quantity: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, quality_vs_quantity toward quantity: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 							else = {
@@ -1886,7 +1886,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, quality_vs_quantity toward quality: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, quality_vs_quantity toward quality: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 						}
@@ -1915,7 +1915,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, offensive_vs_defensive toward defensive: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, offensive_vs_defensive toward defensive: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 							else = {
@@ -1942,7 +1942,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, offensive_vs_defensive toward offensive: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, offensive_vs_defensive toward offensive: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 						}
@@ -1971,7 +1971,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, land_vs_naval toward naval: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, land_vs_naval toward naval: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 							else = {
@@ -1998,7 +1998,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, land_vs_naval toward land: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, land_vs_naval toward land: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 						}
@@ -2027,7 +2027,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, capital_economy_vs_traditional_economy toward traditional_economy: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, capital_economy_vs_traditional_economy toward traditional_economy: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 							else = {
@@ -2054,7 +2054,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, capital_economy_vs_traditional_economy toward capital_economy: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, capital_economy_vs_traditional_economy toward capital_economy: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 						}
@@ -2083,7 +2083,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, individualism_vs_communalism toward communalism: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, individualism_vs_communalism toward communalism: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 							else = {
@@ -2110,7 +2110,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, individualism_vs_communalism toward individualism: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, individualism_vs_communalism toward individualism: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 						}
@@ -2139,7 +2139,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, outward_vs_inward toward inward: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, outward_vs_inward toward inward: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 							else = {
@@ -2166,7 +2166,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, outward_vs_inward toward outward: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, outward_vs_inward toward outward: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 						}
@@ -2195,7 +2195,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, sinicized_vs_unsinicized toward unsinicized: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, sinicized_vs_unsinicized toward unsinicized: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 							else = {
@@ -2222,7 +2222,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, sinicized_vs_unsinicized toward sinicized: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, sinicized_vs_unsinicized toward sinicized: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 						}
@@ -2251,7 +2251,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, absolutism_vs_liberalism toward liberalism: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, absolutism_vs_liberalism toward liberalism: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 							else = {
@@ -2278,7 +2278,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, absolutism_vs_liberalism toward absolutism: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, absolutism_vs_liberalism toward absolutism: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 						}
@@ -2307,7 +2307,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, mysticism_vs_jurisprudence toward jurisprudence: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, mysticism_vs_jurisprudence toward jurisprudence: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 							else = {
@@ -2334,7 +2334,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, mysticism_vs_jurisprudence toward mysticism: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, mysticism_vs_jurisprudence toward mysticism: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 						}
@@ -2363,7 +2363,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, latinization_vs_hellenization toward hellenization: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, latinization_vs_hellenization toward hellenization: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 							else = {
@@ -2390,7 +2390,7 @@ bag_asp_sv_choose = {
 								bag_asp_sv_test = yes
 								if = {
 									limit = { has_variable = bag_asp_log_on }
-									debug_log = "bag_asp: values, latinization_vs_hellenization toward latinization: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month"
+									if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, latinization_vs_hellenization toward latinization: stands at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n1_value')|2], would stop at [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n2_value')|2], moves [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_n3_value')|4] a month" }
 								}
 							}
 						}
@@ -2453,7 +2453,7 @@ bag_asp_sv_test = {
 			has_variable = bag_asp_log_on
 			local_var:bag_asp_sv_r = 1
 		}
-		debug_log = "bag_asp: values, something pushing this side is still being implemented: not taken until it is in full"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, something pushing this side is still being implemented: not taken until it is in full" }
 	}
 	if = {
 		# His screenshot 13.10 15:19: «Качество» held at −20.70 with +0.00 a
@@ -2606,7 +2606,7 @@ bag_asp_sv_bounce = {
 		set_variable = { name = bag_asp_sv_want value = 17 }
 	}
 	set_variable = { name = bag_asp_sv_want_side value = 1 }
-	debug_log = "bag_asp: values, the window left the pair out: another pair first, then it"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the window left the pair out: another pair first, then it" }
 	bag_asp_sv_ask = yes
 	remove_variable = bag_asp_sv_want
 	remove_variable = bag_asp_sv_want_side
@@ -2618,71 +2618,71 @@ bag_asp_sv_ask = {
 		trigger = var:bag_asp_sv_want
 		1 = {
 			set_variable = { name = bag_asp_sv_pair value = societal_value_type:centralization_vs_decentralization }
-			debug_log = "bag_asp: values, the seat goes on centralization_vs_decentralization"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the seat goes on centralization_vs_decentralization" }
 		}
 		2 = {
 			set_variable = { name = bag_asp_sv_pair value = societal_value_type:traditionalist_vs_innovative }
-			debug_log = "bag_asp: values, the seat goes on traditionalist_vs_innovative"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the seat goes on traditionalist_vs_innovative" }
 		}
 		3 = {
 			set_variable = { name = bag_asp_sv_pair value = societal_value_type:spiritualist_vs_humanist }
-			debug_log = "bag_asp: values, the seat goes on spiritualist_vs_humanist"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the seat goes on spiritualist_vs_humanist" }
 		}
 		4 = {
 			set_variable = { name = bag_asp_sv_pair value = societal_value_type:aristocracy_vs_plutocracy }
-			debug_log = "bag_asp: values, the seat goes on aristocracy_vs_plutocracy"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the seat goes on aristocracy_vs_plutocracy" }
 		}
 		5 = {
 			set_variable = { name = bag_asp_sv_pair value = societal_value_type:serfdom_vs_free_subjects }
-			debug_log = "bag_asp: values, the seat goes on serfdom_vs_free_subjects"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the seat goes on serfdom_vs_free_subjects" }
 		}
 		6 = {
 			set_variable = { name = bag_asp_sv_pair value = societal_value_type:mercantilism_vs_free_trade }
-			debug_log = "bag_asp: values, the seat goes on mercantilism_vs_free_trade"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the seat goes on mercantilism_vs_free_trade" }
 		}
 		7 = {
 			set_variable = { name = bag_asp_sv_pair value = societal_value_type:belligerent_vs_conciliatory }
-			debug_log = "bag_asp: values, the seat goes on belligerent_vs_conciliatory"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the seat goes on belligerent_vs_conciliatory" }
 		}
 		8 = {
 			set_variable = { name = bag_asp_sv_pair value = societal_value_type:quality_vs_quantity }
-			debug_log = "bag_asp: values, the seat goes on quality_vs_quantity"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the seat goes on quality_vs_quantity" }
 		}
 		9 = {
 			set_variable = { name = bag_asp_sv_pair value = societal_value_type:offensive_vs_defensive }
-			debug_log = "bag_asp: values, the seat goes on offensive_vs_defensive"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the seat goes on offensive_vs_defensive" }
 		}
 		10 = {
 			set_variable = { name = bag_asp_sv_pair value = societal_value_type:land_vs_naval }
-			debug_log = "bag_asp: values, the seat goes on land_vs_naval"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the seat goes on land_vs_naval" }
 		}
 		11 = {
 			set_variable = { name = bag_asp_sv_pair value = societal_value_type:capital_economy_vs_traditional_economy }
-			debug_log = "bag_asp: values, the seat goes on capital_economy_vs_traditional_economy"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the seat goes on capital_economy_vs_traditional_economy" }
 		}
 		12 = {
 			set_variable = { name = bag_asp_sv_pair value = societal_value_type:individualism_vs_communalism }
-			debug_log = "bag_asp: values, the seat goes on individualism_vs_communalism"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the seat goes on individualism_vs_communalism" }
 		}
 		13 = {
 			set_variable = { name = bag_asp_sv_pair value = societal_value_type:outward_vs_inward }
-			debug_log = "bag_asp: values, the seat goes on outward_vs_inward"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the seat goes on outward_vs_inward" }
 		}
 		14 = {
 			set_variable = { name = bag_asp_sv_pair value = societal_value_type:sinicized_vs_unsinicized }
-			debug_log = "bag_asp: values, the seat goes on sinicized_vs_unsinicized"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the seat goes on sinicized_vs_unsinicized" }
 		}
 		15 = {
 			set_variable = { name = bag_asp_sv_pair value = societal_value_type:absolutism_vs_liberalism }
-			debug_log = "bag_asp: values, the seat goes on absolutism_vs_liberalism"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the seat goes on absolutism_vs_liberalism" }
 		}
 		16 = {
 			set_variable = { name = bag_asp_sv_pair value = societal_value_type:mysticism_vs_jurisprudence }
-			debug_log = "bag_asp: values, the seat goes on mysticism_vs_jurisprudence"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the seat goes on mysticism_vs_jurisprudence" }
 		}
 		17 = {
 			set_variable = { name = bag_asp_sv_pair value = societal_value_type:latinization_vs_hellenization }
-			debug_log = "bag_asp: values, the seat goes on latinization_vs_hellenization"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the seat goes on latinization_vs_hellenization" }
 		}
 	}
 	if = {
@@ -2693,7 +2693,7 @@ bag_asp_sv_ask = {
 		set_variable = { name = bag_asp_sv_left value = yes }
 	}
 	set_variable = { name = bag_asp_sv_open value = yes }
-	debug_log = "bag_asp: values, the window is asked to open and press"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the window is asked to open and press" }
 }
 
 # Scope: country. From bag_asp_tick, monthly: a seat on promote_culture whose province
@@ -2715,10 +2715,10 @@ bag_asp_assim_check = {
 					NOT = { any_location_in_province = { bag_asp_assimilable_to_target = yes } }
 				}
 			}
-			debug_log = "bag_asp: assimilation freed: no pop left in its province that can turn (tribesmen, a blocked class, or a faith-tied culture)"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: assimilation freed: no pop left in its province that can turn (tribesmen, a blocked class, or a faith-tied culture)" }
 			if = {
 				limit = { scope:actor = { has_variable = bag_asp_log_on } }
-				interaction_target:target_1 = { debug_log_scopes = no }
+				interaction_target:target_1 = { if = { limit = { has_global_variable = bag_asp_log } debug_log_scopes = no } }
 			}
 			bag_asp_vacate = yes
 		}
@@ -2741,80 +2741,80 @@ bag_asp_probe_pops = {
 			}
 			any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } }
 		}
-		debug_log = "bag_asp: probe:  a location with foreign pops:"
-		debug_log_scopes = no
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe:  a location with foreign pops:" }
+		if = { limit = { has_global_variable = bag_asp_log } debug_log_scopes = no }
 		if = {
 			limit = { bag_asp_assimilable_any = yes }
-			debug_log = "bag_asp: probe:   and one of them can turn (so the province test should hold)"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe:   and one of them can turn (so the province test should hold)" }
 		}
 		else = {
 			if = {
 				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:tribesmen } }
-				debug_log = "bag_asp: probe:   a foreign pop here is tribesmen, which never assimilate"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe:   a foreign pop here is tribesmen, which never assimilate" }
 			}
 			if = {
 				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } religion = religion:judaism } }
-				debug_log = "bag_asp: probe:   a foreign pop here is of judaism, a culture-locked faith"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe:   a foreign pop here is of judaism, a culture-locked faith" }
 			}
 			if = {
 				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } religion = religion:samaritanism } }
-				debug_log = "bag_asp: probe:   a foreign pop here is of samaritanism, a culture-locked faith"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe:   a foreign pop here is of samaritanism, a culture-locked faith" }
 			}
 			if = {
 				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:nobles location ?= { modifier:local_nobles_assimilation_blocked = yes } } }
-				debug_log = "bag_asp: probe:   a foreign pop here is nobles, blocked here"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe:   a foreign pop here is nobles, blocked here" }
 			}
 			if = {
 				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:clergy location ?= { modifier:local_clergy_assimilation_blocked = yes } } }
-				debug_log = "bag_asp: probe:   a foreign pop here is clergy, blocked here"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe:   a foreign pop here is clergy, blocked here" }
 			}
 			if = {
 				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:burghers location ?= { modifier:local_burghers_assimilation_blocked = yes } } }
-				debug_log = "bag_asp: probe:   a foreign pop here is burghers, blocked here"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe:   a foreign pop here is burghers, blocked here" }
 			}
 			if = {
 				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:laborers location ?= { modifier:local_laborers_assimilation_blocked = yes } } }
-				debug_log = "bag_asp: probe:   a foreign pop here is laborers, blocked here"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe:   a foreign pop here is laborers, blocked here" }
 			}
 			if = {
 				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:soldiers location ?= { modifier:local_soldiers_assimilation_blocked = yes } } }
-				debug_log = "bag_asp: probe:   a foreign pop here is soldiers, blocked here"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe:   a foreign pop here is soldiers, blocked here" }
 			}
 			if = {
 				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:peasants location ?= { modifier:local_peasants_assimilation_blocked = yes } } }
-				debug_log = "bag_asp: probe:   a foreign pop here is peasants, blocked here"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe:   a foreign pop here is peasants, blocked here" }
 			}
 			if = {
 				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:slaves location ?= { modifier:local_slaves_assimilation_blocked = yes } } }
-				debug_log = "bag_asp: probe:   a foreign pop here is slaves, blocked here"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe:   a foreign pop here is slaves, blocked here" }
 			}
 			if = {
 				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:nobles scope:actor = { modifier:global_nobles_assimilation_blocked = yes } } }
-				debug_log = "bag_asp: probe:   a foreign pop here is nobles, blocked in the country"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe:   a foreign pop here is nobles, blocked in the country" }
 			}
 			if = {
 				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:clergy scope:actor = { modifier:global_clergy_assimilation_blocked = yes } } }
-				debug_log = "bag_asp: probe:   a foreign pop here is clergy, blocked in the country"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe:   a foreign pop here is clergy, blocked in the country" }
 			}
 			if = {
 				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:burghers scope:actor = { modifier:global_burghers_assimilation_blocked = yes } } }
-				debug_log = "bag_asp: probe:   a foreign pop here is burghers, blocked in the country"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe:   a foreign pop here is burghers, blocked in the country" }
 			}
 			if = {
 				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:laborers scope:actor = { modifier:global_laborers_assimilation_blocked = yes } } }
-				debug_log = "bag_asp: probe:   a foreign pop here is laborers, blocked in the country"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe:   a foreign pop here is laborers, blocked in the country" }
 			}
 			if = {
 				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:soldiers scope:actor = { modifier:global_soldiers_assimilation_blocked = yes } } }
-				debug_log = "bag_asp: probe:   a foreign pop here is soldiers, blocked in the country"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe:   a foreign pop here is soldiers, blocked in the country" }
 			}
 			if = {
 				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:peasants scope:actor = { modifier:global_peasants_assimilation_blocked = yes } } }
-				debug_log = "bag_asp: probe:   a foreign pop here is peasants, blocked in the country"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe:   a foreign pop here is peasants, blocked in the country" }
 			}
 			if = {
 				limit = { any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } pop_type = pop_type:slaves scope:actor = { modifier:global_slaves_assimilation_blocked = yes } } }
-				debug_log = "bag_asp: probe:   a foreign pop here is slaves, blocked in the country"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe:   a foreign pop here is slaves, blocked in the country" }
 			}
 		}
 	}
@@ -2933,7 +2933,7 @@ bag_asp_emergency = {
 				}
 				if = {
 					limit = { has_variable = bag_asp_placed }
-					debug_log = "bag_asp: emergency, a seat moved to recovery"
+					if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: emergency, a seat moved to recovery" }
 					remove_variable = bag_asp_placed
 					set_variable = { name = bag_asp_em_go value = yes }
 				}
@@ -3582,7 +3582,7 @@ bag_asp_place_promote_culture = {
 						stop_cabinet_action = {}
 						set_cabinet_action = { type = cabinet_action:promote_culture target = scope:target target_1 = scope:bag_asp_new }
 					}
-					debug_log = "bag_asp: assimilation moved to a province with more locations to bring to half"
+					if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: assimilation moved to a province with more locations to bring to half" }
 				}
 			}
 		}
@@ -4178,7 +4178,7 @@ bag_asp_place_develop_province = {
 				remove_variable = bag_asp_claimed
 				remove_variable = bag_asp_kept
 			}
-			debug_log = "bag_asp: develop_province gave up a seat: more than its setting allows"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: develop_province gave up a seat: more than its setting allows" }
 		}
 	}
 	# His rule 13.10: in a full hand-out the row takes the best advisors for it,
@@ -4908,7 +4908,7 @@ bag_asp_move_integrate_province = {
 			set_variable = { name = bag_asp_kept value = yes }
 		}
 	}
-	debug_log = "bag_asp: integrate_province moved to an advisor better at it"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: integrate_province moved to an advisor better at it" }
 }
 
 # Scope: country (scope:actor).
@@ -4934,7 +4934,7 @@ bag_asp_move_integrate_area = {
 			set_variable = { name = bag_asp_kept value = yes }
 		}
 	}
-	debug_log = "bag_asp: integrate_area moved to an advisor better at it"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: integrate_area moved to an advisor better at it" }
 }
 
 # Scope: country (scope:actor).
@@ -4959,7 +4959,7 @@ bag_asp_move_reduce_war_exhaustion = {
 			set_variable = { name = bag_asp_kept value = yes }
 		}
 	}
-	debug_log = "bag_asp: reduce_war_exhaustion moved to an advisor better at it"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: reduce_war_exhaustion moved to an advisor better at it" }
 }
 
 # Scope: country (scope:actor).
@@ -4984,7 +4984,7 @@ bag_asp_move_stabilize_country = {
 			set_variable = { name = bag_asp_kept value = yes }
 		}
 	}
-	debug_log = "bag_asp: stabilize_country moved to an advisor better at it"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: stabilize_country moved to an advisor better at it" }
 }
 
 # Scope: country (scope:actor).
@@ -5010,7 +5010,7 @@ bag_asp_move_increase_control_province = {
 			set_variable = { name = bag_asp_kept value = yes }
 		}
 	}
-	debug_log = "bag_asp: increase_control_province moved to an advisor better at it"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: increase_control_province moved to an advisor better at it" }
 }
 
 # Scope: country (scope:actor).
@@ -5036,7 +5036,7 @@ bag_asp_move_increase_control_area = {
 			set_variable = { name = bag_asp_kept value = yes }
 		}
 	}
-	debug_log = "bag_asp: increase_control_area moved to an advisor better at it"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: increase_control_area moved to an advisor better at it" }
 }
 
 # Scope: country (scope:actor).
@@ -5062,7 +5062,7 @@ bag_asp_move_send_secret_royal_inspectors = {
 			set_variable = { name = bag_asp_kept value = yes }
 		}
 	}
-	debug_log = "bag_asp: send_secret_royal_inspectors moved to an advisor better at it"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: send_secret_royal_inspectors moved to an advisor better at it" }
 }
 
 # Scope: country (scope:actor).
@@ -5089,7 +5089,7 @@ bag_asp_move_promote_culture = {
 			set_variable = { name = bag_asp_kept value = yes }
 		}
 	}
-	debug_log = "bag_asp: promote_culture moved to an advisor better at it"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: promote_culture moved to an advisor better at it" }
 }
 
 # Scope: country (scope:actor).
@@ -5116,7 +5116,7 @@ bag_asp_move_promote_religion = {
 			set_variable = { name = bag_asp_kept value = yes }
 		}
 	}
-	debug_log = "bag_asp: promote_religion moved to an advisor better at it"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: promote_religion moved to an advisor better at it" }
 }
 
 # Scope: country (scope:actor).
@@ -5142,7 +5142,7 @@ bag_asp_move_pacify_population = {
 			set_variable = { name = bag_asp_kept value = yes }
 		}
 	}
-	debug_log = "bag_asp: pacify_population moved to an advisor better at it"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: pacify_population moved to an advisor better at it" }
 }
 
 # Scope: country (scope:actor).
@@ -5168,7 +5168,7 @@ bag_asp_move_recovery_effort = {
 			set_variable = { name = bag_asp_kept value = yes }
 		}
 	}
-	debug_log = "bag_asp: recovery_effort moved to an advisor better at it"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: recovery_effort moved to an advisor better at it" }
 }
 
 # Scope: country (scope:actor).
@@ -5194,7 +5194,7 @@ bag_asp_move_appease_estate = {
 			set_variable = { name = bag_asp_kept value = yes }
 		}
 	}
-	debug_log = "bag_asp: appease_estate moved to an advisor better at it"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: appease_estate moved to an advisor better at it" }
 }
 
 # Scope: country (scope:actor).
@@ -5219,7 +5219,7 @@ bag_asp_move_alleviate_concerns = {
 			set_variable = { name = bag_asp_kept value = yes }
 		}
 	}
-	debug_log = "bag_asp: alleviate_concerns moved to an advisor better at it"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: alleviate_concerns moved to an advisor better at it" }
 }
 
 # Scope: country (scope:actor).
@@ -5244,7 +5244,7 @@ bag_asp_move_reduce_inflation = {
 			set_variable = { name = bag_asp_kept value = yes }
 		}
 	}
-	debug_log = "bag_asp: reduce_inflation moved to an advisor better at it"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: reduce_inflation moved to an advisor better at it" }
 }
 
 # Scope: country (scope:actor).
@@ -5270,7 +5270,7 @@ bag_asp_move_develop_province = {
 			set_variable = { name = bag_asp_kept value = yes }
 		}
 	}
-	debug_log = "bag_asp: develop_province moved to an advisor better at it"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: develop_province moved to an advisor better at it" }
 }
 
 # Scope: country (scope:actor).
@@ -5296,7 +5296,7 @@ bag_asp_move_study_institutions = {
 			set_variable = { name = bag_asp_kept value = yes }
 		}
 	}
-	debug_log = "bag_asp: study_institutions moved to an advisor better at it"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: study_institutions moved to an advisor better at it" }
 }
 
 # Scope: country (scope:actor).
@@ -5322,7 +5322,7 @@ bag_asp_move_pop_promote_action = {
 			set_variable = { name = bag_asp_kept value = yes }
 		}
 	}
-	debug_log = "bag_asp: pop_promote_action moved to an advisor better at it"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: pop_promote_action moved to an advisor better at it" }
 }
 
 # Scope: country (scope:actor).
@@ -5347,7 +5347,7 @@ bag_asp_move_strengthen_government = {
 			set_variable = { name = bag_asp_kept value = yes }
 		}
 	}
-	debug_log = "bag_asp: strengthen_government moved to an advisor better at it"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: strengthen_government moved to an advisor better at it" }
 }
 
 # Scope: country (scope:actor).
@@ -5372,7 +5372,7 @@ bag_asp_move_diplomatic_endeavors = {
 			set_variable = { name = bag_asp_kept value = yes }
 		}
 	}
-	debug_log = "bag_asp: diplomatic_endeavors moved to an advisor better at it"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: diplomatic_endeavors moved to an advisor better at it" }
 }
 
 # Scope: country (scope:actor).
@@ -5397,7 +5397,7 @@ bag_asp_move_counter_espionage_action = {
 			set_variable = { name = bag_asp_kept value = yes }
 		}
 	}
-	debug_log = "bag_asp: counter_espionage_action moved to an advisor better at it"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: counter_espionage_action moved to an advisor better at it" }
 }
 
 # Scope: country (scope:actor).
@@ -5423,7 +5423,7 @@ bag_asp_move_noblesse_oblige_cabinet_action = {
 			set_variable = { name = bag_asp_kept value = yes }
 		}
 	}
-	debug_log = "bag_asp: noblesse_oblige_cabinet_action moved to an advisor better at it"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: noblesse_oblige_cabinet_action moved to an advisor better at it" }
 }
 
 # Scope: country (scope:actor).
@@ -5448,7 +5448,7 @@ bag_asp_move_diplomatic_antagonism = {
 			set_variable = { name = bag_asp_kept value = yes }
 		}
 	}
-	debug_log = "bag_asp: diplomatic_antagonism moved to an advisor better at it"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: diplomatic_antagonism moved to an advisor better at it" }
 }
 
 # Scope: country (scope:actor).
@@ -5475,7 +5475,7 @@ bag_asp_move_promote_culture_full = {
 			set_variable = { name = bag_asp_kept value = yes }
 		}
 	}
-	debug_log = "bag_asp: promote_culture_full moved to an advisor better at it"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: promote_culture_full moved to an advisor better at it" }
 }
 
 # «Ускорять контролем», his rule 13.10: a control action (noblesse_oblige_cabinet_action, increase_control_province,
@@ -5504,7 +5504,7 @@ bag_asp_pair = {
 		if = {
 			limit = { scope:actor = { has_variable = bag_asp_placed } }
 			cabinet_member = { set_variable = { name = bag_asp_paired value = yes } }
-			debug_log = "bag_asp: assimilation sped up with a control action"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: assimilation sped up with a control action" }
 		}
 	}
 	set_variable = { name = bag_asp_placed value = yes }
@@ -5569,7 +5569,7 @@ bag_asp_keep_pairs = {
 						remove_variable = bag_asp_pending
 						remove_variable = bag_asp_claimed
 					}
-					debug_log = "bag_asp: an assimilation gave its seat to the control of a better one"
+					if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: an assimilation gave its seat to the control of a better one" }
 				}
 			}
 			bag_asp_pair = yes
@@ -5591,7 +5591,7 @@ bag_asp_unpair = {
 				interaction_target:selected_province ?= { NOT = { has_variable = bag_asp_busy_promote_culture } }
 			}
 			bag_asp_vacate = yes
-			debug_log = "bag_asp: a control seat released with its assimilation"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: a control seat released with its assimilation" }
 		}
 		else_if = {
 			limit = {
@@ -5615,30 +5615,30 @@ bag_asp_probe_order = {
 			scope:actor = {
 				switch = {
 					trigger = scope:bag_asp_item
-					flag:bag_asp_integrate_province = { debug_log = "bag_asp: probe: in use, next down the order: integrate_province" }
-					flag:bag_asp_integrate_area = { debug_log = "bag_asp: probe: in use, next down the order: integrate_area" }
-					flag:bag_asp_reduce_war_exhaustion = { debug_log = "bag_asp: probe: in use, next down the order: reduce_war_exhaustion" }
-					flag:bag_asp_stabilize_country = { debug_log = "bag_asp: probe: in use, next down the order: stabilize_country" }
-					flag:bag_asp_increase_control_province = { debug_log = "bag_asp: probe: in use, next down the order: increase_control_province" }
-					flag:bag_asp_increase_control_area = { debug_log = "bag_asp: probe: in use, next down the order: increase_control_area" }
-					flag:bag_asp_send_secret_royal_inspectors = { debug_log = "bag_asp: probe: in use, next down the order: send_secret_royal_inspectors" }
-					flag:bag_asp_promote_culture = { debug_log = "bag_asp: probe: in use, next down the order: promote_culture" }
-					flag:bag_asp_promote_religion = { debug_log = "bag_asp: probe: in use, next down the order: promote_religion" }
-					flag:bag_asp_pacify_population = { debug_log = "bag_asp: probe: in use, next down the order: pacify_population" }
-					flag:bag_asp_recovery_effort = { debug_log = "bag_asp: probe: in use, next down the order: recovery_effort" }
-					flag:bag_asp_appease_estate = { debug_log = "bag_asp: probe: in use, next down the order: appease_estate" }
-					flag:bag_asp_alleviate_concerns = { debug_log = "bag_asp: probe: in use, next down the order: alleviate_concerns" }
-					flag:bag_asp_reduce_inflation = { debug_log = "bag_asp: probe: in use, next down the order: reduce_inflation" }
-					flag:bag_asp_develop_province = { debug_log = "bag_asp: probe: in use, next down the order: develop_province" }
-					flag:bag_asp_study_institutions = { debug_log = "bag_asp: probe: in use, next down the order: study_institutions" }
-					flag:bag_asp_pop_promote_action = { debug_log = "bag_asp: probe: in use, next down the order: pop_promote_action" }
-					flag:bag_asp_strengthen_government = { debug_log = "bag_asp: probe: in use, next down the order: strengthen_government" }
-					flag:bag_asp_diplomatic_endeavors = { debug_log = "bag_asp: probe: in use, next down the order: diplomatic_endeavors" }
-					flag:bag_asp_counter_espionage_action = { debug_log = "bag_asp: probe: in use, next down the order: counter_espionage_action" }
-					flag:bag_asp_noblesse_oblige_cabinet_action = { debug_log = "bag_asp: probe: in use, next down the order: noblesse_oblige_cabinet_action" }
-					flag:bag_asp_diplomatic_antagonism = { debug_log = "bag_asp: probe: in use, next down the order: diplomatic_antagonism" }
-					flag:bag_asp_promote_culture_full = { debug_log = "bag_asp: probe: in use, next down the order: promote_culture_full" }
-					flag:bag_asp_change_societal_values = { debug_log = "bag_asp: probe: in use, next down the order: change_societal_values" }
+					flag:bag_asp_integrate_province = { if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: in use, next down the order: integrate_province" } }
+					flag:bag_asp_integrate_area = { if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: in use, next down the order: integrate_area" } }
+					flag:bag_asp_reduce_war_exhaustion = { if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: in use, next down the order: reduce_war_exhaustion" } }
+					flag:bag_asp_stabilize_country = { if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: in use, next down the order: stabilize_country" } }
+					flag:bag_asp_increase_control_province = { if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: in use, next down the order: increase_control_province" } }
+					flag:bag_asp_increase_control_area = { if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: in use, next down the order: increase_control_area" } }
+					flag:bag_asp_send_secret_royal_inspectors = { if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: in use, next down the order: send_secret_royal_inspectors" } }
+					flag:bag_asp_promote_culture = { if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: in use, next down the order: promote_culture" } }
+					flag:bag_asp_promote_religion = { if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: in use, next down the order: promote_religion" } }
+					flag:bag_asp_pacify_population = { if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: in use, next down the order: pacify_population" } }
+					flag:bag_asp_recovery_effort = { if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: in use, next down the order: recovery_effort" } }
+					flag:bag_asp_appease_estate = { if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: in use, next down the order: appease_estate" } }
+					flag:bag_asp_alleviate_concerns = { if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: in use, next down the order: alleviate_concerns" } }
+					flag:bag_asp_reduce_inflation = { if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: in use, next down the order: reduce_inflation" } }
+					flag:bag_asp_develop_province = { if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: in use, next down the order: develop_province" } }
+					flag:bag_asp_study_institutions = { if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: in use, next down the order: study_institutions" } }
+					flag:bag_asp_pop_promote_action = { if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: in use, next down the order: pop_promote_action" } }
+					flag:bag_asp_strengthen_government = { if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: in use, next down the order: strengthen_government" } }
+					flag:bag_asp_diplomatic_endeavors = { if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: in use, next down the order: diplomatic_endeavors" } }
+					flag:bag_asp_counter_espionage_action = { if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: in use, next down the order: counter_espionage_action" } }
+					flag:bag_asp_noblesse_oblige_cabinet_action = { if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: in use, next down the order: noblesse_oblige_cabinet_action" } }
+					flag:bag_asp_diplomatic_antagonism = { if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: in use, next down the order: diplomatic_antagonism" } }
+					flag:bag_asp_promote_culture_full = { if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: in use, next down the order: promote_culture_full" } }
+					flag:bag_asp_change_societal_values = { if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: in use, next down the order: change_societal_values" } }
 				}
 			}
 		}
@@ -5651,30 +5651,30 @@ bag_asp_probe_order = {
 bag_asp_probe_promote = {
 	if = {
 		limit = { cabinet_action:pop_promote_action = { is_available_for = scope:actor } }
-		debug_log = "bag_asp: probe: urbanization is available"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: urbanization is available" }
 	}
 	else = {
-		debug_log = "bag_asp: probe: urbanization is not available"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: urbanization is not available" }
 	}
 	set_global_variable = { name = bag_asp_probe value = 0 }
 	every_province = {
 		limit = { unfilled_jobs_in_province < 0 }
 		change_global_variable = { name = bag_asp_probe add = 1 }
 	}
-	debug_log = "bag_asp: probe: urbanization, provinces short of workers: [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: urbanization, provinces short of workers: [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 	ordered_province = {
 		order_by = bag_asp_promote_score
 		set_global_variable = { name = bag_asp_probe value = unfilled_jobs_in_province }
-		debug_log = "bag_asp: probe: urbanization, most short of workers [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|2]"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: urbanization, most short of workers [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|2]" }
 		set_global_variable = { name = bag_asp_probe value = { value = unfilled_jobs_in_province_percentage multiply = 100 } }
-		debug_log = "bag_asp: probe: urbanization, there in percent [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|2], the province:"
-		debug_log_scopes = no
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: urbanization, there in percent [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|2], the province:" }
+		if = { limit = { has_global_variable = bag_asp_log } debug_log_scopes = no }
 	}
 	ordered_province = {
 		order_by = population
 		set_global_variable = { name = bag_asp_probe value = unfilled_jobs_in_province }
-		debug_log = "bag_asp: probe: urbanization, the most populous province has unfilled jobs [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|2]:"
-		debug_log_scopes = no
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: urbanization, the most populous province has unfilled jobs [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|2]:" }
+		if = { limit = { has_global_variable = bag_asp_log } debug_log_scopes = no }
 	}
 }
 
@@ -5683,153 +5683,153 @@ bag_asp_probe_seats = {
 	every_cabinet = {
 		if = {
 			limit = { NOT = { exists = cabinet_member } }
-			debug_log = "bag_asp: probe: a seat has no advisor"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat has no advisor" }
 		}
 		else_if = {
 			limit = { has_cabinet_action = no }
-			debug_log = "bag_asp: probe: a seat is empty"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat is empty" }
 		}
 		else_if = {
 			limit = { cabinet_action = cabinet_action:alleviate_concerns }
 			set_global_variable = { name = bag_asp_probe value = cabinet_member.dip }
-			debug_log = "bag_asp: probe: a seat on alleviate_concerns, its advisor's dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat on alleviate_concerns, its advisor's dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 		}
 		else_if = {
 			limit = { cabinet_action = cabinet_action:appease_estate }
 			set_global_variable = { name = bag_asp_probe value = cabinet_member.dip }
-			debug_log = "bag_asp: probe: a seat on appease_estate, its advisor's dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat on appease_estate, its advisor's dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 		}
 		else_if = {
 			limit = { cabinet_action = cabinet_action:change_societal_values }
 			set_global_variable = { name = bag_asp_probe value = cabinet_member.dip }
-			debug_log = "bag_asp: probe: a seat on change_societal_values, its advisor's dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat on change_societal_values, its advisor's dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 		}
 		else_if = {
 			limit = { cabinet_action = cabinet_action:counter_espionage_action }
 			set_global_variable = { name = bag_asp_probe value = cabinet_member.dip }
-			debug_log = "bag_asp: probe: a seat on counter_espionage_action, its advisor's dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat on counter_espionage_action, its advisor's dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 		}
 		else_if = {
 			limit = { cabinet_action = cabinet_action:develop_province }
 			set_global_variable = { name = bag_asp_probe value = cabinet_member.adm }
-			debug_log = "bag_asp: probe: a seat on develop_province, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat on develop_province, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 		}
 		else_if = {
 			limit = { cabinet_action = cabinet_action:diplomatic_endeavors }
 			set_global_variable = { name = bag_asp_probe value = cabinet_member.dip }
-			debug_log = "bag_asp: probe: a seat on diplomatic_endeavors, its advisor's dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat on diplomatic_endeavors, its advisor's dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 		}
 		else_if = {
 			limit = { cabinet_action = cabinet_action:increase_control_area }
 			set_global_variable = { name = bag_asp_probe value = cabinet_member.adm }
-			debug_log = "bag_asp: probe: a seat on increase_control_area, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat on increase_control_area, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 		}
 		else_if = {
 			limit = { cabinet_action = cabinet_action:increase_control_province }
 			set_global_variable = { name = bag_asp_probe value = cabinet_member.adm }
-			debug_log = "bag_asp: probe: a seat on increase_control_province, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat on increase_control_province, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 			interaction_target:selected_province ?= {
 				set_global_variable = { name = bag_asp_probe value = { value = province_average_control multiply = 100 } }
-				debug_log = "bag_asp: probe: its province, control [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: its province, control [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 				set_global_variable = { name = bag_asp_probe value = { value = province_average_max_control multiply = 100 } }
-				debug_log = "bag_asp: probe: its province, max [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: its province, max [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 				set_global_variable = { name = bag_asp_probe value = { value = bag_asp_control_missing multiply = 100 } }
-				debug_log = "bag_asp: probe: its province, can still gain [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
-				debug_log = "bag_asp: probe: that province:"
-				debug_log_scopes = no
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: its province, can still gain [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: that province:" }
+				if = { limit = { has_global_variable = bag_asp_log } debug_log_scopes = no }
 			}
 		}
 		else_if = {
 			limit = { cabinet_action = cabinet_action:integrate_area }
 			set_global_variable = { name = bag_asp_probe value = cabinet_member.mil }
-			debug_log = "bag_asp: probe: a seat on integrate_area, its advisor's mil [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat on integrate_area, its advisor's mil [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 		}
 		else_if = {
 			limit = { cabinet_action = cabinet_action:integrate_province }
 			set_global_variable = { name = bag_asp_probe value = cabinet_member.mil }
-			debug_log = "bag_asp: probe: a seat on integrate_province, its advisor's mil [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat on integrate_province, its advisor's mil [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 		}
 		else_if = {
 			limit = { cabinet_action = cabinet_action:noblesse_oblige_cabinet_action }
 			set_global_variable = { name = bag_asp_probe value = cabinet_member.adm }
-			debug_log = "bag_asp: probe: a seat on noblesse_oblige_cabinet_action, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat on noblesse_oblige_cabinet_action, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 			interaction_target:selected_province ?= {
 				set_global_variable = { name = bag_asp_probe value = { value = province_average_control multiply = 100 } }
-				debug_log = "bag_asp: probe: its province, control [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: its province, control [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 				set_global_variable = { name = bag_asp_probe value = { value = province_average_max_control multiply = 100 } }
-				debug_log = "bag_asp: probe: its province, max [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: its province, max [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 				set_global_variable = { name = bag_asp_probe value = { value = bag_asp_control_missing multiply = 100 } }
-				debug_log = "bag_asp: probe: its province, can still gain [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
-				debug_log = "bag_asp: probe: that province:"
-				debug_log_scopes = no
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: its province, can still gain [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: that province:" }
+				if = { limit = { has_global_variable = bag_asp_log } debug_log_scopes = no }
 			}
 		}
 		else_if = {
 			limit = { cabinet_action = cabinet_action:pacify_population }
 			set_global_variable = { name = bag_asp_probe value = cabinet_member.mil }
-			debug_log = "bag_asp: probe: a seat on pacify_population, its advisor's mil [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat on pacify_population, its advisor's mil [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 		}
 		else_if = {
 			limit = { cabinet_action = cabinet_action:pop_promote_action }
 			set_global_variable = { name = bag_asp_probe value = cabinet_member.adm }
-			debug_log = "bag_asp: probe: a seat on pop_promote_action, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat on pop_promote_action, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 		}
 		else_if = {
 			limit = { cabinet_action = cabinet_action:promote_culture }
 			set_global_variable = { name = bag_asp_probe value = cabinet_member.dip }
-			debug_log = "bag_asp: probe: a seat on promote_culture, its advisor's dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat on promote_culture, its advisor's dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 			interaction_target:target_1 ?= {
 				set_global_variable = { name = bag_asp_probe value = bag_asp_half_rank }
-				debug_log = "bag_asp: probe: its province, rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:"
-				debug_log_scopes = no
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: its province, rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:" }
+				if = { limit = { has_global_variable = bag_asp_log } debug_log_scopes = no }
 			}
 		}
 		else_if = {
 			limit = { cabinet_action = cabinet_action:promote_religion }
 			set_global_variable = { name = bag_asp_probe value = cabinet_member.mil }
-			debug_log = "bag_asp: probe: a seat on promote_religion, its advisor's mil [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat on promote_religion, its advisor's mil [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 		}
 		else_if = {
 			limit = { cabinet_action = cabinet_action:recovery_effort }
 			set_global_variable = { name = bag_asp_probe value = cabinet_member.dip }
-			debug_log = "bag_asp: probe: a seat on recovery_effort, its advisor's dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat on recovery_effort, its advisor's dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 		}
 		else_if = {
 			limit = { cabinet_action = cabinet_action:reduce_inflation }
 			set_global_variable = { name = bag_asp_probe value = cabinet_member.adm }
-			debug_log = "bag_asp: probe: a seat on reduce_inflation, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat on reduce_inflation, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 		}
 		else_if = {
 			limit = { cabinet_action = cabinet_action:reduce_war_exhaustion }
 			set_global_variable = { name = bag_asp_probe value = cabinet_member.dip }
-			debug_log = "bag_asp: probe: a seat on reduce_war_exhaustion, its advisor's dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat on reduce_war_exhaustion, its advisor's dip [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 		}
 		else_if = {
 			limit = { cabinet_action = cabinet_action:send_secret_royal_inspectors }
 			set_global_variable = { name = bag_asp_probe value = cabinet_member.adm }
-			debug_log = "bag_asp: probe: a seat on send_secret_royal_inspectors, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat on send_secret_royal_inspectors, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 		}
 		else_if = {
 			limit = { cabinet_action = cabinet_action:stabilize_country }
 			set_global_variable = { name = bag_asp_probe value = cabinet_member.mil }
-			debug_log = "bag_asp: probe: a seat on stabilize_country, its advisor's mil [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat on stabilize_country, its advisor's mil [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 		}
 		else_if = {
 			limit = { cabinet_action = cabinet_action:strengthen_government }
 			set_global_variable = { name = bag_asp_probe value = cabinet_member.mil }
-			debug_log = "bag_asp: probe: a seat on strengthen_government, its advisor's mil [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat on strengthen_government, its advisor's mil [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 		}
 		else_if = {
 			limit = { cabinet_action = cabinet_action:study_institutions }
 			set_global_variable = { name = bag_asp_probe value = cabinet_member.adm }
-			debug_log = "bag_asp: probe: a seat on study_institutions, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat on study_institutions, its advisor's adm [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]" }
 		}
 		else = {
-			debug_log = "bag_asp: probe: a seat on an action outside the pool"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: a seat on an action outside the pool" }
 		}
 		if = {
 			limit = { cabinet_member ?= { has_variable = bag_asp_paired } }
-			debug_log = "bag_asp: probe: (that seat is the control of an assimilation)"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: (that seat is the control of an assimilation)" }
 		}
 	}
 	remove_global_variable = bag_asp_probe
@@ -5889,8 +5889,8 @@ bag_asp_probe_half = {
 								any_pop = { culture = { NOT = { is_primary_or_accepted_in = scope:actor } } }
 							}
 						}
-						debug_log = "bag_asp: probe: not taken, its foreign pops are all locked (tribesmen, a culture-locked faith, a blocked class); rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:"
-						debug_log_scopes = no
+						if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: not taken, its foreign pops are all locked (tribesmen, a culture-locked faith, a blocked class); rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:" }
+						if = { limit = { has_global_variable = bag_asp_log } debug_log_scopes = no }
 						bag_asp_probe_pops = yes
 					}
 					else_if = {
@@ -5900,15 +5900,15 @@ bag_asp_probe_half = {
 								integration_level = integrated
 							}
 						}
-						debug_log = "bag_asp: probe: not taken, an integrated location here has no pop of a culture neither primary nor accepted; rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:"
+						if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: not taken, an integrated location here has no pop of a culture neither primary nor accepted; rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:" }
 					}
 					else = {
-						debug_log = "bag_asp: probe: not taken, no location integrated, and the conquered ones are at half; rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:"
+						if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: not taken, no location integrated, and the conquered ones are at half; rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:" }
 					}
 				}
 				else_if = {
 					limit = { NOT = { bag_asp_half_control_ok = yes } }
-					debug_log = "bag_asp: probe: needs a control seat: no location to assimilate has control at the floor; rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:"
+					if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: needs a control seat: no location to assimilate has control at the floor; rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:" }
 				}
 				else_if = {
 					limit = {
@@ -5958,7 +5958,7 @@ bag_asp_probe_half = {
 							}
 						}
 					}
-					debug_log = "bag_asp: probe: not taken, the game's own province test fails; rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:"
+					if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: not taken, the game's own province test fails; rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:" }
 				}
 				else_if = {
 					limit = {
@@ -5979,12 +5979,12 @@ bag_asp_probe_half = {
 							}
 						}
 					}
-					debug_log = "bag_asp: probe: not taken, an accepted culture leads the primary by 30 points; rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:"
+					if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: not taken, an accepted culture leads the primary by 30 points; rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:" }
 				}
 				else = {
-					debug_log = "bag_asp: probe: passes every test; rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:"
+					if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: probe: passes every test; rank [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_probe_value')|0]:" }
 				}
-				debug_log_scopes = no
+				if = { limit = { has_global_variable = bag_asp_log } debug_log_scopes = no }
 			}
 		}
 	}
@@ -6063,26 +6063,26 @@ bag_asp_log_settings = {
 	else = {
 		set_global_variable = { name = bag_asp_show_control_take value = 0 }
 	}
-	debug_log = "bag_asp: settings: period [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_period')|0], review [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_review')|0], culture_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_culture_target')|0], religion_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_religion_target')|0], assim_control [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_assim_control')|0], develop_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_develop_target')|0], develop_control [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_develop_control')|0], develop_seats [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_develop_seats')|0], control_boost [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_control_boost')|0], control_take [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_control_take')|0]"
+	if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: settings: period [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_period')|0], review [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_review')|0], culture_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_culture_target')|0], religion_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_religion_target')|0], assim_control [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_assim_control')|0], develop_target [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_develop_target')|0], develop_control [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_develop_control')|0], develop_seats [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_develop_seats')|0], control_boost [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_control_boost')|0], control_take [GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_show_control_take')|0]" }
 	if = {
 		limit = { has_variable = bag_asp_auto_on }
-		debug_log = "bag_asp: setting auto on"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: setting auto on" }
 	}
 	else = {
-		debug_log = "bag_asp: setting auto off"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: setting auto off" }
 	}
 	if = {
 		limit = { has_variable = bag_asp_speedup_on }
-		debug_log = "bag_asp: setting culture_speedup on"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: setting culture_speedup on" }
 	}
 	else = {
-		debug_log = "bag_asp: setting culture_speedup off"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: setting culture_speedup off" }
 	}
 	if = {
 		limit = { has_variable = bag_asp_log_on }
-		debug_log = "bag_asp: setting log on"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: setting log on" }
 	}
 	else = {
-		debug_log = "bag_asp: setting log off"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: setting log off" }
 	}
 }

@@ -15,6 +15,8 @@
 нет (`scope:target`, `root`, `prev`), ворот нет — строка видна всегда.
 """
 import glob, json, os, re, sys
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'tools'))
+import quiet_logs  # noqa: E402  строки журнала — под галочкой «Журнал»
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 MOD = os.path.join(ROOT, 'mods', 'rulers_toolkit')
@@ -327,7 +329,9 @@ def main():
             body = '\tOR = {\n' + '\n'.join('\t' + g.replace('\n', '\n\t') for g in row['gates']) + '\n\t}'
         trig.append(f'bag_rtk_cd_gate_{ty} = {{\n{body}\n}}\n')
     open(os.path.join(MOD, 'in_game', 'common', 'scripted_triggers', 'bag_rtk_cd_gates_generated.txt'),
-         'w', encoding='utf-8').write(''.join(trig))
+         # Страны может не быть в мире (Англия к 1773-му): `?=`, как в ванили
+         # (situation_triggers.txt), а не ошибка «Invalid right side 'c'» (10-20).
+         'w', encoding='utf-8').write(re.sub(r'\b(\w+) = (c:[A-Z0-9_]+)\b', r'\1 ?= \2', ''.join(trig)))
 
     # --- эффекты
     out = ['﻿# ' + GEN + '\n\n# Регистрация подвкладок и списков. Scope: country.\nbag_rtk_cd_register_lists = {\n']
@@ -399,7 +403,7 @@ def main():
         out.append(f'\t\tflag:bag_rtk_rel_ready_{ty} = {{ cmf_remove_alert = {{ alert = bag_rtk_rel_ready_{ty} }} }}\n')
     out.append('\t}\n}\n')
     open(os.path.join(MOD, 'in_game', 'common', 'scripted_effects', 'bag_rtk_cd_generated.txt'),
-         'w', encoding='utf-8').write(''.join(out))
+         'w', encoding='utf-8').write(quiet_logs.quiet(''.join(out), 'bag_rtk_log'))
 
     # --- _on_changed списков
     sg = ['﻿# ' + GEN + '\n# Без `_on_changed` CMF прячет список целиком; правка строки применяется здесь,\n# а `is_shown` прячет список без видимых строк.\n\n']

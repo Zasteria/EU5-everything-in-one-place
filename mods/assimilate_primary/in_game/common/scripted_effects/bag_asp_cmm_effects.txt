@@ -276,6 +276,15 @@ bag_asp_sync = {
 	cmm_sync_setting_alias = { setting = bag_asp__develop_control alias = bag_asp_develop_control }
 	cmm_sync_setting_alias = { setting = bag_asp__develop_seats alias = bag_asp_develop_seats }
 	cmm_sync_bool_alias = { setting = bag_asp__log alias = bag_asp_log_on }
+	# Every line of this mod in debug.log waits on this flag (tools/quiet_logs.py,
+	# his word 10-20: the monthly lines are noise unless «Подробный журнал» is on).
+	if = {
+		limit = { has_variable = bag_asp_log_on }
+		set_global_variable = { name = bag_asp_log value = yes }
+	}
+	else = {
+		remove_global_variable = bag_asp_log
+	}
 }
 
 # Scope: country. The two lists into the order the pulse walks, and which rows
@@ -971,13 +980,13 @@ bag_asp_handle_callback = {
 				limit = { has_variable = bag_asp_auto_on }
 				# Ours and the game's «Совет» would fight over the same seats.
 				set_automated_system = { system = cabinet activate = no }
-				debug_log = "bag_asp: own council automation on, the game's «Совет» switched off"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: own council automation on, the game's «Совет» switched off" }
 				set_variable = { name = bag_asp_months value = 0 }
 				set_variable = { name = bag_asp_review_months value = 0 }
 				bag_asp_plan_all = yes
 			}
 			else = {
-				debug_log = "bag_asp: own council automation off"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: own council automation off" }
 			}
 		}
 		flag:bag_asp__period = { bag_asp_sync = yes }
@@ -996,7 +1005,7 @@ bag_asp_handle_callback = {
 	# His ask 13.10: what he changes goes into the log, with every setting after it.
 	if = {
 		limit = { has_variable = bag_asp_log_on }
-		debug_log = "bag_asp: you changed a setting"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: you changed a setting" }
 		bag_asp_log_settings = yes
 	}
 }

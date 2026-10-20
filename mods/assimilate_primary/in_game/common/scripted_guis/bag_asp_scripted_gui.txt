@@ -9,7 +9,7 @@ bag_asp__available_on_changed = {
 		bag_asp_rebuild = yes
 		if = {
 			limit = { has_variable = bag_asp_log_on }
-			debug_log = "bag_asp: you changed the list available"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: you changed the list available" }
 			save_scope_as = actor
 			bag_asp_probe_order = yes
 		}
@@ -30,7 +30,7 @@ bag_asp__priority_on_changed = {
 		bag_asp_rebuild = yes
 		if = {
 			limit = { has_variable = bag_asp_log_on }
-			debug_log = "bag_asp: you changed the list priority"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: you changed the list priority" }
 			save_scope_as = actor
 			bag_asp_probe_order = yes
 		}
@@ -57,7 +57,7 @@ bag_asp_devastated_seen = {
 	scope = country
 	is_shown = { always = yes }
 	effect = {
-		debug_log = "bag_asp: the devastated locations alert is showing"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: the devastated locations alert is showing" }
 	}
 }
 
@@ -71,7 +71,7 @@ bag_asp__values_on_changed = {
 		bag_asp_rebuild = yes
 		if = {
 			limit = { has_variable = bag_asp_log_on }
-			debug_log = "bag_asp: you changed the list values"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: you changed the list values" }
 		}
 		if = {
 			limit = { has_variable = bag_asp_auto_on }
@@ -86,7 +86,7 @@ bag_asp_sv_opening = {
 	scope = country
 	is_shown = { always = yes }
 	effect = {
-		debug_log = "bag_asp: values, the hidden window asked the game's value window to open"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the hidden window asked the game's value window to open" }
 		if = { limit = { has_variable = bag_asp_sv_open } remove_variable = bag_asp_sv_open }
 	}
 }
@@ -96,7 +96,7 @@ bag_asp_sv_pressed = {
 	scope = country
 	is_shown = { always = yes }
 	effect = {
-		debug_log = "bag_asp: values, the value window pressed the asked side"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the value window pressed the asked side" }
 		if = { limit = { has_variable = bag_asp_sv_open } remove_variable = bag_asp_sv_open }
 		if = { limit = { has_variable = bag_asp_sv_left } remove_variable = bag_asp_sv_left }
 		if = { limit = { has_variable = bag_asp_sv_right } remove_variable = bag_asp_sv_right }
@@ -109,7 +109,7 @@ bag_asp_sv_closed = {
 	scope = country
 	is_shown = { always = yes }
 	effect = {
-		debug_log = "bag_asp: values, the panels close after the press"
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the panels close after the press" }
 		# The pair the bounce was for (bag_asp_sv_bounce): asked now, before the
 		# panels close in this same call, so the window opens after them.
 		if = {
@@ -118,7 +118,7 @@ bag_asp_sv_closed = {
 			set_variable = { name = bag_asp_sv_want_side value = var:bag_asp_sv_then_side }
 			remove_variable = bag_asp_sv_then
 			remove_variable = bag_asp_sv_then_side
-			debug_log = "bag_asp: values, now the pair itself"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, now the pair itself" }
 			bag_asp_sv_ask = yes
 			remove_variable = bag_asp_sv_want
 			remove_variable = bag_asp_sv_want_side
@@ -150,7 +150,7 @@ bag_asp_sv_timeout = {
 			}
 			# Probe: the pair the seat holds in the game's eyes when its row is missing.
 			set_global_variable = { name = bag_asp_sv_seat value = var:bag_asp_sv_cab }
-			debug_log = "bag_asp: values, no row pressed in two seconds; the seat holds [GetGlobalVariable('bag_asp_sv_seat').GetCabinet.GetSocietalValueName]"
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, no row pressed in two seconds; the seat holds [GetGlobalVariable('bag_asp_sv_seat').GetCabinet.GetSocietalValueName]" }
 			remove_global_variable = bag_asp_sv_seat
 			if = { limit = { has_variable = bag_asp_sv_open } remove_variable = bag_asp_sv_open }
 			if = { limit = { has_variable = bag_asp_sv_left } remove_variable = bag_asp_sv_left }
@@ -168,7 +168,7 @@ bag_asp_sv_timeout = {
 			}
 			else_if = {
 				limit = { has_variable = bag_asp_sv_cur }
-				debug_log = "bag_asp: values, missed again after another pair; the next pass takes another pair"
+				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, missed again after another pair; the next pass takes another pair" }
 				set_variable = { name = bag_asp_sv_cur_side value = 0 }
 				if = { limit = { has_variable = bag_asp_sv_bounced } remove_variable = bag_asp_sv_bounced }
 			}
@@ -196,7 +196,7 @@ bag_asp_sv_row = {
 	scope = country
 	is_shown = { always = yes }
 	effect = {
-		debug_log = "bag_asp: values, the value window shows a row"
-		scope:sv ?= { debug_log_scopes = no }
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the value window shows a row" }
+		scope:sv ?= { if = { limit = { has_global_variable = bag_asp_log } debug_log_scopes = no } }
 	}
 }

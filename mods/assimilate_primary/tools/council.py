@@ -2259,6 +2259,15 @@ bag_asp_sync = {{
 \tcmm_sync_setting_alias = {{ setting = {MOD_ID}__develop_control alias = bag_asp_develop_control }}
 \tcmm_sync_setting_alias = {{ setting = {MOD_ID}__develop_seats alias = bag_asp_develop_seats }}
 \tcmm_sync_bool_alias = {{ setting = {MOD_ID}__log alias = bag_asp_log_on }}
+\t# Every line of this mod in debug.log waits on this flag (tools/quiet_logs.py,
+\t# his word 10-20: the monthly lines are noise unless «Подробный журнал» is on).
+\tif = {{
+\t\tlimit = {{ has_variable = bag_asp_log_on }}
+\t\tset_global_variable = {{ name = bag_asp_log value = yes }}
+\t}}
+\telse = {{
+\t\tremove_global_variable = bag_asp_log
+\t}}
 }}
 
 # Scope: country. The two lists into the order the pulse walks, and which rows

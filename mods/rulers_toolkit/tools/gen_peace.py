@@ -14,7 +14,11 @@
 
     python3 mods/rulers_toolkit/tools/gen_peace.py
 """
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "tools"))
+import quiet_logs  # noqa: E402  строки журнала — под галочкой «Журнал»
 
 MOD = Path(__file__).resolve().parent.parent
 
@@ -247,7 +251,7 @@ def start_effect():
 
 def main():
     (MOD / "in_game/common/scripted_effects/bag_rtk_pt_generated.txt").write_text(
-        effects() + "\n" + start_effect(), encoding="utf-8", newline="\n")
+        quiet_logs.quiet(effects() + "\n" + start_effect(), "bag_rtk_log"), encoding="utf-8", newline="\n")
     for lang in ("russian", "english"):
         (MOD / f"main_menu/localization/{lang}/bag_rtk_pt_l_{lang}.yml").write_text(loc(lang), encoding="utf-8", newline="\n")
     p = MOD / "in_game/gui/peace_offer_view.gui"
