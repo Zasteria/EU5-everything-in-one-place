@@ -30,6 +30,21 @@ widget = {
 		on_start = "[GetVariableSystem.Clear('bag_rtk_rep_armed')]"
 	}
 
+	# Договор отправлен (кнопка «Отправка требования» ставит `bag_rtk_rep_after`):
+	# через 2 с — мир уже заключён — вернуть ползунок и советника.
+	state = {
+		name = bag_rtk_rep_after_peace
+		trigger_when = "[GetVariableSystem.Exists('bag_rtk_rep_after')]"
+		on_start = "[PdxGuiTriggerAllAnimations('bag_rtk_rep_after_wait')]"
+	}
+
+	state = {
+		name = bag_rtk_rep_after_wait
+		duration = 2
+		on_finish = "[GetVariableSystem.Clear('bag_rtk_rep_after')]"
+		on_finish = "[GetScriptedGui('bag_rtk_rep_release').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+	}
+
 	widget = {
 		size = { 200 20 }
 		visible = "[Or(GetPlayer.MakeScope.GetVariable('bag_rtk_rep_go').IsSet, GetPlayer.MakeScope.GetVariable('bag_rtk_rep_save_pending').IsSet)]"
