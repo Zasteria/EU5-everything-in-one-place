@@ -1733,7 +1733,7 @@ def _gate_vanilla_toggles(text: str) -> tuple[str, int]:
 
 
 # Bump with every change to what cm_rio_patch ships; `mods.bat` compares it.
-RIO_PATCH_REVISION = 3
+RIO_PATCH_REVISION = 4
 
 
 def _rio_patch() -> str:
