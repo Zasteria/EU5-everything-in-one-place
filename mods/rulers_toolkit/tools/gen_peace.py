@@ -100,8 +100,11 @@ def debug_loc() -> str:
     cat = (" BAG_RTK_PT_DBG_CAT: \"# [PeaceOfferCategory.GetName] exp=" + _yn("PeaceOfferCategory.IsExpanded")
            + " poss=" + _yn("PeaceOfferCategory.HasPossibleTreaties") + "\"\n")
     return head + row + cat
-FITS = ("LessThanOrEqualTo_CFixedPoint(Add_CFixedPoint(IntToFixedPoint(PeaceOfferLateralView.GetTotalWarScoreCost), "
-        "PeaceTreaty.GetWarScoreCost), PeaceOfferLateralView.GetWarScore)")
+# In whole points: `IntToFixedPoint` returns a float despite its name, and every
+# comparison built on it failed silently (10-20 log: FetchData failed, 108 768
+# times), so no helper and no gold ever fired.
+FITS = ("LessThanOrEqualTo_int32(Add_int32(PeaceOfferLateralView.GetTotalWarScoreCost, "
+        "FixedPointToInt(PeaceTreaty.GetWarScoreCost)), FixedPointToInt(PeaceOfferLateralView.GetWarScore))")
 
 
 def at_step(i):
@@ -217,7 +220,7 @@ def driver():
         f"{t}{T*6}}}\n")
     gold = (f"And5({RUN}, {at_step('gold')}, EqualTo_CFixedPoint({SUB}, '(CFixedPoint)1'), "
             f"PeaceOfferWarScoreTreatyGlue.IsIncWarScoreEnabled, "
-            f"GreaterThan_CFixedPoint(PeaceOfferLateralView.GetWarScore, IntToFixedPoint(PeaceOfferLateralView.GetTotalWarScoreCost)))")
+            f"GreaterThan_int32(FixedPointToInt(PeaceOfferLateralView.GetWarScore), PeaceOfferLateralView.GetTotalWarScoreCost))")
     tick = "[GetScriptedGui('bag_rtk_pt_next').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
     out = [
         f"{t}# BAG_RTK_PT_DRIVER_BEGIN — сгенерировано mods/rulers_toolkit/tools/gen_peace.py\n",
