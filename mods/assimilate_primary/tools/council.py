@@ -2773,6 +2773,25 @@ on_cabinet_assigned = {{
 }}
 
 # His ask 13.10: an advisor leaving is logged too (named, with the log on).
+# rulers_toolkit's reputation button freed a seat (his word 10-20: hand it out at
+# once, not on the 1st). The hook is rulers_toolkit's; without it, nothing fires.
+bag_rtk_on_seat_freed = {{
+\ton_actions = {{
+\t\tbag_asp_on_seat_freed
+\t}}
+}}
+
+# Scope: country
+bag_asp_on_seat_freed = {{
+\ttrigger = {{
+\t\thas_variable = bag_asp_auto_on
+\t}}
+\teffect = {{
+\t\tdebug_log = "bag_asp: a seat freed by rulers_toolkit, filling empty seats"
+\t\tbag_asp_plan_fill = yes
+\t}}
+}}
+
 # root = country, scope:target = the advisor; fired before on_cabinet_assigned
 # when one replaces another, not on a death.
 on_cabinet_removed = {{
