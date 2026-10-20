@@ -1116,6 +1116,13 @@ lateralview = {
 			widget = {
 				size = { 0 0 }
 
+				text_single = {
+					visible = "[GetPlayer.MakeScope.GetVariable('bag_rtk_log_on').IsSet]"
+					position = { 0 -18 }
+					fontsize = 11
+					text = "BAG_RTK_PT_DBG"
+				}
+
 				# Шагомер: пока идёт шаблон — каждые 0.4 с следующий приоритет.
 				widget = {
 					size = { 1 1 }
@@ -1256,6 +1263,11 @@ lateralview = {
 											on_finish = "[PeaceTreaty.OnClick]"
 											on_finish = "[GetScriptedGui('bag_rtk_pt_clicked').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
 										}
+									}
+									text_single = {
+										visible = "[GetPlayer.MakeScope.GetVariable('bag_rtk_log_on').IsSet]"
+										fontsize = 11
+										text = "BAG_RTK_PT_DBG_ROW"
 									}
 									}
 								}
@@ -1838,6 +1850,60 @@ lateralview = {
 							layoutpolicy_horizontal = expanding
 							spacing = 10
 	
+							# BAG_RTK_PT_BUTTON_BEGIN — сгенерировано mods/rulers_toolkit/tools/gen_peace.py
+							hbox = {
+								layoutpolicy_horizontal = expanding
+								margin = { 5 0 }
+								spacing = 5
+								expand = {}
+									#bag_rtk: ДИПРЕПУТАЦИЯ НА ВРЕМЯ МИРА (Помощник правителя)
+									header_button_left = {
+										size = {30 30}
+										blockoverride "header_button_full_content" {
+											icon = {
+												size = {22 22 }
+												texture = "gfx/interface/icons/flat_icons/diplomatic_reputation.dds"
+												alpha = "[Select_float(GetPlayer.MakeScope.GetVariable('bag_rtk_rep_on').IsSet, '(float)1', '(float)0.45')]"
+											}
+										}
+										tooltipwidget = {
+											BasicFunctionalTooltip = {}
+										}
+										action_tooltip = {
+											click_type = left
+											click_mode = single
+											title = "[Select_CString(GetPlayer.MakeScope.GetVariable('bag_rtk_rep_on').IsSet, Localize('BAG_RTK_REP_OFF_TT'), Localize('BAG_RTK_REP_ON_TT'))]"
+											description = "BAG_RTK_REP_DESC"
+											on_action = "[GetScriptedGui('bag_rtk_rep_toggle').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+										}
+									}
+
+								#bag_rtk: ШАБЛОН ДОГОВОРА (Помощник правителя): сбросить договор и запустить
+								# шагомер (сам он — в начале панели, BAG_RTK_PT_DRIVER).
+								header_button_left = {
+									size = {30 30}
+									visible = "[PeaceOfferLateralView.IsDemanding]"
+									blockoverride "header_button_full_content" {
+										icon = {
+											size = {22 22 }
+											texture = "gfx/interface/icons/peace_treaty/demand_peace.dds"
+										}
+									}
+									tooltipwidget = {
+										BasicFunctionalTooltip = {}
+									}
+									action_tooltip = {
+										click_type = left
+										click_mode = single
+										title = "BAG_RTK_PT_TT"
+										description = "BAG_RTK_PT_DESC"
+										on_action = "[PeaceOfferLateralView.OnResetPeaceOffer]"
+										on_action = "[GetScriptedGui('bag_rtk_pt_start').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+									}
+								}
+							}
+							# BAG_RTK_PT_BUTTON_END
+
 							#SUM UP OF PEACE CONSECUENCES
 							hbox = {
 								layoutpolicy_horizontal = expanding
@@ -1965,54 +2031,6 @@ lateralview = {
 												}
 											}
 											
-											#bag_rtk: ДИПРЕПУТАЦИЯ НА ВРЕМЯ МИРА (Помощник правителя)
-											header_button_left = {
-												size = {30 30}
-												blockoverride "header_button_full_content" {
-													icon = {
-														size = {22 22 }
-														texture = "gfx/interface/icons/flat_icons/diplomatic_reputation.dds"
-														alpha = "[Select_float(GetPlayer.MakeScope.GetVariable('bag_rtk_rep_on').IsSet, '(float)1', '(float)0.45')]"
-													}
-												}
-												tooltipwidget = {
-													BasicFunctionalTooltip = {}
-												}
-												action_tooltip = {
-													click_type = left
-													click_mode = single
-													title = "[Select_CString(GetPlayer.MakeScope.GetVariable('bag_rtk_rep_on').IsSet, Localize('BAG_RTK_REP_OFF_TT'), Localize('BAG_RTK_REP_ON_TT'))]"
-													description = "BAG_RTK_REP_DESC"
-													on_action = "[GetScriptedGui('bag_rtk_rep_toggle').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-												}
-											}
-
-											# BAG_RTK_PT_BUTTON_BEGIN — сгенерировано mods/rulers_toolkit/tools/gen_peace.py
-											#bag_rtk: ШАБЛОН ДОГОВОРА (Помощник правителя): сбросить договор и запустить
-											# шагомер (сам он — в начале панели, BAG_RTK_PT_DRIVER).
-											header_button_left = {
-												size = {30 30}
-												visible = "[PeaceOfferLateralView.IsDemanding]"
-												blockoverride "header_button_full_content" {
-													icon = {
-														size = {22 22 }
-														texture = "gfx/interface/icons/peace_treaty/demand_peace.dds"
-													}
-												}
-												tooltipwidget = {
-													BasicFunctionalTooltip = {}
-												}
-												action_tooltip = {
-													click_type = left
-													click_mode = single
-													title = "BAG_RTK_PT_TT"
-													description = "BAG_RTK_PT_DESC"
-													on_action = "[PeaceOfferLateralView.OnResetPeaceOffer]"
-													on_action = "[GetScriptedGui('bag_rtk_pt_start').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-												}
-											}
-											# BAG_RTK_PT_BUTTON_END
-
 											#RESET OFFER
 											header_button_left = {
 												size = {30 30}

@@ -80,6 +80,24 @@ def effects():
 PV = "GetPlayer.MakeScope.GetVariable"
 STEP = f"{PV}('bag_rtk_pt_step').GetValue"
 RUN = f"{PV}('bag_rtk_pt_run').IsSet"
+LOG = f"{PV}('bag_rtk_log_on').IsSet"
+
+
+def _yn(cond: str) -> str:
+    return "[Select_CString(" + cond + ", 'Y', 'n')]"
+
+
+def debug_loc() -> str:
+    head = (" BAG_RTK_PT_DBG: \"PT run=" + _yn(RUN)
+            + " step=[GetPlayer.MakeScope.GetVariable('bag_rtk_pt_step').GetValue|0] "
+            + " ".join(i + "=[GetPlayer.MakeScope.GetVariable('" + var(i) + "').GetValue|0]" for i, *_ in ITEMS)
+            + " ws=[PeaceOfferLateralView.GetWarScore|0] cost=[PeaceOfferLateralView.GetTotalWarScoreCost]\"\n")
+    row = (" BAG_RTK_PT_DBG_ROW: \"  "
+           + " ".join(i + "=" + _yn("StringContains(PeaceTreaty.GetShortName, Localize('BAG_RTK_PT_MATCH_" + i.upper() + "'))")
+                      for i, _, _, mr, _, _ in ITEMS if mr)
+           + " en=" + _yn("PeaceTreaty.IsEnabled") + " sel=" + _yn("PeaceTreaty.IsSelected")
+           + " fits=" + _yn(FITS) + " [PeaceTreaty.GetWarScoreCost|1]\"\n")
+    return head + row
 FITS = ("LessThanOrEqualTo_CFixedPoint(Add_CFixedPoint(IntToFixedPoint(PeaceOfferLateralView.GetTotalWarScoreCost), "
         "PeaceTreaty.GetWarScoreCost), PeaceOfferLateralView.GetWarScore)")
 
@@ -88,31 +106,64 @@ def at_step(i):
     return f"EqualTo_CFixedPoint({STEP}, {PV}('{var(i)}').GetValue)"
 
 
+REP_BUTTON = """									#bag_rtk: ДИПРЕПУТАЦИЯ НА ВРЕМЯ МИРА (Помощник правителя)
+									header_button_left = {
+										size = {30 30}
+										blockoverride "header_button_full_content" {
+											icon = {
+												size = {22 22 }
+												texture = "gfx/interface/icons/flat_icons/diplomatic_reputation.dds"
+												alpha = "[Select_float(GetPlayer.MakeScope.GetVariable('bag_rtk_rep_on').IsSet, '(float)1', '(float)0.45')]"
+											}
+										}
+										tooltipwidget = {
+											BasicFunctionalTooltip = {}
+										}
+										action_tooltip = {
+											click_type = left
+											click_mode = single
+											title = "[Select_CString(GetPlayer.MakeScope.GetVariable('bag_rtk_rep_on').IsSet, Localize('BAG_RTK_REP_OFF_TT'), Localize('BAG_RTK_REP_ON_TT'))]"
+											description = "BAG_RTK_REP_DESC"
+											on_action = "[GetScriptedGui('bag_rtk_rep_toggle').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+										}
+									}
+"""
+
+
 def button():
-    t = "	" * 11
+    """Our two buttons in a row of their own above the summary row: in the summary
+    row they pushed the war-score cost out of the window (his screenshot 10-20)."""
+    t = "\t" * 7
     return f"""{t}# BAG_RTK_PT_BUTTON_BEGIN — сгенерировано mods/rulers_toolkit/tools/gen_peace.py
-{t}#bag_rtk: ШАБЛОН ДОГОВОРА (Помощник правителя): сбросить договор и запустить
-{t}# шагомер (сам он — в начале панели, BAG_RTK_PT_DRIVER).
-{t}header_button_left = {{
-{t}	size = {{30 30}}
-{t}	visible = "[PeaceOfferLateralView.IsDemanding]"
-{t}	blockoverride "header_button_full_content" {{
-{t}		icon = {{
-{t}			size = {{22 22 }}
-{t}			texture = "gfx/interface/icons/peace_treaty/demand_peace.dds"
-{t}		}}
-{t}	}}
-{t}	tooltipwidget = {{
-{t}		BasicFunctionalTooltip = {{}}
-{t}	}}
-{t}	action_tooltip = {{
-{t}		click_type = left
-{t}		click_mode = single
-{t}		title = "BAG_RTK_PT_TT"
-{t}		description = "BAG_RTK_PT_DESC"
-{t}		on_action = "[PeaceOfferLateralView.OnResetPeaceOffer]"
-{t}		on_action = "[GetScriptedGui('bag_rtk_pt_start').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
-{t}	}}
+{t}hbox = {{
+{t}\tlayoutpolicy_horizontal = expanding
+{t}\tmargin = {{ 5 0 }}
+{t}\tspacing = 5
+{t}\texpand = {{}}
+{REP_BUTTON}
+{t}\t#bag_rtk: ШАБЛОН ДОГОВОРА (Помощник правителя): сбросить договор и запустить
+{t}\t# шагомер (сам он — в начале панели, BAG_RTK_PT_DRIVER).
+{t}\theader_button_left = {{
+{t}\t\tsize = {{30 30}}
+{t}\t\tvisible = "[PeaceOfferLateralView.IsDemanding]"
+{t}\t\tblockoverride "header_button_full_content" {{
+{t}\t\t\ticon = {{
+{t}\t\t\t\tsize = {{22 22 }}
+{t}\t\t\t\ttexture = "gfx/interface/icons/peace_treaty/demand_peace.dds"
+{t}\t\t\t}}
+{t}\t\t}}
+{t}\t\ttooltipwidget = {{
+{t}\t\t\tBasicFunctionalTooltip = {{}}
+{t}\t\t}}
+{t}\t\taction_tooltip = {{
+{t}\t\t\tclick_type = left
+{t}\t\t\tclick_mode = single
+{t}\t\t\ttitle = "BAG_RTK_PT_TT"
+{t}\t\t\tdescription = "BAG_RTK_PT_DESC"
+{t}\t\t\ton_action = "[PeaceOfferLateralView.OnResetPeaceOffer]"
+{t}\t\t\ton_action = "[GetScriptedGui('bag_rtk_pt_start').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+{t}\t\t}}
+{t}\t}}
 {t}}}
 {t}# BAG_RTK_PT_BUTTON_END
 """
@@ -138,6 +189,14 @@ def driver():
 {t}							}}
 {t}						}}
 """)
+    # With the log tick on, each treaty row says what the helpers see (10-20: the
+    # template stepped and clicked nothing, and debug_log cannot read GUI values).
+    helpers.append(f"""{t}						text_single = {{
+{t}							visible = "[{LOG}]"
+{t}							fontsize = 11
+{t}							text = "BAG_RTK_PT_DBG_ROW"
+{t}						}}
+""")
     gold = (f"And4({RUN}, {at_step('gold')}, PeaceOfferWarScoreTreatyGlue.IsIncWarScoreEnabled, "
             f"GreaterThan_CFixedPoint(PeaceOfferLateralView.GetWarScore, IntToFixedPoint(PeaceOfferLateralView.GetTotalWarScoreCost)))")
     return f"""{t}# BAG_RTK_PT_DRIVER_BEGIN — сгенерировано mods/rulers_toolkit/tools/gen_peace.py
@@ -145,6 +204,13 @@ def driver():
 {t}# а не в кнопке — в 0.9.1 внутри кнопки они не срабатывали.
 {t}widget = {{
 {t}	size = {{ 0 0 }}
+
+{t}	text_single = {{
+{t}		visible = "[{LOG}]"
+{t}		position = {{ 0 -18 }}
+{t}		fontsize = 11
+{t}		text = "BAG_RTK_PT_DBG"
+{t}	}}
 
 {t}	# Шагомер: пока идёт шаблон — каждые 0.4 с следующий приоритет.
 {t}	widget = {{
@@ -213,6 +279,7 @@ def driver():
 def loc(lang):
     ru = lang == "russian"
     lines = [BOM + f"l_{lang}:\n"]
+    lines.append(debug_loc())
     lines.append(' bag_rtk__peace_name: "%s"\n' % ("Мир" if ru else "Peace"))
     lines.append(' bag_rtk__peace__template_name: "%s"\n' % ("Шаблон мирного договора: приоритеты" if ru else "Peace template: priorities"))
     for i, rn, en, mr, me, _ in ITEMS:
@@ -263,7 +330,8 @@ def main():
         b = s.index("\n", s.index("# BAG_RTK_PT_END")) + 1
         s = s[:a] + s[b:]
         s = s.replace("\n\n" + reset, "\n" + reset, 1)
-    s = splice(s, "# BAG_RTK_PT_BUTTON_BEGIN", "# BAG_RTK_PT_BUTTON_END", button(), reset, True)
+    s = splice(s, "# BAG_RTK_PT_BUTTON_BEGIN", "# BAG_RTK_PT_BUTTON_END", button(),
+               "\t" * 7 + "#SUM UP OF PEACE CONSECUENCES\n", True)
     panel = ("\tblockoverride \"panel_content\" {\n\t\tvbox = {\n\t\t\tusing = layoutpolicy_expanding\n"
              "\t\t\tusing = bg_main_inner_alt\n\t\t\tusing = window_main_tabs_margin_alt\n")
     s = splice(s, "# BAG_RTK_PT_DRIVER_BEGIN", "# BAG_RTK_PT_DRIVER_END", driver(), panel, False)
