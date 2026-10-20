@@ -33,7 +33,7 @@
 
 **Мастерская (10-04, залито):** основной предмет — эта 1.4-линия, имя «Societal Value
 Hints», id `bag.glorpui_hints`. Для 1.3 — отдельный предмет из
-`mods/glorpui_hints_1_3`. Описания — `workshop/description_<lang>.bbcode`.
+`glorpui_hints_1_3` (мод убран 10-20, история git). Описания — `workshop/description_<lang>.bbcode`.
 1.2.13–1.2.14 в мастерскую не залиты.
 
 **1.2.14 (10-18, после его прогона 1.2.13):** цифра эпохи в «Ещё не доступно»

@@ -155,7 +155,7 @@ them.** Three CJK ideographs landed mid-word in the first large batch
 (`сохранив自 свою`), a fourth in a later one, and an English `though` survived in
 a Russian sentence. None of it is visible while writing and none of it errors:
 it simply renders on screen. On any batch past a few dozen lines, put the check
-in the generator rather than trusting the eye — `mods/nd_ru/tools/generate_ru.py`
+in the generator rather than trusting the eye — `nd_ru/tools/generate_ru.py` (мод убран 10-20, история git)
 refuses a value carrying a character outside Cyrillic and the Latin proper names
 need, or an English function word the source value does not itself contain.
 

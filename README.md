@@ -19,15 +19,12 @@
 | мод | что делает |
 | --- | --- |
 | [`ru_loc_fix`](mods/ru_loc_fix/) | чинит разметку русской локализации игры и переводит ключи беты 10-01 |
-| [`nd_ru`](mods/nd_ru/) | русский для National Destinies (идёт по частям) |
-| [`nmt_ru`](mods/nmt_ru/) | русский для National Mission Trees, 17 стран |
 | [`nmt_fix`](mods/nmt_fix/) | National Mission Trees засчитывает земли подданных |
 | [`cm_maps`](mods/cm_maps/) | три карты Construction Manager без самого CM (CMF нужен) |
 | [`cm_dev_perf`](mods/cm_dev_perf/) | CM Dev под бету и легче; ставится вместо CM Dev |
-| [`cm_perf`](mods/cm_perf/) | облегчённый CM; снят 09-19, его основа живёт в `cm_dev_perf` |
 | [`cmf_dev_beta`](mods/cmf_dev_beta/) | CMF Dev под бету; ставится вместо CMF Dev |
 | [`assimilate_primary`](mods/assimilate_primary/) | автоматика совета ассимилирует в основную культуру, а не в признанную |
-| [`war_sliders`](mods/war_sliders/) | кнопка на панели CMF: содержание армии и инфляция |
+| [`rulers_toolkit`](mods/rulers_toolkit/) | «Помощник правителя»: командиры, ползунки после войны, пленные, творения, откаты, женитьба, мир |
 | [`glorpui_hints`](mods/glorpui_hints/) | подсказки смещения ценностей к Glorp UI (версия из Steam) |
 | [`centered_towns`](mods/centered_towns/) | города и замки в середине района, а не на реке у края |
 

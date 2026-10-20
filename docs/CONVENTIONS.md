@@ -14,7 +14,7 @@ it; [`../CLAUDE.md`](../CLAUDE.md) already carries the rules that fail silently.
 - **A word the game already has a name for is not translated by hand.**
   `[religious_aspect|e]` resolves `game_concept_religious_aspect` in the player's
   language for free, and is right where a synonym would be wrong.
-  `python3 mods/nd_ru/tools/term.py <word>` says what the game calls it.
+  `python3 `nd_ru/tools/term.py` (мод убран 10-20, история git) <word>` says what the game calls it.
 - Anything named `*_generated_*` is written by a tool and must not be hand
   edited.
 - Prefer adding to `gui/filters/` or to CMF's action bar over copying a vanilla

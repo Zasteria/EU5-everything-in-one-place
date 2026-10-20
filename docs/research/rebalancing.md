@@ -16,7 +16,7 @@ not a guess about what the author (or his model) intended.
 ## Writing the change
 
 - Keep a table of `before`/`after` per object and path, made once from git
-  (`mods/nd_unnerf/tools/baseline.py`); the clone keeps only one version, so the
+  (`nd_unnerf/tools/baseline.py` (мод убран 10-20, история git)); the clone keeps only one version, so the
   build cannot diff at refresh time.
 - Build from the **current** base text: copy each object whole as `REPLACE:`
   and change only the numbers the table names, matched by span, so the
@@ -30,4 +30,4 @@ not a guess about what the author (or his model) intended.
   changed lines must equal the table's rows, every one a number.
 
 Unmeasured: whether `REPLACE:` takes on advances, bureaucracies, building and
-unit types and `main_menu` static/auto modifiers (`mods/nd_unnerf/CLAUDE.md`).
+unit types and `main_menu` static/auto modifiers (`nd_unnerf/CLAUDE.md` (мод убран 10-20, история git)).

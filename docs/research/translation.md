@@ -53,7 +53,7 @@ term sitting in the middle of the game's own interface. The game's localization
 answers it: match the English value against `localization/english`, read the
 Russian value of the same key. In EU5 1.3.10 advances are «Улучшения», not
 «достижения», which is what a session guessed before the game's files were in the
-repository. `mods/nd_ru/tools/term.py` is that lookup.
+repository. `nd_ru/tools/term.py` (мод убран 10-20, история git) is that lookup.
 
 Inside `[advances|e]` and other concept links the game substitutes the name
 itself, so the word only has to be chosen where the mod writes it as prose.
@@ -127,7 +127,7 @@ That works only while the old version is still in git history, so do not rely on
 it. Fingerprint instead: record a digest of the English value behind every
 translated key, and have the generator name the ones that moved. Then a base-mod
 update really is *one run that names the keys*, which is what this section used
-to promise and could not deliver. `mods/nd_ru/english_generated_fingerprints.txt`
+to promise and could not deliver. `nd_ru/english_generated_fingerprints.txt` (мод убран 10-20, история git)
 is that record, and `generate_ru.py --accept` is how a reviewed key is signed off.
 **A partial translation layered over a machine one is a deliberate design, not a
 shortfall.** `nd_ru` covers a tenth of National Destinies and is meant to: the

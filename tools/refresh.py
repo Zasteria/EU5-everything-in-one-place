@@ -38,17 +38,12 @@ import refs  # noqa: E402
 # its reference paths from `refs`, so none of them is given an argument here.
 GENERATORS = (
     ("cm_maps", "mods/cm_maps/tools/port_from_cm.py"),
-    ("cm_perf", "mods/cm_perf/tools/port_from_cm.py"),
     ("cm_dev_perf", "mods/cm_dev_perf/tools/port_from_cm_dev.py"),
     ("cmf_dev_beta", "mods/cmf_dev_beta/tools/port_from_cmf_dev.py"),
     ("assimilate_primary", "mods/assimilate_primary/tools/generate.py"),
     ("centered_towns", "mods/centered_towns/tools/generate.py"),
-    ("nd_ru", "mods/nd_ru/tools/generate_ru.py"),
-    ("nd_unnerf", "mods/nd_unnerf/tools/generate.py"),
-    ("nmt_ru", "mods/nmt_ru/tools/generate_ru.py"),
     ("nmt_fix", "mods/nmt_fix/tools/generate.py"),
     ("integration_fix", "mods/integration_fix/tools/generate.py"),
-    ("auto_marry", "mods/auto_marry/tools/generate.py"),
     ("glorpui_hints", "mods/glorpui_hints/tools/generate.py"),
     ("ru_loc_fix", "mods/ru_loc_fix/tools/generate.py"),
 )
