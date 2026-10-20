@@ -185,7 +185,7 @@ bag_asp_mark_busy = {
 		}
 		if = {
 			limit = { cabinet_action = cabinet_action:increase_control_area }
-			interaction_target:selected_area ?= { set_variable = { name = bag_asp_busy_increase_control_area value = yes } }
+			interaction_target:selected_area ?= { add_to_global_variable_list = { name = bag_asp_busy_increase_control_area target = this } }
 		}
 		if = {
 			limit = { cabinet_action = cabinet_action:increase_control_province }
@@ -193,7 +193,7 @@ bag_asp_mark_busy = {
 		}
 		if = {
 			limit = { cabinet_action = cabinet_action:integrate_area }
-			interaction_target:target ?= { set_variable = { name = bag_asp_busy_integrate_area value = yes } }
+			interaction_target:target ?= { add_to_global_variable_list = { name = bag_asp_busy_integrate_area target = this } }
 		}
 		if = {
 			limit = { cabinet_action = cabinet_action:integrate_province }
@@ -250,7 +250,7 @@ bag_asp_clear_busy = {
 		}
 		if = {
 			limit = { cabinet_action = cabinet_action:increase_control_area }
-			interaction_target:selected_area ?= { remove_variable = bag_asp_busy_increase_control_area }
+			interaction_target:selected_area ?= { remove_list_global_variable = { name = bag_asp_busy_increase_control_area target = this } }
 		}
 		if = {
 			limit = { cabinet_action = cabinet_action:increase_control_province }
@@ -258,7 +258,7 @@ bag_asp_clear_busy = {
 		}
 		if = {
 			limit = { cabinet_action = cabinet_action:integrate_area }
-			interaction_target:target ?= { remove_variable = bag_asp_busy_integrate_area }
+			interaction_target:target ?= { remove_list_global_variable = { name = bag_asp_busy_integrate_area target = this } }
 		}
 		if = {
 			limit = { cabinet_action = cabinet_action:integrate_province }
@@ -301,9 +301,9 @@ bag_asp_clear_busy = {
 		limit = { bag_asp_busy_any = yes }
 		remove_variable = bag_asp_busy_appease_estate
 		remove_variable = bag_asp_busy_develop_province
-		remove_variable = bag_asp_busy_increase_control_area
+		remove_list_global_variable = { name = bag_asp_busy_increase_control_area target = this }
 		remove_variable = bag_asp_busy_increase_control_province
-		remove_variable = bag_asp_busy_integrate_area
+		remove_list_global_variable = { name = bag_asp_busy_integrate_area target = this }
 		remove_variable = bag_asp_busy_integrate_province
 		remove_variable = bag_asp_busy_noblesse_oblige_cabinet_action
 		remove_variable = bag_asp_busy_pacify_population
@@ -320,9 +320,9 @@ bag_asp_clear_busy = {
 				limit = { bag_asp_busy_any = yes }
 				remove_variable = bag_asp_busy_appease_estate
 				remove_variable = bag_asp_busy_develop_province
-				remove_variable = bag_asp_busy_increase_control_area
+				remove_list_global_variable = { name = bag_asp_busy_increase_control_area target = this }
 				remove_variable = bag_asp_busy_increase_control_province
-				remove_variable = bag_asp_busy_integrate_area
+				remove_list_global_variable = { name = bag_asp_busy_integrate_area target = this }
 				remove_variable = bag_asp_busy_integrate_province
 				remove_variable = bag_asp_busy_noblesse_oblige_cabinet_action
 				remove_variable = bag_asp_busy_pacify_population
@@ -339,9 +339,9 @@ bag_asp_clear_busy = {
 		limit = { bag_asp_busy_any = yes }
 		remove_variable = bag_asp_busy_appease_estate
 		remove_variable = bag_asp_busy_develop_province
-		remove_variable = bag_asp_busy_increase_control_area
+		remove_list_global_variable = { name = bag_asp_busy_increase_control_area target = this }
 		remove_variable = bag_asp_busy_increase_control_province
-		remove_variable = bag_asp_busy_integrate_area
+		remove_list_global_variable = { name = bag_asp_busy_integrate_area target = this }
 		remove_variable = bag_asp_busy_integrate_province
 		remove_variable = bag_asp_busy_noblesse_oblige_cabinet_action
 		remove_variable = bag_asp_busy_pacify_population
@@ -370,7 +370,7 @@ bag_asp_vacate = {
 		}
 		if = {
 			limit = { cabinet_action = cabinet_action:increase_control_area }
-			interaction_target:selected_area ?= { remove_variable = bag_asp_busy_increase_control_area }
+			interaction_target:selected_area ?= { remove_list_global_variable = { name = bag_asp_busy_increase_control_area target = this } }
 		}
 		if = {
 			limit = { cabinet_action = cabinet_action:increase_control_province }
@@ -378,7 +378,7 @@ bag_asp_vacate = {
 		}
 		if = {
 			limit = { cabinet_action = cabinet_action:integrate_area }
-			interaction_target:target ?= { remove_variable = bag_asp_busy_integrate_area }
+			interaction_target:target ?= { remove_list_global_variable = { name = bag_asp_busy_integrate_area target = this } }
 		}
 		if = {
 			limit = { cabinet_action = cabinet_action:integrate_province }
@@ -510,12 +510,12 @@ bag_asp_try_integrate_area = {
 			ordered_province = {
 				limit = {
 					area ?= {
-						NOT = { has_variable = bag_asp_busy_integrate_area }
+						NOT = { is_target_in_global_variable_list = { name = bag_asp_busy_integrate_area target = this } }
 						any_location_in_area = {
 							owner ?= scope:actor
 							integration_level = conquered
 						}
-						NOT = { has_variable = bag_asp_busy_integrate_area }
+						NOT = { is_target_in_global_variable_list = { name = bag_asp_busy_integrate_area target = this } }
 					}
 				}
 				order_by = {
@@ -546,7 +546,7 @@ bag_asp_try_integrate_area = {
 					bag_asp_vacate = yes
 					set_cabinet_action = { type = cabinet_action:integrate_area target = scope:bag_asp_pick }
 				}
-				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_integrate_area value = yes } }
+				scope:bag_asp_pick = { add_to_global_variable_list = { name = bag_asp_busy_integrate_area target = this } }
 				scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 				scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
 				debug_log = "bag_asp: seat set to integrate_area"
@@ -604,7 +604,7 @@ bag_asp_try_increase_control_province = {
 					province_average_control < 0.95
 					NOT = { has_variable = bag_asp_busy_increase_control_province }
 					NOT = { has_variable = bag_asp_busy_noblesse_oblige_cabinet_action }
-					NOT = { area ?= { has_variable = bag_asp_busy_increase_control_area } }
+					NOT = { area ?= { is_target_in_global_variable_list = { name = bag_asp_busy_increase_control_area target = this } } }
 					bag_asp_control_wanted = yes
 				}
 				order_by = bag_asp_control_score
@@ -633,9 +633,9 @@ bag_asp_try_increase_control_area = {
 			ordered_province = {
 				limit = {
 					area ?= {
-						NOT = { has_variable = bag_asp_busy_increase_control_area }
+						NOT = { is_target_in_global_variable_list = { name = bag_asp_busy_increase_control_area target = this } }
 						"area_average_control(scope:actor)" < 0.95
-						NOT = { has_variable = bag_asp_busy_increase_control_area }
+						NOT = { is_target_in_global_variable_list = { name = bag_asp_busy_increase_control_area target = this } }
 						NOT = { any_location_in_area = { province ?= { has_variable = bag_asp_busy_increase_control_province } } }
 						NOT = { any_location_in_area = { province ?= { has_variable = bag_asp_busy_noblesse_oblige_cabinet_action } } }
 					}
@@ -646,7 +646,7 @@ bag_asp_try_increase_control_area = {
 					bag_asp_vacate = yes
 					set_cabinet_action = { type = cabinet_action:increase_control_area selected_area = scope:bag_asp_pick }
 				}
-				scope:bag_asp_pick = { set_variable = { name = bag_asp_busy_increase_control_area value = yes } }
+				scope:bag_asp_pick = { add_to_global_variable_list = { name = bag_asp_busy_increase_control_area target = this } }
 				scope:bag_asp_seat = { cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } } }
 				scope:actor = { set_variable = { name = bag_asp_placed value = yes } }
 				debug_log = "bag_asp: seat set to increase_control_area"
@@ -732,7 +732,10 @@ bag_asp_try_promote_culture = {
 								limit = { this = scope:actor.capital.province }
 								scope:target = scope:actor.culture
 							}
-							any_location_in_province = { naturally_assimilating_culture = scope:target }
+							OR = {
+								scope:target = scope:actor.culture
+								any_location_in_province = { naturally_assimilating_culture = scope:target }
+							}
 							trigger_if = {
 								limit = { exists = dominant_culture }
 								OR = {
@@ -814,7 +817,10 @@ bag_asp_try_promote_religion = {
 					NOT = { has_variable = bag_asp_busy_promote_religion }
 					any_location_in_province = {
 						OR = {
-							NOT = { dominant_religion = owner.religion }
+							AND = {
+								exists = dominant_religion
+								NOT = { dominant_religion = owner.religion }
+							}
 							local_religious_unity < 0.95
 						}
 					}
@@ -1131,7 +1137,7 @@ bag_asp_try_noblesse_oblige_cabinet_action = {
 					province_average_control < 0.95
 					NOT = { has_variable = bag_asp_busy_noblesse_oblige_cabinet_action }
 					NOT = { has_variable = bag_asp_busy_increase_control_province }
-					NOT = { area ?= { has_variable = bag_asp_busy_increase_control_area } }
+					NOT = { area ?= { is_target_in_global_variable_list = { name = bag_asp_busy_increase_control_area target = this } } }
 					bag_asp_control_wanted = yes
 				}
 				order_by = bag_asp_control_score
@@ -1213,7 +1219,10 @@ bag_asp_try_promote_culture_full = {
 								limit = { this = scope:actor.capital.province }
 								scope:target = scope:actor.culture
 							}
-							any_location_in_province = { naturally_assimilating_culture = scope:target }
+							OR = {
+								scope:target = scope:actor.culture
+								any_location_in_province = { naturally_assimilating_culture = scope:target }
+							}
 							trigger_if = {
 								limit = { exists = dominant_culture }
 								OR = {
@@ -1278,7 +1287,7 @@ bag_asp_try_at_noblesse_oblige_cabinet_action = {
 					province_average_control < 0.95
 					NOT = { has_variable = bag_asp_busy_noblesse_oblige_cabinet_action }
 					NOT = { has_variable = bag_asp_busy_increase_control_province }
-					NOT = { area ?= { has_variable = bag_asp_busy_increase_control_area } }
+					NOT = { area ?= { is_target_in_global_variable_list = { name = bag_asp_busy_increase_control_area target = this } } }
 				}
 				save_temporary_scope_as = bag_asp_pick
 				scope:bag_asp_seat = {
@@ -1308,7 +1317,7 @@ bag_asp_try_at_increase_control_province = {
 					province_average_control < 0.95
 					NOT = { has_variable = bag_asp_busy_increase_control_province }
 					NOT = { has_variable = bag_asp_busy_noblesse_oblige_cabinet_action }
-					NOT = { area ?= { has_variable = bag_asp_busy_increase_control_area } }
+					NOT = { area ?= { is_target_in_global_variable_list = { name = bag_asp_busy_increase_control_area target = this } } }
 				}
 				save_temporary_scope_as = bag_asp_pick
 				scope:bag_asp_seat = {
@@ -3539,7 +3548,10 @@ bag_asp_place_promote_culture = {
 									limit = { this = scope:actor.capital.province }
 									scope:target = scope:actor.culture
 								}
-								any_location_in_province = { naturally_assimilating_culture = scope:target }
+								OR = {
+									scope:target = scope:actor.culture
+									any_location_in_province = { naturally_assimilating_culture = scope:target }
+								}
 								trigger_if = {
 									limit = { exists = dominant_culture }
 									OR = {
@@ -5921,7 +5933,10 @@ bag_asp_probe_half = {
 										limit = { this = scope:actor.capital.province }
 										scope:target = scope:actor.culture
 									}
-									any_location_in_province = { naturally_assimilating_culture = scope:target }
+									OR = {
+										scope:target = scope:actor.culture
+										any_location_in_province = { naturally_assimilating_culture = scope:target }
+									}
 									trigger_if = {
 										limit = { exists = dominant_culture }
 										OR = {

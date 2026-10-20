@@ -2968,6 +2968,7 @@ bag_asp_paired_seat = {{
 }}
 """ + reachable
 
+    triggers, run = area_marks(triggers), area_marks(run)
     return {
         "in_game/common/scripted_triggers/bag_asp_council_triggers.txt": triggers + ramp_triggers(game) + assim_triggers(game) + DEVELOP_TRIGGERS,
         "in_game/common/script_values/bag_asp_values.txt": VALUES + shown_values() + SV_VALUES + DEVELOP_VALUES + sv_push_value(game, actions),
@@ -2980,6 +2981,27 @@ bag_asp_paired_seat = {{
         # The value shift presses the game's own window: tools/value_window.py.
         **value_window.build(game),
     }
+
+
+# An area holds no variables (1.4.1 logs, 10-20: «This scope doesn't support
+# variables» 2 576 times a load from `bag_asp_busy_any`), so the busy mark of an
+# area action never stuck and two seats could take the same area. Those keys
+# keep their mark in a global list of areas instead; every other target keeps
+# its variable. The test reads `this`, so it is right in any scope: a province
+# or an estate is simply never in the list.
+AREA_KEYS = ("increase_control_area", "integrate_area")
+
+
+def area_marks(text: str) -> str:
+    for k in AREA_KEYS:
+        name = f"bag_asp_busy_{k}"
+        text = text.replace(f"set_variable = {{ name = {name} value = yes }}",
+                            f"add_to_global_variable_list = {{ name = {name} target = this }}")
+        text = text.replace(f"remove_variable = {name}",
+                            f"remove_list_global_variable = {{ name = {name} target = this }}")
+        text = text.replace(f"has_variable = {name}",
+                            f"is_target_in_global_variable_list = {{ name = {name} target = this }}")
+    return text
 
 
 def develop_steps(game: Path) -> dict[int, list[str]]:

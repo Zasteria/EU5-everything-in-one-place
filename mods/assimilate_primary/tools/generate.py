@@ -83,6 +83,9 @@ RULE = """\t\t\t# assimilate_primary: for a player whose cabinet is automated, a
 STALE = [
     MOD / "in_game/common/on_action/assimilate_primary_council_on_actions.txt",
     MOD / "in_game/common/decisions/assimilate_primary_decisions.txt",
+    # 10-20, his word: vanilla automation stays free; 1.4.2 also put the
+    # game's own -1000 "Wrong culture" back, so the copy has no job left.
+    OUT,
 ]
 
 LOC = {
@@ -171,19 +174,6 @@ def block_end(text: str, start: int) -> int:
 
 
 def main() -> None:
-    text = (refs.GAME / SOURCE).read_text(encoding="utf-8-sig").replace("\r\n", "\n")
-    if "Wrong culture" in text:
-        raise SystemExit("promote_culture: the game has its own culture penalty again — "
-                         "this mod may no longer be needed; read the file before rebuilding")
-    province = text.find("looking_for_a = province")
-    if province < 0:
-        raise SystemExit("promote_culture: no province selection in the game's file")
-    trigger_end = block_end(text, text.rindex("select_trigger = {", 0, province))
-    enabled = text.find("\t\tenabled = {", province, trigger_end)
-    if enabled < 0:
-        raise SystemExit("promote_culture: the province selection has no `enabled`")
-    end = block_end(text, enabled)
-    write(OUT, HEAD + text[:end].rstrip("\t") + RULE + "\t\t" + text[end:])
     for path in STALE:
         if path.exists():
             path.unlink()

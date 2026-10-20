@@ -50,10 +50,10 @@ MOD = refs.REPO / "mods/cm_dev_perf"
 PROBE = MOD / "tools/probe"
 SRC = refs.mod("romaimperator.construction_manager.dev", "construction_manager_dev")
 
-# cm_perf's generator holds the first-pass widening; reuse it rather than keep
+# cm_perf (retired 10-20) held the first-pass widening; its generator lives on as cm_perf_base.py
 # two copies that drift apart.
 _spec = importlib.util.spec_from_file_location(
-    "cm_perf_port", refs.REPO / "mods/cm_perf/tools/port_from_cm.py"
+    "cm_perf_port", Path(__file__).resolve().parent / "cm_perf_base.py"
 )
 perf = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(perf)
@@ -1627,7 +1627,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 45
+PERF_REVISION = 46
 
 
 def metadata() -> str:
