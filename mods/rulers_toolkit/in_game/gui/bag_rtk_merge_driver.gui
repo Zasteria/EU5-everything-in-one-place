@@ -1,0 +1,62 @@
+﻿# Объединение нерегулярных полков после боя (его просьба 10-20). Своего эффекта
+# слияния у скрипта нет; есть пункт контекстного меню отряда (ПКМ) «Объединить
+# иррегулярные полки» — `UnitActionItem` из `Unit.GetQuickUnitActions`, как в
+# `context_menu.gui`. Бой ставит игроку `bag_rtk_merge_due` (`on_battle_won`,
+# `on_battle_lost`); пока флаг стоит, привод проходит по армиям игрока
+# (`AccessPlayerUnits`, как `single_unit_window.gui`) и жмёт этот пункт там, где
+# он доступен. Через секунду флаг снимается.
+#
+# Пункт узнаётся по ключу (`GetKey` содержит `non_regular`) или по имени, равному
+# тексту ванильной кнопки; ключа в файлах игры нет — он в exe.
+widget = {
+	name = "bag_rtk_merge_driver"
+	visible = "[EqualTo_CFixedPoint('(CFixedPoint)0', '(CFixedPoint)0')]"
+	position = { -10000 1 }
+
+	state = {
+		name = bag_rtk_merge_arm
+		trigger_when = "[GetPlayer.MakeScope.GetVariable('bag_rtk_merge_due').IsSet]"
+		on_start = "[PdxGuiTriggerAllAnimations('bag_rtk_merge_wait')]"
+	}
+
+	state = {
+		name = bag_rtk_merge_wait
+		duration = 1
+		on_finish = "[GetScriptedGui('bag_rtk_merge_done').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+	}
+
+	# Размеры не нулевые: в контейнере нулевого размера игра строк не строит
+	# (шаблон мира 0.9.7, 10-20); форма — как у `bag_rtk_rep_driver.gui`.
+	widget = {
+		size = { 200 200 }
+		visible = "[GetPlayer.MakeScope.GetVariable('bag_rtk_merge_due').IsSet]"
+
+		vbox = {
+			layoutpolicy_horizontal = expanding
+			datamodel = "[AccessPlayerUnits]"
+			item = {
+				widget = {
+					size = { 160 20 }
+					visible = "[Unit.IsArmy]"
+					datacontext = "[Unit.GetQuickUnitActions]"
+
+					vbox = {
+						datamodel = "[QuickUnitActions.AccessList]"
+						item = {
+							widget = {
+								size = { 10 10 }
+								visible_at_creation = no
+								visible = "[And3(GetPlayer.MakeScope.GetVariable('bag_rtk_merge_due').IsSet, Or(StringContains(UnitActionItem.GetKey, 'non_regular'), EqualTo_string(UnitActionItem.GetName, Localize('CONSOLIDATE_NON_REGULARS_BUTTON'))), And(UnitActionItem.HasSingleLeftAction, UnitActionItem.CanSingleLeftClick))]"
+								state = {
+									name = _show
+									duration = 0.05
+									on_finish = "[UnitActionItem.SingleLeftClick]"
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
