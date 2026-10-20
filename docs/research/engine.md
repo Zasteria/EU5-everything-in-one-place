@@ -504,6 +504,8 @@ TOOLBOX     Language  Environment  Map menu  Inspect  Explorer  Unit Viewer  Err
 
 `Tweaker`, `DrawCmdsViewer` and `ScriptProfilerGui` are types in the data dumps
 but have no button here, so they are not reachable this way.
+The console reaches the script profiler anyway, and more —
+[`executable.md`](executable.md), read out of `eu5.exe` 10-20.
 `PdxProfiler*` (frame time, recording, `PdxProfilerGuiWriteFrameCSV`) are
 **global** functions, so a mod window can call them; whether they do anything in
 a release build is what `perf_probe` asks (10-05, untested).

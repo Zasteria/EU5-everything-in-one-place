@@ -11,6 +11,7 @@ does not care what a `$vanilla_key$` passthrough is.
 | | |
 | --- | --- |
 | **[`research/engine.md`](research/engine.md)** | What the engine gives a mod: how to ask it what exists, mod layout, why localization is code and the ways it fails to compile, what gates a production method, geography from script, and where the RGO bonus and the goods data live |
+| **[`research/executable.md`](research/executable.md)** | What `eu5.exe` itself names: console commands (script and interface-data profilers), launch options (`-profile_ticktasks`, `-force_text_save`, hands-off runs), and what his machine holds that `reference/` does not |
 | **[`research/interface.md`](research/interface.md)** | The interface half of the same: which panel is which, list filters and what a filter trigger receives, view object scoping, what a scripted widget costs, and the game's own map selection — what it is made of and which parts of it a mod may have |
 | **[`research/cmf.md`](research/cmf.md)** | Community Mod Framework: its hooks, Mod Menu settings, where every setting's value is stored, and the list machinery that fails silently |
 | **[`research/construction_manager.md`](research/construction_manager.md)** | Construction Manager: where it gets its buildings, why it builds what it builds, how it meets the game's own automation, and how an addon reaches it |
