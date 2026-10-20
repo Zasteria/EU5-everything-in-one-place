@@ -208,11 +208,6 @@ why: the same.
 from: ')|W
 to: ')|W]
 
-key: PAST_FIRST_ADD_CHARACTER_MODIFIER_UNTIL_DEATH
-why: the value starts with a Concept that lost its `[`.
-from: Concept('character', 'Персонаж')|e] получил
-to: [Concept('character', 'Персонаж')|e] получил
-
 key: flavor_byz.60.desc
 why: unclosed Select_CString before the dash.
 from: 'императора-соправителя' ),
@@ -422,10 +417,6 @@ key: EST_SATISFACTION_TITLE
 why: the estate panel supplies `Estate`, not `ESTATE` — the English key says `[Estate.GetNameWithNoTooltip]`. The Russian reached for the uppercase helper, whose seventy five tests all promote `ESTATE`. The mixed-case helper is the same text against the right promote.
 from: $ESTATE_GetNameWithNoTooltip_RU_GEN_lower$
 to: $Estate_GetNameWithNoTooltip_RU_GEN_lower$
-
-why: `TARGET_BUILDING` is not a promote — the effect describes a building *type*, and the English keys say `TARGET_BUILDING_TYPE`. `Promote 'TARGET_BUILDING' returned nullptr`, 638 times.
-from: TARGET_BUILDING.GetName
-to: TARGET_BUILDING_TYPE.GetName
 
 key: THIRD_ADD_TEMPORARY_DEMAND_EFFECT
 why: `TARGET_MARKET` is not supplied here; the same string already uses `MARKET` for the market's own name, and the English key uses only that.
@@ -1088,3 +1079,21 @@ to: есть #TOOLTIP:[ToRowListBreakdownParams(GetSelectedPlaysetIssues)] #L н
 why: a dynasty or work-of-art tooltip aimed at a `_tt` key the game never defines (`capet_dynasty_tt` and five more; `wattasid_dynasty_tt` and its kind exist). These keys only came into the mod with the `unknown_custom` repairs, and check_script refuses a reference to no key. The word stays, the dead tooltip goes, as in flavor_kni.3.desc.
 regex: #TOOLTIP:(?:DYNASTY|WORK_OF_ART),\$(?:capet_dynasty|avesnes_dynasty|valois_dynasty|shokoku_ji|reading_in_a_bamboo_grove|treatise_of_human_nature)_tt\$,X (#L [^#]*#!)#!
 to: \1
+
+# ---------------------------------------------------------------------------
+# 1.4.2 (10-20).
+# ---------------------------------------------------------------------------
+
+why: `LR_*` объявлены `type = location`, а новые ключи 1.4.2 (Арагон, Генуя-Тунис) зовут их с ранга `target_location.GetRank` — то же, что `LOCATION.GetRank.Custom('LR_PREP')` выше. Помощник сам выбирает слово по рангу локации.
+from: target_location.GetRank.Custom(
+to: target_location.Custom(
+
+key: circumnavigation_expedition_events.11.desc
+why: `GetAdjectuve` — опечатка Paradox, такой функции у Religion нет; английский называет веру по имени.
+from: #L [ROOT.GetCountry.GetReligion.GetAdjectuve|l]ую#! веру
+to: веру «[ROOT.GetCountry.GetReligion.GetName]»
+
+key: flavor_ara.23.desc
+why: подсказка `CF_tt` ни одной кастомной локализацией не объявлена; слово `rank_ru_GEN` есть, подсказку убираем.
+from: #L #TOOLTIP:COUNTRY_RANK,[ROOT.GetCountry.GetRank.Custom('CF_tt')],X [ROOT.GetCountry.GetRank.Custom('rank_ru_GEN')|l]#!#!
+to: державы
