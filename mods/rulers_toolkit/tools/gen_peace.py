@@ -258,46 +258,19 @@ def driver():
 
 {t}}}
 
-{t}# Пункты договора: по помощнику на пункт в каждой строке списка. В потоке
-{t}# панели, как зонд 10-20 (тогда строки списка были), а не в виджете нулевого
-{t}# размера: там (0.9.4–0.9.7) списка не было вовсе. Невидимое места не берёт.
+{t}# Пункты договора: по помощнику на пункт. Категории окна — гармошка: раскрыта
+{t}# одна, и только она отдаёт свои пункты (его скрины 10-20; раскрывать их по
+{t}# очереди — мерцание). Поэтому весь список договора разом —
+{t}# `PeaceOfferLateralView.GetAllTreaties`, ванилью не используемый.
 {t}vbox = {{
 {t}	layoutpolicy_horizontal = expanding
 {t}	ignoreinvisible = yes
-{t}	datamodel = "[PeaceOfferLateralView.GetCategories]"
+{t}	datamodel = "[PeaceOfferLateralView.GetAllTreaties]"
 {t}	item = {{
 {t}		vbox = {{
 {t}			layoutpolicy_horizontal = expanding
 {t}			ignoreinvisible = yes
-{t}			# Свёрнутая категория не отдаёт пунктов (его скрины 10-20: строк не было):
-{t}			# на время шаблона категории с пунктами раскрываются.
-{t}			widget = {{
-{t}				size = {{ 1 1 }}
-{t}				visible_at_creation = no
-{t}				visible = "[And3({RUN}, Not(PeaceOfferCategory.IsExpanded), PeaceOfferCategory.HasPossibleTreaties)]"
-{t}				state = {{
-{t}					name = _show
-{t}					duration = 0.05
-{t}					on_finish = "[PeaceOfferCategory.Expand]"
-{t}				}}
-{t}			}}
-{t}			text_single = {{
-{t}				visible = "[{LOG}]"
-{t}				fontsize = 11
-{t}				text = "BAG_RTK_PT_DBG_CAT"
-{t}			}}
-{t}			vbox = {{
-{t}			layoutpolicy_horizontal = expanding
-{t}			ignoreinvisible = yes
-{t}			datamodel = "[PeaceOfferCategory.GetTreaties]"
-{t}			item = {{
-{t}				vbox = {{
-{t}					layoutpolicy_horizontal = expanding
-{t}					ignoreinvisible = yes
-""" + "".join(helpers) + f"""{t}				}}
-{t}			}}
-{t}			}}
-{t}		}}
+""" + "".join(helpers) + f"""{t}		}}
 {t}	}}
 {t}}}
 {t}# BAG_RTK_PT_DRIVER_END

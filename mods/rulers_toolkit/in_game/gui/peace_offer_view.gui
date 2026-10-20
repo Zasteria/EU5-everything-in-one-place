@@ -1167,42 +1167,18 @@ lateralview = {
 
 			}
 
-			# Пункты договора: по помощнику на пункт в каждой строке списка. В потоке
-			# панели, как зонд 10-20 (тогда строки списка были), а не в виджете нулевого
-			# размера: там (0.9.4–0.9.7) списка не было вовсе. Невидимое места не берёт.
+			# Пункты договора: по помощнику на пункт. Категории окна — гармошка: раскрыта
+			# одна, и только она отдаёт свои пункты (его скрины 10-20; раскрывать их по
+			# очереди — мерцание). Поэтому весь список договора разом —
+			# `PeaceOfferLateralView.GetAllTreaties`, ванилью не используемый.
 			vbox = {
 				layoutpolicy_horizontal = expanding
 				ignoreinvisible = yes
-				datamodel = "[PeaceOfferLateralView.GetCategories]"
+				datamodel = "[PeaceOfferLateralView.GetAllTreaties]"
 				item = {
 					vbox = {
 						layoutpolicy_horizontal = expanding
 						ignoreinvisible = yes
-						# Свёрнутая категория не отдаёт пунктов (его скрины 10-20: строк не было):
-						# на время шаблона категории с пунктами раскрываются.
-						widget = {
-							size = { 1 1 }
-							visible_at_creation = no
-							visible = "[And3(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_run').IsSet, Not(PeaceOfferCategory.IsExpanded), PeaceOfferCategory.HasPossibleTreaties)]"
-							state = {
-								name = _show
-								duration = 0.05
-								on_finish = "[PeaceOfferCategory.Expand]"
-							}
-						}
-						text_single = {
-							visible = "[GetPlayer.MakeScope.GetVariable('bag_rtk_log_on').IsSet]"
-							fontsize = 11
-							text = "BAG_RTK_PT_DBG_CAT"
-						}
-						vbox = {
-						layoutpolicy_horizontal = expanding
-						ignoreinvisible = yes
-						datamodel = "[PeaceOfferCategory.GetTreaties]"
-						item = {
-							vbox = {
-								layoutpolicy_horizontal = expanding
-								ignoreinvisible = yes
 									widget = {
 										size = { 1 1 }
 										visible_at_creation = no
@@ -1296,9 +1272,6 @@ lateralview = {
 										fontsize = 11
 										text = "BAG_RTK_PT_DBG_ROW"
 									}
-							}
-						}
-						}
 					}
 				}
 			}
