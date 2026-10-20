@@ -1,0 +1,76 @@
+﻿# Дипрепутация на время мира (его просьба 10-20): кнопкой в окне мира —
+# дипломатические расходы на максимум и один советник на «Дипломатические
+# усилия» (`cabinet_actions/diplomatic_endeavors.txt`: +дипрепутация); второе
+# нажатие или 1-е число — всё обратно. Ползунок двигает привод
+# (`gui/bag_rtk_rep_driver.gui`), советника — скрипт.
+
+# Scope: country (игрок).
+bag_rtk_rep_on = {
+	set_variable = { name = bag_rtk_rep_on value = yes }
+	set_variable = { name = bag_rtk_rep_final value = 1 }
+	set_variable = { name = bag_rtk_rep_save_pending value = 1 }
+	set_variable = { name = bag_rtk_rep_go value = 1 }
+	debug_log = "bag_rtk: rep on"
+	if = {
+		limit = {
+			NOT = { any_cabinet = { has_cabinet_action = yes cabinet_action = cabinet_action:diplomatic_endeavors } }
+			cabinet_action:diplomatic_endeavors = { is_available_for = root }
+		}
+		ordered_cabinet = {
+			limit = { exists = cabinet_member has_cabinet_action = no }
+			order_by = cabinet_member.dip
+			save_scope_as = bag_rtk_rep_seat
+		}
+		if = {
+			limit = { NOT = { exists = scope:bag_rtk_rep_seat } }
+			ordered_cabinet = {
+				limit = { exists = cabinet_member }
+				order_by = cabinet_member.dip
+				save_scope_as = bag_rtk_rep_seat
+			}
+		}
+		scope:bag_rtk_rep_seat ?= {
+			if = {
+				limit = { has_cabinet_action = yes }
+				debug_log = "bag_rtk: rep, busy seat taken, its action dropped"
+			}
+			cabinet_member = { set_variable = { name = bag_rtk_rep_seat value = yes } }
+			set_cabinet_action = { type = cabinet_action:diplomatic_endeavors actor = root }
+			debug_log = "bag_rtk: rep, seat set to diplomatic_endeavors, member:"
+			cabinet_member = { debug_log_scopes = no }
+		}
+	}
+}
+
+# Scope: country (игрок).
+bag_rtk_rep_off = {
+	remove_variable = bag_rtk_rep_on
+	debug_log = "bag_rtk: rep off"
+	if = {
+		limit = { has_variable = bag_rtk_rep_prev }
+		set_variable = { name = bag_rtk_rep_target value = 1 }
+		set_variable = { name = bag_rtk_rep_final value = var:bag_rtk_rep_prev }
+		remove_variable = bag_rtk_rep_save_pending
+		set_variable = { name = bag_rtk_rep_go value = 1 }
+	}
+	every_cabinet = {
+		limit = {
+			exists = cabinet_member
+			cabinet_member = { has_variable = bag_rtk_rep_seat }
+		}
+		cabinet_member = { remove_variable = bag_rtk_rep_seat }
+		if = {
+			limit = { has_cabinet_action = yes cabinet_action = cabinet_action:diplomatic_endeavors }
+			stop_cabinet_action = {}
+			debug_log = "bag_rtk: rep, seat released"
+		}
+	}
+}
+
+# 1-го числа: если включено — вернуть. Scope: country (игрок).
+bag_rtk_rep_monthly = {
+	if = {
+		limit = { has_variable = bag_rtk_rep_on }
+		bag_rtk_rep_off = yes
+	}
+}

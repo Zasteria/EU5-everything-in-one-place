@@ -1,0 +1,105 @@
+﻿# Кнопка «Дипрепутация» в окне мира и её привод (`gui/bag_rtk_rep_driver.gui`).
+
+# Нажатие кнопки: включить или вернуть как было. Scope: country (игрок).
+bag_rtk_rep_toggle = {
+	scope = country
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+	effect = {
+		if = {
+			limit = { has_variable = bag_rtk_rep_on }
+			bag_rtk_rep_off = yes
+		}
+		else = {
+			bag_rtk_rep_on = yes
+		}
+	}
+}
+
+# Привод снял положение ползунка до правки. Scope: country.
+bag_rtk_rep_saved = {
+	scope = country
+	saved_scopes = { bag_rtk_v }
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+	effect = {
+		set_variable = { name = bag_rtk_rep_prev value = scope:bag_rtk_v }
+		set_variable = { name = bag_rtk_rep_target value = scope:bag_rtk_v }
+		remove_variable = bag_rtk_rep_save_pending
+		debug_log = "bag_rtk: rep, diplomacy slider was saved"
+	}
+}
+
+# Ползунок показан с текущим числом — теперь сменить его на нужное. Scope: country.
+bag_rtk_rep_set_target = {
+	scope = country
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+	effect = {
+		set_variable = { name = bag_rtk_rep_target value = var:bag_rtk_rep_final }
+	}
+}
+
+# Ползунок встал и ушёл движку. Scope: country.
+bag_rtk_rep_clear_go = {
+	scope = country
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+	effect = {
+		remove_variable = bag_rtk_rep_go
+		debug_log = "bag_rtk: rep, diplomacy slider posted"
+	}
+}
+
+# Шаблон договора (`tools/gen_peace.py`): кнопка запускает шагомер. Scope: country.
+bag_rtk_pt_start = {
+	scope = country
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+	effect = {
+		bag_rtk_pt_defaults = yes
+		set_variable = { name = bag_rtk_pt_step value = 0 }
+		set_variable = { name = bag_rtk_pt_run value = yes }
+		debug_log = "bag_rtk: peace template started"
+	}
+}
+
+# Следующий приоритет; после последнего — стоп. Scope: country.
+bag_rtk_pt_next = {
+	scope = country
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+	effect = {
+		change_variable = { name = bag_rtk_pt_step add = 1 }
+		debug_log = "bag_rtk: peace template, step [GetPlayer.MakeScope.GetVariable('bag_rtk_pt_step').GetValue|0]"
+		if = {
+			limit = { var:bag_rtk_pt_step > 9 }
+			remove_variable = bag_rtk_pt_run
+			debug_log = "bag_rtk: peace template done"
+		}
+	}
+}
+
+# Мир заключён: вернуть, если включено. Scope: country.
+bag_rtk_rep_release = {
+	scope = country
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+	effect = {
+		if = {
+			limit = { has_variable = bag_rtk_rep_on }
+			debug_log = "bag_rtk: rep, peace sent, putting back"
+			bag_rtk_rep_off = yes
+		}
+	}
+}
+
+# Помощник шаблона нажал пункт (зонд). Scope: country.
+bag_rtk_pt_clicked = {
+	scope = country
+	is_shown = { always = yes }
+	is_valid = { always = yes }
+	effect = {
+		debug_log = "bag_rtk: peace template, a term clicked at step [GetPlayer.MakeScope.GetVariable('bag_rtk_pt_step').GetValue|0]"
+	}
+}

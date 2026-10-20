@@ -1,0 +1,114 @@
+﻿# Привод кнопки «Дипрепутация» в окне мира (`peace_offer_view.gui`). Ползунок
+# «Дипломатия» двигает только `onvaluechanged` самого ползунка, поэтому, как у
+# `bag_wsl_driver.gui`, мод держит свой ползунок на том же `MaintenanceSetting`
+# и пишет ему значение переменной страны. Форма и тайминги — оттуда же.
+#
+# Порядок: (1) `bag_rtk_rep_save_pending` — снять текущее положение ползунка в
+# `bag_rtk_rep_prev`; (2) `bag_rtk_rep_go` — ползунок показан с текущим числом
+# (`bag_rtk_rep_target`), затем число меняется на `bag_rtk_rep_final` — рождается
+# `onvaluechanged`, и `Post` отдаёт его движку.
+widget = {
+	name = "bag_rtk_rep_driver"
+	visible = "[EqualTo_CFixedPoint('(CFixedPoint)0', '(CFixedPoint)0')]"
+	position = { -10000 1 }
+
+	state = {
+		name = bag_rtk_rep_arm
+		trigger_when = "[And(Or(GetPlayer.MakeScope.GetVariable('bag_rtk_rep_go').IsSet, GetPlayer.MakeScope.GetVariable('bag_rtk_rep_save_pending').IsSet), Not(GetVariableSystem.Exists('bag_rtk_rep_armed')))]"
+		on_start = "[PdxGuiTriggerAllAnimations('bag_rtk_rep_arm_settle')]"
+	}
+
+	state = {
+		name = bag_rtk_rep_arm_settle
+		duration = 0.3
+		on_finish = "[GetVariableSystem.Set('bag_rtk_rep_armed', '1')]"
+	}
+
+	state = {
+		name = bag_rtk_rep_disarm
+		trigger_when = "[And(Not(Or(GetPlayer.MakeScope.GetVariable('bag_rtk_rep_go').IsSet, GetPlayer.MakeScope.GetVariable('bag_rtk_rep_save_pending').IsSet)), GetVariableSystem.Exists('bag_rtk_rep_armed'))]"
+		on_start = "[GetVariableSystem.Clear('bag_rtk_rep_armed')]"
+	}
+
+	# Договор отправлен (кнопка «Отправка требования» ставит `bag_rtk_rep_after`):
+	# через 0.1 с — мир уже заключён — вернуть ползунок и советника.
+	state = {
+		name = bag_rtk_rep_after_peace
+		trigger_when = "[GetVariableSystem.Exists('bag_rtk_rep_after')]"
+		on_start = "[PdxGuiTriggerAllAnimations('bag_rtk_rep_after_wait')]"
+	}
+
+	state = {
+		name = bag_rtk_rep_after_wait
+		duration = 0.1
+		on_finish = "[GetVariableSystem.Clear('bag_rtk_rep_after')]"
+		on_finish = "[GetScriptedGui('bag_rtk_rep_release').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+	}
+
+	widget = {
+		size = { 200 20 }
+		visible = "[Or(GetPlayer.MakeScope.GetVariable('bag_rtk_rep_go').IsSet, GetPlayer.MakeScope.GetVariable('bag_rtk_rep_save_pending').IsSet)]"
+		datacontext = "[GetEconomyView]"
+
+		vbox = {
+			layoutpolicy_horizontal = expanding
+
+			vbox = {
+				layoutpolicy_horizontal = expanding
+				ignoreinvisible = yes
+
+				datamodel = "[EconomyView.GetMaintenanceSettings]"
+				item = {
+					widget = {
+						size = { 160 40 }
+
+						# (1) Снять, где стоит ползунок сейчас.
+						widget = {
+							size = { 160 12 }
+							visible_at_creation = no
+							visible = "[And(GetVariableSystem.Exists('bag_rtk_rep_armed'), And(MaintenanceSetting.IsDiplomatic, GetPlayer.MakeScope.GetVariable('bag_rtk_rep_save_pending').IsSet))]"
+
+							state = {
+								name = _show
+								duration = 0.1
+								on_finish = "[GetScriptedGui('bag_rtk_rep_saved').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('bag_rtk_v', MakeScopeValue(MaintenanceSetting.GetSliderValue)).End)]"
+							}
+						}
+
+						# (2) Свой ползунок «Дипломатии».
+						widget = {
+							size = { 160 12 }
+							visible_at_creation = no
+							visible = "[And(GetVariableSystem.Exists('bag_rtk_rep_armed'), And(MaintenanceSetting.IsDiplomatic, And(GetPlayer.MakeScope.GetVariable('bag_rtk_rep_go').IsSet, Not(GetPlayer.MakeScope.GetVariable('bag_rtk_rep_save_pending').IsSet))))]"
+
+							economy_slider = {
+								size = { 120 10 }
+								min = 0
+								max = 1
+								value = "[FixedPointToFloat(GetPlayer.MakeScope.GetVariable('bag_rtk_rep_target').GetValue)]"
+								mincap = "[MaintenanceSetting.GetMin]"
+								maxcap = "[MaintenanceSetting.GetMax]"
+								onvaluechanged = "[MaintenanceSetting.OnChanged]"
+								onchangefinish = "[MaintenanceSetting.Post]"
+							}
+
+							state = {
+								name = _show
+								duration = 0.2
+								next = bag_rtk_rep_set
+								on_finish = "[GetScriptedGui('bag_rtk_rep_set_target').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+							}
+
+							state = {
+								name = bag_rtk_rep_set
+								duration = 0.2
+								on_finish = "[MaintenanceSetting.Post]"
+								on_finish = "[GetScriptedGui('bag_rtk_rep_clear_go').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
