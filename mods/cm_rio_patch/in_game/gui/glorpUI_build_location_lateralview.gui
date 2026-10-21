@@ -616,7 +616,9 @@
 						size = { 23 46 } # GlorpUI: {30 44} -> {23 46}
 						vbox = {
 							# margin = { 5 0 }
-							visible = "[ObjectsEqual(LocationToBuildItem.GetBuilding.GetOwner, Player.Self)]"
+							# cm_rio_patch: open on a row with nothing built too, for CM's button (his screenshot 10-21: still none for the Пакгауз);
+							# subsidize and close keep their own owner gates
+							visible = "[Or(ObjectsEqual(LocationToBuildItem.GetBuilding.GetOwner, Player.Self), Not(LocationToBuildItem.HasConstructedBuildingLevels))]"
 							layoutpolicy_vertical = expanding
 
 							button_square_checkbox = {
@@ -723,8 +725,8 @@
 
 							# cm_rio_patch: CM's button outside the slot below, which opens only on a building of ours and so
 							# hid CM's button for one not built yet (his screenshot 10-20, «Строительство сооружения «Арсенал»»).
-							# Under CM the slot holds nothing visible and closes; CM's button takes its 20x44.
-							cm_auto_expand_building_button_bll = { }
+							# Under CM the slot holds nothing visible and closes; CM's button takes 20x20 of the 46-high column.
+							cm_auto_expand_building_button_bll = { size = { 20 20 } }
 
 							widget = {
 								visible = "[And3(Not(GetScriptedGui('glorpui_is_cm_active').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End)), ObjectsEqual(LocationToBuildItem.GetBuilding.GetOwner, Player.Self), LocationToBuildItem.GetBuilding.GetType.IsMultipleLevels)]"

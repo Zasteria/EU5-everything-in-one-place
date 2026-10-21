@@ -6,8 +6,9 @@
 # (`AccessPlayerUnits`, как `single_unit_window.gui`) и жмёт этот пункт там, где
 # он доступен. Через секунду флаг снимается.
 #
-# Пункт узнаётся по ключу (`GetKey` содержит `non_regular`) или по имени, равному
-# тексту ванильной кнопки; ключа в файлах игры нет — он в exe.
+# Пункт узнаётся по ключу (`non_regular`, `irregular`) или по куску имени
+# («ррегуляр», «rregular»); ключа в файлах игры нет — он в exe. 0.9.13 искал
+# имя целиком — не слил ни разу (10-21); 0.9.14 шире и с зондом.
 widget = {
 	name = "bag_rtk_merge_driver"
 	visible = "[EqualTo_CFixedPoint('(CFixedPoint)0', '(CFixedPoint)0')]"
@@ -46,11 +47,24 @@ widget = {
 							widget = {
 								size = { 10 10 }
 								visible_at_creation = no
-								visible = "[And3(GetPlayer.MakeScope.GetVariable('bag_rtk_merge_due').IsSet, Or(StringContains(UnitActionItem.GetKey, 'non_regular'), EqualTo_string(UnitActionItem.GetName, Localize('CONSOLIDATE_NON_REGULARS_BUTTON'))), And(UnitActionItem.HasSingleLeftAction, UnitActionItem.CanSingleLeftClick))]"
+								visible = "[And3(GetPlayer.MakeScope.GetVariable('bag_rtk_merge_due').IsSet, Or4(StringContains(UnitActionItem.GetKey, 'non_regular'), StringContains(UnitActionItem.GetKey, 'irregular'), StringContains(UnitActionItem.GetName, 'ррегуляр'), StringContains(UnitActionItem.GetName, 'rregular')), And(UnitActionItem.HasSingleLeftAction, UnitActionItem.CanSingleLeftClick))]"
 								state = {
 									name = _show
 									duration = 0.05
 									on_finish = "[UnitActionItem.SingleLeftClick]"
+								}
+							}
+							# Зонд под галочкой журнала: ключ, имя и доступность каждого пункта меню
+							# каждой армии — в debug.log (`bag_rtk: merge item`). 0.9.13 не слил ни разу (10-21).
+							widget = {
+								size = { 10 10 }
+								visible_at_creation = no
+								visible = "[And(GetPlayer.MakeScope.GetVariable('bag_rtk_merge_due').IsSet, GetGlobalVariable('bag_rtk_log').IsSet)]"
+								state = {
+									name = _show
+									duration = 0.05
+									on_finish = "[GetVariableSystem.Set('bag_rtk_mk', Concatenate(UnitActionItem.GetKey, Concatenate(' / ', Concatenate(UnitActionItem.GetName, Select_CString(And(UnitActionItem.HasSingleLeftAction, UnitActionItem.CanSingleLeftClick), ' / can', ' / cannot')))))]"
+									on_finish = "[GetScriptedGui('bag_rtk_merge_probe').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
 								}
 							}
 						}
