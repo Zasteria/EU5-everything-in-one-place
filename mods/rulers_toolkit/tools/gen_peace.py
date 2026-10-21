@@ -107,8 +107,12 @@ FITS = ("LessThanOrEqualTo_int32(Add_int32(PeaceOfferLateralView.GetTotalWarScor
         "FixedPointToInt(PeaceTreaty.GetWarScoreCost)), FixedPointToInt(PeaceOfferLateralView.GetWarScore))")
 
 
+# Шагомер стартует с шага 0 (первый тик ставит 1), и до первого тика пункты с
+# приоритетом 0 — «не брать» — совпадали с шагом и жались (его игра 10-21:
+# расторжение на 0, а взято). Шаг 0 не совпадает ни с чем.
 def at_step(i):
-    return f"EqualTo_CFixedPoint({STEP}, {PV}('{var(i)}').GetValue)"
+    return (f"And(GreaterThan_CFixedPoint({STEP}, '(CFixedPoint)0'), "
+            f"EqualTo_CFixedPoint({STEP}, {PV}('{var(i)}').GetValue))")
 
 
 REP_BUTTON = """									#bag_rtk: ДИПРЕПУТАЦИЯ НА ВРЕМЯ МИРА (Помощник правителя)
@@ -319,7 +323,7 @@ bag_rtk_pt_clicked = {{
 \tis_shown = {{ always = yes }}
 \tis_valid = {{ always = yes }}
 \teffect = {{
-\t\tdebug_log = "bag_rtk: peace template, a term clicked"
+\t\tdebug_log = "bag_rtk: peace template, a term clicked at step [GetPlayer.MakeScope.GetVariable('bag_rtk_pt_step').GetValue|0]"
 \t}}
 }}
 """
