@@ -1,13 +1,33 @@
 ﻿# Объединение нерегулярных полков после боя (его просьба 10-20). Скрипт слить
 # полки не может; он ставит флаг, а жмёт пункт меню отряда привод
-# `gui/bag_rtk_merge_driver.gui`. Scope: country (root `on_battle_won` и `on_battle_lost`).
+# `gui/bag_rtk_merge_driver.gui`. Scope: country (root `on_battle_won` и
+# `on_battle_lost`, и 1-го числа — `bag_rtk_merge_monthly`).
+#
+# 0.9.13 в его игре 10-21 не слил ни разу, и в журнале не было даже строки боя:
+# зонд пишет, дошёл ли бой до мода и стоит ли галочка.
 bag_rtk_merge_after_battle = {
 	if = {
-		limit = {
-			is_ai = no
-			has_variable = bag_rtk_merge_on
+		limit = { is_ai = no }
+		if = {
+			limit = { has_variable = bag_rtk_merge_on }
+			set_variable = { name = bag_rtk_merge_due value = yes }
+			if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: merge, battle over, irregular regiments to consolidate" }
 		}
+		else = {
+			if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: merge, battle over, but the setting is off" }
+		}
+	}
+}
+
+# Раз в месяц тоже: полк, потрёпанный осадой или истощением, сливается и без боя,
+# а если хук боя до мода не доходит, месячный проход всё равно сольёт. Scope: country.
+bag_rtk_merge_monthly = {
+	if = {
+		limit = { has_variable = bag_rtk_merge_on }
 		set_variable = { name = bag_rtk_merge_due value = yes }
-		if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: merge, battle over, irregular regiments to consolidate" }
+		if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: merge, monthly pass" }
+	}
+	else = {
+		if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: merge, monthly pass, the setting is off" }
 	}
 }
