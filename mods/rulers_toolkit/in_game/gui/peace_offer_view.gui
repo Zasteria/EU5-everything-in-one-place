@@ -1122,10 +1122,13 @@ lateralview = {
 					text = "BAG_RTK_PT_DBG"
 				}
 				# Шагомер: каждые 0.15 с следующая фаза (категория), потом приоритет.
+				# Пока на шаге золота «+» ещё жмётся, шагомер стоит: золото бралось не всё —
+				# шаг уходил раньше, чем кончались нажатия (его слова 10-21).
 				widget = {
 					size = { 1 1 }
 					visible_at_creation = no
-					visible = "[GetPlayer.MakeScope.GetVariable('bag_rtk_pt_run').IsSet]"
+					datacontext = "[PeaceOfferLateralView.GetGoldTreaty]"
+					visible = "[And(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_run').IsSet, Not(And5(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_run').IsSet, EqualTo_CFixedPoint(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_step').GetValue, GetPlayer.MakeScope.GetVariable('bag_rtk_pt_p_gold').GetValue), EqualTo_CFixedPoint(GetPlayer.MakeScope.GetVariable('bag_rtk_pt_sub').GetValue, '(CFixedPoint)1'), PeaceOfferWarScoreTreatyGlue.IsIncWarScoreEnabled, GreaterThan_int32(FixedPointToInt(PeaceOfferLateralView.GetWarScore), PeaceOfferLateralView.GetTotalWarScoreCost))))]"
 					state = {
 						name = _show
 						duration = 0.15
