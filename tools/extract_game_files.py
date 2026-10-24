@@ -446,6 +446,15 @@ def build_of(game: Path) -> dict:
                 break
         if any(k.startswith("game_") for k in found):
             break
+    # The 1.4 betas ship no launcher-settings.json; the executable names its own
+    # build, "1.4.4\0Río Salado\0Exe Git" (10-24 — the 10-23 build had gone down
+    # here as 1.4.3, guessed from a database site).
+    exe = (install or game) / "binaries/eu5.exe"
+    if "game_version" not in found and exe.is_file():
+        match = re.search(rb"(\d+\.\d+\.\d+)\x00([^\x00]{1,40})\x00Exe Git", exe.read_bytes())
+        if match:
+            found["game_version"] = match.group(1).decode()
+            found["game_rawversion"] = "%s %s" % (found["game_version"], match.group(2).decode("utf-8", "replace"))
     return found
 
 

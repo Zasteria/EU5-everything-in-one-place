@@ -4,7 +4,7 @@ This file is the part that is live; history is in `docs/archive/`, and the
 mods retired on 2026-10-03 are in [`archive/retired_mods.md`](archive/retired_mods.md). What has already been settled is in
 [`SETTLED.md`](SETTLED.md); where each mod stands is [`STATUS.md`](STATUS.md).
 
-## Патч 2026-10-23 (сборка 26142040): моды подогнаны, в игре не было
+## Патч 1.4.4, 2026-10-23 (сборка 26142040): моды подогнаны, в игре не было
 
 Что патч поменял и что сделано — [`investigations/patch_2026_10_23.md`](investigations/patch_2026_10_23.md).
 
