@@ -73,7 +73,7 @@ _spec = importlib.util.spec_from_file_location(
 beta = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(beta)
 
-REVISION = 14
+REVISION = 15
 
 
 def metadata() -> str:
@@ -150,6 +150,27 @@ def vanilla_types_current() -> list[str]:
         out = text.replace("\n", "\r\n") if crlf else text
         path.write_text("\ufeff" + out, encoding="utf-8")
     return taken
+
+
+LOBBY = "in_game/gui/multiplayer_lobby.gui"
+# Build 26142040 (10-23) made the country flags in the lobby's country list
+# flatter. CMF's `LobbyCountryListWidget` carries its own edits, so the type is
+# not taken whole; only these two sizes follow the game.
+LOBBY_FLAGS = (("size = { 53 40 }", "size = { 53 35 }"), ("size = { 82 62 }", "size = { 82 55 }"))
+
+
+def lobby_flags() -> int:
+    path = MOD / LOBBY
+    text = path.read_text(encoding="utf-8-sig")
+    done = 0
+    for old, new in LOBBY_FLAGS:
+        if text.count(old) == 1:
+            text = text.replace(old, new)
+            done += 1
+        elif new not in text:
+            raise SystemExit(f"{LOBBY}: neither {old!r} nor {new!r}; CMF moved the lobby flags")
+    path.write_text("﻿" + text, encoding="utf-8")
+    return done
 
 
 ACTION_BAR = "in_game/gui/cmf/cmf_action_bar.gui"
@@ -457,6 +478,7 @@ def main() -> int:
     arrows_skip_hidden()
     typed_position()
     taken = vanilla_types_current()
+    flags = lobby_flags()
     (MOD / ".metadata").mkdir(parents=True, exist_ok=True)
     (MOD / ".metadata/metadata.json").write_text("﻿" + metadata(), encoding="utf-8")
     thumb = SRC / ".metadata/thumbnail.png"
@@ -464,6 +486,7 @@ def main() -> int:
         shutil.copy2(thumb, MOD / ".metadata/thumbnail.png")
     print("cmf_dev_beta: whole copy of %s, %d is_host calls on cmf_is_host"
           % (SRC.name, host_calls))
+    print("     lobby flag sizes from the game: %d" % flags)
     print("     %d vanilla types taken from the game over CMF's stale copies%s"
           % (len(taken), (": " + ", ".join(taken)) if taken else ""))
     return 0

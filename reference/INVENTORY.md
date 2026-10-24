@@ -10,7 +10,6 @@ python3 tools/refresh.py
 
 | Folder | Mod id | Version | Game |
 | --- | --- | --- | --- |
-| `3668193813_trin_national_destinies` | `trin.national_destinies` | 1.4.0 | 1.4.* |
 | `3692202776_community_mod_framework` | `community_mod_framework` | 2.5.0 | 1.4.* |
 | `3721516330_integration_hotfix` | `Integration Hotfix` | 0.7 | 1.3.x |
 | `3736668860_construction_manager` | `romaimperator.construction_manager` | 2.2.12 | 1.3.* |
@@ -38,7 +37,7 @@ compiles from them.
 | `3780623638_nation_destinies_rus` | `nation_destinies_rus` | 1.3 | main_menu |
 | `3816131982_theplaymaker_hre_fix` | `theplaymaker.hre_fix` | 1.0.1 | in_game |
 
-`reference/game/` holds 5168 files of EU5 itself — `in_game/gui/`, the parts
+`reference/game/` holds 5173 files of EU5 itself — `in_game/gui/`, the parts
 of `in_game/common/` the mods here reason about, and the game's own
 localization, which is how `mods/nd_ru/tools/term.py` answers what the game
 calls a concept.
