@@ -13,7 +13,7 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`cmf_dev_beta`](../mods/cmf_dev_beta/CLAUDE.md) | +beta13: номер места с начала; +beta12: типы 1.4.1; `cmf_is_host`, панель, стрелки, номер места; вместо CMF и CMF Dev | +beta7, +beta12, +beta13 |
 | [`glorpui_hints`](../mods/glorpui_hints/CLAUDE.md) | 1.2.14, в игре 10-18 | — |
 | [`centered_towns`](../mods/centered_towns/CLAUDE.md) | 0.2.0 (10-04): позиции Better label placement под новыми именами файлов 1.4 | 0.2.0 |
-| [`assimilate_primary`](../mods/assimilate_primary/CLAUDE.md) | 0.10.11: своя автоматика совета; ценности и «до 50 %» работают; развитие, порог контроля — нет; место после ценностей уводится на заглушку (0.10.11) | 0.6.0 |
+| [`assimilate_primary`](../mods/assimilate_primary/CLAUDE.md) | 0.10.11: своя автоматика совета; ценности, «до 50 %» и развитие работают; порог контроля не проверен; место после ценностей уводится на заглушку (0.10.11) | 0.6.0 |
 | [`speed_5`](../mods/speed_5/CLAUDE.md) | паузы, 5 скоростей | всё |
 | [`cmf_saved_settings`](../mods/cmf_saved_settings/CLAUDE.md) | 0.3.0: применение | 0.3.0 |
 | [`rulers_toolkit`](../mods/rulers_toolkit/CLAUDE.md) | 0.9.5: командиры, ползунки, пленные, творения, откаты, женитьба, мир (шаблон, дипрепутация), журнал | флоты, советники, выкуп, откаты |
