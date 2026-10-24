@@ -683,7 +683,7 @@ def try_effect(row: str, kind: str, order: str | None, gate: str, actions: dict[
         last = "\t\t\t\tscope:bag_asp_pick = { save_scope_as = bag_asp_last }\n" if key == PAIRED_WITH else ""
         return (last + f"\t\t\t\tscope:bag_asp_seat = {{\n"
                 f"\t\t\t\t\tbag_asp_vacate = yes\n"
-                f"\t\t\t\t\tset_cabinet_action = {{ type = cabinet_action:{key}{params} }}\n"
+                f"\t\t\t\t\tset_cabinet_action = {{ type = cabinet_action:{key} actor = scope:actor{params} }}\n"
                 f"\t\t\t\t}}\n" + mark + done)
 
     if kind == "country":
@@ -892,7 +892,7 @@ def place_effect(row: str, gate: str, actions: dict[str, str]) -> str:
 \t\t\t\t\tscope:bag_asp_new = {{ set_variable = {{ name = bag_asp_busy_{key} value = yes }} }}
 \t\t\t\t\tscope:bag_asp_seat = {{
 \t\t\t\t\t\tstop_cabinet_action = {{}}
-\t\t\t\t\t\tset_cabinet_action = {{ type = cabinet_action:{key} target = scope:target target_1 = scope:bag_asp_new }}
+\t\t\t\t\t\tset_cabinet_action = {{ type = cabinet_action:{key} actor = scope:actor target = scope:target target_1 = scope:bag_asp_new }}
 \t\t\t\t\t}}
 \t\t\t\t\tdebug_log = "bag_asp: assimilation moved to a province with more locations to bring to half"
 \t\t\t\t}}
@@ -1013,7 +1013,7 @@ bag_asp_move_{row} = {{
 \t}}
 \tscope:bag_asp_seat = {{
 \t\tbag_asp_vacate = yes
-\t\tset_cabinet_action = {{ type = cabinet_action:{key}{params} }}
+\t\tset_cabinet_action = {{ type = cabinet_action:{key} actor = scope:actor{params} }}
 \t\tcabinet_member = {{
 \t\t\tset_variable = {{ name = bag_asp_claimed value = yes }}
 \t\t\tset_variable = {{ name = bag_asp_kept value = yes }}
@@ -1845,6 +1845,7 @@ bag_asp_place_{SV_ACTION} = {{
 \t\t\t\t\tbag_asp_vacate = yes
 \t\t\t\t\tset_cabinet_action = {{
 \t\t\t\t\t\ttype = cabinet_action:{SV_ACTION}
+\t\t\t\t\t\tactor = scope:actor
 \t\t\t\t\t\t# Any pair: the target sets none (his run 12.10); the window picks it.
 \t\t\t\t\t\ttarget = societal_value_type:traditionalist_vs_innovative
 \t\t\t\t\t}}
