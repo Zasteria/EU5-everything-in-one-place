@@ -26,6 +26,7 @@ reads as though the generators were rewriting mods that nobody touched.
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -46,6 +47,9 @@ GENERATORS = (
     ("integration_fix", "mods/integration_fix/tools/generate.py"),
     ("glorpui_hints", "mods/glorpui_hints/tools/generate.py"),
     ("ru_loc_fix", "mods/ru_loc_fix/tools/generate.py"),
+    # Left out until 10-25, so the 1.4.4 Tordesillas gates stayed stale a day.
+    ("rulers_toolkit cooldowns", "mods/rulers_toolkit/tools/gen_cooldowns.py"),
+    ("rulers_toolkit peace", "mods/rulers_toolkit/tools/gen_peace.py"),
 )
 
 
@@ -60,7 +64,10 @@ def run(script: str) -> tuple[int, str, str]:
     """
     done = subprocess.run(
         [sys.executable, str(refs.REPO / script)],
-        capture_output=True, text=True, cwd=refs.REPO,
+        capture_output=True, text=True, cwd=refs.REPO, encoding="utf-8", errors="replace",
+        # His console is cp1251: a print of «Río» killed port_from_cm_dev.py
+        # halfway on 10-25 and left cm_dev_perf with its metadata deleted.
+        env={**os.environ, "PYTHONIOENCODING": "utf-8"},
     )
     return done.returncode, done.stdout.strip(), done.stderr.strip()
 
