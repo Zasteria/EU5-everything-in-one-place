@@ -61,16 +61,6 @@ bag_asp_plan = {
 	# The lists may have moved without their callback (a typed place goes
 	# through the console), so the order is read afresh every pass.
 	bag_asp_rebuild = yes
-	# A seat on values now keeps the pair for good, whoever put it there.
-	every_cabinet = {
-		limit = {
-			has_cabinet_action = yes
-			cabinet_action = cabinet_action:change_societal_values
-			NOT = { bag_asp_sv_seat = yes }
-		}
-		add_to_global_variable_list = { name = bag_asp_sv_seats target = this }
-		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: a seat on values, from now on it takes only actions that keep the log quiet" }
-	}
 	# His ask 13.10: the seats as the pass finds them, so what he changed by
 	# hand between two passes shows against the last pass's «after».
 	if = {
@@ -162,30 +152,6 @@ bag_asp_plan = {
 	if = {
 		limit = { any_cabinet = { bag_asp_free_seat = yes } }
 		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: a seat is left as it was, nothing in use fits it" }
-	}
-	# His word 10-25: a seat that once shifted values and was left on another
-	# action gets the stub, so its progress line stops flooding the log.
-	every_cabinet = {
-		limit = {
-			bag_asp_sv_seat = yes
-			has_cabinet_action = yes
-			NOR = {
-				cabinet_action = cabinet_action:change_societal_values
-				cabinet_action = cabinet_action:integrate_province
-				cabinet_action = cabinet_action:integrate_area
-				cabinet_action = cabinet_action:counter_espionage_action
-			}
-		}
-		if = {
-			limit = { cabinet_action:counter_espionage_action = { is_available_for = scope:actor } }
-			bag_asp_vacate = yes
-			set_cabinet_action = { type = cabinet_action:counter_espionage_action actor = scope:actor }
-			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: a seat that shifted values moved to the stub" }
-		}
-		else = {
-			bag_asp_vacate = yes
-			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: a seat that shifted values emptied, the stub is closed" }
-		}
 	}
 	if = {
 		limit = { has_variable = bag_asp_log_on }
@@ -1430,12 +1396,15 @@ bag_asp_place_change_societal_values = {
 			}
 			set_local_variable = { name = bag_asp_sv_gone value = yes }
 		}
+		# The seat already on values first, whoever is better: values never move
+		# to another advisor (his word 10-25). The pair the window picked stays on
+		# a seat script takes values from, and its outliner line floods debug.log
+		# (hands-off 10-25, docs/pitfalls/script.md); only the game's own end clears it.
 		ordered_cabinet = {
 			limit = { bag_asp_free_seat = yes }
-			# A seat that already holds a pair first: a new one would keep its own.
 			order_by = {
 				value = cabinet_member.dip
-				if = { limit = { bag_asp_sv_seat = yes } add = 1000 }
+				if = { limit = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values } add = 10000 }
 			}
 			save_scope_as = bag_asp_seat
 		}
@@ -1503,6 +1472,16 @@ bag_asp_place_change_societal_values = {
 			}
 			if = { limit = { has_variable = bag_asp_sv_want } remove_variable = bag_asp_sv_want }
 			if = { limit = { has_variable = bag_asp_sv_want_side } remove_variable = bag_asp_sv_want_side }
+		}
+		# Nothing worth a whole point any more: the seat still stays on values
+		# until the game ends the action itself, which clears its pair.
+		every_cabinet = {
+			limit = {
+				has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values
+				bag_asp_free_seat = yes
+			}
+			cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the seat stays until the game ends the action" }
 		}
 	}
 }
@@ -2935,6 +2914,7 @@ bag_asp_emergency = {
 				ordered_cabinet = {
 					limit = {
 						exists = cabinet_member
+						NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 						OR = {
 							has_cabinet_action = no
 							AND = { bag_asp_paired_seat = yes scope:actor.var:bag_asp_rank_promote_culture > scope:actor.var:bag_asp_rank_recovery_effort }
@@ -3062,6 +3042,7 @@ bag_asp_place_integrate_province = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					cabinet_member = { mil > scope:actor.var:bag_asp_low }
 				}
 				order_by = cabinet_member.mil
@@ -3091,6 +3072,7 @@ bag_asp_place_integrate_province = {
 		ordered_cabinet = {
 			limit = {
 				bag_asp_free_seat = yes
+				NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 			}
 			order_by = cabinet_member.mil
 			save_scope_as = bag_asp_seat
@@ -3140,6 +3122,7 @@ bag_asp_place_integrate_area = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					cabinet_member = { mil > scope:actor.var:bag_asp_low }
 				}
 				order_by = cabinet_member.mil
@@ -3169,6 +3152,7 @@ bag_asp_place_integrate_area = {
 		ordered_cabinet = {
 			limit = {
 				bag_asp_free_seat = yes
+				NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 			}
 			order_by = cabinet_member.mil
 			save_scope_as = bag_asp_seat
@@ -3188,7 +3172,6 @@ bag_asp_place_reduce_war_exhaustion = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:reduce_war_exhaustion
-			NOT = { bag_asp_sv_seat = yes }
 		}
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3219,7 +3202,7 @@ bag_asp_place_reduce_war_exhaustion = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
-					NOT = { bag_asp_sv_seat = yes }
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					cabinet_member = { dip > scope:actor.var:bag_asp_low }
 				}
 				order_by = cabinet_member.dip
@@ -3249,7 +3232,7 @@ bag_asp_place_reduce_war_exhaustion = {
 		ordered_cabinet = {
 			limit = {
 				bag_asp_free_seat = yes
-				NOT = { bag_asp_sv_seat = yes }
+				NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 			}
 			order_by = cabinet_member.dip
 			save_scope_as = bag_asp_seat
@@ -3270,7 +3253,6 @@ bag_asp_place_stabilize_country = {
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:stabilize_country
 			scope:actor = { stability < 50 }
-			NOT = { bag_asp_sv_seat = yes }
 		}
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3301,7 +3283,7 @@ bag_asp_place_stabilize_country = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
-					NOT = { bag_asp_sv_seat = yes }
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					cabinet_member = { mil > scope:actor.var:bag_asp_low }
 				}
 				order_by = cabinet_member.mil
@@ -3331,7 +3313,7 @@ bag_asp_place_stabilize_country = {
 		ordered_cabinet = {
 			limit = {
 				bag_asp_free_seat = yes
-				NOT = { bag_asp_sv_seat = yes }
+				NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 			}
 			order_by = cabinet_member.mil
 			save_scope_as = bag_asp_seat
@@ -3351,7 +3333,6 @@ bag_asp_place_increase_control_province = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:increase_control_province
-			NOT = { bag_asp_sv_seat = yes }
 			OR = { bag_asp_paired_seat = yes interaction_target:selected_province ?= { bag_asp_control_rising = yes } }
 		}
 		cabinet_member = {
@@ -3383,7 +3364,7 @@ bag_asp_place_increase_control_province = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
-					NOT = { bag_asp_sv_seat = yes }
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					cabinet_member = { adm > scope:actor.var:bag_asp_low }
 				}
 				order_by = cabinet_member.adm
@@ -3413,7 +3394,7 @@ bag_asp_place_increase_control_province = {
 		ordered_cabinet = {
 			limit = {
 				bag_asp_free_seat = yes
-				NOT = { bag_asp_sv_seat = yes }
+				NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 			}
 			order_by = cabinet_member.adm
 			save_scope_as = bag_asp_seat
@@ -3433,7 +3414,6 @@ bag_asp_place_increase_control_area = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:increase_control_area
-			NOT = { bag_asp_sv_seat = yes }
 		}
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3464,7 +3444,7 @@ bag_asp_place_increase_control_area = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
-					NOT = { bag_asp_sv_seat = yes }
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					cabinet_member = { adm > scope:actor.var:bag_asp_low }
 				}
 				order_by = cabinet_member.adm
@@ -3494,7 +3474,7 @@ bag_asp_place_increase_control_area = {
 		ordered_cabinet = {
 			limit = {
 				bag_asp_free_seat = yes
-				NOT = { bag_asp_sv_seat = yes }
+				NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 			}
 			order_by = cabinet_member.adm
 			save_scope_as = bag_asp_seat
@@ -3514,7 +3494,6 @@ bag_asp_place_send_secret_royal_inspectors = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:send_secret_royal_inspectors
-			NOT = { bag_asp_sv_seat = yes }
 		}
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3545,7 +3524,7 @@ bag_asp_place_send_secret_royal_inspectors = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
-					NOT = { bag_asp_sv_seat = yes }
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					cabinet_member = { adm > scope:actor.var:bag_asp_low }
 				}
 				order_by = cabinet_member.adm
@@ -3575,7 +3554,7 @@ bag_asp_place_send_secret_royal_inspectors = {
 		ordered_cabinet = {
 			limit = {
 				bag_asp_free_seat = yes
-				NOT = { bag_asp_sv_seat = yes }
+				NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 			}
 			order_by = cabinet_member.adm
 			save_scope_as = bag_asp_seat
@@ -3595,7 +3574,6 @@ bag_asp_place_promote_culture = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:promote_culture
-			NOT = { bag_asp_sv_seat = yes }
 			interaction_target:target_1 ?= { bag_asp_needs_half = yes OR = { bag_asp_half_control_ok = yes has_variable = bag_asp_busy_noblesse_oblige_cabinet_action has_variable = bag_asp_busy_increase_control_province } }
 		}
 		cabinet_member = {
@@ -3707,7 +3685,7 @@ bag_asp_place_promote_culture = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
-					NOT = { bag_asp_sv_seat = yes }
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					NOT = { bag_asp_paired_seat = yes }
 					cabinet_member = { dip > scope:actor.var:bag_asp_low }
 				}
@@ -3742,7 +3720,7 @@ bag_asp_place_promote_culture = {
 		ordered_cabinet = {
 			limit = {
 				bag_asp_free_seat = yes
-				NOT = { bag_asp_sv_seat = yes }
+				NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 			}
 			order_by = cabinet_member.dip
 			save_scope_as = bag_asp_seat
@@ -3769,7 +3747,6 @@ bag_asp_place_promote_religion = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:promote_religion
-			NOT = { bag_asp_sv_seat = yes }
 		}
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3800,7 +3777,7 @@ bag_asp_place_promote_religion = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
-					NOT = { bag_asp_sv_seat = yes }
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					cabinet_member = { religion = scope:actor.religion }
 					cabinet_member = { mil > scope:actor.var:bag_asp_low }
 				}
@@ -3831,7 +3808,7 @@ bag_asp_place_promote_religion = {
 		ordered_cabinet = {
 			limit = {
 				bag_asp_free_seat = yes
-				NOT = { bag_asp_sv_seat = yes }
+				NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 				cabinet_member = { religion = scope:actor.religion }
 			}
 			order_by = cabinet_member.mil
@@ -3852,7 +3829,6 @@ bag_asp_place_pacify_population = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:pacify_population
-			NOT = { bag_asp_sv_seat = yes }
 		}
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3883,7 +3859,7 @@ bag_asp_place_pacify_population = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
-					NOT = { bag_asp_sv_seat = yes }
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					cabinet_member = { mil > scope:actor.var:bag_asp_low }
 				}
 				order_by = cabinet_member.mil
@@ -3913,7 +3889,7 @@ bag_asp_place_pacify_population = {
 		ordered_cabinet = {
 			limit = {
 				bag_asp_free_seat = yes
-				NOT = { bag_asp_sv_seat = yes }
+				NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 			}
 			order_by = cabinet_member.mil
 			save_scope_as = bag_asp_seat
@@ -3933,7 +3909,6 @@ bag_asp_place_recovery_effort = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:recovery_effort
-			NOT = { bag_asp_sv_seat = yes }
 		}
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -3964,7 +3939,7 @@ bag_asp_place_recovery_effort = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
-					NOT = { bag_asp_sv_seat = yes }
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					cabinet_member = { dip > scope:actor.var:bag_asp_low }
 				}
 				order_by = cabinet_member.dip
@@ -3994,7 +3969,7 @@ bag_asp_place_recovery_effort = {
 		ordered_cabinet = {
 			limit = {
 				bag_asp_free_seat = yes
-				NOT = { bag_asp_sv_seat = yes }
+				NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 			}
 			order_by = cabinet_member.dip
 			save_scope_as = bag_asp_seat
@@ -4014,7 +3989,6 @@ bag_asp_place_appease_estate = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:appease_estate
-			NOT = { bag_asp_sv_seat = yes }
 		}
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -4045,7 +4019,7 @@ bag_asp_place_appease_estate = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
-					NOT = { bag_asp_sv_seat = yes }
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					cabinet_member = { dip > scope:actor.var:bag_asp_low }
 				}
 				order_by = cabinet_member.dip
@@ -4075,7 +4049,7 @@ bag_asp_place_appease_estate = {
 		ordered_cabinet = {
 			limit = {
 				bag_asp_free_seat = yes
-				NOT = { bag_asp_sv_seat = yes }
+				NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 			}
 			order_by = cabinet_member.dip
 			save_scope_as = bag_asp_seat
@@ -4095,7 +4069,6 @@ bag_asp_place_alleviate_concerns = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:alleviate_concerns
-			NOT = { bag_asp_sv_seat = yes }
 		}
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -4126,7 +4099,7 @@ bag_asp_place_alleviate_concerns = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
-					NOT = { bag_asp_sv_seat = yes }
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					cabinet_member = { dip > scope:actor.var:bag_asp_low }
 				}
 				order_by = cabinet_member.dip
@@ -4156,7 +4129,7 @@ bag_asp_place_alleviate_concerns = {
 		ordered_cabinet = {
 			limit = {
 				bag_asp_free_seat = yes
-				NOT = { bag_asp_sv_seat = yes }
+				NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 			}
 			order_by = cabinet_member.dip
 			save_scope_as = bag_asp_seat
@@ -4177,7 +4150,6 @@ bag_asp_place_reduce_inflation = {
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:reduce_inflation
 			scope:actor = { inflation > 0 }
-			NOT = { bag_asp_sv_seat = yes }
 		}
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -4208,7 +4180,7 @@ bag_asp_place_reduce_inflation = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
-					NOT = { bag_asp_sv_seat = yes }
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					cabinet_member = { adm > scope:actor.var:bag_asp_low }
 				}
 				order_by = cabinet_member.adm
@@ -4238,7 +4210,7 @@ bag_asp_place_reduce_inflation = {
 		ordered_cabinet = {
 			limit = {
 				bag_asp_free_seat = yes
-				NOT = { bag_asp_sv_seat = yes }
+				NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 			}
 			order_by = cabinet_member.adm
 			save_scope_as = bag_asp_seat
@@ -4258,7 +4230,6 @@ bag_asp_place_develop_province = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:develop_province
-			NOT = { bag_asp_sv_seat = yes }
 			interaction_target:target ?= { bag_asp_develop_wanted = yes }
 		}
 		cabinet_member = {
@@ -4320,7 +4291,7 @@ bag_asp_place_develop_province = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
-					NOT = { bag_asp_sv_seat = yes }
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					cabinet_member = { adm > scope:actor.var:bag_asp_low }
 				}
 				order_by = cabinet_member.adm
@@ -4350,7 +4321,7 @@ bag_asp_place_develop_province = {
 		ordered_cabinet = {
 			limit = {
 				bag_asp_free_seat = yes
-				NOT = { bag_asp_sv_seat = yes }
+				NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 			}
 			order_by = cabinet_member.adm
 			save_scope_as = bag_asp_seat
@@ -4370,7 +4341,6 @@ bag_asp_place_study_institutions = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:study_institutions
-			NOT = { bag_asp_sv_seat = yes }
 		}
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -4401,7 +4371,7 @@ bag_asp_place_study_institutions = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
-					NOT = { bag_asp_sv_seat = yes }
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					cabinet_member = { adm > scope:actor.var:bag_asp_low }
 				}
 				order_by = cabinet_member.adm
@@ -4431,7 +4401,7 @@ bag_asp_place_study_institutions = {
 		ordered_cabinet = {
 			limit = {
 				bag_asp_free_seat = yes
-				NOT = { bag_asp_sv_seat = yes }
+				NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 			}
 			order_by = cabinet_member.adm
 			save_scope_as = bag_asp_seat
@@ -4451,7 +4421,6 @@ bag_asp_place_pop_promote_action = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:pop_promote_action
-			NOT = { bag_asp_sv_seat = yes }
 			interaction_target:target ?= { unfilled_jobs_in_province < 0 }
 		}
 		cabinet_member = {
@@ -4483,7 +4452,7 @@ bag_asp_place_pop_promote_action = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
-					NOT = { bag_asp_sv_seat = yes }
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					cabinet_member = { adm > scope:actor.var:bag_asp_low }
 				}
 				order_by = cabinet_member.adm
@@ -4513,7 +4482,7 @@ bag_asp_place_pop_promote_action = {
 		ordered_cabinet = {
 			limit = {
 				bag_asp_free_seat = yes
-				NOT = { bag_asp_sv_seat = yes }
+				NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 			}
 			order_by = cabinet_member.adm
 			save_scope_as = bag_asp_seat
@@ -4533,7 +4502,6 @@ bag_asp_place_strengthen_government = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:strengthen_government
-			NOT = { bag_asp_sv_seat = yes }
 		}
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -4564,7 +4532,7 @@ bag_asp_place_strengthen_government = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
-					NOT = { bag_asp_sv_seat = yes }
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					cabinet_member = { mil > scope:actor.var:bag_asp_low }
 				}
 				order_by = cabinet_member.mil
@@ -4594,7 +4562,7 @@ bag_asp_place_strengthen_government = {
 		ordered_cabinet = {
 			limit = {
 				bag_asp_free_seat = yes
-				NOT = { bag_asp_sv_seat = yes }
+				NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 			}
 			order_by = cabinet_member.mil
 			save_scope_as = bag_asp_seat
@@ -4614,7 +4582,6 @@ bag_asp_place_diplomatic_endeavors = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:diplomatic_endeavors
-			NOT = { bag_asp_sv_seat = yes }
 		}
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -4645,7 +4612,7 @@ bag_asp_place_diplomatic_endeavors = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
-					NOT = { bag_asp_sv_seat = yes }
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					cabinet_member = { dip > scope:actor.var:bag_asp_low }
 				}
 				order_by = cabinet_member.dip
@@ -4675,7 +4642,7 @@ bag_asp_place_diplomatic_endeavors = {
 		ordered_cabinet = {
 			limit = {
 				bag_asp_free_seat = yes
-				NOT = { bag_asp_sv_seat = yes }
+				NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 			}
 			order_by = cabinet_member.dip
 			save_scope_as = bag_asp_seat
@@ -4725,6 +4692,7 @@ bag_asp_place_counter_espionage_action = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					cabinet_member = { dip > scope:actor.var:bag_asp_low }
 				}
 				order_by = cabinet_member.dip
@@ -4754,6 +4722,7 @@ bag_asp_place_counter_espionage_action = {
 		ordered_cabinet = {
 			limit = {
 				bag_asp_free_seat = yes
+				NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 			}
 			order_by = cabinet_member.dip
 			save_scope_as = bag_asp_seat
@@ -4773,7 +4742,6 @@ bag_asp_place_noblesse_oblige_cabinet_action = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:noblesse_oblige_cabinet_action
-			NOT = { bag_asp_sv_seat = yes }
 			OR = { bag_asp_paired_seat = yes interaction_target:selected_province ?= { bag_asp_control_rising = yes } }
 		}
 		cabinet_member = {
@@ -4805,7 +4773,7 @@ bag_asp_place_noblesse_oblige_cabinet_action = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
-					NOT = { bag_asp_sv_seat = yes }
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					cabinet_member = { adm > scope:actor.var:bag_asp_low }
 				}
 				order_by = cabinet_member.adm
@@ -4835,7 +4803,7 @@ bag_asp_place_noblesse_oblige_cabinet_action = {
 		ordered_cabinet = {
 			limit = {
 				bag_asp_free_seat = yes
-				NOT = { bag_asp_sv_seat = yes }
+				NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 			}
 			order_by = cabinet_member.adm
 			save_scope_as = bag_asp_seat
@@ -4856,7 +4824,6 @@ bag_asp_place_diplomatic_antagonism = {
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:diplomatic_endeavors
 			scope:actor = { OR = { has_countries_with_near_coalition_grade_antagonism = yes has_countries_with_coalition_grade_antagonism = yes } }
-			NOT = { bag_asp_sv_seat = yes }
 		}
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -4887,7 +4854,7 @@ bag_asp_place_diplomatic_antagonism = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
-					NOT = { bag_asp_sv_seat = yes }
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					cabinet_member = { dip > scope:actor.var:bag_asp_low }
 				}
 				order_by = cabinet_member.dip
@@ -4917,7 +4884,7 @@ bag_asp_place_diplomatic_antagonism = {
 		ordered_cabinet = {
 			limit = {
 				bag_asp_free_seat = yes
-				NOT = { bag_asp_sv_seat = yes }
+				NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 			}
 			order_by = cabinet_member.dip
 			save_scope_as = bag_asp_seat
@@ -4937,7 +4904,6 @@ bag_asp_place_promote_culture_full = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:promote_culture
-			NOT = { bag_asp_sv_seat = yes }
 		}
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -4968,7 +4934,7 @@ bag_asp_place_promote_culture_full = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
-					NOT = { bag_asp_sv_seat = yes }
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					NOT = { bag_asp_paired_seat = yes }
 					cabinet_member = { dip > scope:actor.var:bag_asp_low }
 				}
@@ -5003,7 +4969,7 @@ bag_asp_place_promote_culture_full = {
 		ordered_cabinet = {
 			limit = {
 				bag_asp_free_seat = yes
-				NOT = { bag_asp_sv_seat = yes }
+				NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 			}
 			order_by = cabinet_member.dip
 			save_scope_as = bag_asp_seat
@@ -5030,7 +4996,6 @@ bag_asp_place_assimilate_area = {
 			bag_asp_free_seat = yes
 			has_cabinet_action = yes
 			cabinet_action = cabinet_action:assimilate_area
-			NOT = { bag_asp_sv_seat = yes }
 		}
 		cabinet_member = {
 			set_variable = { name = bag_asp_claimed value = yes }
@@ -5061,7 +5026,7 @@ bag_asp_place_assimilate_area = {
 			ordered_cabinet = {
 				limit = {
 					bag_asp_free_seat = yes
-					NOT = { bag_asp_sv_seat = yes }
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 					cabinet_member = { dip > scope:actor.var:bag_asp_low }
 				}
 				order_by = cabinet_member.dip
@@ -5091,7 +5056,7 @@ bag_asp_place_assimilate_area = {
 		ordered_cabinet = {
 			limit = {
 				bag_asp_free_seat = yes
-				NOT = { bag_asp_sv_seat = yes }
+				NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 			}
 			order_by = cabinet_member.dip
 			save_scope_as = bag_asp_seat
@@ -5739,7 +5704,7 @@ bag_asp_pair = {
 	ordered_cabinet = {
 		limit = {
 			bag_asp_free_seat = yes
-			NOT = { bag_asp_sv_seat = yes }
+			NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
 		}
 		order_by = cabinet_member.adm
 		save_scope_as = bag_asp_seat

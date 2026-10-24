@@ -803,22 +803,11 @@ def lead_rule(cflag: str) -> str:
             f"\t\t\t\t\t\t\t\tadd = {LEAD}\n\t\t\t\t\t\t\t}}\n\t\t\t\t\t\t}}\n\t\t\t\t\t}}")
 
 
-# The actions a seat that once shifted values may take (hands-off runs 10-25):
-# the value window leaves its pair on the seat, script cannot clear it, and
-# under any other action the outliner's progress line then has no SCOPE and
-# writes «Promote 'SCOPE' returned nullptr» to debug.log every frame (130 000
-# lines his evening of 10-24). These four draw their short progress line
-# without SCOPE; the stub is the one with no target, always open.
-SV_SEAT_ACTIONS = ("change_societal_values", "integrate_province", "integrate_area",
-                   "counter_espionage_action")
-SV_SEAT_STUB = "counter_espionage_action"
-
-
-def seat_test(action: str, tabs: int, key: str = "") -> str:
+def seat_test(action: str, tabs: int) -> str:
     """A free seat this action can use."""
-    seat = ["bag_asp_free_seat = yes"]
-    if key not in SV_SEAT_ACTIONS:
-        seat.append("NOT = { bag_asp_sv_seat = yes }")
+    # Never the seat on values, whatever the order: see bag_asp_place_<SV_ACTION>.
+    seat = ["bag_asp_free_seat = yes",
+            f"NOT = {{ has_cabinet_action = yes cabinet_action = cabinet_action:{SV_ACTION} }}"]
     if value(action, "require_matching_character_religion") == "yes":
         seat.append("cabinet_member = { religion = scope:actor.religion }")
     return "\n".join("\t" * tabs + s for s in seat)
@@ -834,10 +823,8 @@ def place_effect(row: str, gate: str, actions: dict[str, str]) -> str:
     # His run 13.10 10:02: an assimilation moved onto the seat of its own
     # control, which was not yet kept at that step, and the control was lost.
     own_pair = "\t\t\t\t\tNOT = { bag_asp_paired_seat = yes }\n" if key == PAIRED_WITH else ""
-    seat = seat_test(action, 4, key)
+    seat = seat_test(action, 4)
     keep_gate = f"\n\t\t\tscope:actor = {{ {gate} }}" if gate else ""
-    if key not in SV_SEAT_ACTIONS:
-        keep_gate += "\n\t\t\tNOT = { bag_asp_sv_seat = yes }"
     if row in ROW_SEAT:
         keep_gate += f"\n\t\t\t{ROW_SEAT[row]}"
     keep_pairs = pair_after = retarget = trim = ""
@@ -959,7 +946,7 @@ bag_asp_place_{row} = {{
 \t\t\tset_variable = {{ name = bag_asp_low value = scope:bag_asp_from.cabinet_member.{ability} }}
 \t\t\tordered_cabinet = {{
 \t\t\t\tlimit = {{
-{seat_test(action, 5, key)}
+{seat_test(action, 5)}
 {own_pair}\t\t\t\t\tcabinet_member = {{ {ability} > scope:actor.var:bag_asp_low }}
 \t\t\t\t}}
 \t\t\t\torder_by = cabinet_member.{ability}
@@ -1070,7 +1057,7 @@ bag_asp_pair = {{
 \tremove_variable = bag_asp_placed
 \tordered_cabinet = {{
 \t\tlimit = {{
-{seat_test(actions[SPEEDUP[0]], 3, SPEEDUP[0])}
+{seat_test(actions[SPEEDUP[0]], 3)}
 \t\t}}
 \t\torder_by = cabinet_member.{ability}
 \t\tsave_scope_as = bag_asp_seat
@@ -1811,12 +1798,15 @@ bag_asp_place_{SV_ACTION} = {{
 \t\t\t}}
 \t\t\tset_local_variable = {{ name = bag_asp_sv_gone value = yes }}
 \t\t}}
+\t\t# The seat already on values first, whoever is better: values never move
+\t\t# to another advisor (his word 10-25). The pair the window picked stays on
+\t\t# a seat script takes values from, and its outliner line floods debug.log
+\t\t# (hands-off 10-25, docs/pitfalls/script.md); only the game's own end clears it.
 \t\tordered_cabinet = {{
 \t\t\tlimit = {{ bag_asp_free_seat = yes }}
-\t\t\t# A seat that already holds a pair first: a new one would keep its own.
 \t\t\torder_by = {{
 \t\t\t\tvalue = cabinet_member.{ability}
-\t\t\t\tif = {{ limit = {{ bag_asp_sv_seat = yes }} add = 1000 }}
+\t\t\t\tif = {{ limit = {{ {on_values} }} add = 10000 }}
 \t\t\t}}
 \t\t\tsave_scope_as = bag_asp_seat
 \t\t}}
@@ -1881,6 +1871,16 @@ bag_asp_place_{SV_ACTION} = {{
 \t\t\t}}
 \t\t\tif = {{ limit = {{ has_variable = bag_asp_sv_want }} remove_variable = bag_asp_sv_want }}
 \t\t\tif = {{ limit = {{ has_variable = bag_asp_sv_want_side }} remove_variable = bag_asp_sv_want_side }}
+\t\t}}
+\t\t# Nothing worth a whole point any more: the seat still stays on values
+\t\t# until the game ends the action itself, which clears its pair.
+\t\tevery_cabinet = {{
+\t\t\tlimit = {{
+\t\t\t\t{on_values}
+\t\t\t\tbag_asp_free_seat = yes
+\t\t\t}}
+\t\t\tcabinet_member = {{ set_variable = {{ name = bag_asp_claimed value = yes }} }}
+\t\t\tdebug_log = "bag_asp: values, the seat stays until the game ends the action"
 \t\t}}
 \t}}
 }}
@@ -2434,7 +2434,6 @@ bag_asp_handle_callback = {{
     switch = "\n".join(
         f"\t\t\t\t\tflag:bag_asp_{k} = {{ bag_asp_place_{k} = yes"  + " }"
         for k, *_ in POOL)
-    sv_ok = "\n".join(f"\t\t\t\tcabinet_action = cabinet_action:{k}" for k in SV_SEAT_ACTIONS)
     run = f"""# assimilate_primary: the mod's own council automation, the monthly pass.
 # Rebuilt by tools/generate.py (tools/council.py).
 
@@ -2498,16 +2497,6 @@ bag_asp_plan = {{
 \t# The lists may have moved without their callback (a typed place goes
 \t# through the console), so the order is read afresh every pass.
 \tbag_asp_rebuild = yes
-\t# A seat on values now keeps the pair for good, whoever put it there.
-\tevery_cabinet = {{
-\t\tlimit = {{
-\t\t\thas_cabinet_action = yes
-\t\t\tcabinet_action = cabinet_action:{SV_ACTION}
-\t\t\tNOT = {{ bag_asp_sv_seat = yes }}
-\t\t}}
-\t\tadd_to_global_variable_list = {{ name = bag_asp_sv_seats target = this }}
-\t\tdebug_log = "bag_asp: a seat on values, from now on it takes only actions that keep the log quiet"
-\t}}
 \t# His ask 13.10: the seats as the pass finds them, so what he changed by
 \t# hand between two passes shows against the last pass's «after».
 \tif = {{
@@ -2575,27 +2564,6 @@ bag_asp_plan = {{
 \tif = {{
 \t\tlimit = {{ any_cabinet = {{ bag_asp_free_seat = yes }} }}
 \t\tdebug_log = "bag_asp: a seat is left as it was, nothing in use fits it"
-\t}}
-\t# His word 10-25: a seat that once shifted values and was left on another
-\t# action gets the stub, so its progress line stops flooding the log.
-\tevery_cabinet = {{
-\t\tlimit = {{
-\t\t\tbag_asp_sv_seat = yes
-\t\t\thas_cabinet_action = yes
-\t\t\tNOR = {{
-{sv_ok}
-\t\t\t}}
-\t\t}}
-\t\tif = {{
-\t\t\tlimit = {{ cabinet_action:{SV_SEAT_STUB} = {{ is_available_for = scope:actor }} }}
-\t\t\tbag_asp_vacate = yes
-\t\t\tset_cabinet_action = {{ type = cabinet_action:{SV_SEAT_STUB} actor = scope:actor }}
-\t\t\tdebug_log = "bag_asp: a seat that shifted values moved to the stub"
-\t\t}}
-\t\telse = {{
-\t\t\tbag_asp_vacate = yes
-\t\t\tdebug_log = "bag_asp: a seat that shifted values emptied, the stub is closed"
-\t\t}}
 \t}}
 \tif = {{
 \t\tlimit = {{ has_variable = bag_asp_log_on }}
@@ -2742,6 +2710,7 @@ bag_asp_emergency = {{
 \t\t\t\tordered_cabinet = {{
 \t\t\t\t\tlimit = {{
 \t\t\t\t\t\texists = cabinet_member
+\t\t\t\t\t\tNOT = {{ has_cabinet_action = yes cabinet_action = cabinet_action:{SV_ACTION} }}
 \t\t\t\t\t\tOR = {{
 \t\t\t\t\t\t\thas_cabinet_action = no
 {seat_below}
@@ -3019,12 +2988,6 @@ bag_asp_control_reachable = {{
 bag_asp_free_seat = {
 \texists = cabinet_member
 \tcabinet_member = { NOT = { has_variable = bag_asp_claimed } }
-}
-
-# Scope: cabinet. The seat once shifted values: the game keeps its pair
-# (SV_SEAT_ACTIONS in tools/council.py). Seats hold no variables, so a global list.
-bag_asp_sv_seat = {
-\tis_target_in_global_variable_list = { name = bag_asp_sv_seats target = this }
 }
 """ + f"""
 # Scope: location. No primary or accepted culture holds half of it.

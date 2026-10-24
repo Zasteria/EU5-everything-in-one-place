@@ -23,8 +23,13 @@ bag_rtk_rep_on = {
 		}
 		if = {
 			limit = { NOT = { exists = scope:bag_rtk_rep_seat } }
+			# Не место на ценностях: снятая скриптом пара остаётся на месте и
+			# засоряет debug.log (assimilate_primary, 10-25).
 			ordered_cabinet = {
-				limit = { exists = cabinet_member }
+				limit = {
+					exists = cabinet_member
+					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
+				}
 				order_by = cabinet_member.dip
 				save_scope_as = bag_rtk_rep_seat
 			}
