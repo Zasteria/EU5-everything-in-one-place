@@ -440,7 +440,10 @@ def main():
                 out.append(f'\tbag_rtk_cd_gate_est_row = {{ sid = {lid} i = {i} key = {ty} }}\n')
             else:
                 out.append(f'\tbag_rtk_cd_gate_row = {{ sid = {lid} i = {i} type = {ty} }}\n')
-    out.append('}\n\n# Каждая отмеченная строка, 1-го числа. Scope: country.\nbag_rtk_cd_check_all = {\n')
+    # Ворота «можно снова» (`bag_rtk_cd_ready_*`) читают scope:actor, как и при
+    # регистрации: без него «Undefined event target 'actor'» (hands-off 10-25).
+    out.append('}\n\n# Каждая отмеченная строка, 1-го числа. Scope: country.\nbag_rtk_cd_check_all = {\n'
+               '\tsave_scope_as = actor\n')
     for lid, tab, color, view, *_ in lists:
         for i, ty in enumerate(table[lid], 1):
             row = rows[ty]
