@@ -1399,6 +1399,9 @@ reconcile_hre_league_leadership = {
 			international_organization:hre.leader_country = {
 				save_temporary_scope_as = new_hre_league_leader
 			}
+			leader_country ?= {
+				save_temporary_scope_as = old_hre_league_leader
+			}
 			scope:new_hre_league_leader = {
 				if = {
 					limit = { is_leader_of_international_organization = international_organization:italian_league_1 }
@@ -1436,6 +1439,15 @@ reconcile_hre_league_leadership = {
 				add_country_to_international_organization = scope:new_hre_league_leader
 			}
 			set_leader_country = scope:new_hre_league_leader
+			if = {
+				limit = {
+					scope:old_hre_league_leader ?= {
+						is_member_of_international_organization = international_organization:foreign_league_hre
+						NOT = { capital.region = region:italy_region }
+					}
+				}
+				remove_country_from_international_organization = scope:old_hre_league_leader
+			}
 		}
 	}
 }

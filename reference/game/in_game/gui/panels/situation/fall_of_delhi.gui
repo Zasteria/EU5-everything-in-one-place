@@ -450,7 +450,6 @@ situation_panel = {
 			
 			vbox = {
 				layoutpolicy_horizontal = expanding
-				spacing = 10
 				using = vote_countries
 
 				blockoverride "vote_countries_flag_tooltip" {
@@ -495,7 +494,32 @@ situation_panel = {
 					}
 				}
 				blockoverride "cardinals_datamodel" {
-					datamodel = "[SituationView.GetNotVotedYet]"
+					datamodel = "[DataModelFirst(SituationView.GetNotVotedYet, '(int32)10')]"
+				}
+				blockoverride "cardinals_extra_list" {
+					widget = {
+						size = { 45 28 }
+						visible = "[GreaterThan_int32(GetDataModelSize(SituationView.GetNotVotedYet), '(int32)11')]"
+
+						extra_list = {
+							blockoverride "extra_list_text_content" {
+								raw_text = "+[Subtract_int32(GetDataModelSize(SituationView.GetNotVotedYet), '(int32)11')]"
+							}
+
+							tooltipwidget = {
+								SimpleContextualRowTooltipType = {
+									blockoverride "title_text" {
+										text = "SITUATION_NOT_VOTED_TITLE"
+									}
+									blockoverride "tooltip_content" {
+										TooltipListOfCountries = {
+											blockoverride "datamodel" { datamodel = "[DataModelSkipFirst(SituationView.GetNotVotedYet, '(int32)11')]" }
+										}
+									}
+								}
+							}
+						}
+					}
 				}
 			}
 		}

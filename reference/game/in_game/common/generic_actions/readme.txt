@@ -118,7 +118,7 @@
 # As for message types that get sent to the player, the format is as follows. At the very least, the generic version should be provided. If the more specific ones are available, they will be used.
 # Generic catch-all message: PERFORM_ + Key + _ACTION e.g. PERFORM_do_some_stuff_ACTION
 #
-# These are added as message types in gui/messagetypes.txt.
+# These are added as message types in the gui/messagetypes/ folder.
 #
 # The text for them needs to be added as localizations. There are plenty of examples, all the localizations use the stem of the action type as the basis for the localization key.
 #

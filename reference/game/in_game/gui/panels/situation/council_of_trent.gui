@@ -355,7 +355,7 @@ situation_panel = {
 
 					scripted_action_tooltip = {
 						click_type = left
-						click_mode = single
+						click_mode = confirm
 						action_name = "policy_vote"
 						proposer = "[GetUniqueInternationalOrganization('catholic_church').GetActiveResolutionFromKey('policy_vote').GetProposer]"
 						actor = "[SituationView.GetPlayer]"
@@ -366,6 +366,10 @@ situation_panel = {
 						parameter = {
 							parameter_name = "target"
 							parameter_value = "[SituationView.GetActiveSituation.GetSituation.MakeScope.GetVariable('council_of_trent_current_debate').GetPolicy.GetLaw]"
+						}
+						parameter = {
+							parameter_name = "vote"
+							parameter_value = "[GetUniqueInternationalOrganization('catholic_church').GetPolicyForLaw(SituationView.GetActiveSituation.GetSituation.MakeScope.GetVariable('council_of_trent_current_debate').GetPolicy.GetLaw.Self)]"
 						}
 					}
 
@@ -425,6 +429,56 @@ situation_panel = {
 			}
 			blockoverride "common_header_text" {
 				text = "COUNCIL_OF_TRENT_HAS_YET_TO_VOTE"
+			}
+			blockoverride "common_header_extra_right" {
+				header_action_button_left_uber = {
+					size = { 30 30 }
+					blockoverride "button_icon_stretch_sprite" {}
+					blockoverride "header_button_frame_inner" { visible = no }
+					blockoverride "header_button_text_layout" {}
+					blockoverride "header_button_icon_size" { size = { 30 30 } }
+					blockoverride "icon_replace" {
+						icon = {
+							size = { 22 22 }
+							position = { 4 2 }
+							texture = "gfx/interface/icons/international_organizations/law_voting.dds"
+							texture_density = 2
+						}
+					}
+
+					tooltipmeta = {
+						title = "council_of_trent_withdraw_vote"
+					}
+					enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+
+					scripted_action_tooltip = {
+						click_type = left
+						click_mode = single
+						action_name = "council_of_trent_withdraw_vote"
+						actor = "[SituationView.GetPlayer]"
+						parameter = {
+							parameter_name = "recipient"
+							parameter_value = "[GetUniqueInternationalOrganization('catholic_church')]"
+						}
+					}
+
+					tooltipwidget = {
+						ContextualTooltipType = {
+							blockoverride "title_icon_texture" {
+								texture = "gfx/interface/icons/international_organizations/law_voting.dds"
+							}
+							blockoverride "title_text" {
+								text = "[Select_CString(PdxGuiWidget.HasTooltipMetaTitle, PdxGuiWidget.GetTooltipMetaTitle, UIAction.GetTitle)]"
+							}
+							blockoverride "tooltip_content" {
+								TooltipTextBlock = {
+									visible = "[Not(StringIsEmpty(UIAction.GetDescription))]"
+									blockoverride "text" { text = "[UIAction.GetDescription]" }
+								}
+							}
+						}
+					}
+				}
 			}
 			blockoverride "common_bottom_content" {
 				scrollarea = {

@@ -1,4 +1,6 @@
 ﻿peace_take_over_market_center = {
+	category = misc
+
 	cost = {
 		add = {
 			desc = "DIPLOREASON_BASE"
@@ -29,33 +31,40 @@
 		looking_for_a = market
 		source = recipient
 		target_flag = target_market
-        visible = {
+		visible = {
 			any_location_in_market = {
 				owner ?= scope:actor
 			}
 		}
-    }
+	}
+
+	select_trigger = {
+		looking_for_a = location
+		source = actor
+		target_flag = target_location
+		name = "peace_take_over_market_center_select_location"
+		none_available_msg_key = "peace_take_over_market_center_no_locations"
+		column = {
+			data = name
+		}
+		column = {
+			data = population
+		}
+		visible = {
+			is_city = yes
+			is_market_center = no
+			market = scope:target_market
+			owner ?= scope:actor
+			not = { integration_level = conquered }
+		}
+	}
 
 	effect = {
-		scope:target_market = {
-			if = {
-				limit = {
-					any_location_in_market = { this = scope:winner.capital }
-				}
-				relocate_market = scope:winner.capital
+		if = {
+			limit = {
+				exists = scope:target_location
 			}
-			else = {
-				ordered_location_in_market = {
-					limit = { 
-						has_owner = yes
-						owner = scope:winner
-						not = { integration_level = conquered }
-					}
-					order_by = population
-					max = 1
-
-					save_scope_as = target_location
-				}
+			scope:target_market = {
 				relocate_market = scope:target_location
 			}
 		}

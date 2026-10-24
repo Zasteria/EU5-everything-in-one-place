@@ -1542,7 +1542,10 @@ on_winning_war = {
 					mode = add_and_extend
 				}
 				if = {
-					limit = { exists = ruler }
+					limit = {
+						exists = ruler
+						ruler = { NOT = { has_character_modifier = took_the_cross } }
+					}
 					ruler = {
 						add_character_modifier = {
 							modifier = took_the_cross
@@ -1975,29 +1978,26 @@ on_pre_winning_war = {
 		}
 		if = {
 			limit = {
+				has_or_had_tag = SWE
+				is_human = yes
+				religion = religion:lutheran
 				scope:war = {
 					casus_belli ?= casus_belli:cb_religious_superiority
-					any_attacker = {
-						has_or_had_tag = SWE
-						is_human = yes
-						religion = religion:lutheran
+					OR = {
+						AND = {
+							any_attacker = { this = root }
+							any_attacker = { is_member_of_international_organization = international_organization:protestant_union }
+						}
+						AND = {
+							any_defender = { this = root }
+							any_defender = { is_member_of_international_organization = international_organization:protestant_union }
+						}
 					}
 				}
 			}
-			scope:war = {
-				scope:war = {
-					random_attacker = {
-						limit = {
-							has_or_had_tag = SWE
-							is_human = yes
-							religion = religion:lutheran
-						}
-						set_variable = {
-							name = unlock_lion_of_the_north_achievement_variable
-							years = 1
-						}
-					}
-				}
+			set_variable = {
+				name = unlock_lion_of_the_north_achievement_variable
+				years = 1
 			}
 		}
 		if = {

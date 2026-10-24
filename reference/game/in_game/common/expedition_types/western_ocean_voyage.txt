@@ -2,10 +2,65 @@
 
 	unique = yes
 	returns_home = yes
-	travel_speed = 1
+	travel_speed = 0.6
 	origin = closest_non_rural_port
 	travel_mode = sea
 	show_start_message = no
+	show_end_message = no
+	repeatable = no
+
+	variables = {
+		provisions = {
+			display = piechart
+			icon = "gfx/interface/icons/unit_view/food.dds"
+			start = 50
+			min = 0
+			max = 100
+			change_format = "VARIABLE_CHANGE_FORMAT"
+			monthly_change = {
+				subtract = {
+					desc = "EXPEDITION_PROVISIONS_TRAVEL_DRAIN"
+					value = 0
+					if = {
+						limit = {
+							expedition_is_traveling = yes
+							NOT = { expedition_is_paused = yes }
+						}
+						add = 4
+					}
+				}
+			}
+		}
+		morale = {
+			display = piechart
+			icon = "gfx/interface/icons/flat_icons/navy_morale.dds"
+			start = 50
+			min = 0
+			max = 100
+			change_format = "VARIABLE_CHANGE_FORMAT"
+			monthly_change = {
+				subtract = {
+					desc = "EXPEDITION_MORALE_LOW_PROVISIONS"
+					value = 0
+					if = {
+						limit = {
+							expedition_is_traveling = yes
+							NOT = { expedition_is_paused = yes }
+							var:provisions < 50
+						}
+						add = 5
+					}
+				}
+			}
+		}
+		num_ships = {
+			display = fraction
+			icon = "gfx/interface/icons/control_groups/navy.dds"
+			start = 3
+			min = 0
+			max = 4
+		}
+	}
 
 	waypoints = {
 		northern_fuerteventura_coast
@@ -14,14 +69,32 @@
 	}
 
 	potential = {
-		capital = { sub_continent = sub_continent:western_europe }
 		has_ports = yes
+		NOT = { has_global_variable = western_ocean_crossed }
 		NOT = { discovered_any_in_americas_trigger = yes }
+		OR = {
+			capital = { sub_continent = sub_continent:western_europe }
+			character:christopher_columbus ?= {
+				is_alive = yes
+				owner = root
+			}
+		}
 	}
 
 	can_start = {
-		has_advance = open_sea_exploration
-		has_non_rural_port = yes
+		OR = {
+			AND = {
+				has_advance = open_sea_exploration
+				has_non_rural_port = yes
+			}
+			custom_tooltip = {
+				text = western_ocean_voyage_expedition_columbus_tt
+				character:christopher_columbus ?= {
+					is_alive = yes
+					owner = root
+				}
+			}
+		}
 		NOT = { has_cooldown = western_ocean_voyage_cooldown }
 	}
 
@@ -44,6 +117,106 @@
 		}
 		set_variable = { name = landfall_set value = 0 }
 		trigger_event_non_silently = western_ocean_voyage_events.1
+	}
+
+	on_monthly = {
+		if = {
+			limit = { scope:expedition = { var:num_ships <= 0 } }
+			fail_expedition = scope:expedition
+		}
+		else = {
+			scope:expedition = {
+				remove_variable = western_ocean_monthly_event_claimed
+			}
+			if = {
+				limit = {
+					scope:expedition = {
+						expedition_is_traveling = yes
+						NOT = { expedition_is_paused = yes }
+						var:morale < 50
+						NOT = { has_variable = western_ocean_mutiny_cooldown }
+					}
+				}
+				random = {
+					chance = {
+						value = 50
+						subtract = scope:expedition.var:morale
+						min = 1
+					}
+					scope:expedition = { set_variable = western_ocean_monthly_event_claimed }
+					trigger_event_non_silently = western_ocean_voyage_events.8
+				}
+			}
+			if = {
+				limit = {
+					scope:expedition = {
+						expedition_is_traveling = yes
+						NOT = { expedition_is_paused = yes }
+						var:provisions < 55
+						NOT = { has_variable = western_ocean_monthly_event_claimed }
+						NOT = { has_variable = western_ocean_sickness_done }
+					}
+				}
+				random = {
+					chance = {
+						value = 55
+						subtract = scope:expedition.var:provisions
+						min = 2
+					}
+					scope:expedition = { set_variable = western_ocean_monthly_event_claimed }
+					trigger_event_non_silently = western_ocean_voyage_events.9
+				}
+			}
+			if = {
+				limit = {
+					scope:expedition = {
+						expedition_is_traveling = yes
+						NOT = { expedition_is_paused = yes }
+						NOT = { has_variable = western_ocean_monthly_event_claimed }
+					}
+				}
+				random_list = {
+					1 = {
+						trigger = { scope:expedition = { NOT = { has_variable = western_ocean_tempest_done } } }
+						trigger_event_non_silently = western_ocean_voyage_events.15
+					}
+					1 = {
+						trigger = {
+							scope:expedition = { NOT = { has_variable = circ_worm_done } }
+							scope:location = { climate = tropical }
+						}
+						trigger_event_non_silently = circumnavigation_expedition_events.23
+					}
+					1 = {
+						trigger = { scope:expedition = { NOT = { has_variable = western_ocean_becalmed_done } } }
+						trigger_event_non_silently = western_ocean_voyage_events.16
+					}
+					1 = {
+						trigger = { scope:expedition = { NOT = { has_variable = fish_shoal_done } } }
+						trigger_event_non_silently = pacific_crossing_events.12
+					}
+					1 = {
+						trigger = { scope:expedition = { NOT = { has_variable = spoiled_stores_done } } }
+						trigger_event_non_silently = pacific_crossing_events.13
+					}
+					1 = {
+						trigger = {
+							var:landfall_set = 0
+							scope:expedition = { NOT = { has_variable = western_ocean_sargasso_done } }
+						}
+						trigger_event_non_silently = western_ocean_voyage_events.13
+					}
+					1 = {
+						trigger = {
+							var:landfall_set = 1
+							scope:expedition = { NOT = { has_variable = western_ocean_land_signs_done } }
+						}
+						trigger_event_non_silently = western_ocean_voyage_events.14
+					}
+					6 = {}
+				}
+			}
+		}
 	}
 
 	on_arrive_to_new_location = {
@@ -72,10 +245,10 @@
 				NOT = { var:landfall_set >= 1 }
 			}
 			random_list = {
-				25 = { scope:expedition = { add_new_waypoint = location:samana_cay } }
-				25 = { scope:expedition = { add_new_waypoint = location:inagua } }
-				25 = { scope:expedition = { add_new_waypoint = location:bahama } }
-				25 = { scope:expedition = { add_new_waypoint = location:san_salvador_coast } }
+				25 = { scope:expedition = { add_new_waypoint = { location = location:guanahani hidden = yes } } }
+				25 = { scope:expedition = { add_new_waypoint = { location = location:inagua hidden = yes } } }
+				25 = { scope:expedition = { add_new_waypoint = { location = location:bahama hidden = yes } } }
+				25 = { scope:expedition = { add_new_waypoint = { location = location:san_salvador_coast hidden = yes } } }
 			}
 			set_variable = { name = landfall_set value = 1 }
 			trigger_event_non_silently = western_ocean_voyage_events.3
@@ -85,36 +258,66 @@
 				var:landfall_set = 1
 				scope:location = {
 					OR = {
-						this = location:samana_cay
+						this = location:guanahani
 						this = location:inagua
 						this = location:bahama
 						this = location:san_salvador_coast
 					}
 				}
 			}
+			discover_area = area:bahamas_sea_area
 			trigger_event_non_silently = western_ocean_voyage_events.4
 		}
 	}
 
 	on_end = {
-		remove_variable = landfall_set
 		if = {
-			limit = { discovered_any_in_americas_trigger = yes }
-			add_prestige = prestige_extreme_bonus
+			limit = { var:landfall_set = 2 }
+			if = {
+				limit = { NOT = { has_global_variable = western_ocean_crossed } }
+				set_global_variable = { name = western_ocean_crossed value = 1 }
+				set_variable = western_ocean_first_crossing
+			}
 			trigger_event_non_silently = western_ocean_voyage_events.7
 		}
+		remove_variable = landfall_set
 	}
 
 	on_fail = {
+		if = {
+			limit = { has_variable = western_ocean_voyage_voluntary_return }
+			trigger_event_non_silently = western_ocean_voyage_events.10
+		}
+		else = {
+			trigger_event_non_silently = western_ocean_voyage_events.11
+		}
+		remove_variable = western_ocean_voyage_voluntary_return
 		remove_variable = landfall_set
+	}
+
+	leader_utility = {
+		value = 1
+		if = {
+			limit = { has_trait = navigator }
+			add = 5
+		}
 	}
 
 	ai_chance_to_check = {
 		value = define:NAI|EXPEDITION_DEFAULT_CHANCE_TO_CHECK
 		multiply = 0.5
 		if = {
-			limit = { character:christopher_columbus ?= { is_alive = yes } }
+			limit = {
+				character:christopher_columbus ?= {
+					is_alive = yes
+					owner = root
+				}
+			}
 			multiply = 10
+		}
+		if = {
+			limit = { any_character = { has_trait = navigator } }
+			multiply = 3
 		}
 	}
 
