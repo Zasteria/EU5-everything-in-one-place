@@ -1521,7 +1521,8 @@ def sv_actions_loc(game: Path) -> dict[str, str]:
             at = f"[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_at_{side}')|2]"
             # His word 10-26: the whole monthly shift, as the value window shows
             # it; the game itself appends the advisor's share in brackets.
-            net = f"[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_net_{side}')|+=2]"
+            dv = f"GetPlayer.MakeScope.GetVariable('bag_asp_sv_type_{pair}').GetSocietalValue.GetDirectionValue(GetPlayer.Self)"
+            net = f"[{dv}|+=2]" if n == 2 else f"[Multiply_CFixedPoint({dv}, '(CFixedPoint)-1')|+=2]"
             nm = name.replace("${s}$", f"${side}_focus$")
             rows += [f' {k}: "{nm}"', f' {k}_action: "{nm}"', f' {k}_action_title: "{nm}"',
                      f' {k}_active: "{active.replace("${s}$", f"${side}_focus$")}"',
@@ -1548,6 +1549,16 @@ def sv_at_values(game: Path) -> str:
         out.append(f"bag_asp_sv_net_{side} = {{\n\tvalue = modifier:monthly_towards_{side}\n"
                    f"\tsubtract = modifier:monthly_towards_{other}\n}}")
     return "\n".join(out) + "\n"
+
+
+def sv_types_effect(game: Path) -> str:
+    """Scope: country. One variable per pair holding its type, for the
+    progress line's GetSocietalValue (a loc string cannot name a pair).
+    Kept by registration (load, menu) and every pass, before any seat can
+    show the line."""
+    rows = "\n".join(f"\tset_variable = {{ name = bag_asp_sv_type_{pair} value = societal_value_type:{pair} }}"
+                      for pair in value_pairs(game))
+    return "\n# Scope: country. The pair objects for the value actions' progress line.\nbag_asp_sv_types = {\n" + rows + "\n}\n"
 
 
 def sv_set_effect(game: Path) -> str:
@@ -2272,6 +2283,7 @@ def build(game: Path) -> dict[str, str]:
 
 # Scope: country
 bag_asp_register = {{
+\tbag_asp_sv_types = yes
 \tcmm_register_bool_setting = {{
 \t\tmod_id = {MOD_ID}
 \t\tsetting_id = auto
@@ -2584,6 +2596,7 @@ bag_asp_plan_fill = {{
 # chose it; at the end, seats nothing could take keep what they had.
 bag_asp_plan = {{
 \tsave_scope_as = actor
+\tbag_asp_sv_types = yes
 \t# The lists may have moved without their callback (a typed place goes
 \t# through the console), so the order is read afresh every pass.
 \tbag_asp_rebuild = yes
@@ -3122,7 +3135,7 @@ bag_asp_paired_seat = {{
 """ + reachable
 
     sv_set, sv_tests = sv_set_effect(game)
-    run += sv_set
+    run += sv_set + sv_types_effect(game)
     triggers += ("\n# Scope: cabinet (a seat). On one of the mod's own value actions.\n"
                  "bag_asp_on_values = {\n\thas_cabinet_action = yes\n\tOR = { " + sv_tests + " }\n}\n")
     triggers, run = area_marks(triggers), area_marks(run)
