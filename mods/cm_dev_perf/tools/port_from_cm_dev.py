@@ -1807,7 +1807,31 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 49
+PERF_REVISION = 50
+
+# CMF's own `is_host`, under a name neither the game nor any CMF build takes.
+# It reads the host country CMF 2.5.0 records (`_cmm_mark_host_country`), so
+# CMF from the Workshop is all it needs.
+HOST_TRIGGER = """# cm_dev_perf: CMF's is_host under CM's own name. The game's 1.4 trigger
+# is_host shadows CMF's, and cmf_is_host exists only in cmf_dev_beta.
+# True when this country is controlled by the host player, or in singleplayer.
+# Scope: country
+cm_is_host = {
+\ttrigger_if = {
+\t\tlimit = { has_multiple_players = no }
+\t\tis_human = yes
+\t}
+\ttrigger_else = {
+\t\ttrigger_if = {
+\t\t\tlimit = { has_global_variable = cmf_core_host_country }
+\t\t\tthis ?= global_var:cmf_core_host_country
+\t\t}
+\t\ttrigger_else = {
+\t\t\talways = no
+\t\t}
+\t}
+}
+"""
 
 
 def metadata() -> str:
@@ -1921,13 +1945,21 @@ def main() -> int:
     patch = _rio_patch()
     # The beta added a native trigger `is_host`, CMF's own trigger's name; CM's
     # host gates (the classification among them, his run 10-02: never ran) go
-    # to cmf_is_host, which cmf_dev_beta defines with CMF's body.
+    # to cm_is_host, our own copy of CMF's body (+perf50). It was cmf_is_host,
+    # which only cmf_dev_beta defines: with CMF from the Workshop the
+    # classification, the upgrade-map refresh and the host setting stood still.
+    hosts = 0
     for path in (MOD / "in_game/common").rglob("*.txt"):
         text = path.read_text(encoding="utf-8-sig")
         text, n = re.subn(r"^([ \t]*(?:limit = \{ )?)is_host(\s*=\s*(?:yes|no)\b)",
-                          r"\1cmf_is_host\2", text, flags=re.M)
+                          r"\1cm_is_host\2", text, flags=re.M)
         if n:
+            hosts += n
             path.write_text("\ufeff" + text, encoding="utf-8")
+    if not hosts:
+        raise SystemExit("CM no longer calls is_host; drop the cm_is_host pass")
+    (MOD / "in_game/common/scripted_triggers/cm_perf_host_triggers.txt").write_text(
+        "\ufeff" + HOST_TRIGGER, encoding="utf-8")
     # A lookup into a map the scope does not have yet is an error, not false
     # (his log 10-04: 1 243 of them, cm_rgob_cov and cm_rgob_sum the bulk). CM
     # guards most of its lookups with `has_variable_map`; the rest get the
