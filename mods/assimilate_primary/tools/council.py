@@ -1521,8 +1521,13 @@ def sv_actions_loc(game: Path) -> dict[str, str]:
             at = f"[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_at_{side}')|2]"
             # His word 10-26: the whole monthly shift, as the value window shows
             # it; the game itself appends the advisor's share in brackets.
-            dv = f"GetPlayer.MakeScope.GetVariable('bag_asp_sv_type_{pair}').GetSocietalValue.GetDirectionValue(GetPlayer.Self)"
-            net = f"[{dv}|+=2]" if n == 2 else f"[Multiply_CFixedPoint({dv}, '(CFixedPoint)-1')|+=2]"
+            # Its sign is not the position's (his screen 10-26: -0.37 shown while
+            # moving toward the left side), so the size alone, signed by where
+            # the game says the pair is moving.
+            sv = f"GetPlayer.MakeScope.GetVariable('bag_asp_sv_type_{pair}').GetSocietalValue"
+            size = f"Abs_CFixedPoint({sv}.GetDirectionValue(GetPlayer.Self))"
+            moving = f"{sv}.IsMoving{'Left' if n == 1 else 'Right'}(GetPlayer.Self)"
+            net = f"[Select_CFixedPoint({moving}, {size}, Multiply_CFixedPoint({size}, '(CFixedPoint)-1'))|+=2]"
             nm = name.replace("${s}$", f"${side}_focus$")
             rows += [f' {k}: "{nm}"', f' {k}_action: "{nm}"', f' {k}_action_title: "{nm}"',
                      f' {k}_active: "{active.replace("${s}$", f"${side}_focus$")}"',
