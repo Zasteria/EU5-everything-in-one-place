@@ -87,6 +87,11 @@ STALE = [
     # 10-20, his word: vanilla automation stays free; 1.4.2 also put the
     # game's own -1000 "Wrong culture" back, so the copy has no job left.
     OUT,
+    # 0.11.0: values on the mod's own actions; the game's window is no longer
+    # pressed (tools/value_window.py kept for the record, not built).
+    MOD / "in_game/gui/select_societal_value.gui",
+    MOD / "in_game/gui/bag_asp_hidden.gui",
+    MOD / "in_game/gui/scripted_widgets/bag_asp_scripted_widgets.txt",
 ]
 
 LOC = {

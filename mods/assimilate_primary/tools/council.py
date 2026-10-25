@@ -28,7 +28,6 @@ from __future__ import annotations
 import re
 
 import alert_banner  # tools/, put on sys.path by generate.py
-import value_window
 from pathlib import Path
 
 MOD_ID = "bag_asp"
@@ -86,7 +85,7 @@ POOL = [
     # culture, what integration and cores need; this one goes on to the whole.
     ("promote_culture_full", "culture", "population", ""),
     # His spec 12.10–13.10: the pairs ticked in «Общественные ценности», one
-    # seat, through the game's window (value_effects, value_window.py).
+    # seat, on the mod's own action for the side (sv_actions_file, 0.11.0).
     ("change_societal_values", "values", None, ""),
     # His word 10-20: area assimilation, the cultural hegemon's from age 3, works
     # as the province one over a whole area; another advisor on a province
@@ -3131,8 +3130,6 @@ bag_asp_paired_seat = {{
         "in_game/common/scripted_guis/bag_asp_scripted_gui.txt": guis,
         # The watch is a child of the game's alert banner: tools/alert_banner.py.
         alert_banner.PATH: alert_banner.build(game),
-        # The value shift presses the game's own window: tools/value_window.py.
-        **value_window.build(game),
     }
 
 
