@@ -1621,6 +1621,39 @@ def _register_industry_mode(text: str) -> str:
         "\t\t\t}\n\t\t\tcm_ind_mode_changed = yes\n\t\t}\n") + changed, 1)
 
 
+def _probe_each_build(text: str) -> str:
+    """+perf51 (10-26, his ask): every build CM approves writes a line into
+    `debug.log` with the numbers its worker gates read (the probe in
+    tools/probe/). Every feature and Auto-Build category approves through
+    `cm_q_approve_build_copy`; upgrades and urbanize construct on their own and
+    are not probed. His complaint: shortage limits that still build where a
+    location has no peasants, and sliders that seem not to reach what they name.
+    """
+    head = ("cm_q_approve_build_copy = {\n"
+            "\tadd_to_variable_list = { name = cm_q_approved_build_types target = scope:cm_building_type }\n")
+    if text.count(head) != 1:
+        raise SystemExit("feature effects: cm_q_approve_build_copy has changed shape")
+    return text.replace(head, head.replace(
+        "{\n", "{\n\tcm_perf_build_probe = yes # cm_dev_perf +perf51\n", 1), 1)
+
+
+def _probe_feature_names(text: str) -> str:
+    """The pass that is approving, for the build probe's `feature` (+perf51): a
+    flag in a global, which `GetGlobalVariable(...).GetFlagName` prints."""
+    marks = (
+        (r"switch = \{\n\t+trigger = scope:cm_q_pass_feature\n", "scope:cm_q_pass_feature", 1),
+        (r"scope:cm_country = \{ cm_ab_drain_category = \{ WRAP = cm_ab_drain_", "scope:cm_ab_cat", 2),
+        (r"cm_q_pass_auto_urbanize = yes\n", "flag:cm_feature_auto_urbanize", 1),
+    )
+    for anchor, value, count in marks:
+        line = re.compile(r"^(\t*)(" + anchor + ")", re.M)
+        if len(line.findall(text)) != count:
+            raise SystemExit(f"approval pass: {anchor!r} has changed shape")
+        text = line.sub(lambda m: f"{m.group(1)}set_global_variable = {{ name = cm_perf_bp_feat value = {value} }}"
+                        f" # cm_dev_perf +perf51\n{m.group(1)}{m.group(2)}", text)
+    return text
+
+
 EDITS = (
     (CMM, "the industry map's mode dropdown", _register_industry_mode),
     (RESERVE_GUIS, "the gold slider no longer writes CM's reserve", _cut_reserve_pull),
@@ -1685,6 +1718,8 @@ EDITS = (
     (ATR_TRIGGERS, "a charter is a specialization", _charter_counts),
     (ATR_ALLOW, "the textile charter's Flemish gate", _charter_allow),
     (FEATURE, "run the draw once the charters are open", _charter_gate),
+    (FEATURE, "a debug.log line for every approved build", _probe_each_build),
+    (APPROVAL, "name the approving pass for the build probe", _probe_feature_names),
 )
 
 
@@ -1807,7 +1842,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 50
+PERF_REVISION = 51
 
 # CMF's own `is_host`, under a name neither the game nor any CMF build takes.
 # It reads the host country CMF 2.5.0 records (`_cmm_mark_host_country`), so

@@ -1,0 +1,64 @@
+﻿# cm_dev_perf +perf51: the build probe's numbers (cm_perf_build_probe_effects.txt).
+# A `debug_log` string reaches a number only through a script value reading a global.
+
+cm_perf_bp_v1 = { value = global_var:cm_perf_bp_v1 } # pop_code
+cm_perf_bp_v2 = { value = global_var:cm_perf_bp_v2 } # unemployed
+cm_perf_bp_v3 = { value = global_var:cm_perf_bp_v3 } # free
+cm_perf_bp_v4 = { value = global_var:cm_perf_bp_v4 } # inflow
+cm_perf_bp_v5 = { value = global_var:cm_perf_bp_v5 } # measured
+cm_perf_bp_v6 = { value = global_var:cm_perf_bp_v6 } # prod_months
+cm_perf_bp_v7 = { value = global_var:cm_perf_bp_v7 } # food_months
+cm_perf_bp_v8 = { value = global_var:cm_perf_bp_v8 } # prod_slack
+cm_perf_bp_v9 = { value = global_var:cm_perf_bp_v9 } # rgo_free
+cm_perf_bp_v10 = { value = global_var:cm_perf_bp_v10 } # rgo_inflow
+cm_perf_bp_v11 = { value = global_var:cm_perf_bp_v11 } # food_rgo_slack
+cm_perf_bp_v12 = { value = global_var:cm_perf_bp_v12 } # peasants
+cm_perf_bp_v13 = { value = global_var:cm_perf_bp_v13 } # peasants_idle
+cm_perf_bp_v14 = { value = global_var:cm_perf_bp_v14 } # peasants_inflow
+
+# 1 nobles, 2 clergy, 3 burghers, 4 laborers, 5 soldiers, 6 peasants, 7 slaves, 8 tribesmen; -1 no pop type known. Root location, scope:cm_building_type.
+cm_perf_bp_pop_code = {
+	value = -1
+	if = { limit = { NOT = { is_key_in_global_variable_map = { name = cm_building_type_to_pop_type target = scope:cm_building_type } } } value = -1 }
+	else_if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:nobles } value = 1 }
+	else_if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:clergy } value = 2 }
+	else_if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:burghers } value = 3 }
+	else_if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:laborers } value = 4 }
+	else_if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:soldiers } value = 5 }
+	else_if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:peasants } value = 6 }
+	else_if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:slaves } value = 7 }
+	else_if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:tribesmen } value = 8 }
+}
+
+# Pops of the type less every job built or building (CM's *_available). Root location.
+cm_perf_bp_free = {
+	value = 0
+	if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:nobles } value = cm_location_nobles_available }
+	else_if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:clergy } value = cm_location_clergy_available }
+	else_if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:burghers } value = cm_location_burghers_available }
+	else_if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:laborers } value = cm_location_laborers_available }
+	else_if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:soldiers } value = cm_location_soldiers_available }
+	else_if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:peasants } value = cm_location_peasants_available }
+}
+
+# Monthly inflow CM projects for the type. Root location.
+cm_perf_bp_inflow = {
+	value = 0
+	if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:nobles } value = cm_location_fill_rate_for_nobles }
+	else_if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:clergy } value = cm_location_fill_rate_for_clergy }
+	else_if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:burghers } value = cm_location_fill_rate_for_burghers }
+	else_if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:laborers } value = cm_location_fill_rate_for_laborers }
+	else_if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:soldiers } value = cm_location_fill_rate_for_soldiers }
+	else_if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:peasants } value = cm_location_fill_rate_for_peasants }
+}
+
+# 1 when the inflow is the sampler's measurement, 0 when it is the modelled promotion rate. Root location.
+cm_perf_bp_measured = {
+	value = 0
+	if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:nobles } value = 0 if = { limit = { exists = var:cm_pop_rate_nobles } value = 1 } }
+	else_if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:clergy } value = 0 if = { limit = { exists = var:cm_pop_rate_clergy } value = 1 } }
+	else_if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:burghers } value = 0 if = { limit = { exists = var:cm_pop_rate_burghers } value = 1 } }
+	else_if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:laborers } value = 0 if = { limit = { exists = var:cm_pop_rate_laborers } value = 1 } }
+	else_if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:soldiers } value = 0 if = { limit = { exists = var:cm_pop_rate_soldiers } value = 1 } }
+	else_if = { limit = { "global_variable_map(cm_building_type_to_pop_type|scope:cm_building_type)" = pop_type:peasants } value = 0 if = { limit = { exists = var:cm_pop_rate_peasants } value = 1 } }
+}
