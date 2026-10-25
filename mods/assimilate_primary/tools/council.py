@@ -1515,14 +1515,30 @@ def sv_actions_loc(game: Path) -> dict[str, str]:
         rows = [f"l_{lang}:"]
         for i, pair, side, n in sv_sides(game):
             k = f"bag_asp_sv_{side}"
+            # The player's own value, read through a script value: no SCOPE in
+            # it, so nothing here can fail (the pair's whole trouble, 10-25).
+            at = f"[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('bag_asp_sv_at_{side}')|1]"
             nm = name.replace("${s}$", f"${side}_focus$")
             rows += [f' {k}: "{nm}"', f' {k}_action: "{nm}"', f' {k}_action_title: "{nm}"',
                      f' {k}_active: "{active.replace("${s}$", f"${side}_focus$")}"',
                      f' {k}_desc: "{desc.replace("${s}$", f"${side}_focus$").replace("${p}$", f"${pair}$")}"',
-                     f' {k}_action_progress: ""', f' {k}_action_progress_wordier: ""',
-                     f' {k}_action_progress_long_wordier: ""', f' {k}_action_progress_tooltip: ""']
+                     f' {k}_action_progress: "{at}"',
+                     f' {k}_action_progress_wordier: "${side}_focus$: {at} / 100"',
+                     f' {k}_action_progress_long_wordier: "@societal_value! ${side}_focus$: {at} / 100"',
+                     f' {k}_action_progress_tooltip: "${pair}$ → ${side}_focus$: {at} / 100"']
         out[f"main_menu/localization/{lang}/bag_asp_sv_l_{lang}.yml"] = "\n".join(rows) + "\n"
     return out
+
+
+def sv_at_values(game: Path) -> str:
+    """Scope: country. Where a pair stands toward each side, 0..100 (the
+    progress line of the mod's value actions; bag_asp_sv_choose reads the
+    same: the left side is the value times -1)."""
+    out = ["\n# Where each pair stands toward a side, for the progress line of bag_asp_sv_<side>."]
+    for i, pair, side, n in sv_sides(game):
+        sign = "" if n == 2 else "\n\tmultiply = -1"
+        out.append(f"bag_asp_sv_at_{side} = {{\n\tvalue = societal_value:{pair}{sign}\n}}")
+    return "\n".join(out) + "\n"
 
 
 def sv_set_effect(game: Path) -> str:
@@ -3108,7 +3124,7 @@ bag_asp_paired_seat = {{
         SV_ACTIONS_PATH: sv_actions_file(game, actions),
         **sv_actions_loc(game),
         "in_game/common/scripted_triggers/bag_asp_council_triggers.txt": triggers + ramp_triggers(game) + assim_triggers(game) + DEVELOP_TRIGGERS,
-        "in_game/common/script_values/bag_asp_values.txt": VALUES + shown_values() + SV_VALUES + DEVELOP_VALUES + sv_push_value(game, actions),
+        "in_game/common/script_values/bag_asp_values.txt": VALUES + shown_values() + SV_VALUES + DEVELOP_VALUES + sv_push_value(game, actions) + sv_at_values(game),
         "in_game/common/scripted_effects/bag_asp_cmm_effects.txt": effects,
         "in_game/common/scripted_effects/bag_asp_council_effects.txt": run,
         "in_game/common/on_action/bag_asp_cmf_on_actions.txt": on_actions,
