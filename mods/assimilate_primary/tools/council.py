@@ -805,9 +805,7 @@ def lead_rule(cflag: str) -> str:
 
 def seat_test(action: str, tabs: int) -> str:
     """A free seat this action can use."""
-    # Never the seat on values, whatever the order: see bag_asp_place_<SV_ACTION>.
-    seat = ["bag_asp_free_seat = yes",
-            "NOT = { cabinet_member ?= { has_variable = bag_asp_sv_on } }"]
+    seat = ["bag_asp_free_seat = yes"]
     if value(action, "require_matching_character_religion") == "yes":
         seat.append("cabinet_member = { religion = scope:actor.religion }")
     return "\n".join("\t" * tabs + s for s in seat)
@@ -1238,7 +1236,7 @@ def probe_effects(actions: dict[str, str]) -> str:
                 where += (f"\t\t\t\tset_global_variable = {{ name = bag_asp_probe value = {{ value = {val} multiply = 100 }} }}\n"
                           f"\t\t\t\tdebug_log = \"bag_asp: probe: its province, {what} {PRINT}\"\n")
             where += "\t\t\t\tdebug_log = \"bag_asp: probe: that province:\"\n\t\t\t\tdebug_log_scopes = no\n\t\t\t}\n"
-        seats.append(f"\t\telse_if = {{\n\t\t\tlimit = {{ cabinet_action = cabinet_action:{k} }}\n"
+        seats.append(f"\t\telse_if = {{\n\t\t\tlimit = {{ {on_action(k)} }}\n"
                      f"\t\t\tset_global_variable = {{ name = bag_asp_probe value = cabinet_member.{ability} }}\n"
                      f"\t\t\tdebug_log = \"bag_asp: probe: a seat on {k}, its advisor's {ability} {PRINT}\"\n"
                      f"{where}\t\t}}")
@@ -1451,6 +1449,93 @@ def sv_formula(game: Path, actions: dict[str, str]) -> tuple[str, str, str]:
     if not base or not m:
         raise SystemExit("societal values: the action's base push or the skill define moved")
     return base, ability, m.group(1)
+
+
+SV_ACTIONS_PATH = "in_game/common/cabinet_actions/bag_asp_sv_actions.txt"
+
+
+def sv_sides(game: Path) -> list[tuple[int, str, str, str]]:
+    """(row, pair, side, side number 1 left / 2 right) for every pair."""
+    out = []
+    for i, pair in enumerate(value_pairs(game), 1):
+        left, right = pair.split("_vs_")
+        out += [(i, pair, left, 1), (i, pair, right, 2)]
+    return out
+
+
+def on_action(key: str) -> str:
+    """A seat-scope test that the seat is on this pool action. Values are the
+    mod's own actions, one per side (sv_actions_file)."""
+    if key == SV_ACTION:
+        return "bag_asp_on_values = yes"
+    return f"cabinet_action = cabinet_action:{key}"
+
+
+def sv_actions_file(game: Path, actions: dict[str, str]) -> str:
+    """His word 10-25: our own action per side instead of the game's
+    «{SV_ACTION}». The game keeps the pair its window picked on the seat, and
+    script cannot clear it: under any next action the outliner's progress line
+    floods debug.log (docs/pitfalls/script.md). These carry no pair; their push
+    is the game's own modifier monthly_towards_<side> at the base of
+    «{SV_ACTION}», which the engine scales by the advisor exactly as it does
+    the game's action (hands-off 10-25: +0.2330, our bag_asp_sv_push 0.2330)."""
+    base, ability, _ = sv_formula(game, actions)
+    mods = (game / "docs/modifiers.log").read_text(encoding="utf-8", errors="replace")
+    blocks = [f"# assimilate_primary: one action per side of every societal value. Rebuilt by\n"
+              f"# tools/generate.py (tools/council.py, sv_actions_file). Base {base} = the game's «{SV_ACTION}».\n"]
+    for i, pair, side, n in sv_sides(game):
+        if f"Tag: monthly_towards_{side}," not in mods:
+            raise SystemExit(f"societal values: the game has no modifier monthly_towards_{side}")
+        blocks.append(f"""bag_asp_sv_{side} = {{
+\tability = {ability}
+\t# Ours alone: never the game's automation nor the AI.
+\tforbid_for_automation = yes
+\tpotential = {{
+\t\thas_variable = bag_asp_auto_on
+\t}}
+\tcountry_modifier = {{
+\t\tmonthly_towards_{side} = {base}
+\t}}
+}}
+""")
+    return "\n".join(blocks)
+
+
+def sv_actions_loc(game: Path) -> dict[str, str]:
+    """Names in the game's own words ($<side>$, $<pair>$); the progress line is
+    empty, like counter-espionage's: nothing there can fail."""
+    texts = {
+        "english": ("Shift values: ${s}$", "Shifting values to ${s}$",
+                    "The council automation (Council Automation) keeps this advisor pushing ${p}$ toward ${s}$, and takes them off once the shift is no longer worth a whole point."),
+        "russian": ("Сдвиг ценностей: ${s}$", "Сдвиг ценностей к «${s}$»",
+                    "Автоматика совета (Council Automation) держит этого советника на сдвиге «${p}$» к «${s}$» и снимает, когда сдвиг больше не стоит целого пункта."),
+    }
+    out = {}
+    for lang, (name, active, desc) in texts.items():
+        rows = [f"l_{lang}:"]
+        for i, pair, side, n in sv_sides(game):
+            k = f"bag_asp_sv_{side}"
+            nm = name.replace("${s}$", f"${side}_focus$")
+            rows += [f' {k}: "{nm}"', f' {k}_action: "{nm}"', f' {k}_action_title: "{nm}"',
+                     f' {k}_active: "{active.replace("${s}$", f"${side}_focus$")}"',
+                     f' {k}_desc: "{desc.replace("${s}$", f"${side}_focus$").replace("${p}$", f"${pair}$")}"',
+                     f' {k}_action_progress: ""', f' {k}_action_progress_wordier: ""',
+                     f' {k}_action_progress_long_wordier: ""', f' {k}_action_progress_tooltip: ""']
+        out[f"main_menu/localization/{lang}/bag_asp_sv_l_{lang}.yml"] = "\n".join(rows) + "\n"
+    return out
+
+
+def sv_set_effect(game: Path) -> str:
+    """Scope: a seat; scope:actor's var:bag_asp_sv_want / _want_side name it."""
+    branches = []
+    for i, pair, side, n in sv_sides(game):
+        word = "if" if not branches else "else_if"
+        branches.append(f"\t{word} = {{\n\t\tlimit = {{ scope:actor = {{ var:bag_asp_sv_want = {i} var:bag_asp_sv_want_side = {n} }} }}\n"
+                        f"\t\tset_cabinet_action = {{ type = cabinet_action:bag_asp_sv_{side} actor = scope:actor }}\n"
+                        f"\t\tdebug_log = \"bag_asp: values, the seat goes on {pair} toward {side}\"\n\t}}")
+    tests = " ".join(f"cabinet_action = cabinet_action:bag_asp_sv_{side}" for _, _, side, _ in sv_sides(game))
+    return ("\n# Scope: a seat. Puts it on the mod's own action for the wanted side.\n"
+            "bag_asp_sv_set = {\n" + "\n".join(branches) + "\n}\n"), tests
 
 
 def sv_push_value(game: Path, actions: dict[str, str]) -> str:
@@ -1770,7 +1855,7 @@ def value_effects(game: Path, actions: dict[str, str]) -> str:
         f"\t\t\tNOT = {{ var:bag_asp_sv_cur = {i} }}\n\t\t}}\n"
         f"\t\tset_variable = {{ name = bag_asp_sv_want value = {i} }}\n\t}}"
         for i, pair in enumerate(value_pairs(game), 1))
-    on_values = f"has_cabinet_action = yes cabinet_action = cabinet_action:{SV_ACTION}"
+    on_values = "bag_asp_on_values = yes"
     return f"""
 # Scope: country (scope:actor). The «Приоритет» row of {SV_ACTION}.
 bag_asp_place_{SV_ACTION} = {{
@@ -1798,10 +1883,7 @@ bag_asp_place_{SV_ACTION} = {{
 \t\t\t}}
 \t\t\tset_local_variable = {{ name = bag_asp_sv_gone value = yes }}
 \t\t}}
-\t\t# The seat already on values first, whoever is better: values never move
-\t\t# to another advisor (his word 10-25). The pair the window picked stays on
-\t\t# a seat script takes values from, and its outliner line floods debug.log
-\t\t# (hands-off 10-25, docs/pitfalls/script.md); only the game's own end clears it.
+\t\t# The seat already on values first: no needless churn.
 \t\tordered_cabinet = {{
 \t\t\tlimit = {{ bag_asp_free_seat = yes }}
 \t\t\torder_by = {{
@@ -1839,11 +1921,9 @@ bag_asp_place_{SV_ACTION} = {{
 \t\t\t\t\tcabinet_member ?= {{ set_variable = {{ name = bag_asp_claimed value = yes }} }}
 \t\t\t\t}}
 \t\t\t\tdebug_log = "bag_asp: values, the seat keeps its pair"
-\t\t\t\tif = {{ limit = {{ has_variable = bag_asp_sv_release }} remove_variable = bag_asp_sv_release }}
 \t\t\t}}
 \t\t\telse_if = {{
 \t\t\t\tlimit = {{ has_variable = bag_asp_sv_want }}
-\t\t\t\tif = {{ limit = {{ has_variable = bag_asp_sv_release }} remove_variable = bag_asp_sv_release }}
 \t\t\t\t# One seat on values: another one still on it gives it up.
 \t\t\t\tevery_cabinet = {{
 \t\t\t\t\tlimit = {{
@@ -1854,39 +1934,21 @@ bag_asp_place_{SV_ACTION} = {{
 \t\t\t\t}}
 \t\t\t\tscope:bag_asp_seat = {{
 \t\t\t\t\tbag_asp_vacate = yes
-\t\t\t\t\tset_cabinet_action = {{
-\t\t\t\t\t\ttype = cabinet_action:{SV_ACTION}
-\t\t\t\t\t\tactor = scope:actor
-\t\t\t\t\t\t# Any pair: the target sets none (his run 12.10); the window picks it.
-\t\t\t\t\t\ttarget = societal_value_type:traditionalist_vs_innovative
-\t\t\t\t\t}}
+\t\t\t\t\t# The mod's own action for that side (sv_actions_file): no pair is
+\t\t\t\t\t# stored on the seat, so it can be stopped or moved like any other.
+\t\t\t\t\tbag_asp_sv_set = yes
 \t\t\t\t\tcabinet_member = {{ set_variable = {{ name = bag_asp_claimed value = yes }} }}
 \t\t\t\t}}
 {clear_sv(4)}
 \t\t\t\tset_variable = {{ name = bag_asp_sv_cur value = var:bag_asp_sv_want }}
 \t\t\t\tset_variable = {{ name = bag_asp_sv_cur_side value = var:bag_asp_sv_want_side }}
 \t\t\t\tset_variable = {{ name = bag_asp_sv_cab value = scope:bag_asp_seat }}
-\t\t\t\tbag_asp_sv_ask = yes
 \t\t\t}}
 \t\t\telse = {{
 \t\t\t\tdebug_log = "bag_asp: values, no ticked pair would move a whole point"
 \t\t\t}}
 \t\t\tif = {{ limit = {{ has_variable = bag_asp_sv_want }} remove_variable = bag_asp_sv_want }}
 \t\t\tif = {{ limit = {{ has_variable = bag_asp_sv_want_side }} remove_variable = bag_asp_sv_want_side }}
-\t\t}}
-\t\t# Nothing worth a whole point any more: the seat is not stopped by script
-\t\t# (its pair would stay, docs/pitfalls/script.md) but released: the mod's
-\t\t# is_finished in {SV_ACTION}.txt lets the game end the action itself,
-\t\t# which clears the pair (his word 10-25; the game's own end clears it,
-\t\t# hands-off 10-25). The seat waits, claimed, until it is empty.
-\t\tevery_cabinet = {{
-\t\t\tlimit = {{
-\t\t\t\t{on_values}
-\t\t\t\tbag_asp_free_seat = yes
-\t\t\t}}
-\t\t\tcabinet_member = {{ set_variable = {{ name = bag_asp_claimed value = yes }} }}
-\t\t\tscope:actor = {{ set_variable = {{ name = bag_asp_sv_release value = yes }} }}
-\t\t\tdebug_log = "bag_asp: values, released: the game ends the action itself"
 \t\t}}
 \t}}
 }}
@@ -2163,28 +2225,6 @@ bag_asp_sv_row = {{
 \t}}
 }}
 """
-
-
-SV_ACTION_PATH = f"in_game/common/cabinet_actions/{SV_ACTION}.txt"
-
-
-def sv_action_file(game: Path) -> str:
-    """The game's change_societal_values.txt with one end condition added: the
-    mod raises bag_asp_sv_release and the game ends the action itself, which
-    clears the seat's pair; stopped by script, the pair stays and floods
-    debug.log (hands-off 10-25, docs/pitfalls/script.md). His word 10-25."""
-    text = (game / f"in_game/common/cabinet_actions/{SV_ACTION}.txt").read_text(encoding="utf-8-sig")
-    text = text.replace("\r\n", "\n")
-    if "is_finished" in text:
-        raise SystemExit(f"council: {SV_ACTION}.txt has its own is_finished now; merge ours into it")
-    anchor = "\tforbid_for_automation = yes\n"
-    if text.count(anchor) != 1:
-        raise SystemExit(f"council: {SV_ACTION}.txt no longer reads as expected")
-    head = ("# assimilate_primary: the game's file, copied by tools/council.py, with the\n"
-            "# end condition below. Do not edit by hand.\n")
-    end = ("\n\t# assimilate_primary: the council automation releases the seat.\n"
-           "\tis_finished = {\n\t\tscope:actor ?= { has_variable = bag_asp_sv_release }\n\t}\n")
-    return head + text.replace(anchor, anchor + end)
 
 
 def build(game: Path) -> dict[str, str]:
@@ -2525,7 +2565,6 @@ bag_asp_plan = {{
 \t# The lists may have moved without their callback (a typed place goes
 \t# through the console), so the order is read afresh every pass.
 \tbag_asp_rebuild = yes
-\tbag_asp_mark_values = yes
 \t# His ask 13.10: the seats as the pass finds them, so what he changed by
 \t# hand between two passes shows against the last pass's «after».
 \tif = {{
@@ -2685,7 +2724,7 @@ bag_asp_vacate = {{
     def seat_is(k: str, gate: str) -> str:
         if k == "paired":
             return "bag_asp_paired_seat = yes"
-        own = f"cabinet_action = cabinet_action:{act(k)}"
+        own = on_action(act(k))
         if act(k) in SPEEDUP:
             own += " NOT = { bag_asp_paired_seat = yes }"
         if act(k) in shared and k in ROW_SEAT:
@@ -2699,41 +2738,6 @@ bag_asp_vacate = {{
     seat_below = "\n".join(
         f"\t\t\t\t\t\t\tAND = {{ {seat_is(k, g)} scope:actor.var:bag_asp_rank_{r} > scope:actor.var:bag_asp_rank_recovery_effort }}"
         for k, r, g in ranked)
-    run += f"""
-# Scope: country. Marks the advisor on values (bag_asp_sv_on), so a seat test
-# can leave that seat alone. Run 10-25: `NOT = {{ has_cabinet_action = yes
-# cabinet_action = cabinet_action:X }}` on a seat is false on every seat,
-# silently, and 0.10.12 took no free seat with it; the positive test works.
-bag_asp_mark_values = {{
-\tif = {{
-\t\tlimit = {{
-\t\t\thas_variable = bag_asp_sv_release
-\t\t\tNOT = {{ any_cabinet = {{ has_cabinet_action = yes cabinet_action = cabinet_action:{SV_ACTION} }} }}
-\t\t}}
-\t\tremove_variable = bag_asp_sv_release
-\t}}
-\tif = {{
-\t\tlimit = {{
-\t\t\tNOT = {{ is_target_in_variable_list = {{ name = bag_asp_used target = flag:bag_asp_{SV_ACTION} }} }}
-\t\t\tany_cabinet = {{ has_cabinet_action = yes cabinet_action = cabinet_action:{SV_ACTION} }}
-\t\t}}
-\t\tset_variable = {{ name = bag_asp_sv_release value = yes }}
-\t\tdebug_log = "bag_asp: values not in use, the seat on them released"
-\t}}
-\tevery_cabinet = {{
-\t\tlimit = {{ cabinet_member ?= {{ has_variable = bag_asp_sv_on }} }}
-\t\tcabinet_member = {{ remove_variable = bag_asp_sv_on }}
-\t}}
-\tevery_cabinet = {{
-\t\tlimit = {{
-\t\t\texists = cabinet_member
-\t\t\thas_cabinet_action = yes
-\t\t\tcabinet_action = cabinet_action:{SV_ACTION}
-\t\t}}
-\t\tcabinet_member = {{ set_variable = {{ name = bag_asp_sv_on value = yes }} }}
-\t}}
-}}
-"""
     run += f"""
 # Scope: country. While the «devastated locations» alert shows (its banner,
 # bag_alert_banner.gui): as it appears, then every second. Costs a look
@@ -2759,7 +2763,6 @@ bag_asp_emergency = {{
 \t\t\t\t}}
 \t\t\t}}
 \t\t\tbag_asp_rebuild = yes
-\t\t\tbag_asp_mark_values = yes
 \t\t\t# One province per seat, until none is left without recovery or no
 \t\t\t# seat below recovery is free to give.
 \t\t\tset_variable = {{ name = bag_asp_em_go value = yes }}
@@ -2775,7 +2778,6 @@ bag_asp_emergency = {{
 \t\t\t\tordered_cabinet = {{
 \t\t\t\t\tlimit = {{
 \t\t\t\t\t\texists = cabinet_member
-\t\t\t\t\t\tNOT = {{ cabinet_member ?= {{ has_variable = bag_asp_sv_on }} }}
 \t\t\t\t\t\tOR = {{
 \t\t\t\t\t\t\thas_cabinet_action = no
 {seat_below}
@@ -3097,9 +3099,14 @@ bag_asp_paired_seat = {{
 }}
 """ + reachable
 
+    sv_set, sv_tests = sv_set_effect(game)
+    run += sv_set
+    triggers += ("\n# Scope: cabinet (a seat). On one of the mod's own value actions.\n"
+                 "bag_asp_on_values = {\n\thas_cabinet_action = yes\n\tOR = { " + sv_tests + " }\n}\n")
     triggers, run = area_marks(triggers), area_marks(run)
     return {
-        SV_ACTION_PATH: sv_action_file(game),
+        SV_ACTIONS_PATH: sv_actions_file(game, actions),
+        **sv_actions_loc(game),
         "in_game/common/scripted_triggers/bag_asp_council_triggers.txt": triggers + ramp_triggers(game) + assim_triggers(game) + DEVELOP_TRIGGERS,
         "in_game/common/script_values/bag_asp_values.txt": VALUES + shown_values() + SV_VALUES + DEVELOP_VALUES + sv_push_value(game, actions),
         "in_game/common/scripted_effects/bag_asp_cmm_effects.txt": effects,
