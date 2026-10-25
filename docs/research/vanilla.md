@@ -91,6 +91,16 @@ societal_value_type:… }` ставит действие с пустой пар�
 `GetMaxSocietalValueReachable`, `HasReachedMaxSocietalValue`. **Измерено 13.10:** переменная страны держит скоуп места (`set_variable = { … value = <cabinet> }`), и `GetVariable('x').GetCabinet.GetMaxSocietalValueReachable` читает его в локализации («сейчас -35.99, предел 49»). Подсказка игры: предел = 100 × месячный толчок в эту сторону. **Измерено 13.10 11:14 (`assimilate_primary` 0.9.9):** `ChangeCabinetActionTarget(<место на изменении ценностей>)` из скрытого окна открывает `select_societal_value`; строка, сравнившая `SocietalValueCandidate.GetSocietalValue.Self` с парой из переменной страны (`ObjectsEqual`), жмёт `SelectRightCandidate` сама; окно после этого остаётся открытым. **13.10 11:40:** окно не показывает пару, которую место уже двигает (12 строк вместо 13); `Cabinet.GetMaxSocietalValueReachable` даёт 0 у места не на этом действии и число у места на нём (dip 76: 12.79, затем 32.35 после тика). В скрипте левая сторона — минус (`pa_push_towards_traditionalist`: при `> 0` двигает влево). Сдвиг скриптом в
 обход совета — `change_societal_value = { type = <пара> value = <±> }`.
 
+## Своё задание совета: модификатор умножается на навык (мерено 10-25)
+
+`country_modifier` своего `cabinet_action` движок умножает на ту же
+«эффективность» советника, что и ванильный сдвиг ценностей: `monthly_towards_free_trade
+= 0.1` дал +0.2330, ровно `bag_asp_sv_push`. Пару ценностей движок хранит только у
+заданий с полем `societal_values`. Окно ценностей пишет сдвиг из
+`SocietalValue.GetDirectionValue(country)` — знак не как у положения: размер брать
+`Abs_CFixedPoint`, знак — по `IsMovingLeft/Right`. Пару в строку локализации даёт
+переменная игрока со `societal_value_type:<пара>` → `.GetVariable(…).GetSocietalValue`.
+
 ## Нехватка рабочих в триггерах — отрицательное число (1.4, мерено 10-15)
 
 `unfilled_jobs_in_province` **меньше нуля, когда рабочих не хватает**, и 0, когда все места заняты. Зонд `assimilate_primary` 0.10.5, 17:23: Северная Мунтения −1.82, при −684 в одном районе (вероятно, в тысячах). Столбец «недостающие работники» игра сортирует по возрастанию по той же причине (`attribute_columns/20_province.txt`, `missing_promotions`). Условие `> 0` не проходит нигде. `unfilled_jobs_in_province_percentage` у провинции без нехватки равен 100, то есть это доля занятых мест.
