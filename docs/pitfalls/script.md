@@ -262,6 +262,12 @@ for the same reason; it applies to a grep over the tree just as much.
 в параметрах, `remove_from_cabinet` и обратно того же советника, месяц без
 действия. Из 8 178 мест мира такое одно — ваниль при смене действия через своё
 окно пару сбрасывает. `actor` игра хранит у всех мест (`params={ actor=… }`).
+Своим окном тоже не вышло (10-25): `SelectCabinetAction(место, no)` из скрытого окна открывает
+ванильный список, виджет в строке (`attribute_columns/cabinet_action.gui`) её находит
+(`ObjectsEqual(InteractionTarget.GetCabinetAction.Self, …GetVariable(…).GetCabinetAction.Self)`),
+но `SelectInteractionTargetGlue.OnLeftClick`, `…AndConfirm`, `OnMouseDown/Up`,
+`SelectInteractionTargetView.Confirm` из `state` действие не меняют — им нужны параметры клика
+(`on_action_with_params`). Мод держит место на ценностях до конца действия (0.10.12+).
 
 ## Один переключатель на два окна — это два разных переключателя
 
