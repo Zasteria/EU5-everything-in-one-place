@@ -24,14 +24,24 @@ bag_rtk_rep_on = {
 		if = {
 			limit = { NOT = { exists = scope:bag_rtk_rep_seat } }
 			# Не место на ценностях: снятая скриптом пара остаётся на месте и
-			# засоряет debug.log (assimilate_primary, 10-25).
+			# засоряет debug.log (assimilate_primary, 10-25). Метка на советнике:
+			# `NOT = { has_cabinet_action = yes cabinet_action = … }` на месте ложно
+			# всегда (прогон 10-25).
+			every_cabinet = {
+				limit = { exists = cabinet_member has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
+				cabinet_member = { set_variable = { name = bag_rtk_sv_on value = yes } }
+			}
 			ordered_cabinet = {
 				limit = {
 					exists = cabinet_member
-					NOT = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
+					NOT = { cabinet_member = { has_variable = bag_rtk_sv_on } }
 				}
 				order_by = cabinet_member.dip
 				save_scope_as = bag_rtk_rep_seat
+			}
+			every_cabinet = {
+				limit = { cabinet_member ?= { has_variable = bag_rtk_sv_on } }
+				cabinet_member = { remove_variable = bag_rtk_sv_on }
 			}
 		}
 		scope:bag_rtk_rep_seat ?= {

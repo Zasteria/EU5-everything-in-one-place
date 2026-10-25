@@ -807,7 +807,7 @@ def seat_test(action: str, tabs: int) -> str:
     """A free seat this action can use."""
     # Never the seat on values, whatever the order: see bag_asp_place_<SV_ACTION>.
     seat = ["bag_asp_free_seat = yes",
-            f"NOT = {{ has_cabinet_action = yes cabinet_action = cabinet_action:{SV_ACTION} }}"]
+            "NOT = { cabinet_member ?= { has_variable = bag_asp_sv_on } }"]
     if value(action, "require_matching_character_religion") == "yes":
         seat.append("cabinet_member = { religion = scope:actor.religion }")
     return "\n".join("\t" * tabs + s for s in seat)
@@ -2497,6 +2497,7 @@ bag_asp_plan = {{
 \t# The lists may have moved without their callback (a typed place goes
 \t# through the console), so the order is read afresh every pass.
 \tbag_asp_rebuild = yes
+\tbag_asp_mark_values = yes
 \t# His ask 13.10: the seats as the pass finds them, so what he changed by
 \t# hand between two passes shows against the last pass's «after».
 \tif = {{
@@ -2671,6 +2672,26 @@ bag_asp_vacate = {{
         f"\t\t\t\t\t\t\tAND = {{ {seat_is(k, g)} scope:actor.var:bag_asp_rank_{r} > scope:actor.var:bag_asp_rank_recovery_effort }}"
         for k, r, g in ranked)
     run += f"""
+# Scope: country. Marks the advisor on values (bag_asp_sv_on), so a seat test
+# can leave that seat alone. Run 10-25: `NOT = {{ has_cabinet_action = yes
+# cabinet_action = cabinet_action:X }}` on a seat is false on every seat,
+# silently, and 0.10.12 took no free seat with it; the positive test works.
+bag_asp_mark_values = {{
+\tevery_cabinet = {{
+\t\tlimit = {{ cabinet_member ?= {{ has_variable = bag_asp_sv_on }} }}
+\t\tcabinet_member = {{ remove_variable = bag_asp_sv_on }}
+\t}}
+\tevery_cabinet = {{
+\t\tlimit = {{
+\t\t\texists = cabinet_member
+\t\t\thas_cabinet_action = yes
+\t\t\tcabinet_action = cabinet_action:{SV_ACTION}
+\t\t}}
+\t\tcabinet_member = {{ set_variable = {{ name = bag_asp_sv_on value = yes }} }}
+\t}}
+}}
+"""
+    run += f"""
 # Scope: country. While the «devastated locations» alert shows (its banner,
 # bag_alert_banner.gui): as it appears, then every second. Costs a look
 # over the provinces unless one has a location below zero and no recovery;
@@ -2695,6 +2716,7 @@ bag_asp_emergency = {{
 \t\t\t\t}}
 \t\t\t}}
 \t\t\tbag_asp_rebuild = yes
+\t\t\tbag_asp_mark_values = yes
 \t\t\t# One province per seat, until none is left without recovery or no
 \t\t\t# seat below recovery is free to give.
 \t\t\tset_variable = {{ name = bag_asp_em_go value = yes }}
@@ -2710,7 +2732,7 @@ bag_asp_emergency = {{
 \t\t\t\tordered_cabinet = {{
 \t\t\t\t\tlimit = {{
 \t\t\t\t\t\texists = cabinet_member
-\t\t\t\t\t\tNOT = {{ has_cabinet_action = yes cabinet_action = cabinet_action:{SV_ACTION} }}
+\t\t\t\t\t\tNOT = {{ cabinet_member ?= {{ has_variable = bag_asp_sv_on }} }}
 \t\t\t\t\t\tOR = {{
 \t\t\t\t\t\t\thas_cabinet_action = no
 {seat_below}
