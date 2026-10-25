@@ -1438,9 +1438,11 @@ bag_asp_place_change_societal_values = {
 					cabinet_member ?= { set_variable = { name = bag_asp_claimed value = yes } }
 				}
 				if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the seat keeps its pair" }
+				if = { limit = { has_variable = bag_asp_sv_release } remove_variable = bag_asp_sv_release }
 			}
 			else_if = {
 				limit = { has_variable = bag_asp_sv_want }
+				if = { limit = { has_variable = bag_asp_sv_release } remove_variable = bag_asp_sv_release }
 				# One seat on values: another one still on it gives it up.
 				every_cabinet = {
 					limit = {
@@ -1474,15 +1476,19 @@ bag_asp_place_change_societal_values = {
 			if = { limit = { has_variable = bag_asp_sv_want } remove_variable = bag_asp_sv_want }
 			if = { limit = { has_variable = bag_asp_sv_want_side } remove_variable = bag_asp_sv_want_side }
 		}
-		# Nothing worth a whole point any more: the seat still stays on values
-		# until the game ends the action itself, which clears its pair.
+		# Nothing worth a whole point any more: the seat is not stopped by script
+		# (its pair would stay, docs/pitfalls/script.md) but released: the mod's
+		# is_finished in change_societal_values.txt lets the game end the action itself,
+		# which clears the pair (his word 10-25; the game's own end clears it,
+		# hands-off 10-25). The seat waits, claimed, until it is empty.
 		every_cabinet = {
 			limit = {
 				has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values
 				bag_asp_free_seat = yes
 			}
 			cabinet_member = { set_variable = { name = bag_asp_claimed value = yes } }
-			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, the seat stays until the game ends the action" }
+			scope:actor = { set_variable = { name = bag_asp_sv_release value = yes } }
+			if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values, released: the game ends the action itself" }
 		}
 	}
 }
@@ -2881,6 +2887,21 @@ bag_asp_probe_pops = {
 # cabinet_action = cabinet_action:X }` on a seat is false on every seat,
 # silently, and 0.10.12 took no free seat with it; the positive test works.
 bag_asp_mark_values = {
+	if = {
+		limit = {
+			has_variable = bag_asp_sv_release
+			NOT = { any_cabinet = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values } }
+		}
+		remove_variable = bag_asp_sv_release
+	}
+	if = {
+		limit = {
+			NOT = { is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_change_societal_values } }
+			any_cabinet = { has_cabinet_action = yes cabinet_action = cabinet_action:change_societal_values }
+		}
+		set_variable = { name = bag_asp_sv_release value = yes }
+		if = { limit = { has_global_variable = bag_asp_log } debug_log = "bag_asp: values not in use, the seat on them released" }
+	}
 	every_cabinet = {
 		limit = { cabinet_member ?= { has_variable = bag_asp_sv_on } }
 		cabinet_member = { remove_variable = bag_asp_sv_on }

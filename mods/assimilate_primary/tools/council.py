@@ -1839,9 +1839,11 @@ bag_asp_place_{SV_ACTION} = {{
 \t\t\t\t\tcabinet_member ?= {{ set_variable = {{ name = bag_asp_claimed value = yes }} }}
 \t\t\t\t}}
 \t\t\t\tdebug_log = "bag_asp: values, the seat keeps its pair"
+\t\t\t\tif = {{ limit = {{ has_variable = bag_asp_sv_release }} remove_variable = bag_asp_sv_release }}
 \t\t\t}}
 \t\t\telse_if = {{
 \t\t\t\tlimit = {{ has_variable = bag_asp_sv_want }}
+\t\t\t\tif = {{ limit = {{ has_variable = bag_asp_sv_release }} remove_variable = bag_asp_sv_release }}
 \t\t\t\t# One seat on values: another one still on it gives it up.
 \t\t\t\tevery_cabinet = {{
 \t\t\t\t\tlimit = {{
@@ -1872,15 +1874,19 @@ bag_asp_place_{SV_ACTION} = {{
 \t\t\tif = {{ limit = {{ has_variable = bag_asp_sv_want }} remove_variable = bag_asp_sv_want }}
 \t\t\tif = {{ limit = {{ has_variable = bag_asp_sv_want_side }} remove_variable = bag_asp_sv_want_side }}
 \t\t}}
-\t\t# Nothing worth a whole point any more: the seat still stays on values
-\t\t# until the game ends the action itself, which clears its pair.
+\t\t# Nothing worth a whole point any more: the seat is not stopped by script
+\t\t# (its pair would stay, docs/pitfalls/script.md) but released: the mod's
+\t\t# is_finished in {SV_ACTION}.txt lets the game end the action itself,
+\t\t# which clears the pair (his word 10-25; the game's own end clears it,
+\t\t# hands-off 10-25). The seat waits, claimed, until it is empty.
 \t\tevery_cabinet = {{
 \t\t\tlimit = {{
 \t\t\t\t{on_values}
 \t\t\t\tbag_asp_free_seat = yes
 \t\t\t}}
 \t\t\tcabinet_member = {{ set_variable = {{ name = bag_asp_claimed value = yes }} }}
-\t\t\tdebug_log = "bag_asp: values, the seat stays until the game ends the action"
+\t\t\tscope:actor = {{ set_variable = {{ name = bag_asp_sv_release value = yes }} }}
+\t\t\tdebug_log = "bag_asp: values, released: the game ends the action itself"
 \t\t}}
 \t}}
 }}
@@ -2157,6 +2163,28 @@ bag_asp_sv_row = {{
 \t}}
 }}
 """
+
+
+SV_ACTION_PATH = f"in_game/common/cabinet_actions/{SV_ACTION}.txt"
+
+
+def sv_action_file(game: Path) -> str:
+    """The game's change_societal_values.txt with one end condition added: the
+    mod raises bag_asp_sv_release and the game ends the action itself, which
+    clears the seat's pair; stopped by script, the pair stays and floods
+    debug.log (hands-off 10-25, docs/pitfalls/script.md). His word 10-25."""
+    text = (game / f"in_game/common/cabinet_actions/{SV_ACTION}.txt").read_text(encoding="utf-8-sig")
+    text = text.replace("\r\n", "\n")
+    if "is_finished" in text:
+        raise SystemExit(f"council: {SV_ACTION}.txt has its own is_finished now; merge ours into it")
+    anchor = "\tforbid_for_automation = yes\n"
+    if text.count(anchor) != 1:
+        raise SystemExit(f"council: {SV_ACTION}.txt no longer reads as expected")
+    head = ("# assimilate_primary: the game's file, copied by tools/council.py, with the\n"
+            "# end condition below. Do not edit by hand.\n")
+    end = ("\n\t# assimilate_primary: the council automation releases the seat.\n"
+           "\tis_finished = {\n\t\tscope:actor ?= { has_variable = bag_asp_sv_release }\n\t}\n")
+    return head + text.replace(anchor, anchor + end)
 
 
 def build(game: Path) -> dict[str, str]:
@@ -2677,6 +2705,21 @@ bag_asp_vacate = {{
 # cabinet_action = cabinet_action:X }}` on a seat is false on every seat,
 # silently, and 0.10.12 took no free seat with it; the positive test works.
 bag_asp_mark_values = {{
+\tif = {{
+\t\tlimit = {{
+\t\t\thas_variable = bag_asp_sv_release
+\t\t\tNOT = {{ any_cabinet = {{ has_cabinet_action = yes cabinet_action = cabinet_action:{SV_ACTION} }} }}
+\t\t}}
+\t\tremove_variable = bag_asp_sv_release
+\t}}
+\tif = {{
+\t\tlimit = {{
+\t\t\tNOT = {{ is_target_in_variable_list = {{ name = bag_asp_used target = flag:bag_asp_{SV_ACTION} }} }}
+\t\t\tany_cabinet = {{ has_cabinet_action = yes cabinet_action = cabinet_action:{SV_ACTION} }}
+\t\t}}
+\t\tset_variable = {{ name = bag_asp_sv_release value = yes }}
+\t\tdebug_log = "bag_asp: values not in use, the seat on them released"
+\t}}
 \tevery_cabinet = {{
 \t\tlimit = {{ cabinet_member ?= {{ has_variable = bag_asp_sv_on }} }}
 \t\tcabinet_member = {{ remove_variable = bag_asp_sv_on }}
@@ -3056,6 +3099,7 @@ bag_asp_paired_seat = {{
 
     triggers, run = area_marks(triggers), area_marks(run)
     return {
+        SV_ACTION_PATH: sv_action_file(game),
         "in_game/common/scripted_triggers/bag_asp_council_triggers.txt": triggers + ramp_triggers(game) + assim_triggers(game) + DEVELOP_TRIGGERS,
         "in_game/common/script_values/bag_asp_values.txt": VALUES + shown_values() + SV_VALUES + DEVELOP_VALUES + sv_push_value(game, actions),
         "in_game/common/scripted_effects/bag_asp_cmm_effects.txt": effects,

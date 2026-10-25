@@ -267,7 +267,9 @@ for the same reason; it applies to a grep over the tree just as much.
 (`ObjectsEqual(InteractionTarget.GetCabinetAction.Self, …GetVariable(…).GetCabinetAction.Self)`),
 но `SelectInteractionTargetGlue.OnLeftClick`, `…AndConfirm`, `OnMouseDown/Up`,
 `SelectInteractionTargetView.Confirm` из `state` действие не меняют — им нужны параметры клика
-(`on_action_with_params`). Мод держит место на ценностях до конца действия (0.10.12+).
+(`on_action_with_params`). Работает своё окончание игры: снятое игрой действие пару стирает;
+0.10.14 даёт игре снять его через свой `is_finished` в копии `change_societal_values.txt`.
+В hands-off это не измерить: страной правит ИИ и снимает ценности в первый месяц.
 
 ## Один переключатель на два окна — это два разных переключателя
 
