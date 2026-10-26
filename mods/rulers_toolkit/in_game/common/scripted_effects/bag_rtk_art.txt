@@ -11,14 +11,6 @@
 # Scope: country
 bag_rtk_art_monthly = {
 	if = {
-		limit = { has_global_variable = bag_rtk_log has_variable = bag_rtk_art_native_on NOT = { has_variable = bag_rtk_art_on } }
-		debug_log = "bag_rtk: art native ticked, but selling is off"
-	}
-	if = {
-		limit = { has_variable = bag_rtk_art_on has_variable = bag_rtk_art_native_on }
-		bag_rtk_art_native_pick = yes
-	}
-	else_if = {
 		limit = { has_variable = bag_rtk_art_on }
 		save_scope_as = bag_rtk_seller
 		while = {
@@ -75,18 +67,6 @@ bag_rtk_art_fire = {
 			max = 1
 			save_scope_as = bag_rtk_art_buyer
 		}
-		# Продажа — тело ванильного `sell_work_of_art` и его цена
-		# (`price:sell_work_of_art` = 1 золото × `art_price`, платит
-		# покупатель; престиж −2 % цены; дипломат). Само действие из скрипта до
-		# эффекта не доходит ни одним путём (0.4.0–0.4.5, его прогоны 10-18,
-		# `docs/TESTLOG.md`), хотя вручную продаётся; согласие покупателя
-		# проверено выше его же формулой.
-		add_gold = scope:bag_rtk_art.art_price
-		add_prestige = {
-			value = scope:bag_rtk_art.art_price
-			multiply = -0.02
-		}
-		add_diplomats = -1
 	}
 	# Для строки в журнал: согласие покупателя до оплаты.
 	scope:bag_rtk_art_buyer = {
@@ -95,16 +75,13 @@ bag_rtk_art_fire = {
 	scope:bag_rtk_seller = {
 		set_variable = { name = bag_rtk_art_log_acc value = scope:bag_rtk_art_buyer.var:bag_rtk_art_log_acc }
 	}
-	scope:bag_rtk_art_buyer = {
-		remove_variable = bag_rtk_art_log_acc
-		add_gold = {
-			value = scope:bag_rtk_art.art_price
-			multiply = -1
-		}
+	scope:bag_rtk_art_buyer = { remove_variable = bag_rtk_art_log_acc }
+	if = {
+		limit = { scope:bag_rtk_seller = { has_variable = bag_rtk_art_native_on } }
+		bag_rtk_art_fire_own = yes
 	}
-	move_art_and_owner = {
-		location = scope:bag_rtk_art_buyer.capital
-		country = scope:bag_rtk_art_buyer
+	else = {
+		bag_rtk_art_pay_and_move = yes
 	}
 	if = {
 		limit = { owner ?= scope:bag_rtk_art_buyer }
@@ -123,102 +100,90 @@ bag_rtk_art_fire = {
 	}
 }
 
-# Проба 0.10.0 (его мысль 10-26): продать ванильным действием, как вручную.
-# Мод выбирает творение и покупателя по тем же правилам и кладёт их в
-# переменные; привод `gui/bag_rtk_art_driver.gui` жмёт у покупателя
-# «Продать творение» (`DiplomaticActionItem.OnClick`, как ПКМ по стране), а
-# копия `gui/select_interaction_target.gui` жмёт в списке строку покупателя и
-# строку творения (клик с параметрами, как у Playmaker Cabinet Queue). Одна
-# продажа в месяц. Scope: country (игрок).
-bag_rtk_art_native_pick = {
-	# `bag_rtk_art_for_sale` читает `scope:bag_rtk_seller` — сохранить до первой проверки
-	# (0.10.0–0.10.1 сохраняли после: «нет творений» на каждом месяце, его прогоны 10-26).
-	save_scope_as = bag_rtk_seller
-	# 0.10.1: его прогон 10-26 — три месяца ни строки; какое условие не прошло.
-	if = {
-		limit = { has_global_variable = bag_rtk_log }
-		if = { limit = { has_variable = bag_rtk_art_native_due } debug_log = "bag_rtk: art native, skip, last sale still pending" }
-		if = { limit = { num_of_diplomats < bag_rtk_art_dipl_floor } debug_log = "bag_rtk: art native, skip, diplomats below keep+1" }
-		if = { limit = { NOT = { any_work_of_art_in_country = { bag_rtk_art_for_sale = yes } } } debug_log = "bag_rtk: art native, skip, no work of art of a ticked quality" }
+# Продажа скриптом — тело ванильного `sell_work_of_art` и его цена
+# (`price:sell_work_of_art` = 1 золото × `art_price`, платит покупатель;
+# престиж −2 % цены; дипломат). Ванильное действие из скрипта до эффекта не
+# доходит ни одним путём (0.4.0–0.4.5, его прогоны 10-18, `docs/TESTLOG.md`),
+# хотя вручную продаётся; согласие покупателя проверено выше его же формулой.
+# Scope: work_of_art (scope:bag_rtk_art), покупатель выбран.
+bag_rtk_art_pay_and_move = {
+	scope:bag_rtk_seller = {
+		add_gold = scope:bag_rtk_art.art_price
+		add_prestige = {
+			value = scope:bag_rtk_art.art_price
+			multiply = -0.02
+		}
+		add_diplomats = -1
 	}
-	if = {
-		limit = {
-			NOT = { has_variable = bag_rtk_art_native_due }
-			num_of_diplomats >= bag_rtk_art_dipl_floor
-			any_work_of_art_in_country = { bag_rtk_art_for_sale = yes }
+	scope:bag_rtk_art_buyer = {
+		add_gold = {
+			value = scope:bag_rtk_art.art_price
+			multiply = -1
 		}
-		save_scope_as = bag_rtk_seller
-		remove_variable = bag_rtk_art_tried
-		ordered_work_of_art_in_country = {
-			limit = { bag_rtk_art_for_sale = yes }
-			order_by = art_price
-			max = 100
-			check_range_bounds = no
-			# `bag_rtk_art_buyer` читает `scope:bag_rtk_art` — сохранить до проверки
-			# (0.10.2: «Value of wrong type» на строках 67–68 триггеров).
-			if = {
-				limit = { scope:bag_rtk_seller = { NOT = { has_variable = bag_rtk_art_tried } } }
-				save_scope_as = bag_rtk_art
-			}
-			if = {
-				limit = {
-					scope:bag_rtk_seller = {
-						NOT = { has_variable = bag_rtk_art_tried }
-						any_country_in_diplomatic_range = { bag_rtk_art_buyer = yes }
-					}
-				}
-				scope:bag_rtk_seller = {
-					set_variable = { name = bag_rtk_art_tried value = yes }
-					ordered_country_in_diplomatic_range = {
-						limit = { bag_rtk_art_buyer = yes }
-						order_by = bag_rtk_art_accept
-						max = 1
-						save_scope_as = bag_rtk_art_buyer
-					}
-					set_variable = { name = bag_rtk_art_na value = scope:bag_rtk_art }
-					set_variable = { name = bag_rtk_art_nb value = scope:bag_rtk_art_buyer }
-					set_variable = { name = bag_rtk_art_native_due value = yes }
-				}
-				if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: art native, picked, buyer:" }
-				scope:bag_rtk_art_buyer = { if = { limit = { has_global_variable = bag_rtk_log } debug_log_scopes = no } }
-			}
-		}
-		if = {
-			limit = { NOT = { has_variable = bag_rtk_art_tried } }
-			if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: no buyer for any work of art" }
-		}
-		remove_variable = bag_rtk_art_tried
+	}
+	move_art_and_owner = {
+		location = scope:bag_rtk_art_buyer.capital
+		country = scope:bag_rtk_art_buyer
 	}
 }
 
-# Через секунду после нажатия: ушло ли творение. Scope: country (игрок).
-bag_rtk_art_native_check = {
-	remove_variable = bag_rtk_art_native_due
+# 0.11.0 (его слово 10-26: «своё действие продажи, а не пинай ванилу»): своё
+# действие державы `bag_rtk_sell_art` (`country_interactions/bag_rtk_sell_art.txt`)
+# — цель только держава, творение в переменной продавца `bag_rtk_art_na`;
+# так ваниль зовёт `force_embargo` из `hegemon_demands.txt` (`mode = accept`).
+# Платит ли движок цену и берёт ли дипломата при `accept` — не мерено: зонд
+# сверяет золото и дипломатов и доплачивает сам, если нет. Не сработало действие
+# вовсе — продаёт скриптом, как раньше.
+# Scope: work_of_art (scope:bag_rtk_art), покупатель выбран.
+bag_rtk_art_fire_own = {
+	scope:bag_rtk_seller = {
+		set_variable = { name = bag_rtk_art_na value = scope:bag_rtk_art }
+		set_variable = { name = bag_rtk_art_gold0 value = gold }
+		set_variable = { name = bag_rtk_art_dipl0 value = num_of_diplomats }
+		perform_diplomatic_action = {
+			type = bag_rtk_sell_art
+			actor = scope:bag_rtk_seller
+			recipient = scope:bag_rtk_art_buyer
+			mode = accept
+		}
+		remove_variable = bag_rtk_art_na
+	}
 	if = {
-		limit = { has_variable = bag_rtk_art_na has_variable = bag_rtk_art_nb }
-		var:bag_rtk_art_nb = { save_scope_as = bag_rtk_art_buyer }
-		var:bag_rtk_art_na = { save_scope_as = bag_rtk_art }
-		save_scope_as = bag_rtk_seller
-		var:bag_rtk_art_na = {
+		limit = { owner ?= scope:bag_rtk_art_buyer }
+		if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action ran" }
+		scope:bag_rtk_seller = {
 			if = {
-				limit = { owner ?= scope:bag_rtk_art_buyer }
-				if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: art native, SOLD" }
-				# В историю продаж, как своя продажа (согласия тут нет — его считала игра).
-				scope:bag_rtk_seller = {
-					remove_variable = bag_rtk_art_log_acc
-					set_variable = { name = bag_rtk_art_log_price value = scope:bag_rtk_art.art_price }
-					set_variable = { name = bag_rtk_art_log_q value = scope:bag_rtk_art.art_quality }
-					set_variable = { name = bag_rtk_art_log_gold value = scope:bag_rtk_art_buyer.gold }
-					bag_rtk_art_history_add = yes
-				}
+				limit = { gold > { value = var:bag_rtk_art_gold0 add = { value = scope:bag_rtk_art.art_price multiply = 0.5 } } }
+				if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action, the game paid" }
 			}
 			else = {
-				if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: art native, not sold" }
+				if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action, the game did NOT pay, paying by script" }
+				add_gold = scope:bag_rtk_art.art_price
+				scope:bag_rtk_art_buyer = {
+					add_gold = {
+						value = scope:bag_rtk_art.art_price
+						multiply = -1
+					}
+				}
+			}
+			if = {
+				limit = { num_of_diplomats < { value = var:bag_rtk_art_dipl0 subtract = 0.5 } }
+				if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action, the game took a diplomat" }
+			}
+			else = {
+				if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action, no diplomat taken, taking by script" }
+				add_diplomats = -1
 			}
 		}
 	}
-	remove_variable = bag_rtk_art_na
-	remove_variable = bag_rtk_art_nb
+	else = {
+		if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action did NOT run, selling by script" }
+		bag_rtk_art_pay_and_move = yes
+	}
+	scope:bag_rtk_seller = {
+		remove_variable = bag_rtk_art_gold0
+		remove_variable = bag_rtk_art_dipl0
+	}
 }
 
 # История продаж (0.4.12, его просьба 10-18, «в рамках дебага»): галочка
