@@ -13,11 +13,17 @@
 #     крестьян в локации -300»).
 #   - slaves, tribesmen: a free pop of the type.
 #
+#   - and where the type is short, the promotion speed must cover the shortfall within
+#     the hiring horizon ($MONTHS$, the tab's «Срок найма» slider): the speed is CM's own
+#     reading of the game's promotion modifiers (cm_combined_pop_promotion_speed_for_*),
+#     monthly. A location that promotes too slowly for one year builds on two (his
+#     question 10-26).
+#
 # Pop counts are the game's thousands; a level's jobs are its type's employment_size.
 # Every count here is read live, levels under construction included, so a loop building
 # several levels sees each one it has started.
 
-# Root is the location. $T$ = the building type.
+# Root is the location. $T$ = the building type, $MONTHS$ = the hiring horizon's script value.
 cm_perf_pops_ok = {
 	$T$ = { save_temporary_scope_as = cm_perf_pt }
 	has_global_variable_map = cm_building_type_to_pop_type
@@ -28,10 +34,10 @@ cm_perf_pops_ok = {
 		pop_type:peasants = {
 			cm_location_peasants_available > { value = scope:cm_perf_pt.employment_size add = 0.5 }
 		}
-		pop_type:laborers = { cm_perf_pops_promote = { FREE = cm_location_laborers_available } }
-		pop_type:burghers = { cm_perf_pops_promote = { FREE = cm_location_burghers_available } }
-		pop_type:clergy = { cm_perf_pops_promote = { FREE = cm_location_clergy_available } }
-		pop_type:soldiers = { cm_perf_pops_promote = { FREE = cm_location_soldiers_available } }
+		pop_type:laborers = { cm_perf_pops_promote = { FREE = cm_location_laborers_available SPEED = cm_combined_pop_promotion_speed_for_laborers MONTHS = $MONTHS$ } }
+		pop_type:burghers = { cm_perf_pops_promote = { FREE = cm_location_burghers_available SPEED = cm_combined_pop_promotion_speed_for_burghers MONTHS = $MONTHS$ } }
+		pop_type:clergy = { cm_perf_pops_promote = { FREE = cm_location_clergy_available SPEED = cm_combined_pop_promotion_speed_for_clergy MONTHS = $MONTHS$ } }
+		pop_type:soldiers = { cm_perf_pops_promote = { FREE = cm_location_soldiers_available SPEED = cm_combined_pop_promotion_speed_for_soldiers MONTHS = $MONTHS$ } }
 		pop_type:slaves = {
 			num_pop_type:peasants > 0.5
 			"unemployed_pops_of_pop_type_in_location(pop_type:slaves)" > 0
@@ -45,18 +51,20 @@ cm_perf_pops_ok = {
 }
 
 # Root is the location, expects scope:cm_perf_pt. $FREE$ = the script value counting the
-# type's free places (its pops less every job of the type, built or building).
+# type's free places (its pops less every job of the type, built or building), $SPEED$ its
+# monthly promotion speed, $MONTHS$ the hiring horizon.
 cm_perf_pops_promote = {
 	num_pop_type:peasants > 0.5
 	OR = {
 		$FREE$ > 0
 		AND = {
 			cm_location_peasants_available > { value = scope:cm_perf_pt.employment_size subtract = $FREE$ add = 0.5 }
+			$SPEED$ >= { value = scope:cm_perf_pt.employment_size subtract = $FREE$ divide = $MONTHS$ }
 		}
 	}
 }
 
-# Root is the location. The next RGO level: a thousand laborers or slaves, by the same rule
+# Root is the location, $MONTHS$ = the hiring horizon. The next RGO level: a thousand laborers or slaves, by the same rule
 # (CM counts an RGO level as one of its laborer jobs, cm_location_laborers_available).
 cm_perf_rgo_level_ok = {
 	num_pop_type:peasants > 0.5
@@ -64,6 +72,7 @@ cm_perf_rgo_level_ok = {
 		cm_location_laborers_or_slaves_available > 0
 		AND = {
 			cm_location_peasants_available > { value = 1.5 subtract = cm_location_laborers_or_slaves_available }
+			cm_combined_pop_promotion_speed_for_laborers >= { value = 1 subtract = cm_location_laborers_or_slaves_available divide = $MONTHS$ }
 		}
 	}
 }

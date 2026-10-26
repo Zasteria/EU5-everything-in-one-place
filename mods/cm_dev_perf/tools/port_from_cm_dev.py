@@ -1621,9 +1621,15 @@ def _register_industry_mode(text: str) -> str:
         "\t\t\t}\n\t\t\tcm_ind_mode_changed = yes\n\t\t}\n") + changed, 1)
 
 
-_RULE = "cm_perf_pops_ok = { T = scope:cm_building_type } # cm_dev_perf +perf53: his pop rule"
-_RGO_GATE = "cm_perf_rgo_level_ok = yes"
+# The hiring horizon each gate reads (+perf55): the food tab's slider for auto-food and
+# the food tab, the production tab's for the rest, as +perf48 made it.
+_PROD = "MONTHS = cm_perf_ab_prod_horizon_months"
+_FOOD = "MONTHS = cm_perf_ab_food_horizon_months"
+_RULE = f"cm_perf_pops_ok = {{ T = scope:cm_building_type {_PROD} }} # cm_dev_perf +perf53: his pop rule"
+_RGO_GATE = f"cm_perf_rgo_level_ok = {{ {_PROD} }}"
 _RGO_RULE = f"{_RGO_GATE} # cm_dev_perf +perf53: his pop rule"
+_RGO_FOOD_GATE = f"cm_perf_rgo_level_ok = {{ {_FOOD} }}"
+_RGO_FOOD_RULE = f"{_RGO_FOOD_GATE} # cm_dev_perf +perf53: his pop rule"
 
 # Every place CM decides whether a location has the pops for a new level, and what
 # takes its place (+perf53, his rule 10-26, tools/probe/.../cm_perf_pop_rule_triggers.txt).
@@ -1644,7 +1650,7 @@ _POP_RULE = (
      f"\t{_RGO_RULE}\n", 1),
     ("scripted_triggers/cm_food_auto_build_triggers.txt",
      "\t$pool$ > 0\n",
-     "\tcm_perf_pops_ok = { T = scope:cm_food_pops_type } # cm_dev_perf +perf53: his pop rule\n", 1),
+     f"\tcm_perf_pops_ok = {{ T = scope:cm_food_pops_type {_FOOD} }} # cm_dev_perf +perf53: his pop rule\n", 1),
     # The rule reads the building's own type, so the pool each caller named goes.
     ("scripted_triggers/cm_food_auto_build_triggers.txt",
      " pool = cm_location_peasants_available }", " }", 3),
@@ -1656,7 +1662,7 @@ _POP_RULE = (
     ("scripted_triggers/cm_food_auto_build_triggers.txt",
      "\t# cm_dev_perf +perf42: the RGO's own pool, its levels and the laborer jobs counted\n"
      "\tcm_location_laborers_or_slaves_available > 0\n",
-     f"\t{_RGO_RULE}\n", 1),
+     f"\t{_RGO_FOOD_RULE}\n", 1),
     ("scripted_triggers/cm_rgo_triggers.txt",
      "\t\tcm_location_rgo_promotion_buffer_slack >= 0\n", f"\t\t{_RGO_RULE}\n", 1),
     ("scripted_guis/cm_rgos.txt",
@@ -1668,12 +1674,12 @@ _POP_RULE = (
     ("scripted_effects/cm_queue_approval_effects.txt",
      "\t\t\t\t\t\t# cm_dev_perf +perf42: a level only for laborers or slaves who are there\n"
      "\t\t\t\t\t\tcm_location_laborers_or_slaves_available > 0\n",
-     f"\t\t\t\t\t\t{_RGO_RULE}\n", 1),
+     f"\t\t\t\t\t\t{_RGO_FOOD_RULE}\n", 1),
     ("scripted_effects/cm_ab_production_effects.txt",
      "local_var:cm_ab_rgo_slack > local_var:cm_ab_rgo_done # cm_dev_perf +perf44: room left after the levels built",
      _RGO_RULE, 2),
     ("scripted_effects/cm_ab_food_effects.txt",
-     "cm_perf_ab_food_rgo_slack > 0", _RGO_GATE, 2),
+     "cm_perf_ab_food_rgo_slack > 0", _RGO_FOOD_GATE, 2),
     ("scripted_effects/cm_ab_core_effects.txt",
      "\t\t\t\t\t\tcm_ab_can_afford_rgo = { POOL = cm_ab_pool_core }\n\t\t\t\t\t}\n"
      "\t\t\t\t\tchange_local_variable = { name = cm_ab_core_rgo_guard add = 1 }\n",
@@ -1914,7 +1920,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 54
+PERF_REVISION = 55
 
 # CMF's own `is_host`, under a name neither the game nor any CMF build takes.
 # It reads the host country CMF 2.5.0 records (`_cmm_mark_host_country`), so
