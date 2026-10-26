@@ -1,0 +1,62 @@
+﻿# cm_dev_perf +perf62: Building Cleanup by his check of 10-26.
+
+# A closed building runs the method that earns most before it is weighed for reopening: no
+# one picks a method for a closed building, the game's automation only switches open ones.
+# Root is the building.
+cm_perf_cu_best_pm = {
+	ordered_production_method_of_building = {
+		order_by = production_method_profit
+		max = 1
+		check_range_bounds = no
+		save_scope_as = cm_perf_cu_pm
+	}
+	if = {
+		limit = { exists = scope:cm_perf_cu_pm }
+		set_production_method = scope:cm_perf_cu_pm
+	}
+}
+
+# A building this system closed that the reopen pass left shut gains a year; one that stayed
+# shut three cycles running on its best method is destroyed where Destroy is on (his rule
+# 10-26: a building no method makes profitable for some time goes). Reopened or gone, its
+# count is dropped. Run right after the reopen decision. Root is the building, expects
+# scope:cm_country, scope:cm_location, scope:cm_building_type.
+cm_perf_cu_age = {
+	if = {
+		limit = { cm_cu_is_tracked_closed = yes }
+		save_temporary_scope_as = cm_perf_cu_b
+		scope:cm_location = {
+			set_local_variable = { name = cm_perf_cu_n value = 1 }
+			if = {
+				limit = {
+					has_variable_map = cm_perf_cu_years
+					is_key_in_variable_map = { name = cm_perf_cu_years target = scope:cm_building_type }
+				}
+				set_local_variable = { name = cm_perf_cu_n value = "variable_map(cm_perf_cu_years|scope:cm_building_type)" }
+				change_local_variable = { name = cm_perf_cu_n add = 1 }
+			}
+			add_to_variable_map = { name = cm_perf_cu_years key = scope:cm_building_type value = local_var:cm_perf_cu_n }
+		}
+		if = {
+			limit = {
+				scope:cm_country = { exists = var:cm_cu_destroy }
+				scope:cm_location = { "variable_map(cm_perf_cu_years|scope:cm_building_type)" >= 3 }
+			}
+			cm_cu_log = { ACTION = cm_log_cu_deleted }
+			scope:cm_location = {
+				remove_from_variable_map = { name = cm_perf_cu_years key = scope:cm_building_type }
+				destroy_building = scope:cm_perf_cu_b
+			}
+			cm_cu_untrack = yes
+		}
+	}
+	else_if = {
+		limit = {
+			scope:cm_location = {
+				has_variable_map = cm_perf_cu_years
+				is_key_in_variable_map = { name = cm_perf_cu_years target = scope:cm_building_type }
+			}
+		}
+		scope:cm_location = { remove_from_variable_map = { name = cm_perf_cu_years key = scope:cm_building_type } }
+	}
+}

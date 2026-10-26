@@ -270,7 +270,7 @@ cm_cu_validate_tracking = {
 # Expects scope:cm_location and scope:cm_country.
 cm_cu_stage_untrack_if_empty = {
 	if = {
-		limit = { scope:cm_location = { NOT = { variable_list_size = { name = cm_cu_closed_types value >= 1 } } } }
+		limit = { scope:cm_location = { OR = { NOT = { has_variable_list = cm_cu_closed_types } NOT = { variable_list_size = { name = cm_cu_closed_types value >= 1 } } } } # cm_dev_perf +perf62 }
 		scope:cm_country = { add_to_variable_list = { name = cm_cu_untracked_locs target = scope:cm_location } }
 	}
 }
@@ -426,6 +426,7 @@ cm_cu_reopen_pass = {
 				}
 				save_scope_as = cm_building
 				building_type = { save_scope_as = cm_building_type }
+				cm_perf_cu_best_pm = yes # cm_dev_perf +perf62: his check 10-26
 				cm_perf_cu_reopen_probe = yes # cm_dev_perf +perf61
 				if = {
 					# A protected core-goods producer is not judged on profit, so its group's recovery is
@@ -445,6 +446,7 @@ cm_cu_reopen_pass = {
 					}
 					cm_cu_untrack = yes
 				}
+				cm_perf_cu_age = yes # cm_dev_perf +perf62: his rule 10-26
 			}
 		}
 		cm_cu_apply_untracked_locs = yes
