@@ -1842,7 +1842,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 51
+PERF_REVISION = 52
 
 # CMF's own `is_host`, under a name neither the game nor any CMF build takes.
 # It reads the host country CMF 2.5.0 records (`_cmm_mark_host_country`), so
@@ -1993,6 +1993,20 @@ def main() -> int:
             path.write_text("\ufeff" + text, encoding="utf-8")
     if not hosts:
         raise SystemExit("CM no longer calls is_host; drop the cm_is_host pass")
+    # +perf52: every RGO level CM orders says so in debug.log (his run 10-26:
+    # a wave of RGO builds the build probe did not see, RGOs being no building).
+    rgo_sites = 0
+    for path in sorted((MOD / "in_game/common/scripted_effects").glob("*.txt")):
+        text = path.read_text(encoding="utf-8-sig")
+        calls = iter(range(1, 100))
+        text, n = re.subn(r"^([ \t]*)(construct_rgo_upgrade = \{ \})",
+                          lambda m: f"{m.group(1)}cm_perf_rgo_probe = {{ SITE = {path.stem}_{next(calls)} }}"
+                                    f" # cm_dev_perf +perf52\n{m.group(1)}{m.group(2)}", text, flags=re.M)
+        if n:
+            rgo_sites += n
+            path.write_text("﻿" + text, encoding="utf-8")
+    if not rgo_sites:
+        raise SystemExit("CM no longer calls construct_rgo_upgrade; drop the RGO probe")
     (MOD / "in_game/common/scripted_triggers/cm_perf_host_triggers.txt").write_text(
         "\ufeff" + HOST_TRIGGER, encoding="utf-8")
     # A lookup into a map the scope does not have yet is an error, not false
