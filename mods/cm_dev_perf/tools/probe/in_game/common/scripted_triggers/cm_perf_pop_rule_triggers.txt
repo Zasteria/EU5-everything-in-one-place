@@ -5,10 +5,12 @@
 #
 #   - 500 peasants or fewer in the location: no level of anything but nobles.
 #   - nobles: always.
-#   - peasants: free peasants for the whole level, and more than the level plus 500 in all.
-#   - laborers, burghers, clergy, soldiers: a free pop of the type, or peasants to promote
-#     into the shortfall - more than the shortfall plus 500 in all, and every peasant job
-#     still staffed after it ("я вообще никогда не хочу видеть … крестьян в локации -300").
+#   - peasants: more free peasants than the level plus 500.
+#   - laborers, burghers, clergy, soldiers: a free pop of the type, or more free peasants
+#     than the shortfall plus 500 - free meaning after every peasant job, so a promotion
+#     never empties a peasant building (his correction 10-26: «иначе он выгребет на
+#     повышение людей из крестьянских домиков»; «я вообще никогда не хочу видеть …
+#     крестьян в локации -300»).
 #   - slaves, tribesmen: a free pop of the type.
 #
 # Pop counts are the game's thousands; a level's jobs are its type's employment_size.
@@ -24,8 +26,7 @@ cm_perf_pops_ok = {
 		trigger = "global_variable_map(cm_building_type_to_pop_type|scope:cm_perf_pt)"
 		pop_type:nobles = { always = yes }
 		pop_type:peasants = {
-			cm_location_peasants_available >= scope:cm_perf_pt.employment_size
-			num_pop_type:peasants > { value = scope:cm_perf_pt.employment_size add = 0.5 }
+			cm_location_peasants_available > { value = scope:cm_perf_pt.employment_size add = 0.5 }
 		}
 		pop_type:laborers = { cm_perf_pops_promote = { FREE = cm_location_laborers_available } }
 		pop_type:burghers = { cm_perf_pops_promote = { FREE = cm_location_burghers_available } }
@@ -50,8 +51,7 @@ cm_perf_pops_promote = {
 	OR = {
 		$FREE$ > 0
 		AND = {
-			num_pop_type:peasants > { value = scope:cm_perf_pt.employment_size subtract = $FREE$ add = 0.5 }
-			cm_location_peasants_available >= { value = scope:cm_perf_pt.employment_size subtract = $FREE$ }
+			cm_location_peasants_available > { value = scope:cm_perf_pt.employment_size subtract = $FREE$ add = 0.5 }
 		}
 	}
 }
@@ -63,8 +63,7 @@ cm_perf_rgo_level_ok = {
 	OR = {
 		cm_location_laborers_or_slaves_available > 0
 		AND = {
-			num_pop_type:peasants > { value = 1.5 subtract = cm_location_laborers_or_slaves_available }
-			cm_location_peasants_available >= { value = 1 subtract = cm_location_laborers_or_slaves_available }
+			cm_location_peasants_available > { value = 1.5 subtract = cm_location_laborers_or_slaves_available }
 		}
 	}
 }
