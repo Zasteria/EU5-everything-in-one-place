@@ -1,4 +1,4 @@
-# Pitfalls
+﻿# Pitfalls
 
 Mistakes already made here, each with the symptom that gave it away. Every one
 cost at least one round trip through the game: none of them raises an error you
@@ -7,6 +7,8 @@ would notice.
 **«Возьми этот инструмент» — это `cp` и замена префикса, а не новый код**, и
 «соберём заново по подобию» оплачивается его прогонами:
 [`archive/wtp2_failed.md`](archive/where_to_produce/wtp2_failed.md), 2026-09-12.
+
+**Генератор, дописывающий `# пометку` после замены посреди строки, уносит в комментарий её закрывающую `}`.** 2026-10-26, `cm_dev_perf` +perf62: всё, что ниже в `cm_cleanup_effects.txt`, пропало без единой ошибки — очистка нашла 84 здания под снос и не снесла ни одного, лог не писался. Счёт скобок «с комментариями» сходился. **Пометку — только в конце строки замены; `check_script` теперь считает скобки и без комментариев.**
 
 **Мод с неполным `metadata.json` лаунчер не показывает вовсе**, и не говорит
 почему. Дважды: 09-20 у `marker_throttle` не было `game_custom_data`, 09-22 у

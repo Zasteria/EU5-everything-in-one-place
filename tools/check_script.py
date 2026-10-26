@@ -404,6 +404,17 @@ def problems(root: Path) -> list[str]:
                 found.append(f"{where}: {opened} `{{` against {closed} `}}` — "
                              f"count them in the comments too; a stray brace in "
                              f"one is invisible to the engine and to a reader")
+            # **And without the comments**, which the count above cannot see
+            # when the comment holds the brace the code lacks. 2026-10-26,
+            # `cm_dev_perf` +perf62: a generator appended `# note` after a
+            # replacement that ended mid-line, the line's closing `}` went into
+            # the comment, and every effect below it in the file was gone —
+            # cleanup found 84 buildings to remove and removed none, silently.
+            code = re.sub(r'"[^"\n]*"', '""', body)
+            if code.count("{") != code.count("}") and opened == closed:
+                found.append(f"{where}: braces balance only with the comments — "
+                             f"{code.count('{')} `{{` against {code.count('}')} `}}` "
+                             f"in code; a comment swallowed a closing brace")
 
             if "scripted_triggers" not in path.parts:
                 continue
