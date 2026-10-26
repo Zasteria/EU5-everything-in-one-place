@@ -8,8 +8,9 @@
 # получатель-продавец, престиж −2 % и перенос творения — как у ванильного
 # `sell_work_of_art`. Дипломата берёт вызов (`bag_rtk_art_fire_own`).
 # 0.12.0: `type = diplomacy` общему действию нельзя (ошибка разбора) и с ним
-# «Targetted action shouldn't be looking for a recipient» — покупатель теперь
-# `target_1`, тип `owncountry`. В списках игры не показывается, ИИ им не пользуется.
+# «Targetted action shouldn't be looking for a recipient»; `target_1` вызов не
+# передаёт (0.12.2: всё ушло одной стране) — покупатель лежит на самом творении,
+# `var:bag_rtk_art_buyer`, тип `owncountry`. В списках игры не показывается, ИИ им не пользуется.
 bag_rtk_sell_art = {
 	type = owncountry
 	show_in_gui_list = no
@@ -29,7 +30,7 @@ bag_rtk_sell_art = {
 			value = 1
 		}
 	}
-	payer = scope:target_1
+	payer = scope:target.var:bag_rtk_art_buyer
 	payee = scope:actor
 
 	potential = {
@@ -55,26 +56,10 @@ bag_rtk_sell_art = {
 		}
 	}
 
-	select_trigger = {
-		looking_for_a = country
-		target_flag = target_1
-		name = "choose_country"
-		column = {
-			data = country_diplomacy_info_trade
-		}
-		visible = {
-			is_real_country = yes
-			NOT = { this = scope:actor }
-			NOT = { country_type = building }
-		}
-		enabled = {
-			NOT = { is_enemy_of = scope:actor }
-		}
-	}
-
 	effect = {
 		if = {
-			limit = { exists = scope:target exists = scope:target_1 }
+			limit = { exists = scope:target scope:target = { has_variable = bag_rtk_art_buyer } }
+			scope:target.var:bag_rtk_art_buyer = { save_scope_as = bag_rtk_art_to }
 			scope:actor = {
 				add_prestige = {
 					value = scope:target.art_price
@@ -82,7 +67,7 @@ bag_rtk_sell_art = {
 				}
 			}
 			scope:target = {
-				move_art_and_owner = { location = scope:target_1.capital country = scope:target_1 }
+				move_art_and_owner = { location = scope:bag_rtk_art_to.capital country = scope:bag_rtk_art_to }
 			}
 			# Учёт мода: сколько продаж дошло до эффекта, история продаж, заплатил ли движок.
 			scope:actor = {
@@ -90,7 +75,7 @@ bag_rtk_sell_art = {
 				save_scope_as = bag_rtk_seller
 			}
 			scope:target = { save_scope_as = bag_rtk_art }
-			scope:target_1 = { save_scope_as = bag_rtk_art_buyer }
+			scope:bag_rtk_art_to = { save_scope_as = bag_rtk_art_buyer }
 			scope:actor = {
 				if = {
 					limit = { has_variable = bag_rtk_art_gold0 }
@@ -105,9 +90,10 @@ bag_rtk_sell_art = {
 				}
 				set_variable = { name = bag_rtk_art_log_price value = scope:target.art_price }
 				set_variable = { name = bag_rtk_art_log_q value = scope:target.art_quality }
-				set_variable = { name = bag_rtk_art_log_gold value = scope:target_1.gold }
+				set_variable = { name = bag_rtk_art_log_gold value = scope:bag_rtk_art_to.gold }
 				bag_rtk_art_history_add = yes
 			}
+			scope:target = { remove_variable = bag_rtk_art_buyer }
 		}
 	}
 }

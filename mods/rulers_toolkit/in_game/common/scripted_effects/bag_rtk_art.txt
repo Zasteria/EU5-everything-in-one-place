@@ -155,11 +155,16 @@ bag_rtk_art_fire_own = {
 		if = { limit = { has_variable = bag_rtk_art_fired } change_variable = { name = bag_rtk_art_fired add = 1 } } else = { set_variable = { name = bag_rtk_art_fired value = 1 } }
 		add_diplomats = -1
 		remove_variable = bag_rtk_art_stop
+		# Покупателя вызов не передаёт (`target_1` молча терялся, 0.12.2) — он лежит на творении.
+		scope:bag_rtk_art = { set_variable = { name = bag_rtk_art_buyer value = scope:bag_rtk_art_buyer } }
+		if = {
+			limit = { has_global_variable = bag_rtk_log scope:bag_rtk_art = { NOT = { has_variable = bag_rtk_art_buyer } } }
+			debug_log = "bag_rtk: own sell action, the work of art does not keep a variable"
+		}
 		fire_generic_action = {
 			type = bag_rtk_sell_art
 			actor = scope:bag_rtk_seller
 			target = scope:bag_rtk_art
-			target_1 = scope:bag_rtk_art_buyer
 		}
 	}
 	scope:bag_rtk_art_buyer = { set_variable = { name = bag_rtk_art_bought value = yes days = 25 } }
