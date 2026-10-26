@@ -534,13 +534,30 @@ SETTING_WORDS = {
     },
     "cm__ab_production_horizon": {
         "russian": ("Срок найма, лет",
-                    "Сколько лет автостройка готова ждать, пока прирост населения заполнит новый уровень "
-                    "производственного здания или RGO людьми нужного типа. Меньше — строит там, где люди "
-                    "уже есть, и не копит пустые здания."),
+                    "За сколько лет повышение должно закрыть уже начатую нехватку людей нужного типа, прежде чем "
+                    "автостройка начнёт ещё один уровень производственного здания или RGO. Первый уровень "
+                    "строится всегда, если свободных крестьян хватает на нехватку всех сословий плюс 500. "
+                    "Меньше — нехватки не копятся."),
         "english": ("Hiring Horizon, Years",
-                    "How many years Auto-Build will wait for population growth to staff a new level of a "
-                    "production building or RGO with the pops it needs. Lower builds where the pops already "
-                    "are, and stops piling up empty buildings."),
+                    "How many years promotion may take to fill a shortfall already started before Auto-Build "
+                    "starts another level of a production building or RGO. A first level is built whenever the "
+                    "free peasants cover every class's shortfall plus 500. Lower keeps shortfalls from piling up."),
+    },
+    "cm__ae_horizon": {
+        "russian": ("Срок найма для авторасширения, лет",
+                    "То же, что «Срок найма» автостройки, для авторасширения зданий и RGO: за сколько лет повышение "
+                    "должно закрыть уже начатую нехватку людей, прежде чем строить следующий уровень."),
+        "english": ("Hiring Horizon for Auto-Expand, Years",
+                    "As Auto-Build's hiring horizon, for auto-expanding buildings and RGOs: how many years "
+                    "promotion may take to fill a shortfall already started before the next level."),
+    },
+    "cm__af_horizon": {
+        "russian": ("Срок найма для житниц, лет",
+                    "То же, что «Срок найма» автостройки, для авторасширения еды (житниц): за сколько лет повышение "
+                    "должно закрыть уже начатую нехватку людей, прежде чем строить следующий уровень."),
+        "english": ("Hiring Horizon for Auto-Food, Years",
+                    "As Auto-Build's hiring horizon, for auto-food: how many years promotion may take to fill a "
+                    "shortfall already started before the next level."),
     },
     "cm__ab_food_take_manual": {
         "russian": ("Брать житницы, включённые вручную",
@@ -1185,6 +1202,33 @@ def _every_horizon(text: str) -> str:
     return text.replace("# Projected six-year pop slack", "# Projected pop slack over the hiring horizon (cm_dev_perf: the production tab's slider)")
 
 
+def _register_ae_horizons(text: str) -> str:
+    """+perf59, his ask 10-26: auto-expand and auto-food get hiring-horizon sliders of
+    their own on the auto-expand tab, after the metric dropdown, instead of borrowing
+    Auto-Build production's. Read by cm_perf_ae/af_horizon_months."""
+    sync = ("\tcmm_sync_setting_alias = {\n\t\tsetting = cm__expand_metric\n"
+            "\t\talias = cm_expand_metric\n\t}\n")
+    if text.count(sync) != 1:
+        raise SystemExit("cmm: the auto-expand metric setting has changed shape")
+    sliders = ""
+    branches = ""
+    for key in ("ae_horizon", "af_horizon"):
+        sliders += (
+            f"\n\t# cm_dev_perf +perf59: the hiring horizon\n"
+            f"\tcmm_register_slider_setting = {{\n\t\tmod_id = cm\n\t\tsetting_id = {key}\n"
+            "\t\ttab_id = auto_expand\n\t\tgroup_id = priority_list\n\t\tdefault_value = 6\n"
+            "\t\tmin_value = 1\n\t\tmax_value = 10\n\t\tstep_value = 1\n\t}\n"
+            f"\tcmm_sync_setting_alias = {{\n\t\tsetting = cm__{key}\n\t\talias = cm_{key}\n\t}}\n")
+        branches += (
+            f"\t\t# cm_dev_perf +perf59\n\t\tflag:cm__{key} = {{\n\t\t\tcmm_sync_setting_alias = {{\n"
+            f"\t\t\t\tsetting = cm__{key}\n\t\t\t\talias = cm_{key}\n\t\t\t}}\n\t\t}}\n")
+    text = text.replace(sync, sync + sliders, 1)
+    changed = "\t\tflag:cm__expand_metric = {\n"
+    if text.count(changed) != 1:
+        raise SystemExit("cmm: the auto-expand metric branch has changed shape")
+    return text.replace(changed, branches + changed, 1)
+
+
 def _register_ab_prod(text: str) -> str:
     """The slider, after the algorithm dropdown on the production tab."""
     sync = ("\tcmm_sync_setting_alias = {\n\t\tsetting = cm__ab_production_algorithm\n"
@@ -1621,15 +1665,24 @@ def _register_industry_mode(text: str) -> str:
         "\t\t\t}\n\t\t\tcm_ind_mode_changed = yes\n\t\t}\n") + changed, 1)
 
 
-# The hiring horizon each gate reads (+perf55): the food tab's slider for auto-food and
-# the food tab, the production tab's for the rest, as +perf48 made it.
+# The hiring horizon each gate reads (+perf59, his ask 10-26): Auto-Build production and
+# food their tabs' sliders, auto-expand and auto-food the two on the auto-expand tab, and a
+# gate several passes share the pass running now (cm_perf_horizon_months).
 _PROD = "MONTHS = cm_perf_ab_prod_horizon_months"
 _FOOD = "MONTHS = cm_perf_ab_food_horizon_months"
-_RULE = f"cm_perf_pops_ok = {{ T = scope:cm_building_type {_PROD} }} # cm_dev_perf +perf53: his pop rule"
-_RGO_GATE = f"cm_perf_rgo_level_ok = {{ {_PROD} }}"
-_RGO_RULE = f"{_RGO_GATE} # cm_dev_perf +perf53: his pop rule"
-_RGO_FOOD_GATE = f"cm_perf_rgo_level_ok = {{ {_FOOD} }}"
-_RGO_FOOD_RULE = f"{_RGO_FOOD_GATE} # cm_dev_perf +perf53: his pop rule"
+_AE = "MONTHS = cm_perf_ae_horizon_months"
+_AF = "MONTHS = cm_perf_af_horizon_months"
+_NOW = "MONTHS = cm_perf_horizon_months"
+_POP_MARK = " # cm_dev_perf +perf53: his pop rule"
+
+
+def _rule(scope: str, months: str) -> str:
+    return f"cm_perf_pops_ok = {{ T = {scope} {months} }}"
+
+
+def _rgo(months: str) -> str:
+    return f"cm_perf_rgo_level_ok = {{ {months} }}"
+
 
 # Every place CM decides whether a location has the pops for a new level, and what
 # takes its place (+perf53, his rule 10-26, tools/probe/.../cm_perf_pop_rule_triggers.txt).
@@ -1638,19 +1691,18 @@ _POP_RULE = (
     ("scripted_triggers/cm_location_has_enough_pops_available_triggers.txt",
      "\tOR = {\n\t\tcm_location_unemployed_for_building_type > 0\n"
      "\t\tcm_location_promotion_buffer_covers_deficit = yes\n\t}\n",
-     f"\t{_RULE}\n", 1),
+     f"\t{_rule('scope:cm_building_type', _NOW)}{_POP_MARK}\n", 1),
     ("scripted_triggers/cm_perf_ab_production_triggers.txt",
-     "\tcm_perf_ab_prod_slack > 0\n", f"\t{_RULE}\n", 1),
+     "\tcm_perf_ab_prod_slack > 0\n", f"\t{_rule('scope:cm_building_type', _PROD)}{_POP_MARK}\n", 1),
     ("scripted_triggers/cm_ab_triggers.txt",
      "cm_ab_core_pops_ok = {\n\tcm_ab_core_pop_room > 0\n}",
-     f"cm_ab_core_pops_ok = {{\n\tcm_ab_core_pop_room > 0\n\t{_RULE}\n}}", 1),
+     f"cm_ab_core_pops_ok = {{\n\tcm_ab_core_pop_room > 0\n\t{_rule('scope:cm_building_type', _PROD)}{_POP_MARK}\n}}", 1),
     ("scripted_triggers/cm_ab_triggers.txt",
      "\tOR = {\n\t\tcm_location_laborers_or_slaves_available > 0\n"
      "\t\tcm_location_laborers_promotion_source_pool > 0\n\t}\n",
-     f"\t{_RGO_RULE}\n", 1),
+     f"\t{_rgo(_PROD)}{_POP_MARK}\n", 1),
     ("scripted_triggers/cm_food_auto_build_triggers.txt",
-     "\t$pool$ > 0\n",
-     f"\tcm_perf_pops_ok = {{ T = scope:cm_food_pops_type {_FOOD} }} # cm_dev_perf +perf53: his pop rule\n", 1),
+     "\t$pool$ > 0\n", f"\t{_rule('scope:cm_food_pops_type', _NOW)}{_POP_MARK}\n", 1),
     # The rule reads the building's own type, so the pool each caller named goes.
     ("scripted_triggers/cm_food_auto_build_triggers.txt",
      " pool = cm_location_peasants_available }", " }", 3),
@@ -1662,34 +1714,53 @@ _POP_RULE = (
     ("scripted_triggers/cm_food_auto_build_triggers.txt",
      "\t# cm_dev_perf +perf42: the RGO's own pool, its levels and the laborer jobs counted\n"
      "\tcm_location_laborers_or_slaves_available > 0\n",
-     f"\t{_RGO_FOOD_RULE}\n", 1),
+     f"\t{_rgo(_NOW)}{_POP_MARK}\n", 1),
     ("scripted_triggers/cm_rgo_triggers.txt",
-     "\t\tcm_location_rgo_promotion_buffer_slack >= 0\n", f"\t\t{_RGO_RULE}\n", 1),
+     "\t\tcm_location_rgo_promotion_buffer_slack >= 0\n", f"\t\t{_rgo(_AE)}{_POP_MARK}\n", 1),
     ("scripted_guis/cm_rgos.txt",
-     "\t\tcm_location_rgo_promotion_buffer_slack >= 0\n", f"\t\t{_RGO_RULE}\n", 1),
+     "\t\tcm_location_rgo_promotion_buffer_slack >= 0\n", f"\t\t{_rgo(_AE)}{_POP_MARK}\n", 1),
     # The drains counted levels against a slack in thousands of pops: `>=` let the first
     # level through on a slack of exactly 0, a thousand laborers short (his run 10-26).
     ("scripted_effects/cm_queue_approval_effects.txt",
-     "local_var:cm_q_rgo_slack >= local_var:cm_q_rgo_done", _RGO_GATE, 2),
+     "local_var:cm_q_rgo_slack >= local_var:cm_q_rgo_done", _rgo(_AE), 2),
     ("scripted_effects/cm_queue_approval_effects.txt",
      "\t\t\t\t\t\t# cm_dev_perf +perf42: a level only for laborers or slaves who are there\n"
      "\t\t\t\t\t\tcm_location_laborers_or_slaves_available > 0\n",
-     f"\t\t\t\t\t\t{_RGO_FOOD_RULE}\n", 1),
+     f"\t\t\t\t\t\t{_rgo(_AF)}{_POP_MARK}\n", 1),
     ("scripted_effects/cm_ab_production_effects.txt",
      "local_var:cm_ab_rgo_slack > local_var:cm_ab_rgo_done # cm_dev_perf +perf44: room left after the levels built",
-     _RGO_RULE, 2),
+     f"{_rgo(_PROD)}{_POP_MARK}", 2),
     ("scripted_effects/cm_ab_food_effects.txt",
-     "cm_perf_ab_food_rgo_slack > 0", _RGO_FOOD_GATE, 2),
+     "cm_perf_ab_food_rgo_slack > 0", _rgo(_FOOD), 2),
     ("scripted_effects/cm_ab_core_effects.txt",
      "\t\t\t\t\t\tcm_ab_can_afford_rgo = { POOL = cm_ab_pool_core }\n\t\t\t\t\t}\n"
      "\t\t\t\t\tchange_local_variable = { name = cm_ab_core_rgo_guard add = 1 }\n",
-     f"\t\t\t\t\t\tcm_ab_can_afford_rgo = {{ POOL = cm_ab_pool_core }}\n\t\t\t\t\t\t{_RGO_RULE}\n\t\t\t\t\t}}\n"
+     f"\t\t\t\t\t\tcm_ab_can_afford_rgo = {{ POOL = cm_ab_pool_core }}\n\t\t\t\t\t\t{_rgo(_PROD)}{_POP_MARK}\n\t\t\t\t\t}}\n"
      "\t\t\t\t\tchange_local_variable = { name = cm_ab_core_rgo_guard add = 1 }\n", 1),
     # +perf57: a location its peasants cannot cover is held until half the time the debt
     # takes to clear, set where the sampler visits each tracked location before staging.
     ("scripted_effects/cm_pop_sample_effects.txt",
      "\t\t\t\tcm_pop_sample = yes\n",
      "\t\t\t\tcm_pop_sample = yes\n\t\t\t\tcm_perf_pop_hold_update = yes # cm_dev_perf +perf57: his rule 10-26\n", 1),
+    # +perf59, his word 10-26: capital and market-centre buildings, point buildings and
+    # strong ones, build whatever the pops (control buildings never asked).
+    ("scripted_effects/cm_ab_custom_effects.txt",
+     "cm_location_allowed_to_build = { target = scope:cm_building_type }\n"
+     "\t\t\tcm_location_has_enough_pops_available = yes\n"
+     "\t\t\tcm_check_location_meets_min_market_access = yes\n",
+     "cm_location_allowed_to_build = { target = scope:cm_building_type }\n"
+     "\t\t\t# cm_dev_perf +perf59: no pop rule for point buildings (his word 10-26)\n"
+     "\t\t\tcm_check_location_meets_min_market_access = yes\n", 2),
+    # +perf59: the pass running now, for the gates several passes share; the approval
+    # drain marks it too (_probe_feature_names).
+    ("scripted_effects/cm_feature_effects.txt",
+     "\t\t\t\t\t\tswitch = {\n\t\t\t\t\t\t\ttrigger = scope:cm_feature\n",
+     "\t\t\t\t\t\tset_global_variable = { name = cm_perf_bp_feat value = scope:cm_feature } # cm_dev_perf +perf59\n"
+     "\t\t\t\t\t\tswitch = {\n\t\t\t\t\t\t\ttrigger = scope:cm_feature\n", 1),
+    ("scripted_effects/cm_feature_effects.txt",
+     "\t\t\t\t\tscope:cm_country = { cm_ab_stage_category = yes }\n",
+     "\t\t\t\t\tset_global_variable = { name = cm_perf_bp_feat value = scope:cm_ab_cat } # cm_dev_perf +perf59\n"
+     "\t\t\t\t\tscope:cm_country = { cm_ab_stage_category = yes }\n", 1),
 )
 
 
@@ -1788,6 +1859,7 @@ EDITS = (
     (CMM, "the food tab's slider and checkbox", _register_ab_food),
     (AB_PROD, "the production tab's hiring horizon", _ab_prod_horizon),
     (CMM, "the production tab's slider", _register_ab_prod),
+    (CMM, "auto-expand's and auto-food's sliders", _register_ae_horizons),
     (MISC_VALUES, "every pop buffer reads the hiring horizon", _every_horizon),
     (CLEANUP, "reopen a closed type with nothing open to vouch for it", _cleanup_lone_reopen),
     ("in_game/common/scripted_triggers/cm_food_auto_build_triggers.txt", "fishing villages on rivers", _fishing_on_rivers),
@@ -1925,7 +1997,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 58
+PERF_REVISION = 59
 
 # CMF's own `is_host`, under a name neither the game nor any CMF build takes.
 # It reads the host country CMF 2.5.0 records (`_cmm_mark_host_country`), so

@@ -17,7 +17,8 @@ cm_perf_peasant_debt = {
 
 # Months until the debt is paid off by the peasants' own growth, as the sampler measured
 # it (births and migration; promotion moves peasants on and pays nothing), halved: his
-# rule is to look again at half the time it would take; never under 1 nor over 60. Where
+# rule is to look again at half the time it would take; never under 1 nor over 24 (+perf59:
+# at 60 his age-6 save held almost every short location for five years). Where
 # that cannot be counted he wants a look «между 3 и 6 месяцами» (10-26): 3 while the
 # sampler has no reading yet (it has one the month after), 6 where the peasants do not
 # grow. Root is the location.
@@ -36,7 +37,7 @@ cm_perf_pop_hold_months = {
 		divide = var:cm_pop_rate_peasants
 		multiply = 0.5
 		min = 1
-		max = 60
+		max = 24
 	}
 }
 
@@ -45,3 +46,46 @@ cm_perf_pop_hold_months = {
 cm_perf_ph_v1 = { value = global_var:cm_perf_ph_v1 }
 cm_perf_ph_v2 = { value = global_var:cm_perf_ph_v2 }
 cm_perf_ph_v3 = { value = global_var:cm_perf_ph_v3 }
+
+# The hiring horizon in months for the pass running now (+perf59, his ask 10-26: a slider of
+# its own for auto-expand and for auto-food on the auto-expand tab, not only Auto-Build's).
+# cm_perf_bp_feat is the pass, set where staging and the approval drain enter each feature
+# and category. Auto-Build food and production keep their tabs' sliders. Root is the location.
+cm_perf_ae_horizon_months = {
+	value = 72
+	if = {
+		limit = { owner = { exists = var:cm_ae_horizon } }
+		value = owner.var:cm_ae_horizon
+		multiply = 12
+	}
+}
+cm_perf_af_horizon_months = {
+	value = 72
+	if = {
+		limit = { owner = { exists = var:cm_af_horizon } }
+		value = owner.var:cm_af_horizon
+		multiply = 12
+	}
+}
+cm_perf_horizon_months = {
+	value = cm_perf_ab_prod_horizon_months
+	if = {
+		limit = { exists = global_var:cm_perf_bp_feat }
+		if = {
+			limit = {
+				OR = {
+					global_var:cm_perf_bp_feat = flag:cm_feature_auto_expand_buildings
+					global_var:cm_perf_bp_feat = flag:cm_feature_auto_expand_rgos
+					global_var:cm_perf_bp_feat = flag:cm_feature_upgrade_all_buildings
+				}
+			}
+			value = cm_perf_ae_horizon_months
+		} else_if = {
+			limit = { global_var:cm_perf_bp_feat = flag:cm_feature_auto_food }
+			value = cm_perf_af_horizon_months
+		} else_if = {
+			limit = { global_var:cm_perf_bp_feat = flag:cm_ab_cat_food }
+			value = cm_perf_ab_food_horizon_months
+		}
+	}
+}
