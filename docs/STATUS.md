@@ -16,7 +16,7 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`assimilate_primary`](../mods/assimilate_primary/CLAUDE.md) | 0.11.0: своя автоматика совета; ценности, «до 50 %» и развитие работают; порог контроля не проверен; ценности — свои задания мода без пары (0.11.1, в игре 10-26: ошибок нет, место отдаётся) | 0.6.0 |
 | [`speed_5`](../mods/speed_5/CLAUDE.md) | паузы, 5 скоростей | всё |
 | [`cmf_saved_settings`](../mods/cmf_saved_settings/CLAUDE.md) | 0.3.0: применение | 0.3.0 |
-| [`rulers_toolkit`](../mods/rulers_toolkit/CLAUDE.md) | 0.9.5: командиры, ползунки, пленные, творения, откаты, женитьба, мир (шаблон, дипрепутация), журнал | флоты, советники, выкуп, откаты |
+| [`rulers_toolkit`](../mods/rulers_toolkit/CLAUDE.md) | 0.10.0: командиры, ползунки, пленные, творения, откаты, женитьба, мир (шаблон, дипрепутация), журнал | флоты, советники, выкуп, откаты, продажа ванильным действием (проба) |
 
 Закрытые, но лежащие здесь: [`archive/status_closed.md`](archive/status_closed.md).
 Убранные из дерева 10-03: [`archive/retired_mods.md`](archive/retired_mods.md).

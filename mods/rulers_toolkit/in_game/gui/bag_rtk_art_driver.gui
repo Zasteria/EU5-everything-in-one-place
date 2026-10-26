@@ -1,0 +1,106 @@
+﻿# Проба 0.10.0 (его мысль 10-26): продать творение ванильным действием, как
+# вручную, не открывая панель страны. Список действий берётся прямо у
+# покупателя (`Country.GetQuickDiplomaticActions`, так строит меню ПКМ по стране
+# `context_menu.gui`), пункт жмётся `DiplomaticActionItem.OnClick` — без
+# параметров, как в том меню. Дальше открывается ванильный список выбора; его
+# строки жмёт копия `select_interaction_target.gui` (пока стоит `bag_rtk_art_pick`).
+#
+# Порядок: скрипт ставит `bag_rtk_art_native_due` и переменные `bag_rtk_art_nb`
+# (покупатель), `bag_rtk_art_na` (творение) → взвод → пункт «Продать творение»
+# у покупателя нажат один раз (`bag_rtk_art_sent`) → через 4 с
+# `bag_rtk_art_native_done` проверяет владельца и снимает всё.
+#
+# Ключ пункта в файлах игры не назван. Ищем по куску ключа и имени; зонд под
+# галочкой журнала пишет все пункты обоих списков (`bag_rtk: art native, item`).
+widget = {
+	name = "bag_rtk_art_driver"
+	visible = "[EqualTo_CFixedPoint('(CFixedPoint)0', '(CFixedPoint)0')]"
+	position = { -10000 1 }
+
+	state = {
+		name = bag_rtk_art_arm
+		trigger_when = "[And(GetPlayer.MakeScope.GetVariable('bag_rtk_art_native_due').IsSet, Not(GetVariableSystem.Exists('bag_rtk_art_armed')))]"
+		on_start = "[GetVariableSystem.Set('bag_rtk_art_armed', '1')]"
+		on_start = "[PdxGuiTriggerAllAnimations('bag_rtk_art_wait')]"
+	}
+
+	state = {
+		name = bag_rtk_art_wait
+		duration = 4
+		on_finish = "[GetScriptedGui('bag_rtk_art_native_done').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+		on_finish = "[GetVariableSystem.Clear('bag_rtk_art_pick')]"
+		on_finish = "[GetVariableSystem.Clear('bag_rtk_art_sent')]"
+		on_finish = "[GetVariableSystem.Clear('bag_rtk_art_armed')]"
+	}
+
+	# Размеры не нулевые: в контейнере нулевого размера игра строк не строит
+	# (шаблон мира 0.9.7, 10-20); форма — как у `bag_rtk_merge_driver.gui`.
+	widget = {
+		size = { 200 200 }
+		visible = "[And(GetVariableSystem.Exists('bag_rtk_art_armed'), GetPlayer.MakeScope.GetVariable('bag_rtk_art_nb').IsSet)]"
+		datacontext = "[GetPlayer.MakeScope.GetVariable('bag_rtk_art_nb').GetCountry]"
+
+		vbox = {
+			layoutpolicy_horizontal = expanding
+			datacontext = "[Country.GetQuickDiplomaticActions]"
+
+			vbox = {
+				layoutpolicy_horizontal = expanding
+				datamodel = "[QuickDiplomaticActions.GetList]"
+				item = {
+					widget = {
+						size = { 160 20 }
+
+						# Нажать «Продать творение» — один раз за взвод.
+						widget = {
+							size = { 10 10 }
+							visible_at_creation = no
+							visible = "[And3(GetVariableSystem.Exists('bag_rtk_art_armed'), Not(GetVariableSystem.Exists('bag_rtk_art_sent')), And(DiplomaticActionItem.IsEnabled, Or4(StringContains(DiplomaticActionItem.GetTag, 'sell_work_of_art'), StringContains(DiplomaticActionItem.GetTag, 'SELL_WORK_OF_ART'), StringContains(DiplomaticActionItem.GetTitle, 'Продать творение'), StringContains(DiplomaticActionItem.GetTitle, 'Sell Work of Art'))))]"
+							state = {
+								name = _show
+								duration = 0.3
+								on_finish = "[GetVariableSystem.Set('bag_rtk_art_sent', '1')]"
+								on_finish = "[GetVariableSystem.Set('bag_rtk_art_pick', '1')]"
+								on_finish = "[GetVariableSystem.Set('bag_rtk_ak', Concatenate('clicked ', DiplomaticActionItem.GetTag))]"
+								on_finish = "[GetScriptedGui('bag_rtk_art_probe').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+								on_finish = "[DiplomaticActionItem.OnClick]"
+							}
+						}
+
+						# Зонд: каждый пункт списка (ключ / имя / доступен).
+						widget = {
+							size = { 10 10 }
+							visible_at_creation = no
+							visible = "[And(GetVariableSystem.Exists('bag_rtk_art_armed'), GetGlobalVariable('bag_rtk_log').IsSet)]"
+							state = {
+								name = _show
+								duration = 0.1
+								on_finish = "[GetVariableSystem.Set('bag_rtk_ak', Concatenate('item ', Concatenate(DiplomaticActionItem.GetTag, Concatenate(' / ', Concatenate(DiplomaticActionItem.GetTitle, Select_CString(DiplomaticActionItem.IsEnabled, ' / can', ' / cannot'))))))]"
+								on_finish = "[GetScriptedGui('bag_rtk_art_probe').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+							}
+						}
+					}
+				}
+			}
+
+			# Зонд второго списка (меню ПКМ показывает и его): только записать.
+			vbox = {
+				layoutpolicy_horizontal = expanding
+				datamodel = "[QuickDiplomaticActions.GetDynamicList]"
+				item = {
+					widget = {
+						size = { 10 10 }
+						visible_at_creation = no
+						visible = "[And(GetVariableSystem.Exists('bag_rtk_art_armed'), GetGlobalVariable('bag_rtk_log').IsSet)]"
+						state = {
+							name = _show
+							duration = 0.15
+							on_finish = "[GetVariableSystem.Set('bag_rtk_ak', Concatenate('dynamic item ', Concatenate(DiplomaticActionItem.GetTag, Concatenate(' / ', DiplomaticActionItem.GetTitle))))]"
+							on_finish = "[GetScriptedGui('bag_rtk_art_probe').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+						}
+					}
+				}
+			}
+		}
+	}
+}

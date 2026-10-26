@@ -28,6 +28,13 @@ pass`, `bag_rtk: crown commander set`.
 Как продаёт, кому и почему сам, зонды и окно истории —
 [`README.md`](README.md#творения).
 
+**0.10.0 (10-26, проба, не проверено): продажа ванильным действием** — галочка `art_native`. Мод
+выбирает творение и покупателя (`bag_rtk_art_native_pick`), привод `gui/bag_rtk_art_driver.gui` жмёт
+у покупателя пункт из `Country.GetQuickDiplomaticActions` (`DiplomaticActionItem.OnClick`, без панели
+страны), копия `gui/select_interaction_target.gui` жмёт строки покупателя и творения (клик Playmaker,
+`docs/pitfalls/script.md`), через 3 с закрывает список сама. Зонды `bag_rtk: art native, …`: пункты
+списка с ключами, `picker open`, `row clicked … will accept`, `SOLD`/`not sold`.
+
 ## Напоминалка об откатах (0.6.5; вкладка `cooldowns` «Перезарядки»)
 
 Как устроено — [`README.md`](README.md#напоминалка-об-откатах); генератор
