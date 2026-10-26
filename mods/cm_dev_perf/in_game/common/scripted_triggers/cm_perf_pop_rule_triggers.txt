@@ -1,28 +1,29 @@
-﻿# cm_dev_perf +perf53: his rule for the pops a new level may count on, 2026-10-26. It
+﻿# cm_dev_perf +perf53-57: his rule for the pops a new level may count on, 2026-10-26. It
 # replaces CM's projection (the type's own inflow over a hiring horizon), which his age-6
 # save showed building burgher workshops where laborers were thousands short and peasants
 # held 430-670 people for thousands of jobs: the inflow it counted had nowhere to come from.
 #
 #   - 500 peasants or fewer in the location: no level of anything but nobles.
 #   - nobles: always.
-#   - peasants: more free peasants than the level plus 500.
-#   - laborers, burghers, clergy, soldiers: a free pop of the type, or more free peasants
-#     than the shortfall plus 500 - free meaning after every peasant job, so a promotion
-#     never empties a peasant building (his correction 10-26: «иначе он выгребет на
-#     повышение людей из крестьянских домиков»; «я вообще никогда не хочу видеть …
-#     крестьян в локации -300»).
+#   - a free pop of the building's own type (laborers, burghers, clergy, soldiers, the RGO's
+#     laborers and slaves): build.
+#   - otherwise the level is promoted out of peasants, and the free peasants - after every
+#     peasant job - must cover it together with every other type already short, plus 500
+#     (cm_perf_peasant_debt + the level < 0). His words: «я вообще никогда не хочу видеть …
+#     крестьян в локации -300»; «иначе он выгребет на повышение людей из крестьянских
+#     домиков»; and from his screenshot, «стройка должна учитывать нехватку людей других
+#     классов».
+#   - peasant buildings: the same sum, the level being peasants themselves.
 #   - slaves, tribesmen: a free pop of the type.
-#
-#   - the new level itself is always allowed on the peasants above: a slow location is
-#     never refused a building its pops can fill (his correction 10-26). What must
-#     promote within the hiring horizon ($MONTHS$, the tab's «Срок найма» slider) is the
-#     shortfall already standing - levels started and not yet staffed - at CM's own
-#     reading of the game's promotion modifiers (cm_combined_pop_promotion_speed_for_*,
-#     monthly), so shortfalls do not pile up where promotion cannot keep pace.
+#   - the new level itself is never refused for slow promotion; what must promote within
+#     the hiring horizon ($MONTHS$, the tab's «Срок найма» slider) is the type's shortfall
+#     already standing, at CM's reading of the game's promotion modifiers
+#     (cm_combined_pop_promotion_speed_for_*, monthly), so shortfalls do not pile up.
+#   - a location the peasants cannot cover at all is held (cm_perf_pop_hold, set monthly
+#     by cm_perf_pop_hold_update) and refused without counting until half the time the
+#     debt takes to clear has passed.
 #
 # Pop counts are the game's thousands; a level's jobs are its type's employment_size.
-# Every count here is read live, levels under construction included, so a loop building
-# several levels sees each one it has started.
 
 # Root is the location. $T$ = the building type, $MONTHS$ = the hiring horizon's script value.
 cm_perf_pops_ok = {
@@ -33,7 +34,8 @@ cm_perf_pops_ok = {
 		trigger = "global_variable_map(cm_building_type_to_pop_type|scope:cm_perf_pt)"
 		pop_type:nobles = { always = yes }
 		pop_type:peasants = {
-			cm_location_peasants_available > { value = scope:cm_perf_pt.employment_size add = 0.5 }
+			cm_perf_pop_not_held = yes
+			cm_perf_peasant_debt < { value = 0 subtract = scope:cm_perf_pt.employment_size }
 		}
 		pop_type:laborers = { cm_perf_pops_promote = { FREE = cm_location_laborers_available SPEED = cm_combined_pop_promotion_speed_for_laborers MONTHS = $MONTHS$ } }
 		pop_type:burghers = { cm_perf_pops_promote = { FREE = cm_location_burghers_available SPEED = cm_combined_pop_promotion_speed_for_burghers MONTHS = $MONTHS$ } }
@@ -59,21 +61,31 @@ cm_perf_pops_promote = {
 	OR = {
 		$FREE$ > 0
 		AND = {
-			cm_location_peasants_available > { value = scope:cm_perf_pt.employment_size subtract = $FREE$ add = 0.5 }
+			cm_perf_pop_not_held = yes
+			cm_perf_peasant_debt < { value = 0 subtract = scope:cm_perf_pt.employment_size }
 			$SPEED$ >= { value = 0 subtract = $FREE$ divide = $MONTHS$ }
 		}
 	}
 }
 
-# Root is the location, $MONTHS$ = the hiring horizon. The next RGO level: a thousand laborers or slaves, by the same rule
-# (CM counts an RGO level as one of its laborer jobs, cm_location_laborers_available).
+# Root is the location, $MONTHS$ = the hiring horizon. The next RGO level: a thousand laborers
+# or slaves (CM counts an RGO level as one of its laborer jobs), by the same rule.
 cm_perf_rgo_level_ok = {
 	num_pop_type:peasants > 0.5
 	OR = {
 		cm_location_laborers_or_slaves_available > 0
 		AND = {
-			cm_location_peasants_available > { value = 1.5 subtract = cm_location_laborers_or_slaves_available }
+			cm_perf_pop_not_held = yes
+			cm_perf_peasant_debt < -1
 			cm_combined_pop_promotion_speed_for_laborers >= { value = 0 subtract = cm_location_laborers_or_slaves_available divide = $MONTHS$ }
 		}
+	}
+}
+
+# Root is the location. False while cm_perf_pop_hold_update has the location held.
+cm_perf_pop_not_held = {
+	trigger_if = {
+		limit = { exists = var:cm_perf_pop_hold }
+		var:cm_perf_pop_hold <= global_var:cm_pop_month
 	}
 }

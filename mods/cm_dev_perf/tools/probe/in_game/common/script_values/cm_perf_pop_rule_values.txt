@@ -1,0 +1,41 @@
+﻿# cm_dev_perf +perf57: what the peasants of a location already owe, by his rule 10-26.
+# Every type that promotes out of peasants and is short now (burghers, clergy, soldiers,
+# laborers with slaves and the RGO) will draw on the same free peasants; they are summed,
+# and the 500 peasants that must stay are added. Below 0, the free peasants cover all of
+# it with room to spare; a new level that needs E more pops fits while this plus E stays
+# below 0 (his screenshot 10-26: a weapons workshop built on 1 080 free peasants while
+# burghers stood 320 short and laborers 2 300). Pop counts are the game's thousands.
+# Root is the location.
+cm_perf_peasant_debt = {
+	value = 0.5
+	subtract = cm_location_peasants_available
+	add = { value = 0 subtract = cm_location_burghers_available min = 0 }
+	add = { value = 0 subtract = cm_location_clergy_available min = 0 }
+	add = { value = 0 subtract = cm_location_soldiers_available min = 0 }
+	add = { value = 0 subtract = cm_location_laborers_or_slaves_available min = 0 }
+}
+
+# Months until the debt is paid off by the peasants' own growth, as the sampler measured
+# it (births and migration; promotion moves peasants on and pays nothing), halved: his
+# rule is to look again at half the time it would take. 12 when the peasants do not grow
+# or have not been measured yet; never under 1 nor over 60. Root is the location.
+cm_perf_pop_hold_months = {
+	value = 12
+	if = {
+		limit = {
+			exists = var:cm_pop_rate_peasants
+			var:cm_pop_rate_peasants > 0
+		}
+		value = cm_perf_peasant_debt
+		divide = var:cm_pop_rate_peasants
+		multiply = 0.5
+		min = 1
+		max = 60
+	}
+}
+
+# For the debug.log line below. A `debug_log` string reaches a number only through a
+# script value reading a global.
+cm_perf_ph_v1 = { value = global_var:cm_perf_ph_v1 }
+cm_perf_ph_v2 = { value = global_var:cm_perf_ph_v2 }
+cm_perf_ph_v3 = { value = global_var:cm_perf_ph_v3 }

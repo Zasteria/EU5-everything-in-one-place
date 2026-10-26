@@ -1685,6 +1685,11 @@ _POP_RULE = (
      "\t\t\t\t\tchange_local_variable = { name = cm_ab_core_rgo_guard add = 1 }\n",
      f"\t\t\t\t\t\tcm_ab_can_afford_rgo = {{ POOL = cm_ab_pool_core }}\n\t\t\t\t\t\t{_RGO_RULE}\n\t\t\t\t\t}}\n"
      "\t\t\t\t\tchange_local_variable = { name = cm_ab_core_rgo_guard add = 1 }\n", 1),
+    # +perf57: a location its peasants cannot cover is held until half the time the debt
+    # takes to clear, set where the sampler visits each tracked location before staging.
+    ("scripted_effects/cm_pop_sample_effects.txt",
+     "\t\t\t\tcm_pop_sample = yes\n",
+     "\t\t\t\tcm_pop_sample = yes\n\t\t\t\tcm_perf_pop_hold_update = yes # cm_dev_perf +perf57: his rule 10-26\n", 1),
 )
 
 
@@ -1920,7 +1925,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 56
+PERF_REVISION = 57
 
 # CMF's own `is_host`, under a name neither the game nor any CMF build takes.
 # It reads the host country CMF 2.5.0 records (`_cmm_mark_host_country`), so

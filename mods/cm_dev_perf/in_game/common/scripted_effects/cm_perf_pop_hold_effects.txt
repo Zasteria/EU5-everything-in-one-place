@@ -1,0 +1,32 @@
+﻿# cm_dev_perf +perf57: his rule 10-26 for not recounting a short location every month.
+# Where the peasants owe more than they have (cm_perf_peasant_debt >= 0), no level of a
+# type short of its own pops can pass, so the location is held: cm_perf_pop_hold is the
+# month (global_var:cm_pop_month) before which the pop rule refuses those levels without
+# counting anything, set to half the time the debt would take to clear. A free pop of the
+# building's own type still builds while held. Run from cm_pop_sample_pass, once a month
+# per tracked location, before staging. Root is the location.
+cm_perf_pop_hold_update = {
+	if = {
+		limit = {
+			OR = {
+				NOT = { exists = var:cm_perf_pop_hold }
+				var:cm_perf_pop_hold <= global_var:cm_pop_month
+			}
+		}
+		if = {
+			limit = { cm_perf_peasant_debt >= 0 }
+			set_variable = {
+				name = cm_perf_pop_hold
+				value = { value = global_var:cm_pop_month add = cm_perf_pop_hold_months }
+			}
+			set_global_variable = { name = cm_perf_ph_v1 value = cm_perf_peasant_debt }
+			set_global_variable = { name = cm_perf_ph_v2 value = cm_perf_pop_hold_months }
+			set_global_variable = { name = cm_perf_ph_v3 value = cm_location_peasants_available }
+			debug_log = "CM pop hold: debt=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_ph_v1')|2] months=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_ph_v2')|1] peasants_free=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_ph_v3')|2]"
+			debug_log_scopes = no
+		} else_if = {
+			limit = { exists = var:cm_perf_pop_hold }
+			remove_variable = cm_perf_pop_hold
+		}
+	}
+}
