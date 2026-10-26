@@ -272,6 +272,7 @@ for the same reason; it applies to a grep over the tree just as much.
 Прогоны от лица игрока 10-25 (ниже): `is_finished` у ценностей игра не читает; `allow` по флагу
 снимает действие, но пару **оставляет** (ошибки пошли); игровая автоматика «Совет» на месяц
 ценности не трогает. Стирают пару только команда выбора действия — игрока в окне или ИИ страны.
+**Клик с параметрами — как у Playmaker Cabinet Queue** (мастерская 3804621893, 10-26; у автора работало с 0.3.55, у нас не мерено): в строке списка скрытая кнопка 1×1 с двумя `action_tooltip` (`on_action_with_params = "[SelectInteractionTargetGlue.OnLeftClick]"` и `…AndConfirm`), строку отбирает `dynamicgridbox` с `datamodel = DataModelRepeatedItem(Select_int32(условие, 1, 0))`; `state` кнопки с `trigger_on_create` зовёт `OnMouseEnter(PdxGuiWidget.AccessSelf, SelectInteractionTargetGlue.GetObject)`, затем `[UIAction.OnLeftClick]` — щелчок по своему `action_tooltip`, параметры при нём.
 **Решение (0.11.0): своё задание без `societal_values`, с `country_modifier = { monthly_towards_<сторона> }`** —
 пару движок хранит только у заданий с полем `societal_values`; модификатор задания он умножает на навык так же.
 
