@@ -13,6 +13,10 @@ bag_rtk_art_monthly = {
 	if = {
 		limit = { has_variable = bag_rtk_art_on }
 		save_scope_as = bag_rtk_seller
+		if = {
+			limit = { has_variable = bag_rtk_art_na }
+			bag_rtk_art_own_pending_check = yes
+		}
 		while = {
 			count = 5
 			limit = {
@@ -146,10 +150,10 @@ bag_rtk_art_fire_own = {
 			recipient = scope:bag_rtk_art_buyer
 			mode = accept
 		}
-		remove_variable = bag_rtk_art_na
 	}
 	if = {
 		limit = { owner ?= scope:bag_rtk_art_buyer }
+		scope:bag_rtk_seller = { remove_variable = bag_rtk_art_na }
 		if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action ran" }
 		scope:bag_rtk_seller = {
 			if = {
@@ -176,14 +180,39 @@ bag_rtk_art_fire_own = {
 			}
 		}
 	}
+	# 0.11.0 (его прогон 10-26 23:56): здесь творение не ушло ни разу, продавал
+	# запасной путь. Возможно, движок проводит действие позже (а 0.11.0 сразу
+	# снимал `bag_rtk_art_na`, без которой эффект пуст). 0.11.1: творение и
+	# покупатель остаются в переменных, месяц на этом кончается, следующий
+	# начинается с `bag_rtk_art_own_pending_check`.
 	else = {
-		if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action did NOT run, selling by script" }
-		bag_rtk_art_pay_and_move = yes
+		if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action did not run at once, waiting a month" }
+		scope:bag_rtk_seller = { set_variable = { name = bag_rtk_art_nb value = scope:bag_rtk_art_buyer } }
 	}
 	scope:bag_rtk_seller = {
 		remove_variable = bag_rtk_art_gold0
 		remove_variable = bag_rtk_art_dipl0
 	}
+}
+
+# Месяц после своего действия, которое сразу не прошло: ушло ли творение позже.
+# Scope: country (scope:bag_rtk_seller).
+bag_rtk_art_own_pending_check = {
+	if = {
+		limit = { has_variable = bag_rtk_art_nb }
+		var:bag_rtk_art_nb = { save_scope_as = bag_rtk_art_buyer }
+		var:bag_rtk_art_na = {
+			if = {
+				limit = { owner ?= scope:bag_rtk_art_buyer }
+				if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action ran LATER, the work of art is with the buyer" }
+			}
+			else = {
+				if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action NEVER ran" }
+			}
+		}
+	}
+	remove_variable = bag_rtk_art_na
+	remove_variable = bag_rtk_art_nb
 }
 
 # История продаж (0.4.12, его просьба 10-18, «в рамках дебага»): галочка
