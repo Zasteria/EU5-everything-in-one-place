@@ -13,11 +13,12 @@
 #     крестьян в локации -300»).
 #   - slaves, tribesmen: a free pop of the type.
 #
-#   - and where the type is short, the promotion speed must cover the shortfall within
-#     the hiring horizon ($MONTHS$, the tab's «Срок найма» slider): the speed is CM's own
-#     reading of the game's promotion modifiers (cm_combined_pop_promotion_speed_for_*),
-#     monthly. A location that promotes too slowly for one year builds on two (his
-#     question 10-26).
+#   - the new level itself is always allowed on the peasants above: a slow location is
+#     never refused a building its pops can fill (his correction 10-26). What must
+#     promote within the hiring horizon ($MONTHS$, the tab's «Срок найма» slider) is the
+#     shortfall already standing - levels started and not yet staffed - at CM's own
+#     reading of the game's promotion modifiers (cm_combined_pop_promotion_speed_for_*,
+#     monthly), so shortfalls do not pile up where promotion cannot keep pace.
 #
 # Pop counts are the game's thousands; a level's jobs are its type's employment_size.
 # Every count here is read live, levels under construction included, so a loop building
@@ -59,7 +60,7 @@ cm_perf_pops_promote = {
 		$FREE$ > 0
 		AND = {
 			cm_location_peasants_available > { value = scope:cm_perf_pt.employment_size subtract = $FREE$ add = 0.5 }
-			$SPEED$ >= { value = scope:cm_perf_pt.employment_size subtract = $FREE$ divide = $MONTHS$ }
+			$SPEED$ >= { value = 0 subtract = $FREE$ divide = $MONTHS$ }
 		}
 	}
 }
@@ -72,7 +73,7 @@ cm_perf_rgo_level_ok = {
 		cm_location_laborers_or_slaves_available > 0
 		AND = {
 			cm_location_peasants_available > { value = 1.5 subtract = cm_location_laborers_or_slaves_available }
-			cm_combined_pop_promotion_speed_for_laborers >= { value = 1 subtract = cm_location_laborers_or_slaves_available divide = $MONTHS$ }
+			cm_combined_pop_promotion_speed_for_laborers >= { value = 0 subtract = cm_location_laborers_or_slaves_available divide = $MONTHS$ }
 		}
 	}
 }
