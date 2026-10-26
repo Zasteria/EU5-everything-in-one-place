@@ -14,7 +14,7 @@ bag_rtk_art_monthly = {
 		limit = { has_variable = bag_rtk_art_on }
 		save_scope_as = bag_rtk_seller
 		if = {
-			limit = { has_variable = bag_rtk_art_na }
+			limit = { has_variable = bag_rtk_art_fired }
 			bag_rtk_art_own_pending_check = yes
 		}
 		while = {
@@ -88,7 +88,10 @@ bag_rtk_art_fire = {
 		bag_rtk_art_pay_and_move = yes
 	}
 	if = {
-		limit = { owner ?= scope:bag_rtk_art_buyer }
+		limit = {
+			scope:bag_rtk_seller = { NOT = { has_variable = bag_rtk_art_native_on } }
+			owner ?= scope:bag_rtk_art_buyer
+		}
 		scope:bag_rtk_seller = {
 			set_variable = { name = bag_rtk_art_log_price value = scope:bag_rtk_art.art_price }
 			set_variable = { name = bag_rtk_art_log_q value = scope:bag_rtk_art.art_quality }
@@ -99,7 +102,8 @@ bag_rtk_art_fire = {
 		scope:bag_rtk_seller = { bag_rtk_art_history_add = yes }
 		scope:bag_rtk_seller = { remove_variable = bag_rtk_art_stop }
 	}
-	else = {
+	else_if = {
+		limit = { scope:bag_rtk_seller = { NOT = { has_variable = bag_rtk_art_native_on } } }
 		if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: work of art not sold" }
 	}
 }
@@ -131,95 +135,70 @@ bag_rtk_art_pay_and_move = {
 	}
 }
 
-# 0.12.0 (его слово 10-26: «своё действие продажи, а не пинай ванилу»): своё
+# 0.12.x (его слово 10-26: «своё действие продажи, а не пинай ванилу»): своё
 # общее действие `bag_rtk_sell_art` (`generic_actions/bag_rtk_sell_art.txt`),
-# `fire_generic_action` с покупателем и творением. 0.11.x звали действие державы
+# `fire_generic_action` с творением и покупателем. 0.11.x звали действие державы
 # (`country_interactions`) через `perform_diplomatic_action` — в `accept`,
 # `accept` + `hidden`, `propose`, и пустое зонд-действие от игрока и от ИИ: эффект
-# не запустился ни разу (его прогоны 10-26/27). Платит ли движок цену и берёт ли
-# дипломата — зонд сверяет и доплачивает сам, если нет.
+# не запустился ни разу. 0.12.0 (его прогон 10-27 00:20): общее действие
+# срабатывает — но через такт после вызова (команда игры), поэтому продажа здесь
+# считается сделанной сразу, а творение, цену и историю ведёт эффект действия.
+# Дипломат — как у ванильной продажи, сразу (общее действие его не берёт);
+# покупатель — не больше одной продажи в месяц (`bag_rtk_art_bought`).
 # Scope: work_of_art (scope:bag_rtk_art), покупатель выбран.
 bag_rtk_art_fire_own = {
 	scope:bag_rtk_seller = {
-		set_variable = { name = bag_rtk_art_na value = scope:bag_rtk_art }
-		set_variable = { name = bag_rtk_art_gold0 value = gold }
-		set_variable = { name = bag_rtk_art_dipl0 value = num_of_diplomats }
 		if = {
-			limit = {
-				has_global_variable = bag_rtk_log
-				NOT = { can_do_generic_action = { generic_action = generic_action:bag_rtk_sell_art recipient = scope:bag_rtk_art_buyer target = scope:bag_rtk_art } }
-			}
-			debug_log = "bag_rtk: own sell action, the game says it cannot be done now"
+			limit = { NOT = { has_variable = bag_rtk_art_gold0 } }
+			set_variable = { name = bag_rtk_art_gold0 value = gold }
 		}
+		change_variable = { name = bag_rtk_art_fired add = 1 }
+		add_diplomats = -1
+		remove_variable = bag_rtk_art_stop
 		fire_generic_action = {
 			type = bag_rtk_sell_art
 			actor = scope:bag_rtk_seller
-			recipient = scope:bag_rtk_art_buyer
 			target = scope:bag_rtk_art
+			target_1 = scope:bag_rtk_art_buyer
 		}
 	}
-	if = {
-		limit = { owner ?= scope:bag_rtk_art_buyer }
-		scope:bag_rtk_seller = { remove_variable = bag_rtk_art_na }
-		if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action ran" }
-		scope:bag_rtk_seller = {
-			if = {
-				limit = { gold > { value = var:bag_rtk_art_gold0 add = { value = scope:bag_rtk_art.art_price multiply = 0.5 } } }
-				if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action, the game paid" }
-			}
-			else = {
-				if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action, the game did NOT pay, paying by script" }
-				add_gold = scope:bag_rtk_art.art_price
-				scope:bag_rtk_art_buyer = {
-					add_gold = {
-						value = scope:bag_rtk_art.art_price
-						multiply = -1
-					}
-				}
-			}
-			if = {
-				limit = { num_of_diplomats < { value = var:bag_rtk_art_dipl0 subtract = 0.5 } }
-				if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action, the game took a diplomat" }
-			}
-			else = {
-				if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action, no diplomat taken, taking by script" }
-				add_diplomats = -1
-			}
-		}
-	}
-	# 0.11.0 (его прогон 10-26 23:56): здесь творение не ушло ни разу, продавал
-	# запасной путь. Возможно, движок проводит действие позже (а 0.11.0 сразу
-	# снимал `bag_rtk_art_na`, без которой эффект пуст). 0.11.1: творение и
-	# покупатель остаются в переменных, месяц на этом кончается, следующий
-	# начинается с `bag_rtk_art_own_pending_check`.
-	else = {
-		if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action did not run at once, waiting a month" }
-		scope:bag_rtk_seller = { set_variable = { name = bag_rtk_art_nb value = scope:bag_rtk_art_buyer } }
-	}
-	scope:bag_rtk_seller = {
-		remove_variable = bag_rtk_art_gold0
-		remove_variable = bag_rtk_art_dipl0
-	}
+	scope:bag_rtk_art_buyer = { set_variable = { name = bag_rtk_art_bought value = yes days = 25 } }
+	if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action fired, buyer:" }
+	scope:bag_rtk_art_buyer = { if = { limit = { has_global_variable = bag_rtk_log } debug_log_scopes = no } }
 }
 
-# Месяц после своего действия, которое сразу не прошло: ушло ли творение позже.
-# Scope: country (scope:bag_rtk_seller).
+# Начало месяца: сколько своих продаж прошлого месяца дошло до эффекта
+# (`bag_rtk_art_done`); не дошедшим вернуть дипломата. Scope: country (scope:bag_rtk_seller).
 bag_rtk_art_own_pending_check = {
 	if = {
-		limit = { has_variable = bag_rtk_art_nb }
-		var:bag_rtk_art_nb = { save_scope_as = bag_rtk_art_buyer }
-		var:bag_rtk_art_na = {
-			if = {
-				limit = { owner ?= scope:bag_rtk_art_buyer }
-				if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action ran LATER, the work of art is with the buyer" }
+		limit = { has_variable = bag_rtk_art_fired }
+		if = {
+			limit = {
+				OR = {
+					NOT = { has_variable = bag_rtk_art_done }
+					var:bag_rtk_art_done < var:bag_rtk_art_fired
+				}
 			}
-			else = {
-				if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action NEVER ran" }
-			}
+			if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action, some sales of last month never ran, diplomats returned" }
+			set_variable = { name = bag_rtk_art_back value = var:bag_rtk_art_fired }
+			if = { limit = { has_variable = bag_rtk_art_done } change_variable = { name = bag_rtk_art_back subtract = var:bag_rtk_art_done } }
+			add_diplomats = var:bag_rtk_art_back
+			remove_variable = bag_rtk_art_back
+		}
+		else = {
+			if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action, every sale of last month ran" }
 		}
 	}
-	remove_variable = bag_rtk_art_na
-	remove_variable = bag_rtk_art_nb
+	if = {
+		limit = { has_global_variable = bag_rtk_log }
+		if = { limit = { has_variable = bag_rtk_art_paid_yes } debug_log = "bag_rtk: own sell action, the game paid the price" }
+		if = { limit = { has_variable = bag_rtk_art_paid_no } debug_log = "bag_rtk: own sell action, the game did NOT pay the price" }
+	}
+	remove_variable = bag_rtk_art_paid_yes
+	remove_variable = bag_rtk_art_paid_no
+	remove_variable = bag_rtk_art_fired
+	remove_variable = bag_rtk_art_done
+	remove_variable = bag_rtk_art_gold0
 }
 
 # История продаж (0.4.12, его просьба 10-18, «в рамках дебага»): галочка

@@ -1,13 +1,17 @@
-﻿# «Помощник правителя» 0.12.0: своя «Продажа творения» (его слово 10-26:
+﻿# «Помощник правителя» 0.12.x: своя «Продажа творения» (его слово 10-26:
 # «своё действие продажи, а не пинай ванилу»). Действие державы из
 # `country_interactions` скрипт мода не запускает ни в одном режиме (0.11.0–0.11.3,
 # его прогоны 10-26/27, `docs/TESTLOG.md`), а своё общее действие
-# (`generic_actions`) — запускает: так Construction Manager и Playmaker Cabinet
-# Queue зовут свои `fire_generic_action` и оставляют цену движку.
-# Цена, плательщик, получатель, престиж и перенос творения — как у ванильного
-# `sell_work_of_art`. В списках игры не показывается, ИИ им не пользуется.
+# (`generic_actions`) — запускает, через такт после вызова (0.12.0, прогон 10-27):
+# так Construction Manager и Playmaker Cabinet Queue зовут свои `fire_generic_action`.
+# Цена (`price:sell_work_of_art` × цена творения), плательщик-покупатель,
+# получатель-продавец, престиж −2 % и перенос творения — как у ванильного
+# `sell_work_of_art`. Дипломата берёт вызов (`bag_rtk_art_fire_own`).
+# 0.12.0: `type = diplomacy` общему действию нельзя (ошибка разбора) и с ним
+# «Targetted action shouldn't be looking for a recipient» — покупатель теперь
+# `target_1`, тип `owncountry`. В списках игры не показывается, ИИ им не пользуется.
 bag_rtk_sell_art = {
-	type = diplomacy
+	type = owncountry
 	show_in_gui_list = no
 	ai_tick = never
 	automation_tick = never
@@ -25,7 +29,7 @@ bag_rtk_sell_art = {
 			value = 1
 		}
 	}
-	payer = scope:recipient
+	payer = scope:target_1
 	payee = scope:actor
 
 	potential = {
@@ -33,23 +37,6 @@ bag_rtk_sell_art = {
 	}
 
 	allow = {
-	}
-
-	select_trigger = {
-		looking_for_a = country
-		target_flag = recipient
-		name = "choose_country"
-		column = {
-			data = country_diplomacy_info_trade
-		}
-		visible = {
-			is_real_country = yes
-			NOT = { this = scope:actor }
-			NOT = { country_type = building }
-		}
-		enabled = {
-			NOT = { is_enemy_of = scope:actor }
-		}
 	}
 
 	select_trigger = {
@@ -68,26 +55,58 @@ bag_rtk_sell_art = {
 		}
 	}
 
+	select_trigger = {
+		looking_for_a = country
+		target_flag = target_1
+		name = "choose_country"
+		column = {
+			data = country_diplomacy_info_trade
+		}
+		visible = {
+			is_real_country = yes
+			NOT = { this = scope:actor }
+			NOT = { country_type = building }
+		}
+		enabled = {
+			NOT = { is_enemy_of = scope:actor }
+		}
+	}
+
 	effect = {
 		if = {
-			limit = { has_global_variable = bag_rtk_log }
-			debug_log = "bag_rtk: own sell action EFFECT ran"
-		}
-		if = {
-			limit = { exists = scope:target }
+			limit = { exists = scope:target exists = scope:target_1 }
 			scope:actor = {
 				add_prestige = {
 					value = scope:target.art_price
 					multiply = -0.02
 				}
 			}
-			custom_tooltip = {
-				text = sell_work_of_art_move_art_tt
-				hidden_effect = {
-					scope:target = {
-						move_art_and_owner = { location = scope:recipient.capital country = scope:recipient }
+			scope:target = {
+				move_art_and_owner = { location = scope:target_1.capital country = scope:target_1 }
+			}
+			# Учёт мода: сколько продаж дошло до эффекта, история продаж, заплатил ли движок.
+			scope:actor = {
+				change_variable = { name = bag_rtk_art_done add = 1 }
+				save_scope_as = bag_rtk_seller
+			}
+			scope:target = { save_scope_as = bag_rtk_art }
+			scope:target_1 = { save_scope_as = bag_rtk_art_buyer }
+			scope:actor = {
+				if = {
+					limit = { has_variable = bag_rtk_art_gold0 }
+					if = {
+						limit = { gold > { value = var:bag_rtk_art_gold0 add = { value = scope:target.art_price multiply = 0.5 } } }
+						set_variable = { name = bag_rtk_art_paid_yes value = yes }
 					}
+					else = {
+						set_variable = { name = bag_rtk_art_paid_no value = yes }
+					}
+					remove_variable = bag_rtk_art_gold0
 				}
+				set_variable = { name = bag_rtk_art_log_price value = scope:target.art_price }
+				set_variable = { name = bag_rtk_art_log_q value = scope:target.art_quality }
+				set_variable = { name = bag_rtk_art_log_gold value = scope:target_1.gold }
+				bag_rtk_art_history_add = yes
 			}
 		}
 	}
