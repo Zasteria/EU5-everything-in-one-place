@@ -1,0 +1,53 @@
+﻿# cm_dev_perf +perf61: Building Cleanup in debug.log, line by line, for his check of 10-26
+# (auto-close that never reopens, food cleanup, destroying the unprofitable). CM's own log
+# lines need the Debug tab's cleanup category; these do not.
+# A `debug_log` string reaches a number only through a script value reading a global.
+
+# Every action cm_cu_log names: closed, destroyed, trimmed, reopened, deleted, purged, food
+# trimmed or destroyed. Root is the building, expects scope:cm_country, scope:cm_location.
+# The location and the building type follow on lines of their own.
+cm_perf_cu_probe = {
+	set_global_variable = { name = cm_perf_cu_act value = flag:$ACTION$ }
+	set_global_variable = { name = cm_perf_cu_v1 value = cm_cu_profit_per_level }
+	set_global_variable = { name = cm_perf_cu_v2 value = cm_cu_effective_floor }
+	set_global_variable = { name = cm_perf_cu_v3 value = building_potential_profit }
+	set_global_variable = { name = cm_perf_cu_v4 value = building_level }
+	debug_log = "CM cu: [GetGlobalVariable('cm_perf_cu_act').GetFlagName] profit_per_level=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_cu_v1')|2] floor=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_cu_v2')|2] potential=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_cu_v3')|2] level=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_cu_v4')|0]"
+	scope:cm_location = { debug_log_scopes = no }
+	building_type = { debug_log_scopes = no }
+}
+
+# A building this system closed, as the reopen pass weighs it: open=1 reads it open again
+# (the close landed or not), group=1 a profitable open one of its type in the market,
+# lone=1 none open to vouch for it and its own potential over the floor. Root is the
+# building, expects scope:cm_country, scope:cm_location, scope:cm_building_type.
+cm_perf_cu_reopen_probe = {
+	set_global_variable = { name = cm_perf_cu_v1 value = building_potential_profit }
+	set_global_variable = { name = cm_perf_cu_v2 value = cm_cu_effective_floor }
+	set_global_variable = { name = cm_perf_cu_v3 value = 0 }
+	if = { limit = { is_opened = yes } set_global_variable = { name = cm_perf_cu_v3 value = 1 } }
+	set_global_variable = { name = cm_perf_cu_v4 value = 0 }
+	if = { limit = { scope:cm_country = { cm_cu_group_reopen_room = yes } } set_global_variable = { name = cm_perf_cu_v4 value = 1 } }
+	set_global_variable = { name = cm_perf_cu_v5 value = 0 }
+	if = { limit = { cm_perf_cu_lone_reopen = yes } set_global_variable = { name = cm_perf_cu_v5 value = 1 } }
+	debug_log = "CM cu closed: potential=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_cu_v1')|2] floor=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_cu_v2')|2] open=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_cu_v3')|0] group=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_cu_v4')|0] lone=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_cu_v5')|0]"
+	scope:cm_location = { debug_log_scopes = no }
+	building_type = { debug_log_scopes = no }
+}
+
+# The switches and the state of the month's pass. Root is the country.
+cm_perf_cu_state_probe = {
+	set_global_variable = { name = cm_perf_cu_v1 value = 0 }
+	if = { limit = { exists = var:cm_cu_close_open } set_global_variable = { name = cm_perf_cu_v1 value = 1 } }
+	set_global_variable = { name = cm_perf_cu_v2 value = 0 }
+	if = { limit = { exists = var:cm_cu_destroy } set_global_variable = { name = cm_perf_cu_v2 value = 1 } }
+	set_global_variable = { name = cm_perf_cu_v3 value = 0 }
+	if = { limit = { exists = var:cm_cu_auto_food } set_global_variable = { name = cm_perf_cu_v3 value = 1 } }
+	set_global_variable = { name = cm_perf_cu_v4 value = 0 }
+	if = { limit = { exists = var:cm_cu_fire } set_global_variable = { name = cm_perf_cu_v4 value = 1 } }
+	set_global_variable = { name = cm_perf_cu_v5 value = 0 }
+	if = { limit = { exists = var:cm_cu_cycle_open } set_global_variable = { name = cm_perf_cu_v5 value = 1 } }
+	set_global_variable = { name = cm_perf_cu_v6 value = 0 }
+	if = { limit = { has_variable_list = cm_cu_closed_locs } set_global_variable = { name = cm_perf_cu_v6 value = { value = 0 every_in_list = { variable = cm_cu_closed_locs add = 1 } } } }
+	debug_log = "CM cu state: close_open=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_cu_v1')|0] destroy=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_cu_v2')|0] auto_food=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_cu_v3')|0] fire_pending=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_cu_v4')|0] cycle_open=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_cu_v5')|0] closed_locations=[GuiScope.SetRoot(GetPlayer.MakeScope).ScriptValue('cm_perf_cu_v6')|0]"
+}

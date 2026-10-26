@@ -1770,6 +1770,22 @@ _POP_RULE = (
      "\t\t\t\t\tscope:cm_country = { cm_ab_stage_category = yes }\n",
      "\t\t\t\t\tset_global_variable = { name = cm_perf_bp_feat value = scope:cm_ab_cat } # cm_dev_perf +perf59\n"
      "\t\t\t\t\tscope:cm_country = { cm_ab_stage_category = yes }\n", 1),
+    # +perf61, his word 10-26: the food cleanup leaves construction materials standing
+    # (stone, lumber, sand - CM's four core goods), whatever Core Goods is set to.
+    ("scripted_triggers/cm_cleanup_triggers.txt",
+     "\tbuilding_type = { cm_is_building_type_production_building = yes }\n\tsave_temporary_scope_as = cm_cu_af_b\n",
+     "\tbuilding_type = { cm_is_building_type_production_building = yes }\n"
+     "\tcm_cu_produces_core_good = no # cm_dev_perf +perf61: his word 10-26\n\tsave_temporary_scope_as = cm_cu_af_b\n", 1),
+    # +perf61: Building Cleanup in debug.log (tools/probe/.../cm_perf_cu_probe_effects.txt).
+    ("scripted_effects/cm_cleanup_effects.txt",
+     "cm_cu_log = {\n\tif = {",
+     "cm_cu_log = {\n\tcm_perf_cu_probe = { ACTION = $ACTION$ } # cm_dev_perf +perf61\n\tif = {", 1),
+    ("scripted_effects/cm_cleanup_effects.txt",
+     "\t\t\t\tif = {\n\t\t\t\t\t# A protected core-goods producer",
+     "\t\t\t\tcm_perf_cu_reopen_probe = yes # cm_dev_perf +perf61\n\t\t\t\tif = {\n\t\t\t\t\t# A protected core-goods producer", 1),
+    ("scripted_effects/cm_cleanup_effects.txt",
+     "cm_cu_monthly_pass = {\n",
+     "cm_cu_monthly_pass = {\n\tcm_perf_cu_state_probe = yes # cm_dev_perf +perf61\n", 1),
 )
 
 
@@ -2006,7 +2022,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 60
+PERF_REVISION = 61
 
 # CMF's own `is_host`, under a name neither the game nor any CMF build takes.
 # It reads the host country CMF 2.5.0 records (`_cmm_mark_host_country`), so
