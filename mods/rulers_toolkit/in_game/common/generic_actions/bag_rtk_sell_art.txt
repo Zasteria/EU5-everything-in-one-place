@@ -4,34 +4,21 @@
 # его прогоны 10-26/27, `docs/TESTLOG.md`), а своё общее действие
 # (`generic_actions`) — запускает, через такт после вызова (0.12.0, прогон 10-27):
 # так Construction Manager и Playmaker Cabinet Queue зовут свои `fire_generic_action`.
-# Цена (`price:sell_work_of_art` × цена творения), плательщик-покупатель,
-# получатель-продавец, престиж −2 % и перенос творения — как у ванильного
-# `sell_work_of_art`. Дипломата берёт вызов (`bag_rtk_art_fire_own`).
-# 0.12.0: `type = diplomacy` общему действию нельзя (ошибка разбора) и с ним
-# «Targetted action shouldn't be looking for a recipient»; `target_1` вызов не
-# передаёт (0.12.2: всё ушло одной стране) — покупатель лежит на самом творении,
-# `var:bag_rtk_art_buyer`, тип `owncountry`. В списках игры не показывается, ИИ им не пользуется.
+# Что выяснилось по дороге (его прогоны 10-27):
+# - `type = diplomacy` общему действию нельзя (ошибка разбора), а с `recipient`
+#   «Targetted action shouldn't be looking for a recipient» — тип `owncountry`;
+# - `target_1` вызов не передаёт (0.12.2: всё ушло одной стране);
+# - творение переменных не держит (0.12.3).
+# Поэтому покупатель держит творение в своей переменной `bag_rtk_art_incoming`,
+# эффект находит его по ней. Цена, престиж −2 % и перенос творения — как у
+# ванильного `sell_work_of_art` (1 золото × цена творения, платит покупатель);
+# платит сам эффект: плательщика движку назвать нечем. Дипломата берёт вызов
+# (`bag_rtk_art_fire_own`). В списках игры не показывается, ИИ им не пользуется.
 bag_rtk_sell_art = {
 	type = owncountry
 	show_in_gui_list = no
 	ai_tick = never
 	automation_tick = never
-
-	price = price:sell_work_of_art
-	price_modifier = {
-		if = {
-			limit = { exists = scope:target }
-			add = {
-				desc = "ART_SALE_VALUE"
-				value = scope:target.art_price
-			}
-		}
-		else = {
-			value = 1
-		}
-	}
-	payer = scope:target.var:bag_rtk_art_buyer
-	payee = scope:actor
 
 	potential = {
 		scope:actor = { is_ai = no }
@@ -58,18 +45,35 @@ bag_rtk_sell_art = {
 
 	effect = {
 		if = {
-			limit = { exists = scope:target scope:target = { has_variable = bag_rtk_art_buyer } }
-			scope:target.var:bag_rtk_art_buyer = { save_scope_as = bag_rtk_art_to }
+			limit = { exists = scope:target }
+			random_country = {
+				limit = {
+					has_variable = bag_rtk_art_incoming
+					var:bag_rtk_art_incoming = { this = scope:target }
+				}
+				save_scope_as = bag_rtk_art_to
+			}
+		}
+		if = {
+			limit = { exists = scope:bag_rtk_art_to }
 			scope:actor = {
+				add_gold = scope:target.art_price
 				add_prestige = {
 					value = scope:target.art_price
 					multiply = -0.02
 				}
 			}
+			scope:bag_rtk_art_to = {
+				add_gold = {
+					value = scope:target.art_price
+					multiply = -1
+				}
+				remove_variable = bag_rtk_art_incoming
+			}
 			scope:target = {
 				move_art_and_owner = { location = scope:bag_rtk_art_to.capital country = scope:bag_rtk_art_to }
 			}
-			# Учёт мода: сколько продаж дошло до эффекта, история продаж, заплатил ли движок.
+			# Учёт мода: сколько продаж дошло до эффекта, история продаж.
 			scope:actor = {
 				if = { limit = { has_variable = bag_rtk_art_done } change_variable = { name = bag_rtk_art_done add = 1 } } else = { set_variable = { name = bag_rtk_art_done value = 1 } }
 				save_scope_as = bag_rtk_seller
@@ -77,23 +81,11 @@ bag_rtk_sell_art = {
 			scope:target = { save_scope_as = bag_rtk_art }
 			scope:bag_rtk_art_to = { save_scope_as = bag_rtk_art_buyer }
 			scope:actor = {
-				if = {
-					limit = { has_variable = bag_rtk_art_gold0 }
-					if = {
-						limit = { gold > { value = var:bag_rtk_art_gold0 add = { value = scope:target.art_price multiply = 0.5 } } }
-						set_variable = { name = bag_rtk_art_paid_yes value = yes }
-					}
-					else = {
-						set_variable = { name = bag_rtk_art_paid_no value = yes }
-					}
-					remove_variable = bag_rtk_art_gold0
-				}
 				set_variable = { name = bag_rtk_art_log_price value = scope:target.art_price }
 				set_variable = { name = bag_rtk_art_log_q value = scope:target.art_quality }
 				set_variable = { name = bag_rtk_art_log_gold value = scope:bag_rtk_art_to.gold }
 				bag_rtk_art_history_add = yes
 			}
-			scope:target = { remove_variable = bag_rtk_art_buyer }
 		}
 	}
 }
