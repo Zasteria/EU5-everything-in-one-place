@@ -131,67 +131,31 @@ bag_rtk_art_pay_and_move = {
 	}
 }
 
-# 0.11.0 (его слово 10-26: «своё действие продажи, а не пинай ванилу»): своё
-# действие державы `bag_rtk_sell_art` (`country_interactions/bag_rtk_sell_art.txt`)
-# — цель только держава, творение в переменной продавца `bag_rtk_art_na`;
-# так ваниль зовёт `force_embargo` из `hegemon_demands.txt` (`mode = accept`).
-# Платит ли движок цену и берёт ли дипломата при `accept` — не мерено: зонд
-# сверяет золото и дипломатов и доплачивает сам, если нет. Не сработало действие
-# вовсе — продаёт скриптом, как раньше.
+# 0.12.0 (его слово 10-26: «своё действие продажи, а не пинай ванилу»): своё
+# общее действие `bag_rtk_sell_art` (`generic_actions/bag_rtk_sell_art.txt`),
+# `fire_generic_action` с покупателем и творением. 0.11.x звали действие державы
+# (`country_interactions`) через `perform_diplomatic_action` — в `accept`,
+# `accept` + `hidden`, `propose`, и пустое зонд-действие от игрока и от ИИ: эффект
+# не запустился ни разу (его прогоны 10-26/27). Платит ли движок цену и берёт ли
+# дипломата — зонд сверяет и доплачивает сам, если нет.
 # Scope: work_of_art (scope:bag_rtk_art), покупатель выбран.
 bag_rtk_art_fire_own = {
-	# Зонд 0.11.3: самое простое своё действие (`bag_rtk_probe_action`), от игрока
-	# и от ИИ — запускает ли его `perform_diplomatic_action` хоть в одну сторону.
-	set_global_variable = { name = bag_rtk_probe_pa value = yes }
-	if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: probe action, calling both ways" }
-	scope:bag_rtk_seller = {
-		perform_diplomatic_action = {
-			type = bag_rtk_probe_action
-			actor = scope:bag_rtk_seller
-			recipient = scope:bag_rtk_art_buyer
-			mode = accept
-		}
-	}
-	scope:bag_rtk_art_buyer = {
-		perform_diplomatic_action = {
-			type = bag_rtk_probe_action
-			actor = scope:bag_rtk_art_buyer
-			recipient = scope:bag_rtk_seller
-			mode = accept
-		}
-	}
 	scope:bag_rtk_seller = {
 		set_variable = { name = bag_rtk_art_na value = scope:bag_rtk_art }
 		set_variable = { name = bag_rtk_art_gold0 value = gold }
 		set_variable = { name = bag_rtk_art_dipl0 value = num_of_diplomats }
-		# 0.11.1 (прогон 10-27 00:04): `mode = accept` — эффект не запустился ни
-		# сразу, ни за месяц. 0.11.2 чередует по месяцам: `accept` + `hidden = yes`
-		# (так Playmaker зовёт `share_maps`) и `propose` (в 0.4.2 с ванильной
-		# продажей он хотя бы тратил дипломата — предложение уходило); согласие
-		# покупателя в `propose` даёт метка `bag_rtk_art_agreed` (мод уже проверил
-		# его по ванильной формуле).
 		if = {
-			limit = { has_variable = bag_rtk_art_try_propose }
-			remove_variable = bag_rtk_art_try_propose
-			if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action, trying mode = propose" }
-			scope:bag_rtk_art_buyer = { set_variable = { name = bag_rtk_art_agreed value = yes days = 60 } }
-			perform_diplomatic_action = {
-				type = bag_rtk_sell_art
-				actor = scope:bag_rtk_seller
-				recipient = scope:bag_rtk_art_buyer
-				mode = propose
+			limit = {
+				has_global_variable = bag_rtk_log
+				NOT = { can_do_generic_action = { generic_action = generic_action:bag_rtk_sell_art recipient = scope:bag_rtk_art_buyer target = scope:bag_rtk_art } }
 			}
+			debug_log = "bag_rtk: own sell action, the game says it cannot be done now"
 		}
-		else = {
-			set_variable = { name = bag_rtk_art_try_propose value = yes }
-			if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action, trying mode = accept, hidden" }
-			perform_diplomatic_action = {
-				type = bag_rtk_sell_art
-				actor = scope:bag_rtk_seller
-				recipient = scope:bag_rtk_art_buyer
-				mode = accept
-				hidden = yes
-			}
+		fire_generic_action = {
+			type = bag_rtk_sell_art
+			actor = scope:bag_rtk_seller
+			recipient = scope:bag_rtk_art_buyer
+			target = scope:bag_rtk_art
 		}
 	}
 	if = {

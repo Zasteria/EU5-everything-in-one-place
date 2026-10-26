@@ -1,0 +1,94 @@
+﻿# «Помощник правителя» 0.12.0: своя «Продажа творения» (его слово 10-26:
+# «своё действие продажи, а не пинай ванилу»). Действие державы из
+# `country_interactions` скрипт мода не запускает ни в одном режиме (0.11.0–0.11.3,
+# его прогоны 10-26/27, `docs/TESTLOG.md`), а своё общее действие
+# (`generic_actions`) — запускает: так Construction Manager и Playmaker Cabinet
+# Queue зовут свои `fire_generic_action` и оставляют цену движку.
+# Цена, плательщик, получатель, престиж и перенос творения — как у ванильного
+# `sell_work_of_art`. В списках игры не показывается, ИИ им не пользуется.
+bag_rtk_sell_art = {
+	type = diplomacy
+	show_in_gui_list = no
+	ai_tick = never
+	automation_tick = never
+
+	price = price:sell_work_of_art
+	price_modifier = {
+		if = {
+			limit = { exists = scope:target }
+			add = {
+				desc = "ART_SALE_VALUE"
+				value = scope:target.art_price
+			}
+		}
+		else = {
+			value = 1
+		}
+	}
+	payer = scope:recipient
+	payee = scope:actor
+
+	potential = {
+		scope:actor = { is_ai = no }
+	}
+
+	allow = {
+	}
+
+	select_trigger = {
+		looking_for_a = country
+		target_flag = recipient
+		name = "choose_country"
+		column = {
+			data = country_diplomacy_info_trade
+		}
+		visible = {
+			is_real_country = yes
+			NOT = { this = scope:actor }
+			NOT = { country_type = building }
+		}
+		enabled = {
+			NOT = { is_enemy_of = scope:actor }
+		}
+	}
+
+	select_trigger = {
+		looking_for_a = work_of_art
+		source = actor
+		target_flag = target
+		name = "sell_work_of_art_select_art"
+		none_available_msg_key = "sell_work_of_art_no_art"
+		column = {
+			data = name
+		}
+		visible = {
+			art_is_priceless = no
+			is_art_destroyed = no
+			work_of_art_is_imperial_regalia = no
+		}
+	}
+
+	effect = {
+		if = {
+			limit = { has_global_variable = bag_rtk_log }
+			debug_log = "bag_rtk: own sell action EFFECT ran"
+		}
+		if = {
+			limit = { exists = scope:target }
+			scope:actor = {
+				add_prestige = {
+					value = scope:target.art_price
+					multiply = -0.02
+				}
+			}
+			custom_tooltip = {
+				text = sell_work_of_art_move_art_tt
+				hidden_effect = {
+					scope:target = {
+						move_art_and_owner = { location = scope:recipient.capital country = scope:recipient }
+					}
+				}
+			}
+		}
+	}
+}

@@ -28,12 +28,13 @@ pass`, `bag_rtk: crown commander set`.
 Как продаёт, кому и почему сам, зонды и окно истории —
 [`README.md`](README.md#творения).
 
-**0.11.0 (10-26, проба, не проверено): своё действие продажи** — галочка `art_native`. 0.10.x жали
-ванильное через окно — продажа есть только в боковой панели (TESTLOG 10-26), снято. Теперь
-`country_interactions/bag_rtk_sell_art.txt` (цель — держава, творение в `bag_rtk_art_na` продавца),
-`bag_rtk_art_fire_own` зовёт его `perform_diplomatic_action … mode = accept`; зонды `own sell action
-ran / the game paid / took a diplomat` (иначе доплачивает сам), `did NOT run` → продажа скриптом.
-Рабочая 0.9.22 — тег `rulers_toolkit-0.9.22`.
+**0.12.0 (10-27, проба, не проверено): своё действие продажи** — галочка `art_native`. 0.10.x жали
+ванильное через окно — продажа есть только в боковой панели; 0.11.x — своё действие державы
+(`country_interactions`) через `perform_diplomatic_action`: не запускается ни в каком режиме, даже
+пустое (TESTLOG 10-26/27). Теперь `generic_actions/bag_rtk_sell_art.txt` (`type = diplomacy`, цена и
+плательщик как у ванильной), `bag_rtk_art_fire_own` → `fire_generic_action`; зонды `EFFECT ran`,
+`the game paid / took a diplomat` (иначе доплачивает сам), `did not run at once` → проверка через месяц.
+Рабочие копии — теги `rulers_toolkit-0.9.22`, `rulers_toolkit-0.11.0`.
 
 ## Напоминалка об откатах (0.6.5; вкладка `cooldowns` «Перезарядки»)
 
