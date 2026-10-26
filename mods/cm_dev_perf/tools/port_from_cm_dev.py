@@ -1621,6 +1621,78 @@ def _register_industry_mode(text: str) -> str:
         "\t\t\t}\n\t\t\tcm_ind_mode_changed = yes\n\t\t}\n") + changed, 1)
 
 
+_RULE = "cm_perf_pops_ok = { T = scope:cm_building_type } # cm_dev_perf +perf53: his pop rule"
+_RGO_GATE = "cm_perf_rgo_level_ok = yes"
+_RGO_RULE = f"{_RGO_GATE} # cm_dev_perf +perf53: his pop rule"
+
+# Every place CM decides whether a location has the pops for a new level, and what
+# takes its place (+perf53, his rule 10-26, tools/probe/.../cm_perf_pop_rule_triggers.txt).
+# (file, old, new, how many times old occurs).
+_POP_RULE = (
+    ("scripted_triggers/cm_location_has_enough_pops_available_triggers.txt",
+     "\tOR = {\n\t\tcm_location_unemployed_for_building_type > 0\n"
+     "\t\tcm_location_promotion_buffer_covers_deficit = yes\n\t}\n",
+     f"\t{_RULE}\n", 1),
+    ("scripted_triggers/cm_perf_ab_production_triggers.txt",
+     "\tcm_perf_ab_prod_slack > 0\n", f"\t{_RULE}\n", 1),
+    ("scripted_triggers/cm_ab_triggers.txt",
+     "cm_ab_core_pops_ok = {\n\tcm_ab_core_pop_room > 0\n}",
+     f"cm_ab_core_pops_ok = {{\n\tcm_ab_core_pop_room > 0\n\t{_RULE}\n}}", 1),
+    ("scripted_triggers/cm_ab_triggers.txt",
+     "\tOR = {\n\t\tcm_location_laborers_or_slaves_available > 0\n"
+     "\t\tcm_location_laborers_promotion_source_pool > 0\n\t}\n",
+     f"\t{_RGO_RULE}\n", 1),
+    ("scripted_triggers/cm_food_auto_build_triggers.txt",
+     "\t$pool$ > 0\n",
+     "\tcm_perf_pops_ok = { T = scope:cm_food_pops_type } # cm_dev_perf +perf53: his pop rule\n", 1),
+    # The rule reads the building's own type, so the pool each caller named goes.
+    ("scripted_triggers/cm_food_auto_build_triggers.txt",
+     " pool = cm_location_peasants_available }", " }", 3),
+    ("scripted_triggers/cm_food_auto_build_triggers.txt",
+     " pool = cm_location_laborers_or_slaves_available }", " }", 1),
+    ("scripted_triggers/cm_food_auto_build_triggers.txt",
+     " and $pool$ = the script\n# value counting free places of its pop type.\n",
+     ". cm_dev_perf +perf53: the pops by his rule,\n# cm_perf_pops_ok.\n", 1),
+    ("scripted_triggers/cm_food_auto_build_triggers.txt",
+     "\t# cm_dev_perf +perf42: the RGO's own pool, its levels and the laborer jobs counted\n"
+     "\tcm_location_laborers_or_slaves_available > 0\n",
+     f"\t{_RGO_RULE}\n", 1),
+    ("scripted_triggers/cm_rgo_triggers.txt",
+     "\t\tcm_location_rgo_promotion_buffer_slack >= 0\n", f"\t\t{_RGO_RULE}\n", 1),
+    ("scripted_guis/cm_rgos.txt",
+     "\t\tcm_location_rgo_promotion_buffer_slack >= 0\n", f"\t\t{_RGO_RULE}\n", 1),
+    # The drains counted levels against a slack in thousands of pops: `>=` let the first
+    # level through on a slack of exactly 0, a thousand laborers short (his run 10-26).
+    ("scripted_effects/cm_queue_approval_effects.txt",
+     "local_var:cm_q_rgo_slack >= local_var:cm_q_rgo_done", _RGO_GATE, 2),
+    ("scripted_effects/cm_queue_approval_effects.txt",
+     "\t\t\t\t\t\t# cm_dev_perf +perf42: a level only for laborers or slaves who are there\n"
+     "\t\t\t\t\t\tcm_location_laborers_or_slaves_available > 0\n",
+     f"\t\t\t\t\t\t{_RGO_RULE}\n", 1),
+    ("scripted_effects/cm_ab_production_effects.txt",
+     "local_var:cm_ab_rgo_slack > local_var:cm_ab_rgo_done # cm_dev_perf +perf44: room left after the levels built",
+     _RGO_RULE, 2),
+    ("scripted_effects/cm_ab_food_effects.txt",
+     "cm_perf_ab_food_rgo_slack > 0", _RGO_GATE, 2),
+    ("scripted_effects/cm_ab_core_effects.txt",
+     "\t\t\t\t\t\tcm_ab_can_afford_rgo = { POOL = cm_ab_pool_core }\n\t\t\t\t\t}\n"
+     "\t\t\t\t\tchange_local_variable = { name = cm_ab_core_rgo_guard add = 1 }\n",
+     f"\t\t\t\t\t\tcm_ab_can_afford_rgo = {{ POOL = cm_ab_pool_core }}\n\t\t\t\t\t\t{_RGO_RULE}\n\t\t\t\t\t}}\n"
+     "\t\t\t\t\tchange_local_variable = { name = cm_ab_core_rgo_guard add = 1 }\n", 1),
+)
+
+
+def _his_pop_rule() -> None:
+    """+perf53: his pop rule in every place CM asks whether a level has its pops."""
+    for path, old, new, count in _POP_RULE:
+        target = MOD / "in_game/common" / path
+        text = target.read_text(encoding="utf-8-sig")
+        if text.count(old) != count:
+            raise SystemExit(f"{path}: the pop gate {old.strip()[:60]!r} has changed shape "
+                             f"({text.count(old)} found, {count} expected)")
+        target.write_text("﻿" + text.replace(old, new), encoding="utf-8")
+
+
 def _probe_each_build(text: str) -> str:
     """+perf51 (10-26, his ask): every build CM approves writes a line into
     `debug.log` with the numbers its worker gates read (the probe in
@@ -1842,7 +1914,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 52
+PERF_REVISION = 53
 
 # CMF's own `is_host`, under a name neither the game nor any CMF build takes.
 # It reads the host country CMF 2.5.0 records (`_cmm_mark_host_country`), so
@@ -2007,6 +2079,7 @@ def main() -> int:
             path.write_text("﻿" + text, encoding="utf-8")
     if not rgo_sites:
         raise SystemExit("CM no longer calls construct_rgo_upgrade; drop the RGO probe")
+    _his_pop_rule()
     (MOD / "in_game/common/scripted_triggers/cm_perf_host_triggers.txt").write_text(
         "\ufeff" + HOST_TRIGGER, encoding="utf-8")
     # A lookup into a map the scope does not have yet is an error, not false
