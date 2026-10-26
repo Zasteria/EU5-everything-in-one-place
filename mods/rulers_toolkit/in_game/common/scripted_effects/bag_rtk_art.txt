@@ -154,6 +154,12 @@ bag_rtk_art_native_pick = {
 			order_by = art_price
 			max = 100
 			check_range_bounds = no
+			# `bag_rtk_art_buyer` читает `scope:bag_rtk_art` — сохранить до проверки
+			# (0.10.2: «Value of wrong type» на строках 67–68 триггеров).
+			if = {
+				limit = { scope:bag_rtk_seller = { NOT = { has_variable = bag_rtk_art_tried } } }
+				save_scope_as = bag_rtk_art
+			}
 			if = {
 				limit = {
 					scope:bag_rtk_seller = {
@@ -161,7 +167,6 @@ bag_rtk_art_native_pick = {
 						any_country_in_diplomatic_range = { bag_rtk_art_buyer = yes }
 					}
 				}
-				save_scope_as = bag_rtk_art
 				scope:bag_rtk_seller = {
 					set_variable = { name = bag_rtk_art_tried value = yes }
 					ordered_country_in_diplomatic_range = {
