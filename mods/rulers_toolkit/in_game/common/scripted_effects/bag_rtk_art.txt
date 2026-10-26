@@ -144,11 +144,34 @@ bag_rtk_art_fire_own = {
 		set_variable = { name = bag_rtk_art_na value = scope:bag_rtk_art }
 		set_variable = { name = bag_rtk_art_gold0 value = gold }
 		set_variable = { name = bag_rtk_art_dipl0 value = num_of_diplomats }
-		perform_diplomatic_action = {
-			type = bag_rtk_sell_art
-			actor = scope:bag_rtk_seller
-			recipient = scope:bag_rtk_art_buyer
-			mode = accept
+		# 0.11.1 (прогон 10-27 00:04): `mode = accept` — эффект не запустился ни
+		# сразу, ни за месяц. 0.11.2 чередует по месяцам: `accept` + `hidden = yes`
+		# (так Playmaker зовёт `share_maps`) и `propose` (в 0.4.2 с ванильной
+		# продажей он хотя бы тратил дипломата — предложение уходило); согласие
+		# покупателя в `propose` даёт метка `bag_rtk_art_agreed` (мод уже проверил
+		# его по ванильной формуле).
+		if = {
+			limit = { has_variable = bag_rtk_art_try_propose }
+			remove_variable = bag_rtk_art_try_propose
+			if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action, trying mode = propose" }
+			scope:bag_rtk_art_buyer = { set_variable = { name = bag_rtk_art_agreed value = yes days = 60 } }
+			perform_diplomatic_action = {
+				type = bag_rtk_sell_art
+				actor = scope:bag_rtk_seller
+				recipient = scope:bag_rtk_art_buyer
+				mode = propose
+			}
+		}
+		else = {
+			set_variable = { name = bag_rtk_art_try_propose value = yes }
+			if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: own sell action, trying mode = accept, hidden" }
+			perform_diplomatic_action = {
+				type = bag_rtk_sell_art
+				actor = scope:bag_rtk_seller
+				recipient = scope:bag_rtk_art_buyer
+				mode = accept
+				hidden = yes
+			}
 		}
 	}
 	if = {
