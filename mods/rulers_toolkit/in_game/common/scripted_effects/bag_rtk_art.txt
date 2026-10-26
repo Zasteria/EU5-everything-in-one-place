@@ -11,6 +11,10 @@
 # Scope: country
 bag_rtk_art_monthly = {
 	if = {
+		limit = { has_global_variable = bag_rtk_log has_variable = bag_rtk_art_native_on NOT = { has_variable = bag_rtk_art_on } }
+		debug_log = "bag_rtk: art native ticked, but selling is off"
+	}
+	if = {
 		limit = { has_variable = bag_rtk_art_on has_variable = bag_rtk_art_native_on }
 		bag_rtk_art_native_pick = yes
 	}
@@ -127,6 +131,13 @@ bag_rtk_art_fire = {
 # строку творения (клик с параметрами, как у Playmaker Cabinet Queue). Одна
 # продажа в месяц. Scope: country (игрок).
 bag_rtk_art_native_pick = {
+	# 0.10.1: его прогон 10-26 — три месяца ни строки; какое условие не прошло.
+	if = {
+		limit = { has_global_variable = bag_rtk_log }
+		if = { limit = { has_variable = bag_rtk_art_native_due } debug_log = "bag_rtk: art native, skip, last sale still pending" }
+		if = { limit = { num_of_diplomats < bag_rtk_art_dipl_floor } debug_log = "bag_rtk: art native, skip, diplomats below keep+1" }
+		if = { limit = { NOT = { any_work_of_art_in_country = { bag_rtk_art_for_sale = yes } } } debug_log = "bag_rtk: art native, skip, no work of art of a ticked quality" }
+	}
 	if = {
 		limit = {
 			NOT = { has_variable = bag_rtk_art_native_due }
@@ -178,10 +189,20 @@ bag_rtk_art_native_check = {
 	if = {
 		limit = { has_variable = bag_rtk_art_na has_variable = bag_rtk_art_nb }
 		var:bag_rtk_art_nb = { save_scope_as = bag_rtk_art_buyer }
+		var:bag_rtk_art_na = { save_scope_as = bag_rtk_art }
+		save_scope_as = bag_rtk_seller
 		var:bag_rtk_art_na = {
 			if = {
 				limit = { owner ?= scope:bag_rtk_art_buyer }
 				if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: art native, SOLD" }
+				# В историю продаж, как своя продажа (согласия тут нет — его считала игра).
+				scope:bag_rtk_seller = {
+					remove_variable = bag_rtk_art_log_acc
+					set_variable = { name = bag_rtk_art_log_price value = scope:bag_rtk_art.art_price }
+					set_variable = { name = bag_rtk_art_log_q value = scope:bag_rtk_art.art_quality }
+					set_variable = { name = bag_rtk_art_log_gold value = scope:bag_rtk_art_buyer.gold }
+					bag_rtk_art_history_add = yes
+				}
 			}
 			else = {
 				if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: art native, not sold" }
