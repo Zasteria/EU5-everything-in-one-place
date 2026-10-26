@@ -1,0 +1,53 @@
+﻿# Проба 0.13.0: настоящий династический брак (`bag_rtk_wed_native_fire`).
+# Ванильный `royal_marriage` жмётся кнопкой `scripted_action_tooltip` по имени
+# действия — так игра жмёт займы (`credit.gui`) и действия персонажа
+# (`select_consort_interaction.gui`). Пока стоит глобальная `bag_rtk_wed_go`,
+# родится скрытая кнопка с параметрами из глобальных переменных и нажмёт себя
+# (`UIAction.OnLeftClick`, клик с параметрами — как у Playmaker Cabinet Queue);
+# сразу же `bag_rtk_wed_clicked` снимает `bag_rtk_wed_go`, второго нажатия нет.
+widget = {
+	name = "bag_rtk_wed_driver"
+	visible = "[EqualTo_CFixedPoint('(CFixedPoint)0', '(CFixedPoint)0')]"
+	position = { -10000 1 }
+	size = { 20 20 }
+
+	dynamicgridbox = {
+		datamodel = "[DataModelRepeatedItem(Select_int32(GetGlobalVariable('bag_rtk_wed_go').IsSet, '(int32)1', '(int32)0'))]"
+		item = {
+			button = {
+				name = "bag_rtk_wed_press"
+				size = { 10 10 }
+				alwaystransparent = yes
+
+				scripted_action_tooltip = {
+					click_type = left
+					click_mode = single
+					action_name = "royal_marriage"
+					actor = "[GetGlobalVariable('bag_rtk_wed_from').GetCountry]"
+					parameter = {
+						parameter_name = "recipient"
+						parameter_value = "[GetGlobalVariable('bag_rtk_wed_to').GetCountry.MakeScope]"
+					}
+					parameter = {
+						parameter_name = "target_1"
+						parameter_value = "[GetGlobalVariable('bag_rtk_wed_groom').GetCharacter.MakeScope]"
+					}
+					parameter = {
+						parameter_name = "target_2"
+						parameter_value = "[GetGlobalVariable('bag_rtk_wed_bride').GetCharacter.MakeScope]"
+					}
+				}
+
+				state = {
+					name = bag_rtk_wed_press_once
+					trigger_on_create = yes
+					alpha = 0.99
+					duration = 0.3
+					on_finish = "[GetVariableSystem.Set('bag_rtk_wk', Select_CString(IsPlayerValid, 'player valid', 'NO player'))]"
+					on_finish = "[UIAction.OnLeftClick]"
+					on_finish = "[GetScriptedGui('bag_rtk_wed_clicked').Execute(GuiScope.SetRoot(GetGlobalVariable('bag_rtk_wed_from').GetCountry.MakeScope).End)]"
+				}
+			}
+		}
+	}
+}

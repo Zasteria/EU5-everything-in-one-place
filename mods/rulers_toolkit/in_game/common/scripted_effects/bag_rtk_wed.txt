@@ -15,6 +15,10 @@
 # Scope: country (игрок).
 bag_rtk_wed_monthly = {
 	if = {
+		limit = { has_global_variable = bag_rtk_wed_groom }
+		bag_rtk_wed_native_check = yes
+	}
+	if = {
 		limit = { has_variable = bag_rtk_wed_on }
 		save_scope_as = bag_rtk_wed_home
 		every_character = {
@@ -59,16 +63,77 @@ bag_rtk_wed_try = {
 		position = 0
 		check_range_bounds = no
 		save_scope_as = bag_rtk_wed_cand
-		scope:bag_rtk_wed_one = { marry_character = scope:bag_rtk_wed_cand }
 		if = {
-			limit = { scope:bag_rtk_wed_one = { is_married = yes } }
-			if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: wedding done, to:" }
+			limit = { scope:bag_rtk_wed_home = { has_variable = bag_rtk_wed_native_on } }
+			bag_rtk_wed_native_fire = yes
 		}
 		else = {
-			if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: wedding failed, to:" }
+			bag_rtk_wed_direct = yes
 		}
-		if = { limit = { has_global_variable = bag_rtk_log } debug_log_scopes = no }
-		owner = { if = { limit = { has_global_variable = bag_rtk_log } debug_log_scopes = no } }
 	}
 	clear_variable_list = bag_rtk_wed_pool
+}
+
+bag_rtk_wed_direct = {
+	scope:bag_rtk_wed_one = { marry_character = scope:bag_rtk_wed_cand }
+	if = {
+		limit = { scope:bag_rtk_wed_one = { is_married = yes } }
+		if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: wedding done, to:" }
+	}
+	else = {
+		if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: wedding failed, to:" }
+	}
+	if = { limit = { has_global_variable = bag_rtk_log } debug_log_scopes = no }
+	owner = { if = { limit = { has_global_variable = bag_rtk_log } debug_log_scopes = no } }
+}
+
+# Проба 0.13.0 (его просьба 10-26: брак «с полноценными последствиями, униями»):
+# ванильный `royal_marriage`. Из скрипта он не идёт ни в каком виде (0.8.0,
+# 10-20), а `perform_diplomatic_action` не запускает даже свои действия (0.11.x,
+# 10-27). Игра жмёт свои действия по имени кнопкой `scripted_action_tooltip`
+# (займы в `credit.gui`, действия персонажа в `select_consort_interaction.gui`) —
+# её и жмёт привод `gui/bag_rtk_wed_driver.gui`: actor — наша страна, recipient —
+# страна невесты, target_1 — наш, target_2 — их (так названы в `on_royal_marriage`).
+# Пара — в глобальных переменных, одна свадьба в месяц; итог — в начале
+# следующего месяца (`bag_rtk_wed_native_check`).
+# Scope: character (scope:bag_rtk_wed_cand).
+bag_rtk_wed_native_fire = {
+	if = {
+		limit = { NOT = { has_global_variable = bag_rtk_wed_groom } }
+		set_global_variable = { name = bag_rtk_wed_from value = scope:bag_rtk_wed_home }
+		set_global_variable = { name = bag_rtk_wed_to value = scope:bag_rtk_wed_cand.owner }
+		set_global_variable = { name = bag_rtk_wed_groom value = scope:bag_rtk_wed_one }
+		set_global_variable = { name = bag_rtk_wed_bride value = scope:bag_rtk_wed_cand }
+		set_global_variable = { name = bag_rtk_wed_go value = yes }
+		if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: royal marriage proposed by button, ours and theirs:" }
+		scope:bag_rtk_wed_one = { if = { limit = { has_global_variable = bag_rtk_log } debug_log_scopes = no } }
+		scope:bag_rtk_wed_cand = { if = { limit = { has_global_variable = bag_rtk_log } debug_log_scopes = no } }
+	}
+}
+
+# Начало месяца: вышел ли настоящий брак. Scope: country.
+bag_rtk_wed_native_check = {
+	global_var:bag_rtk_wed_from = { save_scope_as = bag_rtk_wed_from }
+	global_var:bag_rtk_wed_to = { save_scope_as = bag_rtk_wed_to }
+	global_var:bag_rtk_wed_groom = {
+		if = {
+			limit = { is_married = yes }
+			if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: royal marriage, ours is MARRIED" }
+		}
+		else = {
+			if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: royal marriage, ours is still single" }
+		}
+	}
+	if = {
+		limit = { scope:bag_rtk_wed_from = { has_royal_marriage_with = scope:bag_rtk_wed_to } }
+		if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: royal marriage, the RELATION between countries EXISTS" }
+	}
+	else = {
+		if = { limit = { has_global_variable = bag_rtk_log } debug_log = "bag_rtk: royal marriage, no relation between countries" }
+	}
+	remove_global_variable = bag_rtk_wed_from
+	remove_global_variable = bag_rtk_wed_to
+	remove_global_variable = bag_rtk_wed_groom
+	remove_global_variable = bag_rtk_wed_bride
+	remove_global_variable = bag_rtk_wed_go
 }
