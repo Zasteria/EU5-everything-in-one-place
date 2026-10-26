@@ -1753,6 +1753,15 @@ _POP_RULE = (
      "\t\t\tcm_check_location_meets_min_market_access = yes\n", 2),
     # +perf59: the pass running now, for the gates several passes share; the approval
     # drain marks it too (_probe_feature_names).
+    # +perf60, his word 10-26: the auto-food cleanup clears non-food production as soon as
+    # the peasants stop covering every class's shortfall plus 500 - where food buildings
+    # begin to go short - not only once some type is already below its jobs.
+    ("scripted_effects/cm_cleanup_effects.txt",
+     "\t\t\tcm_location_has_worker_deficit = yes\n",
+     "\t\t\tOR = { # cm_dev_perf +perf60: his rule 10-26\n"
+     "\t\t\t\tcm_location_has_worker_deficit = yes\n"
+     "\t\t\t\tcm_perf_peasant_debt >= 0\n"
+     "\t\t\t}\n", 1),
     ("scripted_effects/cm_feature_effects.txt",
      "\t\t\t\t\t\tswitch = {\n\t\t\t\t\t\t\ttrigger = scope:cm_feature\n",
      "\t\t\t\t\t\tset_global_variable = { name = cm_perf_bp_feat value = scope:cm_feature } # cm_dev_perf +perf59\n"
@@ -1997,7 +2006,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 59
+PERF_REVISION = 60
 
 # CMF's own `is_host`, under a name neither the game nor any CMF build takes.
 # It reads the host country CMF 2.5.0 records (`_cmm_mark_host_country`), so
