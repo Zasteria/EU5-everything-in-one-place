@@ -1772,7 +1772,7 @@ _POP_RULE = (
     ("scripted_triggers/cm_cleanup_triggers.txt",
      "\tbuilding_type = { cm_is_building_type_production_building = yes }\n\tsave_temporary_scope_as = cm_cu_af_b\n",
      "\tbuilding_type = { cm_is_building_type_production_building = yes }\n"
-     "\tcm_perf_cu_af_spared = no # cm_dev_perf +perf61/62: his word 10-26, stone too\n\tsave_temporary_scope_as = cm_cu_af_b\n", 1),
+     "\tcm_perf_cu_af_spared = no # cm_dev_perf +perf61/62: his word 10-26\n\tsave_temporary_scope_as = cm_cu_af_b\n", 1),
     # +perf61: Building Cleanup in debug.log (tools/probe/.../cm_perf_cu_probe_effects.txt).
     ("scripted_effects/cm_cleanup_effects.txt",
      "cm_cu_log = {\n\tif = {",
@@ -2036,7 +2036,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 62
+PERF_REVISION = 63
 
 # CMF's own `is_host`, under a name neither the game nor any CMF build takes.
 # It reads the host country CMF 2.5.0 records (`_cmm_mark_host_country`), so
