@@ -48,6 +48,10 @@ import refs  # noqa: E402
 
 MOD = refs.REPO / "mods/cm_dev_perf"
 PROBE = MOD / "tools/probe"
+# The debug.log probes of +perf51/52/61 (every approved build, every RGO level, every
+# cleanup action): his runs of 10-26 are read; off for play (his word 10-26), True to
+# put them back for the next measurement.
+PROBES = False
 SRC = refs.mod("romaimperator.construction_manager.dev", "construction_manager_dev")
 
 # cm_perf (retired 10-20) held the first-pass widening; its generator lives on as cm_perf_base.py
@@ -1849,6 +1853,10 @@ _POP_RULE = (
 def _his_pop_rule() -> None:
     """+perf53: his pop rule in every place CM asks whether a level has its pops."""
     for path, old, new, count in _POP_RULE:
+        if not PROBES:
+            new = "\n".join(l for l in new.split("\n") if "_probe" not in l)
+            if new == old:
+                continue
         target = MOD / "in_game/common" / path
         text = target.read_text(encoding="utf-8-sig")
         if text.count(old) != count:
@@ -1958,6 +1966,8 @@ EDITS = (
     (FEATURE, "a debug.log line for every approved build", _probe_each_build),
     (APPROVAL, "name the approving pass for the build probe", _probe_feature_names),
 )
+if not PROBES:
+    EDITS = tuple(e for e in EDITS if e[2] is not _probe_each_build)
 
 
 CM_ACTIVE = "GetScriptedGui('glorpui_is_cm_active').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End)"
@@ -2079,7 +2089,8 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 65
+PERF_REVISION = 66
+
 
 # CMF's own `is_host`, under a name neither the game nor any CMF build takes.
 # It reads the host country CMF 2.5.0 records (`_cmm_mark_host_country`), so
@@ -2232,18 +2243,19 @@ def main() -> int:
         raise SystemExit("CM no longer calls is_host; drop the cm_is_host pass")
     # +perf52: every RGO level CM orders says so in debug.log (his run 10-26:
     # a wave of RGO builds the build probe did not see, RGOs being no building).
-    rgo_sites = 0
-    for path in sorted((MOD / "in_game/common/scripted_effects").glob("*.txt")):
-        text = path.read_text(encoding="utf-8-sig")
-        calls = iter(range(1, 100))
-        text, n = re.subn(r"^([ \t]*)(construct_rgo_upgrade = \{ \})",
-                          lambda m: f"{m.group(1)}cm_perf_rgo_probe = {{ SITE = {path.stem}_{next(calls)} }}"
-                                    f" # cm_dev_perf +perf52\n{m.group(1)}{m.group(2)}", text, flags=re.M)
-        if n:
-            rgo_sites += n
-            path.write_text("﻿" + text, encoding="utf-8")
-    if not rgo_sites:
-        raise SystemExit("CM no longer calls construct_rgo_upgrade; drop the RGO probe")
+    if PROBES:
+        rgo_sites = 0
+        for path in sorted((MOD / "in_game/common/scripted_effects").glob("*.txt")):
+            text = path.read_text(encoding="utf-8-sig")
+            calls = iter(range(1, 100))
+            text, n = re.subn(r"^([ \t]*)(construct_rgo_upgrade = \{ \})",
+                              lambda m: f"{m.group(1)}cm_perf_rgo_probe = {{ SITE = {path.stem}_{next(calls)} }}"
+                                        f" # cm_dev_perf +perf52\n{m.group(1)}{m.group(2)}", text, flags=re.M)
+            if n:
+                rgo_sites += n
+                path.write_text("﻿" + text, encoding="utf-8")
+        if not rgo_sites:
+            raise SystemExit("CM no longer calls construct_rgo_upgrade; drop the RGO probe")
     _his_pop_rule()
     (MOD / "in_game/common/scripted_triggers/cm_perf_host_triggers.txt").write_text(
         "\ufeff" + HOST_TRIGGER, encoding="utf-8")
@@ -2261,7 +2273,7 @@ def main() -> int:
     # script values); their sources live in tools/probe/ so this rebuild does
     # not wipe them.
     for src in PROBE.rglob("*"):
-        if src.is_file():
+        if src.is_file() and (PROBES or "_probe_" not in src.name):
             dst = MOD / src.relative_to(PROBE)
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, dst)
