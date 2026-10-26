@@ -150,7 +150,6 @@ bag_rtk_art_fire_own = {
 	scope:bag_rtk_seller = {
 		if = { limit = { has_variable = bag_rtk_art_fired } change_variable = { name = bag_rtk_art_fired add = 1 } } else = { set_variable = { name = bag_rtk_art_fired value = 1 } }
 		add_diplomats = -1
-		remove_variable = bag_rtk_art_stop
 		# Покупателя вызов не передаёт (`target_1` терялся, 0.12.2), творение переменных не
 		# держит (0.12.3) — творение лежит у покупателя, эффект найдёт его по нему.
 		scope:bag_rtk_art_buyer = { set_variable = { name = bag_rtk_art_incoming value = scope:bag_rtk_art } }
@@ -165,6 +164,24 @@ bag_rtk_art_fire_own = {
 	scope:bag_rtk_art_buyer = { if = { limit = { has_global_variable = bag_rtk_log } debug_log_scopes = no } }
 }
 
+# Игра выполняет за такт одно общее действие страны: из трёх вызванных за раз
+# продаж дошла одна (hands-off 10-27 00:41, 4 месяца: 9 вызовов, 4 эффекта).
+# Поэтому за месяц вызов один, а следующую продажу зовёт эффект предыдущей —
+# цепочкой, по продаже за такт, до пяти за месяц. Scope: country (продавец).
+bag_rtk_art_chain = {
+	save_scope_as = bag_rtk_seller
+	if = {
+		limit = {
+			has_variable = bag_rtk_art_on
+			has_variable = bag_rtk_art_fired
+			var:bag_rtk_art_fired < 5
+			num_of_diplomats >= bag_rtk_art_dipl_floor
+			any_work_of_art_in_country = { bag_rtk_art_for_sale = yes }
+		}
+		bag_rtk_art_sell_one = yes
+		remove_variable = bag_rtk_art_stop
+	}
+}
 # Начало месяца: сколько своих продаж прошлого месяца дошло до эффекта
 # (`bag_rtk_art_done`); не дошедшим вернуть дипломата. Scope: country (scope:bag_rtk_seller).
 bag_rtk_art_own_pending_check = {
@@ -458,7 +475,7 @@ bag_rtk_art_history_add = {
 		if = { limit = { has_variable = bag_rtk_art_log_acc } set_variable = { name = bag_rtk_art_h1_acc value = var:bag_rtk_art_log_acc } }
 		if = { limit = { has_variable = bag_rtk_art_log_gold } set_variable = { name = bag_rtk_art_h1_gold value = var:bag_rtk_art_log_gold } }
 		set_variable = { name = bag_rtk_art_h1_year value = current_year }
-		change_variable = { name = bag_rtk_art_h_count add = 1 }
+		if = { limit = { has_variable = bag_rtk_art_h_count } change_variable = { name = bag_rtk_art_h_count add = 1 } } else = { set_variable = { name = bag_rtk_art_h_count value = 1 } }
 	}
 }
 
