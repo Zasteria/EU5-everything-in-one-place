@@ -1500,6 +1500,23 @@ def sv_actions_file(game: Path, actions: dict[str, str]) -> str:
     return "\n".join(blocks)
 
 
+SV_FILTER_PATH = "in_game/gui/filters/bag_asp_sv_filter.txt"
+SV_FILTER = "bag_asp_hide_own_values"
+
+
+def sv_filter_file(game: Path) -> str:
+    """His screen 10-27: the 34 value actions fill the game's «assign a new
+    cabinet action» list. A cabinet action has no key that hides it from the
+    list (`potential` would also stop the mod setting it), so a filter of the
+    list itself does: ticked at start, it passes every action but ours; untick
+    the chip to see them. `this` is the filtered object (docs/research/interface.md)."""
+    tests = "\n".join(f"\t\t\t\tthis = cabinet_action:bag_asp_sv_{side}" for _, _, side, _ in sv_sides(game))
+    return ("# assimilate_primary: hides the mod's own value actions from the manual cabinet\n"
+            "# action list. Rebuilt by tools/generate.py (tools/council.py, sv_filter_file).\n\n"
+            f"{SV_FILTER} = {{\n\tscope = cabinet_action\n\tgroup = 3\n\ttag = cabinet_action\n"
+            f"\tenabled_at_start = yes\n\ttrigger = {{\n\t\tNOT = {{\n\t\t\tOR = {{\n{tests}\n\t\t\t}}\n\t\t}}\n\t}}\n}}\n")
+
+
 def sv_actions_loc(game: Path) -> dict[str, str]:
     """Names in the game's own words ($<side>$, $<pair>$); the progress line is
     empty, like counter-espionage's: nothing there can fail."""
@@ -1536,6 +1553,12 @@ def sv_actions_loc(game: Path) -> dict[str, str]:
                      f' {k}_action_progress_wordier: "${side}_focus$: {at} ({net} {month})"',
                      f' {k}_action_progress_long_wordier: "@societal_value! ${side}_focus$: {at} ({net} {month})"',
                      f' {k}_action_progress_tooltip: "${pair}$ → ${side}_focus$: {at} ({net} {month})"']
+        chip = {"english": ("Hide Council Automation's value actions",
+                            "Hides the mod's own «Shift values» actions, which only its automation sets. Untick to see them."),
+                 "russian": ("Скрыть сдвиги ценностей автоматики",
+                             "Прячет задания «Сдвиг ценностей» мода: их ставит только автоматика совета. Снимите, чтобы увидеть."),
+                 }[lang]
+        rows += [f' search_filter_{SV_FILTER}_name: "{chip[0]}"', f' search_filter_{SV_FILTER}_desc: "{chip[1]}"']
         out[f"main_menu/localization/{lang}/bag_asp_sv_l_{lang}.yml"] = "\n".join(rows) + "\n"
     return out
 
@@ -3146,6 +3169,7 @@ bag_asp_paired_seat = {{
     triggers, run = area_marks(triggers), area_marks(run)
     return {
         SV_ACTIONS_PATH: sv_actions_file(game, actions),
+        SV_FILTER_PATH: sv_filter_file(game),
         **sv_actions_loc(game),
         "in_game/common/scripted_triggers/bag_asp_council_triggers.txt": triggers + ramp_triggers(game) + assim_triggers(game) + DEVELOP_TRIGGERS,
         "in_game/common/script_values/bag_asp_values.txt": VALUES + shown_values() + SV_VALUES + DEVELOP_VALUES + sv_push_value(game, actions) + sv_at_values(game),
