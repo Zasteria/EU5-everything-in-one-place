@@ -66,6 +66,7 @@ pass`, `bag_rtk: crown commander set`.
 ## Мир: шаблон договора и дипрепутация (0.9.x, его просьба 10-20)
 
 Копия ванильного `gui/peace_offer_view.gui` (после патча — `tools/rebase_overrides.py`).
+- **0.13.3 (10-27):** в списке выбранных договоров вложенная сетка внутренней категории получила `visible = "[PeaceTreaty.HasInnerCategory]"` — у ванили там ~400 строк `GetInnerCategory returned nullptr` в секунду, пока окно мира открыто. Не проверено в игре.
 - **Дипрепутация** (кнопка у сброса): ползунок «Дипломатия» на максимум — свой
   ползунок на том же `MaintenanceSetting` (`gui/bag_rtk_rep_driver.gui`, как у
   ползунков после войны), советник с лучшей дипломатией на `diplomatic_endeavors`;

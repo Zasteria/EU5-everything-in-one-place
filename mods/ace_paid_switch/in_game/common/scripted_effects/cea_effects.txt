@@ -1,0 +1,249 @@
+﻿# Scope: country. Runs $effect$ on every child the settings track: the ruler's dynasty, and the heir's family
+# when the heir is of another dynasty.
+cea_for_each_tracked_child = {
+	every_character = {
+		limit = {
+			owner ?= root
+			cea_is_tracked_child = yes
+		}
+		$effect$ = yes
+	}
+}
+
+# Scope: character. The education of the best of its skills.
+cea_set_best_skill_education = {
+	if = {
+		limit = {
+			adm >= dip
+			adm >= mil
+		}
+		set_child_education = child_education:administrative_education
+	}
+	else_if = {
+		limit = { dip >= mil }
+		set_child_education = child_education:diplomatic_education
+	}
+	else = {
+		set_child_education = child_education:military_education
+	}
+}
+
+# Scope: character. The education its child trait points to; a two-skill trait takes the higher of its two skills,
+# any other child the best of its skills.
+cea_set_trait_education = {
+	if = {
+		limit = { has_trait = child_intelligent }
+		set_child_education = child_education:administrative_education
+	}
+	else_if = {
+		limit = { has_trait = child_gregarious }
+		set_child_education = child_education:diplomatic_education
+	}
+	else_if = {
+		limit = { has_trait = child_rowdy }
+		set_child_education = child_education:military_education
+	}
+	else_if = {
+		limit = { has_trait = child_ambitious }
+		if = {
+			limit = { adm >= dip }
+			set_child_education = child_education:administrative_education
+		}
+		else = {
+			set_child_education = child_education:diplomatic_education
+		}
+	}
+	else_if = {
+		limit = { has_trait = child_gallant }
+		if = {
+			limit = { dip >= mil }
+			set_child_education = child_education:diplomatic_education
+		}
+		else = {
+			set_child_education = child_education:military_education
+		}
+	}
+	else_if = {
+		limit = { has_trait = child_shrewd }
+		if = {
+			limit = { mil >= adm }
+			set_child_education = child_education:military_education
+		}
+		else = {
+			set_child_education = child_education:administrative_education
+		}
+	}
+	else = {
+		cea_set_best_skill_education = yes
+	}
+}
+
+# Scope: character. Auto-education: first the paid in-depth education for the picked traits (paid like the game does,
+# skipped when the country can't afford it), then the "auto" setting: 2 by traits, 3 administrative, 4 diplomatic,
+# 5 military.
+cea_auto_educate = {
+	# cea_waits_for_paid marks a child that got a cheaper education only because the paid one wasn't affordable; it is
+	# moved to the paid one once it is, while educations the player chose stay untouched
+	if = {
+		limit = {
+			OR = {
+				cea_can_have_better_education = yes
+				has_variable = cea_waits_for_paid
+			}
+			cea_wants_paid_education = yes
+			# ace_paid_switch: paid education switched off as a whole; the child gets the cheaper one and waits
+			NOT = { root = { has_variable = cea_paid_off } }
+			root = { can_pay_price = price:select_expensive_child_education }
+		}
+		root = { pay_price = price:select_expensive_child_education }
+		set_child_education = child_education:expensive_in_depth_education
+		if = {
+			limit = { has_variable = cea_waits_for_paid }
+			remove_variable = cea_waits_for_paid
+		}
+	}
+	# else: the new education only shows once the effect is done, so a separate check here would still see the old
+	# one and replace the paid education just set
+	else_if = {
+		limit = { cea_can_have_better_education = yes }
+		if = {
+			limit = { cea_wants_paid_education = yes }
+			set_variable = { name = cea_waits_for_paid value = yes }
+		}
+		if = {
+			limit = { root.var:cea_auto ?= 3 }
+			set_child_education = child_education:administrative_education
+		}
+		else_if = {
+			limit = { root.var:cea_auto ?= 4 }
+			set_child_education = child_education:diplomatic_education
+		}
+		else_if = {
+			limit = { root.var:cea_auto ?= 5 }
+			set_child_education = child_education:military_education
+		}
+		else_if = {
+			limit = { root.var:cea_auto ?= 2 }
+			cea_set_trait_education = yes
+		}
+	}
+}
+
+# Scope: character. Marks the country when this child could get a better education.
+cea_flag_if_needs_education = {
+	if = {
+		limit = { cea_can_have_better_education = yes }
+		root = {
+			set_variable = { name = cea_found value = yes }
+			change_variable = { name = cea_n add = 1 }
+		}
+		# the first 8 children are listed in the alert's tooltip, and its clicks open their cards in turn
+		save_temporary_scope_as = cea_kid
+				if = {
+				limit = { root = { var:cea_n ?= 1 } }
+				root = { set_variable = { name = cea_child_1 value = scope:cea_kid } }
+			}
+			else_if = {
+				limit = { root = { var:cea_n ?= 2 } }
+				root = { set_variable = { name = cea_child_2 value = scope:cea_kid } }
+			}
+			else_if = {
+				limit = { root = { var:cea_n ?= 3 } }
+				root = { set_variable = { name = cea_child_3 value = scope:cea_kid } }
+			}
+			else_if = {
+				limit = { root = { var:cea_n ?= 4 } }
+				root = { set_variable = { name = cea_child_4 value = scope:cea_kid } }
+			}
+			else_if = {
+				limit = { root = { var:cea_n ?= 5 } }
+				root = { set_variable = { name = cea_child_5 value = scope:cea_kid } }
+			}
+			else_if = {
+				limit = { root = { var:cea_n ?= 6 } }
+				root = { set_variable = { name = cea_child_6 value = scope:cea_kid } }
+			}
+			else_if = {
+				limit = { root = { var:cea_n ?= 7 } }
+				root = { set_variable = { name = cea_child_7 value = scope:cea_kid } }
+			}
+			else_if = {
+				limit = { root = { var:cea_n ?= 8 } }
+				root = { set_variable = { name = cea_child_8 value = scope:cea_kid } }
+			}
+	}
+}
+
+# Scope: country. Points cea_current at the next listed child (wrapping round); the alert's click opens it.
+cea_advance_current = {
+	change_variable = { name = cea_idx add = 1 }
+	if = {
+		limit = { var:cea_idx > var:cea_n_listed }
+		set_variable = { name = cea_idx value = 1 }
+	}
+	if = {
+		limit = { var:cea_idx ?= 1 }
+		set_variable = { name = cea_current value = var:cea_child_1 }
+	}
+	else_if = {
+		limit = { var:cea_idx ?= 2 }
+		set_variable = { name = cea_current value = var:cea_child_2 }
+	}
+	else_if = {
+		limit = { var:cea_idx ?= 3 }
+		set_variable = { name = cea_current value = var:cea_child_3 }
+	}
+	else_if = {
+		limit = { var:cea_idx ?= 4 }
+		set_variable = { name = cea_current value = var:cea_child_4 }
+	}
+	else_if = {
+		limit = { var:cea_idx ?= 5 }
+		set_variable = { name = cea_current value = var:cea_child_5 }
+	}
+	else_if = {
+		limit = { var:cea_idx ?= 6 }
+		set_variable = { name = cea_current value = var:cea_child_6 }
+	}
+	else_if = {
+		limit = { var:cea_idx ?= 7 }
+		set_variable = { name = cea_current value = var:cea_child_7 }
+	}
+	else_if = {
+		limit = { var:cea_idx ?= 8 }
+		set_variable = { name = cea_current value = var:cea_child_8 }
+	}
+}
+
+# Scope: country. Forgets last month's list.
+cea_clear_list = {
+	set_variable = { name = cea_n value = 0 }
+	set_variable = { name = cea_idx value = 0 }
+	if = { limit = { exists = var:cea_child_1 } remove_variable = cea_child_1 }
+	if = { limit = { exists = var:cea_child_2 } remove_variable = cea_child_2 }
+	if = { limit = { exists = var:cea_child_3 } remove_variable = cea_child_3 }
+	if = { limit = { exists = var:cea_child_4 } remove_variable = cea_child_4 }
+	if = { limit = { exists = var:cea_child_5 } remove_variable = cea_child_5 }
+	if = { limit = { exists = var:cea_child_6 } remove_variable = cea_child_6 }
+	if = { limit = { exists = var:cea_child_7 } remove_variable = cea_child_7 }
+	if = { limit = { exists = var:cea_child_8 } remove_variable = cea_child_8 }
+	if = { limit = { exists = var:cea_current } remove_variable = cea_current }
+}
+
+cea_initialize = {
+ if = { limit = { NOT = { has_variable = cea_standalone_initialized } }
+ set_variable = { name = cea_alert_enabled value = yes }
+ set_variable = { name = cea_who value = 1 }
+ set_variable = { name = cea_depth value = 3 }
+ set_variable = { name = cea_auto value = 1 }
+ set_variable = { name = cea_standalone_initialized value = yes }
+ }
+}
+cea_refresh_list = {
+ if = { limit = { has_variable = cea_found } remove_variable = cea_found }
+ cea_clear_list = yes
+ cea_for_each_tracked_child = { effect = cea_flag_if_needs_education }
+ set_variable = { name = cea_n_listed value = var:cea_n }
+ if = { limit = { var:cea_n_listed > 8 } set_variable = { name = cea_n_listed value = 8 } }
+ if = { limit = { var:cea_n_listed > 0 } cea_advance_current = yes }
+}
