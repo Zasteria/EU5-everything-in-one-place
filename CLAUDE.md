@@ -45,7 +45,7 @@ for the reference tree and the rebuild loop,
 
 This tree is a knowledge base built for sessions **without** his PC, where he
 was the hands and eyes. **With PC access, act alone** (10-28): any access you
-need, mods into the game, logs, runs, commit, push. «Ask him» is for the rest.
+need, mods into the game, logs, runs, commit, push. Paths: `docs/CONVENTIONS.md`.
 
 ## Rules that exist because breaking them is silent
 

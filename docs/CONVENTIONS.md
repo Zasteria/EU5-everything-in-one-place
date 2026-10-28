@@ -68,6 +68,17 @@ What is deliberately absent: `gfx`, `events`, `decisions`, map data, and most of
 Run it at the start of a session too: it is cheaper than believing a document.
 Nothing anywhere records a version by hand.
 
+## His PC
+
+- this clone: `C:\Users\Zaste\Documents\GitHub\bag`; push works without a
+  password (Git Credential Manager); no `gh`
+- the game: `C:\Program Files (x86)\Steam\steamapps\common\Europa Universalis V`
+- workshop mods: `C:\Program Files (x86)\Steam\steamapps\workshop\content\3450310`
+- his data: `C:\Users\Zaste\Documents\Paradox Interactive\Europa Universalis V`
+  (`mod\`, `logs\`, `playsets.json`, saves)
+- collection scripts `C:\eu5 script` (`eu5_collect.py`, `eu5_recon.py`); old
+  mods `C:\Создал моды для EU5`
+
 ## The tools
 
 Every generator and checker lives in `mods/*/tools/` and is committed. **Nothing
