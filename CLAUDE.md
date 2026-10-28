@@ -41,15 +41,15 @@ for the reference tree and the rebuild loop,
 
 **The owner is Константин, he** — not «Lena»; masculine in Russian.
 
-## On his PC, do it yourself
+## On his PC, act alone
 
-**Never send him to `mods.bat`** (10-28): copy the built mod into the game's
-`mod\` folder yourself, commit and push yourself, ask for any access you need.
+This tree is a knowledge base built for sessions **without** his PC, where he
+was the hands and eyes. **With PC access, act alone** (10-28): any access you
+need, mods into the game, logs, runs, commit, push. «Ask him» is for the rest.
 
 ## Rules that exist because breaking them is silent
 
-- **Only the player can play**; a session may launch a hands-off run (TESTLOG
-  10-25). Say plainly what is verified and what is not. Build the smallest
+- **Say plainly what is verified and what is not.** Build the smallest
   thing that would show a signal and ask for one run — a whole feature finished
   before its first load is how `where_to_produce` ended up with six suspects and
   no way to choose between them.
