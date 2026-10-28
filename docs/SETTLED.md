@@ -47,7 +47,7 @@ is the normal state of the tree.
 
 **Nothing about updating the owner's mods may require a session of ours.** He
 asked for that in those words. `mods.bat` is his menu; **a session on his PC
-never sends him to it** and runs `tools/mods.py` itself (10-28).
+never sends him to it**: it copies the mod into the game itself (10-28).
 
 ## What has never been run
 

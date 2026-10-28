@@ -13,9 +13,8 @@
 `music`. Всё остальное в `mods/<мод>/` — `tools/`, `README.md`, `workshop/`,
 `translations/` — наше и никуда не едет.
 
-**Ничего паковать не надо.** `python3 tools/mods.py install <мод>` (сессия с
-доступом к ПК делает это сама; у него — `mods.bat` → 2 → мод → «поставить в игру»)
-уже делает ровно эту выборку и кладёт результат в
+**Ничего паковать не надо.** Сессия на ПК сама копирует эти папки мода в
+(у него без сессии — `mods.bat` → 2 → мод → «поставить в игру»)
 
 ```
 Documents\Paradox Interactive\Europa Universalis V\mod\<имя мода>\
@@ -196,7 +195,7 @@ two Required Items in step 5.
 
 `python3 tools/publish.py glorpui_hints` says `ok`; everything is ready.
 
-1. merge the branch, then `python3 tools/mods.py install <mod>` — yourself;
+1. merge the branch, then copy the mod into the game's `mod\` folder yourself;
 2. load once and check the list above;
 3. in game: mods screen → «Выбранные модификации» row → **sandbox icon** → Mod
    Tools → *Create mod*, filled from `metadata.json` (the table is in

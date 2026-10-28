@@ -6,8 +6,6 @@ no session of mine in the loop:
 
     python3 tools/mods.py           the menu
     python3 tools/mods.py check     just the answer, for a script or a shortcut
-    python3 tools/mods.py install [mod ...]   ours into the game, no menu: what a
-                                    session on his PC runs itself (10-28)
 
 The menu, as he asked for it on 2026-10-03:
 
@@ -41,8 +39,8 @@ The menu, as he asked for it on 2026-10-03:
    replaces our mods whole, writes it again from `last.txt`.
 
 **Nothing here rebuilds or checks anything**, and nothing commits: generators,
-`tools/refresh.py` and the checkers are a session's job, and so are commit and
-push when a session is on his PC (10-28); otherwise his, in GitHub Desktop.
+`tools/refresh.py` and the checkers are a session's job, and commit and push
+are his, in GitHub Desktop.
 
 Settings that are his rather than the repository's — where steamcmd lives, which
 Steam account, which branch — go in `tools/mods.local.json`, which is ignored by
@@ -1737,11 +1735,8 @@ def main(argv: list[str]) -> int:
         prog="mods.py",
         description="Обновление модов EU5: мастерская, папка игры и этот репозиторий.")
     parser.add_argument("command", nargs="?", default="menu",
-                        choices=["menu", "check", "install"],
-                        help="menu — меню (по умолчанию); check — только отчёт; "
-                             "install [мод ...] — поставить наши моды в игру без меню")
-    parser.add_argument("names", nargs="*", metavar="мод",
-                        help="для install: папки из mods/; без них — все, что в игре не совпадают")
+                        choices=["menu", "check"],
+                        help="menu — меню (по умолчанию); check — только отчёт")
     parser.add_argument("--workshop", metavar="DIR",
                         help="папка steamapps/workshop/content, если она не там, где обычно")
     parser.add_argument("--steamcmd", metavar="PATH", help="путь к steamcmd")
@@ -1759,26 +1754,6 @@ def main(argv: list[str]) -> int:
             configured[name] = given
     if any(getattr(parsed, n) for n in ("workshop", "steamcmd", "login", "game_mods", "game")):
         settings_write(configured)
-
-    if parsed.command == "install":
-        # The session's own way in (his word 10-28): with the PC at hand it
-        # installs what it built, rather than asking him to open the menu.
-        target = game_mods_dir(configured, make=True)
-        if target is None:
-            say("Папка модов игры не найдена.")
-            return 1
-        ours = {mod.path.name: mod for mod in our_mods()}
-        unknown = [n for n in parsed.names if n not in ours]
-        if unknown:
-            say("Нет в mods/: %s" % ", ".join(unknown))
-            return 1
-        chosen = ([ours[n] for n in parsed.names] if parsed.names else
-                  [m for m in ours.values() if installed_state(m, target) != "совпадает"])
-        if not chosen:
-            say("Все наши моды в игре совпадают с репозиторием.")
-            return 0
-        install_ours(chosen, target)
-        return 0 if all(installed_state(m, target) == "совпадает" for m in chosen) else 1
 
     if parsed.command == "check":
         world = gather(configured)

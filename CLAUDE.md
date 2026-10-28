@@ -43,8 +43,8 @@ for the reference tree and the rebuild loop,
 
 ## On his PC, do it yourself
 
-**Never send him to `mods.bat`** (10-28): `tools/mods.py install <mod>`,
-`check`; commit and push yourself; ask for any access you need.
+**Never send him to `mods.bat`** (10-28): copy the built mod into the game's
+`mod\` folder yourself, commit and push yourself, ask for any access you need.
 
 ## Rules that exist because breaking them is silent
 

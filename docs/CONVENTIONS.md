@@ -138,9 +138,9 @@ first time anything here could see more than five of the twenty-two.
 2026-10-03 to his list, four items, and **it never rebuilds or checks anything**:
 «любые обновления идут через тебя, и я не хочу сталкиваться с генераторами
 лично — совсем». After he pushes a reference update, `tools/refresh.py`, the
-generators and the checkers are the session's to run. **A session on his PC runs
-the menu's steps itself** (`python3 tools/mods.py install|check`, 10-28) and
-never asks him to. `refresh.py` on Windows: `PYTHONIOENCODING=utf-8`, in the
+generators and the checkers are the session's to run. **A session on his PC does
+the menu's steps itself** — copies the mod into the game's `mod\` folder — and
+never asks him to (10-28). `refresh.py` on Windows: `PYTHONIOENCODING=utf-8`, in the
 background; it can regenerate a file another session edited by hand — commit
 only what your task changed.
 
