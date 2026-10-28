@@ -1546,10 +1546,14 @@ def sv_actions_loc(game: Path) -> dict[str, str]:
             moving = f"{sv}.IsMoving{'Left' if n == 1 else 'Right'}(GetPlayer.Self)"
             net = f"[Select_CFixedPoint({moving}, {size}, Multiply_CFixedPoint({size}, '(CFixedPoint)-1'))|+=2]"
             nm = name.replace("${s}$", f"${side}_focus$")
+            # The outliner's progress field is 80 px and shrinks what does not
+            # fit; with the game's own «(+0.17)» after it, «30.00 (+0.42)» came
+            # out in a smaller font than every other line (his screen 10-28).
+            # There, the position alone; the whole shift stays in the tooltip.
             rows += [f' {k}: "{nm}"', f' {k}_action: "{nm}"', f' {k}_action_title: "{nm}"',
                      f' {k}_active: "{active.replace("${s}$", f"${side}_focus$")}"',
                      f' {k}_desc: "{desc.replace("${s}$", f"${side}_focus$").replace("${p}$", f"${pair}$")}"',
-                     f' {k}_action_progress: "{at} ({net})"',
+                     f' {k}_action_progress: "{at}"',
                      f' {k}_action_progress_wordier: "${side}_focus$: {at} ({net} {month})"',
                      f' {k}_action_progress_long_wordier: "@societal_value! ${side}_focus$: {at} ({net} {month})"',
                      f' {k}_action_progress_tooltip: "${pair}$ → ${side}_focus$: {at} ({net} {month})"']
