@@ -13,7 +13,8 @@
 `music`. Всё остальное в `mods/<мод>/` — `tools/`, `README.md`, `workshop/`,
 `translations/` — наше и никуда не едет.
 
-**Ничего паковать не надо.** `mods.bat` → **2** → мод → **«поставить в игру»**
+**Ничего паковать не надо.** `python3 tools/mods.py install <мод>` (сессия с
+доступом к ПК делает это сама; у него — `mods.bat` → 2 → мод → «поставить в игру»)
 уже делает ровно эту выборку и кладёт результат в
 
 ```
@@ -195,7 +196,7 @@ two Required Items in step 5.
 
 `python3 tools/publish.py glorpui_hints` says `ok`; everything is ready.
 
-1. merge the branch, then `mods.bat → 2` → the mod → «поставить в игру»;
+1. merge the branch, then `python3 tools/mods.py install <mod>` — yourself;
 2. load once and check the list above;
 3. in game: mods screen → «Выбранные модификации» row → **sandbox icon** → Mod
    Tools → *Create mod*, filled from `metadata.json` (the table is in

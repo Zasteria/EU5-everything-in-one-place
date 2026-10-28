@@ -41,10 +41,15 @@ for the reference tree and the rebuild loop,
 
 **The owner is Константин, he** — not «Lena»; masculine in Russian.
 
+## On his PC, do it yourself
+
+**Never send him to `mods.bat`** (10-28): `tools/mods.py install <mod>`,
+`check`; commit and push yourself; ask for any access you need.
+
 ## Rules that exist because breaking them is silent
 
-- **Only the player can run the game.** Nothing here can be tested from a
-  session. Say plainly what is verified and what is not. Build the smallest
+- **Only the player can play**; a session may launch a hands-off run (TESTLOG
+  10-25). Say plainly what is verified and what is not. Build the smallest
   thing that would show a signal and ask for one run — a whole feature finished
   before its first load is how `where_to_produce` ended up with six suspects and
   no way to choose between them.
@@ -102,10 +107,7 @@ Do not hardcode a reference folder's name or trust a version written in prose:
     python3 tools/refresh.py           rebuild every generated file, report what moved
 
 The session hook runs it — believe it over a document. **The menu never
-rebuilds** (10-03): what he pushes, we rebuild. His whole mod loop is
-`mods.bat`, a menu rather than commands to remember: **do not tell him to run
-the pieces by hand when the menu covers it**, and do not build a step only a
-session can perform.
+rebuilds** (10-03): what he pushes, we rebuild.
 
 ## Keeping this current
 

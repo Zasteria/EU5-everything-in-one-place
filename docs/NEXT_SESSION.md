@@ -28,7 +28,8 @@ Hands-off запуск (`research/executable.md`) — **только с его �
 
 Four items ([`CONVENTIONS.md`](CONVENTIONS.md)), **no rebuild in it** — after a
 reference update he pushes, `tools/refresh.py` is ours. Tried only on a mock
-Steam folder. **Ask for** `mods.bat → 1`, `→ 2` and `mods.bat check`.
+Steam folder. **Run them yourself** on his PC: `python3 tools/mods.py check`,
+`install` (10-28: installed `assimilate_primary` 0.11.8 — works), the menu's 1 and 2.
 
 ## `assimilate_primary` (10-13): главное сделано, ветка слита в main
 
@@ -43,7 +44,7 @@ Steam folder. **Ask for** `mods.bat → 1`, `→ 2` and `mods.bat check`.
 
 ## Also waiting on the owner, all of it cheap
 
-- **`mods.bat → 3 → 1` on his machine** — the 2026-08-28 files of Advanced Auto
+- **`tools/mods.py` → 3 → 1, run it yourself** — the 2026-08-28 files of Advanced Auto
   Build and Glorp UI are still missing here; it does **not** re-extract the game.
 - **The panel-open bisect and the hover run** —
   [`investigations/panel_hitch.md`](investigations/panel_hitch.md),

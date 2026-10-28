@@ -46,9 +46,8 @@ about it, and do not report a mod arriving at a newer version as a problem: that
 is the normal state of the tree.
 
 **Nothing about updating the owner's mods may require a session of ours.** He
-asked for that in those words. `mods.bat` is the menu; do not build a step only
-a session can perform, and do not tell him to run the pieces by hand when the
-menu covers it.
+asked for that in those words. `mods.bat` is his menu; **a session on his PC
+never sends him to it** and runs `tools/mods.py` itself (10-28).
 
 ## What has never been run
 
