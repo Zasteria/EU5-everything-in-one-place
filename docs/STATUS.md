@@ -5,7 +5,7 @@ One line each. **Read only the brief of the mod the task is about** —
 
 | mod | state | never been in game |
 | --- | --- | --- |
-| [`ru_loc_fix`](../mods/ru_loc_fix/CLAUDE.md) | разметка русского; **0.6.0 (10-30): 1.4.5 + DLC D009**; 0.5.9 (10-27): падежи товаров без `AddTextIf` (`tools/goods_cases.py`), `fire_generic_action` с `COUNTRY`; **09-26: круг 4 подтверждён** | круги 5–8, 0.5.9, 0.6.0 |
+| [`ru_loc_fix`](../mods/ru_loc_fix/CLAUDE.md) | разметка русского; **0.6.1 (10-31): 1.4.6, ключ Гранады**; 0.6.0 (10-30): 1.4.5 + DLC D009; 0.5.9 (10-27): падежи товаров без `AddTextIf` (`tools/goods_cases.py`), `fire_generic_action` с `COUNTRY`; **09-26: круг 4 подтверждён** | круги 5–8, 0.5.9, 0.6.0, 0.6.1 |
 | [`nmt_fix`](../mods/nmt_fix/CLAUDE.md) | 0.2.0 (10-03): земли подданных (121 условие) + NMT под 1.4 | всё |
 | [`integration_fix`](../mods/integration_fix/CLAUDE.md) | 0.2.0: Integration Hotfix на 1.4.1, вместо него | всё |
 | [`cm_maps`](../mods/cm_maps/CLAUDE.md) | **загружен 09-19, рисует**; 0.6.0: три режима карты отраслей; еда, губернатор под 1.4 не сверены | 0.3.0–0.6.0, починка прав, еда |
