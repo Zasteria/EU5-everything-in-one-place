@@ -37,7 +37,7 @@ compiles from them.
 | `3780623638_nation_destinies_rus` | `nation_destinies_rus` | 1.3 | main_menu |
 | `3816131982_theplaymaker_hre_fix` | `theplaymaker.hre_fix` | 1.0.1 | in_game |
 
-`reference/game/` holds 5173 files of EU5 itself — `in_game/gui/`, the parts
+`reference/game/` holds 5590 files of EU5 itself — `in_game/gui/`, the parts
 of `in_game/common/` the mods here reason about, and the game's own
 localization, which is how `mods/nd_ru/tools/term.py` answers what the game
 calls a concept.
