@@ -2115,27 +2115,52 @@ def _atr_list(text: str) -> str:
            "\t\ttab_id = auto_town_rights\n\t\titem_count = %d\n\t\tis_ordered = 1\n\t}\n" % len(old))
     if text.count(reg) != 1:
         raise SystemExit("town rights list: CM dev's registration has changed")
+    # A DLC's rights do not exist without it: a player who lacks it gets a list without
+    # their rows (registered shorter, rows never written), not rows naming nothing (10-30).
+    origin = {r.name: r.dlc for r in town_rights.rights()}
+    dlcs = sorted({origin[r] for r in rows if origin.get(r)})
+    if len(dlcs) > 1:
+        raise SystemExit(f"town rights list: rights of several DLCs ({dlcs}); nest their rows")
+    if any(origin.get(a) and not origin.get(b) for a, b in zip(rows, rows[1:])):
+        raise SystemExit("town rights list: a base right after a DLC's; the DLC's rows must come last")
+    base_rows = [r for r in rows if not origin.get(r)]
+
+    def registration(count: int, tabs: str) -> str:
+        migrate = (
+            "# cm_dev_perf +perf69: CMF builds row identities only on first registration;\n"
+            "# a save made with fewer rows is re-initialised so the new rights show.\n"
+            "if = {\n\tlimit = {\n"
+            "\t\thas_variable = cmm_list_initialized_cm__auto_town_rights_list\n"
+            f"\t\tvar:cmm_setting_list_count_cm__auto_town_rights_list < {count}\n"
+            "\t}\n"
+            "\tremove_variable = cmm_list_initialized_cm__auto_town_rights_list\n"
+            "\tremove_from_variable_map = { name = cmm_list_count key = flag:cm__auto_town_rights_list }\n"
+            "\tremove_from_variable_map = { name = cmm_list_last_index key = flag:cm__auto_town_rights_list }\n"
+            "}\n") + reg.replace("\t", "", 0).replace(f"item_count = {len(old)}", f"item_count = {count}").replace("\n\t", "\n")[1:]
+        return "".join(tabs + line + "\n" if line else "\n" for line in migrate.rstrip("\n").split("\n"))
+
     count = len(old) + len(rows)
-    migrate = (
-        "\t# cm_dev_perf +perf69: CMF builds row identities only on first registration;\n"
-        "\t# a save made with fewer rows is re-initialised so the new rights show.\n"
-        "\tif = {\n\t\tlimit = {\n"
-        "\t\t\thas_variable = cmm_list_initialized_cm__auto_town_rights_list\n"
-        f"\t\t\tvar:cmm_setting_list_count_cm__auto_town_rights_list < {count}\n"
-        "\t\t}\n"
-        "\t\tremove_variable = cmm_list_initialized_cm__auto_town_rights_list\n"
-        "\t\tremove_from_variable_map = { name = cmm_list_count key = flag:cm__auto_town_rights_list }\n"
-        "\t\tremove_from_variable_map = { name = cmm_list_last_index key = flag:cm__auto_town_rights_list }\n"
-        "\t}\n")
-    text = text.replace(reg, migrate + reg.replace(f"item_count = {len(old)}", f"item_count = {count}"))
+    if dlcs:
+        new_reg = (f"\tif = {{\n\t\tlimit = {{ has_dlc = \"{dlcs[0]}\" }}\n" + registration(count, "\t\t")
+                   + "\t}\n\telse = {\n" + registration(len(old) + len(base_rows), "\t\t") + "\t}\n")
+    else:
+        new_reg = registration(count, "\t")
+    text = text.replace(reg, new_reg)
     last = re.search(r"\tcmm_set_list_item_value = \{\n\t\tmod_id = cm\n\t\tsetting_id = auto_town_rights_list\n"
                      rf"\t\titem = {len(old)}\n\t\tvalue = town_rights_type:[a-z_0-9]+\n\t\}}\n", text)
     if not last:
         raise SystemExit("town rights list: CM dev's last row has moved")
-    added = "".join(
-        "\n\tcmm_set_list_item_value = {\n\t\tmod_id = cm\n\t\tsetting_id = auto_town_rights_list\n"
-        f"\t\titem = {len(old) + n}\n\t\tvalue = town_rights_type:{r} # cm_dev_perf +perf69\n\t}}\n"
-        for n, r in enumerate(rows, 1))
+
+    def row(n: int, right: str, tabs: str) -> str:
+        return (f"\n{tabs}cmm_set_list_item_value = {{\n{tabs}\tmod_id = cm\n{tabs}\tsetting_id = auto_town_rights_list\n"
+                f"{tabs}\titem = {n}\n{tabs}\tvalue = town_rights_type:{right} # cm_dev_perf +perf69\n{tabs}}}\n")
+
+    added = "".join(row(len(old) + n, r, "\t") for n, r in enumerate(base_rows, 1))
+    if dlcs:
+        added += (f"\n\tif = {{\n\t\tlimit = {{ has_dlc = \"{dlcs[0]}\" }}"
+                  + "".join(row(len(old) + len(base_rows) + n, r, "\t\t")
+                            for n, r in enumerate(rows[len(base_rows):], 1))
+                  + "\t}\n")
     return text[:last.end()] + added + text[last.end():]
 
 
@@ -2508,7 +2533,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 69
+PERF_REVISION = 70
 
 
 # CMF's own `is_host`, under a name neither the game nor any CMF build takes.
