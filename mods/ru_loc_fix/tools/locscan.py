@@ -145,6 +145,13 @@ def load(root: Path = None) -> tuple[dict[str, Entry], dict[str, Entry]]:
     for base in (refs.GAME_LOCALIZATION, refs.GAME / "loading_screen/localization"):
         russian.update(read_language(base / "russian"))
         english.update(read_language(base / "english"))
+    # A DLC keeps its own localization in its folder (1.4.5: Across the Pillars,
+    # 72 files a language) and is read after the base game, so it wins a clash.
+    for base in sorted(refs.GAME.glob("dlc/*/main_menu/localization")):
+        for path in sorted(base.rglob("*_l_russian.yml")):
+            russian.update(read_file(path))
+        for path in sorted(base.rglob("*_l_english.yml")):
+            english.update(read_file(path))
     # The engine layers keep every language in one folder, not a folder each.
     # Some files come in English only — the playset screen's
     # `MOD_PLAYSET_IS_AUTOMATICALLY_SORTED_*` (10-01) showed as a raw key — and

@@ -1,0 +1,633 @@
+﻿types GrandAllianceTypes {
+    type GrandAllianceDominanceTooltip = ContextualTooltipType {
+        blockoverride "title_icon_texture" { texture = "[InternationalOrganizationsView.GetInternationalOrganization.GetIcon]" }
+        blockoverride "concept_link" { text = "[international_organization|e]" }
+        blockoverride "tooltip_content" {
+            TooltipTextBlock = {}
+            block "ga_dominance_modifier" {}
+            block "ga_dominance_bonus" {}
+        }
+    }
+}
+
+organization_war_theme = {
+
+    blockoverride "coalition_header_background" {
+        datacontext = "[InternationalOrganizationsView.GetInternationalOrganization.GetTarget]"
+        background = {
+            visible = "[And(Country.IsValid, Not(Or(ObjectsEqual(Country.Self, GetCountry('MOR').Self), Or(ObjectsEqual(Country.Self, GetCountry('GRA').Self), ObjectsEqual(Country.Self, GetCountry('ADU').Self)))))]"
+            texture = "gfx/interface/illustrations/situation/golden_century_castile.dds"
+            modify_texture = {
+                using = bg_mask_fade_horizontal_middle_texture
+                texture_density = 2
+                spriteType = stretched
+                spriteborder = { 250 250 }
+                blend_mode = alphamultiply
+                alpha = 0.4
+            }
+        }
+        background = {
+            visible = "[And(Country.IsValid, ObjectsEqual(Country.Self, GetCountry('MOR').Self))]"
+            texture = "gfx/interface/illustrations/situation/golden_century_morocco.dds"
+            modify_texture = {
+                using = bg_mask_fade_horizontal_middle_texture
+                texture_density = 2
+                spriteType = stretched
+                spriteborder = { 250 250 }
+                blend_mode = alphamultiply
+                alpha = 0.4
+            }
+        }
+        background = {
+            visible = "[And(Country.IsValid, Or(ObjectsEqual(Country.Self, GetCountry('GRA').Self), ObjectsEqual(Country.Self, GetCountry('ADU').Self)))]"
+            texture = "gfx/interface/illustrations/situation/golden_century_granada.dds"
+            modify_texture = {
+                using = bg_mask_fade_horizontal_middle_texture
+                texture_density = 2
+                spriteType = stretched
+                spriteborder = { 250 250 }
+                blend_mode = alphamultiply
+                alpha = 0.4
+            }
+        }
+    }
+
+    blockoverride "organization_overview_tab_visible" {}
+
+    blockoverride "ios_common_subheader" {
+        hbox = {
+            layoutpolicy_horizontal = expanding
+            spacing = 2
+            background = {
+				texture = "gfx/interface/component_decoration/situation/battle_for_the_strait_dds/battle_for_the_strait_loading_bar_background.dds"
+				texture_density = 2
+				spriteType = stretched
+			}
+
+			icon = {
+				size = { 16 48 }
+				texture = "gfx/interface/component_decoration/situation/battle_for_the_strait_dds/battler_for_the_strait_column.dds"
+			}
+            
+            datacontext = "[InternationalOrganizationsView.GetInternationalOrganization.GetTarget]"
+            widget = {
+				size = { 32 32 }
+                tooltipwidget = {
+                    GrandAllianceDominanceTooltip = {
+                        blockoverride "title_text" { text = "gc_colonial_dominance" }
+                        blockoverride "text" { text = "ga_dominance_bar_current_colonial_tt" }
+                    }
+                }
+
+
+                piechart = {
+                    size = { 100% 100% }
+                    parentanchor = center
+                    using = piechart_angles
+                    using = bg_circle_piechart
+
+                    pieslice_no_highlight = {
+                        using = bg_pie_chart_alpha_80_texture
+                        value = "[FixedPointToFloat(Country.GetVariable('gc_colonial_dominance'))]"
+                        using = color_value_progress_gray
+                    }
+                    pieslice_no_highlight = {
+                        using = bg_pie_chart_alpha_80_texture
+                        value = "[Subtract_float('(float)100.0', FixedPointToFloat(Country.GetVariable('gc_colonial_dominance')))]"
+                        using = color_value_progress_gray
+                    }
+
+                    icon = {
+                        size = { 95% 95% }
+                        parentanchor = center
+                        using = gc_colonial_dominance_texture
+                    }
+                }
+
+                piechart = {
+                    size = { 100% 100% }
+                    parentanchor = center
+                    using = piechart_angles
+
+                    pieslice_no_highlight = {
+                        using = bg_pie_chart_alpha_80_texture
+                        value = "[FixedPointToFloat(Country.GetVariable('gc_colonial_dominance'))]"
+                        using = color_value_progress_blue
+                    }
+                    pieslice_no_highlight = {
+                        using = bg_pie_chart_alpha_80_texture
+                        value = "[Subtract_float('(float)100.0', FixedPointToFloat(Country.GetVariable('gc_colonial_dominance')))]"
+                        color = { 0 0 0 0 }
+                    }
+                }
+            }
+            widget = {
+                allow_outside = yes
+                size = { 200 50 }
+    
+                widget = {
+                    size = { 98% 20 }
+                    parentanchor = center
+                    tooltipwidget = {
+                        GrandAllianceDominanceTooltip = {
+                            blockoverride "title_text" { text = "gc_colonial_dominance" }
+                            blockoverride "text" { text = "ga_dominance_bar_current_colonial_tt" }
+                        }
+                    }
+                    background = {
+                        using = bg_cabinet_card_frame
+                    }
+
+                    progressbar_framed = {
+                        size = { 100% 100% }
+                        texture_density = 2
+                        spriteType = corneredstretched
+                        spriteborder = { 12 0 }
+                        min = 0
+                        max = 100
+                        value = "[FixedPointToFloat(Country.GetVariable('gc_colonial_dominance'))]"
+                        progresstexture = "gfx/interface/progressbars/progress_bar_goldish.dds"
+                        noprogresstexture = "gfx/interface/progressbars/progress_bar_grey_alt.dds"
+                    }
+                }
+
+                hbox = {
+                    size = { 100% 100% }
+                    allow_outside = yes
+                    position = { 14 0 }
+    
+                    expand = {}
+                    GoldenCenturyThresholdMarker = {
+                        blockoverride "gc_threshold_marker_size" { size = { 30 30 } }
+                        blockoverride "gc_marker_pct" { raw_text = "25" }
+                        blockoverride "gc_marker_lit" {
+                            visible = "[GreaterThanOrEqualTo_CFixedPoint(Country.GetVariable('gc_colonial_dominance'), '(CFixedPoint)25')]"
+                        }
+                        tooltipwidget = {
+                            GrandAllianceDominanceTooltip = {
+                                blockoverride "title_text" { text = "gc_colonial_dominance" }
+                                blockoverride "text" { text = "ga_dominance_bar_current_colonial_tt" }
+                                blockoverride "ga_dominance_bonus" {
+                                    using = ga_threshold_bonus_list
+                                    blockoverride "ga_threshold_bonus_list_col_text" {
+                                        text = "ga_col_25_bonus_tt"
+                                    }
+                                    blockoverride "ga_threshold_bonus_list_col_visible" { visible = yes }
+                                    blockoverride "ga_threshold_bonus_list_eu_visible" { visible = no }
+                                }
+                            }
+                        }
+                    }
+                    expand = {}
+                    GoldenCenturyThresholdMarker = {
+                        blockoverride "gc_threshold_marker_size" { size = { 30 30 } }
+                        blockoverride "gc_marker_pct" { raw_text = "50" }
+                        blockoverride "gc_marker_lit" {
+                            visible = "[GreaterThanOrEqualTo_CFixedPoint(Country.GetVariable('gc_colonial_dominance'), '(CFixedPoint)50')]"
+                        }
+                        tooltipwidget = {
+                            GrandAllianceDominanceTooltip = {
+                                blockoverride "title_text" { text = "gc_colonial_dominance" }
+                                blockoverride "text" { text = "ga_dominance_bar_current_colonial_tt" }
+                                blockoverride "ga_dominance_bonus" {
+                                    using = ga_threshold_bonus_list
+                                    blockoverride "ga_threshold_bonus_list_col_text" {
+                                        text = "ga_col_50_bonus_tt"
+                                    }
+                                    blockoverride "ga_threshold_bonus_list_col_visible" { visible = yes }
+                                    blockoverride "ga_threshold_bonus_list_eu_visible" { visible = no }
+                                }
+                            }
+                        }
+                    }
+                    expand = {}
+                    GoldenCenturyThresholdMarker = {
+                        blockoverride "gc_threshold_marker_size" { size = { 30 30 } }
+                        blockoverride "gc_marker_pct" { raw_text = "75" }
+                        blockoverride "gc_marker_lit" {
+                            visible = "[GreaterThanOrEqualTo_CFixedPoint(Country.GetVariable('gc_colonial_dominance'), '(CFixedPoint)75')]"
+                        }
+                        tooltipwidget = {
+                            GrandAllianceDominanceTooltip = {
+                                blockoverride "title_text" { text = "gc_colonial_dominance" }
+                                blockoverride "text" { text = "ga_dominance_bar_current_colonial_tt" }
+                                blockoverride "ga_dominance_bonus" {
+                                    using = ga_threshold_bonus_list
+                                    blockoverride "ga_threshold_bonus_list_col_text" {
+                                        text = "ga_col_75_bonus_tt"
+                                    }
+                                    blockoverride "ga_threshold_bonus_list_col_visible" { visible = yes }
+                                    blockoverride "ga_threshold_bonus_list_eu_visible" { visible = no }
+                                }
+                            }
+                        }
+                    }
+                    expand = {}
+                    GoldenCenturyThresholdMarker = {
+                        blockoverride "gc_threshold_marker_size" { size = { 30 30 } }
+                        blockoverride "gc_marker_pct" { raw_text = "100" }
+                        blockoverride "gc_marker_lit" {
+                            visible = "[GreaterThanOrEqualTo_CFixedPoint(Country.GetVariable('gc_colonial_dominance'), '(CFixedPoint)100')]"
+                        }
+                        tooltipwidget = {
+                            GrandAllianceDominanceTooltip = {
+                                blockoverride "title_text" { text = "gc_colonial_dominance" }
+                                blockoverride "text" { text = "ga_dominance_bar_current_colonial_tt" }
+                                blockoverride "ga_dominance_bonus" {
+                                    using = ga_threshold_bonus_list
+                                    blockoverride "ga_threshold_bonus_list_col_text" {
+                                        text = "ga_col_100_bonus_tt"
+                                    }
+                                    blockoverride "ga_threshold_bonus_list_col_visible" { visible = yes }
+                                    blockoverride "ga_threshold_bonus_list_eu_visible" { visible = no }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            expand = {}
+            widget = {
+                allow_outside = yes
+                size = { 200 50 }
+    
+                widget = {
+                    size = { 98% 20 }
+                    parentanchor = center
+                    tooltipwidget = {
+                        GrandAllianceDominanceTooltip = {
+                            blockoverride "title_text" { text = "gc_european_dominance" }
+                            blockoverride "text" { text = "ga_dominance_bar_current_european_tt" }
+                        }
+                    }
+                    background = {
+                        using = bg_cabinet_card_frame
+                    }
+
+                    progressbar_framed = {
+                        size = { 100% 100% }
+                        texture_density = 2
+                        spriteType = corneredstretched
+                        spriteborder = { 12 0 }
+                        min = 0
+                        max = 100
+                        invertprogress = yes
+                        value = "[FixedPointToFloat(Country.GetVariable('gc_european_dominance'))]"
+                        progresstexture = "gfx/interface/progressbars/progress_bar_goldish.dds"
+                        noprogresstexture = "gfx/interface/progressbars/progress_bar_grey_alt.dds"
+                    }
+                }
+    
+                hbox = {
+                    size = { 100% 100% }
+                    allow_outside = yes
+                    position = { -14 0 }
+                    
+                    GoldenCenturyThresholdMarker = {
+                        blockoverride "gc_threshold_marker_size" { size = { 30 30 } }
+                        blockoverride "gc_marker_pct" { raw_text = "100" }
+                        blockoverride "gc_marker_lit" {
+                            visible = "[GreaterThanOrEqualTo_CFixedPoint(Country.GetVariable('gc_european_dominance'), '(CFixedPoint)100')]"
+                        }
+                        tooltipwidget = {
+                            GrandAllianceDominanceTooltip = {
+                                blockoverride "title_text" { text = "gc_european_dominance" }
+                                blockoverride "text" { text = "ga_dominance_bar_current_european_tt" }
+                                blockoverride "ga_dominance_bonus" {
+                                    using = ga_threshold_bonus_list
+                                    blockoverride "ga_threshold_bonus_list_eu_text" {
+                                        text = "ga_eu_100_bonus_tt"
+                                    }
+                                    blockoverride "ga_threshold_bonus_list_eu_visible" { visible = yes }
+                                    blockoverride "ga_threshold_bonus_list_col_visible" { visible = no }
+                                }
+                            }
+                        }
+                    }
+                    expand = {}
+                    GoldenCenturyThresholdMarker = {
+                        blockoverride "gc_threshold_marker_size" { size = { 30 30 } }
+                        blockoverride "gc_marker_pct" { raw_text = "75" }
+                        blockoverride "gc_marker_lit" {
+                            visible = "[GreaterThanOrEqualTo_CFixedPoint(Country.GetVariable('gc_european_dominance'), '(CFixedPoint)75')]"
+                        }
+                        tooltipwidget = {
+                            GrandAllianceDominanceTooltip = {
+                                blockoverride "title_text" { text = "gc_european_dominance" }
+                                blockoverride "text" { text = "ga_dominance_bar_current_european_tt" }
+                                blockoverride "ga_dominance_bonus" {
+                                    using = ga_threshold_bonus_list
+                                    blockoverride "ga_threshold_bonus_list_eu_text" {
+                                        text = "ga_eu_75_bonus_tt"
+                                    }
+                                    blockoverride "ga_threshold_bonus_list_eu_visible" { visible = yes }
+                                    blockoverride "ga_threshold_bonus_list_col_visible" { visible = no }
+                                }
+                            }
+                        }
+                    }
+                    expand = {}
+                    GoldenCenturyThresholdMarker = {
+                        blockoverride "gc_threshold_marker_size" { size = { 30 30 } }
+                        blockoverride "gc_marker_pct" { raw_text = "50" }
+                        blockoverride "gc_marker_lit" {
+                            visible = "[GreaterThanOrEqualTo_CFixedPoint(Country.GetVariable('gc_european_dominance'), '(CFixedPoint)50')]"
+                        }
+                        tooltipwidget = {
+                            GrandAllianceDominanceTooltip = {
+                                blockoverride "title_text" { text = "gc_european_dominance" }
+                                blockoverride "text" { text = "ga_dominance_bar_current_european_tt" }
+                                blockoverride "ga_dominance_bonus" {
+                                    using = ga_threshold_bonus_list
+                                    blockoverride "ga_threshold_bonus_list_eu_text" {
+                                        text = "ga_eu_50_bonus_tt"
+                                    }
+                                    blockoverride "ga_threshold_bonus_list_eu_visible" { visible = yes }
+                                    blockoverride "ga_threshold_bonus_list_col_visible" { visible = no }
+                                }
+                            }
+                        }
+                    }
+                    expand = {}
+                    GoldenCenturyThresholdMarker = {
+                        blockoverride "gc_threshold_marker_size" { size = { 30 30 } }
+                        blockoverride "gc_marker_pct" { raw_text = "25" }
+                        blockoverride "gc_marker_lit" {
+                            visible = "[GreaterThanOrEqualTo_CFixedPoint(Country.GetVariable('gc_european_dominance'), '(CFixedPoint)25')]"
+                        }
+                        tooltipwidget = {
+                            GrandAllianceDominanceTooltip = {
+                                blockoverride "title_text" { text = "gc_european_dominance" }
+                                blockoverride "text" { text = "ga_dominance_bar_current_european_tt" }
+                                blockoverride "ga_dominance_bonus" {
+                                    using = ga_threshold_bonus_list
+                                    blockoverride "ga_threshold_bonus_list_eu_text" {
+                                        text = "ga_eu_25_bonus_tt"
+                                    }
+                                    blockoverride "ga_threshold_bonus_list_eu_visible" { visible = yes }
+                                    blockoverride "ga_threshold_bonus_list_col_visible" { visible = no }
+                                }
+                            }
+                        }
+                    }
+                    expand = {}
+                }
+            }
+            widget = {
+				size = { 32 32 }
+                tooltipwidget = {
+                    GrandAllianceDominanceTooltip = {
+                        blockoverride "title_text" { text = "gc_european_dominance" }
+                        blockoverride "text" { text = "ga_dominance_bar_current_european_tt" }
+                    }
+                }
+
+                piechart = {
+                    size = { 100% 100% }
+                    parentanchor = center
+                    using = piechart_angles
+                    using = bg_circle_piechart
+
+                    pieslice_no_highlight = {
+                        using = bg_pie_chart_alpha_80_texture
+                        value = "[FixedPointToFloat(Country.GetVariable('gc_european_dominance'))]"
+                        using = color_value_progress_gray
+                    }
+                    pieslice_no_highlight = {
+                        using = bg_pie_chart_alpha_80_texture
+                        value = "[Subtract_float('(float)100.0', FixedPointToFloat(Country.GetVariable('gc_european_dominance')))]"
+                        using = color_value_progress_gray
+                    }
+
+                    icon = {
+                        size = { 100% 100% }
+                        parentanchor = center
+                        using = gc_european_dominance_texture
+                    }
+                }
+
+                piechart = {
+                    size = { 100% 100% }
+                    parentanchor = center
+                    using = piechart_angles
+
+                    pieslice_no_highlight = {
+                        using = bg_pie_chart_alpha_80_texture
+                        value = "[FixedPointToFloat(Country.GetVariable('gc_european_dominance'))]"
+                        using = color_value_progress_red
+                    }
+                    pieslice_no_highlight = {
+                        using = bg_pie_chart_alpha_80_texture
+                        value = "[Subtract_float('(float)100.0', FixedPointToFloat(Country.GetVariable('gc_european_dominance')))]"
+                        color = { 0 0 0 0 }
+                    }
+                }
+            }
+
+            icon = {
+				size = { 16 48 }
+				texture = "gfx/interface/component_decoration/situation/battle_for_the_strait_dds/battler_for_the_strait_column.dds"
+			}
+        }
+    }
+
+    blockoverride "organization_panel_overview_visible" {
+        visible = "[InternationalOrganizationsView.Vars.NotExistOrHasValue( 'organizations', 'overview' )]"
+    }
+
+    blockoverride "organization_members_tab_down" {
+        down = "[InternationalOrganizationsView.Vars.HasValue( 'organizations', 'members' )]"
+    }
+
+    blockoverride "organization_panel_members_visible" {
+        visible = "[InternationalOrganizationsView.Vars.HasValue( 'organizations', 'members' )]"
+    }
+
+    blockoverride "organization_main_actions_extra_visible" {
+        visible = yes
+    }
+
+    blockoverride "organization_main_actions_extra" {
+        button_regular_diamond = {
+            size = { 470 30 }
+            text = "ASK_FOR_IO_MEMBERSHIP"
+
+            visible = "[Not(Player.IsMemberOfInternationalOrganization(InternationalOrganizationsView.GetInternationalOrganization))]"
+            enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+
+            scripted_action_tooltip = {
+                click_type = left
+                click_mode = single
+                action_name = "ask_to_join_international_organization"
+                action_direction = "request"
+                actor = "[InternationalOrganizationsView.GetPlayer]"
+                parameter = {
+                    parameter_name = "recipient"
+                    parameter_value = "[InternationalOrganizationsView.GetInternationalOrganization.GetLeaderCountry]"
+                }
+                parameter = {
+                    parameter_name = "international_organization"
+                    parameter_value = "[InternationalOrganizationsView.GetInternationalOrganization]"
+                }
+            }
+
+            tooltipwidget = {
+                using = io_join_button_tooltip
+            }
+        }
+
+        button_regular_diamond = {
+            size = { 470 30 }
+            text = "INVITE_FOR_IO_MEMBERSHIP"
+
+            visible = "[Player.IsMemberOfInternationalOrganization(InternationalOrganizationsView.GetInternationalOrganization)]"
+            enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+
+            scripted_action_tooltip = {
+                click_type = left
+                click_mode = single
+                action_name = "invite_to_international_organization"
+                action_direction = "offer"
+                actor = "[InternationalOrganizationsView.GetPlayer]"
+                parameter = {
+                    parameter_name = "international_organization"
+                    parameter_value = "[InternationalOrganizationsView.GetInternationalOrganization]"
+                }
+            }
+
+            tooltipwidget = {
+                using = io_invite_button_tooltip
+            }
+        }
+
+        button_regular_diamond = {
+            size = { 470 30 }
+            text = "LEAVE_IO_MEMBERSHIP"
+
+            visible = "[Player.IsMemberOfInternationalOrganization(InternationalOrganizationsView.GetInternationalOrganization)]"
+            enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+
+            scripted_action_tooltip = {
+                click_type = left
+                click_mode = confirm
+                action_name = "leave_international_organization"
+                action_direction = "offer"
+                actor = "[InternationalOrganizationsView.GetPlayer]"
+                parameter = {
+                    parameter_name = "recipient"
+                    parameter_value = "[InternationalOrganizationsView.GetInternationalOrganization]"
+                }
+            }
+
+            tooltipwidget = {
+                using = io_leave_button_tooltip
+            }
+        }
+    }
+
+    blockoverride "organization_overview_list_custom_top_extra" {
+        hbox = {
+            layoutpolicy_horizontal = expanding
+            spacing = 4
+            margin = { 6 2 }
+            using = bg_paper_card
+            using = bg_cabinet_card_frame
+
+            hbox = {
+                layoutpolicy_horizontal = expanding
+                margin = { 6 8 }
+                minimumsize = { 360 -1 }
+                maximumsize = { 360 -1 }
+                background = {
+                    texture = "gfx/interface/component_tiles/military_modifiers_container.dds"
+                    texture_density = 2
+                    mirror = horizontal
+                    spriteType = Corneredstretched
+                    spriteborder = { 25 0 }
+                }
+
+                vbox = {
+                    margin = { 12 4 }
+                    spacing = 2
+                    datacontext = "[InternationalOrganizationsView.GetInternationalOrganization.GetLeaderCountry]"
+                    country_flag_mid = {
+                        tooltipwidget = { using = CountryTooltip }
+                    }
+                    text_single = {
+                        autoresize = yes
+                        align = center
+                        default_format = "#yellow_titles"
+                        text = "grand_alliance_leader"
+                        tooltipwidget = {
+                            ContextualTooltipType = {
+                                blockoverride "title_icon" {
+                                    icon = {
+                                        using = tooltip_title_icon_size
+                                        texture = "[InternationalOrganizationsView.GetInternationalOrganization.GetIcon]"
+                                    }
+                                }
+                                blockoverride "title_text" { text = "grand_alliance_leader" }
+                                blockoverride "concept_link" { text = "[international_organization_leader_short|e]" }
+                                blockoverride "tooltip_content" {
+                                    TooltipFlavorTextBlock = {
+                                        blockoverride "text" { text = "grand_alliance_leader_desc" }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    text_single = {
+                        autoresize = yes
+                        align = center
+                        text = "[Country.GetName]"
+                    }
+                }
+            }
+
+            expand = {}
+
+            vbox = {
+                visible = "[InternationalOrganizationsView.GetInternationalOrganization.GetTarget.IsValid]"
+                using = bg_text_mask_container_dark_red
+                margin = { 12 4 }
+                spacing = 2
+                datacontext = "[InternationalOrganizationsView.GetInternationalOrganization.GetTarget]"
+                country_flag_mid = {
+                    tooltipwidget = { using = CountryTooltip }
+                }
+                text_single = {
+                    autoresize = yes
+                    align = center
+                    default_format = "#yellow_titles"
+                    text = "gc_legend_colossus"
+                    tooltipwidget = {
+                        ContextualTooltipType = {
+                            blockoverride "title_icon" {
+                                icon = {
+                                    using = tooltip_title_icon_size
+                                    texture = "[InternationalOrganizationsView.GetInternationalOrganization.GetIcon]"
+                                }
+                            }
+                            blockoverride "title_text" { text = "gc_legend_colossus" }
+                            blockoverride "tooltip_content" {
+                                TooltipFlavorTextBlock = {
+                                    blockoverride "text" { text = "gc_legend_colossus_desc" }
+                                }
+                            }
+                        }
+                    }
+                }
+                text_single = {
+                    autoresize = yes
+                    align = center
+                    text = "[Country.GetName]"
+                }
+            }
+            expand = {}
+        }
+    }
+
+    blockoverride "organization_overview_list_custom_bottom" {
+        expand = {}
+    }
+}

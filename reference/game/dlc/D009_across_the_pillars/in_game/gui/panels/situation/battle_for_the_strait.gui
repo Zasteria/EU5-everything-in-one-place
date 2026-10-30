@@ -1,0 +1,1250 @@
+﻿Types BattleForTheStraitTypes {
+	type influence_threshold_icon = widget  {
+		ignore_layout = yes
+		allow_outside = yes
+		parentanchor = center
+		widgetanchor = center
+		position = { 0 6 }
+		
+		size = { 34 36 }
+
+		background = {
+			texture = "gfx/interface/icons/unit_view/moral_bar_transparent.dds"
+		}
+
+		icon = {
+			parentanchor = center
+			size = { 100% 100% }
+			texture = "gfx/interface/component_decoration/situation/battle_for_the_strait_dds/porcent_frame_with_arrows.dds"
+			texture_density = 2
+			spriteType = stretched
+
+			hbox = {
+				parentanchor = center
+				position = { 0 9 }
+				maximumsize = { 26 19 }
+				
+				text_single = {
+					autoresize = yes
+					align = center|nobaseline
+					fontsize = 13
+					block "influence_threshold_text" {}
+				}
+				text_single = {
+					autoresize = yes
+					align = center|nobaseline
+					fontsize = 10
+					raw_text = "%"
+				}
+			}
+
+		}
+	}
+
+	type bfts_action_button = widget {
+		size = { 40 40 }
+
+		button = {
+			parentanchor = center
+			size = { 102% 102% }
+			texture_density = 2
+			spriteType = stretched
+
+			block "bfts_action_button_enabled" {
+				enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+			}
+
+			block "bfts_action_button_action" {
+				scripted_action_tooltip = {
+					click_type = left
+					click_mode = confirm
+					actor = "[SituationView.GetPlayer]"
+					parameter = {
+						parameter_name = "recipient"
+						parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+					}
+				}
+			}
+
+			tooltipwidget = {
+				ContextualTooltipType = {
+					blockoverride "title_text" {
+						text = "[GenericAction.GetNameWithNoTooltip]"
+					}
+					blockoverride "concept_link" {
+						text = "[situation|e]"
+					}
+					blockoverride "title_icon" {
+						icon = {
+							using = tooltip_title_icon_size
+							texture = "[GenericAction.GetIcon]"
+						}
+					}
+					blockoverride "tooltip_content" {
+						using = action_tooltip_inner_content
+					}
+				}
+			}
+
+			block "bfts_action_button_art" {
+				visible = yes
+			}
+
+			icon = {
+				parentanchor = center
+				size = { 32 32 }
+				texture = "[GenericAction.GetIcon]"
+				alpha = 0.8
+
+				block "bfts_action_button_icon_inactive" {
+					visible = no
+				}
+			}
+
+			icon = {
+				parentanchor = center
+				size = { 32 32 }
+				texture = "[GenericAction.GetIcon]"
+
+				block "bfts_action_button_icon_active" {
+					visible = yes
+				}
+			}
+		}
+
+		icon = {
+			parentanchor = center
+			size = { 102% 102% }
+			texture_density = 2
+			spriteType = stretched
+			enabled = no
+
+			block "bfts_action_button_unavailable" {
+				visible = no
+			}
+
+			tooltipwidget = {
+				ContextualTooltipType = {
+					blockoverride "title_text" {
+						text = "[GenericAction.GetNameWithNoTooltip]"
+					}
+					blockoverride "concept_link" {
+						text = "[situation|e]"
+					}
+					blockoverride "title_icon" {
+						icon = {
+							using = tooltip_title_icon_size
+							texture = "[GenericAction.GetIcon]"
+						}
+					}
+					blockoverride "tooltip_content" {
+						TooltipTextBlock = {
+							blockoverride "text" {
+								text = "[GenericAction.GetBasicTooltip]"
+							}
+						}
+					}
+				}
+			}
+
+			icon = {
+				parentanchor = center
+				size = { 32 32 }
+				texture = "[GenericAction.GetIcon]"
+			}
+		}
+	}
+
+	type bfts_action_button_castile = bfts_action_button {
+		blockoverride "bfts_action_button_art" {
+			visible = "[GetCountry('CAS').IsPlayer]"
+			texture = "gfx/interface/component_decoration/situation/battle_for_the_strait_dds/castile_button.dds"
+		}
+		blockoverride "bfts_action_button_unavailable" {
+			visible = "[Not(GetCountry('CAS').IsPlayer)]"
+			texture = "gfx/interface/component_decoration/situation/battle_for_the_strait_dds/castile_unavailable.dds"
+		}
+	}
+
+	type bfts_action_button_morocco = bfts_action_button {
+		blockoverride "bfts_action_button_art" {
+			visible = "[GetCountry('MOR').IsPlayer]"
+			texture = "gfx/interface/component_decoration/situation/battle_for_the_strait_dds/morocco_button.dds"
+		}
+		blockoverride "bfts_action_button_unavailable" {
+			visible = "[Not(GetCountry('MOR').IsPlayer)]"
+			texture = "gfx/interface/component_decoration/situation/battle_for_the_strait_dds/morocco_unavailable.dds"
+		}
+	}
+
+	type bfts_action_button_granada = bfts_action_button {
+		blockoverride "bfts_action_button_art" {
+			visible = "[GetCountry('GRA').IsPlayer]"
+			texture = "gfx/interface/component_decoration/situation/battle_for_the_strait_dds/granada_button.dds"
+		}
+		blockoverride "bfts_action_button_unavailable" {
+			visible = "[Not(GetCountry('GRA').IsPlayer)]"
+			texture = "gfx/interface/component_decoration/situation/battle_for_the_strait_dds/granada_unavailable.dds"
+		}
+	}
+
+	type bfts_monthly_change_breakdown_list = TooltipListBase {
+		block "set_textcontext" {
+			ontextcontextchanged = "[SetStringPairListWithTitleFromTextContext(PdxGuiWidget.AccessSelf)]"
+		}
+		datacontext = "[GetAutoTableWidthForWidget(PdxGuiWidget.Self)]"
+		minimumsize = "[AutoTableWidth.GetTableMinimumSize('(float)420', '(float)20', PdxGuiWidget.Self)]"
+
+		blockoverride "block_title" {
+			visible = "[And(HasStringPairListContext(PdxGuiWidget.Self), StringPairList.GetTitle.IsStringViewNotEmptyOrNull)]"
+			text = "[StringPairList.GetTitle.GetStringView]"
+		}
+
+		TooltipListScrollArea = {
+			autoresize_axis = vertical
+			visible = "[And(HasStringPairListContext(PdxGuiWidget.Self), DataModelHasItems(StringPairList.GetRows))]"
+
+			blockoverride "scrollarea_content" {
+				TooltipStringPairListFixedContent = {
+					blockoverride "stringpair_datamodel" {
+						datamodel = "[DataModelFirst(StringPairList.GetRows, '(int32)9')]"
+					}
+				}
+			}
+		}
+
+		TooltipTableField = {
+			visible = "[And(HasStringPairListContext(PdxGuiWidget.Self), GreaterThan_int32(GetDataModelSize(StringPairList.GetRows), '(int32)9'))]"
+
+			blockoverride "field_background" {
+				background = {
+					using = tooltip_table_field_texture
+				}
+			}
+
+			blockoverride "field_content" {
+				text_single = {
+					margin = { 10 5 }
+					align = nobaseline
+					autoresize = yes
+					elide = right
+					using = tooltip_max_width_title_wide
+					text = "BFTS_BREAKDOWN_AND_SOME_MORE"
+				}
+
+				expand = {}
+			}
+
+			tooltipwidget = {
+				ContextualTooltipType = {
+					blockoverride "title_icon_texture" {
+						texture = "[SituationView.GetActiveSituation.GetVariableIcon(MonthlySavedVariable.Self)]"
+					}
+					blockoverride "title_text" {
+						text = "BFTS_MONTHLY_CHANGE_TITLE"
+					}
+					blockoverride "tooltip_content" {
+						TooltipScrolledStringPairList = {
+							blockoverride "block_scrollarea" { maximumsize = { -1 600 } }
+							textcontext = "[MonthlySavedVariable.GetMonthlyChangeBreakdown(SituationView.GetActiveSituation.GetBaseClass)]"
+						}
+					}
+				}
+			}
+		}
+
+		TooltipListEmptyContent = {
+			block "stringpair_datamodel_is_empty" {
+				visible = "[And(HasStringPairListContext(PdxGuiWidget.Self), IsDataModelEmpty(StringPairList.GetRows))]"
+			}
+		}
+	}
+
+	type bfts_truncated_hint_list = TooltipListBase {
+		block "set_textcontext" {
+			ontextcontextchanged = "[SetStringPairListWithTitleFromTextContext(PdxGuiWidget.AccessSelf)]"
+		}
+		datacontext = "[GetAutoTableWidthForWidget(PdxGuiWidget.Self)]"
+		minimumsize = "[AutoTableWidth.GetTableMinimumSize('(float)420', '(float)20', PdxGuiWidget.Self)]"
+
+		blockoverride "block_title" {
+			default_format = "#help"
+			visible = "[And(HasStringPairListContext(PdxGuiWidget.Self), StringPairList.GetTitle.IsStringViewNotEmptyOrNull)]"
+			text = "[StringPairList.GetTitle.GetStringView]"
+		}
+
+		TooltipListScrollArea = {
+			autoresize_axis = vertical
+			visible = "[And(HasStringPairListContext(PdxGuiWidget.Self), DataModelHasItems(StringPairList.GetRows))]"
+
+			blockoverride "scrollarea_content" {
+				TooltipStringPairListFixedContent = {
+					blockoverride "stringpair_datamodel" {
+						datamodel = "[DataModelFirst(StringPairList.GetRows, '(int32)3')]"
+					}
+				}
+			}
+		}
+
+		TooltipTableField = {
+			visible = "[And(HasStringPairListContext(PdxGuiWidget.Self), GreaterThan_int32(GetDataModelSize(StringPairList.GetRows), '(int32)3'))]"
+
+			blockoverride "field_background" {
+				background = {
+					using = tooltip_table_field_texture
+				}
+			}
+
+			blockoverride "field_content" {
+				text_single = {
+					margin = { 10 5 }
+					align = nobaseline
+					autoresize = yes
+					elide = right
+					using = tooltip_max_width_title_wide
+					text = "BFTS_HINT_AND_SOME_MORE"
+				}
+
+				expand = {}
+			}
+
+			tooltipwidget = {
+				ContextualTooltipType = {
+					blockoverride "title_icon_texture" {
+						texture = "[SituationView.GetActiveSituation.GetVariableIcon(MonthlySavedVariable.Self)]"
+					}
+					blockoverride "title_text" {
+						text = "[StringPairList.GetTitle.GetStringView]"
+					}
+					blockoverride "tooltip_content" {
+						TooltipScrolledStringPairList = {
+							blockoverride "set_textcontext" {}
+							blockoverride "block_scrollarea" { maximumsize = { -1 600 } }
+						}
+					}
+				}
+			}
+		}
+
+		TooltipListEmptyContent = {
+			block "stringpair_datamodel_is_empty" {
+				visible = "[And(HasStringPairListContext(PdxGuiWidget.Self), IsDataModelEmpty(StringPairList.GetRows))]"
+			}
+		}
+	}
+
+	# never reorder the outcome blocks in common/situations/battle_for_the_strait.txt: these spans index them
+	type bfts_outcome_tooltip_content = vbox {
+		layoutpolicy_horizontal = expanding
+		block "bfts_outcome_tooltip_datamodel" {}
+
+		item = {
+			vbox = {
+				layoutpolicy_horizontal = expanding
+
+				TooltipRequirementsList = {
+					blockoverride "block_title" {
+						text = "BFTS_OUTCOME_CONDITIONS_TITLE"
+					}
+					textcontext = "[ScriptedOutcome.GetSituationConditions(SituationView.GetActiveSituation.GetSituation.Self)]"
+				}
+
+				TooltipTextBlock = {
+					visible = "[Not(StringIsEmpty(ScriptedOutcome.GetDesc))]"
+					blockoverride "block_title" {
+						text = "BFTS_OUTCOME_REWARD_TITLE"
+					}
+					textcontext = "[ScriptedOutcome.GetDesc]"
+				}
+			}
+		}
+	}
+}
+
+template BFTSInfluenceVariableTooltip {
+	ContextualTooltipType = {
+		blockoverride "title_icon_texture" {
+			texture = "[SituationView.GetActiveSituation.GetVariableIcon(MonthlySavedVariable.Self)]"
+		}
+		blockoverride "title_text" {
+			text = "[MonthlySavedVariable.GetName]"
+		}
+		blockoverride "concept_link" {
+			block "concept_link" {
+				text = "[situation|e]"
+			}
+		}
+		blockoverride "tooltip_content" {
+			TooltipTextBlock = {
+				blockoverride "text" {
+					text = "[MonthlySavedVariable.GetTitle(SituationView.GetActiveSituation.GetBaseClass)]"
+				}
+			}
+			bfts_monthly_change_breakdown_list = {
+				visible = "[And(Not(MonthlySavedVariable.IsMonthlyChangeHidden), Not(StringIsEmpty(MonthlySavedVariable.GetMonthlyChangeBreakdown(SituationView.GetActiveSituation.GetBaseClass))))]"
+				textcontext = "[Localize('BFTS_INFLUENCE_MONTHLY_CHANGE_TITLE')][Localize('NEWLINE_BREAK')][MonthlySavedVariable.GetMonthlyChangeBreakdown(SituationView.GetActiveSituation.GetBaseClass)]"
+			}
+			bfts_truncated_hint_list = {
+				textcontext = "[Localize('BFTS_INFLUENCE_TOWARD_CAS_HINTS')]"
+			}
+
+			bfts_truncated_hint_list = {
+				textcontext = "[Localize('BFTS_INFLUENCE_TOWARD_MOR_HINTS')]"
+			}
+
+			TooltipFlavorTextBlock = {
+				blockoverride "text" {
+					text = "[MonthlySavedVariable.GetDesc]"
+				}
+			}
+		}
+	}
+}
+
+template BFTSSovereigntyVariableTooltip {
+	ContextualTooltipType = {
+		blockoverride "title_icon_texture" {
+			texture = "[SituationView.GetActiveSituation.GetVariableIcon(MonthlySavedVariable.Self)]"
+		}
+		blockoverride "title_text" {
+			text = "[MonthlySavedVariable.GetName]"
+		}
+		blockoverride "concept_link" {
+			block "concept_link" {
+				text = "[granadan_sovereignty|e]"
+			}
+		}
+		blockoverride "tooltip_content" {
+			TooltipScrolledContentSection = {
+				TooltipTextBlock = {
+					blockoverride "text" {
+						text = "[MonthlySavedVariable.GetTitle(SituationView.GetActiveSituation.GetBaseClass)]"
+					}
+				}
+				bfts_monthly_change_breakdown_list = {
+					visible = "[And(Not(MonthlySavedVariable.IsMonthlyChangeHidden), Not(StringIsEmpty(MonthlySavedVariable.GetMonthlyChangeBreakdown(SituationView.GetActiveSituation.GetBaseClass))))]"
+					textcontext = "[Localize('BFTS_SOVEREIGNTY_MONTHLY_CHANGE_TITLE')][Localize('NEWLINE_BREAK')][MonthlySavedVariable.GetMonthlyChangeBreakdown(SituationView.GetActiveSituation.GetBaseClass)]"
+				}
+				TooltipScrolledStringPairList = {
+					datacontext = "[GetCountry('GRA')]"
+					visible = "[Not(StringIsEmpty(ShowAutoModifierEffectScaledForCountry(Country.Self, 'gra_sovereignty_country_effects')))]"
+					blockoverride "block_scrollarea" { maximumsize = { -1 450 } }
+					blockoverride "block_title" {
+						text = "BFTS_SOVEREIGNTY_IMPACT_TITLE"
+					}
+					textcontext = "[Localize(ShowAutoModifierEffectScaledForCountry(Country.Self, 'gra_sovereignty_country_effects'))]"
+				}
+				bfts_outcome_tooltip_content = {
+					blockoverride "bfts_outcome_tooltip_datamodel" {
+						datamodel = "[DataModelSubSpan(SituationView.GetActiveSituation.GetSituation.GetOutcomes, '(int32)2', '(int32)1')]"
+					}
+				}
+			}
+		}
+	}
+}
+
+template BFTSCastilianOutcomeTooltip {
+	ContextualTooltipType = {
+		blockoverride "title_icon_texture" {
+			texture = "[SituationView.GetActiveSituation.GetIcon]"
+		}
+		blockoverride "title_text" {
+			text = "battle_for_the_strait_castilian_supremacy"
+		}
+		blockoverride "concept_link" {
+			text = "[situation|e]"
+		}
+		blockoverride "tooltip_content" {
+			bfts_outcome_tooltip_content = {
+				blockoverride "bfts_outcome_tooltip_datamodel" {
+					datamodel = "[DataModelSubSpan(SituationView.GetActiveSituation.GetSituation.GetOutcomes, '(int32)0', '(int32)1')]"
+				}
+			}
+		}
+	}
+}
+
+template BFTSMoroccanOutcomeTooltip {
+	ContextualTooltipType = {
+		blockoverride "title_icon_texture" {
+			texture = "[SituationView.GetActiveSituation.GetIcon]"
+		}
+		blockoverride "title_text" {
+			text = "battle_for_the_strait_moroccan_supremacy"
+		}
+		blockoverride "concept_link" {
+			text = "[situation|e]"
+		}
+		blockoverride "tooltip_content" {
+			bfts_outcome_tooltip_content = {
+				blockoverride "bfts_outcome_tooltip_datamodel" {
+					datamodel = "[DataModelSubSpan(SituationView.GetActiveSituation.GetSituation.GetOutcomes, '(int32)1', '(int32)1')]"
+				}
+			}
+		}
+	}
+}
+
+situation_panel = {
+	blockoverride "situation_top_subheader_content" {
+		hbox = {
+			layoutpolicy_horizontal = expanding
+			allow_outside = yes
+			margin = { 20 4 }
+			spacing = 6
+
+			visible = "[SituationView.GetActiveSituation.HasVariable('influence_over_granada')]"
+			datacontext = "[SituationView.GetActiveSituation.GetVariableSpec('influence_over_granada')]"
+
+			background = {
+				texture = "gfx/interface/component_decoration/situation/battle_for_the_strait_dds/battle_for_the_strait_loading_bar_background.dds"
+				texture_density = 2
+				spriteType = stretched
+			}
+
+			icon = {
+				ignore_layout = yes
+				position = { -5 0 }
+				size = { 16 47 }
+				texture = "gfx/interface/component_decoration/situation/battle_for_the_strait_dds/battler_for_the_strait_column.dds"
+			}
+			country_flag_small = {
+				blockoverride "country_flag_small_size" {
+					size = { 44 30 }
+				}
+				datacontext = "[GetCountry('CAS')]"
+			}
+
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				allow_outside = yes
+				expand = {}
+
+				widget = {
+					allow_outside = yes
+					size = { 380 38 }
+
+					widget = {
+						parentanchor = vcenter
+						size = { 100% 18 }
+
+						background = {
+							texture = "gfx/interface/component_decoration/situation/battle_for_the_strait_dds/progress_bar_frame.dds"
+							texture_density = 2
+							spriteType = Corneredstretched
+							spriteborder = { 12 0 }
+							margin = { 4 4 }
+						}
+						background = {
+							texture = "gfx/interface/progressbars/progress_bar_grey_alt.dds"
+							texture_density = 2
+							spriteType = Corneredstretched
+							spriteborder = { 12 0 }
+						}
+
+						widget = {
+							parentanchor = left|top
+							size = { 50% 100% }
+							progressbar = {
+								size = { 100% 100% }
+								mirror = horizontal
+								noprogresstexture = "gfx/interface/icons/unit_view/moral_bar_transparent.dds"
+								progresstexture = "gfx/interface/progressbars/progress_bar_goldish.dds"
+								texture_density = 2
+								spriteType = Corneredstretched
+								spriteborder = { 12 0 }
+								min = 0
+								max = 100
+								value = "[Max_float(Multiply_float('(float)-1.0', FixedPointToFloat(SituationView.GetActiveSituation.GetVariable('influence_over_granada'))), '(float)0')]"
+							}
+							tooltipwidget = {
+								using = BFTSInfluenceVariableTooltip
+							}
+						}
+
+						widget = {
+							parentanchor = right|top
+							size = { 50% 100% }
+							progressbar = {
+								size = { 100% 100% }
+								noprogresstexture = "gfx/interface/icons/unit_view/moral_bar_transparent.dds"
+								progresstexture = "gfx/interface/progressbars/progress_bar_goldish.dds"
+								texture_density = 2
+								spriteType = Corneredstretched
+								spriteborder = { 12 0 }
+								min = 0
+								max = 100
+								value = "[Max_float(FixedPointToFloat(SituationView.GetActiveSituation.GetVariable('influence_over_granada')), '(float)0')]"
+							}
+							tooltipwidget = {
+								using = BFTSInfluenceVariableTooltip
+							}
+						}
+
+						icon = {
+							ignore_layout = yes
+							parentanchor = hcenter|vcenter
+							widgetanchor = hcenter|vcenter
+							size = { 2 100% }
+							using = color_white_texture
+							alpha = 0.6
+						}
+					}
+
+					axis_value_marker = {
+						visible = "[Or(LessThan_CFixedPoint(SituationView.GetActiveSituation.GetVariable('influence_over_granada'), '(CFixedPoint)-15'), GreaterThan_CFixedPoint(SituationView.GetActiveSituation.GetVariable('influence_over_granada'), '(CFixedPoint)15'))]"
+						blockoverride "axis_value_marker_size" { size = { 100% 100% } }
+						blockoverride "axis_value_marker_weight_low" {
+							layoutstretchfactor_horizontal = "[Add_int32(FixedPointToInt(SituationView.GetActiveSituation.GetVariable('influence_over_granada')), '(int32)200')]"
+						}
+						blockoverride "axis_value_marker_weight_high" {
+							layoutstretchfactor_horizontal = "[Subtract_int32('(int32)200', FixedPointToInt(SituationView.GetActiveSituation.GetVariable('influence_over_granada')))]"
+						}
+						blockoverride "axis_value_marker_content" {
+							text_single = {
+								ignore_layout = yes
+								allow_outside = yes
+								alwaystransparent = yes
+								autoresize = yes
+								minimumsize = { 20 10 }
+								maximumsize = { 40 10 }
+								align = center|nobaseline
+								parentanchor = center
+								fontsize = 12
+								default_format = "#T"
+								text = "[SituationView.GetActiveSituation.GetVariableText(MonthlySavedVariable.Self)]"
+							}
+						}
+					}
+
+					axis_value_marker = {
+						blockoverride "axis_value_marker_size" { size = { 100% 100% } }
+						blockoverride "axis_value_marker_weight_low" { layoutstretchfactor_horizontal = 50 }
+						blockoverride "axis_value_marker_weight_high" { layoutstretchfactor_horizontal = 150 }
+						blockoverride "axis_value_marker_content" {
+							influence_threshold_icon = {
+								blockoverride "influence_threshold_text" { raw_text = "50" }
+								tooltipwidget = {
+									ContextualTooltipType = {
+										blockoverride "title_icon_texture" { texture = "[SituationView.GetActiveSituation.GetIcon]" }
+										blockoverride "title_text" { text = "BFTS_THRESHOLD_CAS_50_TITLE" }
+										blockoverride "concept_link" { text = "[situation|e]" }
+										blockoverride "tooltip_content" {
+											TooltipTextBlock = { blockoverride "text" { text = "BFTS_THRESHOLD_CAS_50_DESC" } }
+										}
+									}
+								}
+								enabled = "[LessThanOrEqualTo_CFixedPoint(SituationView.GetActiveSituation.GetVariable('influence_over_granada'), '(CFixedPoint)-50')]"
+							}
+						}
+					}
+
+					axis_value_marker = {
+						blockoverride "axis_value_marker_size" { size = { 100% 100% } }
+						blockoverride "axis_value_marker_weight_low" { layoutstretchfactor_horizontal = 150 }
+						blockoverride "axis_value_marker_weight_high" { layoutstretchfactor_horizontal = 50 }
+						blockoverride "axis_value_marker_content" {
+							influence_threshold_icon = {
+								blockoverride "influence_threshold_text" { raw_text = "50" }
+								tooltipwidget = {
+									ContextualTooltipType = {
+										blockoverride "title_icon_texture" { texture = "[SituationView.GetActiveSituation.GetIcon]" }
+										blockoverride "title_text" { text = "BFTS_THRESHOLD_MOR_50_TITLE" }
+										blockoverride "concept_link" { text = "[situation|e]" }
+										blockoverride "tooltip_content" {
+											TooltipTextBlock = { blockoverride "text" { text = "BFTS_THRESHOLD_MOR_50_DESC" } }
+										}
+									}
+								}
+								enabled = "[GreaterThanOrEqualTo_CFixedPoint(SituationView.GetActiveSituation.GetVariable('influence_over_granada'), '(CFixedPoint)50')]"
+							}
+						}
+					}
+
+					axis_value_marker = {
+						blockoverride "axis_value_marker_size" { size = { 100% 100% } }
+						blockoverride "axis_value_marker_weight_low" { layoutstretchfactor_horizontal = 0 }
+						blockoverride "axis_value_marker_weight_high" { layoutstretchfactor_horizontal = 200 }
+						blockoverride "axis_value_marker_content" {
+							influence_threshold_icon = {
+								blockoverride "influence_threshold_text" { raw_text = "100" }
+								tooltipwidget = {
+									ContextualTooltipType = {
+										blockoverride "title_icon_texture" { texture = "[SituationView.GetActiveSituation.GetIcon]" }
+										blockoverride "title_text" { text = "BFTS_THRESHOLD_CAS_100_TITLE" }
+										blockoverride "concept_link" { text = "[situation|e]" }
+										blockoverride "tooltip_content" {
+											TooltipTextBlock = { blockoverride "text" { text = "BFTS_THRESHOLD_CAS_100_DESC" } }
+										}
+									}
+								}
+								enabled = "[LessThanOrEqualTo_CFixedPoint(SituationView.GetActiveSituation.GetVariable('influence_over_granada'), '(CFixedPoint)-100')]"
+							}
+						}
+					}
+
+					axis_value_marker = {
+						blockoverride "axis_value_marker_size" { size = { 100% 100% } }
+						blockoverride "axis_value_marker_weight_low" { layoutstretchfactor_horizontal = 200 }
+						blockoverride "axis_value_marker_weight_high" { layoutstretchfactor_horizontal = 0 }
+						blockoverride "axis_value_marker_content" {
+							influence_threshold_icon = {
+								blockoverride "influence_threshold_text" { raw_text = "100" }
+								tooltipwidget = {
+									ContextualTooltipType = {
+										blockoverride "title_icon_texture" { texture = "[SituationView.GetActiveSituation.GetIcon]" }
+										blockoverride "title_text" { text = "BFTS_THRESHOLD_MOR_100_TITLE" }
+										blockoverride "concept_link" { text = "[situation|e]" }
+										blockoverride "tooltip_content" {
+											TooltipTextBlock = { blockoverride "text" { text = "BFTS_THRESHOLD_MOR_100_DESC" } }
+										}
+									}
+								}
+								enabled = "[GreaterThanOrEqualTo_CFixedPoint(SituationView.GetActiveSituation.GetVariable('influence_over_granada'), '(CFixedPoint)100')]"
+							}
+						}
+					}
+
+					axis_value_marker = {
+						blockoverride "axis_value_marker_size" { size = { 100% 100% } }
+						blockoverride "axis_value_marker_weight_low" { layoutstretchfactor_horizontal = 75 }
+						blockoverride "axis_value_marker_weight_high" { layoutstretchfactor_horizontal = 125 }
+						blockoverride "axis_value_marker_content" {
+							influence_threshold_icon = {
+								blockoverride "influence_threshold_text" { raw_text = "25" }
+								tooltipwidget = {
+									ContextualTooltipType = {
+										blockoverride "title_icon_texture" { texture = "[SituationView.GetActiveSituation.GetIcon]" }
+										blockoverride "title_text" { text = "BFTS_THRESHOLD_CAS_25_TITLE" }
+										blockoverride "concept_link" { text = "[situation|e]" }
+										blockoverride "tooltip_content" {
+											TooltipTextBlock = { blockoverride "text" { text = "BFTS_THRESHOLD_CAS_25_DESC" } }
+										}
+									}
+								}
+								enabled = "[LessThanOrEqualTo_CFixedPoint(SituationView.GetActiveSituation.GetVariable('influence_over_granada'), '(CFixedPoint)-25')]"
+							}
+						}
+					}
+
+					axis_value_marker = {
+						blockoverride "axis_value_marker_size" { size = { 100% 100% } }
+						blockoverride "axis_value_marker_weight_low" { layoutstretchfactor_horizontal = 125 }
+						blockoverride "axis_value_marker_weight_high" { layoutstretchfactor_horizontal = 75 }
+						blockoverride "axis_value_marker_content" {
+							influence_threshold_icon = {
+								blockoverride "influence_threshold_text" { raw_text = "25" }
+								tooltipwidget = {
+									ContextualTooltipType = {
+										blockoverride "title_icon_texture" { texture = "[SituationView.GetActiveSituation.GetIcon]" }
+										blockoverride "title_text" { text = "BFTS_THRESHOLD_MOR_25_TITLE" }
+										blockoverride "concept_link" { text = "[situation|e]" }
+										blockoverride "tooltip_content" {
+											TooltipTextBlock = { blockoverride "text" { text = "BFTS_THRESHOLD_MOR_25_DESC" } }
+										}
+									}
+								}
+								enabled = "[GreaterThanOrEqualTo_CFixedPoint(SituationView.GetActiveSituation.GetVariable('influence_over_granada'), '(CFixedPoint)25')]"
+							}
+						}
+					}
+
+					axis_value_marker = {
+						blockoverride "axis_value_marker_size" { size = { 100% 100% } }
+						blockoverride "axis_value_marker_weight_low" { layoutstretchfactor_horizontal = 25 }
+						blockoverride "axis_value_marker_weight_high" { layoutstretchfactor_horizontal = 175 }
+						blockoverride "axis_value_marker_content" {
+							influence_threshold_icon = {
+								blockoverride "influence_threshold_text" { raw_text = "75" }
+								tooltipwidget = {
+									ContextualTooltipType = {
+										blockoverride "title_icon_texture" { texture = "[SituationView.GetActiveSituation.GetIcon]" }
+										blockoverride "title_text" { text = "BFTS_THRESHOLD_CAS_75_TITLE" }
+										blockoverride "concept_link" { text = "[situation|e]" }
+										blockoverride "tooltip_content" {
+											TooltipTextBlock = { blockoverride "text" { text = "BFTS_THRESHOLD_CAS_75_DESC" } }
+										}
+									}
+								}
+								enabled = "[LessThanOrEqualTo_CFixedPoint(SituationView.GetActiveSituation.GetVariable('influence_over_granada'), '(CFixedPoint)-75')]"
+							}
+						}
+					}
+
+					axis_value_marker = {
+						blockoverride "axis_value_marker_size" { size = { 100% 100% } }
+						blockoverride "axis_value_marker_weight_low" { layoutstretchfactor_horizontal = 175 }
+						blockoverride "axis_value_marker_weight_high" { layoutstretchfactor_horizontal = 25 }
+						blockoverride "axis_value_marker_content" {
+							influence_threshold_icon = {
+								blockoverride "influence_threshold_text" { raw_text = "75" }
+								tooltipwidget = {
+									ContextualTooltipType = {
+										blockoverride "title_icon_texture" { texture = "[SituationView.GetActiveSituation.GetIcon]" }
+										blockoverride "title_text" { text = "BFTS_THRESHOLD_MOR_75_TITLE" }
+										blockoverride "concept_link" { text = "[situation|e]" }
+										blockoverride "tooltip_content" {
+											TooltipTextBlock = { blockoverride "text" { text = "BFTS_THRESHOLD_MOR_75_DESC" } }
+										}
+									}
+								}
+								enabled = "[GreaterThanOrEqualTo_CFixedPoint(SituationView.GetActiveSituation.GetVariable('influence_over_granada'), '(CFixedPoint)75')]"
+							}
+						}
+					}
+
+					axis_value_marker = {
+						blockoverride "axis_value_marker_size" { size = { 100% 100% } }
+						blockoverride "axis_value_marker_weight_low" {
+							layoutstretchfactor_horizontal = "[Add_int32(FixedPointToInt(SituationView.GetActiveSituation.GetVariable('influence_over_granada')), '(int32)100')]"
+						}
+						blockoverride "axis_value_marker_weight_high" {
+							layoutstretchfactor_horizontal = "[Subtract_int32('(int32)100', FixedPointToInt(SituationView.GetActiveSituation.GetVariable('influence_over_granada')))]"
+						}
+						blockoverride "axis_value_marker_content" {
+							widget = {
+								parentanchor = center
+								position = { 0 -11 }
+								size = { 46 25 }
+								ignore_layout = yes
+								allow_outside = yes
+								alwaystransparent = yes
+
+								background = {
+									texture = "gfx/interface/component_decoration/situation/battle_for_the_strait_dds/granada_flag_frame.dds"
+									texture_density = 2
+									spriteType = stretched
+								}
+
+								country_flag_very_small = {
+									datacontext = "[GetCountry('GRA')]"
+									parentanchor = center
+									alwaystransparent = yes
+								}
+							}
+						}
+					}
+
+				}
+
+				expand = {}
+			}
+
+			country_flag_small = {
+				blockoverride "country_flag_small_size" {
+					size = { 44 30 }
+				}
+				datacontext = "[GetCountry('MOR')]"
+			}
+
+			icon = {
+				parentanchor = right
+				ignore_layout = yes
+				position = { 5 0 }
+				size = { 16 47 }
+				texture = "gfx/interface/component_decoration/situation/battle_for_the_strait_dds/battler_for_the_strait_column.dds"
+			}
+		}
+	}
+
+	blockoverride "situation_start_date" {}
+
+	##################################### MAIN CONTENT #####################################
+	blockoverride "situation_panel_autoresize_scroll_area" {
+		autoresizeviewport = no
+
+		viewportwidget = {
+			widget = {
+				size = { 100% 100% }
+				scissor = no
+			}
+		}
+	}
+
+	blockoverride "situation_tab_buttons" {}
+
+	blockoverride "situation_panel_main_content_margin" {
+		margin = { 2 6 }
+	}
+
+	blockoverride "situation_panel_main_content" {
+		vbox = {
+			layoutpolicy_horizontal = expanding
+			allow_outside = yes
+			minimumsize = { 536 -1 }
+			background = {
+				texture = "gfx/interface/component_decoration/situation/battle_for_the_strait_dds/granadian_sovereignity_background.dds"
+				spriteType = stretched
+			}
+			using = bg_cabinet_card_frame
+			margin = { 10 8 }
+			margin_bottom = 22
+			spacing = -130
+
+			widget = {
+				ignore_layout = yes
+				layoutpolicy_horizontal = expanding
+				parentanchor = top|hcenter
+				position = { 2 26 }
+				size = { 460 190 }
+				datacontext = "[SituationView.GetActiveSituation.GetVariableSpec('granadan_sovereignty')]"
+
+				icon = {
+					size = { 100% 100% }
+					texture = "gfx/interface/component_decoration/situation/battle_for_the_strait_dds/castilla_morocco_frame.dds"
+					text_single = {
+						parentanchor = center
+						position = { 0 -36 }
+						autoresize = yes
+						minimumsize = { 40 18 }
+						maximumsize = { 40 18 }
+						align = center
+						fontsize = 14
+						default_format = "#yellow_titles"
+						text = "[SituationView.GetActiveSituation.GetVariableText(MonthlySavedVariable.Self)]"
+						tooltipwidget = {
+							using = BFTSSovereigntyVariableTooltip
+						}
+					}
+				}
+
+				widget = {
+					parentanchor = left|vcenter
+					size = { 185 190 }
+					background = {
+						texture = "gfx/interface/icons/unit_view/moral_bar_transparent.dds"
+						spriteType = stretched
+					}
+					tooltipwidget = {
+						using = BFTSCastilianOutcomeTooltip
+					}
+				}
+
+				widget = {
+					parentanchor = right|vcenter
+					size = { 185 190 }
+					background = {
+						texture = "gfx/interface/icons/unit_view/moral_bar_transparent.dds"
+						spriteType = stretched
+					}
+					tooltipwidget = {
+						using = BFTSMoroccanOutcomeTooltip
+					}
+				}
+			}
+
+			hbox = {
+				margin_top = 206
+				layoutpolicy_horizontal = expanding
+				spacing = 47
+
+				hbox = {
+					layoutpolicy_horizontal = expanding
+					spacing = 8
+					expand = {}
+					bfts_action_button_castile = {
+						datacontext = "[GetGenericAction('cas_force_tribute')]"
+						blockoverride "bfts_action_button_action" {
+							scripted_action_tooltip = {
+								click_type = left
+								click_mode = confirm
+								actor = "[SituationView.GetPlayer]"
+								parameter = {
+									parameter_name = "recipient"
+									parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+								}
+								action_name = "cas_force_tribute"
+							}
+						}
+					}
+					bfts_action_button_castile = {
+						datacontext = "[GetGenericAction('hire_granadan_jinetes')]"
+						blockoverride "bfts_action_button_action" {
+							scripted_action_tooltip = {
+								click_type = left
+								click_mode = confirm
+								actor = "[SituationView.GetPlayer]"
+								parameter = {
+									parameter_name = "recipient"
+									parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+								}
+								action_name = "hire_granadan_jinetes"
+							}
+						}
+					}
+					bfts_action_button_castile = {
+						datacontext = "[GetGenericAction('vassalize_granada')]"
+						blockoverride "bfts_action_button_action" {
+							scripted_action_tooltip = {
+								click_type = left
+								click_mode = confirm
+								actor = "[SituationView.GetPlayer]"
+								parameter = {
+									parameter_name = "recipient"
+									parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+								}
+								action_name = "vassalize_granada"
+							}
+						}
+					}
+					expand = {}
+				}
+				expand = {}
+				hbox = {
+					layoutpolicy_horizontal = expanding
+					spacing = 8
+					expand = {}
+					bfts_action_button_morocco = {
+						datacontext = "[GetGenericAction('mor_force_tribute')]"
+						blockoverride "bfts_action_button_action" {
+							scripted_action_tooltip = {
+								click_type = left
+								click_mode = confirm
+								actor = "[SituationView.GetPlayer]"
+								parameter = {
+									parameter_name = "recipient"
+									parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+								}
+								action_name = "mor_force_tribute"
+							}
+						}
+					}
+					bfts_action_button_morocco = {
+						datacontext = "[GetGenericAction('mor_attract_andalusi_craftsmen')]"
+						blockoverride "bfts_action_button_action" {
+							scripted_action_tooltip = {
+								click_type = left
+								click_mode = single
+								actor = "[SituationView.GetPlayer]"
+								parameter = {
+									parameter_name = "recipient"
+									parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+								}
+								action_name = "mor_attract_andalusi_craftsmen"
+							}
+						}
+					}
+					bfts_action_button_morocco = {
+						datacontext = "[GetGenericAction('mor_vassalize_granada')]"
+						blockoverride "bfts_action_button_action" {
+							scripted_action_tooltip = {
+								click_type = left
+								click_mode = confirm
+								actor = "[SituationView.GetPlayer]"
+								parameter = {
+									parameter_name = "recipient"
+									parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+								}
+								action_name = "mor_vassalize_granada"
+							}
+						}
+					}
+					expand = {}
+				}
+			}
+
+			widget = {
+				layoutpolicy_horizontal = expanding
+				allow_outside = yes
+				size = { -1 180 }
+
+				visible = "[SituationView.GetActiveSituation.HasVariable('granadan_sovereignty')]"
+				datacontext = "[SituationView.GetActiveSituation.GetVariableSpec('granadan_sovereignty')]"
+
+				vbox = {
+					layoutpolicy_horizontal = expanding
+					allow_outside = yes
+					margin_top = 15
+
+					widget = {
+						size = { 136 136 }
+
+						icon = {
+							size = { 100% 100% }
+							texture = "gfx/interface/component_decoration/situation/battle_for_the_strait_dds/granada_off.dds"
+							texture_density = 2
+							alpha = 0.40
+						}
+						tooltipwidget = {
+							using = BFTSSovereigntyVariableTooltip
+						}
+
+						progressbar = {
+							size = { 100% 100% }
+							direction = vertical
+							spriteType = stretched
+							texture_density = 2
+							min = 0
+							max = 100
+							value = "[FixedPointToFloat(SituationView.GetActiveSituation.GetVariable('granadan_sovereignty'))]"
+							progresstexture = "gfx/interface/component_decoration/situation/battle_for_the_strait_dds/granada_on.dds"
+							noprogresstexture = "gfx/interface/icons/unit_view/moral_bar_transparent.dds"
+						}
+					}
+
+					widget = {
+						ignore_layout = yes
+						allow_outside = yes
+						layoutpolicy_horizontal = expanding
+						parentanchor = bottom|hcenter
+						position = { 0 -11 }
+						hbox = {
+							allow_outside = yes
+							ignore_layout = yes
+							layoutpolicy_horizontal = expanding
+							spacing = 8
+							expand = {}
+							bfts_action_button_granada = {
+								datacontext = "[GetGenericAction('gra_enforce_sovereignty')]"
+								background = {
+									visible = "[GetCountry('GRA').HasVariable('duration_of_enforcing_variable')]"
+									texture = "gfx/interface/advance/advances_glow/advances_glow_yellow.dds"
+									texture_density = 2
+									alpha = 1
+									margin = { 12 12 }
+								}
+								background = {
+									visible = "[GetCountry('GRA').HasVariable('duration_of_enforcing_variable')]"
+									texture = "gfx/interface/advance/advances_glow/advances_glow_yellow.dds"
+									texture_density = 2
+									alpha = 1
+									margin = { 9 9 }
+								}
+								blockoverride "bfts_action_button_icon_inactive" {
+									visible = "[Not(GetCountry('GRA').HasVariable('duration_of_enforcing_variable'))]"
+								}
+								blockoverride "bfts_action_button_icon_active" {
+									visible = "[GetCountry('GRA').HasVariable('duration_of_enforcing_variable')]"
+								}
+								blockoverride "bfts_action_button_action" {
+									scripted_action_tooltip = {
+										click_type = left
+										click_mode = confirm
+										actor = "[SituationView.GetPlayer]"
+										parameter = {
+											parameter_name = "recipient"
+											parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+										}
+										action_name = "gra_enforce_sovereignty"
+									}
+								}
+							}
+							bfts_action_button_granada = {
+								datacontext = "[GetGenericAction('attract_andalusi_refugees')]"
+								blockoverride "bfts_action_button_action" {
+									scripted_action_tooltip = {
+										click_type = left
+										click_mode = confirm
+										actor = "[SituationView.GetPlayer]"
+										parameter = {
+											parameter_name = "recipient"
+											parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+										}
+										action_name = "attract_andalusi_refugees"
+									}
+								}
+							}
+							bfts_action_button_granada = {
+								datacontext = "[GetGenericAction('gra_construct_alhambra')]"
+								blockoverride "bfts_action_button_action" {
+									scripted_action_tooltip = {
+										click_type = left
+										click_mode = confirm
+										actor = "[SituationView.GetPlayer]"
+										parameter = {
+											parameter_name = "recipient"
+											parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+										}
+										action_name = "gra_construct_alhambra"
+									}
+								}
+							}
+							expand = {}
+	
+							widget = {
+								allow_outside = yes
+								ignore_layout = yes
+								layoutpolicy_horizontal = expanding
+								parentanchor = center
+								position = { 0 -28 }
+								size = { 300 70}
+	
+								icon = {
+									size = { 100% 100% }
+									texture = "gfx/interface/component_decoration/situation/battle_for_the_strait_dds/granada_gold_decoration.dds"
+								}
+							}
+						}
+					}
+				}
+			}
+
+			widget = {
+				allow_outside = yes
+				ignore_layout = yes
+				layoutpolicy_horizontal = expanding
+				position = { -9 -3}
+				size = { 554 284 }
+				datacontext = "[SituationView.GetActiveSituation.GetVariableSpec('granadan_sovereignty')]"
+
+				icon = {
+					parentanchor = center
+					size = { 100% 100% }
+					texture = "gfx/interface/component_decoration/situation/battle_for_the_strait_dds/granadian_sovereignity_decoration.dds"
+					text_single = {
+						autoresize = yes
+						parentanchor = top|hcenter
+						margin_top = 10
+						align = center
+						fontsize = 16
+						default_format = "#yellow_titles"
+						text = "game_concept_granadan_sovereignty"
+					}
+				}
+			}
+		}
+	}
+
+	blockoverride "situation_card_actions_widget_size" {
+		size = { 500 34 }
+	}
+	blockoverride "situation_card_actions_button_size" {
+		size = { 500 30 }
+	}
+	
+	# End Requirements
+	blockoverride "situation_panel_main_content_top" {}
+	blockoverride "situation_panel_main_content_bottom" {
+		using = situation_outcomes
+		blockoverride "situation_panel_outcomes_card_size" {
+			minimumsize = { 520 -1 }
+			maximumsize = { 520 -1 }
+		}
+		blockoverride "situation_panel_outcomes_header_text" {
+			text = "BFTS_NEUTRAL_OUTCOMES_HEADER"
+		}
+		blockoverride "situation_panel_outcome_list_spacing" {
+			spacing = 5
+		}
+		blockoverride "situation_panel_outcome_list_datamodel" {
+			datamodel = "[DataModelSubSpan(SituationView.GetActiveSituation.GetSituation.GetOutcomes, '(int32)3', '(int32)1')]"
+		}
+		blockoverride "situation_panel_outcome_item_content" {
+			TooltipRequirementsList = {
+				textcontext = "[ScriptedOutcome.GetSituationConditions(SituationView.GetActiveSituation.GetSituation.Self)]"
+			}
+		}
+	}
+
+    blockoverride "situation_panel_image" {
+		background = {
+			texture = "[GetSituationIllustration(SituationView.GetActiveSituation.GetSituation)]"
+			texture_density = 2
+			spriteType = stretched
+			spriteborder = { 0 0 }
+		}
+	}
+
+    blockoverride "situation_subheader_content" {}
+}

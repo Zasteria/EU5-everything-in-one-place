@@ -1,0 +1,2312 @@
+﻿template gc_banner_action_icon {
+	icon = {
+		size = { 22 22 }
+		alwaystransparent = yes
+		texture = "[GenericAction.GetIcon]"
+	}
+}
+
+template ga_threshold_bonus_list {
+	TooltipListBase = {
+		blockoverride "block_title" {
+			text = "ga_threshold_bonus_title"
+		}
+		text_multi = {
+			margin = { 6 0 }
+			block "ga_threshold_bonus_list_eu_visible" { 
+				visible = "[EqualTo_string(MonthlySavedVariable.GetTag, 'gc_european_dominance')]"
+			}
+			layoutpolicy_horizontal = expanding
+			minimumsize = { 420 -1 }
+			autoresize = yes
+			fontsize_min = 13
+			align = left|nobaseline
+			block "ga_threshold_bonus_list_eu_text" {}
+		}
+		text_multi = {
+			margin = { 6 0 }
+			block "ga_threshold_bonus_list_col_visible" { 
+				visible = "[EqualTo_string(MonthlySavedVariable.GetTag, 'gc_colonial_dominance')]"
+			}
+			layoutpolicy_horizontal = expanding
+			minimumsize = { 420 -1 }
+			autoresize = yes
+			fontsize_min = 13
+			align = left|nobaseline
+			block "ga_threshold_bonus_list_col_text" {}
+		}
+	}
+}
+
+template ga_threshold_modifier_reward {
+	TooltipListBase = {
+		blockoverride "block_title" {
+			text = "GC_THRESHOLD_MODIFIER"
+		}
+		text_multi = {
+			margin = { 6 0 }
+			block "ga_threshold_modifier_eu_spa_visible" {
+				visible = "[And(EqualTo_string(MonthlySavedVariable.GetTag, 'gc_european_dominance'), Or(ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('SPA').Self), ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('CAS').Self)))]"
+			}
+			layoutpolicy_horizontal = expanding
+			minimumsize = { 420 -1 }
+			autoresize = yes
+			fontsize_min = 13
+			align = left|nobaseline
+			block "ga_threshold_modifier_eu_spa_text" {}
+		}
+		text_multi = {
+			margin = { 6 0 }
+			block "ga_threshold_modifier_eu_adu_visible" {
+				visible = "[And(EqualTo_string(MonthlySavedVariable.GetTag, 'gc_european_dominance'), Not(Or(ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('SPA').Self), ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('CAS').Self))))]"
+			}
+			layoutpolicy_horizontal = expanding
+			minimumsize = { 420 -1 }
+			autoresize = yes
+			fontsize_min = 13
+			align = left|nobaseline
+			block "ga_threshold_modifier_eu_adu_text" {}
+		}
+		text_multi = {
+			margin = { 6 0 }
+			block "ga_threshold_modifier_col_spa_visible" {
+				visible = "[And(EqualTo_string(MonthlySavedVariable.GetTag, 'gc_colonial_dominance'), Or(ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('SPA').Self), ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('CAS').Self)))]"
+			}
+			layoutpolicy_horizontal = expanding
+			minimumsize = { 420 -1 }
+			autoresize = yes
+			fontsize_min = 13
+			align = left|nobaseline
+			block "ga_threshold_modifier_col_spa_text" {}
+		}
+		text_multi = {
+			margin = { 6 0 }
+			block "ga_threshold_modifier_col_adu_visible" {
+				visible = "[And(EqualTo_string(MonthlySavedVariable.GetTag, 'gc_colonial_dominance'), Not(Or(ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('SPA').Self), ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('CAS').Self))))]"
+			}
+			layoutpolicy_horizontal = expanding
+			minimumsize = { 420 -1 }
+			autoresize = yes
+			fontsize_min = 13
+			align = left|nobaseline
+			block "ga_threshold_modifier_col_adu_text" {}
+		}
+	}
+}
+
+template gc_action_effects_list {
+	TooltipConditionList = {
+		visible = "[ConditionList.HasItems]"
+		blockoverride "block_title" { text = "game_concept_effects" }
+		datacontext = "[StringToConditionListOnlyPassedAndNeutral(UIAction.GetEffects)]"
+	}
+}
+
+template GoldenCenturyDominance_Tooltip {
+	ContextualTooltipType = {
+		blockoverride "title_text" {
+			text = "[MonthlySavedVariable.GetName]"
+		}
+		blockoverride "concept_link" {
+			text = "[situation|e]"
+		}
+		blockoverride "tooltip_content" {
+			TooltipTextBlock = {
+				blockoverride "text" {
+					text = "GC_CURRENT_DOMINANCE"
+				}
+			}
+			TooltipScrolledStringPairList = {
+				visible = "[And(Not(MonthlySavedVariable.IsMonthlyChangeHidden), Not(StringIsEmpty(MonthlySavedVariable.GetMonthlyChangeBreakdown(SituationView.GetActiveSituation.GetBaseClass))))]"
+				blockoverride "block_scrollarea" { maximumsize = { -1 450 } }
+				blockoverride "block_title" {
+					text = "GC_DOMINANCE_MONTHLY_CHANGE_TITLE"
+				}
+				textcontext = "[MonthlySavedVariable.GetMonthlyChangeBreakdown(SituationView.GetActiveSituation.GetBaseClass)]"
+			}
+			TooltipScrolledStringPairList = {
+				visible = "[EqualTo_string(MonthlySavedVariable.GetTag, 'gc_european_dominance')]"
+				blockoverride "block_scrollarea" { maximumsize = { -1 450 } }
+				textcontext = "[Localize('GC_EUROPEAN_DOMINANCE_SOURCES')]"
+			}
+			TooltipScrolledStringPairList = {
+				visible = "[EqualTo_string(MonthlySavedVariable.GetTag, 'gc_colonial_dominance')]"
+				blockoverride "block_scrollarea" { maximumsize = { -1 450 } }
+				textcontext = "[Localize('GC_COLONIAL_DOMINANCE_SOURCES')]"
+			}
+			TooltipTextBlock = {
+				blockoverride "text" {
+					text = "[MonthlySavedVariable.GetDesc]"
+				}
+			}
+			block "gc_dominance_tooltip_extra" {}
+		}
+	}
+}
+
+types GoldenCenturyTypes {
+	type GoldenCenturyThresholdMarker = widget {
+		block "gc_threshold_marker_size" {
+			size = { 34 34 }
+		}
+
+		icon = {
+			size = { 100% 100% }
+			parentanchor = center
+			texture = "gfx/interface/progressbars/empty_circle_bg.dds"
+			texture_density = 2
+			alpha = 0.6
+		}
+		icon = {
+			size = { 100% 100% }
+			parentanchor = center
+			texture = "gfx/interface/progressbars/yellow_circle_bg.dds"
+			texture_density = 2
+			block "gc_marker_lit" {}
+		}
+		hbox = {
+			parentanchor = center
+
+			expand = {}
+			text_single = {
+				align = center|nobaseline
+				fontsize = 11
+				default_format = "#header_titles"
+				block "gc_marker_pct" {}
+			}
+			text_single = {
+				align = center|nobaseline
+				fontsize = 9
+				default_format = "#header_titles"
+				raw_text = "%"
+			}
+			expand = {}
+		}
+	}
+
+	type GoldenCenturyUnlockRow = hbox {
+		layoutpolicy_horizontal = expanding
+		spacing = 6
+		margin = { 4 2 }
+		icon = {
+			size = { 24 24 }
+			texture = "[GenericAction.GetIcon]"
+		}
+		text_single = {
+			autoresize = yes
+			align = left|nobaseline
+			text = "[GenericAction.GetNameWithNoTooltip]"
+		}
+		expand = {}
+	}
+
+	type GoldenCenturyThresholdMarker25 = GoldenCenturyThresholdMarker {
+		blockoverride "gc_marker_pct" { raw_text = "25" }
+		blockoverride "gc_marker_lit" {
+			visible = "[GreaterThanOrEqualTo_CFixedPoint(SituationView.GetActiveSituation.GetVariable(MonthlySavedVariable.GetTag), '(CFixedPoint)25')]"
+		}
+		tooltipwidget = {
+			ContextualTooltipType = {
+				blockoverride "title_icon_texture" { texture = "[SituationView.GetActiveSituation.GetIcon]" }
+				blockoverride "title_text" { text = "[MonthlySavedVariable.GetName]" }
+				blockoverride "concept_link" { text = "[situation|e]" }
+				blockoverride "tooltip_content" {
+					TooltipTextBlock = { blockoverride "text" { text = "GC_THRESHOLD_CURRENT" } }
+					TooltipListBase = {
+						blockoverride "block_title" {
+							text = "GC_THRESHOLD_UNLOCKS"
+						}
+						vbox = {
+							layoutpolicy_horizontal = expanding
+							visible = "[EqualTo_string(MonthlySavedVariable.GetTag, 'gc_european_dominance')]"
+							GoldenCenturyUnlockRow = {
+								visible = "[Not(Or(ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('SPA').Self), ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('CAS').Self)))]"
+								datacontext = "[GetGenericAction('invoke_ummayad_legacy')]"
+							}
+							GoldenCenturyUnlockRow = {
+								visible = "[Or(ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('SPA').Self), ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('CAS').Self))]"
+								datacontext = "[GetGenericAction('spa_edict_expulsion')]"
+							}
+						}
+						vbox = {
+							layoutpolicy_horizontal = expanding
+							visible = "[EqualTo_string(MonthlySavedVariable.GetTag, 'gc_colonial_dominance')]"
+							GoldenCenturyUnlockRow = {
+								visible = "[Not(Or(ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('SPA').Self), ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('CAS').Self)))]"
+								datacontext = "[GetGenericAction('adu_charter_saharan_trade_house')]"
+							}
+							GoldenCenturyUnlockRow = {
+								visible = "[Or(ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('SPA').Self), ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('CAS').Self))]"
+								datacontext = "[GetGenericAction('spa_increase_capital_market_demands')]"
+							}
+						}
+					}
+					using = ga_threshold_modifier_reward
+					blockoverride "ga_threshold_modifier_eu_spa_text" { text = "as_long_as_we_remain_at_25_european_dominance_rising_iberian_power_modifier_tt" }
+					blockoverride "ga_threshold_modifier_eu_adu_text" { text = "as_long_as_we_remain_at_25_european_dominance_restoration_of_al_andalus_modifier_tt" }
+					blockoverride "ga_threshold_modifier_col_spa_text" { text = "as_long_as_we_remain_at_25_colonial_dominance_market_dominance_modifier_tt" }
+					blockoverride "ga_threshold_modifier_col_adu_text" { text = "as_long_as_we_remain_at_25_colonial_dominance_wealth_sahel_modifier_tt" }
+					using = ga_threshold_bonus_list
+					blockoverride "ga_threshold_bonus_list_eu_text" {
+						text = "ga_eu_25_bonus_tt" 
+					}
+					blockoverride "ga_threshold_bonus_list_col_text" {
+						text = "ga_col_25_bonus_tt" 
+					}
+				}
+			}
+		}
+	}
+
+	type GoldenCenturyThresholdMarker50 = GoldenCenturyThresholdMarker {
+		blockoverride "gc_marker_pct" { raw_text = "50" }
+		blockoverride "gc_marker_lit" {
+			visible = "[GreaterThanOrEqualTo_CFixedPoint(SituationView.GetActiveSituation.GetVariable(MonthlySavedVariable.GetTag), '(CFixedPoint)50')]"
+		}
+		tooltipwidget = {
+			ContextualTooltipType = {
+				blockoverride "title_icon_texture" { texture = "[SituationView.GetActiveSituation.GetIcon]" }
+				blockoverride "title_text" { text = "[MonthlySavedVariable.GetName]" }
+				blockoverride "concept_link" { text = "[situation|e]" }
+				blockoverride "tooltip_content" {
+					TooltipTextBlock = { blockoverride "text" { text = "GC_THRESHOLD_CURRENT" } }
+					TooltipListBase = {
+						blockoverride "block_title" {
+							text = "GC_THRESHOLD_UNLOCKS"
+						}
+						vbox = {
+							layoutpolicy_horizontal = expanding
+							visible = "[EqualTo_string(MonthlySavedVariable.GetTag, 'gc_european_dominance')]"
+							GoldenCenturyUnlockRow = {
+								visible = "[Not(Or(ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('SPA').Self), ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('CAS').Self)))]"
+								datacontext = "[GetGenericAction('adu_muster_the_ghuzat')]"
+							}
+							GoldenCenturyUnlockRow = {
+								visible = "[Or(ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('SPA').Self), ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('CAS').Self))]"
+								datacontext = "[GetGenericAction('spa_patronize_golden_century')]"
+							}
+						}
+						vbox = {
+							layoutpolicy_horizontal = expanding
+							visible = "[EqualTo_string(MonthlySavedVariable.GetTag, 'gc_colonial_dominance')]"
+							GoldenCenturyUnlockRow = {
+								visible = "[Not(Or(ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('SPA').Self), ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('CAS').Self)))]"
+								datacontext = "[GetGenericAction('adu_dispatch_gold_caravan')]"
+							}
+							GoldenCenturyUnlockRow = {
+								visible = "[Or(ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('SPA').Self), ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('CAS').Self))]"
+								datacontext = "[GetGenericAction('spa_issue_royal_decree')]"
+							}
+						}
+					}
+					using = ga_threshold_modifier_reward
+					blockoverride "ga_threshold_modifier_eu_spa_text" { text = "as_long_as_we_remain_at_50_european_dominance_european_aspirations_modifier_tt" }
+					blockoverride "ga_threshold_modifier_eu_adu_text" { text = "as_long_as_we_remain_at_50_european_dominance_holy_struggle_modifier_tt" }
+					blockoverride "ga_threshold_modifier_col_spa_text" { text = "as_long_as_we_remain_at_50_colonial_dominance_migratory_waves_modifier_tt" }
+					blockoverride "ga_threshold_modifier_col_adu_text" { text = "as_long_as_we_remain_at_50_colonial_dominance_golden_road_modifier_tt" }
+					using = ga_threshold_bonus_list
+					blockoverride "ga_threshold_bonus_list_eu_text" {
+						text = "ga_eu_50_bonus_tt" 
+					}
+					blockoverride "ga_threshold_bonus_list_col_text" {
+						text = "ga_col_50_bonus_tt" 
+					}
+				}
+			}
+		}
+	}
+
+	type GoldenCenturyThresholdMarker75 = GoldenCenturyThresholdMarker {
+		blockoverride "gc_marker_pct" { raw_text = "75" }
+		blockoverride "gc_marker_lit" {
+			visible = "[GreaterThanOrEqualTo_CFixedPoint(SituationView.GetActiveSituation.GetVariable(MonthlySavedVariable.GetTag), '(CFixedPoint)75')]"
+		}
+		tooltipwidget = {
+			ContextualTooltipType = {
+				blockoverride "title_icon_texture" { texture = "[SituationView.GetActiveSituation.GetIcon]" }
+				blockoverride "title_text" { text = "[MonthlySavedVariable.GetName]" }
+				blockoverride "concept_link" { text = "[situation|e]" }
+				blockoverride "tooltip_content" {
+					TooltipTextBlock = { blockoverride "text" { text = "GC_THRESHOLD_CURRENT" } }
+					TooltipListBase = {
+						blockoverride "block_title" {
+							text = "GC_THRESHOLD_UNLOCKS"
+						}
+						vbox = {
+							layoutpolicy_horizontal = expanding
+							visible = "[EqualTo_string(MonthlySavedVariable.GetTag, 'gc_european_dominance')]"
+							GoldenCenturyUnlockRow = {
+								visible = "[Not(Or(ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('SPA').Self), ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('CAS').Self)))]"
+								datacontext = "[GetGenericAction('adu_proclaim_a_fatwa')]"
+							}
+							GoldenCenturyUnlockRow = {
+								visible = "[Or(ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('SPA').Self), ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('CAS').Self))]"
+								datacontext = "[GetGenericAction('spa_enforce_conformity')]"
+							}
+						}
+						vbox = {
+							layoutpolicy_horizontal = expanding
+							visible = "[EqualTo_string(MonthlySavedVariable.GetTag, 'gc_colonial_dominance')]"
+							GoldenCenturyUnlockRow = {
+								visible = "[Not(Or(ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('SPA').Self), ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('CAS').Self)))]"
+								datacontext = "[GetGenericAction('adu_build_qadi_office')]"
+							}
+							GoldenCenturyUnlockRow = {
+								visible = "[Or(ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('SPA').Self), ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('CAS').Self))]"
+								datacontext = "[GetGenericAction('spa_demand_tribute_fleets')]"
+							}
+						}
+					}
+					using = ga_threshold_modifier_reward
+					blockoverride "ga_threshold_modifier_eu_spa_text" { text = "as_long_as_we_remain_at_75_european_dominance_expanded_cabinet_jurisdiction_modifier_tt" }
+					blockoverride "ga_threshold_modifier_eu_adu_text" { text = "as_long_as_we_remain_at_75_european_dominance_sword_of_the_west_modifier_tt" }
+					blockoverride "ga_threshold_modifier_col_spa_text" { text = "as_long_as_we_remain_at_75_colonial_dominance_elevated_cultural_identity_modifier_tt" }
+					blockoverride "ga_threshold_modifier_col_adu_text" { text = "as_long_as_we_remain_at_75_colonial_dominance_dawa_colonial_administration_modifier_tt" }
+					using = ga_threshold_bonus_list
+					blockoverride "ga_threshold_bonus_list_eu_text" {
+						text = "ga_eu_75_bonus_tt" 
+					}
+					blockoverride "ga_threshold_bonus_list_col_text" {
+						text = "ga_col_75_bonus_tt" 
+					}
+				}
+			}
+		}
+	}
+
+	type GoldenCenturyThresholdMarker100 = GoldenCenturyThresholdMarker {
+		blockoverride "gc_marker_pct" { raw_text = "100" }
+		blockoverride "gc_marker_lit" {
+			visible = "[GreaterThanOrEqualTo_CFixedPoint(SituationView.GetActiveSituation.GetVariable(MonthlySavedVariable.GetTag), '(CFixedPoint)100')]"
+		}
+		tooltipwidget = {
+			ContextualTooltipType = {
+				blockoverride "title_icon_texture" { texture = "[SituationView.GetActiveSituation.GetIcon]" }
+				blockoverride "title_text" { text = "[MonthlySavedVariable.GetName]" }
+				blockoverride "concept_link" { text = "[situation|e]" }
+				blockoverride "tooltip_content" {
+					TooltipTextBlock = { blockoverride "text" { text = "GC_THRESHOLD_CURRENT" } }
+					TooltipListBase = {
+						blockoverride "block_title" {
+							text = "GC_THRESHOLD_UNLOCKS"
+						}
+						vbox = {
+							layoutpolicy_horizontal = expanding
+							visible = "[EqualTo_string(MonthlySavedVariable.GetTag, 'gc_european_dominance')]"
+							GoldenCenturyUnlockRow = {
+								visible = "[Not(Or(ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('SPA').Self), ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('CAS').Self)))]"
+								datacontext = "[GetGenericAction('adu_proclaim_crown_al_andalus')]"
+							}
+							GoldenCenturyUnlockRow = {
+								visible = "[Or(ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('SPA').Self), ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('CAS').Self))]"
+								datacontext = "[GetGenericAction('plan_partition_campaign')]"
+							}
+						}
+						vbox = {
+							layoutpolicy_horizontal = expanding
+							visible = "[EqualTo_string(MonthlySavedVariable.GetTag, 'gc_colonial_dominance')]"
+							GoldenCenturyUnlockRow = {
+								visible = "[Not(Or(ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('SPA').Self), ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('CAS').Self)))]"
+								datacontext = "[GetGenericAction('adu_integrate_natives')]"
+							}
+							GoldenCenturyUnlockRow = {
+								visible = "[Or(ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('SPA').Self), ObjectsEqual(GetGlobalVariable('battle_for_the_strait_winner_country').GetCountry.Self, GetCountry('CAS').Self))]"
+								datacontext = "[GetGenericAction('spa_seize_colony')]"
+							}
+						}
+					}
+					using = ga_threshold_modifier_reward
+					blockoverride "ga_threshold_modifier_eu_spa_text" { text = "as_long_as_we_remain_at_100_european_dominance_universal_monarchy_modifier_tt" }
+					blockoverride "ga_threshold_modifier_eu_adu_text" { text = "as_long_as_we_remain_at_100_european_dominance_renewed_faith_modifier_tt" }
+					blockoverride "ga_threshold_modifier_col_spa_text" { text = "as_long_as_we_remain_at_100_colonial_dominance_global_colonial_dominance_modifier_tt" }
+					blockoverride "ga_threshold_modifier_col_adu_text" { text = "as_long_as_we_remain_at_100_colonial_dominance_global_colonial_dominance_modifier_tt" }
+					using = ga_threshold_bonus_list
+					blockoverride "ga_threshold_bonus_list_eu_text" {
+						text = "ga_eu_100_bonus_tt" 
+					}
+					blockoverride "ga_threshold_bonus_list_col_text" {
+						text = "ga_col_100_bonus_tt" 
+					}
+				}
+			}
+		}
+	}
+
+	type GoldenCenturyColumnRight = widget {
+		datacontext = "[SituationView.GetActiveSituation.GetSituation.MakeScope.GetVariable('gc_winner_country').GetCountry]"
+		allow_outside = yes
+
+		vbox = {
+			visible = "[Or(ObjectsEqual(Country.Self, GetCountry('SPA').Self), ObjectsEqual(Country.Self, GetCountry('CAS').Self))]"
+			parentanchor = top|hcenter
+			widgetanchor = top|hcenter
+			layoutpolicy_vertical = expanding
+			allow_outside = yes
+
+			icon = {
+				block "spa_column_texture_top" {
+					texture = "gfx/interface/icons/situations/golden_century/golden_century_castile_tower_top_right.dds"
+				}
+				texture_density = 2
+			}
+			icon = {
+				using = golden_century_castile_middle_block_texture
+				size = { 48 60 }
+			}
+			icon = {
+				using = golden_century_castile_middle_block_texture
+				size = { 48 60 }
+			}
+			icon = {
+				using = golden_century_castile_middle_block_texture
+				size = { 48 60 }
+			}
+			icon = {
+				using = golden_century_castile_middle_block_texture
+				size = { 48 60 }
+			}
+			icon = {
+				layoutpolicy_vertical = expanding
+				texture = "gfx/interface/icons/situations/golden_century/golden_century_castile_tower_base.dds"
+				texture_density = 2
+				spriteType = corneredtiled
+				spriteborder = { 0 33 }
+			}
+		}
+
+		vbox = {
+			visible = "[Not(Or(ObjectsEqual(Country.Self, GetCountry('SPA').Self), ObjectsEqual(Country.Self, GetCountry('CAS').Self)))]"
+			parentanchor = top|hcenter
+			widgetanchor = top|hcenter
+			layoutpolicy_vertical = expanding
+			allow_outside = yes
+
+			icon = {
+				block "mor_column_top_mirror" {}
+				texture = "gfx/interface/icons/situations/golden_century/golden_century_morrocco_tower_top.dds"
+				texture_density = 2
+			}
+			icon = {
+				using = golden_century_morrocco_middle_block_texture
+				size = { 48 60 }
+			}
+			icon = {
+				using = golden_century_morrocco_middle_block_texture
+				size = { 48 60 }
+			}
+			icon = {
+				using = golden_century_morrocco_middle_block_texture
+				size = { 48 60 }
+			}
+			icon = {
+				using = golden_century_morrocco_middle_block_texture
+				size = { 48 60 }
+			}
+			icon = {
+				layoutpolicy_vertical = expanding
+				texture = "gfx/interface/icons/situations/golden_century/golden_century_morrocco_tower_base.dds"
+				texture_density = 2
+				spriteType = corneredtiled
+				spriteborder = { 0 39 }
+			}
+		}
+	}
+	type GoldenCenturyColumnLeft = GoldenCenturyColumnRight {
+		blockoverride "spa_column_texture_top" {
+			texture = "gfx/interface/icons/situations/golden_century/golden_century_castile_tower_top_left.dds"
+		}
+		blockoverride "mor_column_top_mirror" {
+			mirror = horizontal
+		}
+	}
+
+	type GoldenCenturyArches = vbox {
+		datacontext = "[SituationView.GetActiveSituation.GetSituation.MakeScope.GetVariable('gc_winner_country').GetCountry]"
+		vbox = {
+			visible = "[Not(Or(ObjectsEqual(Country.Self, GetCountry('SPA').Self), ObjectsEqual(Country.Self, GetCountry('CAS').Self)))]"
+			icon = {
+				size = { 56 55 }
+				using = golden_century_morrocco_arch_texture
+			}
+			icon = {
+				size = { 56 55 }
+				using = golden_century_morrocco_arch_texture
+			}
+			icon = {
+				size = { 56 55 }
+				using = golden_century_morrocco_arch_texture
+			}
+		}
+		vbox = {
+			visible = "[Or(ObjectsEqual(Country.Self, GetCountry('SPA').Self), ObjectsEqual(Country.Self, GetCountry('CAS').Self))]"
+			icon = {
+				size = { 56 55 }
+				using = golden_century_castile_arch_texture
+			}
+			icon = {
+				size = { 56 55 }
+				using = golden_century_castile_arch_texture
+			}
+			icon = {
+				size = { 56 55 }
+				using = golden_century_castile_arch_texture
+			}
+			icon = {
+				visible = "[Or(ObjectsEqual(Country.Self, GetCountry('SPA').Self), ObjectsEqual(Country.Self, GetCountry('CAS').Self))]"
+				size = { 56 80 }
+				using = golden_century_castile_arch_texture
+			}
+		}
+		icon = {
+			visible = "[Not(Or(ObjectsEqual(Country.Self, GetCountry('SPA').Self), ObjectsEqual(Country.Self, GetCountry('CAS').Self)))]"
+			size = { 56 80 }
+			using = golden_century_morrocco_arch_texture
+		}
+		expand = {}
+	}
+
+	type GoldenCenturyDominanceBar = widget {
+		allow_outside = yes
+
+		widget = {
+			size = { 22 100% }
+			parentanchor = center
+			tooltipwidget = {
+				ContextualTooltipType = {
+					blockoverride "title_icon_texture" { texture = "[SituationView.GetActiveSituation.GetIcon]" }
+					blockoverride "title_text" { text = "[MonthlySavedVariable.GetName]" }
+					blockoverride "concept_link" { text = "[situation|e]" }
+					blockoverride "tooltip_content" {
+						TooltipTextBlock = { blockoverride "text" { text = "GC_THRESHOLD_CURRENT" } }
+					}
+				}
+			}
+			background = {
+				using = bg_progress_bar_silver_rotated_texture
+				spriteType = corneredstretched
+				spriteborder = { 0 12 }
+			}
+
+			progressbar = {
+				size = { 100% 100% }
+				direction = vertical
+				texture_density = 2
+				spriteType = corneredstretched
+				spriteborder = { 0 12 }
+				min = 0
+				max = 100
+				value = "[FixedPointToFloat(SituationView.GetActiveSituation.GetVariable(MonthlySavedVariable.GetTag))]"
+				progresstexture = "gfx/interface/progressbars/progress_bar_goldish_rotated.dds"
+				noprogresstexture = "gfx/interface/icons/unit_view/moral_bar_transparent.dds"
+			}
+		}
+
+		vbox = {
+			size = { 100% 100% }
+			allow_outside = yes
+
+			widget = {
+				layoutpolicy_vertical = expanding
+				allow_outside = yes
+				GoldenCenturyThresholdMarker100 = { parentanchor = top|hcenter widgetanchor = center }
+			}
+			widget = {
+				layoutpolicy_vertical = expanding
+				allow_outside = yes
+				GoldenCenturyThresholdMarker75 = { parentanchor = top|hcenter widgetanchor = center }
+			}
+			widget = {
+				layoutpolicy_vertical = expanding
+				allow_outside = yes
+				GoldenCenturyThresholdMarker50 = { parentanchor = top|hcenter widgetanchor = center }
+			}
+			widget = {
+				layoutpolicy_vertical = expanding
+				allow_outside = yes
+				GoldenCenturyThresholdMarker25 = { parentanchor = top|hcenter widgetanchor = center }
+			}
+		}
+	}
+
+	type GoldenCenturyActionBanner = widget {
+		size = { 240 50 }
+		
+		button = {
+			size = { 100% 100% }
+			parentanchor = center
+			texture = "gfx/interface/icons/situations/golden_century/castile_golden_century_button.dds"
+			using = gc_action_banner_button_properties
+			visible = yes
+			block "gc_banner_button_mirror" { mirror = horizontal }
+
+			block "gc_banner_action_overlay" {
+				scripted_action_tooltip = {
+					click_type = left
+					click_mode = confirm
+					action_name = "gc_action_default"
+					actor = "[SituationView.GetPlayer]"
+					parameter = {
+						parameter_name = "recipient"
+						parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+					}
+				}
+				enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+			}
+			block "gc_banner_tooltip" {
+				tooltipwidget = {
+					ContextualTooltipType = {
+						blockoverride "title_icon_texture" { texture = "[SituationView.GetActiveSituation.GetIcon]" }
+						blockoverride "title_text" { text = "gc_action_default" }
+						blockoverride "concept_link" { text = "[action|E]" }
+						blockoverride "tooltip_content" {
+							using = gc_action_effects_list
+						}
+					}
+				}
+			}
+		}
+
+		hbox = {
+			parentanchor = center
+			spacing = 2
+			alwaystransparent = yes
+			block "gc_banner_icon_leading" {
+				margin_left = 28
+				margin_right = 12
+				using = gc_banner_action_icon
+			}
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				maximumsize = { 173 -1 }
+				autoresize = yes
+				block "gc_banner_text_align" {
+					align = left
+				}
+				fontsize = 13
+				alwaystransparent = yes
+				default_format = "#header_titles"
+				block "gc_banner_text" {}
+			}
+			block "gc_banner_icon_trailing" {}
+		}
+	}
+
+	type GoldenCenturyActionBannerRight = GoldenCenturyActionBanner {
+		blockoverride "gc_banner_button_mirror" {}
+		blockoverride "gc_banner_icon_leading" {}
+		blockoverride "gc_banner_text_align" {
+			align = right
+		}
+		blockoverride "gc_banner_icon_trailing" {
+			using = gc_banner_action_icon
+			margin_left = 12
+			margin_right = 28
+		}
+	}
+
+	type GoldenCenturyMorActionBanner = widget {
+		size = { 240 50 }
+		
+		button = {
+			size = { 100% 100% }
+			parentanchor = center
+			texture = "gfx/interface/icons/situations/golden_century/morocco_golden_century_button.dds"
+			using = gc_action_banner_button_properties
+			visible = yes
+			block "gc_banner_button_mirror" { mirror = horizontal }
+
+			block "gc_banner_action_overlay" {
+				scripted_action_tooltip = {
+					click_type = left
+					click_mode = confirm
+					action_name = "gc_action_default"
+					actor = "[SituationView.GetPlayer]"
+					parameter = {
+						parameter_name = "recipient"
+						parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+					}
+				}
+				enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+			}
+			block "gc_banner_tooltip" {
+				tooltipwidget = {
+					ContextualTooltipType = {
+						blockoverride "title_icon_texture" { texture = "[SituationView.GetActiveSituation.GetIcon]" }
+						blockoverride "title_text" { text = "gc_action_default" }
+						blockoverride "concept_link" { text = "[action|E]" }
+						blockoverride "tooltip_content" {
+							using = gc_action_effects_list
+						}
+					}
+				}
+			}
+		}
+
+
+		hbox = {
+			parentanchor = center
+			spacing = 5
+			alwaystransparent = yes
+			block "gc_banner_icon_leading" {
+				margin_left = 28
+				margin_right = 12
+				using = gc_banner_action_icon
+			}
+			text_single = {
+				layoutpolicy_horizontal = expanding
+				maximumsize = { 173 -1 }
+				autoresize = yes
+				block "gc_banner_text_align" {
+					align = left
+				}
+				fontsize = 13
+				alwaystransparent = yes
+				default_format = "#header_titles"
+				block "gc_banner_text" {}
+			}
+			block "gc_banner_icon_trailing" {}
+		}
+	}
+
+	type GoldenCenturyMorActionBannerRight = GoldenCenturyMorActionBanner {
+		blockoverride "gc_banner_button_mirror" {}
+		blockoverride "gc_banner_icon_leading" {}
+		blockoverride "gc_banner_text_align" {
+			align = right
+		}
+		blockoverride "gc_banner_icon_trailing" {
+			using = gc_banner_action_icon
+			margin_left = 12
+			margin_right = 28
+		}
+	}
+
+	type GoldenCenturyMemberCard = widget {
+		layoutpolicy_horizontal = expanding
+		size = { -1 30 }
+		using = bg_paper_card
+		using = bg_cabinet_card_frame
+
+		hbox = {
+			layoutpolicy_horizontal = expanding
+			margin = { 2 4 }
+			margin_right = 4
+			spacing = 3
+
+			country_flag_very_small = {
+				tooltipwidget = { using = CountryTooltip }
+			}
+
+			expand = {}
+
+			hbox = {
+				tooltipwidget = { using = ArmyOverview_tooltip }
+				text_single = {
+					autoresize = yes
+					maximumsize = { 100 -1 }
+					align = right
+					fontsize = 13
+					raw_text = "[Country.GetRaisedAndPotentialLevyStrength] @levy! / [Country.GetRegularArmySize|0L] @regular!"
+				}
+			}
+
+			hbox = {
+				spacing = 3
+				tooltipwidget = {
+					SimpleContextualStringPairTooltipType = {
+						blockoverride "title_icon_texture" { texture = "gfx/interface/icons/flat_icons/military.dds" }
+						blockoverride "tooltip_title_text" { text = "[military_strength]" }
+						blockoverride "concept_link" { text = "[military_strength|e]" }
+						lowpriotextcontext = "[Country.GetMilitaryStrengthForRelativePowerTooltip]"
+					}
+				}
+				text_single = {
+					autoresize = yes
+					maximumsize = { 24 -1 }
+					fontsize = 13
+					default_format = "#yellow_titles"
+					text = "[Country.GetMilitaryStrength|1]"
+				}
+				icon = {
+					size = { 16 16 }
+					using = military_texture
+				}
+			}
+		}
+	}
+}
+
+situation_panel = {
+
+	blockoverride "situation_start_date" {
+		icon = {
+			parentanchor = top|hcenter
+			texture = "gfx/interface/component_tiles/regular_banner.dds"
+			size = { 175 48 }
+			texture_density = 2
+			spriteType = corneredstretched
+            spriteborder = { 20 0 }
+			vbox = {
+				layoutpolicy_horizontal = expanding
+				maximumsize = {170 38}
+				parentanchor = top|hcenter
+				text_single = {
+					layoutpolicy_horizontal = expanding
+					align = center
+					raw_text = "[Localize('SITUATION_LATERAL_VIEW_START_DATE_HEADER')] - [Localize('SITUATION_LATERAL_VIEW_END_DATE_HEADER')]"
+					default_format = "#subtle_name"
+				}
+	
+				text_single = {
+					layoutpolicy_horizontal = expanding
+					align = center
+					fontsize = 13
+					raw_text = "[SituationView.GetActiveSituation.GetStartDate] - [SituationView.GetActiveSituation.GetStartDatePlusYears('(int32)100')]"
+				}
+			}
+		}
+	}
+
+	##################################### MAIN IMAGE #####################################
+	blockoverride "situation_panel_image" {
+		datacontext = "[SituationView.GetActiveSituation.GetSituation.MakeScope.GetVariable('gc_winner_country').GetCountry]"
+		using = one_country_header_template
+		blockoverride "one_country_header_background" {
+			background = {
+				visible = "[And(Country.IsValid, Not(Or(ObjectsEqual(Country.Self, GetCountry('MOR').Self), Or(ObjectsEqual(Country.Self, GetCountry('GRA').Self), ObjectsEqual(Country.Self, GetCountry('ADU').Self)))))]"
+				texture = "gfx/interface/illustrations/situation/golden_century_castile.dds"
+				modify_texture = {
+					using = bg_mask_fade_horizontal_middle_texture
+					texture_density = 2
+					spriteType = stretched
+					spriteborder = { 250 250 }
+					blend_mode = alphamultiply
+					alpha = 0.4
+				}
+			}
+			background = {
+				visible = "[And(Country.IsValid, ObjectsEqual(Country.Self, GetCountry('MOR').Self))]"
+				texture = "gfx/interface/illustrations/situation/golden_century_morocco.dds"
+				modify_texture = {
+					using = bg_mask_fade_horizontal_middle_texture
+					texture_density = 2
+					spriteType = stretched
+					spriteborder = { 250 250 }
+					blend_mode = alphamultiply
+					alpha = 0.4
+				}
+			}
+			background = {
+				visible = "[And(Country.IsValid, Or(ObjectsEqual(Country.Self, GetCountry('GRA').Self), ObjectsEqual(Country.Self, GetCountry('ADU').Self)))]"
+				texture = "gfx/interface/illustrations/situation/golden_century_granada.dds"
+				modify_texture = {
+					using = bg_mask_fade_horizontal_middle_texture
+					texture_density = 2
+					spriteType = stretched
+					spriteborder = { 250 250 }
+					blend_mode = alphamultiply
+					alpha = 0.4
+				}
+			}
+		}
+
+
+		blockoverride "character_portrait_anchor" {
+			parentanchor = bottom|left
+		}
+		blockoverride "character_religion_visibility" {
+			visible = no
+		}
+		blockoverride "character_name_maximumsize" {
+			maximumsize = { 270 -1 }
+		}
+		blockoverride "country_header_extra" {
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				layoutpolicy_vertical = expanding
+				margin = { 10 10 }
+				spacing = 8
+				expand = {}
+			}
+		}
+	}
+
+	##################################### TOP SUBHEADER #####################################
+	blockoverride "situation_panel_main_actions" {}
+	blockoverride "situation_top_subheader_content" {
+		hbox = {
+			visible = no
+			layoutpolicy_horizontal = expanding
+			margin = { 36 0 }
+			spacing = 10
+
+			# ===================== COLONIAL DOMINANCE =====================
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				maximumsize = { 190 -1 }
+				spacing = 6
+				visible = "[SituationView.GetActiveSituation.HasVariable('gc_colonial_dominance')]"
+				datacontext = "[SituationView.GetActiveSituation.GetVariableSpec('gc_colonial_dominance')]"
+
+				widget = {
+					size = { 38 38 }
+
+					tooltipwidget = {
+						using = GoldenCenturyDominance_Tooltip
+						blockoverride "title_icon_texture" { texture = "gfx/interface/icons/situations/gc_colonial_dominance.dds" }
+					}
+
+					piechart = {
+						size = { 100% 100% }
+						parentanchor = center
+						using = piechart_angles
+						using = bg_circle_piechart
+
+						pieslice_no_highlight = {
+							using = bg_pie_chart_alpha_80_texture
+							value = "[FixedPointToFloat(SituationView.GetActiveSituation.GetVariable('gc_colonial_dominance'))]"
+							using = color_value_progress_blue
+						}
+						pieslice_no_highlight = {
+							using = bg_pie_chart_alpha_80_texture
+							value = "[Subtract_float('(float)100.0', FixedPointToFloat(SituationView.GetActiveSituation.GetVariable('gc_colonial_dominance')))]"
+							using = color_value_progress_gray
+						}
+
+						icon = {
+							size = { 60% 60% }
+							parentanchor = center
+							using = gc_colonial_dominance_texture
+						}
+					}
+				}
+
+				vbox = {
+					spacing = 2
+
+					text_single = {
+						autoresize = yes
+						fontsize = 15
+						text = "[MonthlySavedVariable.GetName]"
+					}
+					text_single = {
+						layoutpolicy_horizontal = expanding
+						autoresize = yes
+						align = left
+						fontsize = 15
+						default_format = "#yellow_titles"
+						text = "[SituationView.GetActiveSituation.GetVariableText(MonthlySavedVariable.Self)]"
+					}
+				}
+			}
+
+			expand = {}
+
+			# ===================== NEXT FLASHPOINT =====================
+			widget = {
+				size = { 40 40 }
+				visible = "[SituationView.GetActiveSituation.HasVariable('gc_flashpoint_meter')]"
+				datacontext = "[SituationView.GetActiveSituation.GetVariableSpec('gc_flashpoint_meter')]"
+
+				tooltipwidget = {
+					using = GoldenCenturyDominance_Tooltip
+					blockoverride "title_icon_texture" { texture = "gfx/interface/icons/situations/flashpoint.dds" }
+					blockoverride "gc_dominance_tooltip_extra" {
+						TooltipTextBlock = {
+							blockoverride "text" {
+								text = "gc_flashpoint_meter_at_max_tt"
+							}
+						}
+					}
+				}
+
+				piechart = {
+					size = { 100% 100% }
+					parentanchor = center
+					using = piechart_angles
+					using = bg_circle_piechart
+
+					pieslice_no_highlight = {
+						using = bg_pie_chart_alpha_80_texture
+						value = "[FixedPointToFloat(SituationView.GetActiveSituation.GetVariable('gc_flashpoint_meter'))]"
+						color = { 0.94 0.8 0.36 1 }
+					}
+					pieslice_no_highlight = {
+						using = bg_pie_chart_alpha_80_texture
+						value = "[Subtract_float('(float)100.0', FixedPointToFloat(SituationView.GetActiveSituation.GetVariable('gc_flashpoint_meter')))]"
+						using = color_value_progress_gray
+					}
+
+					icon = {
+						size = { 55% 55% }
+						parentanchor = center
+						using = flashpoint_texture
+					}
+				}
+			}
+
+			expand = {}
+
+			# ===================== EUROPEAN DOMINANCE =====================
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				maximumsize = { 190 -1 }
+				spacing = 6
+				visible = "[SituationView.GetActiveSituation.HasVariable('gc_european_dominance')]"
+				datacontext = "[SituationView.GetActiveSituation.GetVariableSpec('gc_european_dominance')]"
+
+				vbox = {
+					spacing = 2
+
+					text_single = {
+						autoresize = yes
+						fontsize = 15
+						align = right
+						text = "[MonthlySavedVariable.GetName]"
+					}
+					text_single = {
+						layoutpolicy_horizontal = expanding
+						autoresize = yes
+						fontsize = 15
+						align = right
+						default_format = "#yellow_titles"
+						text = "[SituationView.GetActiveSituation.GetVariableText(MonthlySavedVariable.Self)]"
+					}
+				}
+
+				widget = {
+					size = { 38 38 }
+
+					tooltipwidget = {
+						using = GoldenCenturyDominance_Tooltip
+						blockoverride "title_icon_texture" { texture = "gfx/interface/icons/situations/gc_european_dominance.dds" }
+					}
+
+					piechart = {
+						size = { 100% 100% }
+						parentanchor = center
+						using = piechart_angles
+						using = bg_circle_piechart
+
+						pieslice_no_highlight = {
+							using = bg_pie_chart_alpha_80_texture
+							value = "[FixedPointToFloat(SituationView.GetActiveSituation.GetVariable('gc_european_dominance'))]"
+							using = color_value_progress_red
+						}
+						pieslice_no_highlight = {
+							using = bg_pie_chart_alpha_80_texture
+							value = "[Subtract_float('(float)100.0', FixedPointToFloat(SituationView.GetActiveSituation.GetVariable('gc_european_dominance')))]"
+							using = color_value_progress_gray
+						}
+
+						icon = {
+							size = { 60% 60% }
+							parentanchor = center
+							using = gc_european_dominance_texture
+						}
+					}
+				}
+			}
+		}
+	}
+
+	##################################### SUBHEADER #####################################
+
+	blockoverride "situation_subheader_content" {}
+
+	##################################### MAIN CONTENT #####################################
+	blockoverride "situation_breakdown_tab_size" { 
+		size = { -1 70 }
+	}
+	blockoverride "situation_tab_buttons" {
+		vbox = {
+			text_single = {
+				margin_top = 20
+				text = "gc_main_actions"
+				fontsize = 20
+
+			}
+
+			##################################### FRAMING COLUMNS #####################################
+			##Actions
+			hbox = {
+				using = layoutpolicy_expanding
+				spacing = 10
+				vbox = {
+					using = layoutpolicy_expanding
+					spacing = 8
+					margin_top = 35
+					datacontext = "[SituationView.GetActiveSituation.GetVariableSpec('gc_colonial_dominance')]"
+					datacontext = "[SituationView.GetActiveSituation.GetSituation.MakeScope.GetVariable('gc_winner_country').GetCountry]"
+					GoldenCenturyActionBanner = {
+						datacontext = "[GetGenericAction('spa_seize_colony')]"
+						visible = "[Or(ObjectsEqual(Country.Self, GetCountry('SPA').Self), ObjectsEqual(Country.Self, GetCountry('CAS').Self))]"
+						blockoverride "gc_banner_text" { text = "[GetGenericAction('spa_seize_colony').GetNameWithNoTooltip]" }
+						blockoverride "gc_banner_tooltip" {
+							tooltipwidget = {
+								ContextualTooltipType = {
+									blockoverride "title_icon_texture" { texture = "[GenericAction.GetIcon]" }
+									blockoverride "title_text" { text = "[GetGenericAction('spa_seize_colony').GetNameWithNoTooltip]" }
+									blockoverride "concept_link" { text = "[action|E]" }
+									blockoverride "tooltip_content" {
+										TooltipTextBlock = { blockoverride "text" { text = "spa_seize_colony_desc" } }
+										using = gc_action_effects_list
+									}
+								}
+							}
+						}
+						blockoverride "gc_banner_action_overlay" {
+							scripted_action_tooltip = {
+								click_type = left
+								click_mode = confirm
+								action_name = "spa_seize_colony"
+								actor = "[SituationView.GetPlayer]"
+								parameter = {
+									parameter_name = "recipient"
+									parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+								}
+							}
+							enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+						}
+					}
+					GoldenCenturyActionBanner = {
+						datacontext = "[GetGenericAction('spa_demand_tribute_fleets')]"
+						visible = "[Or(ObjectsEqual(Country.Self, GetCountry('SPA').Self), ObjectsEqual(Country.Self, GetCountry('CAS').Self))]"
+						blockoverride "gc_banner_text" { text = "[GetGenericAction('spa_demand_tribute_fleets').GetNameWithNoTooltip]" }
+						blockoverride "gc_banner_tooltip" {
+							tooltipwidget = {
+								ContextualTooltipType = {
+									blockoverride "title_icon_texture" { texture = "[GenericAction.GetIcon]" }
+									blockoverride "title_text" { text = "[GetGenericAction('spa_demand_tribute_fleets').GetNameWithNoTooltip]" }
+									blockoverride "concept_link" { text = "[action|E]" }
+									blockoverride "tooltip_content" {
+										TooltipTextBlock = { blockoverride "text" { text = "spa_demand_tribute_fleets_desc" } }
+										using = gc_action_effects_list
+									}
+								}
+							}
+						}
+						blockoverride "gc_banner_action_overlay" {
+							scripted_action_tooltip = {
+								click_type = left
+								click_mode = confirm
+								action_name = "spa_demand_tribute_fleets"
+								actor = "[SituationView.GetPlayer]"
+								parameter = {
+									parameter_name = "recipient"
+									parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+								}
+							}
+							enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+						}
+					}
+					GoldenCenturyActionBanner = {
+						datacontext = "[GetGenericAction('spa_issue_royal_decree')]"
+						visible = "[Or(ObjectsEqual(Country.Self, GetCountry('SPA').Self), ObjectsEqual(Country.Self, GetCountry('CAS').Self))]"
+						blockoverride "gc_banner_text" { text = "[GetGenericAction('spa_issue_royal_decree').GetNameWithNoTooltip]" }
+						blockoverride "gc_banner_tooltip" {
+							tooltipwidget = {
+								ContextualTooltipType = {
+									blockoverride "title_icon_texture" { texture = "[GenericAction.GetIcon]" }
+									blockoverride "title_text" { text = "[GetGenericAction('spa_issue_royal_decree').GetNameWithNoTooltip]" }
+									blockoverride "concept_link" { text = "[action|E]" }
+									blockoverride "tooltip_content" {
+										TooltipTextBlock = { blockoverride "text" { text = "spa_issue_royal_decree_desc" } }
+										using = gc_action_effects_list
+									}
+								}
+							}
+						}
+						blockoverride "gc_banner_action_overlay" {
+							scripted_action_tooltip = {
+								click_type = left
+								click_mode = confirm
+								action_name = "spa_issue_royal_decree"
+								actor = "[SituationView.GetPlayer]"
+								parameter = {
+									parameter_name = "recipient"
+									parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+								}
+							}
+							enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+						}
+					}
+					GoldenCenturyActionBanner = {
+						datacontext = "[GetGenericAction('spa_increase_capital_market_demands')]"
+						visible = "[Or(ObjectsEqual(Country.Self, GetCountry('SPA').Self), ObjectsEqual(Country.Self, GetCountry('CAS').Self))]"
+						blockoverride "gc_banner_text" { text = "[GetGenericAction('spa_increase_capital_market_demands').GetNameWithNoTooltip]" }
+						blockoverride "gc_banner_tooltip" {
+							tooltipwidget = {
+								ContextualTooltipType = {
+									blockoverride "title_icon_texture" { texture = "[GenericAction.GetIcon]" }
+									blockoverride "title_text" { text = "[GetGenericAction('spa_increase_capital_market_demands').GetNameWithNoTooltip]" }
+									blockoverride "concept_link" { text = "[action|E]" }
+									blockoverride "tooltip_content" {
+										TooltipTextBlock = { blockoverride "text" { text = "spa_increase_capital_market_demands_desc" } }
+										using = gc_action_effects_list
+									}
+								}
+							}
+						}
+						blockoverride "gc_banner_action_overlay" {
+							scripted_action_tooltip = {
+								click_type = left
+								click_mode = confirm
+								action_name = "spa_increase_capital_market_demands"
+								actor = "[SituationView.GetPlayer]"
+								parameter = {
+									parameter_name = "recipient"
+									parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+								}
+							}
+							enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+						}
+					}
+		
+					GoldenCenturyMorActionBanner = {
+						datacontext = "[GetGenericAction('adu_integrate_natives')]"
+						visible = "[Not(Or(ObjectsEqual(Country.Self, GetCountry('SPA').Self), ObjectsEqual(Country.Self, GetCountry('CAS').Self)))]"
+						blockoverride "gc_banner_text" { text = "[GetGenericAction('adu_integrate_natives').GetNameWithNoTooltip]" }
+						blockoverride "gc_banner_tooltip" {
+							tooltipwidget = {
+								ContextualTooltipType = {
+									blockoverride "title_icon_texture" { texture = "[GenericAction.GetIcon]" }
+									blockoverride "title_text" { text = "[GetGenericAction('adu_integrate_natives').GetNameWithNoTooltip]" }
+									blockoverride "concept_link" { text = "[action|E]" }
+									blockoverride "tooltip_content" {
+										TooltipTextBlock = { blockoverride "text" { text = "adu_integrate_natives_desc" } }
+										using = gc_action_effects_list
+									}
+								}
+							}
+						}
+						blockoverride "gc_banner_action_overlay" {
+							scripted_action_tooltip = {
+								click_type = left
+								click_mode = confirm
+								action_name = "adu_integrate_natives"
+								actor = "[SituationView.GetPlayer]"
+								parameter = {
+									parameter_name = "recipient"
+									parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+								}
+							}
+							enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+						}
+					}
+					GoldenCenturyMorActionBanner = {
+						datacontext = "[GetGenericAction('adu_build_qadi_office')]"
+						visible = "[Not(Or(ObjectsEqual(Country.Self, GetCountry('SPA').Self), ObjectsEqual(Country.Self, GetCountry('CAS').Self)))]"
+						blockoverride "gc_banner_text" { text = "[GetGenericAction('adu_build_qadi_office').GetNameWithNoTooltip]" }
+						blockoverride "gc_banner_tooltip" {
+							tooltipwidget = {
+								ContextualTooltipType = {
+									blockoverride "title_icon_texture" { texture = "[GenericAction.GetIcon]" }
+									blockoverride "title_text" { text = "[GetGenericAction('adu_build_qadi_office').GetNameWithNoTooltip]" }
+									blockoverride "concept_link" { text = "[action|E]" }
+									blockoverride "tooltip_content" {
+										TooltipTextBlock = { blockoverride "text" { text = "adu_build_qadi_office_desc" } }
+										using = gc_action_effects_list
+									}
+								}
+							}
+						}
+						blockoverride "gc_banner_action_overlay" {
+							scripted_action_tooltip = {
+								click_type = left
+								click_mode = confirm
+								action_name = "adu_build_qadi_office"
+								actor = "[SituationView.GetPlayer]"
+								parameter = {
+									parameter_name = "recipient"
+									parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+								}
+							}
+							enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+						}
+					}
+					GoldenCenturyMorActionBanner = {
+						datacontext = "[GetGenericAction('adu_dispatch_gold_caravan')]"
+						visible = "[Not(Or(ObjectsEqual(Country.Self, GetCountry('SPA').Self), ObjectsEqual(Country.Self, GetCountry('CAS').Self)))]"
+						blockoverride "gc_banner_text" { text = "[GetGenericAction('adu_dispatch_gold_caravan').GetNameWithNoTooltip]" }
+						blockoverride "gc_banner_tooltip" {
+							tooltipwidget = {
+								ContextualTooltipType = {
+									blockoverride "title_icon_texture" { texture = "[GenericAction.GetIcon]" }
+									blockoverride "title_text" { text = "[GetGenericAction('adu_dispatch_gold_caravan').GetNameWithNoTooltip]" }
+									blockoverride "concept_link" { text = "[action|E]" }
+									blockoverride "tooltip_content" {
+										TooltipTextBlock = { blockoverride "text" { text = "adu_dispatch_gold_caravan_desc" } }
+										using = gc_action_effects_list
+									}
+								}
+							}
+						}
+						blockoverride "gc_banner_action_overlay" {
+							scripted_action_tooltip = {
+								click_type = left
+								click_mode = confirm
+								action_name = "adu_dispatch_gold_caravan"
+								actor = "[SituationView.GetPlayer]"
+								parameter = {
+									parameter_name = "recipient"
+									parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+								}
+							}
+							enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+						}
+					}
+					GoldenCenturyMorActionBanner = {
+						datacontext = "[GetGenericAction('adu_charter_saharan_trade_house')]"
+						visible = "[Not(Or(ObjectsEqual(Country.Self, GetCountry('SPA').Self), ObjectsEqual(Country.Self, GetCountry('CAS').Self)))]"
+						blockoverride "gc_banner_text" { text = "[GetGenericAction('adu_charter_saharan_trade_house').GetNameWithNoTooltip]" }
+						blockoverride "gc_banner_tooltip" {
+							tooltipwidget = {
+								ContextualTooltipType = {
+									blockoverride "title_icon_texture" { texture = "[GenericAction.GetIcon]" }
+									blockoverride "title_text" { text = "[GetGenericAction('adu_charter_saharan_trade_house').GetNameWithNoTooltip]" }
+									blockoverride "concept_link" { text = "[action|E]" }
+									blockoverride "tooltip_content" {
+										TooltipTextBlock = { blockoverride "text" { text = "adu_charter_saharan_trade_house_desc" } }
+										using = gc_action_effects_list
+									}
+								}
+							}
+						}
+						blockoverride "gc_banner_action_overlay" {
+							scripted_action_tooltip = {
+								click_type = left
+								click_mode = confirm
+								action_name = "adu_charter_saharan_trade_house"
+								actor = "[SituationView.GetPlayer]"
+								parameter = {
+									parameter_name = "recipient"
+									parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+								}
+							}
+							enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+						}
+					}
+				}
+
+				vbox = {
+					using = layoutpolicy_expanding
+					spacing = 8
+					margin_top = 35
+					datacontext = "[SituationView.GetActiveSituation.GetVariableSpec('gc_european_dominance')]"
+					datacontext = "[SituationView.GetActiveSituation.GetSituation.MakeScope.GetVariable('gc_winner_country').GetCountry]"
+					GoldenCenturyActionBannerRight = {
+						datacontext = "[GetGenericAction('plan_partition_campaign')]"
+						visible = "[Or(ObjectsEqual(Country.Self, GetCountry('SPA').Self), ObjectsEqual(Country.Self, GetCountry('CAS').Self))]"
+						blockoverride "gc_banner_text" { text = "[GetGenericAction('plan_partition_campaign').GetNameWithNoTooltip]" }
+						blockoverride "gc_banner_tooltip" {
+							tooltipwidget = {
+								ContextualTooltipType = {
+									blockoverride "title_icon_texture" { texture = "[GenericAction.GetIcon]" }
+									blockoverride "title_text" { text = "[GetGenericAction('plan_partition_campaign').GetNameWithNoTooltip]" }
+									blockoverride "concept_link" { text = "[action|E]" }
+									blockoverride "tooltip_content" {
+										TooltipTextBlock = { blockoverride "text" { text = "plan_partition_campaign_desc" } }
+										using = gc_action_effects_list
+									}
+								}
+							}
+						}
+						blockoverride "gc_banner_action_overlay" {
+							scripted_action_tooltip = {
+								click_type = left
+								click_mode = confirm
+								action_name = "plan_partition_campaign"
+								actor = "[SituationView.GetPlayer]"
+								parameter = {
+									parameter_name = "recipient"
+									parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+								}
+							}
+							enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+						}
+					}
+					GoldenCenturyActionBannerRight = {
+						datacontext = "[GetGenericAction('spa_enforce_conformity')]"
+						visible = "[Or(ObjectsEqual(Country.Self, GetCountry('SPA').Self), ObjectsEqual(Country.Self, GetCountry('CAS').Self))]"
+						blockoverride "gc_banner_text" { text = "[GetGenericAction('spa_enforce_conformity').GetNameWithNoTooltip]" }
+						blockoverride "gc_banner_tooltip" {
+							tooltipwidget = {
+							ContextualTooltipType = {
+								blockoverride "title_icon_texture" { texture = "[GenericAction.GetIcon]" }
+								blockoverride "title_text" { text = "[GetGenericAction('spa_enforce_conformity').GetNameWithNoTooltip]" }
+								blockoverride "concept_link" { text = "[action|E]" }
+								blockoverride "tooltip_content" {
+									TooltipTextBlock = { blockoverride "text" { text = "spa_enforce_conformity_desc" } }
+									using = gc_action_effects_list
+								}
+							}
+							}
+						}
+						
+						blockoverride "gc_banner_action_overlay" {
+							scripted_action_tooltip = {
+								click_type = left
+								click_mode = confirm
+								action_name = "spa_enforce_conformity"
+								actor = "[SituationView.GetPlayer]"
+								parameter = {
+									parameter_name = "recipient"
+									parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+								}
+							}
+							enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+						}
+					}
+					GoldenCenturyActionBannerRight = {
+						datacontext = "[GetGenericAction('spa_patronize_golden_century')]"
+						visible = "[Or(ObjectsEqual(Country.Self, GetCountry('SPA').Self), ObjectsEqual(Country.Self, GetCountry('CAS').Self))]"
+						blockoverride "gc_banner_text" { text = "[GetGenericAction('spa_patronize_golden_century').GetNameWithNoTooltip]" }
+						blockoverride "gc_banner_tooltip" {
+							tooltipwidget = {
+								ContextualTooltipType = {
+									blockoverride "title_icon_texture" { texture = "[GenericAction.GetIcon]" }
+									blockoverride "title_text" { text = "[GetGenericAction('spa_patronize_golden_century').GetNameWithNoTooltip]" }
+									blockoverride "concept_link" { text = "[action|E]" }
+									blockoverride "tooltip_content" {
+										TooltipTextBlock = { blockoverride "text" { text = "spa_patronize_golden_century_desc" } }
+										using = gc_action_effects_list
+									}
+								}
+							}
+						}
+						
+						blockoverride "gc_banner_action_overlay" {
+							scripted_action_tooltip = {
+								click_type = left
+								click_mode = confirm
+								action_name = "spa_patronize_golden_century"
+								actor = "[SituationView.GetPlayer]"
+								parameter = {
+									parameter_name = "recipient"
+									parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+								}
+							}
+							enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+						}
+					}
+					GoldenCenturyActionBannerRight = {
+						datacontext = "[GetGenericAction('spa_edict_expulsion')]"
+						visible = "[Or(ObjectsEqual(Country.Self, GetCountry('SPA').Self), ObjectsEqual(Country.Self, GetCountry('CAS').Self))]"
+						blockoverride "gc_banner_text" { text = "[GetGenericAction('spa_edict_expulsion').GetNameWithNoTooltip]" }
+						blockoverride "gc_banner_tooltip" {
+							tooltipwidget = {
+								ContextualTooltipType = {
+									blockoverride "title_icon_texture" { texture = "[GenericAction.GetIcon]" }
+									blockoverride "title_text" { text = "[GetGenericAction('spa_edict_expulsion').GetNameWithNoTooltip]" }
+									blockoverride "concept_link" { text = "[action|E]" }
+									blockoverride "tooltip_content" {
+										TooltipTextBlock = { blockoverride "text" { text = "spa_edict_expulsion_desc" } }
+										using = gc_action_effects_list
+									}
+								}
+							}
+						}
+						blockoverride "gc_banner_action_overlay" {
+							scripted_action_tooltip = {
+								click_type = left
+								click_mode = confirm
+								action_name = "spa_edict_expulsion"
+								actor = "[SituationView.GetPlayer]"
+								parameter = {
+									parameter_name = "recipient"
+									parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+								}
+							}
+							enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+						}
+					}
+		
+					GoldenCenturyMorActionBannerRight = {
+						datacontext = "[GetGenericAction('adu_proclaim_crown_al_andalus')]"
+						visible = "[Not(Or(ObjectsEqual(Country.Self, GetCountry('SPA').Self), ObjectsEqual(Country.Self, GetCountry('CAS').Self)))]"
+						blockoverride "gc_banner_text" { text = "crown_of_al_andalus" }
+						blockoverride "gc_banner_tooltip" {
+							tooltipwidget = {
+								ContextualTooltipType = {
+									blockoverride "title_icon_texture" { texture = "[GenericAction.GetIcon]" }
+									blockoverride "title_text" { text = "crown_of_al_andalus" }
+									blockoverride "concept_link" { text = "[action|E]" }
+									blockoverride "tooltip_content" {
+										TooltipTextBlock = { blockoverride "text" { text = "crown_of_al_andalus_desc" } }
+										using = gc_action_effects_list
+									}
+								}
+							}
+						}
+						blockoverride "gc_banner_action_overlay" {
+							scripted_action_tooltip = {
+								click_type = left
+								click_mode = confirm
+								action_name = "adu_proclaim_crown_al_andalus"
+								actor = "[SituationView.GetPlayer]"
+								parameter = {
+									parameter_name = "recipient"
+									parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+								}
+							}
+							enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+						}
+					}
+					GoldenCenturyMorActionBannerRight = {
+						datacontext = "[GetGenericAction('adu_proclaim_a_fatwa')]"
+						visible = "[Not(Or(ObjectsEqual(Country.Self, GetCountry('SPA').Self), ObjectsEqual(Country.Self, GetCountry('CAS').Self)))]"
+						blockoverride "gc_banner_text" { text = "[GetGenericAction('adu_proclaim_a_fatwa').GetNameWithNoTooltip]" }
+						blockoverride "gc_banner_tooltip" {
+							tooltipwidget = {
+								ContextualTooltipType = {
+									blockoverride "title_icon_texture" { texture = "[GenericAction.GetIcon]" }
+									blockoverride "title_text" { text = "[GetGenericAction('adu_proclaim_a_fatwa').GetNameWithNoTooltip]" }
+									blockoverride "concept_link" { text = "[action|E]" }
+									blockoverride "tooltip_content" {
+										TooltipTextBlock = { blockoverride "text" { text = "adu_proclaim_a_fatwa_desc" } }
+										using = gc_action_effects_list
+									}
+								}
+							}
+						}
+						blockoverride "gc_banner_action_overlay" {
+							scripted_action_tooltip = {
+								click_type = left
+								click_mode = confirm
+								action_name = "adu_proclaim_a_fatwa"
+								actor = "[SituationView.GetPlayer]"
+								parameter = {
+									parameter_name = "recipient"
+									parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+								}
+							}
+							enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+						}
+					}
+					GoldenCenturyMorActionBannerRight = {
+						datacontext = "[GetGenericAction('adu_muster_the_ghuzat')]"
+						visible = "[Not(Or(ObjectsEqual(Country.Self, GetCountry('SPA').Self), ObjectsEqual(Country.Self, GetCountry('CAS').Self)))]"
+						blockoverride "gc_banner_text" { text = "[GetGenericAction('adu_muster_the_ghuzat').GetNameWithNoTooltip]" }
+						blockoverride "gc_banner_tooltip" {
+							tooltipwidget = {
+								ContextualTooltipType = {
+									blockoverride "title_icon_texture" { texture = "[GenericAction.GetIcon]" }
+									blockoverride "title_text" { text = "[GetGenericAction('adu_muster_the_ghuzat').GetNameWithNoTooltip]" }
+									blockoverride "concept_link" { text = "[action|E]" }
+									blockoverride "tooltip_content" {
+										TooltipTextBlock = { blockoverride "text" { text = "adu_muster_the_ghuzat_desc" } }
+										using = gc_action_effects_list
+									}
+								}
+							}
+						}
+						blockoverride "gc_banner_action_overlay" {
+							scripted_action_tooltip = {
+								click_type = left
+								click_mode = confirm
+								action_name = "adu_muster_the_ghuzat"
+								actor = "[SituationView.GetPlayer]"
+								parameter = {
+									parameter_name = "recipient"
+									parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+								}
+							}
+							enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+						}
+					}
+					GoldenCenturyMorActionBannerRight = {
+						datacontext = "[GetGenericAction('invoke_ummayad_legacy')]"
+						visible = "[Not(Or(ObjectsEqual(Country.Self, GetCountry('SPA').Self), ObjectsEqual(Country.Self, GetCountry('CAS').Self)))]"
+						blockoverride "gc_banner_text" { text = "[GetGenericAction('invoke_ummayad_legacy').GetNameWithNoTooltip]" }
+						blockoverride "gc_banner_tooltip" {
+							tooltipwidget = {
+								ContextualTooltipType = {
+									blockoverride "title_icon_texture" { texture = "[GenericAction.GetIcon]" }
+									blockoverride "title_text" { text = "[GetGenericAction('invoke_ummayad_legacy').GetNameWithNoTooltip]" }
+									blockoverride "concept_link" { text = "[action|E]" }
+									blockoverride "tooltip_content" {
+										TooltipTextBlock = { blockoverride "text" { text = "invoke_ummayad_legacy_desc" } }
+										using = gc_action_effects_list
+									}
+								}
+							}
+						}
+						blockoverride "gc_banner_action_overlay" {
+							scripted_action_tooltip = {
+								click_type = left
+								click_mode = confirm
+								action_name = "invoke_ummayad_legacy"
+								actor = "[SituationView.GetPlayer]"
+								parameter = {
+									parameter_name = "recipient"
+									parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
+								}
+							}
+							enabled = "[PdxGuiWidget.IsUberButtonEnabled]"
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	#End Requirements
+	blockoverride "situation_panel_outcome_list_spacing" {
+		spacing = 5
+	}
+	blockoverride "situation_panel_outcomes_card_size" {
+		minimumsize = { 410 -1 }
+		maximumsize = { 410 -1 }
+	}
+	blockoverride "situation_panel_outcome_item_size" {
+		minimumsize = { 360 -1 }
+		maximumsize = { 360 -1 }
+	}
+	blockoverride "situation_panel_outcome_hint" {
+		action_tooltip = {
+			title = "OPEN_HINT"
+			on_action = "[OpenLateralViewWithParams('hints', 'selected_hint = hint_golden_century')]"
+		}
+	}
+	
+	blockoverride "situation_panel_main_content" {
+		vbox = {
+			layoutpolicy_horizontal = expanding
+			spacing = 5
+			margin = { 50 0 }
+			margin_top = 12
+			ignoreinvisible = yes
+
+
+			vbox = {
+				layoutpolicy_horizontal = expanding
+
+				minimumsize = { -1 220 }
+				maximumsize = { -1 220 }
+				visible = "[GetUniqueInternationalOrganization('grand_alliance').Exists]"
+				using = bg_paper_card
+				using = bg_cabinet_card_frame
+				datacontext = "[SituationView.GetActiveSituation.GetSituation.MakeScope.GetVariable('gc_winner_country').GetCountry]"
+
+				widget = {
+					layoutpolicy_horizontal = expanding
+					size = { -1 41 }
+
+					hbox = {
+						layoutpolicy_horizontal = expanding
+						layoutpolicy_vertical = expanding
+						spacing = 20
+						margin = { 5 0 }
+						margin_top = 5
+
+						header_button_left = {
+							layoutpolicy_horizontal = expanding
+							size = { -1 36 }
+							datacontext = "[GetUniqueInternationalOrganization('grand_alliance').GetTarget]"
+							enabled = "[GetUniqueInternationalOrganization('grand_alliance').Exists]"
+
+							action_tooltip = {
+								click_type = left
+								title = "GC_OPEN_COUNTRY_DIPLOMACY"
+								using = snd_UI_alert_openAndCycle
+								on_action = "[OpenDiplomacy(Country.Self)]"
+							}
+
+							tooltipwidget = { BasicFunctionalTooltip = {} }
+
+							blockoverride "header_button_icon_size" {}
+							blockoverride "header_button_icon_obj" {}
+							blockoverride "header_button_frame_inner" { visible = no }
+
+							blockoverride "header_button_text_layout" {
+								background = {
+									using = color_dark_green_texture
+									margin = { -2 -2 }
+								}
+								
+								hbox = {
+									layoutpolicy_horizontal = expanding
+									margin = { 10 0 }
+									margin_right = 15
+									spacing = 5
+									country_flag_very_small = {}
+
+									text_single = {
+										layoutpolicy_horizontal = expanding
+										fontsize = 15
+										minimumsize = { -1 20 }
+										autoresize = no
+										align = left
+										text = "gc_our_coalition"
+									}
+
+									expand = {}
+
+									text_single = {
+										fontsize = 15
+										autoresize = yes
+										align = left
+										raw_text = "[GetDataModelSize(SituationView.GetSubjectsAndAllies(Country.Self))]"
+									}
+								}
+							}
+						}
+
+						header_button_left = {
+							layoutpolicy_horizontal = expanding
+							size = { -1 36 }
+							datacontext = "[GetUniqueInternationalOrganization('grand_alliance')]"
+							enabled = "[GetUniqueInternationalOrganization('grand_alliance').Exists]"
+
+							action_tooltip = {
+								click_type = left
+								title = "OPEN_IO"
+								using = snd_UI_alert_openAndCycle
+								on_action = "[OpenInternationalOrganizationView(InternationalOrganization.Self)]"
+							}
+
+							tooltipwidget = { BasicFunctionalTooltip = {} }
+
+							blockoverride "header_button_icon_size" {}
+							blockoverride "header_button_icon_obj" {}
+							blockoverride "header_button_frame_inner" { visible = no }
+
+							blockoverride "header_button_text_layout" {
+								background = {
+									using = bg_red_bckg_texture
+									margin = { -2 -2 }
+								}
+
+								hbox = {
+									layoutpolicy_horizontal = expanding
+									margin = { 10 0 }
+									margin_left = 15
+									spacing = 5
+
+									icon = {
+										size = { 20 20 }
+										texture = "[InternationalOrganization.GetIcon]"
+										texture_density = 2
+									}
+
+									text_single = {
+										layoutpolicy_horizontal = expanding
+										fontsize = 15
+										minimumsize = { -1 20 }
+										autoresize = no
+										align = left
+										text = "[InternationalOrganization.GetNameWithNoTooltip]"
+									}
+
+									text_single = {
+										fontsize = 15
+										autoresize = yes
+										align = left
+										raw_text = "[GetDataModelSize(InternationalOrganization.GetMembers)]"
+									}
+								}
+							}
+						}
+					}
+
+					widget = {
+						parentanchor = center
+						size = { 34 34 }
+						tooltipwidget = {
+							ContextualTooltipType = {
+								blockoverride "title_icon_texture" { texture = "gfx/interface/icons/flat_icons/military.dds" }
+								blockoverride "title_text" { text = "[military_strength]" }
+								blockoverride "concept_link" { text = "[military_strength|e]" }
+								blockoverride "tooltip_content" {
+									TooltipManualTableField = {
+										blockoverride "field_content" {
+											margin = { 10 0 }
+											spacing = 10
+											widget = {
+												size = { 12 12 }
+												background = { using = color_dark_green_texture }
+											}
+											text_single = {
+												autoresize = yes
+												align = nobaseline
+												text = "gc_our_coalition"
+											}
+											expand = {}
+											text_single = {
+												autoresize = yes
+												align = nobaseline
+												default_format = "#yellow_titles"
+												raw_text = "[Country.GetDiplomacy.GetCoalitionArmyStrength|1]"
+											}
+										}
+									}
+									TooltipManualTableField = {
+										blockoverride "field_content" {
+											margin = { 10 0 }
+											spacing = 10
+											widget = {
+												size = { 12 12 }
+												background = { using = color_dark_red_texture }
+											}
+											text_single = {
+												autoresize = yes
+												align = nobaseline
+												text = "[GetUniqueInternationalOrganization('grand_alliance').GetNameWithNoTooltip]"
+											}
+											expand = {}
+											text_single = {
+												autoresize = yes
+												align = nobaseline
+												default_format = "#yellow_titles"
+												raw_text = "[GetUniqueInternationalOrganization('grand_alliance').GetTotalMilitaryStrength|1]"
+											}
+										}
+									}
+								}
+							}
+						}
+						piechart = {
+							size = { 100% 100% }
+							parentanchor = center
+							using = piechart_angles
+							using = bg_circle_piechart
+							
+							pieslice_no_highlight = {
+								using = bg_pie_chart_alpha_80_texture
+								value = "[FixedPointToFloat(GetUniqueInternationalOrganization('grand_alliance').GetTotalMilitaryStrength)]"
+								color = { 0.70 0.13 0.13 1 }
+							}
+							pieslice_no_highlight = {
+								using = bg_pie_chart_alpha_80_texture
+								value = "[FixedPointToFloat(Country.GetDiplomacy.GetCoalitionArmyStrength)]"
+								color = { 0.25 0.55 0.28 1 }
+							}
+
+							icon = {
+								size = { 70% 70% }
+								parentanchor = center
+								using = military_texture
+							}
+						}
+					}
+				}
+
+				widget = {
+					layoutpolicy_horizontal = expanding
+					size = { -1 172 }
+
+					hbox = {
+						layoutpolicy_horizontal = expanding
+						margin = { 4 -16 }
+						spacing = 2
+
+						scrollarea = {
+							layoutpolicy_horizontal = expanding
+							minimumsize = { 0 165 }
+							maximumsize = { -1 165 }
+							scrollbarpolicy_horizontal = always_off
+							scrollbar_vertical = {
+								using = Scrollbar_Vertical
+							}
+							scrollwidget = {
+								vbox = {
+									layoutpolicy_horizontal = expanding
+									vbox = {
+										margin_left = 12
+										margin_right = 12
+										layoutpolicy_horizontal = expanding
+										spacing = 4
+										datamodel = "[SituationView.GetSubjectsAndAllies(Country.Self)]"
+										item = {
+											GoldenCenturyMemberCard = {}
+										}
+									}
+									expand = {}
+								}
+							}
+						}
+
+						scrollarea = {
+							layoutpolicy_horizontal = expanding
+							minimumsize = { 0 165 }
+							maximumsize = { -1 165 }
+							scrollbarpolicy_horizontal = always_off
+							scrollbar_vertical = {
+								using = Scrollbar_Vertical
+							}
+							scrollwidget = {
+								vbox = {
+									layoutpolicy_horizontal = expanding
+									vbox = {
+										margin_right = 12
+										layoutpolicy_horizontal = expanding
+										spacing = 4
+										datamodel = "[SituationView.GetOrganizationMembersByStrength('grand_alliance')]"
+										item = {
+											GoldenCenturyMemberCard = {}
+										}
+									}
+									expand = {}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	##TOP Banners
+	datacontext = "[SituationView.GetActiveSituation.GetSituation.MakeScope.GetVariable('gc_winner_country').GetCountry]"
+	widget = {
+		allow_outside = yes
+		parentanchor = top|hcenter
+		visible = "[Not(Or(ObjectsEqual(Country.Self, GetCountry('SPA').Self), ObjectsEqual(Country.Self, GetCountry('CAS').Self)))]"
+		
+		icon = {
+			parentanchor = right
+			position = { -44 39 }
+			mirror = horizontal
+			using = golden_century_morrocco_banner_top_texture
+		}
+		
+		icon = {
+			parentanchor = left
+			position = { 44 39 }
+			using = golden_century_morrocco_banner_top_texture
+		}
+	}
+	widget = {
+		allow_outside = yes
+		parentanchor = top|hcenter
+		visible = "[Or(ObjectsEqual(Country.Self, GetCountry('SPA').Self), ObjectsEqual(Country.Self, GetCountry('CAS').Self))]"
+
+		icon = {
+			parentanchor = right
+			position = { -44 39 }
+			mirror = horizontal
+			using = golden_century_castile_banner_top_texture
+		}
+		
+		icon = {
+			parentanchor = left
+			position = { 44 39 }
+			using = golden_century_castile_banner_top_texture
+		}
+	}
+
+	##Columns
+	GoldenCenturyColumnRight = {
+		size = { 62 100% }
+		parentanchor = top|right
+		position = { -11 220 }
+		allow_outside = yes
+	}
+	GoldenCenturyColumnLeft = {
+		size = { 62 100% }
+		parentanchor = top|left
+		position = { 11 220 }
+		allow_outside = yes
+	}
+
+	##ProgressBars
+	widget = {
+		size = { 100% 100% }
+		parentanchor = top|left
+		allow_outside = yes
+
+		hbox = {
+			layoutpolicy_horizontal = expanding
+			layoutpolicy_vertical = expanding
+			allow_outside = yes
+			margin = { 19 0 }
+			margin_top = 80
+			margin_bottom = 18
+
+			widget = {
+				layoutpolicy_vertical = expanding
+				size = { 46 -1 }
+				allow_outside = yes
+
+				GoldenCenturyDominanceBar = {
+					position = { 8 336 }
+					size = { 30 222 }
+					datacontext = "[SituationView.GetActiveSituation.GetVariableSpec('gc_colonial_dominance')]"
+				}
+			}
+
+			expand = {}
+
+			widget = {
+				layoutpolicy_vertical = expanding
+				size = { 46 -1 }
+				allow_outside = yes
+
+				GoldenCenturyDominanceBar = {
+					position = { 8 336 }
+					size = { 30 222 }
+					datacontext = "[SituationView.GetActiveSituation.GetVariableSpec('gc_european_dominance')]"
+				}
+			}
+		}
+	}
+
+	##Archs
+	widget = {
+		size = { 56 320 }
+		parentanchor = left
+		position = { 14 395 }
+		GoldenCenturyArches = {}
+	}
+	widget = {
+		size = { 56 320 }
+		parentanchor = right
+		position = { -14 395 }
+		GoldenCenturyArches = {}
+	}
+
+	##################################### TOP SUBHEADER (ON TOP OF ART) #####################################
+	widget = {
+		size = { 100% 45 }
+		parentanchor = top|hcenter
+		position = { 0 38 }
+		allow_outside = yes
+
+		hbox = {
+			layoutpolicy_horizontal = expanding
+			margin = { 14 0 }
+			spacing = 10
+
+			# ===================== COLONIAL DOMINANCE =====================
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				maximumsize = { 190 -1 }
+				spacing = 6
+				visible = "[SituationView.GetActiveSituation.HasVariable('gc_colonial_dominance')]"
+				datacontext = "[SituationView.GetActiveSituation.GetVariableSpec('gc_colonial_dominance')]"
+				tooltipwidget = {
+					using = GoldenCenturyDominance_Tooltip
+					blockoverride "title_icon_texture" { texture = "gfx/interface/icons/situations/gc_colonial_dominance.dds" }
+				}
+
+				widget = {
+					size = { 35 35 }
+
+
+					piechart = {
+						size = { 100% 100% }
+						parentanchor = center
+						using = piechart_angles
+						using = bg_circle_piechart
+
+						pieslice_no_highlight = {
+							using = bg_pie_chart_alpha_80_texture
+							value = "[FixedPointToFloat(SituationView.GetActiveSituation.GetVariable('gc_colonial_dominance'))]"
+							using = color_value_progress_gray
+						}
+						pieslice_no_highlight = {
+							using = bg_pie_chart_alpha_80_texture
+							value = "[Subtract_float('(float)100.0', FixedPointToFloat(SituationView.GetActiveSituation.GetVariable('gc_colonial_dominance')))]"
+							using = color_value_progress_gray
+						}
+
+						icon = {
+							size = { 95% 95% }
+							parentanchor = center
+							using = gc_colonial_dominance_texture
+						}
+					}
+
+					piechart = {
+						size = { 100% 100% }
+						parentanchor = center
+						using = piechart_angles
+
+						pieslice_no_highlight = {
+							using = bg_pie_chart_alpha_80_texture
+							value = "[FixedPointToFloat(SituationView.GetActiveSituation.GetVariable('gc_colonial_dominance'))]"
+							using = color_value_progress_blue
+						}
+						pieslice_no_highlight = {
+							using = bg_pie_chart_alpha_80_texture
+							value = "[Subtract_float('(float)100.0', FixedPointToFloat(SituationView.GetActiveSituation.GetVariable('gc_colonial_dominance')))]"
+							color = { 0 0 0 0 }
+						}
+					}
+				}
+
+				hbox = {
+					spacing = 8
+
+					text_multi = {
+						layoutpolicy_horizontal = expanding
+						minimumsize = { 100 -1 }
+						maximumsize = { 100 -1 }
+						autoresize = yes
+						fontsize = 14
+						default_format = "#yellow_titles"
+						text = "[MonthlySavedVariable.GetName]"
+					}
+
+					vbox = {
+						using = layoutpolicy_expanding
+						expand = {}
+						text_single = {
+							layoutpolicy_horizontal = expanding
+							minimumsize = { 40 -1 }
+							maximumsize = { 40 -1 }
+							autoresize = yes
+							align = right
+							fontsize = 15
+							default_format = "#yellow_titles"
+							text = "[SituationView.GetActiveSituation.GetVariableText(MonthlySavedVariable.Self)]"
+						}
+					}
+				}
+				expand = {}
+			}
+
+			expand = {}
+
+			# ===================== NEXT FLASHPOINT =====================
+			widget = {
+				size = { 40 40 }
+				ignore_layout = yes
+				parentanchor = center
+				position = { 0 5 }
+				visible = "[SituationView.GetActiveSituation.HasVariable('gc_flashpoint_meter')]"
+				datacontext = "[SituationView.GetActiveSituation.GetVariableSpec('gc_flashpoint_meter')]"
+
+				tooltipwidget = {
+					using = GoldenCenturyDominance_Tooltip
+					blockoverride "title_icon_texture" { texture = "gfx/interface/icons/situations/flashpoint.dds" }
+					blockoverride "gc_dominance_tooltip_extra" {
+						TooltipTextBlock = {
+							blockoverride "text" {
+								text = "gc_flashpoint_meter_at_max_tt"
+							}
+						}
+					}
+				}
+
+				piechart = {
+					size = { 100% 100% }
+					parentanchor = center
+					using = piechart_angles
+					using = bg_circle_piechart
+
+					pieslice_no_highlight = {
+						using = bg_pie_chart_alpha_80_texture
+						value = "[FixedPointToFloat(SituationView.GetActiveSituation.GetVariable('gc_flashpoint_meter'))]"
+						color = { 0.94 0.8 0.36 1 }
+					}
+					pieslice_no_highlight = {
+						using = bg_pie_chart_alpha_80_texture
+						value = "[Subtract_float('(float)100.0', FixedPointToFloat(SituationView.GetActiveSituation.GetVariable('gc_flashpoint_meter')))]"
+						using = color_value_progress_gray
+					}
+
+					icon = {
+						size = { 90% 90% }
+						parentanchor = center
+						using = flashpoint_texture
+						
+					}
+				}
+			}
+
+			expand = {}
+
+			# ===================== EUROPEAN DOMINANCE =====================
+			hbox = {
+				layoutpolicy_horizontal = expanding
+				maximumsize = { 190 -1 }
+				spacing = 6
+				visible = "[SituationView.GetActiveSituation.HasVariable('gc_european_dominance')]"
+				datacontext = "[SituationView.GetActiveSituation.GetVariableSpec('gc_european_dominance')]"
+				tooltipwidget = {
+					using = GoldenCenturyDominance_Tooltip
+					blockoverride "title_icon_texture" { texture = "gfx/interface/icons/situations/gc_european_dominance.dds" }
+				}
+
+				hbox = {
+					spacing = 8
+					righttoleft = yes
+
+					text_multi = {
+						layoutpolicy_horizontal = expanding
+						minimumsize = { 100 -1 }
+						maximumsize = { 100 -1 }
+						autoresize = yes
+						align = right
+						fontsize = 14
+						default_format = "#yellow_titles"
+						text = "[MonthlySavedVariable.GetName]"
+					}
+
+					vbox = {
+						using = layoutpolicy_expanding
+						expand = {}
+						text_single = {
+							layoutpolicy_horizontal = expanding
+							minimumsize = { 36 -1 }
+							maximumsize = { 36 -1 }
+							autoresize = yes
+							align = right
+							fontsize = 15
+							default_format = "#yellow_titles"
+							text = "[SituationView.GetActiveSituation.GetVariableText(MonthlySavedVariable.Self)]"
+						}
+					}
+				}
+
+				widget = {
+					size = { 35 35 }
+
+
+					piechart = {
+						size = { 100% 100% }
+						parentanchor = center
+						using = piechart_angles
+						using = bg_circle_piechart
+
+						pieslice_no_highlight = {
+							using = bg_pie_chart_alpha_80_texture
+							value = "[FixedPointToFloat(SituationView.GetActiveSituation.GetVariable('gc_european_dominance'))]"
+							using = color_value_progress_gray
+						}
+						pieslice_no_highlight = {
+							using = bg_pie_chart_alpha_80_texture
+							value = "[Subtract_float('(float)100.0', FixedPointToFloat(SituationView.GetActiveSituation.GetVariable('gc_european_dominance')))]"
+							using = color_value_progress_gray
+						}
+
+						icon = {
+							size = { 100% 100% }
+							parentanchor = center
+							using = gc_european_dominance_texture
+						}
+					}
+
+					piechart = {
+						size = { 100% 100% }
+						parentanchor = center
+						using = piechart_angles
+
+						pieslice_no_highlight = {
+							using = bg_pie_chart_alpha_80_texture
+							value = "[FixedPointToFloat(SituationView.GetActiveSituation.GetVariable('gc_european_dominance'))]"
+							using = color_value_progress_red
+						}
+						pieslice_no_highlight = {
+							using = bg_pie_chart_alpha_80_texture
+							value = "[Subtract_float('(float)100.0', FixedPointToFloat(SituationView.GetActiveSituation.GetVariable('gc_european_dominance')))]"
+							color = { 0 0 0 0 }
+						}
+					}
+				}
+			}
+		}
+	}
+}
