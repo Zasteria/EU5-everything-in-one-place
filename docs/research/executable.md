@@ -68,3 +68,11 @@
   за сессию), `error.log`, `debug.log`, и сейвы.
 - Копии наших модов в `Documents/.../mod/` — **10-20 там `rulers_toolkit` 0.7.4**,
   когда в main уже 0.7.5: что в игре, видно прямо, без вопроса ему.
+
+## Дампы API без консоли (10-30, 1.4.5)
+
+Скрытый виджет (своё окно в `scripted_widgets/`, `visible_at_creation = no`, всегда истинный
+`visible`) со `state = { name = _show duration = 5 on_finish = "[ExecuteConsoleCommandsForced('script_docs;dump_data_types')]" }`
+под `-debug_mode -loadsavehandsoff=…` пишет `docs/*.log` и `logs/data_types/` в его папке игры
+сам, без рук. Так сняты дампы 1.4.5 в `reference/game/docs/`. С 1.4.5 движок ещё и пишет в
+`error.log` «is set but is never used» с «Possible match: …» — это проверка, не поломка.

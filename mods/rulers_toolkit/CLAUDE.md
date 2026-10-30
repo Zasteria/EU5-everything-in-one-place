@@ -131,3 +131,10 @@ pass`, `bag_rtk: crown commander set`.
 
     python3 tools/check_script.py mods/rulers_toolkit
     python3 tools/check_cmm.py mods/rulers_toolkit/in_game/common
+
+## 0.13.5 (10-30, игра 1.4.5)
+
+- `bag_rtk_merge_driver.gui`: у `item` списка действий отряда два виджета (нажатие и зонд), 1.4.5
+  пишет «Too many widget entries: Property widgets must specify exactly one widget» — оба в одном
+  держателе. Слияние нерегулярных по-прежнему выключено. `gen_peace.py` сам пишет первое
+  нажатие 0.13.4 (`OnIncRightClick`), пересборка его больше не откатывает.

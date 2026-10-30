@@ -98,7 +98,9 @@ def apply_effect(values: dict, order: dict) -> str:
                 "\tif = {",
                 "\t\tlimit = {",
                 "\t\t\tis_key_in_%svariable_map = { name = cmm target = flag:%s }" % (g, key),
-                "\t\t\tNOT = { is_key_in_%svariable_map = { name = bag_cmfs_done target = flag:%s } }" % (g, key),
+                # Guarded: the first lookup comes before the map exists (error.log, 1.4.5 run 10-30).
+                "\t\t\tNOT = { AND = { has_%svariable_map = bag_cmfs_done"
+                " is_key_in_%svariable_map = { name = bag_cmfs_done target = flag:%s } } }" % (g, g, key),
                 "\t\t}",
                 # CMF itself removes before it adds (cmm_core_auto_apply_scripted_gui).
                 "\t\tremove_from_%svariable_map = { name = cmm key = flag:%s }" % (g, key),
@@ -121,7 +123,8 @@ def apply_effect(values: dict, order: dict) -> str:
             "\tif = {",
             "\t\tlimit = {",
             "\t\t\thas_variable_list = cmm_list_items_%s" % setting,
-            "\t\t\tNOT = { is_key_in_variable_map = { name = bag_cmfs_done target = flag:%s } }" % setting,
+            "\t\t\tNOT = { AND = { has_variable_map = bag_cmfs_done"
+            " is_key_in_variable_map = { name = bag_cmfs_done target = flag:%s } } }" % setting,
             "\t\t}",
             "\t\tclear_variable_list = bag_cmfs_tmp",
             "\t\tevery_in_list = {",

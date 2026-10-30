@@ -46,27 +46,32 @@ widget = {
 					vbox = {
 						datamodel = "[QuickUnitActions.AccessList]"
 						item = {
+							# 0.13.5: one widget per item -- 1.4.5 logs «Too many widget entries» for two
+							# (run 10-30), so the presser and its probe share one holder.
 							widget = {
 								size = { 10 10 }
-								visible_at_creation = no
-								visible = "[And3(GetPlayer.MakeScope.GetVariable('bag_rtk_merge_due').IsSet, Or4(StringContains(UnitActionItem.GetKey, 'non_regular'), StringContains(UnitActionItem.GetKey, 'irregular'), StringContains(UnitActionItem.GetName, 'ррегуляр'), StringContains(UnitActionItem.GetName, 'rregular')), And(UnitActionItem.HasSingleLeftAction, UnitActionItem.CanSingleLeftClick))]"
-								state = {
-									name = _show
-									duration = 0.05
-									on_finish = "[UnitActionItem.SingleLeftClick]"
+								widget = {
+									size = { 10 10 }
+									visible_at_creation = no
+									visible = "[And3(GetPlayer.MakeScope.GetVariable('bag_rtk_merge_due').IsSet, Or4(StringContains(UnitActionItem.GetKey, 'non_regular'), StringContains(UnitActionItem.GetKey, 'irregular'), StringContains(UnitActionItem.GetName, 'ррегуляр'), StringContains(UnitActionItem.GetName, 'rregular')), And(UnitActionItem.HasSingleLeftAction, UnitActionItem.CanSingleLeftClick))]"
+									state = {
+										name = _show
+										duration = 0.05
+										on_finish = "[UnitActionItem.SingleLeftClick]"
+									}
 								}
-							}
-							# Зонд под галочкой журнала: ключ, имя и доступность каждого пункта меню
-							# каждой армии — в debug.log (`bag_rtk: merge item`). 0.9.13 не слил ни разу (10-21).
-							widget = {
-								size = { 10 10 }
-								visible_at_creation = no
-								visible = "[And(GetPlayer.MakeScope.GetVariable('bag_rtk_merge_due').IsSet, GetGlobalVariable('bag_rtk_log').IsSet)]"
-								state = {
-									name = _show
-									duration = 0.05
-									on_finish = "[GetVariableSystem.Set('bag_rtk_mk', Concatenate(UnitActionItem.GetKey, Concatenate(' / ', Concatenate(UnitActionItem.GetName, Select_CString(And(UnitActionItem.HasSingleLeftAction, UnitActionItem.CanSingleLeftClick), ' / can', ' / cannot')))))]"
-									on_finish = "[GetScriptedGui('bag_rtk_merge_probe').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+								# Зонд под галочкой журнала: ключ, имя и доступность каждого пункта меню
+								# каждой армии — в debug.log (`bag_rtk: merge item`). 0.9.13 не слил ни разу (10-21).
+								widget = {
+									size = { 10 10 }
+									visible_at_creation = no
+									visible = "[And(GetPlayer.MakeScope.GetVariable('bag_rtk_merge_due').IsSet, GetGlobalVariable('bag_rtk_log').IsSet)]"
+									state = {
+										name = _show
+										duration = 0.05
+										on_finish = "[GetVariableSystem.Set('bag_rtk_mk', Concatenate(UnitActionItem.GetKey, Concatenate(' / ', Concatenate(UnitActionItem.GetName, Select_CString(And(UnitActionItem.HasSingleLeftAction, UnitActionItem.CanSingleLeftClick), ' / can', ' / cannot')))))]"
+										on_finish = "[GetScriptedGui('bag_rtk_merge_probe').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+									}
 								}
 							}
 						}

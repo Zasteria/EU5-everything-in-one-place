@@ -665,7 +665,7 @@ cm_rgob_scan_pm = {
 		if = {
 			limit = { scope:cm_rgob_out > 0 }
 			if = {
-				limit = { NOT = { is_key_in_global_variable_map = { name = cm_rgob_best target = scope:cm_rgob_bt } } }
+				limit = { NOT = { AND = { has_global_variable_map = cm_rgob_best is_key_in_global_variable_map = { name = cm_rgob_best target = scope:cm_rgob_bt } } } }
 				add_to_global_variable_map = { name = cm_rgob_best key = scope:cm_rgob_bt value = scope:cm_rgob_out }
 				add_to_global_variable_map = { name = cm_bt_output key = scope:cm_rgob_bt value = scope:cm_rgob_out }
 			}
@@ -686,13 +686,13 @@ cm_rgob_scan_entry = {
 	saved_scopes = { cm_rgob_bt cm_rgob_pm cm_rgob_amount }
 	effect = {
 		if = {
-			limit = { NOT = { is_key_in_global_variable_map = { name = cm_rgob_total_claim target = scope:cm_rgob_pm } } }
+			limit = { NOT = { AND = { has_global_variable_map = cm_rgob_total_claim is_key_in_global_variable_map = { name = cm_rgob_total_claim target = scope:cm_rgob_pm } } } }
 			add_to_global_variable_map = { name = cm_rgob_total_claim key = scope:cm_rgob_pm value = scope:cm_rgob_bt }
 		}
 		if = {
 			limit = { "global_variable_map(cm_rgob_total_claim|scope:cm_rgob_pm)" = scope:cm_rgob_bt }
 			if = {
-				limit = { is_key_in_global_variable_map = { name = cm_rgob_total target = scope:cm_rgob_pm } }
+				limit = { AND = { has_global_variable_map = cm_rgob_total is_key_in_global_variable_map = { name = cm_rgob_total target = scope:cm_rgob_pm } } }
 				set_local_variable = { name = cm_rgob_t value = { value = "global_variable_map(cm_rgob_total|scope:cm_rgob_pm)" add = scope:cm_rgob_amount } }
 				add_to_global_variable_map = { name = cm_rgob_total key = scope:cm_rgob_pm value = local_var:cm_rgob_t }
 			}
@@ -710,7 +710,7 @@ cm_rgob_collect_pm = {
 	saved_scopes = { cm_rgob_bt cm_rgob_pm cm_rgob_out }
 	effect = {
 		if = {
-			limit = { is_key_in_global_variable_map = { name = cm_rgob_best target = scope:cm_rgob_bt } }
+			limit = { AND = { has_global_variable_map = cm_rgob_best is_key_in_global_variable_map = { name = cm_rgob_best target = scope:cm_rgob_bt } } }
 			set_local_variable = { name = cm_rgob_thr value = { value = "global_variable_map(cm_rgob_best|scope:cm_rgob_bt)" multiply = 0.5 } }
 			if = {
 				limit = { scope:cm_rgob_out >= local_var:cm_rgob_thr }
@@ -721,7 +721,7 @@ cm_rgob_collect_pm = {
 				# is pre-incremented, so no real index collides with it.
 				set_local_variable = { name = cm_rgob_head value = 0 }
 				if = {
-					limit = { is_key_in_global_variable_map = { name = cm_rgob_pm_head target = scope:cm_rgob_pm } }
+					limit = { AND = { has_global_variable_map = cm_rgob_pm_head is_key_in_global_variable_map = { name = cm_rgob_pm_head target = scope:cm_rgob_pm } } }
 					set_local_variable = { name = cm_rgob_head value = "global_variable_map(cm_rgob_pm_head|scope:cm_rgob_pm)" }
 				}
 				add_to_global_variable_map = { name = cm_rgob_pair_next key = global_var:cm_rgob_pair_count value = local_var:cm_rgob_head }
@@ -740,12 +740,12 @@ cm_rgob_collect_entry = {
 	saved_scopes = { cm_rgob_bt cm_rgob_pm cm_rgob_out cm_rgob_good cm_rgob_amount }
 	effect = {
 		if = {
-			limit = { is_key_in_global_variable_map = { name = cm_rgob_best target = scope:cm_rgob_bt } }
+			limit = { AND = { has_global_variable_map = cm_rgob_best is_key_in_global_variable_map = { name = cm_rgob_best target = scope:cm_rgob_bt } } }
 			set_local_variable = { name = cm_rgob_thr value = { value = "global_variable_map(cm_rgob_best|scope:cm_rgob_bt)" multiply = 0.5 } }
 			if = {
 				limit = { scope:cm_rgob_out >= local_var:cm_rgob_thr }
 				if = {
-					limit = { NOT = { is_key_in_global_variable_map = { name = cm_rgob_row_claim target = scope:cm_rgob_pm } } }
+					limit = { NOT = { AND = { has_global_variable_map = cm_rgob_row_claim is_key_in_global_variable_map = { name = cm_rgob_row_claim target = scope:cm_rgob_pm } } } }
 					add_to_global_variable_map = { name = cm_rgob_row_claim key = scope:cm_rgob_pm value = scope:cm_rgob_bt }
 				}
 				if = {
@@ -753,7 +753,7 @@ cm_rgob_collect_entry = {
 						"global_variable_map(cm_rgob_row_claim|scope:cm_rgob_pm)" = scope:cm_rgob_bt
 						scope:cm_rgob_good = { goods_category = raw_material }
 						scope:cm_rgob_amount > 0
-						is_key_in_global_variable_map = { name = cm_rgob_total target = scope:cm_rgob_pm }
+						AND = { has_global_variable_map = cm_rgob_total is_key_in_global_variable_map = { name = cm_rgob_total target = scope:cm_rgob_pm } }
 					}
 					set_local_variable = { name = cm_rgob_tot value = "global_variable_map(cm_rgob_total|scope:cm_rgob_pm)" }
 					if = {
@@ -766,7 +766,7 @@ cm_rgob_collect_entry = {
 						# handful of goods it actually produces instead of all of them.
 						set_local_variable = { name = cm_rgob_head value = 0 }
 						if = {
-							limit = { is_key_in_global_variable_map = { name = cm_rgob_good_head target = scope:cm_rgob_good } }
+							limit = { AND = { has_global_variable_map = cm_rgob_good_head is_key_in_global_variable_map = { name = cm_rgob_good_head target = scope:cm_rgob_good } } }
 							set_local_variable = { name = cm_rgob_head value = "global_variable_map(cm_rgob_good_head|scope:cm_rgob_good)" }
 						}
 						add_to_global_variable_map = { name = cm_rgob_row_next key = global_var:cm_rgob_row_count value = local_var:cm_rgob_head }

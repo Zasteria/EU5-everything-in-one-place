@@ -193,7 +193,9 @@ def _mirror_log(text: str) -> str:
     return text
 
 
-_LOOKUP = re.compile(r"is_key_in_variable_map\s*=\s*\{\s*name\s*=\s*(\S+)\s+target\s*=\s*(\S+)\s*\}")
+# Global maps too since +perf69: the 1.4.5 run (10-30) logged six `cm_rgob_*` lookups on
+# the RGO scan's first pass, before the scan had made those maps.
+_LOOKUP = re.compile(r"is_key_in_(global_)?variable_map\s*=\s*\{\s*name\s*=\s*(\S+)\s+target\s*=\s*(\S+)\s*\}")
 
 
 def _guard_maps(text: str) -> tuple[str, int]:
@@ -209,11 +211,12 @@ def _guard_maps(text: str) -> tuple[str, int]:
             continue
         out, pos = [], 0
         for match in _LOOKUP.finditer(line):
+            kind, name = match.group(1) or "", match.group(2)
             above = "\n".join(lines[max(0, i - 2):i]) + line[:match.start()]
-            if re.search(r"has_variable_map\s*=\s*%s(?!\S)" % re.escape(match.group(1)), above):
+            if re.search(r"has_%svariable_map\s*=\s*%s(?!\S)" % (kind, re.escape(name)), above):
                 continue
             out.append(line[pos:match.start()])
-            out.append("AND = { has_variable_map = %s %s }" % (match.group(1), match.group(0)))
+            out.append("AND = { has_%svariable_map = %s %s }" % (kind, name, match.group(0)))
             pos = match.end()
             n += 1
         if out:
