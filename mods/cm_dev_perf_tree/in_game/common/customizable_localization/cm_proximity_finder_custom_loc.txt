@@ -1,0 +1,277 @@
+﻿# Governor/capital finder tooltip status line: names rank 2/3 or a local maximum. Appended to
+# the scored tooltip via [ROOT.GetLocation.Custom('cm_pf_gf_status' / 'cm_pf_cf_status')].
+cm_pf_gf_status = {
+	type = location
+	text = {
+		trigger = {
+			has_variable = cm_gf_top
+			var:cm_gf_top = 2
+		}
+		localization_key = cm_pf_status_second
+	}
+	text = {
+		trigger = {
+			has_variable = cm_gf_top
+			var:cm_gf_top = 3
+		}
+		localization_key = cm_pf_status_third
+	}
+	text = {
+		# Skip capital/governor tiles: they show their own stripes, not the gray local-max one.
+		trigger = {
+			has_variable = cm_gf_localmax
+			NOT = { modifier:local_proximity_source > 0 }
+		}
+		localization_key = cm_pf_status_localmax
+	}
+}
+
+cm_pf_cf_status = {
+	type = location
+	text = {
+		trigger = {
+			has_variable = cm_cf_top
+			var:cm_cf_top = 2
+		}
+		localization_key = cm_pf_status_second
+	}
+	text = {
+		trigger = {
+			has_variable = cm_cf_top
+			var:cm_cf_top = 3
+		}
+		localization_key = cm_pf_status_third
+	}
+	text = {
+		# Skip source tiles: they show the magenta stripe, not the gray local-max one.
+		trigger = {
+			has_variable = cm_cf_localmax
+			NOT = { modifier:local_proximity_source > 0 }
+		}
+		localization_key = cm_pf_status_localmax
+	}
+}
+
+# Debug label for the predicted-proximity line in CM_PF_DEBUG_BLOCK, matching the roads setting
+# the predicted value was computed under.
+cm_pf_pred_label = {
+	type = location
+	text = {
+		trigger = {
+			owner = { cm_pf_roads_is_current = yes }
+		}
+		localization_key = cm_pf_pred_label_current
+	}
+	text = {
+		localization_key = cm_pf_pred_label_max
+	}
+}
+
+# Basis wording for the governor no-gain tooltip, matching the infrastructure settings the
+# run was computed under.
+cm_pf_nogain_basis = {
+	type = location
+	text = {
+		trigger = {
+			owner = {
+				cm_pf_roads_is_current = yes
+				cm_pf_naval_is_current_presence = yes
+			}
+		}
+		localization_key = cm_pf_nogain_basis_current
+	}
+	text = {
+		localization_key = cm_pf_nogain_basis_assumed
+	}
+}
+
+# Which of the two ways a location can host neither governor type the ineligible tooltip names.
+cm_pf_inelig_reason = {
+	type = location
+	text = {
+		trigger = {
+			cm_gov_site_blocks_land_governor = yes
+		}
+		localization_key = cm_pf_inelig_reason_blocked
+	}
+	text = {
+		localization_key = cm_pf_inelig_reason_route
+	}
+}
+
+# Gates the entire --debug-- block behind the diagnostic setting: with it off, the debug-mode
+# tooltip matches the plain one.
+cm_pf_debug_block = {
+	type = location
+	text = {
+		trigger = {
+			owner = { exists = var:cm_placement_finder_debug_path }
+		}
+		localization_key = cm_pf_debug_block_text
+	}
+	text = {
+		localization_key = cm_pf_blank
+		fallback = yes
+	}
+}
+
+# Debug path from the capital, shown at the bottom of the debug block. Custom loc cannot iterate,
+# so the path is a fixed set of slots read off the hovered location's cm_pf_prev chain: slot k shows
+# the node k-1 hops up the chain, gated on cm_pf_dep (its hop count from the capital). cm_pf_path_body
+# concatenates them highest-depth-first so the capital leads; unfilled slots emit nothing.
+cm_pf_path_block = {
+	type = location
+	text = {
+		trigger = { has_variable = cm_pf_prev }
+		localization_key = cm_pf_path_body
+	}
+	text = {
+		localization_key = cm_pf_blank
+		fallback = yes
+	}
+}
+
+cm_pf_path_overflow = {
+	type = location
+	text = {
+		trigger = { var:cm_pf_dep >= 12 }
+		localization_key = cm_pf_path_overflow_line
+	}
+	text = {
+		localization_key = cm_pf_blank
+		fallback = yes
+	}
+}
+
+cm_pf_path_slot_1 = {
+	type = location
+	text = {
+		trigger = { var:cm_pf_dep >= 0 }
+		localization_key = cm_pf_path_line_1
+	}
+	text = {
+		localization_key = cm_pf_blank
+		fallback = yes
+	}
+}
+cm_pf_path_slot_2 = {
+	type = location
+	text = {
+		trigger = { var:cm_pf_dep >= 1 }
+		localization_key = cm_pf_path_line_2
+	}
+	text = {
+		localization_key = cm_pf_blank
+		fallback = yes
+	}
+}
+cm_pf_path_slot_3 = {
+	type = location
+	text = {
+		trigger = { var:cm_pf_dep >= 2 }
+		localization_key = cm_pf_path_line_3
+	}
+	text = {
+		localization_key = cm_pf_blank
+		fallback = yes
+	}
+}
+cm_pf_path_slot_4 = {
+	type = location
+	text = {
+		trigger = { var:cm_pf_dep >= 3 }
+		localization_key = cm_pf_path_line_4
+	}
+	text = {
+		localization_key = cm_pf_blank
+		fallback = yes
+	}
+}
+cm_pf_path_slot_5 = {
+	type = location
+	text = {
+		trigger = { var:cm_pf_dep >= 4 }
+		localization_key = cm_pf_path_line_5
+	}
+	text = {
+		localization_key = cm_pf_blank
+		fallback = yes
+	}
+}
+cm_pf_path_slot_6 = {
+	type = location
+	text = {
+		trigger = { var:cm_pf_dep >= 5 }
+		localization_key = cm_pf_path_line_6
+	}
+	text = {
+		localization_key = cm_pf_blank
+		fallback = yes
+	}
+}
+cm_pf_path_slot_7 = {
+	type = location
+	text = {
+		trigger = { var:cm_pf_dep >= 6 }
+		localization_key = cm_pf_path_line_7
+	}
+	text = {
+		localization_key = cm_pf_blank
+		fallback = yes
+	}
+}
+cm_pf_path_slot_8 = {
+	type = location
+	text = {
+		trigger = { var:cm_pf_dep >= 7 }
+		localization_key = cm_pf_path_line_8
+	}
+	text = {
+		localization_key = cm_pf_blank
+		fallback = yes
+	}
+}
+cm_pf_path_slot_9 = {
+	type = location
+	text = {
+		trigger = { var:cm_pf_dep >= 8 }
+		localization_key = cm_pf_path_line_9
+	}
+	text = {
+		localization_key = cm_pf_blank
+		fallback = yes
+	}
+}
+cm_pf_path_slot_10 = {
+	type = location
+	text = {
+		trigger = { var:cm_pf_dep >= 9 }
+		localization_key = cm_pf_path_line_10
+	}
+	text = {
+		localization_key = cm_pf_blank
+		fallback = yes
+	}
+}
+cm_pf_path_slot_11 = {
+	type = location
+	text = {
+		trigger = { var:cm_pf_dep >= 10 }
+		localization_key = cm_pf_path_line_11
+	}
+	text = {
+		localization_key = cm_pf_blank
+		fallback = yes
+	}
+}
+cm_pf_path_slot_12 = {
+	type = location
+	text = {
+		trigger = { var:cm_pf_dep >= 11 }
+		localization_key = cm_pf_path_line_12
+	}
+	text = {
+		localization_key = cm_pf_blank
+		fallback = yes
+	}
+}

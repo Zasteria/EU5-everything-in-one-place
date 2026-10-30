@@ -1,0 +1,58 @@
+﻿# Discourages a lucky nation from funding its court, stability and diplomacy investment sliders.
+cm_ln_frugal_government = {
+	potential_trigger = {
+		cm_ln_is_active = yes
+	}
+
+	# Court investment feeds government power (in_game/gui/shared/topbar_tooltips.gui:174 reads
+	# court_maintenance into the legitimacy tooltip), so its target is what drives court spending.
+	# Base is AI_GOVERNMENT_POWER_LOWER_LIMIT = 50: loading_screen/common/defines/00_defines.txt:1295
+	ai_government_power_target_modifier = -50
+	# Twenty times the strongest weighting vanilla applies, which spans -0.2 to +0.25
+	# (in_game/common/ai_personalities/00_ai_personalities.txt:151, :172).
+	stability_importance_modifier = -5
+	diplomacy_importance_modifier = -5
+	# No court_importance_modifier exists, so gold is the only weight reaching court spending.
+	# Vanilla's greediest ruler is 0.2 (in_game/common/traits/00_ruler.txt:773).
+	gold_importance_modifier = 5
+	# Max expense is economical_base * DIPLOMATIC_SPENDING_FRACTION * (1 + this), so the total must
+	# reach -1 to cost nothing: -1.1 against the +0.1 every country carries
+	# (in_game/common/auto_modifiers/country.txt:117, loading_screen/common/defines/00_defines.txt:1863).
+	diplomatic_spending_cost = -1.1
+}
+
+# Stability costs economical_base * STABILIY_EXPENSE_FACTOR / (1 + efficiency), so 99 leaves a
+# hundredth (loading_screen/common/defines/00_defines.txt:1941), and full investment grants
+# STABILITY_INVEST_FACTOR 0.5 a month (:1940).
+# There is no stability counterpart to the diplomatic_maintenance trigger, so the slider position
+# cannot be read and the cancel is flat: 0.15 sits under the 0.17 a 35% slider grants, leaving the
+# AI a little stability for the gold it still pays. The limit is what keeps a lower slider safe:
+# at 5 the whole modifier lifts and the AI recovers stability at the ordinary price.
+cm_ln_stab_no_gain = {
+	potential_trigger = {
+		cm_ln_is_active = yes
+	}
+	limit = {
+		stability >= 5
+	}
+
+	stability_cost_efficiency = 99
+	stability_investment = -0.15
+}
+
+# Mirrors diplomatic_maintenance_mod, which the engine applies scaled by the same slider:
+# main_menu/common/static_modifiers/country.txt:393-405
+cm_ln_dip_no_gain = {
+	potential_trigger = {
+		cm_ln_is_active = yes
+	}
+	scales_with = cm_ln_dip_slider
+
+	monthly_diplomats = -0.4
+	max_diplomats = -3
+	subject_loyalty = -30
+	annexation_speed_base = -0.5
+	diplomatic_reputation = -3
+	monthly_complacency = 0.1
+	counter_espionage = -0.5
+}

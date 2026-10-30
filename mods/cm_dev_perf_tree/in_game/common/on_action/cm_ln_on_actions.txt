@@ -1,0 +1,94 @@
+﻿# Lucky Nations hooks. The vanilla country pulses fire for every country in the world, so the
+# leaf trigger is the whole gate: with the rule off no country carries cm_ln_active and a
+# pulse costs one absent-variable lookup per country.
+
+on_game_start_after_lobby = {
+	on_actions = {
+		cm_ln_on_lobby
+		cm_ln_on_new_game
+	}
+}
+
+on_game_load_after_lobby = {
+	on_actions = {
+		cm_ln_on_lobby
+	}
+}
+
+cm_ln_on_lobby = {
+	effect = {
+		cm_ln_reset_country_ids = yes
+		cm_ln_seed_marks = yes
+		cm_ln_refresh_countries = yes
+		every_country = {
+			limit = { cm_ln_is_active = yes }
+			cm_ln_init_country = yes
+		}
+		cm_ln_sync_open_cycles = yes
+	}
+}
+
+# on_game_start_after_lobby is new-game only, so the setup changes are made once and a save load
+# never re-applies them.
+cm_ln_on_new_game = {
+	effect = {
+		cm_ln_run_setup_changes = yes
+	}
+}
+
+# weather_monthly_pulse is the one engine periodic that fires globally with no root scope.
+weather_monthly_pulse = {
+	on_actions = {
+		cm_ln_monthly_global
+	}
+}
+
+# Marking runs first, so a country the rule designates this month is given its id and its settings
+# in the same tick.
+cm_ln_monthly_global = {
+	effect = {
+		cm_ln_seed_marks = yes
+		cm_ln_refresh_countries = yes
+	}
+}
+
+monthly_country_pulse = {
+	on_actions = {
+		cm_ln_on_monthly
+	}
+}
+
+yearly_country_pulse = {
+	on_actions = {
+		cm_ln_on_yearly
+	}
+}
+
+cm_ln_on_monthly = {
+	trigger = {
+		cm_ln_is_active = yes
+	}
+	effect = {
+		cm_ln_monthly_cycle = yes
+	}
+}
+
+cm_ln_on_yearly = {
+	trigger = {
+		cm_ln_is_active = yes
+	}
+	effect = {
+		cm_ln_yearly_cycle = yes
+	}
+}
+
+# Scope: country. Reached from the observer bridge's console command through
+# trigger_event_silently, which resolves this leaf from the loaded on_action database rather than
+# re-instantiating it. Naming cm_ln_sync_check_apply in the command directly costs 222,000 effect
+# and trigger instantiations per cycle, since it reaches cm_q_approval_pass at two call sites.
+cm_ln_c_on_sync_check = {
+	effect = {
+		save_scope_as = cm_ln_country
+		cm_ln_sync_check_apply = yes
+	}
+}

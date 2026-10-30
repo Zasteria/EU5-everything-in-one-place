@@ -1,0 +1,98 @@
+﻿cmf_monthly_human_country_pulse = {
+	on_actions = {
+		# Budget refresh first so this month's funds exist before the dispatcher stages.
+		cm_ab_monthly_budget
+		cm_unified_auto_expand
+		cm_update_all_list_visibility
+		cm_monthly_auto_town_rights
+	}
+}
+
+# Global rather than per-country, so a location's sample stamp counts the same months
+# whoever owned it in between.
+weather_monthly_pulse = {
+	on_actions = {
+		cm_pop_month_tick
+	}
+}
+
+cm_pop_month_tick = {
+	effect = {
+		change_global_variable = { name = cm_pop_month add = 1 }
+	}
+}
+
+# Four-yearly in singleplayer, twelve-yearly in multiplayer, both paced by the cooldown the effect
+# sets rather than by this leaf. Merges with the Auto-Build Roads leaf on the same pulse.
+four_yearly_country_pulse = {
+	on_actions = {
+		cm_upgrade_refresh_pulse
+	}
+}
+
+# Root is the country. The pulse fires for every country in the world; a human is enough to carry
+# the refresh, since the map it rebuilds is global and the driver reads the local player either way.
+cm_upgrade_refresh_pulse = {
+	trigger = {
+		is_ai = no
+	}
+	effect = {
+		cm_arm_upgrade_refresh_if_due = yes
+	}
+}
+
+# Refresh the CMF settings lists each month so newly available items appear.
+cm_update_all_list_visibility = {
+	effect = {
+		cm_update_auto_build_list_visibility = yes
+		cm_update_auto_town_rights_list_visibility = yes
+		cm_update_auto_urbanize_ignore_list_visibility = yes
+	}
+}
+
+# Standalone monthly hook for auto-grant town rights. Lives outside the priority
+# dispatcher because the player toggles it on its own tab, not in the priority list.
+# Still respects the master pause toggle.
+cm_monthly_auto_town_rights = {
+	effect = {
+		save_scope_as = cm_country
+		if = {
+			limit = {
+				cm_should_pause_auto_expand = no
+				exists = var:cm_auto_grant_town_rights
+			}
+			cm_run_auto_town_rights = yes
+		}
+	}
+}
+
+# Standalone monthly hook for the Auto-Build budget and food sampling. Its own
+# on_action so a skipped construction cycle never skips them.
+cm_ab_monthly_budget = {
+	effect = {
+		save_scope_as = cm_country
+		if = {
+			limit = { cm_ab_master_active = yes }
+			# Ahead of the refresh, so the month the governor plan claims the treasury is the month
+			# the pools go to zero. A lucky nation ticks its own plan from cm_ln_monthly_cycle.
+			if = {
+				limit = {
+					cm_ln_is_active = no
+					exists = var:cm_ab_governors_enabled
+				}
+				cm_gov_reorg_tick = yes
+			}
+			cm_ab_monthly_budget_refresh = yes
+			cm_ab_food_sample_markets = yes
+		}
+	}
+}
+
+# Unified dispatcher: iterates the priority list in order and calls each
+# enabled feature's effect. Gated by the master pause toggle.
+cm_unified_auto_expand = {
+	effect = {
+		cm_run_construction_cycle = yes
+	}
+}
+

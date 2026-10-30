@@ -1,0 +1,60 @@
+﻿# Lucky Nations queue window controllers. The window iterates a global list of countries, so
+# the drivers gate on global counts rather than on any one country's flags, and
+# cm_ln_client_drives is what picks a single client to fire them.
+
+# Gates the lucky queue window's round driver.
+cm_ln_should_construct = {
+	is_shown = {
+		cm_ln_client_drives = yes
+		has_global_variable = cm_ln_open_cycles
+	}
+}
+
+# Gates the lucky queue window's scan driver. Global rather than per country, because one
+# driver serves the whole list and lucky nations arm on different days of the month.
+cm_ln_should_scan = {
+	is_shown = {
+		cm_ln_client_drives = yes
+		has_global_variable = cm_ln_scan_armed
+	}
+}
+
+# Ends the scan driver's one sweep.
+cm_ln_scan_disarm = {
+	effect = {
+		if = {
+			limit = { has_global_variable = cm_ln_scan_armed }
+			remove_global_variable = cm_ln_scan_armed
+		}
+	}
+}
+
+# Gates the lucky queue window's Building Cleanup toggle driver.
+cm_ln_should_toggle = {
+	is_shown = {
+		cm_ln_client_drives = yes
+		has_global_variable = cm_ln_cu_pending
+	}
+}
+
+# Ends one lucky nation's toggle pass. Root is the player, scope:cm_ln_country the lucky
+# nation, matching the scorers rather than rooting at a country this client does not play.
+cm_ln_cu_end = {
+	saved_scopes = { cm_ln_country }
+	effect = {
+		cm_ln_cu_end_apply = yes
+	}
+}
+
+# Per-round completion check for a lucky nation. Root is the player, scope:cm_ln_country the
+# lucky nation. Everything the pass approves constructs from script inside it, so there is no
+# approved set to verify instantiated and no fire pass to arm.
+cm_ln_sync_check = {
+	saved_scopes = { cm_ln_country }
+	is_valid = {
+		always = yes
+	}
+	effect = {
+		cm_ln_sync_check_apply = yes
+	}
+}

@@ -1,0 +1,352 @@
+﻿cm_location_raw_wealth = {
+	value = location_tax_base
+	divide = {
+		value = local_control
+		min = 0.01
+	}
+}
+
+cm_location_total_building_levels = {
+	value = total_building_levels
+	divide = {
+		value = modifier:free_building_levels
+		min = 0.01
+	}
+}
+
+cm_location_rgo_value = {
+	value = 0
+	if = {
+		limit = { exists = raw_material }
+		raw_material = { save_temporary_scope_as = cm_rgo_good }
+		add = "default_price(scope:cm_rgo_good)"
+	}
+}
+
+cm_location_rgo_market_value = {
+	value = 0
+	if = {
+		limit = { exists = raw_material }
+		raw_material = { save_temporary_scope_as = cm_rgo_good }
+		add = "market.market_price(scope:cm_rgo_good)"
+	}
+}
+
+cm_location_attacker_penalty = {
+	value = 0
+	if = {
+		limit = { topography = mountains }
+		add = 2
+	}
+	else_if = {
+		limit = {
+			OR = {
+				topography = hills
+				topography = plateau
+				topography = wetlands
+				topography = narrows
+			}
+		}
+		add = 1
+	}
+	if = {
+		limit = {
+			OR = {
+				vegetation = woods
+				vegetation = forest
+				vegetation = jungle
+			}
+		}
+		add = 1
+	}
+}
+
+# Mirrors vanilla Food Productivity: local_monthly_food_modifier holds general bonuses,
+# local_<good>_output_modifier holds rgo-specific ones. Hardcoded per-level rates below come from
+# in_game/common/production_methods/village_production_methods.txt and building max_building_level.
+# Subtracting dev and normalizing rank to rural to get base food potential.
+# Windmill/irrigation: subtract effective contribution, add assumed-max.
+# farming_village has no food modifier; raw_material_output and livestock handled in
+# cm_location_food_potential_live.
+# Other situational food buildings, namely bund, polders, and terraces, keep current contribution.
+cm_location_food_potential_food_multiplier = {
+	value = 1
+	add = modifier:local_monthly_food_modifier
+	if = { limit = { raw_material ?= goods:wheat } add = modifier:local_wheat_output_modifier }
+	else_if = { limit = { raw_material ?= goods:rice } add = modifier:local_rice_output_modifier }
+	else_if = { limit = { raw_material ?= goods:millet } add = modifier:local_millet_output_modifier }
+	else_if = { limit = { raw_material ?= goods:maize } add = modifier:local_maize_output_modifier }
+	else_if = { limit = { raw_material ?= goods:legumes } add = modifier:local_legumes_output_modifier }
+	else_if = { limit = { raw_material ?= goods:potato } add = modifier:local_potato_output_modifier }
+	else_if = { limit = { raw_material ?= goods:livestock } add = modifier:local_livestock_output_modifier }
+	else_if = { limit = { raw_material ?= goods:olives } add = modifier:local_olives_output_modifier }
+	else_if = { limit = { raw_material ?= goods:fruit } add = modifier:local_fruit_output_modifier }
+	else_if = { limit = { raw_material ?= goods:fish } add = modifier:local_fish_output_modifier }
+	else_if = { limit = { raw_material ?= goods:wild_game } add = modifier:local_wild_game_output_modifier }
+	else_if = { limit = { raw_material ?= goods:fur } add = modifier:local_fur_output_modifier }
+	else_if = { limit = { raw_material ?= goods:beeswax } add = modifier:local_beeswax_output_modifier }
+	subtract = {
+		value = development
+		multiply = 0.01  # vanilla 1%/dev
+	}
+	# Rank normalized to rural so ranks compare on terrain alone.
+	# in_game/common/location_ranks/00_default.txt: rural_settlement 0.1 (:187),
+	# megalopolis -0.67 (:26); town and city grant none.
+	if = {
+		limit = { location_rank = location_rank:megalopolis }
+		add = 0.67
+	}
+	if = {
+		limit = { NOT = { location_rank = location_rank:rural_settlement } }
+		add = 0.1
+	}
+	subtract = {
+		value = "location_building_level(building_type:windmill)"
+		multiply = "building_efficiency(building_type:windmill)"
+		multiply = 0.10  # windmill 10%/level
+	}
+	subtract = {
+		value = "location_building_level(building_type:irrigation_systems)"
+		multiply = "building_efficiency(building_type:irrigation_systems)"
+		multiply = 0.05  # irrigation 5%/level
+	}
+	if = {
+		limit = {
+			OR = {
+				raw_material ?= goods:wheat
+				raw_material ?= goods:rice
+				raw_material ?= goods:millet
+			}
+		}
+		add = 0.10  # 1 windmill * 0.10, max_levels = 1
+	}
+	if = {
+		limit = {
+			OR = {
+				has_river = yes
+				is_adjacent_to_lake = yes
+			}
+		}
+		add = 0.80  # 16 irrigation * 0.05
+	}
+	min = 0
+}
+
+# Reads modifier:local_raw_material_output, which captures devastation, static modifiers, and the
+# employed portion of built farming_villages, then swaps farming_village's current effective
+# contribution for the assumed-max bonus.
+cm_location_food_potential_raw_output_multiplier = {
+	value = 1
+	add = modifier:local_raw_material_output
+	subtract = {
+		value = "location_building_level(building_type:farming_village)"
+		multiply = "building_efficiency(building_type:farming_village)"
+		multiply = 0.025  # FV 2.5%/level
+	}
+	if = {
+		limit = {
+			OR = {
+				raw_material ?= goods:wheat
+				raw_material ?= goods:maize
+				raw_material ?= goods:rice
+				raw_material ?= goods:millet
+				raw_material ?= goods:legumes
+				raw_material ?= goods:potato
+				raw_material ?= goods:livestock
+				raw_material ?= goods:olives
+				raw_material ?= goods:fruit
+			}
+		}
+		add = 0.40  # 16 FV * 0.025
+	}
+}
+
+# Final score: [rgo food_value * raw_output_multiplier + farming_village livestock side
+# production] * food_multiplier. exists guard keeps locations without an rgo from erroring
+# on raw_material.food_value.
+cm_location_food_potential_live = {
+	value = 0
+	if = {
+		limit = { exists = raw_material }
+		add = raw_material.food_value
+	}
+	multiply = cm_location_food_potential_raw_output_multiplier
+	if = {
+		limit = {
+			OR = {
+				raw_material ?= goods:wheat
+				raw_material ?= goods:maize
+				raw_material ?= goods:rice
+				raw_material ?= goods:millet
+				raw_material ?= goods:legumes
+				raw_material ?= goods:potato
+				raw_material ?= goods:livestock
+				raw_material ?= goods:olives
+				raw_material ?= goods:fruit
+			}
+		}
+		add = 3.45  # 0.5 livestock * 8 food * 0.75 ratio * 1.15 econ-scale, 16 FV
+	}
+	multiply = cm_location_food_potential_food_multiplier
+}
+
+# cm_fpot_recompute_all writes cm_fpot_score on every land location once per lobby, so the fallback
+# is reachable only on water, which the location search filter does not exclude.
+cm_location_food_potential = {
+	value = 0
+	if = {
+		limit = { has_variable = cm_fpot_score }
+		add = var:cm_fpot_score
+	}
+	else = {
+		add = cm_location_food_potential_live
+	}
+}
+
+# Topography component of the net terrain proximity penalty, scaled by the owner's
+# per-topography proximity impact modifiers. Split out of cm_location_proximity_modifier so the
+# vegetation component can be selectively dropped where a road or river connects the two
+# locations being traveled between; topography is never affected by roads or rivers.
+cm_location_topography_proximity_modifier = {
+	value = 0
+	if = {
+		limit = { topography = mountains }
+		add = {
+			value = -0.5 # Mirrors vanilla mountains proximity: in_game/common/topography/00_default.txt:22
+			if = {
+				limit = { exists = owner }
+				multiply = {
+					value = 1
+					add = owner.modifier:mountains_proximity_impact
+				}
+			}
+		}
+	}
+	else_if = {
+		limit = { topography = hills }
+		add = {
+			value = -0.25 # Mirrors vanilla hills proximity: in_game/common/topography/00_default.txt:54
+			if = {
+				limit = { exists = owner }
+				multiply = {
+					value = 1
+					add = owner.modifier:hills_proximity_impact
+				}
+			}
+		}
+	}
+	else_if = {
+		limit = { topography = wetlands }
+		add = {
+			value = -0.25 # Mirrors vanilla wetlands proximity: in_game/common/topography/00_default.txt:104
+			if = {
+				limit = { exists = owner }
+				multiply = {
+					value = 1
+					add = owner.modifier:wetlands_proximity_impact
+				}
+			}
+		}
+	}
+	else_if = {
+		limit = { topography = plateau }
+		add = {
+			value = -0.125 # Mirrors vanilla plateau proximity: in_game/common/topography/00_default.txt:82
+			if = {
+				limit = { exists = owner }
+				multiply = {
+					value = 1
+					add = owner.modifier:plateau_proximity_impact
+				}
+			}
+		}
+	}
+}
+
+# Vegetation component of the net terrain proximity penalty. Never scaled by any owner modifier.
+cm_location_vegetation_proximity_modifier = {
+	value = 0
+	if = { limit = { vegetation = jungle } add = -0.5 } # Mirrors vanilla jungle proximity: in_game/common/vegetation/00_default.txt:125
+	else_if = { limit = { vegetation = forest } add = -0.25 } # Mirrors vanilla forest proximity: in_game/common/vegetation/00_default.txt:101
+	else_if = { limit = { vegetation = woods } add = -0.125 } # Mirrors vanilla woods proximity: in_game/common/vegetation/00_default.txt:79
+	else_if = { limit = { vegetation = desert } add = -0.05 } # Mirrors vanilla desert proximity: in_game/common/vegetation/00_default.txt:4
+	else_if = { limit = { vegetation = farmland } add = -0.05 } # Mirrors vanilla farmland proximity: in_game/common/vegetation/00_default.txt:58
+}
+
+# Net terrain proximity penalty (topography always; vegetation only when this location has no
+# road or river - see cm_location_has_road_or_river, an aggregate, direction-unaware
+# approximation). Used by the standalone Proximity Efficiency Impact map mode. The placement
+# finder does NOT use this value: it has real per-edge direction information and reads
+# cm_location_topography_proximity_modifier / cm_location_vegetation_proximity_modifier directly
+# (cm_proximity_finder_script_values.txt), so its Current-roads model stays edge-precise instead
+# of inheriting this location-level approximation.
+cm_location_proximity_modifier = {
+	value = cm_location_topography_proximity_modifier
+	if = {
+		limit = { NOT = { cm_location_has_road_or_river = yes } }
+		add = cm_location_vegetation_proximity_modifier
+	}
+}
+
+# Local Access to Raw Materials bonus for the building type: best worth-using production
+# method's share of inputs available as province raw materials, times the modifier value.
+cm_building_rgo_bonus = {
+	value = cm_rgob_coverage
+	multiply = cm_rgob_modifier
+}
+
+cm_rgob_modifier = {
+	value = 0
+	owner = { add = modifier:raw_material_in_province_impact }
+}
+
+# Location-scope R.G.O. Bonus for the build-location list: the viewed building type's
+# coverage times the modifier value.
+cm_rgob_location_bonus = {
+	value = cm_rgob_coverage_selected
+	multiply = cm_rgob_modifier_at_location
+}
+
+cm_rgob_modifier_at_location = {
+	value = 0
+	if = {
+		limit = { exists = owner }
+		owner = { add = modifier:raw_material_in_province_impact }
+	}
+}
+
+# Building scope. Coverage precomputed per province by the batched rgob sweep from the
+# hidden window's rgob classification; types without an entry read 0.
+cm_rgob_coverage = {
+	value = 0
+	building_type = { save_temporary_scope_as = cm_rgob_bt }
+	location = {
+		province = {
+			if = {
+				limit = {
+					has_variable_map = cm_rgob_cov
+					is_key_in_variable_map = { name = cm_rgob_cov target = scope:cm_rgob_bt }
+				}
+				add = "variable_map(cm_rgob_cov|scope:cm_rgob_bt)"
+			}
+		}
+	}
+}
+
+# Location scope. Same coverage keyed by the build-location list's viewed building type.
+cm_rgob_coverage_selected = {
+	value = 0
+	if = {
+		limit = { scope:target = { exists = var:cm_rgob_selected_type } }
+		scope:target = { var:cm_rgob_selected_type = { save_temporary_scope_as = cm_rgob_bt } }
+		province = {
+			if = {
+				limit = {
+					has_variable_map = cm_rgob_cov
+					is_key_in_variable_map = { name = cm_rgob_cov target = scope:cm_rgob_bt }
+				}
+				add = "variable_map(cm_rgob_cov|scope:cm_rgob_bt)"
+			}
+		}
+	}
+}

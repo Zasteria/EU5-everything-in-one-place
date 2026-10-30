@@ -1,0 +1,416 @@
+﻿# The lucky-nation half of the governor plan: the capital search and move it runs as phases 1 and 2
+# ahead of the plan proper, and the two opening ticks that settle a country's capital and fill the
+# governor slots it starts with. The plan itself is in cm_gov_plan_effects.txt.
+
+# A capital scoring below this share of the best location is worth moving. Scores are
+# normalised to 0-1000 against the best, and the gap is hysteresis against churn.
+@cm_ln_cap_keep = 900
+# A capital scoring below this share of the best is worth the opening move.
+@cm_ln_open_cap_keep = 700
+# Months with no progress the opening move may wait on its preconditions before it is given up, so
+# a country whose search never becomes possible does not stay shut out of construction. A month the
+# river harvest advanced through does not count, so the wait is only spent on a harvest that has
+# stopped, which is what an observer run leaves behind.
+@cm_ln_open_max_wait = 2
+
+# The finder reads these as ordinary country variables, and a country the player tag-switched
+# out of carries their values, so all four are written rather than left to their defaults.
+# Root is the country.
+cm_ln_pf_settings_on = {
+	set_variable = { name = cm_placement_finder_accuracy value = 5 } # Fastest
+	set_variable = { name = cm_placement_finder_naval value = 1 } # Current presence
+	set_variable = { name = cm_placement_finder_roads value = 2 } # Max Roads
+	set_variable = { name = cm_placement_finder_method value = 1 } # Tax Base
+}
+
+# Root is the country.
+cm_ln_pf_settings_off = {
+	remove_variable = cm_placement_finder_accuracy
+	remove_variable = cm_placement_finder_naval
+	remove_variable = cm_placement_finder_roads
+	remove_variable = cm_placement_finder_method
+}
+
+# Root is the country, scope:cm_country set.
+cm_ln_reorg_capital_search = {
+	if = {
+		limit = { exists = var:cm_gov_probe_site }
+		if = {
+			limit = { var:cm_gov_probe_wait > 0 }
+			change_variable = { name = cm_gov_probe_wait subtract = 1 }
+		}
+		if = {
+			limit = {
+				var:cm_gov_probe_wait <= 0
+				cm_gov_no_finder_run_in_flight = yes
+				cm_pf_river_data_is_current = yes
+			}
+			cm_ln_reorg_cap_search_run = yes
+			cm_ln_reorg_cap_probe_check = yes
+		}
+	}
+	else_if = {
+		limit = {
+			cm_gov_no_finder_run_in_flight = yes
+			cm_pf_river_data_is_current = yes
+		}
+		cm_ln_reorg_cap_search_run = yes
+		cm_ln_reorg_cap_probe_open = yes
+	}
+}
+
+# Root is the country, scope:cm_country set.
+cm_ln_reorg_cap_search_run = {
+	set_variable = { name = cm_pf_view_c value = 1 }
+	remove_variable = cm_pf_view_g
+	cm_pf_prep_core = yes
+	cm_pf_run_tiered_sync = yes
+	remove_variable = cm_pf_view_c
+}
+
+# Root is the country, scope:cm_country set.
+cm_ln_reorg_cap_probe_open = {
+	set_local_variable = { name = cm_gov_picked value = 0 }
+	ordered_owned_location = {
+		order_by = { value = var:cm_cf_score }
+		position = 0
+		check_range_bounds = no
+		limit = {
+			has_variable = cm_cf_score
+			NOT = { integration_level = conquered }
+			NOT = { cm_location_deurbanize_would_undo = yes }
+			NOT = { has_variable = cm_gov_probe_reject }
+		}
+		save_scope_as = cm_gov_probe_pick
+		set_local_variable = { name = cm_gov_picked value = 1 }
+		scope:cm_country = { cm_gov_probe_start = { SCORE = cm_cf_score } }
+	}
+	if = {
+		limit = { local_var:cm_gov_picked = 0 }
+		set_variable = { name = cm_gov_phase value = 2 }
+	}
+}
+
+# Root is the country, scope:cm_country set.
+cm_ln_reorg_cap_probe_check = {
+	cm_gov_probe_share = { SCORE = cm_cf_score }
+	if = {
+		limit = { scope:cm_gov_probe_now >= cm_gov_probe_keep_value }
+		set_variable = { name = cm_ln_cap_target value = var:cm_gov_probe_site }
+		cm_dbg_log_value = { cat = governors action = cm_gov_log_probe_kept value = scope:cm_gov_probe_now }
+		cm_gov_probe_end = yes
+		set_variable = { name = cm_gov_phase value = 2 }
+	}
+	else = {
+		cm_gov_probe_drop = yes
+		cm_ln_reorg_cap_probe_open = yes
+	}
+}
+
+# The move ends the month: set_capital shifts every location's proximity, the country's
+# topography impact and has_road_to_capital everywhere, and the governor plan reads all three.
+# Root is the country, scope:cm_country set.
+cm_ln_reorg_capital_move = {
+	if = {
+		limit = {
+			exists = var:cm_ln_cap_target
+			var:cm_ln_cap_target = { owner = scope:cm_country }
+			NOT = { var:cm_ln_cap_target = capital }
+			capital = {
+				trigger_if = {
+					limit = {
+						has_variable = cm_cf_score
+						cm_location_deurbanize_would_undo = no
+					}
+					var:cm_cf_score < @cm_ln_cap_keep
+				}
+				trigger_else = { always = yes }
+			}
+		}
+		set_capital = var:cm_ln_cap_target
+		capital = { cm_ln_capital_start_town_upgrade = yes }
+		cm_ab_rd_mark_replan = yes
+		cm_dbg_log = { cat = governors action = cm_ln_log_capital_moved }
+	}
+	remove_variable = cm_ln_cap_target
+	# A capital reject says nothing about the same site as a governor spot.
+	cm_gov_probe_clear_rejects = yes
+	cm_gov_seed_slot_counters = yes
+	set_variable = { name = cm_gov_phase value = 3 }
+}
+
+# The urbanize pass gates on population, the RGO ignore list and the food reservation, so a
+# rural capital can sit at rank indefinitely. Root is the location. Expects scope:cm_country.
+cm_ln_capital_start_town_upgrade = {
+	if = {
+		limit = {
+			location_rank = location_rank:rural_settlement
+			NOT = { has_building = building_type:cm_upgrade_rural_to_town_building }
+			NOT = { any_buildings_in_location = { building_type = building_type:cm_upgrade_rural_to_town_building building_levels_under_construction > 0 } }
+			cm_location_allowed_to_build = { target = building_type:cm_upgrade_rural_to_town_building }
+		}
+		construct_building = { building_type = building_type:cm_upgrade_rural_to_town_building }
+	}
+}
+
+# --- The opening capital move ---
+#
+# One capital move at the start of the game, before the country builds anything, so it never
+# invests in a capital it is about to leave. This is the only move that costs anything; the
+# reorganization's own moves above are free.
+
+# Root is the country, scope:cm_country set.
+cm_ln_open_capital_tick = {
+	if = {
+		limit = { NOT = { exists = var:cm_ln_open_done } }
+		if = {
+			limit = { NOT = { exists = var:cm_ln_open_wait } }
+			set_variable = { name = cm_ln_open_wait value = 0 }
+		}
+		if = {
+			limit = {
+				exists = capital
+				cm_pf_river_data_is_current = yes
+				NOT = { has_global_variable = cm_gov_token }
+				cm_gov_no_finder_run_in_flight = yes
+			}
+			cm_ln_open_capital_run = yes
+		}
+		else_if = {
+			limit = { cm_ln_open_river_advancing = yes }
+			set_variable = { name = cm_ln_open_wait value = 0 }
+			set_variable = { name = cm_ln_open_idx value = global_var:cm_pf_river_idx }
+		}
+		else = {
+			change_variable = { name = cm_ln_open_wait add = 1 }
+			if = {
+				limit = { var:cm_ln_open_wait >= @cm_ln_open_max_wait }
+				set_variable = { name = cm_ln_open_done value = 1 }
+				cm_ab_rd_mark_replan = yes
+				remove_variable = cm_ln_open_idx
+				cm_dbg_log = { cat = governors action = cm_ln_log_open_gave_up }
+			}
+		}
+	}
+}
+
+# The search and the move both land in this tick, since no governor plan is waiting on the
+# proximity the move shifts. Root is the country, scope:cm_country set.
+cm_ln_open_capital_run = {
+	set_global_variable = { name = cm_gov_token value = 1 }
+	cm_ln_pf_settings_open = yes
+	set_variable = { name = cm_pf_view_c value = 1 }
+	remove_variable = cm_pf_view_g
+	cm_pf_prep_core = yes
+	cm_pf_run_tiered_sync = yes
+	remove_variable = cm_pf_view_c
+	remove_variable = cm_ln_cap_target
+	ordered_owned_location = {
+		order_by = { value = var:cm_cf_score }
+		position = 0
+		check_range_bounds = no
+		limit = {
+			has_variable = cm_cf_score
+			NOT = { integration_level = conquered }
+			NOT = { cm_location_deurbanize_would_undo = yes }
+		}
+		save_scope_as = cm_ln_cap_pick
+		scope:cm_country = { set_variable = { name = cm_ln_cap_target value = scope:cm_ln_cap_pick } }
+	}
+	if = {
+		limit = { NOT = { exists = var:cm_ln_cap_target } }
+		cm_dbg_log = { cat = governors action = cm_ln_log_open_no_target }
+	}
+	else_if = {
+		limit = {
+			NOT = { var:cm_ln_cap_target = capital }
+			NOT = {
+				capital = {
+					cm_location_deurbanize_would_undo = no
+					has_variable = cm_cf_score
+					var:cm_cf_score >= @cm_ln_open_cap_keep
+				}
+			}
+		}
+		set_capital = var:cm_ln_cap_target
+		cm_ln_open_charge_move = yes
+		capital = { cm_ln_capital_start_town_upgrade = yes }
+		cm_dbg_log = { cat = governors action = cm_ln_log_capital_moved }
+	}
+	remove_variable = cm_ln_cap_target
+	cm_gov_strip_finder_outputs = yes
+	cm_ln_pf_settings_off = yes
+	remove_global_variable = cm_gov_token
+	remove_variable = cm_ln_open_wait
+	remove_variable = cm_ln_open_idx
+	set_variable = { name = cm_ln_open_done value = 1 }
+	cm_ab_rd_mark_replan = yes
+}
+
+# A share of the vanilla capital_movement price, which is scaled_gold 12 (120% of economic base)
+# plus stability 20: in_game/common/prices/00_hardcoded.txt:213. A player reaches 66% off the
+# gold and 33% off the stability without much effort, so the charge is what one would really
+# pay. The gold half stops at the treasury, so a country that cannot cover it pays what it has.
+# Root is the country.
+cm_ln_open_charge_move = {
+	add_gold = {
+		value = cm_ln_open_capital_charge
+		multiply = -1
+	}
+	add_stability = -13
+}
+
+# Scores on the roads that actually stand, which the country has no advance to improve this
+# early. Root is the country.
+cm_ln_pf_settings_open = {
+	set_variable = { name = cm_placement_finder_accuracy value = 5 } # Fastest
+	set_variable = { name = cm_placement_finder_naval value = 1 } # Current presence
+	set_variable = { name = cm_placement_finder_roads value = 1 } # Current
+	set_variable = { name = cm_placement_finder_method value = 1 } # Tax Base
+}
+
+# --- The opening governor placement ---
+#
+# Every governor slot the country starts with, one a month from the month after the opening capital
+# move so the search reads the proximity and the roads the new capital gives. Each site is picked by
+# its own search, which sees the sites already committed to as proximity sources, so a second
+# governor is never planted beside the first. It takes the best location a governor can stand on as
+# it is, so the opening carries none of the reorganization's urbanize and road steps, and the charge
+# stops at the treasury so the placement lands whatever the country can pay.
+
+# Root is the country, scope:cm_country set.
+cm_ln_open_gov_tick = {
+	if = {
+		limit = {
+			NOT = { exists = var:cm_ln_open_gov_done }
+			exists = capital
+			cm_pf_river_data_is_current = yes
+			NOT = { has_global_variable = cm_gov_token }
+			cm_gov_no_finder_run_in_flight = yes
+		}
+		# Bounded by the room the country opens with rather than by the live slot count, so a
+		# placement the engine takes no slot for cannot re-run the search every month forever.
+		if = {
+			limit = { NOT = { exists = var:cm_ln_open_gov_left } }
+			set_variable = { name = cm_ln_open_gov_left value = cm_gov_land_free }
+			change_variable = { name = cm_ln_open_gov_left add = cm_gov_naval_free }
+			if = {
+				limit = { var:cm_ln_open_gov_left <= 0 }
+				cm_dbg_log = { cat = governors action = cm_ln_log_open_gov_none }
+			}
+		}
+		if = {
+			limit = {
+				var:cm_ln_open_gov_left > 0
+				cm_gov_slot_open = yes
+			}
+			change_variable = { name = cm_ln_open_gov_left subtract = 1 }
+			cm_ln_open_gov_run = yes
+		}
+		# construct_building counts against the slot immediately, so the last placement of the
+		# opening closes it in its own tick rather than a month later.
+		if = {
+			limit = {
+				OR = {
+					var:cm_ln_open_gov_left <= 0
+					cm_gov_slot_open = no
+				}
+			}
+			cm_ln_open_gov_finish = yes
+		}
+	}
+}
+
+# Root is the country.
+cm_ln_open_gov_finish = {
+	set_variable = { name = cm_ln_open_gov_done value = 1 }
+	remove_variable = cm_ln_open_gov_left
+	clear_variable_list = cm_ln_open_gov_sites
+}
+
+# The search and the placement both land in this tick. Root is the country, scope:cm_country set.
+cm_ln_open_gov_run = {
+	set_global_variable = { name = cm_gov_token value = 1 }
+	cm_ln_pf_settings_open = yes
+	cm_ln_open_gov_filter_on = yes
+	set_variable = { name = cm_pf_view_g value = 1 }
+	remove_variable = cm_pf_view_c
+	cm_pf_prep_core = yes
+	cm_pf_run_tiered_sync = yes
+	remove_variable = cm_pf_view_g
+	cm_ln_open_gov_place = yes
+	cm_ln_open_gov_filter_off = yes
+	cm_gov_strip_finder_outputs = yes
+	cm_ln_pf_settings_off = yes
+	remove_global_variable = cm_gov_token
+}
+
+# One placement, so each counter carries at most the one slot its kind has room for.
+# Root is the country.
+cm_ln_open_gov_filter_on = {
+	set_variable = { name = cm_gov_valid_only value = 1 }
+	set_variable = { name = cm_gov_land_left value = 0 }
+	if = {
+		limit = { cm_ab_gov_has_land_room = yes }
+		set_variable = { name = cm_gov_land_left value = 1 }
+	}
+	set_variable = { name = cm_gov_naval_left value = 0 }
+	if = {
+		limit = { cm_ab_gov_has_naval_room = yes }
+		set_variable = { name = cm_gov_naval_left value = 1 }
+	}
+}
+
+# Root is the country.
+cm_ln_open_gov_filter_off = {
+	remove_variable = cm_gov_valid_only
+	remove_variable = cm_gov_land_left
+	remove_variable = cm_gov_naval_left
+}
+
+# Root is the country, scope:cm_country set.
+cm_ln_open_gov_place = {
+	ordered_owned_location = {
+		order_by = { value = var:cm_gf_score }
+		position = 0
+		check_range_bounds = no
+		limit = {
+			has_variable = cm_gf_score
+			cm_ab_gov_location_placeable = yes
+			NOT = { scope:cm_country = { is_target_in_variable_list = { name = cm_ln_open_gov_sites target = prev } } }
+		}
+		save_scope_as = cm_ln_open_gov_site
+	}
+	if = {
+		limit = { exists = scope:cm_ln_open_gov_site }
+		cm_gov_resolve_placeable_type = { SITE = scope:cm_ln_open_gov_site }
+		scope:cm_ln_open_gov_site = { save_temporary_scope_as = cm_location }
+		# The charge stops at the treasury, so the placement lands even where the country
+		# cannot cover it.
+		add_gold = {
+			value = cm_ln_open_gov_charge
+			multiply = -1
+		}
+		scope:cm_ln_open_gov_site = {
+			construct_building = {
+				building_type = scope:cm_building_type
+				cost_multiplier = 0
+				cost_multiplier_reason = cm_ln_open_gov_placement
+				owner = scope:cm_country
+				payer = scope:cm_country
+			}
+		}
+		# The governor is months from standing, so the next search reads this site as a source
+		# from here rather than from the live proximity.
+		add_to_variable_list = { name = cm_ln_open_gov_sites target = scope:cm_ln_open_gov_site }
+		add_to_variable_list = { name = cm_ln_seats target = scope:cm_ln_open_gov_site }
+		cm_ab_rd_mark_replan = yes
+		cm_dbg_log = { cat = governors action = cm_ln_log_open_gov_placed }
+	}
+	else = {
+		# Nothing the search would take, so the slots that are left stay empty for the
+		# reorganization to fill.
+		set_variable = { name = cm_ln_open_gov_left value = 0 }
+		cm_dbg_log = { cat = governors action = cm_ln_log_open_gov_none }
+	}
+}

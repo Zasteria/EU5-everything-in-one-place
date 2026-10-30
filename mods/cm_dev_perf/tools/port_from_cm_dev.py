@@ -77,6 +77,12 @@ _spec = importlib.util.spec_from_file_location(
 buildings = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(buildings)
 
+_spec = importlib.util.spec_from_file_location(
+    "cm_perf_town_rights", Path(__file__).resolve().parent / "town_rights.py")
+town_rights = importlib.util.module_from_spec(_spec)
+sys.modules[_spec.name] = town_rights  # its dataclass looks its module up there
+_spec.loader.exec_module(town_rights)
+
 _CLASSIFY = (
     "GetScriptedGui('cm_should_building_type_section_show')"
     ".IsShown(GuiScope.SetRoot(GetPlayer.MakeScope)"
@@ -2053,7 +2059,191 @@ def _probe_feature_names(text: str) -> str:
     return text
 
 
+# +perf69 (10-30, game 1.4.5 + Across the Pillars). CM dev's town-rights mirror was
+# generated against 1.3: it lacked the 1.4 rights and the DLC's, and seven rights' `allow`
+# and four `potential` had moved under it (staple port and market charter now exclude the
+# royal market and staple rights, Sweden and Norway take has_or_had_tag). Rebuilt whole
+# from the game's files (town_rights.py) before the charter edits below run on it.
+ATR_POTENTIAL = "in_game/common/scripted_triggers/cm_auto_town_rights_potential_triggers.txt"
+TEXTICONS = "in_game/gui/cm_town_rights_texticons.gui"
+
+
+def _mirror_allow(text: str) -> str:
+    return town_rights.allow_text()
+
+
+def _mirror_potential(text: str) -> str:
+    return town_rights.potential_text()
+
+
+# The Custom Right Granter list: every right that is not a specialization, as CM's own
+# 2.2.13 does for 1.4, plus the DLC's. CMF caps a list at 50 rows and the game has 54
+# such rights, so four stay out, each for a reason a blind granter cannot weigh:
+_ATR_LEFT_OUT = {
+    "iberian_aljama_charter": "halves heathen conversion in the location",
+    "mozarab_charter_town_rights": "halves heathen conversion in the location",
+    "andalusi_resettlement_golden_age_town_rights": "the upgrade of andalusi_resettlement",
+    "sale_arsenal_town_rights": "one location in the world, Sale",
+}
+_ATR_LIST_CAP = 50
+
+
+def _atr_new_rows() -> list[str]:
+    shipped = re.findall(r"value = town_rights_type:([a-z_0-9]+)",
+                         (SRC / CMM).read_text(encoding="utf-8-sig"))
+    rows = [r.name for r in town_rights.rights()
+            if not r.specialization and r.name not in shipped and r.name not in _ATR_LEFT_OUT]
+    if len(shipped) + len(rows) > _ATR_LIST_CAP:
+        raise SystemExit(f"town rights list: {len(shipped)} + {len(rows)} rows, CMF holds "
+                         f"{_ATR_LIST_CAP}; choose more to leave out ({rows})")
+    return rows
+
+
+def _atr_list(text: str) -> str:
+    """The new rights as rows after CM dev's 38, and a save started on 38 re-initialised.
+
+    CMF builds a list's row identities only on its first registration
+    (`cmm_list_initialized_*`), so a save made with fewer rows would never show the
+    new ones; CM 2.2.13 clears the flag the same way when its count grows.
+    """
+    old = re.findall(r"value = town_rights_type:([a-z_0-9]+)", text)
+    rows = _atr_new_rows()
+    reg = ("\tcmm_register_settings_list = {\n\t\tmod_id = cm\n\t\tsetting_id = auto_town_rights_list\n"
+           "\t\ttab_id = auto_town_rights\n\t\titem_count = %d\n\t\tis_ordered = 1\n\t}\n" % len(old))
+    if text.count(reg) != 1:
+        raise SystemExit("town rights list: CM dev's registration has changed")
+    count = len(old) + len(rows)
+    migrate = (
+        "\t# cm_dev_perf +perf69: CMF builds row identities only on first registration;\n"
+        "\t# a save made with fewer rows is re-initialised so the new rights show.\n"
+        "\tif = {\n\t\tlimit = {\n"
+        "\t\t\thas_variable = cmm_list_initialized_cm__auto_town_rights_list\n"
+        f"\t\t\tvar:cmm_setting_list_count_cm__auto_town_rights_list < {count}\n"
+        "\t\t}\n"
+        "\t\tremove_variable = cmm_list_initialized_cm__auto_town_rights_list\n"
+        "\t\tremove_from_variable_map = { name = cmm_list_count key = flag:cm__auto_town_rights_list }\n"
+        "\t\tremove_from_variable_map = { name = cmm_list_last_index key = flag:cm__auto_town_rights_list }\n"
+        "\t}\n")
+    text = text.replace(reg, migrate + reg.replace(f"item_count = {len(old)}", f"item_count = {count}"))
+    last = re.search(r"\tcmm_set_list_item_value = \{\n\t\tmod_id = cm\n\t\tsetting_id = auto_town_rights_list\n"
+                     rf"\t\titem = {len(old)}\n\t\tvalue = town_rights_type:[a-z_0-9]+\n\t\}}\n", text)
+    if not last:
+        raise SystemExit("town rights list: CM dev's last row has moved")
+    added = "".join(
+        "\n\tcmm_set_list_item_value = {\n\t\tmod_id = cm\n\t\tsetting_id = auto_town_rights_list\n"
+        f"\t\titem = {len(old) + n}\n\t\tvalue = town_rights_type:{r} # cm_dev_perf +perf69\n\t}}\n"
+        for n, r in enumerate(rows, 1))
+    return text[:last.end()] + added + text[last.end():]
+
+
+def _atr_row_words(text: str) -> str:
+    """Each new row's label, in CM's own form: the right's icon and its game name."""
+    rows = _atr_new_rows()
+    first = len(re.findall(r"value = town_rights_type:", (SRC / CMM).read_text(encoding="utf-8-sig"))) + 1
+    last = re.search(rf"(?m)^ cm__auto_town_rights_list_i{first - 1}_name: .*\n", text)
+    if not last:
+        raise SystemExit(f"town rights list: row {first - 1}'s label is gone")
+    added = "".join(f" cm__auto_town_rights_list_i{first + n}_name: \"@{r}! [ShowTownRightsName('{r}')]\"\n"
+                    for n, r in enumerate(rows))
+    return text[:last.end()] + added + text[last.end():]
+
+
+def _icon_paths() -> set[str]:
+    listing = refs.GAME / "FILES.txt"
+    if not listing.exists():
+        raise SystemExit("reference/game/FILES.txt is missing: run tools/extract_game_files.py")
+    out = set()
+    for line in listing.read_text(encoding="utf-8").splitlines():
+        m = re.search(r"main_menu/gfx/interface/icons/town_rights/([a-z_0-9]+)\.dds\t", line)
+        if m:
+            out.add(m.group(1))
+    return out
+
+
+def _texticons(text: str) -> str:
+    """A text icon for every right the game has, its own picture where the game ships one."""
+    have = set(re.findall(r"(?m)^\ticon = ([a-z_0-9]+)", text))
+    icons = _icon_paths()
+    added = ""
+    for r in town_rights.rights():
+        if r.name in have:
+            continue
+        tex = r.name if r.name in icons else "_default"
+        added += ("\ntexticon = {\n\ticon = %s # cm_dev_perf +perf69\n\ticonsize = {\n"
+                  "\t\ttexture = \"gfx/interface/icons/town_rights/%s.dds\"\n"
+                  "\t\tsize = { 20 20 }\n\t\toffset = { 0 2 }\n\t\tfontsize = 16\n\t}\n}\n") % (r.name, tex)
+    return text.rstrip("\n") + "\n" + added
+
+
+# Construction goods CM dev does not know. 1.4.1 made camels one (caravanserai and caravan
+# stop, goods_demand/building_construction_costs.txt), and CM 2.2.13 added it to its maps;
+# dev never did, so those two buildings' camel demand was read as nothing. Every good the
+# game's construction costs name is given the blocks CM dev gives wool.
+HIDDEN_GUIS = "in_game/common/scripted_guis/cm_hidden_window_scripted_gui.txt"
+COST_ADJ = "in_game/common/script_values/cm_construction_cost_adjustments_script_values.txt"
+DEMAND_COUNTS = "in_game/common/script_values/cm_construction_demand_counts_script_values.txt"
+
+
+def _construction_goods() -> list[str]:
+    goods, used = set(), []
+    for path in town_rights._sources("goods"):
+        goods |= {n for n, _ in town_rights._blocks(town_rights._strip_comments(
+            path.read_text(encoding="utf-8-sig")))}
+    for path in town_rights._sources("goods_demand"):
+        if path.name != "building_construction_costs.txt":
+            continue
+        for _, body in town_rights._blocks(town_rights._strip_comments(path.read_text(encoding="utf-8-sig"))):
+            used += [g for g in re.findall(r"(?m)^\s*([a-z_]+)\s*=\s*[0-9.]", body)
+                     if g in goods and g not in used]
+    return used
+
+
+def _block_at(text: str, start: int) -> int:
+    """End of the `{ ... }` block whose opening brace is the first after `start`, newline included."""
+    j = text.index("{", start) + 1
+    depth = 1
+    while depth:
+        depth += {"{": 1, "}": -1}.get(text[j], 0)
+        j += 1
+    return text.index("\n", j) + 1
+
+
+def _clone_wool(text: str, anchor: str, label: str) -> str:
+    """After each block `anchor` (with `{good}`) opens for wool, the same block for every missing good."""
+    template = re.compile(r"(?m)^[ \t]*" + re.escape(anchor.replace("{good}", "wool")))
+    hits = list(template.finditer(text))
+    if not hits:
+        raise SystemExit(f"{label}: no wool block to copy")
+    missing = [g for g in _construction_goods()
+               if not re.search(re.escape(anchor.replace("{good}", g)), text)]
+    if not missing:
+        return text
+    for m in reversed(hits):
+        end = _block_at(text, m.start())
+        block = text[m.start():end]
+        # `cm_construction_demand_wool` too: `_` is a word character, so no \b.
+        copies = "".join(re.sub(r"(?<![a-z])wool(?![a-z])", g, block) for g in missing)
+        text = text[:end] + copies + text[end:]
+    return text
+
+
+def _goods_hidden(text: str) -> str:
+    return _clone_wool(text, "goods:{good} = {", "hidden window scripted GUIs")
+
+
+def _goods_values(text: str) -> str:
+    return _clone_wool(text, "if = { limit = { AND = { has_global_variable_map = cm_construction_demand_{good} ",
+                       "construction demand values")
+
+
 EDITS = (
+    (ATR_ALLOW, "the town-rights allow mirror rebuilt from the game (+perf69)", _mirror_allow),
+    (ATR_POTENTIAL, "the town-rights potential mirror rebuilt from the game (+perf69)", _mirror_potential),
+    (CMM, "the 1.4 and DLC rights in the Custom Right Granter (+perf69)", _atr_list),
+    (TEXTICONS, "a text icon for every right (+perf69)", _texticons),
+    (HIDDEN_GUIS, "every construction good in the classification maps (+perf69)", _goods_hidden),
+    (COST_ADJ, "every construction good in the cost adjustment (+perf69)", _goods_values),
+    (DEMAND_COUNTS, "every construction good in the demand counts (+perf69)", _goods_values),
     (CMM, "the industry map's mode dropdown", _register_industry_mode),
     (RESERVE_GUIS, "the gold slider no longer writes CM's reserve", _cut_reserve_pull),
     (WINDOW, "gate the building-type tree", _gate_the_tree),
@@ -2247,7 +2437,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 68
+PERF_REVISION = 69
 
 
 # CMF's own `is_host`, under a name neither the game nor any CMF build takes.
@@ -2289,6 +2479,31 @@ def metadata() -> str:
     )
     base["supported_game_version"] = "1.*"
     return json.dumps(base, indent=4, ensure_ascii=False) + "\n"
+
+
+# His ask 10-30: the same mod with CM dev's own tree, to compare the two in one game.
+# Everything of cm_dev_perf, and CM dev's hidden window byte for byte: no gate on the
+# building-type tree (it stands all session, as in CM and CM dev) and the 0.5 s timings
+# that tree was sized for.
+TREE = refs.REPO / "mods/cm_dev_perf_tree"
+
+
+def _tree_variant() -> None:
+    for name in ("in_game", "main_menu", ".metadata"):
+        if (TREE / name).exists():
+            shutil.rmtree(TREE / name)
+    for name in ("in_game", "main_menu", ".metadata"):
+        shutil.copytree(MOD / name, TREE / name)
+    shutil.copy2(SRC / WINDOW, TREE / WINDOW)
+    meta = json.loads((MOD / ".metadata/metadata.json").read_text(encoding="utf-8-sig"))
+    meta["name"] = "Construction Manager Dev (perf, CM's tree)"
+    meta["id"] = "bag.cm_dev_perf_tree"
+    meta["short_description"] = (
+        "cm_dev_perf with Construction Manager Dev's own hidden building-type tree, standing all "
+        "session as in CM, to compare against cm_dev_perf. Load ONE of the two, never both, and "
+        "never alongside Construction Manager Dev.")
+    (TREE / ".metadata/metadata.json").write_text(
+        "﻿" + json.dumps(meta, indent=4, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def main() -> int:
@@ -2340,7 +2555,8 @@ def main() -> int:
     for folder in sorted((MOD / "main_menu/localization").iterdir()):
         lang = folder.name
         rows = folder / f"cm_cmm_l_{lang}.yml"
-        rows.write_text("\ufeff" + buildings.edit_row_names(rows.read_text(encoding="utf-8-sig")), encoding="utf-8")
+        rows.write_text("\ufeff" + _atr_row_words(buildings.edit_row_names(rows.read_text(encoding="utf-8-sig"))),
+                        encoding="utf-8")
         (folder / f"cm_perf_buildings_l_{lang}.yml").write_text(buildings.localization(lang), encoding="utf-8")
     # 10-01: CM Dev's copies of vanilla windows are Glorp UI's 1.3 layout and
     # break on the beta; each with a spec in tools/beta/ is rebuilt as the
@@ -2443,6 +2659,7 @@ def main() -> int:
     thumb = SRC / ".metadata/thumbnail.png"
     if thumb.exists():
         shutil.copy2(thumb, MOD / ".metadata/thumbnail.png")
+    _tree_variant()
     print("cm_dev_perf: %d files copied from %s, %d edits applied, rebuilt on the beta: %s"
           % (copied, SRC.name, len(EDITS), ", ".join(rebuilt)))
     print(f"cm_dev_perf: {gated} vanilla auto-expand toggles gated on CM; cm_rio_patch: {patch}")
