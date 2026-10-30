@@ -198,7 +198,7 @@ def other_lines(findings: list[dict]) -> list[dict]:
         if value is None or value <= 0 or source in CORE_SOURCES:
             continue
         base = {"direction": axis, "object": obj, "value": value, "up_to": False,
-                "source_type": source, "soon": None, "dlc": row.get("dlc")}
+                "source_type": source, "soon": None}
         if source == "estates":
             # `high_power`: in force only above the power threshold, and scaled
             # past it, so the number is a ceiling (his note, 2026-09-28).
@@ -251,31 +251,9 @@ def other_lines(findings: list[dict]) -> list[dict]:
     return lines
 
 
-def dlc_gated(line: dict) -> dict:
-    """A line whose object lives in a DLC's folder asks `has_dlc` before anything else.
-
-    Without the DLC the object does not exist, and a gate that names it first
-    (`estate_privilege:X`, `has_reform = …`) is an error in every game of every
-    player who lacks it (10-30, his question about players without the DLC).
-    Triggers stop at the first false, so the DLC check comes first everywhere:
-    «now», «soon», the requirements and the «not available» row.
-    """
-    dlc = line.get("dlc") or pdx.ORIGIN.get(line["object"]) or pdx.ORIGIN.get(line.get("law") or "")
-    if not dlc:
-        return line
-    gate = 'has_dlc = "%s"' % dlc
-    line = dict(line, dlc=gate)
-    line["now"] = [gate] + list(line.get("now") or [])
-    if line.get("soon"):
-        line["soon"] = [gate] + list(line["soon"])
-    if line.get("needs"):
-        line["needs"] = [gate] + [n for n in line["needs"] if n != gate]
-    return line
-
-
 def collect() -> dict[str, list[dict]]:
     """direction -> its lines, takeable kinds first, each kind strongest first."""
-    lines = [dlc_gated(l) for l in core.collect(GAME) + other_lines(scan_sources.scan(str(GAME)))]
+    lines = core.collect(GAME) + other_lines(scan_sources.scan(str(GAME)))
     order = {"privilege": 0, "reform": 1, "policy": 2, "io_policy": 3, "estate_power": 4,
              "catalog": 5, "scaled": 6, "conditional": 7, "cabinet": 8}
     out: dict[str, list[dict]] = collections.defaultdict(list)
@@ -465,8 +443,6 @@ def never_gate(line: dict) -> list[str]:
     belongs to Lithuania, what to the Ottomans): neither now nor later, and not
     already in force."""
     gate = ["NOT = { %s }" % HAS[line["kind"]] % line["object"]]
-    if line.get("dlc"):
-        gate.insert(0, line["dlc"])
     if line["now"]:
         gate.append("NOT = { AND = { %s } }" % " ".join(line["now"]))
     if line["soon"]:

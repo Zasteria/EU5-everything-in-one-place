@@ -548,3 +548,13 @@ buildings panel credits "Livestock in the province" for its efficiency bonus.
 Building types also carry `location_potential`, a trigger with the location as
 root, which is how vanilla gates where a type may be built at all —
 `saltpeter_guild` wants `livestock` and `clay` in the market.
+
+## DLC: папки грузятся всем, платное закрыто `has_dlc` (10-30, 1.4.5)
+
+У Steam у EU5 три пакета установки и ни одного отдельного под DLC — `game/dlc/*` ставится каждому.
+Внутри `D009_across_the_pillars` Paradox сама пишет `has_dlc = "d009_across_the_pillars"` 407 раз
+(почти у каждой привилегии, реформы, закона, права), а Fate of the Phoenix держит всё в файлах базы
+под `has_dlc = "d008_fate_of_the_phoenix"` (176). Значит, объекты DLC есть у всех, а доступность
+решает её же `has_dlc` (по описанию триггера — DLC хоста, «synched content»). **Моду своих
+`has_dlc` не ставить**: копировать условия игры как есть — бесплатное останется бесплатным.
+Прямой прогон без DLC не делался.

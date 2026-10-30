@@ -110,17 +110,6 @@ def with_dlc(directory: Path) -> list[Path]:
     return [directory]
 
 
-# object key -> the DLC whose folder defines it ("d009_across_the_pillars"), filled by
-# `objects`. A game without that DLC has no such object at all: every gate of its line
-# must ask `has_dlc` first, before anything names the object (10-30).
-ORIGIN: dict[str, str] = {}
-
-
-def dlc_of(path: Path) -> str | None:
-    parts = Path(path).parts
-    return parts[parts.index("dlc") + 1].lower() if "dlc" in parts else None
-
-
 def txt_files(directory: Path) -> list[Path]:
     return [p for d in with_dlc(directory) for p in sorted(d.glob("*.txt"))]
 
@@ -137,9 +126,6 @@ def objects(directory: Path) -> dict[str, tuple[list[Entry], str]]:
     for path in txt_files(directory):
         for entry in parse_file(path):
             if isinstance(entry.value, list) and entry.key and not entry.key.startswith("@"):
-                # A DLC's copy of a base object only changes it; the object exists either way.
-                if dlc_of(path) and entry.key not in found:
-                    ORIGIN[entry.key] = dlc_of(path)
                 found[entry.key] = (entry.value, path.name)
     return found
 

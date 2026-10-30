@@ -100,11 +100,11 @@ def scan(root):
             full = os.path.join(dirpath, filename)
             rel = os.path.relpath(full, root).replace(os.sep, "/")
             # A DLC's folder holds the same tree under dlc/<name>/ (1.4.5, Across
-            # the Pillars): read as the game's own, with the DLC noted.
-            dlc = None
+            # the Pillars); its source type is read past that prefix. The game loads
+            # those folders for every player and gates paid content with its own
+            # `has_dlc`, which the gates copy as they stand (his point 10-30).
             if rel.startswith("dlc/") and rel.count("/") > 2:
-                _, name, rel = rel.split("/", 2)
-                dlc = name.lower()
+                rel = rel.split("/", 2)[2]
             with open(full, encoding="utf-8-sig", errors="replace") as handle:
                 text = handle.read()
             if "monthly_towards_" not in text:
@@ -121,7 +121,6 @@ def scan(root):
                     "axis": match.group(1),
                     "raw_value": value,
                     "value": numeric(value),
-                    "dlc": dlc,
                 })
     return findings
 
