@@ -78,7 +78,16 @@ def scan_objects(root, relative_dir):
             # in it swallowed the rest — `merge_culture_group`'s commented-out
             # rank, four unit checks of `support_noble_sponsored_armies` (10-04).
             for key, body in find_blocks(pdx.strip_comments(handle.read())):
-                objects[key] = body
+                # `INJECT:` adds to the base object, `REPLACE:` swaps it (pdx.objects).
+                op, _, name = key.rpartition(":")
+                if op.endswith("INJECT") or op == "INJECT_OR_CREATE":
+                    if name in objects or op == "INJECT_OR_CREATE":
+                        objects[name] = objects.get(name, "") + "\n" + body
+                elif op.endswith("REPLACE") or op == "REPLACE_OR_CREATE":
+                    if name in objects or op == "REPLACE_OR_CREATE":
+                        objects[name] = body
+                elif not op:
+                    objects[key] = body
     return objects
 
 

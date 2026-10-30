@@ -125,6 +125,20 @@ def objects(directory: Path) -> dict[str, tuple[list[Entry], str]]:
         return found
     for path in txt_files(directory):
         for entry in parse_file(path):
+            # `INJECT:legal_code_law = { … }` (Across the Pillars, 1.4.5) adds to the
+            # base object, `REPLACE:` swaps it; as the engine reads them, not as new
+            # objects — his run 10-30: «Unknown trigger type: law:INJECT:legal_code_law».
+            op, _, name = (entry.key or "").rpartition(":")
+            if op and isinstance(entry.value, list):
+                if op in ("INJECT", "TRY_INJECT", "INJECT_OR_CREATE"):
+                    if name in found:
+                        found[name] = (found[name][0] + entry.value, found[name][1])
+                    elif op == "INJECT_OR_CREATE":
+                        found[name] = (entry.value, path.name)
+                elif op in ("REPLACE", "TRY_REPLACE", "REPLACE_OR_CREATE"):
+                    if name in found or op == "REPLACE_OR_CREATE":
+                        found[name] = (entry.value, path.name)
+                continue
             if isinstance(entry.value, list) and entry.key and not entry.key.startswith("@"):
                 found[entry.key] = (entry.value, path.name)
     return found
