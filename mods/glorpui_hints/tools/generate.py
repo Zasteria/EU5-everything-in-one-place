@@ -40,9 +40,9 @@ sys.path.insert(0, str(TOOLS))
 sys.path.insert(0, str(REPO / "tools"))
 
 import core  # noqa: E402
+import pdx  # noqa: E402
 import gates as svx_gates  # noqa: E402
 import languages as svx_languages  # noqa: E402
-import pdx  # noqa: E402
 import refs  # noqa: E402
 import scan_sources  # noqa: E402
 
@@ -471,7 +471,7 @@ def _game_loc(key: str) -> str | None:
     for lang in ("english", "russian"):
         if lang not in _LOC:
             _LOC[lang] = {}
-            for path in (GAME / "main_menu/localization" / lang).rglob("*.yml"):
+            for path in [p for d in pdx.with_dlc(GAME / "main_menu/localization" / lang) for p in d.rglob("*.yml")]:
                 for m in re.finditer(r'^ +([^:#\s]+):\d* +"(.*)"', path.read_text("utf-8-sig", "replace"), re.M):
                     _LOC[lang].setdefault(m.group(1), m.group(2))
     texts = [_LOC[lang].get(key) for lang in ("english", "russian")]
@@ -495,17 +495,19 @@ def flag_sources(flags: set[str]) -> dict[str, dict]:
     disaster's name), or a rebel demand (rebel_demand_flavor_<tag>_N). A flag set
     anywhere else keeps the game's wording."""
     sets = collections.defaultdict(list)
-    for path in sorted((GAME / "in_game").rglob("*.txt")):
-        text = path.read_text("utf-8-sig", "replace")
-        if "set_variable" not in text:
-            continue
-        tops = [(m.start(), m.group(1)) for m in re.finditer(r"^([A-Za-z0-9_.]+)\s*=\s*\{", text, re.M)]
-        for m in re.finditer(r"set_variable\s*=\s*(?:\{[^}]*?name\s*=\s*)?([A-Za-z0-9_]+)", text):
-            if m.group(1) not in flags:
+    # The DLC's script too (1.4.5, Across the Pillars), each file relative to its own in_game.
+    for base in pdx.with_dlc(GAME / "in_game"):
+        for path in sorted(base.rglob("*.txt")):
+            text = path.read_text("utf-8-sig", "replace")
+            if "set_variable" not in text:
                 continue
-            top = next((name for at, name in reversed(tops) if at < m.start()), None)
-            body = text[[at for at, name in tops if name == top][0]:m.start()] if top else ""
-            sets[m.group(1)].append((path.relative_to(GAME / "in_game"), top, body))
+            tops = [(m.start(), m.group(1)) for m in re.finditer(r"^([A-Za-z0-9_.]+)\s*=\s*\{", text, re.M)]
+            for m in re.finditer(r"set_variable\s*=\s*(?:\{[^}]*?name\s*=\s*)?([A-Za-z0-9_]+)", text):
+                if m.group(1) not in flags:
+                    continue
+                top = next((name for at, name in reversed(tops) if at < m.start()), None)
+                body = text[[at for at, name in tops if name == top][0]:m.start()] if top else ""
+                sets[m.group(1)].append((path.relative_to(base), top, body))
     out = {}
     for flag, hits in sets.items():
         found = None

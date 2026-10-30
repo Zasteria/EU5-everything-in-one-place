@@ -11,7 +11,7 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`cm_maps`](../mods/cm_maps/CLAUDE.md) | **загружен 09-19, рисует**; 0.6.0: три режима карты отраслей; еда, губернатор под 1.4 не сверены | 0.3.0–0.6.0, починка прав, еда |
 | [`cm_dev_perf`](../mods/cm_dev_perf/CLAUDE.md) | **+perf69 (10-30): права 1.4/DLC, верблюды; `cm_dev_perf_tree` — с деревом CM для сравнения**; +perf67/68: выдача прав: одно право из списка, затем специализация (или наоборот, галочка), скрытые права уходят вниз (не проверено); +perf53–66: правило людей, очистка зданий, зонды сняты; он играет партию; +perf50: свой `cm_is_host`, работает с CMF из мастерской (не проверено), цель — мастерская; +perf42–44: стройка по рабочим; +perf41/46: карта отраслей; перед Río, после Río — [`cm_rio_patch`](../mods/cm_rio_patch/CLAUDE.md); ND — своя категория | +perf19–39, патч |
 | [`cmf_dev_beta`](../mods/cmf_dev_beta/CLAUDE.md) | +beta13: номер места с начала; +beta12: типы 1.4.1; `cmf_is_host`, панель, стрелки, номер места; вместо CMF и CMF Dev | +beta7, +beta12, +beta13 |
-| [`glorpui_hints`](../mods/glorpui_hints/CLAUDE.md) | 1.2.14, в игре 10-18 | — |
+| [`glorpui_hints`](../mods/glorpui_hints/CLAUDE.md) | 1.2.17 (10-30): источники DLC D009; 1.2.14 в игре 10-18 | — |
 | [`centered_towns`](../mods/centered_towns/CLAUDE.md) | 0.2.0 (10-04): позиции Better label placement под новыми именами файлов 1.4 | 0.2.0 |
 | [`assimilate_primary`](../mods/assimilate_primary/CLAUDE.md) | 0.11.0: своя автоматика совета; ценности, «до 50 %» и развитие работают; порог контроля не проверен; ценности — свои задания мода без пары (0.11.1, в игре 10-26: ошибок нет, место отдаётся) | 0.6.0 |
 | [`speed_5`](../mods/speed_5/CLAUDE.md) | паузы, 5 скоростей | всё |

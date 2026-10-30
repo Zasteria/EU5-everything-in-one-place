@@ -2366,7 +2366,72 @@ def _gate_vanilla_toggles(text: str) -> tuple[str, int]:
 
 
 # Bump with every change to what cm_rio_patch ships; `mods.bat` compares it.
-RIO_PATCH_REVISION = 4
+RIO_PATCH_REVISION = 5
+
+
+# Templates Río still calls that the game no longer defines. 1.4.0 commented out
+# `legislative_efficiency_tooltip` (shared/government_tooltips.gui:2301); Río's top bar
+# keeps `using = legislative_efficiency_tooltip`, and 1.4.5 logs «Not enough widget
+# entries» (glorp.gui:75, run 10-30) for a tooltip with nothing in it. This defines only
+# what is missing, in a file of its own, and replaces none of Río's: a Río that stops
+# calling the template, or a game that defines it again, leaves it unused (and then
+# the build below stops writing it). Shape of the game's cabinet_efficiency_tooltip
+# (main_menu/gui/shared/cabinet_tooltips.gui), words of the commented original.
+_RIO_TEMPLATES = {
+    "legislative_efficiency_tooltip": """template legislative_efficiency_tooltip {
+	ContextualTooltipType = {
+		blockoverride "title_text" {
+			datacontext = "[Player]"
+			text = "GOVERNMENT_WINDOW_LEGISLATIVE_EFFICIENCY"
+		}
+
+		blockoverride "title_icon" {
+			icon = {
+				using = tooltip_title_icon_size
+				texture = "gfx/interface/icons/flat_icons/legislative_efficiency.dds"
+
+				glow = {
+					name = "drop_shadow"
+					glow_radius = 3
+					color = {0.0 0.0 0.0 1.0}
+					alpha = 0.3
+				}
+			}
+		}
+
+		blockoverride "concept_link" {
+			text = [legislative_efficiency|E]
+		}
+
+		blockoverride "tooltip_content" {
+			TooltipStringPairList = {
+				blockoverride "block_title" {
+					datacontext = "[Country]"
+					text = "LEGISLATIVE_EFFICIENCY_TOOLTIP"
+				}
+
+				textcontext = "[Country.GetDescriptionFor('legislative_efficiency')]"
+			}
+		}
+	}
+}
+""",
+}
+
+
+def _rio_missing_templates(rio_root: Path) -> str:
+    game = "\n".join(p.read_text(encoding="utf-8-sig", errors="replace")
+                     for d in (refs.GAME_GUI, refs.GAME / "main_menu/gui") for p in d.rglob("*.gui"))
+    rio = "\n".join(p.read_text(encoding="utf-8-sig", errors="replace") for p in rio_root.rglob("*.gui"))
+    wanted = [name for name in _RIO_TEMPLATES
+              if re.search(rf"\busing = {name}\b", rio)
+              and not re.search(rf"(?m)^\s*template {name}\b", game + "\n" + rio)]
+    if not wanted:
+        return ""
+    head = ("# cm_rio_patch: templates Glorp UI Río calls that the game no longer defines.\n"
+            "# Written by mods/cm_dev_perf/tools/port_from_cm_dev.py (_RIO_TEMPLATES) only while\n"
+            "# both hold; replaces none of Río's files, so an updated Río leaves it unused.\n\n")
+    return head + "\n".join(_RIO_TEMPLATES[n] for n in wanted)
 
 
 def _rio_patch() -> str:
@@ -2415,7 +2480,10 @@ def _rio_patch() -> str:
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text("﻿" + "\n".join(kept), encoding="utf-8")
     print(f"cm_rio_patch: {stripped} dead use_global_input_instance lines dropped from Río's windows")
-    rio_meta = json.loads((rio_root / ".metadata/metadata.json").read_text(encoding="utf-8-sig"))
+    compat = _rio_missing_templates(rio_root)
+    if compat:
+        (out / "bag_rio_glorp_compat.gui").write_text("﻿" + compat, encoding="utf-8")
+    rio_meta =json.loads((rio_root / ".metadata/metadata.json").read_text(encoding="utf-8-sig"))
     meta = {
         "name": "CM Perf x Glorp UI Rio",
         "id": "bag.cm_rio_patch",

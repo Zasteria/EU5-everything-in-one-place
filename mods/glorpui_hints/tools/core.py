@@ -44,7 +44,7 @@ LAW_FIELDS = {"potential", "allow", "locked", "custom_tags", "law_category", "ty
 def steps(game: Path) -> dict[str, float]:
     """`societal_value_*_move = 0.1` and the rest, as the game defines them."""
     found = {}
-    for path in (game / "main_menu/common/script_values").glob("*.txt"):
+    for path in pdx.txt_files(game / "main_menu/common/script_values"):
         for match in re.finditer(r"^(societal_value_\w+)\s*=\s*(-?[\d.]+)",
                                  path.read_text(encoding="utf-8-sig"), re.M):
             found[match.group(1)] = float(match.group(2))

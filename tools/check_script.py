@@ -1345,8 +1345,12 @@ def unresolved_localization_refs(root: Path) -> list[str]:
     модах, которых в `reference/` может не быть.
     """
     keys: set[str] = set()
+    # The DLC's own localization too: Across the Pillars (1.4.5) keeps its keys in
+    # its folder, and `influence_over_granada`, `por_estado_da_india_decision.title`
+    # read as missing while the game has them (10-30).
     for folder in (root / "main_menu/localization",
                    REPO / "reference/game/main_menu/localization",
+                   *sorted((REPO / "reference/game/dlc").glob("*/main_menu/localization")),
                    REPO / "reference/mods"):
         if not folder.is_dir():
             continue

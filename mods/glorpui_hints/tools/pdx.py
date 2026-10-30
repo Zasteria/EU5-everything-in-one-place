@@ -94,16 +94,36 @@ def parse_file(path: Path) -> list[Entry]:
     return parse(path.read_text(encoding="utf-8-sig", errors="replace"))
 
 
+def with_dlc(directory: Path) -> list[Path]:
+    """The folder and the same folder in every DLC of the game it belongs to.
+
+    1.4.5's Across the Pillars keeps its laws, privileges, reforms and the rest
+    in `dlc/D009_across_the_pillars/in_game/common/`, where a base-only read
+    never looks. The DLC's come after the base game's, as the engine reads them.
+    """
+    directory = Path(directory)
+    for root in directory.parents:
+        if (root / "dlc").is_dir() and (root / "in_game").is_dir():
+            rel = directory.relative_to(root)
+            return [directory] + [dlc / rel for dlc in sorted((root / "dlc").iterdir())
+                                  if (dlc / rel).is_dir()]
+    return [directory]
+
+
+def txt_files(directory: Path) -> list[Path]:
+    return [p for d in with_dlc(directory) for p in sorted(d.glob("*.txt"))]
+
+
 def objects(directory: Path) -> dict[str, tuple[list[Entry], str]]:
     """Top-level `name = { ... }` objects of every .txt in a folder, by name.
 
     The second item is the file's name, which is what orders objects the way the
-    game lists them.
+    game lists them. The DLC's copies of the folder are read too (`with_dlc`).
     """
     found: dict[str, tuple[list[Entry], str]] = {}
     if not directory.is_dir():
         return found
-    for path in sorted(directory.glob("*.txt")):
+    for path in txt_files(directory):
         for entry in parse_file(path):
             if isinstance(entry.value, list) and entry.key and not entry.key.startswith("@"):
                 found[entry.key] = (entry.value, path.name)

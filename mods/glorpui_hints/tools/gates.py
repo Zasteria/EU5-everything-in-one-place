@@ -67,16 +67,13 @@ def sub_block(body, name):
 
 
 def scan_objects(root, relative_dir):
-    """object key -> body text, for every .txt under root/relative_dir."""
+    """object key -> body text, for every .txt under root/relative_dir, DLC folders too."""
     objects = {}
     directory = os.path.join(root, relative_dir)
     if not os.path.isdir(directory):
         return objects
-    for name in sorted(os.listdir(directory)):
-        if not name.endswith(".txt"):
-            continue
-        with open(os.path.join(directory, name),
-                  encoding="utf-8-sig", errors="replace") as handle:
+    for path in pdx.txt_files(pdx.Path(directory)):
+        with open(path, encoding="utf-8-sig", errors="replace") as handle:
             # Comments out first: a block is copied as one line, and a `#` left
             # in it swallowed the rest — `merge_culture_group`'s commented-out
             # rank, four unit checks of `support_noble_sponsored_armies` (10-04).
