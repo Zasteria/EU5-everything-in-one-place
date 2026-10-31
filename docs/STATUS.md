@@ -5,7 +5,7 @@ One line each. **Read only the brief of the mod the task is about** —
 
 | mod | state | never been in game |
 | --- | --- | --- |
-| [`ru_loc_fix`](../mods/ru_loc_fix/CLAUDE.md) | разметка русского; **0.6.1 (10-31): 1.4.6, ключ Гранады**; 0.6.0 (10-30): 1.4.5 + DLC D009; 0.5.9 (10-27): падежи товаров без `AddTextIf` (`tools/goods_cases.py`), `fire_generic_action` с `COUNTRY`; **09-26: круг 4 подтверждён** | круги 5–8, 0.5.9, 0.6.0, 0.6.1 |
+| [`ru_loc_fix`](../mods/ru_loc_fix/CLAUDE.md) | разметка русского; **0.6.1 (10-31): 1.4.6, ключ Гранады**; 0.6.0 (10-30): 1.4.5 + DLC D009; 0.5.9 (10-27): падежи товаров без `AddTextIf` (`mods/ru_loc_fix/tools/goods_cases.py`), `fire_generic_action` с `COUNTRY`; **09-26: круг 4 подтверждён** | круги 5–8, 0.5.9, 0.6.0, 0.6.1 |
 | [`nmt_fix`](../mods/nmt_fix/CLAUDE.md) | 0.2.0 (10-03): земли подданных (121 условие) + NMT под 1.4 | всё |
 | [`integration_fix`](../mods/integration_fix/CLAUDE.md) | 0.2.0: Integration Hotfix на 1.4.1, вместо него | всё |
 | [`cm_maps`](../mods/cm_maps/CLAUDE.md) | **загружен 09-19, рисует**; 0.6.0: три режима карты отраслей; еда, губернатор под 1.4 не сверены | 0.3.0–0.6.0, починка прав, еда |
@@ -18,7 +18,7 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`cmf_lobby_fix`](../mods/cmf_lobby_fix/CLAUDE.md) | 0.1.0: значки лобби под 1.4.4; снять с новым CMF | всё |
 | [`cmf_saved_settings`](../mods/cmf_saved_settings/CLAUDE.md) | 0.3.0: применение | 0.3.0 |
 | [`rulers_toolkit`](../mods/rulers_toolkit/CLAUDE.md) | 0.10.0: командиры, ползунки, пленные, творения, откаты, женитьба, мир (шаблон, дипрепутация), журнал | флоты, советники, выкуп, откаты, продажа ванильным действием (проба) |
-| [`ace_paid_switch`](../mods/ace_paid_switch/CLAUDE.md) | 0.1.0: галочка «Платить за дорогое образование» к Auto Child Education | всё |
+| [`ace_paid_switch`](../mods/ace_paid_switch/CLAUDE.md) | 0.1.1: галочка «Платить за дорогое образование» к Auto Child Education | всё |
 
 Закрытые, но лежащие здесь: [`archive/status_closed.md`](archive/status_closed.md).
 Убранные из дерева 10-03: [`archive/retired_mods.md`](archive/retired_mods.md).

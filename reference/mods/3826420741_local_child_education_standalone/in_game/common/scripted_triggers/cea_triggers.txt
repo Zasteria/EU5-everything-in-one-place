@@ -1,0 +1,200 @@
+﻿# Scope: character, root is the country. A child the alert and the auto-education look at, by the "who" setting:
+# 1 (default) heirs in the line of succession, and the children and grandchildren of anyone in the line, men only unless
+# the "women" setting is on;
+# 2 every child of the ruler's dynasty at court.
+cea_is_tracked_child = {
+	is_alive = yes
+	is_adult = no
+	age_in_years >= 3		# EDUCATION_AGE and CHILD_TRAIT_AGE in the game's defines: before 3 there is no education and no child trait yet
+	owner ?= root
+	# "women" off: boys only, whichever children the "who" setting picks
+	trigger_if = {
+		limit = { NOT = { root = { has_variable = cea_women } } }
+		is_female = no
+	}
+	# "future_royals": only those still in the crown estate once the first heir rules. The game puts the ruler and the
+	# ruler's close relatives in that estate; the rest become nobles.
+	trigger_if = {
+		limit = { root = { has_variable = cea_future_royals } }
+		root = { exists = heir }
+		OR = {
+			this = root.heir
+			is_close_relative = root.heir
+		}
+	}
+	# the heirs and their children and grandchildren count with either option; "all" (2) adds the ruler's dynasty and
+	# the ruler's own children and grandchildren, who may be of another dynasty (a daughter's children)
+	OR = {
+		any_parent = { this = root.ruler }
+		any_parent = { any_parent = { this = root.ruler } }
+		cea_is_counted_heir = yes
+		any_parent = { cea_is_counted_heir = yes }
+		any_parent = {
+			any_parent = { cea_is_counted_heir = yes }
+		}
+		AND = {
+			root.var:cea_who ?= 2
+			OR = {
+				AND = {
+					exists = dynasty
+					root.ruler ?= { exists = dynasty }
+					dynasty = root.ruler.dynasty
+				}
+				any_parent = { this = root.ruler }
+				any_parent = {
+					any_parent = { this = root.ruler }
+				}
+			}
+		}
+	}
+}
+
+# Scope: character, root is the country. In the first "depth" places of the line of succession; with "all" (2), anywhere in it.
+cea_is_counted_heir = {
+	# the first heir is told by is_heir: the game may count the places from 0, which left that heir's children out
+	OR = {
+		is_heir = yes
+		AND = {
+			heir_position > 0
+			# "all" (2) counts every place: "places in line" is greyed out then, so it must not count
+			OR = {
+				root.var:cea_who ?= 2
+				heir_position <= root.var:cea_depth
+			}
+		}
+	}
+}
+
+# Scope: character. Gets the balanced education or none yet.
+cea_can_have_better_education = {
+	OR = {
+		has_child_education = balanced_education
+		has_child_education_selected = no
+	}
+}
+
+# Scope: character. Has a trait the player picked for the paid in-depth education.
+cea_wants_paid_education = {
+	OR = {
+		AND = {
+			is_female = no
+			has_trait = child_prodigy
+			root = { has_variable = cea_paidm_child_prodigy }
+		}
+		AND = {
+			is_female = no
+			has_trait = child_gifted
+			root = { has_variable = cea_paidm_child_gifted }
+		}
+		AND = {
+			is_female = no
+			has_trait = healthy
+			root = { has_variable = cea_paidm_healthy }
+		}
+		AND = {
+			is_female = no
+			has_trait = child_intelligent
+			root = { has_variable = cea_paidm_child_intelligent }
+		}
+		AND = {
+			is_female = no
+			has_trait = child_gregarious
+			root = { has_variable = cea_paidm_child_gregarious }
+		}
+		AND = {
+			is_female = no
+			has_trait = child_rowdy
+			root = { has_variable = cea_paidm_child_rowdy }
+		}
+		AND = {
+			is_female = no
+			has_trait = child_ambitious
+			root = { has_variable = cea_paidm_child_ambitious }
+		}
+		AND = {
+			is_female = no
+			has_trait = child_gallant
+			root = { has_variable = cea_paidm_child_gallant }
+		}
+		AND = {
+			is_female = no
+			has_trait = child_shrewd
+			root = { has_variable = cea_paidm_child_shrewd }
+		}
+		AND = {
+			is_female = no
+			has_trait = child_slow
+			root = { has_variable = cea_paidm_child_slow }
+		}
+		AND = {
+			is_female = no
+			has_trait = child_idiot
+			root = { has_variable = cea_paidm_child_idiot }
+		}
+		AND = {
+			is_female = no
+			has_trait = sickly
+			root = { has_variable = cea_paidm_sickly }
+		}
+		AND = {
+			is_female = yes
+			has_trait = child_prodigy
+			root = { has_variable = cea_paidf_child_prodigy }
+		}
+		AND = {
+			is_female = yes
+			has_trait = child_gifted
+			root = { has_variable = cea_paidf_child_gifted }
+		}
+		AND = {
+			is_female = yes
+			has_trait = healthy
+			root = { has_variable = cea_paidf_healthy }
+		}
+		AND = {
+			is_female = yes
+			has_trait = child_intelligent
+			root = { has_variable = cea_paidf_child_intelligent }
+		}
+		AND = {
+			is_female = yes
+			has_trait = child_gregarious
+			root = { has_variable = cea_paidf_child_gregarious }
+		}
+		AND = {
+			is_female = yes
+			has_trait = child_rowdy
+			root = { has_variable = cea_paidf_child_rowdy }
+		}
+		AND = {
+			is_female = yes
+			has_trait = child_ambitious
+			root = { has_variable = cea_paidf_child_ambitious }
+		}
+		AND = {
+			is_female = yes
+			has_trait = child_gallant
+			root = { has_variable = cea_paidf_child_gallant }
+		}
+		AND = {
+			is_female = yes
+			has_trait = child_shrewd
+			root = { has_variable = cea_paidf_child_shrewd }
+		}
+		AND = {
+			is_female = yes
+			has_trait = child_slow
+			root = { has_variable = cea_paidf_child_slow }
+		}
+		AND = {
+			is_female = yes
+			has_trait = child_idiot
+			root = { has_variable = cea_paidf_child_idiot }
+		}
+		AND = {
+			is_female = yes
+			has_trait = sickly
+			root = { has_variable = cea_paidf_sickly }
+		}
+	}
+}

@@ -78,19 +78,37 @@ WRITTEN = (
     # `set_local_variable` counts, every staged local reads as never set. The
     # town-rights map copy staged nineteen of them and all nineteen were
     # reported as faults.
+    # **A name keeps its `$parameters$`**, here and in BEING_READ. CMF writes
+    # `cmm_list_field_$slot$_type_$mod_id$__$setting_id$` and reads it back as
+    # `cmm_list_field_1_type_$setting$`; cut at the first `$`, the two halves
+    # never met and seven reads in `cmf_dev_beta` came out as never set (10-31).
+    # `_template_matches` lines them up. A variable map is a write too.
     re.compile(r'(?:set|change)(?:_global|_local)?_variable(?:_list)?\s*=\s*'
-               r'\{\s*name\s*=\s*(\w+)'),
-    re.compile(r'add_to(?:_global|_local)?_variable_list\s*=\s*\{\s*name\s*=\s*(\w+)'),
+               r'\{\s*name\s*=\s*([\w$]+)'),
+    re.compile(r'add_to(?:_global|_local)?_variable_(?:list|map)\s*=\s*\{\s*name\s*=\s*([\w$]+)'),
     # CMF owns these: a setting alias and a list it builds are written by the
     # framework, and the mod only ever reads them back.
-    re.compile(r'(?:alias|list_name)\s*=\s*(\w+)'),
+    re.compile(r'(?:alias|list_name)\s*=\s*([\w$]+)'),
 )
 BEING_READ = re.compile(
-    r'(?:global_var|var):(\w+)'
-    r'|has(?:_global)?_variable\s*=\s*(\w+)'
-    r"|GetVariable\('(\w+)'\)"
-    r'|is_target_in(?:_global)?_variable_list\s*=\s*\{\s*name\s*=\s*(\w+)'
-    r'|(?<![\w])variable\s*=\s*(\w+)')
+    r'(?:global_var|var):([\w$]+)'
+    r'|has(?:_global)?_variable\s*=\s*([\w$]+)'
+    r"|GetVariable\('([\w$]+)'\)"
+    r'|is_target_in(?:_global)?_variable_list\s*=\s*\{\s*name\s*=\s*([\w$]+)'
+    r'|(?<![\w])variable\s*=\s*([\w$]+)')
+
+
+def _template_matches(written: str, read: str) -> bool:
+    """Whether a variable written as `written` can be the one read as `read`.
+
+    Either may hold `$parameters$`; a parameter stands for any run of name
+    characters, the empty one included.
+    """
+    if "$" not in written and "$" not in read:
+        return written == read
+    pattern = "".join(r"\w*" if i % 2 else re.escape(part)
+                      for i, part in enumerate(written.split("$")))
+    return re.fullmatch(pattern, re.sub(r"\$\w*\$", "x", read)) is not None
 
 # A read the mod knows can never be written, with the reason beside it. Put on
 # the line, the way `check_docs.py` takes `check-docs: ignore`.
@@ -262,12 +280,16 @@ def unwritten(root: Path) -> list[str]:
     # A mod's own namespace is the prefix its files are named for -- `bag_wtp`
     # from `bag_wtp_compute.txt`. Taken off the writes, so a mod that has not
     # settled on one is simply not checked rather than checked wrongly.
-    prefixes = {n.rsplit("_", 1)[0] + "_" for n in written if n.count("_") >= 2}
+    prefixes = {n.split("$", 1)[0].rsplit("_", 1)[0] + "_"
+                for n in written if n.split("$", 1)[0].count("_") >= 2}
     if not prefixes:
         return []
     found = []
     for name, (path, line) in sorted(read.items()):
         if name in written or name in ignored or not name.startswith(tuple(prefixes)):
+            continue
+        if any(_template_matches(w, name) or _template_matches(name, w)
+               for w in written if "$" in w or "$" in name):
             continue
         found.append(f"{path.relative_to(REPO)}:{line}: `{name}` is read and "
                      f"nothing sets it — the game logs this only once loaded, "
@@ -381,9 +403,14 @@ def problems(root: Path) -> list[str]:
             # the file one brace open. The engine ignores a brace in a comment
             # and chokes on the other, and neither says which file in
             # `error.log`, so both are cheaper to catch here.
+            # **`{{` only.** An f-string escaped one level too many doubles both
+            # braces, so the opening pair finds it; `}}` alone is two blocks
+            # closing on one line, which the game writes in 79 of its windows
+            # (`maximumsize = { -1 320 }}`) — counted, it put seven copies of game
+            # types on the list as faults (10-31).
             body = "\n".join(l.split("#", 1)[0] for l in text.splitlines())
-            if "{{" in body or "}}" in body:
-                token = "{{" if "{{" in body else "}}"
+            if "{{" in body:
+                token = "{{"
                 line = body[:body.index(token)].count("\n") + 1
                 found.append(f"{where}:{line}: `{token}` in script — a "
                              f"generator's f-string escaped one level too many, "
@@ -622,6 +649,29 @@ def misplaced_triggers(root: Path) -> list[str]:
     return found
 
 
+_UPSTREAMS: dict[Path, list[Path]] = {}
+
+
+def upstream_mods(root: Path) -> list[Path]:
+    """The mods in `reference/mods/` this one carries files of, whole.
+
+    A file at the same path inside one of them is a file this mod replaces, so
+    that mod is loaded under it and defines what the copy still calls:
+    `ace_paid_switch` replaces two files of Auto Child Education and calls its
+    forty scripted GUIs. A path the game also has proves nothing -- two mods
+    replacing `ingame_menu.gui` are not each other's base.
+    """
+    if root not in _UPSTREAMS:
+        game = REPO / "reference/game"
+        ours = [p.relative_to(root) for mount in MOUNTS if (root / mount).is_dir()
+                for p in (root / mount).rglob("*") if p.is_file()]
+        ours = [rel for rel in ours if not (game / rel).is_file()]
+        _UPSTREAMS[root] = [
+            mod for mod in sorted((REPO / "reference/mods").iterdir())
+            if mod.is_dir() and any((mod / rel).is_file() for rel in ours)]
+    return _UPSTREAMS[root]
+
+
 def unresolved_interface(root: Path) -> list[str]:
     """Every name a window says, checked against the thing that has to define it.
 
@@ -708,6 +758,10 @@ def unresolved_interface(root: Path) -> list[str]:
         # **A file several mods ship alike** (tools/alert_banner.py) holds each
         # mod's child; a name any of those mods defines is defined.
         shared = set(guis)
+        for base in upstream_mods(root):
+            for sgui in sorted(base.glob("in_game/common/scripted_guis/*.txt")):
+                shared |= set(re.findall(r"(?m)^([A-Za-z0-9_]+)\s*=\s*\{",
+                                         sgui.read_text(encoding="utf-8-sig")))
         for other in sorted((REPO / "mods").glob(f"*/{path.relative_to(root).as_posix()}")):
             if other != path and other.read_text(encoding="utf-8-sig") == text:
                 for sgui in sorted(other.parents[1].glob("common/scripted_guis/*.txt")):
@@ -774,18 +828,30 @@ def unregistered_windows(root: Path) -> list[str]:
 
     The name in the registry has to match the window's own `name`, because that
     is what the engine looks the widget up by.
+
+    **Two other ways a window gets made**, both seen 10-31: a file at a path the
+    game has is the game's own window, which the engine creates itself (CMF's
+    `multiplayer_lobby.gui`); and a button can make one with the console command
+    `gui.createwidget gui/<file>.gui <name>` (Auto Child Education's settings
+    window). The registry and those commands are read in the mods this one
+    replaces files of too, since they are loaded under it.
     """
     gui = root / "in_game/gui"
     if not gui.is_dir():
         return []
     registered: dict[str, str] = {}
-    for path in sorted((gui / "scripted_widgets").glob("*.txt")):
-        for line in path.read_text(encoding="utf-8-sig").split("\n"):
-            line = line.split("#")[0].strip()
-            if "=" not in line:
-                continue
-            where, name = (part.strip() for part in line.split("=", 1))
-            registered[where] = name
+    created: set[tuple[str, str]] = set()
+    for base in (root, *upstream_mods(root)):
+        for path in sorted((base / "in_game/gui/scripted_widgets").glob("*.txt")):
+            for line in path.read_text(encoding="utf-8-sig").split("\n"):
+                line = line.split("#")[0].strip()
+                if "=" not in line:
+                    continue
+                where, name = (part.strip() for part in line.split("=", 1))
+                registered.setdefault(where, name)
+        for path in sorted((base / "in_game/gui").rglob("*.gui")):
+            created |= set(re.findall(r"gui\.createwidget\s+(gui/[\w/.]+\.gui)\s+(\w+)",
+                                      path.read_text(encoding="utf-8-sig"), re.I))
     found = []
     for path in sorted(gui.glob("*.gui")):
         text = path.read_text(encoding="utf-8-sig")
@@ -794,10 +860,14 @@ def unregistered_windows(root: Path) -> list[str]:
         # file could not be registered separately anyway.
         if not re.search(r"^window = \{", text, re.M):
             continue
+        if (REPO / "reference/game" / path.relative_to(root)).is_file():
+            continue
         match = re.search(r'^window = \{[^}]*?name = "([^"]+)"', text, re.M | re.S)
         name = match.group(1) if match else None
         key = f"gui/{path.name}"
         where = f"{path.relative_to(REPO)}"
+        if (key, name) in created:
+            continue
         if key not in registered:
             found.append(f"{where}: a window nothing registers — add "
                          f"`{key} = {name or path.stem}` to "
@@ -830,6 +900,13 @@ def flowcontainer_datamodels(root: Path) -> list[str]:
     138 times the game draws one: `addcolumn`, `addrow`, `datamodel_wrap`,
     `flipdirection = yes`.
 
+    **That was the game before 1.4.** On 1.4.6 (10-31) its lobby, production
+    and unit windows do carry a list on a `flowcontainer` —
+    `datamodel = "[ForeignBuildingLocationItem.GetBuildings]"` with
+    `wrap_count = 7` — and CMF copies them. What crashed here was never
+    explained, so the rule stays for the windows this repository writes; the
+    game's own, copied, are told apart in `main` as inherited.
+
     So this refuses the pairing rather than the widget. A `flowcontainer` of
     literal children is fine and stays fine.
     """
@@ -861,7 +938,7 @@ def flowcontainer_datamodels(root: Path) -> list[str]:
             line = text[:match.start()].count("\n") + 1
             found.append(
                 f"{path.relative_to(REPO)}:{line}: a `flowcontainer` with a "
-                f"datamodel of its own — the game has none and four builds of "
+                f"datamodel of its own — the game has a few and four builds of "
                 f"this repository crashed on one, silently. A wrapping grid of "
                 f"a list is a `fixedgridbox` (addcolumn/addrow/datamodel_wrap/"
                 f"flipdirection); docs/pitfalls/interface.md")
@@ -1111,8 +1188,12 @@ def frameless_windows(root: Path) -> list[str]:
             name = re.search(r'name\s*=\s*"([^"]+)"', body)
             # **The window's own line, at its own indentation.** Splitting the
             # body at "the first child" does not work: `size = { 1320 900 }` is a
-            # property and looks exactly like a block opening.
-            if re.search(r"^\tusing = bg_window_default_alt\s*$", body, re.M):
+            # property and looks exactly like a block opening. **Its own level is
+            # counted, not its tab**: Auto Child Education indents with spaces,
+            # and its framed window came out frameless (10-31).
+            if any(body[:m.start()].count("{") == body[:m.start()].count("}")
+                   for m in re.finditer(r"^[ \t]+using\s*=\s*bg_window_default_alt\s*$",
+                                        body, re.M)):
                 continue
             line = text[:match.end()].count("\n") + 1
             found.append(
@@ -1491,6 +1572,92 @@ def shared_copies() -> list[str]:
     return found
 
 
+def checks(root: Path, known: set[str]) -> list[str]:
+    return (problems(root) + unresolved(root, known) + unwritten(root)
+            + misplaced_triggers(root)
+            + listless_callbacks(root)
+            + sized_above_datamodel(root)
+            + misplaced_values(root)
+            + orphan_localization_lists(root)
+            + unresolved_script_values(root)
+            + duplicate_definitions(root)
+            + frameless_windows(root)
+            + unregistered_windows(root) + unresolved_interface(root)
+            + flowcontainer_datamodels(root)
+            + scope_mixed_variables(root)
+            + quoted_only_parameters(root)
+            + overflowing_windows(root)
+            + localization_markup(root)
+            + stale_overrides(root)
+            + foreign_breakdown_in_own_text(root)
+            + unresolved_localization_refs(root)
+            + ungated_live_windows(root))
+
+
+FINDING = re.compile(r"^(?P<rel>[^:]+?)(?::(?P<line>\d+))?: (?P<what>.*)$", re.S)
+
+
+def _finding_keys(root: Path, found: list[str]) -> list[tuple | None]:
+    """Each finding as (file inside the mod, what it says, the line it points at).
+
+    The line's text stands in for its number, which moves whenever the copy is
+    rebased; the metadata is always the mod's own and never compared.
+    """
+    head = str(root.relative_to(REPO)) + os.sep
+    keys: list[tuple | None] = []
+    for line in found:
+        match = FINDING.match(line[len(head):]) if line.startswith(head) else None
+        if not match or match["rel"].startswith(".metadata"):
+            keys.append(None)
+            continue
+        rel = match["rel"].replace(os.sep, "/")
+        text = ""
+        if match["line"]:
+            try:
+                lines = (root / rel).read_text(encoding="utf-8-sig").splitlines()
+                text = lines[int(match["line"]) - 1].strip()
+            except (OSError, IndexError):
+                pass
+        keys.append((rel, match["what"], text))
+    return keys
+
+
+def inherited(root: Path, found: list[str], known: set[str]) -> tuple[list[str], dict[str, int]]:
+    """Split off the findings a file carries from the mod it replaces.
+
+    **A copy repeats its author's patterns.** `cmf_dev_beta` is CMF 2.5.0 with
+    its own edits, and CMF in turn copies game windows; its sweep reported
+    sixteen things CMF ships exactly so — a file with no BOM, a type wearing a
+    window frame, the game's own lobby — and the refresh went red every run on
+    findings nobody here is going to fix (10-31). So the same checks run over
+    each mod in `upstream_mods`, and a finding this mod has *as many times* as
+    that mod has it, in the same file, with the same words on the same line, is
+    that mod's. One more of them is ours and still counts — an edit of this
+    repository is still checked, the copy around it is not.
+    """
+    keys = _finding_keys(root, found)
+    # **The most any one of them has, not their sum**: CMF and CMF Dev ship the
+    # same file, and added up they hid a flowcontainer put in as a probe (10-31).
+    theirs: dict[tuple, tuple[int, str]] = {}
+    for base in upstream_mods(root):
+        counts: dict[tuple, int] = {}
+        for key in _finding_keys(base, checks(base, known)):
+            if key:
+                counts[key] = counts.get(key, 0) + 1
+        for key, count in counts.items():
+            if count > theirs.get(key, (0, ""))[0]:
+                theirs[key] = (count, base.name)
+    kept, dropped = [], {}
+    for line, key in zip(found, keys):
+        left, base = theirs.get(key, (0, "")) if key else (0, "")
+        if left:
+            theirs[key] = (left - 1, base)
+            dropped[base] = dropped.get(base, 0) + 1
+            continue
+        kept.append(line)
+    return kept, dropped
+
+
 def main(argv: list[str]) -> int:
     roots = [Path(a) for a in argv[1:]] or [
         p for p in sorted((REPO / "mods").iterdir())
@@ -1507,28 +1674,13 @@ def main(argv: list[str]) -> int:
         if not root.is_dir():
             continue
         root = root if root.is_absolute() else REPO / root
-        found = (problems(root) + unresolved(root, known) + unwritten(root)
-                 + misplaced_triggers(root)
-                 + listless_callbacks(root)
-                 + sized_above_datamodel(root)
-                 + misplaced_values(root)
-                 + orphan_localization_lists(root)
-                 + unresolved_script_values(root)
-                 + duplicate_definitions(root)
-                 + frameless_windows(root)
-                 + unregistered_windows(root) + unresolved_interface(root)
-                 + flowcontainer_datamodels(root)
-                 + scope_mixed_variables(root)
-                 + quoted_only_parameters(root)
-                 + overflowing_windows(root)
-                 + localization_markup(root)
-                 + stale_overrides(root)
-                 + foreign_breakdown_in_own_text(root)
-                 + unresolved_localization_refs(root)
-                 + ungated_live_windows(root))
+        found, dropped = inherited(root, checks(root, known), known)
         total += len(found)
         for line in found:
             print(line)
+        for base, count in sorted(dropped.items()):
+            print(f"     {root.name}: {count} finding(s) in files copied from "
+                  f"{base}, which has them too — not counted")
     checked = ", ".join(r.name for r in roots if r.is_dir())
     print(f"{checked}: {'clean' if not total else f'{total} problem(s)'}")
     return 1 if total else 0

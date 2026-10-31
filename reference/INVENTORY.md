@@ -10,6 +10,7 @@ python3 tools/refresh.py
 
 | Folder | Mod id | Version | Game |
 | --- | --- | --- | --- |
+| `3624485168_labelplace` | `labelplace` | 0.1 | 1.* |
 | `3692202776_community_mod_framework` | `community_mod_framework` | 2.5.0 | 1.4.* |
 | `3721516330_integration_hotfix` | `Integration Hotfix` | 0.7 | 1.3.x |
 | `3736668860_construction_manager` | `romaimperator.construction_manager` | 2.2.12 | 1.3.* |
@@ -23,6 +24,7 @@ python3 tools/refresh.py
 | `3813229007_ru_l10n_fix` | `ru_l10n_fix` | 1.0.2 | 1.3.* |
 | `3813746228_grackbox_formables_atlas` | `grackbox.formables_atlas` | 1.0.2 | 1.4.* |
 | `3814531699_national_mission_trees_1_4` | `national_mission_trees_1.4` | 0.3 | 1.4 |
+| `3826420741_local_child_education_standalone` | `local.child_education_standalone` | 0.2.2 | 1.4.* |
 
 ## The rest of the playset
 

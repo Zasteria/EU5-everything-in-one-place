@@ -134,3 +134,9 @@ never shows. Three-way: equal to the new game — fine; equal to the old game �
 a plain copy, take the game's; equal to neither — the mod's own edit, port by
 hand. On 1.4.1 that sorted CMF's 201 copies into 190 / 11 / 0 in a minute
 (`cmf_dev_beta` +beta12 now takes the game's for any copy without `cmf`/`cmm`).
+
+**A base mod leaves with its subscription.** The 10-12 refresh copied in what
+he was subscribed to and nothing else, so Better label placement went and
+`centered_towns` stopped building, and Auto Child Education never came in, so
+`ace_paid_switch` read as 41 undefined names (10-31). A mod a generator or a
+checker needs goes into `tools/workshop_mods.txt`, subscribed to or not.
