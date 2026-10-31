@@ -251,32 +251,17 @@ for the same reason; it applies to a grep over the tree just as much.
 **Нужно «не это действие» — сначала пометь места положительной проверкой**
 (переменная на `cabinet_member`), потом исключай по метке.
 
-## Место советника помнит пару ценностей и после смены действия
+## Место советника помнит пару ценностей и после смены действия — в архиве
 
-**Скрипт её не снимает, и окно потом не может посчитать прогресс.** Место,
-которому окно `select_societal_value` выбрало пару, хранит `societal_values=…`
-и после `stop_cabinet_action` + `set_cabinet_action` другого действия; в
-`debug.log` тогда «Promote 'SCOPE' returned nullptr» на `*_action_progress`
-этого места, десятки строк в секунду, пока виден аутлайнер (130 тыс. за его
-вечер 10-24, по одному действию за раз). Не снимают (hands-off 10-25): `actor`
-в параметрах, `remove_from_cabinet` и обратно того же советника, месяц без
-действия. Из 8 178 мест мира такое одно — ваниль при смене действия через своё
-окно пару сбрасывает. `actor` игра хранит у всех мест (`params={ actor=… }`).
-Своим окном тоже не вышло (10-25): `SelectCabinetAction(место, no)` из скрытого окна открывает
-ванильный список, виджет в строке (`attribute_columns/cabinet_action.gui`) её находит
-(`ObjectsEqual(InteractionTarget.GetCabinetAction.Self, …GetVariable(…).GetCabinetAction.Self)`),
-но `SelectInteractionTargetGlue.OnLeftClick`, `…AndConfirm`, `OnMouseDown/Up`,
-`SelectInteractionTargetView.Confirm` из `state` действие не меняют — им нужны параметры клика
-(`on_action_with_params`). Работает своё окончание игры: снятое игрой действие пару стирает;
-0.10.14 даёт игре снять его через свой `is_finished` в копии `change_societal_values.txt`.
-Прогоны от лица игрока 10-25 (ниже): `is_finished` у ценностей игра не читает; `allow` по флагу
-снимает действие, но пару **оставляет** (ошибки пошли); игровая автоматика «Совет» на месяц
-ценности не трогает. Стирают пару только команда выбора действия — игрока в окне или ИИ страны.
-**Клик с параметрами — как у Playmaker Cabinet Queue** (мастерская 3804621893, 10-26; у автора работало с 0.3.55, у нас не мерено): в строке списка скрытая кнопка 1×1 с двумя `action_tooltip` (`on_action_with_params = "[SelectInteractionTargetGlue.OnLeftClick]"` и `…AndConfirm`), строку отбирает `dynamicgridbox` с `datamodel = DataModelRepeatedItem(Select_int32(условие, 1, 0))`; `state` кнопки с `trigger_on_create` зовёт `OnMouseEnter(PdxGuiWidget.AccessSelf, SelectInteractionTargetGlue.GetObject)`, затем `[UIAction.OnLeftClick]` — щелчок по своему `action_tooltip`, параметры при нём.
-**Действие из `country_interactions` без боковой панели не достать** (`rulers_toolkit` 0.10.3, 10-26): `Country.GetQuickDiplomaticActions` — только шесть быстрых (`WAR`, `CREATE_CASUS_BELLI`, `BUILD_SPYNETWORK`, `CURRY_FAVORS`, `PROFESS_TRUST`, `IMPROVE_RELATION`), `GetSpecificAction('sell_work_of_art')` нет; полный список — у `ForeignCountryView` и `DiplomacyMacrobuilderLateralView`, глобально из видов доступен лишь `GetEconomyView`. Ярлыки Playmaker тоже стоят внутри `ForeignCountryView`.
-**`perform_diplomatic_action` не запускает действие державы мода** (`rulers_toolkit` 0.11.0–0.11.3, 10-26/27): `accept`, `accept` + `hidden`, `propose`, пустое действие без цены и условий от игрока и от ИИ — эффект ни разу, ошибок нет. Своё общее действие (`generic_actions`, `type = diplomacy` бывает) зовут `fire_generic_action` — CM и Playmaker так и делают (0.12.0 — проверка). Кнопку любого действия без панели даёт `scripted_action_tooltip` (`action_name`, `actor`, `parameter`), `generic_actions/readme.txt` — ход для брака, не мерен.
-**Решение (0.11.0): своё задание без `societal_values`, с `country_modifier = { monthly_towards_<сторона> }`** —
-пару движок хранит только у заданий с полем `societal_values`; модификатор задания он умножает на навык так же.
+**Скрипт её не снимает, и окно потом не может посчитать прогресс:** на
+`*_action_progress` этого места `debug.log` пишет «Promote 'SCOPE' returned
+nullptr», десятки строк в секунду. Стирает пару только команда выбора действия —
+игрока в окне или ИИ страны. `perform_diplomatic_action` действие державы мода не
+запускает; своё общее действие зовут `fire_generic_action`. **Решение (0.11.0):
+своё задание без `societal_values`, с `country_modifier = {
+monthly_towards_<сторона> }`.** Что пару не сняло, клик с параметрами как у
+Playmaker Cabinet Queue, быстрые действия державы:
+[`../archive/pitfalls_script_cabinet_values.md`](../archive/pitfalls_script_cabinet_values.md).
 
 ## Один переключатель на два окна — это два разных переключателя
 
@@ -308,39 +293,12 @@ for the same reason; it applies to a grep over the tree just as much.
 **Если чужое значение уже лежит в дереве — зови его**, а не пиши рядом второе с
 тем же именем в комментарии.
 
-## Окно и эффект, которые обязаны договориться
+## Окно и эффект, которые обязаны договориться — в архиве
 
-**Число и его подсказка обязаны быть одним счётом.** Столбец «Пригодность» в
-поиске по грамоте считал наш `_rq<k>` -- покрытие по **доступным** способам, --
-а подсказка под ним рисовала разбор перенесённой карты (`_trmm_*`), то есть
-числа Construction Manager, которые про эпоху не знают. На его экране 2026-09-14
-подсказка говорила «76.1 %», столбец «236.1 %», и сойтись они не могли ни при
-каких данных. Он прочёл это как «бардак», и был прав: **подсказка, которая
-объясняет чужой расчёт, хуже отсутствующей** -- она не просто не помогает, она
-опровергает то, что стоит рядом. Перенося чужой инструмент, переноси **или**
-расчёт вместе с его объяснением, **или** ни того ни другого.
-
-**Разбор показывает слагаемые, а не итог.** «Текстиль 100 %» он читать отказался:
-«а с чего бы он 100%? Я этого не вижу». Число, сложенное из покрытия сырья и
-местного модификатора, обязано показывать обе половины порознь -- иначе 236 % на
-земле, у которой каждый товар меньше сотни, выглядит ошибкой, а не суммой.
-
-**A list that offers what its own button refuses is a bug report waiting.** The
-swap window's right column asked whether the building may stand here and never
-asked the side, while every branch of the placement asks
-`_plan_is_town`; so a village building sat in a city's list and «+» on it did
-nothing at all. **Build such a list out of the placement's own gate** — one arm
-per (good, side), side and room and free good together — and the list cannot
-promise what the press will not do.
-
-**Two entries for one good mean two gates, and the wrong one can eat the
-press.** `mason` is one of the few buildings the game allows in a village **and**
-in a town, so it carries a rural and a town entry for `masonry`. Both gates read
-`_pm<n>` — the town variable — and listed the same method numbers, so in a city
-the rural branch matched first, called an effect that asks `_plan_is_town = no`
-inside itself, did nothing, and spent the one-shot counter; the town branch never
-ran and the building could not be removed at all. **Each side reads its own
-variable (`_pm` / `_prm`) and carries its own side in the gate.**
+**Число и его подсказка — один счёт; разбор показывает слагаемые, а не итог;
+список строится из гейта самой кнопки, и у каждой стороны (`_pm` / `_prm`) свой
+гейт.** Случаи «Пригодности» в `where_to_produce` 2026-09-14 и `mason`:
+[`../archive/pitfalls_script_window_and_effect.md`](../archive/pitfalls_script_window_and_effect.md).
 
 ## Что стоит кадра
 
