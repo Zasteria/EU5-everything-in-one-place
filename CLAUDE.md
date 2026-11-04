@@ -45,9 +45,7 @@ for the reference tree and the rebuild loop,
 
 This tree is a knowledge base built for sessions **without** his PC, where he
 was the hands and eyes. **With PC access, act alone** (10-28): any access you
-need, mods into the game, logs, runs, commit, push. Paths: `docs/CONVENTIONS.md`.
-**On his PC, no branch** (11-04): the game first, checked there, then a commit
-straight to `main`. A branch is for cloud work only, where it comes before the check.
+need, mods into the game, logs, runs, push to `main`, no branch (11-04). Paths: `docs/CONVENTIONS.md`.
 
 ## Rules that exist because breaking them is silent
 
