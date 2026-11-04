@@ -446,6 +446,53 @@
 # The bare scalar form (add_new_waypoint = location:x) is unaffected and always non-hidden.
 #
 #
+# select_trigger (optional, repeatable)
+# -------------------------------------
+# Lets the player (and AI) choose targets when launching this type, for example how many
+# provisions to take. One block per choice; the stages appear in the Start Expedition panel
+# after the expedition type and the leader have been picked, and only for this type. The
+# block takes the same fields as select_trigger in generic actions and cabinet actions
+# (looking_for_a, source, visible, enabled, column, min / max / step / default, ...).
+#
+#   select_trigger = {
+#       looking_for_a = value
+#       target_flag = circumnavigation_provisions
+#       name = "circumnavigation_select_provisions"
+#       min = 0
+#       max = 100
+#       step = 10
+#       default = 100
+#       ai_override_value = 100
+#   }
+#
+# Rules:
+# - target_flag is required and must be unique across ALL expedition types. It must not be
+#   target or target_1 (the expedition type and the leader), nor expedition, actor, recipient
+#   or location. A block with a missing, reserved or reused flag logs an error and that block
+#   is ignored. Prefix the flag with the type key.
+# - Triggers and values inside the block can use scope:actor (the country), scope:target (the
+#   expedition type) and scope:target_1 (the leader).
+# - min, max, step and default are script values, so the range can depend on the country.
+# - Value stages need ai_override_value (an error is logged without it); AI countries pick that
+#   value. Types that declare select_trigger are not launched by the direct AI expedition
+#   launcher, only through the start_expedition generic action.
+# - Do not use cache_targets in these blocks: the Start button state is evaluated before the
+#   leader is chosen, so a cached stage that reads scope:target_1 sees no leader.
+# - The selections are available as scope:<target_flag> in on_start ONLY, and on_start runs in
+#   the country scope. To keep one, copy it onto the expedition in on_start, for example:
+#       scope:expedition = {
+#           set_variable = { name = provisions value = scope:circumnavigation_provisions }
+#       }
+#   Declared variables share the store used by set_variable, so this also sets a declared
+#   variable such as provisions. set_variable does not clamp to the variable's declared max,
+#   so keep the stage max at or below it.
+# - Types launched through their own generic action (for example pilgrimages) call the
+#   start_expedition effect directly and get no selections. Guard with
+#   exists = scope:<target_flag> if a type can be launched both ways.
+# - The blocks are read when the game loads. Changing them needs a restart, a live reload of
+#   an expedition type that declares select_trigger is not supported.
+#
+#
 # Waypoint messages (notification, not an event)
 # ----------------------------------------------
 # To show a plain notification when the expedition reaches a defined (static) waypoint,

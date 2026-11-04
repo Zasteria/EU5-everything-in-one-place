@@ -2295,6 +2295,9 @@ on_ending_war = {
 				scope:winner = c:GRA
 				scope:loser = c:CAS
 			}
+			c:GRA = {
+				set_variable = { name = bfts_won_war_against_castile years = 10 }
+			}
 			trigger_event_silently = flavor_gra.24
 		}
 		if = {
@@ -4690,7 +4693,7 @@ on_union_merging = {
 
 #sent after the new union is setup
 #root = new union IO, scope:ruler = ruling character or heir
-#(optional) scope:first_leader = the leader country of the first union from the merge
+#(optional) scope:first_leader = the leader country of the union that is kept in the merge
 #(optional) scope:second_leader = the leader country of the second union from the merge
 on_union_formation = {
 	effect = {
@@ -4709,7 +4712,12 @@ on_union_formation = {
 			if = {
 				limit = {
 					exists = scope:second_leader
-					scope:first_leader.country_economical_base < scope:second_leader.country_economical_base
+					scope:second_leader = {
+						country_economical_base >= {
+							value = scope:first_leader.country_economical_base
+							multiply = 1.25
+						}
+					}
 				}
 				scope:second_leader = { save_scope_as = union_leader }
 			}
@@ -5736,6 +5744,7 @@ on_regency_start = {
 		if = {
 			limit = {
 				is_in_union = yes
+				not = { regency_type ?= regency_type:expedition_regency }
 			}
 			union = {
 				every_active_resolution = {

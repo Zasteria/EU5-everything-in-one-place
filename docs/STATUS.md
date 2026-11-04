@@ -5,19 +5,19 @@ One line each. **Read only the brief of the mod the task is about** —
 
 | mod | state | never been in game |
 | --- | --- | --- |
-| [`ru_loc_fix`](../mods/ru_loc_fix/CLAUDE.md) | разметка русского; **0.6.1 (10-31): 1.4.6, ключ Гранады**; **09-26: круг 4 подтверждён**; прошлые версии — [`archive/status_history.md`](archive/status_history.md) | круги 5–8, 0.5.9, 0.6.0, 0.6.1 |
+| [`ru_loc_fix`](../mods/ru_loc_fix/CLAUDE.md) | разметка русского; **0.6.2: 1.4.7**; **09-26: круг 4 подтверждён**; прошлые версии — [`archive/status_history.md`](archive/status_history.md) | круги 5–8, 0.5.9–0.6.2 |
 | [`nmt_fix`](../mods/nmt_fix/CLAUDE.md) | 0.2.0 (10-03): земли подданных (121 условие) + NMT под 1.4 | всё |
 | [`integration_fix`](../mods/integration_fix/CLAUDE.md) | 0.2.0: Integration Hotfix на 1.4.1, вместо него | всё |
 | [`cm_maps`](../mods/cm_maps/CLAUDE.md) | **загружен 09-19, рисует**; 0.6.0: три режима карты отраслей; еда, губернатор под 1.4 не сверены | 0.3.0–0.6.0, починка прав, еда |
-| [`cm_dev_perf`](../mods/cm_dev_perf/CLAUDE.md) | **+perf69 (10-30): права 1.4/DLC, верблюды; `cm_dev_perf_tree` — с деревом CM для сравнения**; не проверены: выдача прав +perf67/68, свой `cm_is_host` с CMF из мастерской (+perf50); перед Río, после Río — [`cm_rio_patch`](../mods/cm_rio_patch/CLAUDE.md); прошлые версии — [`archive/status_history.md`](archive/status_history.md) | +perf19–39, патч |
-| [`cmf_dev_beta`](../mods/cmf_dev_beta/CLAUDE.md) | +beta13: номер места с начала; +beta12: типы 1.4.1; `cmf_is_host`, панель, стрелки, номер места; вместо CMF и CMF Dev | +beta7, +beta12, +beta13 |
+| [`cm_dev_perf`](../mods/cm_dev_perf/CLAUDE.md) | **+perf72: 1.4.7; +perf69 (10-30): права 1.4/DLC, верблюды; `cm_dev_perf_tree` — с деревом CM для сравнения**; не проверены: выдача прав +perf67/68, свой `cm_is_host` с CMF из мастерской (+perf50); перед Río, после Río — [`cm_rio_patch`](../mods/cm_rio_patch/CLAUDE.md); прошлые версии — [`archive/status_history.md`](archive/status_history.md) | +perf19–39, патч |
+| [`cmf_dev_beta`](../mods/cmf_dev_beta/CLAUDE.md) | +beta16: 1.4.7; +beta13: номер места с начала; +beta12: типы 1.4.1; `cmf_is_host`, панель, стрелки, номер места; вместо CMF и CMF Dev | +beta7, +beta12, +beta13 |
 | [`glorpui_hints`](../mods/glorpui_hints/CLAUDE.md) | 1.2.17 (10-30): источники DLC D009; 1.2.14 в игре 10-18 | — |
 | [`centered_towns`](../mods/centered_towns/CLAUDE.md) | 0.2.0 (10-04): позиции Better label placement под новыми именами файлов 1.4 | 0.2.0 |
 | [`assimilate_primary`](../mods/assimilate_primary/CLAUDE.md) | 0.11.0: своя автоматика совета; ценности — задания мода без пары (0.11.1, в игре 10-26); порог контроля не проверен | 0.6.0 |
 | [`speed_5`](../mods/speed_5/CLAUDE.md) | паузы, 5 скоростей | всё |
 | [`cmf_lobby_fix`](../mods/cmf_lobby_fix/CLAUDE.md) | 0.1.0: значки лобби под 1.4.4; снять с новым CMF | всё |
 | [`cmf_saved_settings`](../mods/cmf_saved_settings/CLAUDE.md) | 0.3.0: применение | 0.3.0 |
-| [`rulers_toolkit`](../mods/rulers_toolkit/CLAUDE.md) | 0.10.0: командиры, ползунки, пленные, творения, откаты, женитьба, мир (шаблон, дипрепутация), журнал | флоты, советники, выкуп, откаты, продажа ванильным действием (проба) |
+| [`rulers_toolkit`](../mods/rulers_toolkit/CLAUDE.md) | 0.13.6: 1.4.7; 0.10.0: командиры, ползунки, пленные, творения, откаты, женитьба, мир (шаблон, дипрепутация), журнал | флоты, советники, выкуп, откаты, продажа ванильным действием (проба) |
 | [`ace_paid_switch`](../mods/ace_paid_switch/CLAUDE.md) | 0.1.1: галочка «Платить за дорогое образование» к Auto Child Education | всё |
 
 Закрытые, но лежащие здесь: [`archive/status_closed.md`](archive/status_closed.md).
