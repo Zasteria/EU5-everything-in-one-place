@@ -1422,10 +1422,10 @@ set_ended_disaster_flag_effect = {
 	}
 }
 
-make_regent_to_ruler = {
+make_character_ruler_effect = {
 	if = {
-		limit = { has_regent = yes }
-		regent ?= {			
+		limit = { exists = $character$ }
+		$character$ = {			
 			if = {
 				limit = { NOT = { has_estate = estate_type:nobles_estate } }
 				change_character_estate = estate_type:nobles_estate
@@ -1442,7 +1442,7 @@ make_regent_to_ruler = {
 					}
 					root.capital ?= {
 						create_dynasty_from_location = random
-						last_dynasty_in_location = { save_scope_as = target_dynasty }
+						last_dynasty_in_location ?= { save_scope_as = target_dynasty }
 					}
 					if = {
 						limit = { exists = scope:target_dynasty }
@@ -1473,12 +1473,19 @@ make_regent_to_ruler = {
 		}
 		if = {
 			limit = {
-				regent.religion.group != religion.group
+				$character$.religion.group != religion.group
 				modifier:blocked_from_conversion = no
 			}
-			change_religion = regent.religion
+			change_religion = $character$.religion
 		}
-		set_new_ruler = regent
+		set_new_ruler = $character$
+	}
+}
+
+make_regent_to_ruler = {
+	if = {
+		limit = { has_regent = yes }
+		make_character_ruler_effect = { character = regent }
 	}
 }
 
@@ -2521,16 +2528,17 @@ change_culture_for_ruler_and_family = {
 change_religion_for_ruler_and_family = {
 	hidden_effect = {
 		$country$ = {
+			save_temporary_scope_as = ruler_religion_country
 			if = {
 				limit = {
 					ruler ?= {
-						owner = $country$ 
+						owner = scope:ruler_religion_country
 					}
 				}
 				heir ?= {
 					if = {
 						limit = {
-							owner = $country$
+							owner = scope:ruler_religion_country
 						}
 						change_character_religion = $religion$
 					}
@@ -2548,7 +2556,7 @@ change_religion_for_ruler_and_family = {
 					}
 					every_descendant = {
 						limit = {
-							owner = $country$
+							owner = scope:ruler_religion_country
 							or = {
 								is_religious_figure = no
 								religious_figure != religious_figure:cardinal
@@ -2559,15 +2567,15 @@ change_religion_for_ruler_and_family = {
 					}
 					every_spouse = {
 						limit = {
-							owner = $country$
+							owner = scope:ruler_religion_country
 							or = {
 								is_religious_figure = no
 								religious_figure != religious_figure:cardinal
 							}
 							NOT = { owner = religion:catholic.religious_head }
 							trigger_if = {
-								limit = { exists = $country$.heir }
-								this != $country$.heir
+								limit = { exists = scope:ruler_religion_country.heir }
+								this != scope:ruler_religion_country.heir
 							}
 						}
 						change_character_religion = $religion$

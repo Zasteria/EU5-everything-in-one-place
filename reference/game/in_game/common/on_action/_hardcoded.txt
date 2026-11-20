@@ -893,6 +893,31 @@ on_annex = {
 				months = 1
 			}
 		}
+		if = {
+			limit = {
+				scope:target ?= {
+					exists = autocephalous_patriarchate
+					autocephalous_patriarchate = {
+						leader_country ?= scope:target
+					}
+				}
+			}
+			scope:target.autocephalous_patriarchate = {
+				random_international_organization_member = {
+					limit = { NOT = { this = scope:target } }
+					save_scope_as = patriarchate_successor
+				}
+				if = {
+					limit = { exists = scope:patriarchate_successor }
+					set_leader_country = scope:patriarchate_successor
+					set_variable = {
+						name = annexed_leader
+						value = scope:target
+						months = 1
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -3584,6 +3609,18 @@ on_subject_created = {
 			}
 			change_religion = scope:overlord.religion
 		}
+		if = {
+			limit = {
+				religion = religion:nahuatl
+				has_reform = government_reform:altepetl
+				scope:overlord = {
+					has_reform = government_reform:reformed_nahuatl_society
+				}
+			}
+			set_variable = reformed_nahuatl_society_variable
+			remove_reform = government_reform:altepetl
+			add_reform = government_reform:reformed_nahuatl_society
+		}
 		# A military order (e.g. Teutonic Order) creates a subject that inherits
 		# the theocracy government type but not the military_order_reform (skipped
 		# at creation). Without that reform the subject auto-qualifies for the
@@ -5311,8 +5348,20 @@ on_location_changed_owner = {
 					if = {
 						limit = {
 							scope:winner = { religion = religion:catholic }
+							religion = religion:catholic
 						}
 						move_country = scope:winner
+						if = {
+							limit = {
+								employer ?= scope:loser
+							}
+							scope:cardinal_seat_location = {
+								set_variable = {
+									name = cardinal_awaiting_new_owner
+									value = prev
+								}
+							}
+						}
 					}
 					else = {
 						remove_cardinal_variables = yes
@@ -5323,6 +5372,7 @@ on_location_changed_owner = {
 		if = {
 			limit = {
 				has_building = building_type:itinerant_court_seat
+				exists = scope:winner
 				scope:loser ?= {
 					is_real_country = yes
 					is_rebel_country = no
@@ -5333,6 +5383,7 @@ on_location_changed_owner = {
 				move_building = {
 					from = root
 					type = itinerant_court_seat
+					from_owner = scope:winner
 					owner = scope:loser
 				}
 			}
@@ -5374,6 +5425,22 @@ on_new_country_formed = {
 			international_organization:catholic_church = {
 				add_country_to_international_organization = prev
 			}
+		}
+		every_owned_location = {
+			limit = {
+				has_variable = cardinal_awaiting_new_owner
+			}
+			var:cardinal_awaiting_new_owner ?= {
+				if = {
+					limit = {
+						is_alive = yes
+						religious_figure ?= religious_figure:cardinal
+						location = prev
+					}
+					move_country = root
+				}
+			}
+			remove_variable = cardinal_awaiting_new_owner
 		}
 
 		#shinto

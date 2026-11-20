@@ -944,6 +944,11 @@ apply_same_laws_policy_effect = {
 			every_current_policy = {
 				limit = {
 					is_implementable_in = scope:leader_scope
+					is_available_for = scope:leader_scope
+					law = {
+						is_implementable_in = scope:leader_scope
+						is_available_for = scope:leader_scope
+					}
 				}
 				scope:target_country = { remove_policy = PREV }
 			}
@@ -1685,6 +1690,34 @@ hre_grant_elector_role = {
 			if = {
 				limit = { exists = leader_country }
 				$country$ = {
+					add_opinion = { target = international_organization:hre.leader_country modifier = opinion_granted_electorship }
+				}
+			}
+		}
+	}
+}
+
+hre_transfer_elector_role = {
+	international_organization:hre = {
+		if = {
+			limit = {
+				country_has_special_status = { type = special_status:elector country = $from$ }
+				special_status_can_be_bestowed = {
+					type = special_status:elector
+					country = $to$
+				}
+			}
+			international_organization_remove_special_status = {
+				type = special_status:elector
+				country = $from$
+			}
+			international_organization_add_special_status = {
+				type = special_status:elector
+				country = $to$
+			}
+			if = {
+				limit = { exists = leader_country }
+				$to$ = {
 					add_opinion = { target = international_organization:hre.leader_country modifier = opinion_granted_electorship }
 				}
 			}

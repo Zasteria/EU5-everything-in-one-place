@@ -233,6 +233,7 @@
 				}
 			}
 			hbox = {
+				visible = "[Not(EqualTo_string(Market.GetNameWithNoTooltip, Trade.GetToMarket.GetNameWithNoTooltip))]"
 				layoutpolicy_horizontal = expanding
 				using = bg_number_container_bckg
 				blockoverride "number_container_extra" {
@@ -295,6 +296,78 @@
 						using = progress_bar_green_alt
 						min = 0
 						max = "[FixedPointToFloat(Trade.GetToMarket.GetCenterLocation.GetModifierValueFixed('maximum_stockpile_capacity'))]"
+						value = "[FixedPointToFloat(GoodsMarketEntry.GetStockpile)]"
+						direction = vertical
+					}
+					tooltipwidget = {
+						using = GoodsMarketEntry_template
+					}
+				}
+			}
+			hbox = {
+				visible = "[EqualTo_string(Market.GetNameWithNoTooltip, Trade.GetToMarket.GetNameWithNoTooltip)]"
+				layoutpolicy_horizontal = expanding
+				using = bg_number_container_bckg
+				blockoverride "number_container_extra" {
+					alpha = 0.4
+					margin = {1 5}
+				}
+
+				widget = {
+					size = {15 22}
+					datacontext = "[Trade.GetToMarket]"
+					datacontext = "[Trade.GetToMarket.GetMarketEntry(Trade.GetGoods)]"
+					progressbar_framed = {
+						parentanchor = center
+						size = { 5 22 }
+						using = progress_bar_green_alt
+						min = 0
+						max = "[FixedPointToFloat(Trade.GetToMarket.GetCenterLocation.GetModifierValueFixed('maximum_stockpile_capacity'))]"
+						value = "[FixedPointToFloat(GoodsMarketEntry.GetStockpile)]"
+						direction = vertical
+					}
+					tooltipwidget = {
+						using = GoodsMarketEntry_template
+					}
+	
+					block "sort_by_highlight_stockpile" {}
+				}
+
+				block "trade_market_names" {
+					text_single = { #IMPORTS (from the point of view of the Market you are looking at)
+						visible = "[EqualTo_string(Market.GetNameWithNoTooltip, Trade.GetToMarket.GetNameWithNoTooltip)]"
+						autoresize = no
+						using = Font_Size_Small
+						layoutpolicy_horizontal = expanding
+						size = { -1 20 }
+						default_format = "#subtle_name"
+						text = "[Select_CString(Trade.IsExport, Localize('EXTERNAL_TC_IMPORT'), Localize('LOCAL_TC_IMPORT'))]"
+		
+						block "sort_by_highlight_markets" {}
+					}
+		
+					text_single = { #EXPORTS (from the point of view of the Market you are looking at)
+						visible = "[Not(EqualTo_string(Market.GetNameWithNoTooltip, Trade.GetToMarket.GetNameWithNoTooltip))]"
+						autoresize = no
+						using = Font_Size_Small
+						layoutpolicy_horizontal = expanding
+						size = { -1 20 }
+						text = "[Select_CString(Trade.IsExport, Localize('LOCAL_TC_EXPORT'), Localize('EXTERNAL_TC_EXPORT'))]"
+						default_format = "#subtle_name"
+		
+						block "sort_by_highlight_markets" {}
+					}
+				}
+				widget = {
+					size = {15 22}
+					datacontext = "[Trade.GetFromMarket]"
+					datacontext = "[Trade.GetFromMarket.GetMarketEntry(Trade.GetGoods)]"
+					progressbar_framed = {
+						parentanchor = center
+						size = { 5 22 }
+						using = progress_bar_green_alt
+						min = 0
+						max = "[FixedPointToFloat(Trade.GetFromMarket.GetCenterLocation.GetModifierValueFixed('maximum_stockpile_capacity'))]"
 						value = "[FixedPointToFloat(GoodsMarketEntry.GetStockpile)]"
 						direction = vertical
 					}

@@ -107,6 +107,7 @@ scripted_trigger valid_female_for_heir = {
 	is_adult = yes
 	age_in_years < 25
 	is_married = no
+	is_betrothed = no
 	is_eligible_for_marriage = yes
 	NOT = { is_close_relative = root.heir }
 }
@@ -126,6 +127,7 @@ noble_marriage.2 = {
 		ruler = { has_dynasty = yes }
 		heir ?= {
 			is_married = no
+			is_betrothed = no
 			is_female = no
 			age_in_years > 21
 			has_dynasty = yes
@@ -168,8 +170,12 @@ noble_marriage.2 = {
 	option = {
 		name = noble_marriage.2.a
 		hidden_effect = {
-			ruler ?= {	remove_character_modifier = block_marriage	}
-			scope:target = { remove_character_modifier = block_marriage	}
+			scope:target ?= {
+				remove_character_modifier = {
+					modifier = block_marriage
+					recalculate_immediately = yes
+				}
+			}
 		}
 		heir ?= { marry_character = scope:target }
 		add_estate_satisfaction = { type = estate_type:nobles_estate value = estate_satisfaction_mild_bonus }

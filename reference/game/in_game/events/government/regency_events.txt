@@ -376,3 +376,112 @@ regencies.7 = {
 		add_legitimacy = legitimacy_mild_penalty
 	}
 }
+
+regencies.8 = {
+	type = country_event
+
+	title = regencies.8.title
+	desc = regencies.8.desc
+	outcome = neutral
+
+	trigger = {
+		government_type = government_type:monarchy
+		has_regent = yes
+		has_heir = no
+		ruler_reign >= 5
+		NOT = { regency_type ?= regency_type:expedition_regency }
+		NOR = {
+			succession_law = heir_selection:veche_selection
+			succession_law = heir_selection:guru_election
+			succession_law = heir_selection:fratricide_succesion
+		}
+		NOT = { has_variable = regency_council_declined }
+		regent = {
+			has_estate = estate_type:clergy_estate
+			religion = religion:catholic
+		}
+	}
+	illustration_tags = {
+		10 = regular
+		10 = interior
+	}
+	immediate = {
+		event_illustration_estate_effect = { foreground = estate_type:nobles_estate background = estate_type:nobles_estate }
+		regent = { save_scope_as = target_character }
+		if = {
+			limit = {
+				any_character = {
+					can_become_a_regent = yes
+					is_ruler = no
+					is_heir = no
+					has_estate = estate_type:nobles_estate
+					is_religious_order_member = no
+					has_religion_of_country_heir_law = { country = root }
+					valid_gender_for_heir_selection = root.succession_law
+				}
+			}
+			ordered_character = {
+				limit = {
+					can_become_a_regent = yes
+					is_ruler = no
+					is_heir = no
+					has_estate = estate_type:nobles_estate
+					is_religious_order_member = no
+					has_religion_of_country_heir_law = { country = root }
+					valid_gender_for_heir_selection = root.succession_law
+				}
+				order_by = {
+					value = adm
+					add = dip
+					add = mil
+				}
+				max = 1
+				check_range_bounds = no
+				save_scope_as = council_candidate
+			}
+		}
+		else = {
+			hidden_effect = {
+				if = {
+					limit = {
+						root.succession_law = {
+							allow_male = no
+						}
+					}
+					create_character = {
+						age = 30
+						female = yes
+						religion = root.religion
+						estate = estate_type:nobles_estate
+						save_scope_as = council_candidate
+					}
+				}
+				else = {
+					create_character = {
+						age = 30
+						female = no
+						religion = root.religion
+						estate = estate_type:nobles_estate
+						save_scope_as = council_candidate
+					}
+				}
+			}
+		}
+	}
+
+	option = {
+		name = regencies.8.a
+		make_character_ruler_effect = { character = scope:council_candidate }
+		ai_chance = {
+			factor = 100
+		}
+	}
+
+	option = {
+		name = regencies.8.b
+		set_variable = { name = regency_council_declined years = 10 }
+		ai_chance = {
+			factor = 0
+		}
+	}
+}

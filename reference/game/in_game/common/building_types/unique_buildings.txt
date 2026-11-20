@@ -469,6 +469,7 @@ order_stronghold = {
 
 
 		can_recruit_regiment_in_this_location = yes
+		can_raise_crusader_levies = yes
 
 	}
 	
@@ -1361,41 +1362,37 @@ lieutenancy = {
 	build_time = government_build_time
 
 	location_potential = {
-		trigger_if = {
-			limit = { exists = owner }
-			is_capital = no
-			is_historical_capital = no
-			has_proximity_source_building = no
-			trigger_if = {
-					limit = { has_dlc = "d009_across_the_pillars" }
-					OR = {
-						AND = {
-							is_in_scripted_geography = scripted_geography:castile_geography
-							owner = { has_bureaucracy_of_type = bureaucracy_type:spa_council_of_castile_bureaucracy }
-						}
-						AND = {
-							is_in_scripted_geography = scripted_geography:aragon_geography
-							owner = { has_bureaucracy_of_type = bureaucracy_type:spa_council_of_aragon_bureaucracy }
-						}
-						AND = {
-							is_in_scripted_geography = scripted_geography:portugal_geography
-							owner = { has_bureaucracy_of_type = bureaucracy_type:spa_council_of_portugal_bureaucracy }
-						}
-						AND = {
-							is_in_scripted_geography = scripted_geography:spanish_netherlands_geography
-							owner = { has_bureaucracy_of_type = bureaucracy_type:spa_council_of_flanders_bureaucracy }
-						}
-						AND = {
-							region = region:italy_region
-							owner = { has_bureaucracy_of_type = bureaucracy_type:spa_council_of_italy_bureaucracy }
-						}
+		is_capital = no
+		is_historical_capital = no
+		has_proximity_source_building = no
+		OR = {
+			has_road_to_capital = yes
+			AND = {
+				has_dlc = "d009_across_the_pillars"
+				OR = {
+					AND = {
+						is_in_scripted_geography = scripted_geography:castile_geography
+						owner ?= { has_bureaucracy_of_type = bureaucracy_type:spa_council_of_castile_bureaucracy }
+					}
+					AND = {
+						is_in_scripted_geography = scripted_geography:aragon_geography
+						owner ?= { has_bureaucracy_of_type = bureaucracy_type:spa_council_of_aragon_bureaucracy }
+					}
+					AND = {
+						is_in_scripted_geography = scripted_geography:portugal_geography
+						owner ?= { has_bureaucracy_of_type = bureaucracy_type:spa_council_of_portugal_bureaucracy }
+					}
+					AND = {
+						is_in_scripted_geography = scripted_geography:spanish_netherlands_geography
+						owner ?= { has_bureaucracy_of_type = bureaucracy_type:spa_council_of_flanders_bureaucracy }
+					}
+					AND = {
+						region = region:italy_region
+						owner ?= { has_bureaucracy_of_type = bureaucracy_type:spa_council_of_italy_bureaucracy }
 					}
 				}
-				trigger_else = {
-					has_road_to_capital = yes
-				}
+			}
 		}
-		trigger_else = { always = no }
 	}
 
 	important_for_AI = yes
@@ -1413,21 +1410,14 @@ lieutenancy = {
 	}
 
 	allow = {
-		trigger_if = {
-			limit = { has_dlc = "d009_across_the_pillars" }
-			custom_tooltip = {
-				text = lieutenancy_dlc_tt
-				scope:actor = {
+		custom_tooltip = {
+			text = lieutenancy_tt
+			scope:actor = {
+				OR = {
 					total_building_levels_including_construction:lieutenancy < modifier:num_lieutenancy
-				}
-			}
-		}
-		trigger_else = {
-			custom_tooltip = {
-				text = lieutenancy_tt
-				scope:actor = {
 					total_building_levels_including_construction:local_governor < {
 						value = effective_num_local_governors
+						add = modifier:num_lieutenancy
 						subtract = total_building_levels_including_construction:lieutenancy
 						subtract = total_building_levels_including_construction:itinerant_court_seat
 						subtract = total_building_levels_including_construction:kings_manor
@@ -1439,6 +1429,9 @@ lieutenancy = {
 	}
 
 	remove_if = {
+		location = { has_road_to_capital = no }
+		NOT = { owner = { at_war = yes } }
+		NOT = { owner = { in_civil_war = yes } }
 		trigger_if = {
 			limit = { has_dlc = "d009_across_the_pillars" }
 			NOT = {
@@ -1465,11 +1458,6 @@ lieutenancy = {
 					}
 				}
 			}
-		}
-		trigger_else = {
-			location = { has_road_to_capital = no }
-			NOT = { owner = { at_war = yes } }
-			NOT = { owner = { in_civil_war = yes } }
 		}
 	}
 
@@ -1867,7 +1855,10 @@ kings_manor = {
 	}
 
 	can_destroy = {
-		NOT = { owner = { has_variable = council_of_the_north } }
+		custom_tooltip = {
+			text = kings_manor_cannot_destroy_tt
+			NOT = { owner = { has_variable = council_of_the_north } }
+		}
 	}
 
 
@@ -4317,7 +4308,12 @@ monument_sa_llotja_de_palma = {
 	}
 
 	country_potential = {
-		has_or_had_tag = MLL
+		OR = {
+			has_or_had_tag = MLL
+			has_or_had_tag = ARA
+			has_or_had_tag = CAT
+		}
+		culture = culture:catalan
 		current_age_or_later = { age = age_3_discovery }
 	}
 
@@ -5716,8 +5712,8 @@ monument_bou_inania_madrasa = {
 	allow = {
 	}
 	modifier = {
-		institution_growth = 0.05
-		local_max_literacy = 10
+		local_institution_growth_modifier = 0.25
+		local_max_literacy = 2.5
 	}
 	possible_production_methods = {
 		temple_maintenance
@@ -6028,10 +6024,7 @@ monument_qarawiyyin = {
 		always = no
 	}
 	modifier = {
-		local_max_literacy = 10
-	}
-	capital_country_modifier = {
-		research_speed_modifier = 0.1
+		local_max_literacy = 2.5
 	}
 	possible_production_methods = {
 		temple_maintenance

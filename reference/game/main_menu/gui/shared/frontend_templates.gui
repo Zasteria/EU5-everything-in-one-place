@@ -233,20 +233,52 @@ types Frontend
 
 				expand = {}
 
-				hbox = {
+				vbox = {
 					layoutpolicy_horizontal = expanding
 					using = bg_text_mask_container_dark_blue
-					margin = { 10 7 }
+					margin = { 5 7 }
+
+					ontextcontextchanged = "[SetRowListWithTitleFromTextContext(PdxGuiWidget.AccessSelf)]"
+					block "flavor_textcontext" {
+						visible = no
+					}
 
 					text_multi = {
 						layoutpolicy_horizontal = expanding
-						block "flavor_text" {
-							visible = no
-						}
+						margin = { 10 10 }
+						
+						visible = "[RowList.GetTitle.IsStringViewNotEmptyOrNull]"
+						text = "[RowList.GetTitle.GetStringView]"
+
 						align = left|nobaseline
+						using = Font_Size_Small
 						default_format = "#color_light_gray"
-						fontsize = 14
 						autoresize = yes
+
+						background = {
+							using = color_black_texture
+							alpha = 0.25
+						}
+					}
+
+					vbox = {
+						layoutpolicy_horizontal = expanding
+						datamodel = "[RowList.GetRows]"
+						item = {
+							text_multi = {
+								layoutpolicy_horizontal = expanding
+								margin = { 10 5 }
+
+								autoresize = yes
+								text = "[CPdxStringView.GetStringView]"
+
+								background = {
+									visible = "[IsOdd_int32(PdxGuiWidget.GetIndexInParent)]"
+									using = color_black_texture
+									alpha = 0.2
+								}
+							}
+						}
 					}
 				}
 

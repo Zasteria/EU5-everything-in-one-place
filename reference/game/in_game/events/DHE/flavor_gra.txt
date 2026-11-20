@@ -672,13 +672,17 @@ flavor_gra.13 = {
 		create_mercenary = {
 			name = gra_volunteers_of_faith
 			home = root.capital
+			borrower = root
 			categories = {
 				army_heavy_infantry = 20
 				army_heavy_cavalry = 4
 			}
 			cost_multiplier = 0.1
 			leader = scope:target_character2
+			save_scope_as = target_mercenary
 		}
+
+		hire_mercenary = scope:target_mercenary
 
 		if = {
 			limit = {
@@ -705,12 +709,16 @@ flavor_gra.13 = {
 		create_mercenary = {
 			name = gra_volunteers_of_faith
 			home = root.capital
+			borrower = root
 			categories = {
 				army_heavy_infantry = 10
 				army_heavy_cavalry = 2
 			}
 			cost_multiplier = 0.25
+			save_scope_as = target_mercenary
 		}
+
+		hire_mercenary = scope:target_mercenary
 
 		custom_tooltip = gra_mercenary_company_will_be_weaker_and_more_expensive
 
@@ -898,13 +906,12 @@ flavor_gra.15 = {
 					has_any_active_disaster = yes
 				}
 			}
-
-			ruler_or_regent ?= {
-				save_scope_as = target_character2
-			}
-
 			c:CAS = {
 				save_scope_as = target_country
+
+				ruler_or_regent ?= {
+					save_scope_as = target_character2
+				}
 			}
 		}
 		else_if = {
@@ -913,13 +920,12 @@ flavor_gra.15 = {
 					has_any_active_disaster = yes
 				}
 			}
-
-			ruler_or_regent ?= {
-				save_scope_as = target_character2
-			}
-
 			c:MOR = {
 				save_scope_as = target_country
+
+				ruler_or_regent ?= {
+					save_scope_as = target_character2
+				}
 			}
 		}
 	}
@@ -1741,73 +1747,77 @@ flavor_gra.1104 = {
 				name = var_target_character
 				value = scope:target_character
 			}
-		}	
+		}
+
+		set_variable = {
+			name = current_ruler_power_variable
+			value = {
+				add = {
+					value = "estate_power(estate_type:crown_estate)"
+					multiply = 5
+				}
+				add = {
+					value = government_power
+					divide = 2
+				}
+			}
+		}
+		set_variable = {
+			name = num_rebelling_locations
+			value = 0
+		}
+		if = {
+			limit = {
+				var:current_ruler_power_variable < 100
+			}
+			while = {
+				limit = { var:current_ruler_power_variable < 100 }
+				ordered_owned_location = {
+					limit = {
+						is_capital = no
+						NOT = { has_variable = already_supports_rebel_variable }
+					}
+					order_by = {
+						value = population
+						multiply = -1
+					}
+					max = 1
+					owner = {
+						change_variable = {
+							name = current_ruler_power_variable
+							add = 2
+						}
+						change_variable = {
+							name = num_rebelling_locations
+							add = 1
+						}
+					}
+					set_variable = {
+						name = already_supports_rebel_variable
+						months = 2
+					}
+					every_pop = {
+						limit = {
+							owner = root
+						}
+						add_pop_satisfaction = pop_satisfaction_extreme_penalty
+						change_pop_allegiance = scope:target_rebel
+					}
+				}
+			}
+		}
 	}
 
 	#Crush the Rebels
 	option = {
 		name = flavor_gra.1104.a
 
-		hidden_effect = {
-			set_variable = {
-				name = current_ruler_power_variable
-				value = {
-					add = {
-						value = "estate_power(estate_type:crown_estate)"
-						multiply = 5
-					}
-					add = {
-						value = government_power
-						divide = 2
-					}
-				}
+		show_as_tooltip = {
+			create_rebel = {
+				category = pretender
+				rebel_demand = rebel_demand_flavor_gra
 			}
-			set_variable = {
-				name = num_rebelling_locations
-				value = 0
-			}
-			if = {
-				limit = {
-					var:current_ruler_power_variable < 100
-				}
-				while = {
-					limit = { var:current_ruler_power_variable < 100 }
-					ordered_owned_location = {
-						limit = {
-							is_capital = no
-							NOT = { has_variable = already_supports_rebel_variable }
-						}
-						order_by = {
-							value = population
-							multiply = -1
-						}
-						max = 1
-						owner = {
-							change_variable = {
-								name = current_ruler_power_variable
-								add = 2
-							}
-							change_variable = {
-								name = num_rebelling_locations
-								add = 1
-							}
-						}
-						set_variable = {
-							name = already_supports_rebel_variable
-							months = 2
-						}
-						every_pop = {
-							limit = {
-								owner = root
-							}
-							add_pop_satisfaction = pop_satisfaction_extreme_penalty
-							change_pop_allegiance = scope:target_rebel
-						}
-					}
-				}
-			}
-		}
-		
+		}		
 	}
 
 	#Accept Demands

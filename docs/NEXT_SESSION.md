@@ -4,6 +4,10 @@ This file is the part that is live; history is in `docs/archive/`, and the
 mods retired on 2026-10-03 are in [`archive/retired_mods.md`](archive/retired_mods.md). What has already been settled is in
 [`SETTLED.md`](SETTLED.md); where each mod stands is [`STATUS.md`](STATUS.md).
 
+## Патч 1.4.9, 2026-11-20 (сборка 26655995)
+
+Обновлены ru_loc_fix 0.6.3 и speed_5 0.1.1. Проверка отображения в русской игре и сравнение производительности режимов открыты. CM Dev ждёт отдельной сверки с оригиналом и Glorp UI. Сохранённые настройки отложены до конца обновлений.
+
 ## Патч 1.4.7, 2026-11-03 (сборка 26377361): моды подогнаны, в игре не было
 
 Что патч поменял и что сделано — [`investigations/patch_2026_11_03.md`](investigations/patch_2026_11_03.md).

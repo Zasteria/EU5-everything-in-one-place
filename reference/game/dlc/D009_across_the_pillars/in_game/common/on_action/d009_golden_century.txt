@@ -1,38 +1,43 @@
-﻿on_winning_war = {
-	on_actions = { d009_gc_winning_war }
+﻿on_losing_war = {
+	on_actions = { d009_gc_losing_war }
 }
 
-d009_gc_winning_war = {
+d009_gc_losing_war = {
 	effect = {
 		if = {
 			limit = {
 				has_dlc = "d009_across_the_pillars"
 				is_situation_active = situation:golden_century
 				has_global_variable = battle_for_the_strait_winner_country
-				this = global_var:battle_for_the_strait_winner_country
-				NOT = { has_variable = gc_recently_humbled_grand_alliance }
 				io_exists = international_organization:grand_alliance
+				is_member_of_international_organization = international_organization:grand_alliance
+				global_var:battle_for_the_strait_winner_country ?= {
+					scope:winner ?= this
+					NOT = { has_variable = gc_recently_humbled_grand_alliance }
+				}
 				scope:war = {
 					OR = {
 						AND = {
-							attacker_leader = root
-							defender_leader = { is_member_of_international_organization = international_organization:grand_alliance }
+							defender_leader = root
+							attacker_leader = global_var:battle_for_the_strait_winner_country
 						}
 						AND = {
-							defender_leader = root
-							attacker_leader = { is_member_of_international_organization = international_organization:grand_alliance }
+							attacker_leader = root
+							defender_leader = global_var:battle_for_the_strait_winner_country
 						}
 					}
 				}
 			}
-			set_variable = {
-				name = gc_recently_humbled_grand_alliance
-				days = 730
+			global_var:battle_for_the_strait_winner_country = {
+				set_variable = {
+					name = gc_recently_humbled_grand_alliance
+					days = 730
+				}
 			}
 			gc_change_european_dominance = { value = gc_bump_won_war }
 			scope:war = {
 				if = {
-					limit = { attacker_leader = root }
+					limit = { defender_leader = root }
 					every_defender = {
 						limit = { is_member_of_international_organization = international_organization:grand_alliance }
 						international_organization:grand_alliance = {
@@ -49,7 +54,9 @@ d009_gc_winning_war = {
 					}
 				}
 			}
-			trigger_event_non_silently = golden_century_events.54
+			global_var:battle_for_the_strait_winner_country = {
+				trigger_event_non_silently = golden_century_events.54
+			}
 		}
 	}
 }

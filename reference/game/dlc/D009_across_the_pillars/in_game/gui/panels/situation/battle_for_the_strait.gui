@@ -1146,7 +1146,27 @@ situation_panel = {
 								}
 							}
 							bfts_action_button_granada = {
-								datacontext = "[GetGenericAction('gra_construct_alhambra')]"
+								datacontext = "[GetGenericAction('gra_patronize_shadhili_order')]"
+								background = {
+									visible = "[GetCountry('GRA').HasVariable('patronizing_shadhili_order_variable')]"
+									texture = "gfx/interface/advance/advances_glow/advances_glow_yellow.dds"
+									texture_density = 2
+									alpha = 1
+									margin = { 12 12 }
+								}
+								background = {
+									visible = "[GetCountry('GRA').HasVariable('patronizing_shadhili_order_variable')]"
+									texture = "gfx/interface/advance/advances_glow/advances_glow_yellow.dds"
+									texture_density = 2
+									alpha = 1
+									margin = { 9 9 }
+								}
+								blockoverride "bfts_action_button_icon_inactive" {
+									visible = "[Not(GetCountry('GRA').HasVariable('patronizing_shadhili_order_variable'))]"
+								}
+								blockoverride "bfts_action_button_icon_active" {
+									visible = "[GetCountry('GRA').HasVariable('patronizing_shadhili_order_variable')]"
+								}
 								blockoverride "bfts_action_button_action" {
 									scripted_action_tooltip = {
 										click_type = left
@@ -1156,7 +1176,7 @@ situation_panel = {
 											parameter_name = "recipient"
 											parameter_value = "[SituationView.GetActiveSituation.GetSituation]"
 										}
-										action_name = "gra_construct_alhambra"
+										action_name = "gra_patronize_shadhili_order"
 									}
 								}
 							}
@@ -1216,6 +1236,55 @@ situation_panel = {
 	# End Requirements
 	blockoverride "situation_panel_main_content_top" {}
 	blockoverride "situation_panel_main_content_bottom" {
+		vbox = {
+			layoutpolicy_horizontal = expanding
+			spacing = 5
+			datamodel = "[DataModelSubSpan(SituationView.GetActiveSituation.GetSituation.GetOutcomes, '(int32)0', '(int32)3')]"
+
+			item = {
+				situation_card_expandable = {
+					blockoverride "card_expandable_size" {
+						minimumsize = { 520 -1 }
+						maximumsize = { 520 -1 }
+					}
+					blockoverride "header_button_onclick" {
+						onclick = "[LateralView.Vars.Toggle(ScriptedOutcome.GetName)]"
+					}
+					blockoverride "header_text" {
+						text = "[ScriptedOutcome.GetName]"
+					}
+					blockoverride "header_icon" {
+						texture = "gfx/interface/icons/disasters/end_requirements_green.dds"
+					}
+					blockoverride "bottom_content" {
+						TooltipRequirementsList = {
+							blockoverride "block_title" {
+								text = "BFTS_OUTCOME_CONDITIONS_TITLE"
+							}
+							textcontext = "[ScriptedOutcome.GetSituationConditions(SituationView.GetActiveSituation.GetSituation.Self)]"
+						}
+						TooltipTextBlock = {
+							visible = "[Not(StringIsEmpty(ScriptedOutcome.GetDesc))]"
+							blockoverride "block_title" {
+								text = "BFTS_OUTCOME_REWARD_TITLE"
+							}
+							textcontext = "[ScriptedOutcome.GetDesc]"
+						}
+					}
+					blockoverride "visible_hint" {}
+					blockoverride "bottom_content_onclick" {
+						visible = "[LateralView.Vars.Exists(ScriptedOutcome.GetName)]"
+					}
+					blockoverride "icon_replace_visible_yes" {
+						visible = "[LateralView.Vars.Exists(ScriptedOutcome.GetName)]"
+					}
+					blockoverride "icon_replace_visible_not" {
+						visible = "[Not(LateralView.Vars.Exists(ScriptedOutcome.GetName))]"
+					}
+				}
+			}
+		}
+
 		using = situation_outcomes
 		blockoverride "situation_panel_outcomes_card_size" {
 			minimumsize = { 520 -1 }

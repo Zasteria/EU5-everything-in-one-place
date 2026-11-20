@@ -7,7 +7,7 @@ template agenda_scrollarea_setup {
 	}
 
 	autoresizescrollarea = no
-	size = { 700 300 }
+	size = { 700 260 }
 
 	scrollbarpolicy_horizontal = always_off
 
@@ -390,7 +390,9 @@ basic_priority_dialog = {
 									blockoverride "country_specific_bonuses_datamodel" {
 										datamodel = "[AgendaView.GetUniqueCountryBonuses]"
 									}
-									blockoverride "country_culture_datacontext" {}
+									blockoverride "country_culture_datacontext" {
+										datacontext = "[GetPlayer]"
+									}
 								}
 							}
 
@@ -473,7 +475,7 @@ basic_priority_dialog = {
 				}
 
 				widget = {
-					size = { 700 300 }
+					size = { 860 260 }
 					
 					ecs_scene_viewer_widget =  {
 						size = { 100% 100% }
@@ -493,6 +495,8 @@ basic_priority_dialog = {
 
 						using = bg_age_event_frame
 						using = agenda_scrollarea_setup
+						minimumsize = { 860 -1 }
+
 						scrollwidget = {
 							vbox = {
 								text_multi = {
@@ -589,11 +593,11 @@ basic_priority_dialog = {
 				}
 
 				fixedgridbox = {
-					datamodel = "[DataModelFirst(AgendaView.GetUniqueContentItemShowcase, '(int32)9')]"
+					datamodel = "[DataModelFirst(AgendaView.GetUniqueContentItemShowcase, '(int32)11')]"
 					addcolumn = 80
 					addrow = 100
-					datamodel_wrap = 9
-					maxhorizontalslots = 9
+					datamodel_wrap = 11
+					maxhorizontalslots = 11
 					setitemsizefromcell = yes
 					flipdirection = yes
 					item = {
@@ -604,46 +608,24 @@ basic_priority_dialog = {
 					}
 				}
 
-				container = {
-					using = bg_paper_card
-					using = bg_cabinet_card_frame
+				vbox = {
+					layoutpolicy_horizontal = expanding
+					margin = { 4 0 }
 
-					# Background
 					flowcontainer = {
-						margin = { 0 2 }
-						direction = vertical
-						datamodel = "[DataModelRepeatedItem(
-						Add_int32(Divide_int32(GetDataModelSize(AgendaView.GetUniqueContentTypeCategories),'(int32)6'), '(int32)1')
-						)]"
-						
-						item = {
-							flowcontainer = {
-								datamodel = "[DataModelRepeatedItem('(int32)6')]"
-								item = {
-									widget = {
-										size = { 118 55 }
-										widget = {
-											size = { 100% 100% }
-											visible = "[IsOdd_int32(Add_int32(PdxGuiWidget.GetIndexInDataModel, PdxGuiWidget.AccessParent.AccessParent.GetIndexInDataModel))]"
-											using = bg_text_mask_container_brown
-										}
-									}
-								}
-							}
-						}
-					}
-					
-					flowcontainer = {
-						margin = { 0 2 }
-						wrap_count = 6
-						ignoreinvisible = yes
+						layoutpolicy_horizontal = expanding
+						wrap_basedon = parent
 						righttoleft = yes
-						
-						unique_content_type_category_item = {
+
+						unique_content_type_category_wooden_square_item = {
 							datacontext = "[AgendaView.GetUniqueContentDescription]"
 
 							blockoverride "unique_content_type_category_icon" {
 								texture = "gfx/interface/icons/events/history.dds"
+							}
+							blockoverride "unique_content_type_category_title_text" {
+								text = "COUNTRY_EVENTS_SPECIFIC_LOBBY_DESCRIPTION_TT"
+								default_format = "#e"
 							}
 							blockoverride "unique_content_type_category_text" {
 								text = "[UniqueContentDescription.GetEventsAmountUniqueContent]"
@@ -678,7 +660,11 @@ basic_priority_dialog = {
 
 						datamodel = "[AgendaView.GetUniqueContentTypeCategories]"
 						item = {
-							unique_content_type_category_item = {
+							unique_content_type_category_wooden_square_item = {
+								blockoverride "unique_content_type_category_header" {
+									using = unique_content_type_category_header_bg
+								}
+
 								blockoverride "unique_content_type_category_tooltip" {
 									tooltipwidget = {
 										using = unique_content_type_category_tooltip_template
@@ -689,9 +675,9 @@ basic_priority_dialog = {
 								}
 							}
 						}
-
+					
 						blockoverride "unique_content_type_category_size" {
-							size = { 118 55 }
+							size = { 87 104 }
 						}
 					}
 				}

@@ -1,4 +1,6 @@
 ﻿battle_for_the_strait = {
+	content_priority = 1000
+	is_content_highlighted = yes
 
 	monthly_spawn_chance = monthly_spawn_chance_unique
 	hint_tag = hint_battle_for_the_strait
@@ -47,6 +49,7 @@
 	}
 
 	visible = {
+		has_dlc = "d009_across_the_pillars"
 		OR = {
 			has_or_had_tag = CAS
 			has_or_had_tag = GRA
@@ -1017,10 +1020,22 @@
 					}
 				}
 			}
+			if = {
+				limit = { has_area_preference = morocco_conquer_iberia }
+				remove_area_preference = morocco_conquer_iberia
+				add_area_preference = morocco_conquer_iberia_secondary
+			}
+			add_area_preference = morocco_conquer_the_strait
 		}
 
 		c:CAS ?= {
 			add_area_preference = castile_conquer_maghreb
+			if = {
+				limit = { has_area_preference = castile_conquer_spain }
+				remove_area_preference = castile_conquer_spain
+				add_area_preference = castile_conquer_spain_secondary
+			}
+			add_area_preference = castile_conquer_the_strait
 		}
 	}
 
@@ -1223,7 +1238,23 @@
 		c:MOR ?= { remove_country_modifier = contested_strait_modifier }
 		c:CAS ?= { remove_country_modifier = contested_strait_modifier }
 		c:MOR ?= { remove_country_modifier = mor_contests_the_strait_modifier }
-		c:CAS ?= { remove_area_preference = castile_conquer_maghreb }
+		c:CAS ?= {
+			remove_area_preference = castile_conquer_maghreb
+			remove_area_preference = castile_conquer_the_strait
+			if = {
+				limit = { has_area_preference = castile_conquer_spain_secondary }
+				remove_area_preference = castile_conquer_spain_secondary
+				add_area_preference = castile_conquer_spain
+			}
+		}
+		c:MOR ?= {
+			remove_area_preference = morocco_conquer_the_strait
+			if = {
+				limit = { has_area_preference = morocco_conquer_iberia_secondary }
+				remove_area_preference = morocco_conquer_iberia_secondary
+				add_area_preference = morocco_conquer_iberia
+			}
+		}
 		if = {
 			limit = {
 				battle_for_the_strait_castile_requirements_met = yes
@@ -1316,6 +1347,7 @@
 			limit = { country_exists = c:GRA }
 			c:GRA ?= {
 				remove_country_modifier = patronizing_shadhili_order_modifier
+				remove_variable = patronizing_shadhili_order_variable
 				remove_country_modifier = enforcing_sovereignty_modifier
 				remove_country_modifier = dismantled_council_modifier
 				remove_country_modifier = expanded_vizier_influence_modifier

@@ -290,10 +290,15 @@ promote_urbanization = {
 		is_ai = no
 		modifier:can_build_cities = yes
 		num_locations > 1
-		num_of_non_rural <= {
-			value = num_locations
-			multiply = 0.1
+		any_owned_rural_location = {
+			NOT = {
+				any_neighbor_location = {
+					owner ?= root
+					is_city = yes
+				}
+			}
 		}
+
 	}
 
 	chance = {
@@ -331,67 +336,25 @@ promote_urbanization = {
 	
 	on_debate_passed = {
 		ordered_owned_rural_location = {
+			limit = {
+				NOT = {
+					any_neighbor_location = {
+						owner ?= root
+						is_city = yes
+					}
+				}
+			}
 			order_by = {
-				value = population
-				multiply = proximity
-				if = {
-					limit = {
-						NOT = { is_core_of = ROOT }
-					}
-					multiply = 0.1
-				}
+				value = development
+				add = population
+				add = num_buildings
 			}
-			max = 4
-			check_range_bounds = no
-
-			add_to_list = promote_urbanization_list
-		}
-
-		random_in_list = {
-			list = promote_urbanization_list
-
+			max = 1
 			change_location_rank_effect = { location_rank = location_rank:town }
-			ordered_pop = {
-				limit = { 
-					owner = ROOT 
-					estate_type = estate_type:burghers_estate
+			every_pop = {
+				limit = {
+					owner = root
 				}
-				order_by = pop_size
-				max = 1
-				check_range_bounds = no
-				add_pop_satisfaction = pop_satisfaction_ultimate_bonus 
-			}
-			ordered_pop = {
-				limit = { 
-					owner = ROOT 
-					estate_type = estate_type:nobles_estate
-				}
-				order_by = pop_size
-				max = 1
-				check_range_bounds = no
-				add_pop_satisfaction = pop_satisfaction_ultimate_bonus 
-			}
-			ordered_pop = {
-				limit = { 
-					owner = ROOT 
-					estate_type = estate_type:clergy_estate
-				}
-				order_by = pop_size
-				max = 1
-				check_range_bounds = no
-				add_pop_satisfaction = pop_satisfaction_ultimate_bonus 
-			}
-			ordered_pop = {
-				limit = { 
-					owner = ROOT
-					OR = {
-						estate_type = estate_type:peasants_estate
-						estate_type = estate_type:dhimmi_estate
-					}
-				}
-				order_by = pop_size
-				max = 2
-				check_range_bounds = no
 				add_pop_satisfaction = pop_satisfaction_ultimate_bonus 
 			}
 		}

@@ -2,15 +2,24 @@
 	START_DATE = "1337.4.1"
 	END_DATE = "1836.12.31"
 	
-	GAME_SPEED_TICKS = {	# wall-clock seconds per tick in every game speed; last entry is uncapped
+	GAME_SPEED_TICKS_DAILY = {	# wall-clock seconds per day in every game speed with daily time steps; last entry is uncapped
 		2.0
 		1.0
 		0.5
 		0.2
 		0.0
 	}
+	GAME_SPEED_TICKS_HOURLY = {	# wall-clock seconds per tick in every game speed with hourly time steps
+		0.5
+		0.25
+		0.1
+		0.05
+		0.0
+	}
+	HOUR_TICK = 2	# in-game hours each tick advances with hourly time steps; must divide 24
+	MORNING_OFFSET = 8	# hour of day the clock shows on the first tick of each day with hourly time steps
 
-	
+
 	GAME_SPEED_SCALES = {	# Factors to scale speed
 		0.75
 		1.0
@@ -391,11 +400,15 @@ NUnit = {
 	LAND_MORALE = 3.0
 	NAVAL_MORALE = 3.0
 	
-	ARMY_MOVEMENT_SPEED = 0.9				# movement progress per day
-	NAVY_MOVEMENT_SPEED = 3.525				# movement progress per day
+	ARMY_MOVEMENT_SPEED_DAILY = 0.9			# movement progress per day with daily time steps
+	ARMY_MOVEMENT_SPEED_HOURLY = 0.13		# movement progress per tick with hourly time steps
+	NAVY_MOVEMENT_SPEED_DAILY = 3.525		# movement progress per day with daily time steps
+	NAVY_MOVEMENT_SPEED_HOURLY = 0.5		# movement progress per tick with hourly time steps
 
-	EXPEDITION_TRAVEL_SPEED_LAND = 10.8	# progress per day
-	EXPEDITION_TRAVEL_SPEED_SEA = 60.0	# progress per day
+	EXPEDITION_TRAVEL_SPEED_LAND_DAILY = 10.8	# progress per day with daily time steps
+	EXPEDITION_TRAVEL_SPEED_LAND_HOURLY = 0.9	# progress per tick with hourly time steps
+	EXPEDITION_TRAVEL_SPEED_SEA_DAILY = 60.0	# progress per day with daily time steps
+	EXPEDITION_TRAVEL_SPEED_SEA_HOURLY = 5.0	# progress per tick with hourly time steps
 	EXPEDITION_UNKNOWN_TERRITORY_COST_MULTIPLIER = 25
 
 	ARMY_MOVEMENT_SPEED_INTO_UNKNOWN_TERRITORY_MODIFIER = 1
@@ -451,18 +464,24 @@ NCombat = {
 	RETREAT_STRENGTH_DAMAGE = 0.1
 	GARRISON_AFTER_OCCUPATION = 0.010
 	MORALE_COLLAPSE_THRESHOLD = 0.05
-	MINIMUM_COMBAT_DAYS = 5					# minimum land combat duration in daily ticks
-	MINIMUM_NAVAL_COMBAT_DAYS = 5			# minimum naval combat duration in daily ticks
+	MINIMUM_COMBAT_DURATION_DAILY = 5			# minimum land combat duration in days with daily time steps
+	MINIMUM_COMBAT_DURATION_HOURLY = 24			# minimum land combat duration in ticks with hourly time steps
+	MINIMUM_NAVAL_COMBAT_DURATION_DAILY = 5		# minimum naval combat duration in days with daily time steps
+	MINIMUM_NAVAL_COMBAT_DURATION_HOURLY = 72	# minimum naval combat duration in ticks with hourly time steps
 	NAVAL_LOW_MORALE_THRESHOLD = 1.5      # below 50% of base naval morale (3.0) → shattered retreat to port
 	
 	BOMBARD_BASE_CHANCE = 0.2
-	BOMBARD_DAYS = 3						# bombard phase duration in daily ticks
-	DAYS_PER_PHASE = 4						# combat phase rotation interval in daily ticks
+	BOMBARD_DURATION_DAILY = 3				# bombard phase duration in days with daily time steps
+	BOMBARD_DURATION_HOURLY = 5				# bombard phase duration in ticks with hourly time steps
+	COMBAT_PHASE_DURATION_DAILY = 4			# combat phase rotation interval in days with daily time steps
+	COMBAT_PHASE_DURATION_HOURLY = 5		# combat phase rotation interval in ticks with hourly time steps
 	COMBAT_DICE_SIDE = 10
 	COMBAT_BASE = 5
 	COMBAT_MAX = 15
-	COMBAT_DAMAGE_MULT = 0.12				# damage per daily tick
-	COMBAT_DAILY_MORALE_TICK = 0.03			# morale drain per daily tick
+	COMBAT_DAMAGE_MULT_DAILY = 0.12			# damage per day with daily time steps
+	COMBAT_DAMAGE_MULT_HOURLY = 0.01		# damage per tick with hourly time steps
+	COMBAT_MORALE_TICK_DAILY = 0.03			# morale drain per day with daily time steps
+	COMBAT_MORALE_TICK_HOURLY = 0.01		# morale drain per tick with hourly time steps
 	COMBAT_IMPRISONED_UNIT_DEATH_RATE = 0.4
 	STRAIT_CROSSING_DICE = -2
 	RIVER_CROSSING_DICE = -1
@@ -475,20 +494,29 @@ NCombat = {
 	LAND_LEVY_COMBAT_IMPACT = 0.75
 	MORALE_SIZE_RATIO_MAX = 4.0	# cap on how far regiment size may scale morale damage, either way
 	
-	INITIATIVE_BASE_CHANCE = 0.60	# base chance per daily tick, below 12-tick parity (0.72) to leave probability headroom for the initiative term
-	INITIATIVE_CHANCE_EACH = 0.025 # Chance to engage per point of initiative
-	INITIATIVE_CHANCE_PER_DAY = 0.03 # Per-day growth of engage chance with combat duration
-	INITIATIVE_CHANCE_MAX = 0.30 # Cap on the initiative-derived part of engage chance, before base/day add. Saturates at effective initiative 12, above the highest raw stat in content, so army_initiative modifiers still matter.
+	INITIATIVE_BASE_CHANCE_DAILY = 0.60	# base chance per day with daily time steps
+	INITIATIVE_BASE_CHANCE_HOURLY = 0.1	# base chance per tick with hourly time steps
+	INITIATIVE_CHANCE_EACH_DAILY = 0.025 # Chance to engage per point of initiative with daily time steps
+	INITIATIVE_CHANCE_EACH_HOURLY = 0.01 # Chance to engage per point of initiative with hourly time steps
+	INITIATIVE_CHANCE_DURATION_DAILY = 0.03 # Engage chance per day of combat with daily time steps
+	INITIATIVE_CHANCE_DURATION_HOURLY = 0.01 # Engage chance per tick into the current combat phase with hourly time steps
+	INITIATIVE_CHANCE_MAX_DAILY = 0.30 # Cap on the initiative-derived part of engage chance with daily time steps
+	INITIATIVE_CHANCE_MAX_HOURLY = 0.15 # Cap on the initiative-derived part of engage chance with hourly time steps
 	
-	COMBAT_SPEED_SCALE = 0.1
+	COMBAT_SPEED_SCALE_DAILY = 0.1			# reserve reinforce chance per point of combat speed per day with daily time steps
+	COMBAT_SPEED_SCALE_HOURLY = 0.05		# reserve reinforce chance per point of combat speed per tick with hourly time steps
 
 	NAVAL_EXPERIENCE_DAMAGE_REDUCTION = 0.5
 	LAND_EXPERIENCE_DAMAGE_REDUCTION = 0.5
 
-	LAND_STRENGTH_DAMAGE_MODIFIER = 0.04
-	NAVAL_STRENGTH_DAMAGE_MODIFIER = 0.0625
-	LAND_MORALE_DAMAGE_MODIFIER = 0.25
-	NAVAL_MORALE_DAMAGE_MODIFIER = 0.05
+	LAND_STRENGTH_DAMAGE_MODIFIER_DAILY = 0.04
+	LAND_STRENGTH_DAMAGE_MODIFIER_HOURLY = 0.16
+	NAVAL_STRENGTH_DAMAGE_MODIFIER_DAILY = 0.0625
+	NAVAL_STRENGTH_DAMAGE_MODIFIER_HOURLY = 0.25
+	LAND_MORALE_DAMAGE_MODIFIER_DAILY = 0.25
+	LAND_MORALE_DAMAGE_MODIFIER_HOURLY = 1.0
+	NAVAL_MORALE_DAMAGE_MODIFIER_DAILY = 0.05
+	NAVAL_MORALE_DAMAGE_MODIFIER_HOURLY = 0.2
 	NOT_ENGAGED_STRENGTH_DAMAGE_MODIFIER = 1.1
 	NOT_ENGAGED_MORALE_DAMAGE_MODIFIER = 1.2
 	
@@ -502,7 +530,8 @@ NCombat = {
 	
 	
 	NAVAL_RETREAT_DAMAGE_THRESHOLD = 0.5		# if below this % strength, check chance to retreat.
-	NAVAL_RETREAT_CHANCE = 3 #out of 100 if below	the damage threshold, it will retreat ..  combat speed increases it.
+	NAVAL_RETREAT_CHANCE_DAILY = 3 #out of 100 per day if below	the damage threshold, it will retreat ..  combat speed increases it.
+	NAVAL_RETREAT_CHANCE_HOURLY = 10 #out of 100 per tick with hourly time steps
 	
 	BASE_MORALE_DAMAGE = 1.0
 	
@@ -552,7 +581,8 @@ NCombat = {
 	SIEGE_BREACH_LOSS = 0.05
 	SIEGE_BREACH_IMPACT = 2
 
-	SIEGE_DAYS_PER_PHASE = 1				# assault dice re-roll interval in daily ticks
+	SIEGE_PHASE_DURATION_DAILY = 1			# assault dice re-roll interval in days with daily time steps
+	SIEGE_PHASE_DURATION_HOURLY = 5			# assault dice re-roll interval in ticks with hourly time steps
 	
 	ASSAULT_ATTACKER_LOSS = 2.5
 	ASSAULT_ATTACKER_MORALE_LOSS = 3.0
@@ -814,6 +844,7 @@ NAI = {
 	AI_PERFORMANCE_CABINET_ACTION_AREA_SAMPLE_SIZE = 1 # Maximum number of sample areas for AI cabinet actions
 	AI_PERFORMANCE_CABINET_ACTION_MONTHS_BETWEEN_UPDATES = 36 # Number of months between each AI update to change cabinet actions
 	AI_PERFORMANCE_REFORMS_MONTHS_BETWEEN_UPDATES = 24 # Number of months between each AI update to change government reforms
+	AI_PERFORMANCE_REFORMS_FREE_SLOT_MONTHS_BETWEEN_UPDATES = 3 # Number of months between each AI update to fill empty government reform slots
 	AI_PERFORMANCE_BUREAUCRACY_MONTHS_BETWEEN_UPDATES = 16 # Number of months between each AI update to add or remove bureaucracies
 	AI_PERFORMANCE_POLICIES_MONTHS_BETWEEN_UPDATES = 6 # Number of months between each AI update to change policies of laws
 	AI_PERFORMANCE_ESTATE_PRIVILEGES_MONTHS_BETWEEN_UPDATES = 12 # Number of months between each AI update to change estate privileges
@@ -1831,7 +1862,7 @@ NPop = {
 	YEARLY_POP_SATISFACTION_FROM_EVENTS_DECAY = 0.01 # percentage, will display as value * 100
 
 	# Post-conquest migration dynamics
-	DISCRIMINATION_PUSH_FACTOR = 2.0          # Mechanic A: emigration speed multiplier for pops that are discriminated at their location (culture status None, or religion mismatched against country state religion AND location dominant religion)
+	DISCRIMINATION_PUSH_FACTOR = 2.0          # Mechanic A: emigration speed multiplier for pops that are discriminated at their location (discriminated culture, or religion mismatched against country state religion AND location dominant religion)
 	POST_CONQUEST_EMIGRATION_FRACTION = 0.0025   # On ownership change: one-time fraction of each pop that flees toward the previous owner if it is now discriminated under the new owner (and would not be discriminated at the destination).
 	POST_CONQUEST_EMIGRATION_MONTHS = 12      # On ownership change: number of months over which the post-conquest emigration is spread.
 	SETTLER_PULL_BASE = 2.0            # Mechanic C: peak attraction boost immediately after a culture-shifting owner change. Ramp = 1 + base × (1 - years/ramp_years), so default yields 3.0× attraction at year 0 decaying linearly to 1.0× at ramp_years.
@@ -2828,6 +2859,7 @@ NReligion = {
 	CORE_THRESHOLD = 0.5
 	OMEN_LENGTH_MONTHS = 120
 	RELIGIOUS_ORDER_SOCIETAL_VALUE_PUSH = 0.05 # per preferred societal value, scaled by an order's footprint (holdings x zeal/100) in a country
+	RELIGIOUS_ORDER_SOCIETAL_VALUE_ZEAL_MAX = 6 # zeal target from one fully aligned preferred societal value, scaled by the share of an order's holdings in that country
 }
 
 NSpreadable = {

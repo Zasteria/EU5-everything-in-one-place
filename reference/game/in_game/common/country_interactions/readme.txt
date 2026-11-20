@@ -257,6 +257,7 @@
 # existing_loans_from_country
 # too_many_loans
 # need_loan
+# no_need_for_loan
 # loan_is_insignificant
 # loan_ends_too_soon
 # loan_ends_too_late
