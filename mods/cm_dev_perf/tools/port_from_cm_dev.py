@@ -374,6 +374,42 @@ def _food_rgo_list(text: str) -> str:
     return text.replace(old, "".join(line.format(g) for g in goods), 1)
 
 
+def _gov_land_slots(text: str) -> str:
+    """Use the country's capacity expression from the game's local_governor allow."""
+    source = refs.GAME_COMMON / "building_types/capital_buildings.txt"
+    definitions = dict(town_rights._blocks(town_rights._strip_comments(source.read_text(encoding="utf-8-sig"))))
+    allow = town_rights._child(definitions["local_governor"], "allow")
+    tooltip = town_rights._child(allow or "", "custom_tooltip")
+    actor = town_rights._child(tooltip or "", "scope:actor")
+    cap = re.fullmatch(r"\s*total_building_levels_including_construction:local_governor\s*<\s*\{([^{}]+)\}\s*",
+                       actor or "")
+    if not cap:
+        raise SystemExit("local_governor: expected one country-level capacity comparison in allow")
+
+    old = ("# Country scope. Land governors share their pool with lieutenancies.\n"
+           "# Vanilla allow: in_game/common/building_types/capital_buildings.txt:611\n"
+           "cm_gov_land_slots = {\n"
+           "\tvalue = modifier:num_local_governors\n"
+           "\tsubtract = total_building_levels_including_construction:lieutenancy\n")
+    buildings._once(text, old, "CM land governor capacity")
+    return text.replace(old, "# Country scope. Capacity from local_governor.allow, including construction.\n"
+                        "cm_gov_land_slots = {\n" + town_rights._reindent(cap[1], 1))
+
+
+def _gov_has_land_room(text: str) -> str:
+    """Placement and planning use the same capacity and count queued governors."""
+    old = ("# Copied from the vanilla local_governor allow block, where lieutenancies share the pool\n"
+           "# (game in_game/common/building_types/capital_buildings.txt:627-630; lieutenancy repeats it at\n"
+           "# in_game/common/building_types/unique_buildings.txt:1267-1270). Root is the country.\n"
+           "cm_ab_gov_has_land_room = {\n"
+           "\ttotal_building_levels_including_construction:local_governor < {\n"
+           "\t\tvalue = modifier:num_local_governors\n"
+           "\t\tsubtract = total_building_levels_including_construction:lieutenancy\n\t}\n}")
+    buildings._once(text, old, "CM land governor placement")
+    return text.replace(old, "# Country scope. cm_gov_land_free also counts governors under construction.\n"
+                        "cm_ab_gov_has_land_room = {\n\tcm_gov_land_free > 0\n}")
+
+
 def _gov_other_sources(text: str) -> str:
     """The governor plan leaves alone a location that already holds another
     proximity source (+perf46, his word 10-20): he put the Italian
@@ -2255,6 +2291,8 @@ EDITS = (
     (LOG, "mirror the Debug tab's log into debug.log", _mirror_log),
     (ROADS, "say the roads plan's gates in its probe", _probe_road_gates),
     (ROADS, "let roads go ahead through a market shortage", _roads_ignore_shortage),
+    ("in_game/common/script_values/cm_gov_script_values.txt", "land governor capacity from the game", _gov_land_slots),
+    ("in_game/common/scripted_triggers/cm_ab_triggers.txt", "use the planner's free land slots", _gov_has_land_room),
     ("in_game/common/scripted_triggers/cm_gov_triggers.txt", "no governor beside another proximity source",
      _gov_other_sources),
     ("in_game/common/scripted_guis/cm_food_auto_build_scripted_gui.txt", "every food good of the game", _food_rgo_trigger),
@@ -2366,7 +2404,7 @@ def _gate_vanilla_toggles(text: str) -> tuple[str, int]:
 
 
 # Bump with every change to what cm_rio_patch ships; `mods.bat` compares it.
-RIO_PATCH_REVISION = 5
+RIO_PATCH_REVISION = 6
 
 
 # Templates Río still calls that the game no longer defines. 1.4.0 commented out
@@ -2508,7 +2546,7 @@ def _rio_patch() -> str:
 # **Raise with every change to what this mod ships** (his rule, 2026-09-27):
 # `mods.bat` compares this number with the one installed in the game, and a
 # refresh rewrites `.metadata` from here — a bump made by hand there is lost.
-PERF_REVISION = 72
+PERF_REVISION = 73
 
 
 # CMF's own `is_host`, under a name neither the game nor any CMF build takes.
