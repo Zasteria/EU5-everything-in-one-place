@@ -5,6 +5,7 @@
 # Scope: country
 bag_asp_register = {
 	bag_asp_sv_types = yes
+	cmm_register_button_setting = { mod_id = bag_asp setting_id = manual tab_id = main group_id = council }
 	cmm_register_bool_setting = {
 		mod_id = bag_asp
 		setting_id = auto
@@ -44,7 +45,7 @@ bag_asp_register = {
 		mod_id = bag_asp
 		setting_id = available
 		tab_id = actions
-		item_count = 25
+		item_count = 26
 		is_ordered = 0
 	}
 	cmm_register_list_bool_field = {
@@ -57,7 +58,7 @@ bag_asp_register = {
 		mod_id = bag_asp
 		setting_id = priority
 		tab_id = actions
-		item_count = 25
+		item_count = 26
 		is_ordered = 1
 	}
 	cmm_register_list_text_field = {
@@ -185,6 +186,26 @@ bag_asp_register = {
 	cmm_set_list_item_value = { mod_id = bag_asp setting_id = values item = 15 value = flag:bag_asp_sv_absolutism_vs_liberalism }
 	cmm_set_list_item_value = { mod_id = bag_asp setting_id = values item = 16 value = flag:bag_asp_sv_mysticism_vs_jurisprudence }
 	cmm_set_list_item_value = { mod_id = bag_asp setting_id = values item = 17 value = flag:bag_asp_sv_latinization_vs_hellenization }
+	if = {
+		limit = { NOT = { is_target_in_variable_list = { name = cmm_list_items_bag_asp__available target = flag:bag_asp__available_i26 } } }
+		set_variable = { name = cmm_list_item_owner_setting_bag_asp__available_i26 value = flag:bag_asp__available }
+		set_variable = { name = bag_asp__available_i26_name value = flag:bag_asp__available_i26_name }
+		set_variable = { name = bag_asp__available_i26_desc value = flag:bag_asp__available_i26_desc }
+		add_to_variable_list = { name = cmm_list_items_bag_asp__available target = flag:bag_asp__available_i26 }
+	}
+	if = {
+		limit = { NOT = { is_target_in_variable_list = { name = cmm_list_items_bag_asp__priority target = flag:bag_asp__priority_i26 } } }
+		set_variable = { name = cmm_list_item_owner_setting_bag_asp__priority_i26 value = flag:bag_asp__priority }
+		set_variable = { name = bag_asp__priority_i26_name value = flag:bag_asp__priority_i26_name }
+		set_variable = { name = bag_asp__priority_i26_desc value = flag:bag_asp__priority_i26_desc }
+		add_to_variable_list = { name = cmm_list_items_bag_asp__priority target = flag:bag_asp__priority_i26 }
+	}
+	add_to_variable_map = { name = cmm_list_field_default key = flag:bag_asp__available_i26_f1 value = 0 }
+	if = {
+		limit = { NOT = { has_variable = bag_asp_half_religion_initialized } }
+		cmm_set_list_field_value = { mod_id = bag_asp setting_id = available field_id = use item = 26 value = 0 }
+		set_variable = { name = bag_asp_half_religion_initialized value = yes }
+	}
 	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 1 value = flag:bag_asp_integrate_province }
 	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 1 value = flag:bag_asp_integrate_province }
 	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 1 value = flag:bag_asp_ability_mil }
@@ -260,6 +281,9 @@ bag_asp_register = {
 	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 25 value = flag:bag_asp_assimilate_area }
 	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 25 value = flag:bag_asp_assimilate_area }
 	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 25 value = flag:bag_asp_ability_dip }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = available item = 26 value = flag:bag_asp_promote_religion_half }
+	cmm_set_list_item_value = { mod_id = bag_asp setting_id = priority item = 26 value = flag:bag_asp_promote_religion_half }
+	cmm_set_list_text_value = { mod_id = bag_asp setting_id = priority field_id = ability item = 26 value = flag:bag_asp_ability_mil }
 
 	bag_asp_sync = yes
 	bag_asp_rebuild = yes
@@ -727,6 +751,23 @@ bag_asp_rebuild = {
 		else = {
 			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 25 }
 		}
+		if = {
+			limit = { cabinet_action:promote_religion = { is_visible_for = root } }
+			cmm_show_list_item = { mod_id = bag_asp setting_id = available item = 26 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = available item = 26 }
+		}
+		if = {
+			limit = {
+				cabinet_action:promote_religion = { is_visible_for = root }
+				is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_promote_religion_half }
+			}
+			cmm_show_list_item = { mod_id = bag_asp setting_id = priority item = 26 }
+		}
+		else = {
+			cmm_hide_list_item = { mod_id = bag_asp setting_id = priority item = 26 }
+		}
 		# Each action's place in «Приоритет» (1 = top), +100 when not ticked:
 		# the emergency gives up the seat whose action ranks lowest.
 		set_variable = { name = bag_asp_rank_counter value = 0 }
@@ -762,6 +803,7 @@ bag_asp_rebuild = {
 					flag:bag_asp_promote_culture_full = { set_variable = { name = bag_asp_rank_promote_culture_full value = var:bag_asp_rank_counter } }
 					flag:bag_asp_change_societal_values = { set_variable = { name = bag_asp_rank_change_societal_values value = var:bag_asp_rank_counter } }
 					flag:bag_asp_assimilate_area = { set_variable = { name = bag_asp_rank_assimilate_area value = var:bag_asp_rank_counter } }
+					flag:bag_asp_promote_religion_half = { set_variable = { name = bag_asp_rank_promote_religion_half value = var:bag_asp_rank_counter } }
 				}
 			}
 		}
@@ -864,6 +906,10 @@ bag_asp_rebuild = {
 		if = {
 			limit = { NOT = { is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_assimilate_area } } }
 			change_variable = { name = bag_asp_rank_assimilate_area add = 100 }
+		}
+		if = {
+			limit = { NOT = { is_target_in_variable_list = { name = bag_asp_used target = flag:bag_asp_promote_religion_half } } }
+			change_variable = { name = bag_asp_rank_promote_religion_half add = 100 }
 		}
 	}
 	if = {
@@ -997,6 +1043,10 @@ bag_asp_rebuild = {
 bag_asp_handle_callback = {
 	switch = {
 		trigger = var:cmf_callback
+		flag:bag_asp__manual = {
+			bag_asp_refresh_seat_list = yes
+			set_variable = { name = bag_asp_seats_open value = yes }
+		}
 		flag:bag_asp__auto = {
 			bag_asp_sync = yes
 			if = {

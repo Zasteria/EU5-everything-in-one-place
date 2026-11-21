@@ -13,7 +13,7 @@ One line each. **Read only the brief of the mod the task is about** —
 | [`cmf_dev_beta`](../mods/cmf_dev_beta/CLAUDE.md) | +beta16: 1.4.7; +beta13: номер места с начала; +beta12: типы 1.4.1; `cmf_is_host`, панель, стрелки, номер места; вместо CMF и CMF Dev | +beta7, +beta12, +beta13 |
 | [`glorpui_hints`](../mods/glorpui_hints/CLAUDE.md) | 1.2.17 (10-30): источники DLC D009; 1.2.14 в игре 10-18 | — |
 | [`centered_towns`](../mods/centered_towns/CLAUDE.md) | 0.2.0 (10-04): позиции Better label placement под новыми именами файлов 1.4 | 0.2.0 |
-| [`assimilate_primary`](../mods/assimilate_primary/CLAUDE.md) | 0.11.0: своя автоматика совета; ценности — задания мода без пары (0.11.1, в игре 10-26); порог контроля не проверен | 0.6.0 |
+| [`assimilate_primary`](../mods/assimilate_primary/CLAUDE.md) | **0.12.0:** ручные места совета и отдельный приоритет обращения до 50% в каждом районе. Сборка 1.4.9 проверена статически, игровой прогон ожидается | 0.6.0 |
 | [`speed_5`](../mods/speed_5/CLAUDE.md) | 0.1.1: дневные скорости | всё |
 | [`cmf_lobby_fix`](../mods/cmf_lobby_fix/CLAUDE.md) | 0.1.0: значки лобби под 1.4.4; снять с новым CMF | всё |
 | [`cmf_saved_settings`](../mods/cmf_saved_settings/CLAUDE.md) | 0.3.0: применение | 0.3.0 |

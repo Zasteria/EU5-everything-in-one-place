@@ -93,15 +93,18 @@ POOL = [
     # such provinces). The area of the most populous province still short of
     # 95 % unity goes first.
     ("assimilate_area", "culture_area", "population", ""),
+    ("promote_religion_half", "religion", "population", ""),
 ]
 
 # A row that is not an action of its own: the action it places.
-ROW_ACTION = {"diplomatic_antagonism": "diplomatic_endeavors", "promote_culture_full": "promote_culture"}
+ROW_ACTION = {"diplomatic_antagonism": "diplomatic_endeavors", "promote_culture_full": "promote_culture",
+              "promote_religion_half": "promote_religion"}
 
 # A row's own condition on a target (in the province search) and on a seat
 # already on its action (keeping it; the emergency's rank).
 ROW_TARGET = {"promote_culture": "bag_asp_needs_half = yes bag_asp_control_reachable = yes"}
-ROW_SEAT = {"promote_culture": "interaction_target:target_1 ?= { bag_asp_needs_half = yes OR = { bag_asp_half_control_ok = yes has_variable = bag_asp_busy_noblesse_oblige_cabinet_action has_variable = bag_asp_busy_increase_control_province } }",
+ROW_SEAT = {"promote_religion_half": "bag_asp_running_religion_needs_half = yes",
+            "promote_culture": "interaction_target:target_1 ?= { bag_asp_needs_half = yes OR = { bag_asp_half_control_ok = yes has_variable = bag_asp_busy_noblesse_oblige_cabinet_action has_variable = bag_asp_busy_increase_control_province } }",
             "develop_province": "interaction_target:target ?= { bag_asp_develop_wanted = yes }",
             "pop_promote_action": "interaction_target:target ?= { unfilled_jobs_in_province < 0 }",
             "increase_control_province": "OR = { bag_asp_paired_seat = yes interaction_target:selected_province ?= { bag_asp_control_rising = yes } }",
@@ -117,6 +120,14 @@ CAP = {"develop_province": ("bag_asp_develop_seats", "bag_asp_develop_used")}
 
 # Rows of one action told apart in their label, and their tooltips.
 ROW_NOTE = {
+    "promote_religion": {
+        "english": (" (full)", "Continues to the game’s normal completion threshold."),
+        "russian": (" (полное)", "Продолжает обращение до обычного порога завершения в игре."),
+    },
+    "promote_religion_half": {
+        "english": (" (to 50%)", "Targets eligible provinces with an inhabited location you own below 50% of the chosen faith. When all reach half, the seat is released at the monthly check. The full conversion row can continue the work."),
+        "russian": (" (до 50%)", "Выбирает доступные провинции, где хотя бы в одном вашем населённом районе целевой веры придерживается меньше половины жителей. Когда все такие районы достигнут половины, ежемесячная проверка освобождает место. Строка полного обращения позволяет продолжить работу."),
+    },
     "promote_culture": {
         "english": (" (to half)", "Until no location of the province is «integrated» or «conquered» short of half a primary or accepted culture: at half an integrated location becomes core. The province with the higher average control goes first, counted in bands of ten points (without control nothing assimilates; none at all, never); within a band, the one with more integrated locations, then more conquered ones. In a full hand-out a running one moves to a province that ranks higher. A seat whose province is done is freed, unless the full row is in use."),
         "russian": (" (до 50%)", "Пока в провинции есть районы «интегрирован» или «завоёван» без половины основной или признанной культуры: на половине интегрированный район становится национальным. Первой идёт провинция с более высоким средним контролем, по ступеням в 10 пунктов (без контроля ассимиляция не идёт; при нулевом провинция не берётся); внутри ступени — где больше интегрированных районов, потом завоёванных. При полной раздаче идущая ассимиляция переезжает в провинцию выше по этому порядку. Место, чья провинция готова, освобождается, если не используется строка полной ассимиляции."),
@@ -748,6 +759,8 @@ def try_effect(row: str, kind: str, order: str | None, gate: str, actions: dict[
         # the game offers no other).
         other = ("NOT = { this = scope:actor.religion } group = scope:actor.religion.group "
                  "is_religion_enabled = yes")
+        half = (f"\n\t\t\t\t\tbag_asp_religion_needs_half = {{ FAITH = scope:{rflag} }}"
+                if row == "promote_religion_half" else "")
         inner = (f"\t\tif = {{\n\t\t\tlimit = {{\n\t\t\t\tscope:actor = {{\n"
                  f"\t\t\t\t\tvar:bag_asp_religion_target = 2\n"
                  f"\t\t\t\t\tany_present_religion_in_country = {{ {other} }}\n"
@@ -758,7 +771,7 @@ def try_effect(row: str, kind: str, order: str | None, gate: str, actions: dict[
                  f"\t\t\t\t\tsave_scope_as = {rflag}\n\t\t\t\t}}\n\t\t\t}}\n\t\t}}\n"
                  f"\t\telse = {{\n\t\t\tscope:actor.religion = {{ save_scope_as = {rflag} }}\n\t\t}}\n"
                  f"\t\tscope:actor = {{\n\t\t\tordered_province = {{\n\t\t\t\tlimit = {{\n"
-                 f"{target_test(sel, 5, actions, key)}\n\t\t\t\t}}\n\t\t\t\torder_by = {order}\n"
+                 f"{target_test(sel, 5, actions, key)}{half}\n\t\t\t\t}}\n\t\t\t\torder_by = {order}\n"
                  f"\t\t\t\tsave_temporary_scope_as = bag_asp_pick\n"
                  f"{assign(f' {rflag} = scope:{rflag} {pflag} = scope:bag_asp_pick', pflag)}\n\t\t\t}}\n\t\t}}")
     elif kind == "estate":
@@ -838,6 +851,7 @@ def place_effect(row: str, gate: str, actions: dict[str, str]) -> str:
 \t\t\tany_cabinet = {{
 \t\t\t\thas_cabinet_action = yes
 \t\t\t\tcabinet_action = cabinet_action:{key}
+\t\t\t\tbag_asp_manual_seat = no
 \t\t\t\tcabinet_member ?= {{ has_variable = bag_asp_kept }}
 \t\t\t}}
 \t\t}}
@@ -845,6 +859,7 @@ def place_effect(row: str, gate: str, actions: dict[str, str]) -> str:
 \t\t\tlimit = {{
 \t\t\t\thas_cabinet_action = yes
 \t\t\t\tcabinet_action = cabinet_action:{key}
+\t\t\t\tbag_asp_manual_seat = no
 \t\t\t\tcabinet_member ?= {{ has_variable = bag_asp_kept }}
 \t\t\t}}
 \t\t\torder_by = {{
@@ -868,6 +883,7 @@ def place_effect(row: str, gate: str, actions: dict[str, str]) -> str:
 \t\tlimit = {{ NOT = {{ has_variable = bag_asp_fill_only }} }}
 \t\tevery_cabinet = {{
 \t\t\tlimit = {{
+\t\t\t\tbag_asp_manual_seat = no
 \t\t\t\tcabinet_member ?= {{ has_variable = bag_asp_kept }}
 \t\t\t\texists = interaction_target:target
 \t\t\t\texists = interaction_target:target_1
@@ -929,11 +945,11 @@ bag_asp_place_{row} = {{
 \t\twhile = {{
 \t\t\tlimit = {{
 \t\t\t\thas_variable = bag_asp_moving
-\t\t\t\tany_cabinet = {{ cabinet_member ?= {{ has_variable = bag_asp_kept }} }}
+\t\t\t\tany_cabinet = {{ bag_asp_manual_seat = no cabinet_member ?= {{ has_variable = bag_asp_kept }} }}
 \t\t\t}}
 \t\t\tremove_variable = bag_asp_moving
 \t\t\tordered_cabinet = {{
-\t\t\t\tlimit = {{ cabinet_member ?= {{ has_variable = bag_asp_kept }} }}
+\t\t\t\tlimit = {{ bag_asp_manual_seat = no cabinet_member ?= {{ has_variable = bag_asp_kept }} }}
 \t\t\t\torder_by = {{
 \t\t\t\t\tvalue = 0
 \t\t\t\t\tsubtract = cabinet_member.{ability}
@@ -960,7 +976,7 @@ bag_asp_place_{row} = {{
 \t\t}}
 \t}}
 \tevery_cabinet = {{
-\t\tlimit = {{ cabinet_member ?= {{ has_variable = bag_asp_kept }} }}
+\t\tlimit = {{ bag_asp_manual_seat = no cabinet_member ?= {{ has_variable = bag_asp_kept }} }}
 \t\tcabinet_member = {{ remove_variable = bag_asp_kept }}
 \t}}
 {keep_pairs}\tset_variable = {{ name = bag_asp_placed value = yes }}
@@ -1077,6 +1093,7 @@ bag_asp_pair = {{
 bag_asp_keep_pairs = {{
 \tevery_cabinet = {{
 \t\tlimit = {{
+\t\t\tbag_asp_manual_seat = no
 \t\t\thas_cabinet_action = yes
 \t\t\tcabinet_action = cabinet_action:{PAIRED_WITH}
 \t\t\texists = interaction_target:{pflag}
@@ -1085,9 +1102,9 @@ bag_asp_keep_pairs = {{
 \t\tcabinet_member = {{ set_variable = {{ name = bag_asp_pending value = yes }} }}
 \t}}
 \twhile = {{
-\t\tlimit = {{ any_cabinet = {{ cabinet_member ?= {{ has_variable = bag_asp_pending }} }} }}
+\t\tlimit = {{ any_cabinet = {{ bag_asp_manual_seat = no cabinet_member ?= {{ has_variable = bag_asp_pending }} }} }}
 \t\tordered_cabinet = {{
-\t\t\tlimit = {{ cabinet_member ?= {{ has_variable = bag_asp_pending }} }}
+\t\t\tlimit = {{ bag_asp_manual_seat = no cabinet_member ?= {{ has_variable = bag_asp_pending }} }}
 \t\t\torder_by = bag_asp_seat_rank
 \t\t\tcabinet_member = {{ remove_variable = bag_asp_pending }}
 \t\t\tinteraction_target:{pflag} = {{ save_scope_as = bag_asp_last }}
@@ -1112,11 +1129,11 @@ bag_asp_keep_pairs = {{
 \t\t\t\tlimit = {{
 \t\t\t\t\tNOT = {{ has_variable = bag_asp_fill_only }}
 \t\t\t\t\tNOT = {{ any_cabinet = {{ bag_asp_free_seat = yes }} }}
-\t\t\t\t\tany_cabinet = {{ cabinet_member ?= {{ has_variable = bag_asp_pending }} }}
+\t\t\t\t\tany_cabinet = {{ bag_asp_manual_seat = no cabinet_member ?= {{ has_variable = bag_asp_pending }} }}
 \t\t\t\t\tscope:bag_asp_last = {{ bag_asp_control_fits = yes }}
 \t\t\t\t}}
 \t\t\t\tordered_cabinet = {{
-\t\t\t\t\tlimit = {{ cabinet_member ?= {{ has_variable = bag_asp_pending }} }}
+\t\t\t\t\tlimit = {{ bag_asp_manual_seat = no cabinet_member ?= {{ has_variable = bag_asp_pending }} }}
 \t\t\t\t\torder_by = {{
 \t\t\t\t\t\tvalue = 0
 \t\t\t\t\t\tsubtract = bag_asp_seat_rank
@@ -1140,7 +1157,7 @@ bag_asp_keep_pairs = {{
 # off, or the seat given something else, it is only no longer bound.
 bag_asp_unpair = {{
 \tevery_cabinet = {{
-\t\tlimit = {{ cabinet_member ?= {{ has_variable = bag_asp_paired }} }}
+\t\tlimit = {{ bag_asp_manual_seat = no cabinet_member ?= {{ has_variable = bag_asp_paired }} }}
 \t\tif = {{
 \t\t\tlimit = {{
 \t\t\t\tscope:actor = {{ has_variable = bag_asp_speedup_on }}
@@ -1764,6 +1781,7 @@ bag_asp_assim_check = {{
 \tsave_scope_as = actor
 \tevery_cabinet = {{
 \t\tlimit = {{
+\t\t\tbag_asp_manual_seat = no
 \t\t\thas_cabinet_action = yes
 \t\t\tcabinet_action = cabinet_action:{key}
 \t\t\texists = interaction_target:target
@@ -2316,6 +2334,7 @@ def build(game: Path) -> dict[str, str]:
 # Scope: country
 bag_asp_register = {{
 \tbag_asp_sv_types = yes
+\tcmm_register_button_setting = {{ mod_id = {MOD_ID} setting_id = manual tab_id = main group_id = council }}
 \tcmm_register_bool_setting = {{
 \t\tmod_id = {MOD_ID}
 \t\tsetting_id = auto
@@ -2415,6 +2434,26 @@ bag_asp_register = {{
 """)
     for i, pair in enumerate(pairs, 1):
         reg.append(f"\tcmm_set_list_item_value = {{ mod_id = {MOD_ID} setting_id = values item = {i} value = flag:bag_asp_sv_{pair} }}\n")
+    half_item = next(i for i, row in enumerate(POOL, 1) if row[0] == "promote_religion_half")
+    for setting in LISTS:
+        identity = f"{MOD_ID}__{setting}_i{half_item}"
+        items = f"cmm_list_items_{MOD_ID}__{setting}"
+        reg.append(f"""\tif = {{
+\t\tlimit = {{ NOT = {{ is_target_in_variable_list = {{ name = {items} target = flag:{identity} }} }} }}
+\t\tset_variable = {{ name = cmm_list_item_owner_setting_{identity} value = flag:{MOD_ID}__{setting} }}
+\t\tset_variable = {{ name = {identity}_name value = flag:{identity}_name }}
+\t\tset_variable = {{ name = {identity}_desc value = flag:{identity}_desc }}
+\t\tadd_to_variable_list = {{ name = {items} target = flag:{identity} }}
+\t}}
+""")
+    reg.append(f"\tadd_to_variable_map = {{ name = cmm_list_field_default key = flag:{MOD_ID}__available_i{half_item}_f1 value = 0 }}\n")
+    # Seed this new row once. A reload must preserve a tick the player has set.
+    reg.append(f"""\tif = {{
+\t\tlimit = {{ NOT = {{ has_variable = bag_asp_half_religion_initialized }} }}
+\t\tcmm_set_list_field_value = {{ mod_id = {MOD_ID} setting_id = available field_id = use item = {half_item} value = 0 }}
+\t\tset_variable = {{ name = bag_asp_half_religion_initialized value = yes }}
+\t}}
+""")
     for i, (k, *_) in enumerate(POOL, 1):
         ability = value(actions[act(k)], "ability") or "adm"
         reg.append(f"\tcmm_set_list_item_value = {{ mod_id = {MOD_ID} setting_id = available item = {i} value = flag:bag_asp_{k} }}\n"
@@ -2527,6 +2566,10 @@ bag_asp_rebuild = {{
 bag_asp_handle_callback = {{
 \tswitch = {{
 \t\ttrigger = var:cmf_callback
+\t\tflag:{MOD_ID}__manual = {{
+\t\t\tbag_asp_refresh_seat_list = yes
+\t\t\tset_variable = {{ name = bag_asp_seats_open value = yes }}
+\t\t}}
 \t\tflag:{MOD_ID}__auto = {{
 \t\t\tbag_asp_sync = yes
 \t\t\tif = {{
@@ -2606,6 +2649,7 @@ bag_asp_tick = {{
 \t\tset_variable = {{ name = bag_asp_months value = 0 }}
 \t\tbag_asp_plan_fill = yes
 \t}}
+\telse = {{ bag_asp_release_half_religion = yes }}
 }}
 
 # Scope: country. Every seat handed out down «Приоритет».
@@ -2632,6 +2676,7 @@ bag_asp_plan = {{
 \t# The lists may have moved without their callback (a typed place goes
 \t# through the console), so the order is read afresh every pass.
 \tbag_asp_rebuild = yes
+\tbag_asp_release_half_religion = yes
 \t# His ask 13.10: the seats as the pass finds them, so what he changed by
 \t# hand between two passes shows against the last pass's «after».
 \tif = {{
@@ -2650,6 +2695,7 @@ bag_asp_plan = {{
 \t\tlimit = {{ NOT = {{ is_target_in_variable_list = {{ name = bag_asp_used target = flag:bag_asp_promote_culture_full }} }} }}
 \t\tevery_cabinet = {{
 \t\t\tlimit = {{
+\t\t\t\tbag_asp_manual_seat = no
 \t\t\t\thas_cabinet_action = yes
 \t\t\t\tcabinet_action = cabinet_action:promote_culture
 \t\t\t\tinteraction_target:target_1 ?= {{ NOT = {{ bag_asp_needs_half = yes }} }}
@@ -2672,6 +2718,7 @@ bag_asp_plan = {{
 \t\tlimit = {{ has_variable = bag_asp_fill_only }}
 \t\tevery_cabinet = {{
 \t\t\tlimit = {{
+\t\t\t\tbag_asp_manual_seat = no
 \t\t\t\thas_cabinet_action = yes
 \t\t\t\texists = cabinet_member
 \t\t\t}}
@@ -2764,14 +2811,14 @@ bag_asp_clear_busy = {{
 # the pass takes from another action goes through here.
 bag_asp_vacate = {{
 \tif = {{
-\t\tlimit = {{ has_cabinet_action = yes }}
+\t\tlimit = {{ bag_asp_manual_seat = no has_cabinet_action = yes }}
 {pass_("remove_variable = bag_asp_busy_{k}")}
 {stopped}
 \t\tstop_cabinet_action = {{}}
 \t}}
 \tcabinet_member ?= {{
 \t\tif = {{
-\t\t\tlimit = {{ has_variable = bag_asp_paired }}
+\t\t\tlimit = {{ prev = {{ bag_asp_manual_seat = no }} has_variable = bag_asp_paired }}
 \t\t\tremove_variable = bag_asp_paired
 \t\t}}
 \t}}
@@ -2799,12 +2846,17 @@ bag_asp_vacate = {{
         return own + (f" scope:actor = {{ {gate} }}" if act(k) in shared and gate else "")
     # A control seat bound to an assimilation ranks as the assimilation.
     ranked = [("paired", PAIRED_WITH, "")] + [(k, k, g) for k, _, _, g in rows]
-    seat_rank = "\n".join(
-        f"\t\t\telse_if = {{ limit = {{ {seat_is(k, g)} }} add = scope:actor.var:bag_asp_rank_{r} }}"
-        for k, r, g in ranked)
-    seat_below = "\n".join(
-        f"\t\t\t\t\t\t\tAND = {{ {seat_is(k, g)} scope:actor.var:bag_asp_rank_{r} > scope:actor.var:bag_asp_rank_recovery_effort }}"
-        for k, r, g in ranked)
+    # Both conversion rows can match one running action. Emergency recovery must
+    # respect the better of the two user priorities that apply to that seat.
+    scores = [(seat_is(k, g), f"scope:actor.var:bag_asp_rank_{r}") for k, r, g in ranked
+              if act(k) != "promote_religion"]
+    scores.append((on_action("promote_religion"), "bag_asp_running_religion_rank"))
+    seat_rank = "\\n".join(
+        f"\\t\\t\\telse_if = {{ limit = {{ {condition} }} add = {score} }}"
+        for condition, score in scores)
+    seat_below = "\\n".join(
+        f"\\t\\t\\t\\t\\t\\t\\tAND = {{ {condition} {score} > scope:actor.var:bag_asp_rank_recovery_effort }}"
+        for condition, score in scores)
     run += f"""
 # Scope: country. While the «devastated locations» alert shows (its banner,
 # bag_alert_banner.gui): as it appears, then every second. Costs a look
@@ -2844,6 +2896,7 @@ bag_asp_emergency = {{
 \t\t\t\tremove_variable = bag_asp_em_go
 \t\t\t\tordered_cabinet = {{
 \t\t\t\t\tlimit = {{
+\t\t\t\t\t\tbag_asp_manual_seat = no
 \t\t\t\t\t\texists = cabinet_member
 \t\t\t\t\t\tOR = {{
 \t\t\t\t\t\t\thas_cabinet_action = no
@@ -3120,6 +3173,7 @@ bag_asp_control_reachable = {{
 
 # Scope: cabinet (a seat). It has an advisor whom this pass has not chosen yet.
 bag_asp_free_seat = {
+\tbag_asp_manual_seat = no
 \texists = cabinet_member
 \tcabinet_member = { NOT = { has_variable = bag_asp_claimed } }
 }
@@ -3158,6 +3212,7 @@ bag_asp_busy_any = {{
 
 # Scope: cabinet. A control action bound to an assimilation («Ускорять контролем»).
 bag_asp_paired_seat = {{
+\tbag_asp_manual_seat = no
 \thas_cabinet_action = yes
 \tOR = {{
 {chr(10).join(f"{chr(9)*2}cabinet_action = cabinet_action:{k}" for k in SPEEDUP)}

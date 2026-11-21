@@ -96,6 +96,12 @@ STALE = [
 
 LOC = {
     "english": {
+        "bag_asp__manual_name": "Manual seats",
+        "bag_asp__manual_desc": "Select each seat you want to manage yourself. Checking a seat keeps its current assignment. The reservation stays with the seat when the advisor changes.",
+        "bag_asp__manual_text": "Choose seats",
+        "bag_asp_seat_number": "Seat [Add_int32(Scope.GetCabinet.GetIndex, '(int32)1')]",
+        "bag_asp_seat_empty": "Vacant",
+        "bag_asp_no_seats": "Your country has no cabinet seats.",
         "bag_asp_name": "Council Automation",
         "bag_asp_desc": "The mod's own council automation: seats get actions down a priority list you set here. Cabinet assimilation targets the primary culture.",
         "bag_asp__main_name": "Council",
@@ -122,6 +128,12 @@ LOC = {
         "bag_asp__priority_desc": "The actions in use, tried from the top.",
     },
     "russian": {
+        "bag_asp__manual_name": "Ручные места",
+        "bag_asp__manual_desc": "Отметьте места для ручного управления. Текущее задание сохраняется. Галочка остаётся за местом при смене советника.",
+        "bag_asp__manual_text": "Выбрать места",
+        "bag_asp_seat_number": "Место [Add_int32(Scope.GetCabinet.GetIndex, '(int32)1')]",
+        "bag_asp_seat_empty": "Свободно",
+        "bag_asp_no_seats": "У державы пока нет мест в совете.",
         "bag_asp_name": "Автоматика совета",
         "bag_asp_desc": "Своя автоматика совета: места получают действия по списку приоритетов, который задаётся здесь. Ассимиляция советом идёт в основную культуру.",
         "bag_asp__main_name": "Совет",

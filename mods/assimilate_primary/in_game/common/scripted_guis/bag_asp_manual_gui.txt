@@ -1,0 +1,60 @@
+﻿# The CMF button dispatches to bag_asp_handle_callback.
+bag_asp__manual_on_changed = {
+	scope = country
+	is_shown = { always = yes }
+	effect = {}
+}
+
+bag_asp_close_seats = {
+	scope = country
+	effect = {
+		remove_variable = bag_asp_seats_open
+		clear_variable_list = bag_asp_seat_list
+	}
+}
+
+# Only visible when the open list is stale, even if a slot changes on pause.
+bag_asp_refresh_seats = {
+	scope = country
+	is_shown = {
+		has_variable = bag_asp_seats_open
+		OR = {
+			any_cabinet = {
+				NOT = { owner = { is_target_in_variable_list = { name = bag_asp_seat_list target = prev } } }
+			}
+			AND = {
+				has_variable_list = bag_asp_seat_list
+				NOT = { variable_list_size = { name = bag_asp_seat_list target = bag_asp_actual_seat_count } }
+			}
+		}
+	}
+	effect = { bag_asp_refresh_seat_list = yes }
+}
+
+bag_asp_seat_is_manual = {
+	scope = country
+	saved_scopes = { seat }
+	is_shown = { is_target_in_variable_list = { name = bag_asp_manual_seats target = scope:seat } }
+}
+
+bag_asp_toggle_manual_seat = {
+	scope = country
+	saved_scopes = { seat }
+	is_valid = { any_cabinet = { this = scope:seat } }
+	effect = {
+		if = {
+			limit = { any_cabinet = { this = scope:seat } }
+			if = {
+				limit = { is_target_in_variable_list = { name = bag_asp_manual_seats target = scope:seat } }
+				remove_list_variable = { name = bag_asp_manual_seats target = scope:seat }
+				if = { limit = { has_variable = bag_asp_auto_on } bag_asp_plan_all = yes }
+			}
+			else = {
+				add_to_variable_list = { name = bag_asp_manual_seats target = scope:seat }
+				scope:seat.cabinet_member ?= {
+					if = { limit = { has_variable = bag_asp_paired } remove_variable = bag_asp_paired }
+				}
+			}
+		}
+	}
+}

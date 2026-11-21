@@ -1,0 +1,87 @@
+﻿window = {
+	name = "bag_asp_manual_seats_window"
+	datacontext = "[GetPlayer]"
+	allow_outside = yes
+	alwaystransparent = no
+	parentanchor = center
+	widgetanchor = center
+	movable = yes
+	layer = confirmation
+	filter_mouse = all
+	size = { 480 380 }
+	using = bg_window_default_alt
+	visible = "[GetPlayer.MakeScope.GetVariable('bag_asp_seats_open').IsSet]"
+	enabled = "[GetPlayer.MakeScope.GetVariable('bag_asp_seats_open').IsSet]"
+
+	widget = {
+		parentanchor = right
+		size = { 40 40 }
+		position = { -5 1 }
+		button_close_alt = {
+			blockoverride "close_on_action" {
+				on_action = "[GetScriptedGui('bag_asp_close_seats').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+			}
+		}
+	}
+	vbox = {
+		using = window_margin_alt
+		window_header_alt = {
+			blockoverride "header_text" { text = "bag_asp__manual_name" }
+		}
+		vbox = {
+			using = layoutpolicy_expanding
+			spacing = 5
+			text_multi = {
+				layoutpolicy_horizontal = expanding
+				autoresize = yes
+				text = "bag_asp__manual_desc"
+			}
+			text_single = {
+				visible = "[IsDataModelEmpty(GetPlayer.MakeScope.GetList('bag_asp_seat_list'))]"
+				text = "bag_asp_no_seats"
+			}
+			scrollarea = {
+				using = layoutpolicy_expanding
+				scrollbarpolicy_horizontal = always_off
+				scrollbar_vertical = { using = Scrollbar_Vertical }
+				scrollwidget = {
+					vbox = {
+						layoutpolicy_horizontal = expanding
+						datamodel = "[GetPlayer.MakeScope.GetList('bag_asp_seat_list')]"
+						item = {
+							hbox = {
+								layoutpolicy_horizontal = expanding
+								spacing = 10
+								checkbox_square_alt = {
+									size = { 28 28 }
+									down = "[GetScriptedGui('bag_asp_seat_is_manual').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('seat', Scope.GetCabinet.MakeScope).End)]"
+									onclick = "[GetScriptedGui('bag_asp_toggle_manual_seat').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('seat', Scope.GetCabinet.MakeScope).End)]"
+								}
+								text_single = { text = "bag_asp_seat_number" }
+								text_single = {
+									visible = "[Scope.GetCabinet.IsCharacterSet]"
+									text = "[Scope.GetCabinet.GetCharacter.GetNameWithNoTooltip]"
+								}
+								text_single = {
+									visible = "[Not(Scope.GetCabinet.IsCharacterSet)]"
+									text = "bag_asp_seat_empty"
+								}
+								expand = {}
+							}
+						}
+					}
+				}
+			}
+			widget = {
+				size = { 0 0 }
+				visible_at_creation = no
+				visible = "[GetScriptedGui('bag_asp_refresh_seats').IsShown(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+				state = {
+					name = _show
+					duration = 0.1
+					on_finish = "[GetScriptedGui('bag_asp_refresh_seats').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+				}
+			}
+		}
+	}
+}
