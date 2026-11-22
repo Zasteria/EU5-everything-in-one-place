@@ -1,0 +1,92 @@
+﻿# Scope: settings country. Defer a refresh if CMF is iterating this list.
+bag_cmm_list_visibility_changed = {
+	if = {
+		limit = { var:cmm_setting_list_is_ordered_$setting$ = 1 }
+		if = {
+			limit = { has_variable = bag_cmm_iterating_$setting$ }
+			set_variable = { name = bag_cmm_needs_partition_$setting$ value = yes }
+		}
+		else = { bag_cmm_partition_ordered_list = { setting = $setting$ } }
+	}
+}
+
+bag_cmm_partition_ordered_list = {
+	if = {
+		limit = { var:cmm_setting_list_is_ordered_$setting$ = 1 }
+		set_local_variable = { name = bag_cmm_setting_key value = flag:$setting$ }
+		if = {
+			limit = { "variable_map(cmm_is_global|local_var:bag_cmm_setting_key)" >= 1 }
+			_bag_cmm_partition_ordered_list = { setting = $setting$ vt = global_variable lt = in_global }
+		}
+		else = {
+			_bag_cmm_partition_ordered_list = { setting = $setting$ vt = variable lt = in }
+		}
+	}
+}
+
+# Keep both partitions stable. Only rebuild the persistent list when a visible
+# item follows a hidden item. The original row flags remain the field keys.
+_bag_cmm_partition_ordered_list = {
+	save_scope_as = bag_cmm_list_owner
+	set_local_variable = { name = bag_cmm_visible_last_index value = -1 }
+	set_local_variable = { name = bag_cmm_hidden_seen value = 0 }
+	set_local_variable = { name = bag_cmm_partition_needed value = 0 }
+	every_$lt$_list = {
+		variable = cmm_list_items_$setting$
+		save_scope_as = bag_cmm_partition_item
+		if = {
+			limit = {
+				scope:bag_cmm_list_owner = {
+					is_key_in_variable_map = { name = cmm_list_item_hidden target = scope:bag_cmm_partition_item }
+				}
+			}
+			set_local_variable = { name = bag_cmm_hidden_seen value = 1 }
+		}
+		else = {
+			change_local_variable = { name = bag_cmm_visible_last_index add = 1 }
+			if = {
+				limit = { local_var:bag_cmm_hidden_seen = 1 }
+				set_local_variable = { name = bag_cmm_partition_needed value = 1 }
+			}
+		}
+	}
+	set_variable = { name = bag_cmm_visible_last_$setting$ value = local_var:bag_cmm_visible_last_index }
+	add_to_variable_map = {
+		name = cmm_list_last_index
+		key = flag:$setting$
+		value = local_var:bag_cmm_visible_last_index
+	}
+	if = {
+		limit = { local_var:bag_cmm_partition_needed = 1 }
+		clear_variable_list = bag_cmm_shown_rows
+		clear_variable_list = bag_cmm_hidden_rows
+		every_$lt$_list = {
+			variable = cmm_list_items_$setting$
+			save_scope_as = bag_cmm_partition_item
+			scope:bag_cmm_list_owner = {
+				if = {
+					limit = { is_key_in_variable_map = { name = cmm_list_item_hidden target = scope:bag_cmm_partition_item } }
+					add_to_variable_list = { name = bag_cmm_hidden_rows target = scope:bag_cmm_partition_item }
+				}
+				else = {
+					add_to_variable_list = { name = bag_cmm_shown_rows target = scope:bag_cmm_partition_item }
+				}
+			}
+		}
+		clear_$vt$_list = cmm_list_items_$setting$
+		_bag_cmm_append_rows = { source = bag_cmm_shown_rows setting = $setting$ vt = $vt$ }
+		_bag_cmm_append_rows = { source = bag_cmm_hidden_rows setting = $setting$ vt = $vt$ }
+		clear_variable_list = bag_cmm_shown_rows
+		clear_variable_list = bag_cmm_hidden_rows
+	}
+}
+
+_bag_cmm_append_rows = {
+	every_in_list = {
+		variable = $source$
+		save_scope_as = bag_cmm_partition_item
+		scope:bag_cmm_list_owner = {
+			add_to_$vt$_list = { name = cmm_list_items_$setting$ target = scope:bag_cmm_partition_item }
+		}
+	}
+}

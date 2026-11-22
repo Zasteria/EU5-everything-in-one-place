@@ -1571,6 +1571,7 @@ def sv_actions_loc(game: Path) -> dict[str, str]:
                      f' {k}_active: "{active.replace("${s}$", f"${side}_focus$")}"',
                      f' {k}_desc: "{desc.replace("${s}$", f"${side}_focus$").replace("${p}$", f"${pair}$")}"',
                      f' {k}_action_progress: "{at}"',
+                     f' {k}_outliner_progress: "{at} ({net})"',
                      f' {k}_action_progress_wordier: "${side}_focus$: {at} ({net} {month})"',
                      f' {k}_action_progress_long_wordier: "@societal_value! ${side}_focus$: {at} ({net} {month})"',
                      f' {k}_action_progress_tooltip: "${pair}$ → ${side}_focus$: {at} ({net} {month})"']
@@ -1582,6 +1583,59 @@ def sv_actions_loc(game: Path) -> dict[str, str]:
         rows += [f' search_filter_{SV_FILTER}_name: "{chip[0]}"', f' search_filter_{SV_FILTER}_desc: "{chip[1]}"']
         out[f"main_menu/localization/{lang}/bag_asp_sv_l_{lang}.yml"] = "\n".join(rows) + "\n"
     return out
+
+
+SV_OUTLINER_PATH = "in_game/gui/bag_asp_value_outliner.gui"
+
+
+def sv_outliner(game: Path) -> str:
+    """Give each own action its named outliner entry; retain the shared game widgets."""
+    base = """# The engine looks for <action>_cabinet_entry before its generic cabinet_entry.
+# Rebuilt by tools/generate.py. Only Council Automation's own actions use these entries.
+template bag_asp_value_outliner {
+	blockoverride "expanded_big_content" {
+		OutlinerButtonBase = {
+			size = { 95% 100% }
+
+			hbox = {
+				visible = "[Cabinet.IsActive]"
+				datacontext = "[Cabinet.GetCharacter]"
+				using = outliner_entry_margin
+				spacing = 5
+				using = cabinet_entry_action_progress
+
+				blockoverride "cabinet_entry_progress_text" {
+					OutlinerTextBase = {
+						autoresize = yes
+						block "bag_asp_value_outliner_text" {}
+					}
+				}
+			}
+		}
+	}
+	blockoverride "expanded_small_content" {
+		using = cabinet_entry_small_action_progress
+	}
+	blockoverride "icon_content" { using = cabinet_entry_icon_empty }
+	blockoverride "button_setup" {
+		using = cabinet_entry_actions
+		tooltipwidget = { using = action_progress_tooltip }
+	}
+	blockoverride "category_color" { using = cabinet_entry_color }
+}
+"""
+    return base + "".join(
+        f"""
+OutlinerEntryBase = {{
+	name = "bag_asp_sv_{side}_cabinet_entry"
+	using = bag_asp_value_outliner
+	blockoverride "bag_asp_value_outliner_text" {{
+		text = "bag_asp_sv_{side}_outliner_progress"
+	}}
+}}
+"""
+        for _, _, side, _ in sv_sides(game)
+    )
 
 
 def sv_at_values(game: Path) -> str:
@@ -2500,7 +2554,6 @@ bag_asp_rebuild = {{
 \t\t\thas_variable_list = cmm_list_items_{MOD_ID}__priority
 \t\t}}
 \t\tcmm_build_list_bool_list = {{ setting = {MOD_ID}__available field_slot = 1 list_name = bag_asp_used }}
-\t\tcmm_build_list_ordered_values = {{ setting = {MOD_ID}__priority list_name = bag_asp_order }}
 """)
     for i, (k, *_) in enumerate(POOL, 1):
         reg.append(f"""\t\tif = {{
@@ -2528,7 +2581,8 @@ bag_asp_rebuild = {{
         f"\t\tif = {{\n\t\t\tlimit = {{ NOT = {{ is_target_in_variable_list = {{ name = bag_asp_used target = flag:bag_asp_{k} }} }} }}\n"
         f"\t\t\tchange_variable = {{ name = bag_asp_rank_{k} add = 100 }}\n\t\t}}"
         for k, *_ in POOL)
-    reg.append(f"""\t\t# Each action's place in «Приоритет» (1 = top), +100 when not ticked:
+    reg.append(f"""\t\tcmm_build_list_ordered_values = {{ setting = {MOD_ID}__priority list_name = bag_asp_order }}
+\t\t# Each action's place in «Приоритет» (1 = top), +100 when not ticked:
 \t\t# the emergency gives up the seat whose action ranks lowest.
 \t\tset_variable = {{{{ name = bag_asp_rank_counter value = 0 }}}}
 \t\tevery_in_list = {{{{
@@ -2851,11 +2905,11 @@ bag_asp_vacate = {{
     scores = [(seat_is(k, g), f"scope:actor.var:bag_asp_rank_{r}") for k, r, g in ranked
               if act(k) != "promote_religion"]
     scores.append((on_action("promote_religion"), "bag_asp_running_religion_rank"))
-    seat_rank = "\\n".join(
-        f"\\t\\t\\telse_if = {{ limit = {{ {condition} }} add = {score} }}"
+    seat_rank = "\n".join(
+        f"\t\t\telse_if = {{ limit = {{ {condition} }} add = {score} }}"
         for condition, score in scores)
-    seat_below = "\\n".join(
-        f"\\t\\t\\t\\t\\t\\t\\tAND = {{ {condition} {score} > scope:actor.var:bag_asp_rank_recovery_effort }}"
+    seat_below = "\n".join(
+        f"\t\t\t\t\t\t\tAND = {{ {condition} {score} > scope:actor.var:bag_asp_rank_recovery_effort }}"
         for condition, score in scores)
     run += f"""
 # Scope: country. While the «devastated locations» alert shows (its banner,
@@ -3229,6 +3283,7 @@ bag_asp_paired_seat = {{
     return {
         SV_ACTIONS_PATH: sv_actions_file(game, actions),
         SV_FILTER_PATH: sv_filter_file(game),
+        SV_OUTLINER_PATH: sv_outliner(game),
         **sv_actions_loc(game),
         "in_game/common/scripted_triggers/bag_asp_council_triggers.txt": triggers + ramp_triggers(game) + assim_triggers(game) + DEVELOP_TRIGGERS,
         "in_game/common/script_values/bag_asp_values.txt": VALUES + shown_values() + SV_VALUES + DEVELOP_VALUES + sv_push_value(game, actions) + sv_at_values(game),
